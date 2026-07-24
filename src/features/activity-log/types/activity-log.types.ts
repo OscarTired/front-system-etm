@@ -19,6 +19,7 @@ export interface ActivityType {
   // la pantalla de tipos de actividad, nada de esto vive hardcodeado
   // en el componente del picker.
   pinned: boolean
+  department: ActivityDepartment
 }
 
 export interface ActivityLogProjectRef {
@@ -40,6 +41,14 @@ export interface ActivityLogUserRef {
   icon: string
 }
 
+export type ActivityLogSource =
+  | "MANUAL"
+  | "AUTO"
+
+export type ActivityDepartment =
+  | "PRODUCCION"
+  | "INGENIERIA"
+
 export interface ActivityLog {
   id: string
   userId: string
@@ -48,7 +57,10 @@ export interface ActivityLog {
   taskId: string | null
   note: string | null
   photoUrl: string | null
-  shift: DayShift
+  // Nullable: los registros AUTO (al completar una tarea) no
+  // pertenecen a ninguna franja horaria manual.
+  shift: DayShift | null
+  source: ActivityLogSource
   loggedAt: string
   activityType: ActivityType
   project: ActivityLogProjectRef | null

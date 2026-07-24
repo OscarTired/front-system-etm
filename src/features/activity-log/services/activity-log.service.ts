@@ -1,6 +1,7 @@
 import { api } from "@/lib/api"
 
 import type {
+  ActivityDepartment,
   ActivityLog,
   ActivityType,
   CreateActivityLogDto,
@@ -10,10 +11,13 @@ import type {
 
 export const activityLogService = {
 
-  async getTypes(includeInactive = false, signal?: AbortSignal) {
+  async getTypes(includeInactive = false, department?: ActivityDepartment, signal?: AbortSignal) {
     const response = await api.get<ActivityType[]>("/activity-types", {
       signal,
-      params: includeInactive ? { includeInactive: "1" } : undefined,
+      params: {
+        ...(includeInactive ? { includeInactive: "1" } : {}),
+        ...(department ? { department } : {}),
+      },
     })
     return response.data
   },
@@ -41,13 +45,16 @@ export const activityLogService = {
     await api.delete(`/activity-log/${id}`)
   },
 
-  async getMyToday(signal?: AbortSignal) {
-    const response = await api.get<ActivityLog[]>("/activity-log/me/today", { signal })
+  async getMyToday(department?: ActivityDepartment, signal?: AbortSignal) {
+    const response = await api.get<ActivityLog[]>("/activity-log/me/today", {
+      signal,
+      params: department ? { department } : undefined,
+    })
     return response.data
   },
 
   async getAll(
-    filters: { userId?: string; projectId?: string; taskId?: string; from?: string; to?: string },
+    filters: { userId?: string; projectId?: string; taskId?: string; from?: string; to?: string; department?: ActivityDepartment },
     signal?: AbortSignal,
   ) {
     const response = await api.get<ActivityLog[]>("/activity-log", { params: filters, signal })

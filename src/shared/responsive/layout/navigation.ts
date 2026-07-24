@@ -105,6 +105,21 @@ export const NAVIGATION = [
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ_ANY,
       },
+      // A diferencia del resto: además del permiso (compartido con
+      // toda la bitácora), acá se exige también el rol — es la
+      // única forma de que este ítem quede oculto para cualquiera
+      // que no sea de Ingeniería/Admin, sin necesitar un
+      // PermissionCode nuevo solo para esto (ver
+      // sidebar-navigation.tsx, que filtra por roles igual que por
+      // permission). El backend hace el mismo chequeo
+      // independientemente (ActivityLogService.assertEngineeringAccess).
+      {
+        label: "Bitácora Ingeniería",
+        href: "/bitacora/ingenieria",
+        icon: NotebookPen,
+        permission: PermissionCode.ACTIVITY_LOG_READ,
+        roles: ["INGENIERIA", "ADMIN"],
+      },
     ],
   },
 

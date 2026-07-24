@@ -57,6 +57,10 @@ import type {
   ShiftSlotDefinition,
 } from "../constants/shift-definitions"
 
+import type {
+  ActivityDepartment,
+} from "../types/activity-log.types"
+
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -65,6 +69,9 @@ type Props = {
   // como franja lo decide el servidor a partir de la hora real al
   // momento de guardar (ver activity-log.service.ts), no este valor.
   activeSlot?: ShiftSlotDefinition | null
+  // Bitácora de Producción (default) o de Ingeniería — decide qué
+  // tipos de actividad se listan acá.
+  department?: ActivityDepartment
 }
 
 const EMPTY_CONTEXT: ContextPickerValue = {
@@ -87,16 +94,17 @@ export function ActivityPickerDialog({
   open,
   onOpenChange,
   activeSlot,
+  department,
 }: Props) {
 
   const {
     types,
-  } = useActivityTypes()
+  } = useActivityTypes(false, department)
 
   const {
     createLog,
     creating,
-  } = useCreateActivityLog(types)
+  } = useCreateActivityLog(types, department)
 
   const [
     selectedTypeId,

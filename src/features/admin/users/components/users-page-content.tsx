@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { useRoles } from "@/features/roles/hooks/use-roles"
+import { useAreas } from "@/features/areas/hooks/use-areas"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { PrimaryAction } from "@/shared/ui/actions/primary-action"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
@@ -42,6 +43,7 @@ type UserFormData = {
   isChangingPassword: boolean
   roleId: string
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+  areaId: string | null
   icon: EntityIcon
   color: string
   active: boolean
@@ -51,6 +53,7 @@ export function UsersPageContent() {
   const { isMobile } = useResponsive()
   const { users, loading } = useUsers()
   const { roles, loading: loadingRoles } = useRoles()
+  const { areas } = useAreas()
   const { createUser, updateUser, deleteUser } = useUserMutations()
   const { has } = usePermissions()
 
@@ -75,6 +78,7 @@ export function UsersPageContent() {
     isChangingPassword: false,
     roleId: "",
     level: null,
+    areaId: null,
     icon: "user",
     color: "#7C3AED",
     active: true,
@@ -125,6 +129,7 @@ export function UsersPageContent() {
       isChangingPassword: false,
       roleId: selectedUser.role.id,
       level: selectedUser.level ?? null,
+      areaId: selectedUser.area?.id ?? null,
       icon: (selectedUser.icon as EntityIcon) ?? "user",
       color: selectedUser.color ?? "#7C3AED",
       active: selectedUser.active,
@@ -184,6 +189,7 @@ export function UsersPageContent() {
       isChangingPassword: true,
       roleId: selectedRoleId,
       level: null,
+      areaId: null,
       icon: "user",
       color: "#7C3AED",
       active: true,
@@ -203,6 +209,7 @@ export function UsersPageContent() {
       email: formData.email,
       roleId: formData.roleId,
       level: formData.level,
+      areaId: formData.areaId,
       icon: formData.icon,
       color: formData.color,
       active: formData.active,
@@ -495,12 +502,11 @@ export function UsersPageContent() {
 
                       <PrimaryAction
                         label={
-                          isSaving
-                            ? "Guardando..."
-                            : isCreating
-                              ? "Crear usuario"
-                              : "Guardar cambios"
+                          isCreating
+                            ? "Crear usuario"
+                            : "Guardar cambios"
                         }
+                        isLoading={isSaving}
                         disabled={!canUpdate || isSaving}
                         onClick={handleSave}
                       />
@@ -524,16 +530,24 @@ export function UsersPageContent() {
                       roles={roles}
                       selectedRole={selectedFormRole}
                       level={formData.level}
+                      area={areas.find(a => a.id === formData.areaId) ?? null}
                       errors={attempted ? errors : undefined}
                       onRoleChange={roleId => {
                         const nextRole = roles.find(r => r.id === roleId)
                         setFormData(c => ({
                           ...c,
                           roleId,
-                          ...(nextRole?.code !== "PRODUCCION" && { level: null }),
+                          ...(nextRole?.code !== "PRODUCCION" && { level: null, areaId: null }),
                         }))
                       }}
-                      onLevelChange={level => setFormData(c => ({ ...c, level }))}
+                      onLevelChange={level => setFormData(c => ({
+                        ...c,
+                        level,
+                        // Mismo criterio que en UserDialog/backend: el
+                        // área solo aplica a OPERARIO.
+                        ...(level !== "OPERARIO" && { areaId: null }),
+                      }))}
+                      onAreaChange={areaId => setFormData(c => ({ ...c, areaId }))}
                       onChangingPasswordChange={val =>
                         setFormData(c => ({ ...c, isChangingPassword: val }))
                       }

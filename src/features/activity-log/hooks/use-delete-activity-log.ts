@@ -3,11 +3,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { activityLogService } from "../services/activity-log.service"
 import { myActivityLogQueryKey } from "./use-my-activity-log"
-import type { ActivityLog } from "../types/activity-log.types"
+import type { ActivityDepartment, ActivityLog } from "../types/activity-log.types"
 
-export function useDeleteActivityLog() {
+export function useDeleteActivityLog(department?: ActivityDepartment) {
 
   const queryClient = useQueryClient()
+
+  const queryKey = myActivityLogQueryKey(department)
 
   const mutation = useMutation({
 
@@ -15,12 +17,12 @@ export function useDeleteActivityLog() {
 
     onMutate: async (id) => {
 
-      await queryClient.cancelQueries({ queryKey: myActivityLogQueryKey })
+      await queryClient.cancelQueries({ queryKey })
 
-      const previous = queryClient.getQueryData<ActivityLog[]>(myActivityLogQueryKey) ?? []
+      const previous = queryClient.getQueryData<ActivityLog[]>(queryKey) ?? []
 
       queryClient.setQueryData<ActivityLog[]>(
-        myActivityLogQueryKey,
+        queryKey,
         previous.filter((log) => log.id !== id),
       )
 
@@ -30,12 +32,12 @@ export function useDeleteActivityLog() {
 
     onError: (_err, _id, context) => {
       if (context) {
-        queryClient.setQueryData(myActivityLogQueryKey, context.previous)
+        queryClient.setQueryData(queryKey, context.previous)
       }
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: myActivityLogQueryKey })
+      queryClient.invalidateQueries({ queryKey })
     },
 
   })

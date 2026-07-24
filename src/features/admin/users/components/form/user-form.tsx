@@ -5,6 +5,7 @@ import { WizardProgress } from "@/shared/ui/dialogs/form-dialog/wizard-progress"
 
 import type { EntityIcon } from "@/shared/constants/entity-icons"
 import type { Role } from "@/features/roles/types/role.types"
+import type { Area } from "@/features/areas/types/area.types"
 
 import type { UserErrors } from "../../hooks/validate-user"
 
@@ -47,12 +48,14 @@ type Props = {
   roles: Role[]
   selectedRole?: Role
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+  area?: Area | null
   errors?: UserErrors
   step?: number
   onRoleChange: (roleId: string) => void
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
   ) => void
+  onAreaChange: (areaId: string | null) => void
   onChangingPasswordChange: (value: boolean) => void
   onNameChange: (value: string) => void
   onUsernameChange: (value: string) => void
@@ -75,10 +78,12 @@ export function UserForm({
   roles,
   selectedRole,
   level,
+  area,
   errors,
   step = 0,
   onRoleChange,
   onLevelChange,
+  onAreaChange,
   onChangingPasswordChange,
   onNameChange,
   onUsernameChange,
@@ -99,9 +104,11 @@ export function UserForm({
       roles={roles}
       selectedRole={selectedRole}
       level={level}
+      area={area}
       error={errors?.roleId}
       onRoleChange={onRoleChange}
       onLevelChange={onLevelChange}
+      onAreaChange={onAreaChange}
     />
   )
 

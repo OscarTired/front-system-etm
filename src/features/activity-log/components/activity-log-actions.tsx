@@ -12,13 +12,21 @@ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
 import { ActivityPickerDialog } from "./activity-picker-dialog"
 
+import type { ActivityDepartment } from "../types/activity-log.types"
+
+type Props = {
+  department?: ActivityDepartment
+}
+
 // Mismo patrón que ProjectActions/TaskActions/UserActions/
 // ActivityTypeActions: vive en el header de la página, dueño de su
 // propio diálogo — desacoplado del contenido (que además abre este
 // mismo diálogo al tocar "+ Registrar qué hiciste" dentro de una
 // franja vacía; cada uno maneja su propia instancia, es liviano y
 // evita pasar estado de la página al contenido y viceversa).
-export function ActivityLogActions() {
+export function ActivityLogActions({
+  department,
+}: Props = {}) {
 
   const [open, setOpen] = useState(false)
 
@@ -65,6 +73,7 @@ export function ActivityLogActions() {
 
       <ActivityPickerDialog
         open={canCreate && open}
+        department={department}
         onOpenChange={setOpen}
       />
 

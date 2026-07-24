@@ -231,8 +231,9 @@ export function RolePermissionsPageContent() {
               </div>
 
               <PrimaryAction
-                label={saving ? "Guardando..." : "Guardar cambios"}
+                label="Guardar cambios"
                 icon={Save}
+                isLoading={saving}
                 onClick={handleSave}
                 disabled={!selectedRole || !dirty || saving}
               />
@@ -304,8 +305,9 @@ export function RolePermissionsPageContent() {
                   </div>
 
                   <PrimaryAction
-                    label={saving ? "Guardando..." : "Guardar cambios"}
+                    label="Guardar cambios"
                     icon={Save}
+                    isLoading={saving}
                     onClick={handleSave}
                     disabled={!dirty || saving}
                   />

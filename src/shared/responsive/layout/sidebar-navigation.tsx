@@ -12,6 +12,7 @@ import { SidebarSection } from "./sidebar-section"
 import { cn } from "@/shared/utils/utils"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+import { useAuthStore } from "@/features/auth/store/auth-store"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 import type { ProcessCounts } from "./hooks/use-sidebar-counts"
@@ -40,6 +41,7 @@ export function SidebarNavigation({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { has } = usePermissions()
+  const currentRole = useAuthStore(state => state.user?.role)
 
   const [isMounting, setIsMounting] = useState(true)
 
@@ -75,8 +77,9 @@ export function SidebarNavigation({
       {NAVIGATION.map((section, sectionIndex) => {
         const items = section.items.filter(
           item =>
-            !("permission" in item) ||
-            has(item.permission),
+            (!("permission" in item) || has(item.permission)) &&
+            (!("roles" in item) ||
+              (currentRole != null && (item.roles as readonly string[]).includes(currentRole))),
         )
 
         if (items.length === 0) {

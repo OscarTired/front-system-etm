@@ -7,9 +7,11 @@ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
 import { useMyActivityLog } from "../hooks/use-my-activity-log"
 import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
-import { SHIFT_GROUPS } from "../constants/shift-definitions"
 import type { ShiftSlotDefinition } from "../constants/shift-definitions"
+import { SHIFT_GROUPS } from "../constants/shift-definitions"
+import type { ActivityDepartment } from "../types/activity-log.types"
 import { ShiftGroupSection } from "./shift-group-section"
+import { AutoActivitySection } from "./auto-activity-section"
 import { ActivityPickerDialog } from "./activity-picker-dialog"
 import { ActivityLogSkeleton } from "./activity-log-skeleton"
 
@@ -19,10 +21,20 @@ const TODAY_LABEL = new Date().toLocaleDateString("es-PE", {
   month: "long",
 })
 
-export function ActivityLogPageContent() {
+type Props = {
+  // Bitácora de Producción (default, con franjas + auto-registro) o
+  // de Ingeniería (mismo motor, 100% manual, sin AutoActivitySection
+  // porque ahí nunca hay logs AUTO — no hay WorkflowStep que
+  // completar en Ingeniería).
+  department?: ActivityDepartment
+}
 
-  const { logs, loading } = useMyActivityLog()
-  const { deleteLog } = useDeleteActivityLog()
+export function ActivityLogPageContent({
+  department = "PRODUCCION",
+}: Props = {}) {
+
+  const { logs, loading } = useMyActivityLog(department)
+  const { deleteLog } = useDeleteActivityLog(department)
 
   const { has } = usePermissions()
   const canCreate = has(PermissionCode.ACTIVITY_LOG_CREATE)
@@ -74,30 +86,42 @@ export function ActivityLogPageContent() {
 
         ) : (
 
-          SHIFT_GROUPS.map((group) => {
+          <>
 
-            const logsBySlot: Record<string, typeof logs> = {}
+            {department === "PRODUCCION" && (
 
-            for (const slot of group.slots) {
-              logsBySlot[slot.shift] = logs.filter((log) => log.shift === slot.shift)
-            }
-
-            return (
-
-              <ShiftGroupSection
-                key={group.key}
-                group={group}
-                logsBySlot={logsBySlot}
-                onLogClick={handleOpenPicker}
-                onDeleteLog={handleDeleteLog}
-                deletingLogId={deletingLogId}
-                canCreate={canCreate}
-                canDelete={canDelete}
+              <AutoActivitySection
+                logs={logs.filter(log => log.source === "AUTO")}
               />
 
-            )
+            )}
 
-          })
+            {SHIFT_GROUPS.map((group) => {
+
+              const logsBySlot: Record<string, typeof logs> = {}
+
+              for (const slot of group.slots) {
+                logsBySlot[slot.shift] = logs.filter((log) => log.shift === slot.shift)
+              }
+
+              return (
+
+                <ShiftGroupSection
+                  key={group.key}
+                  group={group}
+                  logsBySlot={logsBySlot}
+                  onLogClick={handleOpenPicker}
+                  onDeleteLog={handleDeleteLog}
+                  deletingLogId={deletingLogId}
+                  canCreate={canCreate}
+                  canDelete={canDelete}
+                />
+
+              )
+
+            })}
+
+          </>
 
         )}
 
@@ -106,6 +130,7 @@ export function ActivityLogPageContent() {
       <ActivityPickerDialog
         open={canCreate && pickerOpen}
         activeSlot={activeSlot}
+        department={department}
         onOpenChange={(open) => {
           setPickerOpen(open)
           if (!open) {

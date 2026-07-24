@@ -34,6 +34,10 @@ import {
 } from "@/features/roles/hooks/use-roles"
 
 import {
+  useAreas,
+} from "@/features/areas/hooks/use-areas"
+
+import {
   validateUser,
   type UserErrors,
 } from "../../hooks/validate-user"
@@ -59,6 +63,7 @@ type UserFormValue = {
   isChangingPassword: boolean
   roleId: string
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+  areaId: string | null
   icon: EntityIcon
   color: string
   active: boolean
@@ -124,6 +129,7 @@ function createInitialForm(
     isChangingPassword: false,
     roleId: user?.role.id ?? "",
     level: user?.level ?? null,
+    areaId: user?.area?.id ?? null,
     icon: user?.icon ?? "user",
     color: user?.color ?? "#7C3AED",
     active: user?.active ?? true,
@@ -141,6 +147,10 @@ export function UserDialog({
     roles,
     loading,
   } = useRoles(open)
+
+  const {
+    areas,
+  } = useAreas()
 
   const {
     createUser,
@@ -197,6 +207,11 @@ export function UserDialog({
     roles.find(
       role => role.id === form.roleId,
     )
+
+  const selectedArea =
+    areas.find(
+      area => area.id === form.areaId,
+    ) ?? null
 
   const isEditing =
     Boolean(user)
@@ -397,6 +412,7 @@ export function UserDialog({
         roles={roles}
         selectedRole={selectedRole}
         level={form.level}
+        area={selectedArea}
         errors={visibleErrors}
         step={step}
         onRoleChange={roleId => {
@@ -407,11 +423,26 @@ export function UserDialog({
             roleId,
             ...(nextRole?.code !== "PRODUCCION" && {
               level: null,
+              areaId: null,
             }),
           })
         }}
         onLevelChange={level =>
-          update({ level })
+          update({
+            level,
+            // Mismo criterio que el backend
+            // (assertAreaMatchesLevel): el área solo tiene sentido
+            // para OPERARIO, así que se limpia sola al cambiar a
+            // cualquier otro sub-nivel — evita que quede una
+            // selección vieja "fantasma" que después el backend
+            // igual iba a descartar.
+            ...(level !== "OPERARIO" && {
+              areaId: null,
+            }),
+          })
+        }
+        onAreaChange={areaId =>
+          update({ areaId })
         }
         onChangingPasswordChange={
           isChangingPassword =>

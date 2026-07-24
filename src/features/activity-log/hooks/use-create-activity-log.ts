@@ -4,11 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { activityLogService } from "../services/activity-log.service"
 import { myActivityLogQueryKey } from "./use-my-activity-log"
 import { getCurrentShift } from "../constants/shift-definitions"
-import type { ActivityLog, ActivityType, CreateActivityLogDto } from "../types/activity-log.types"
+import type { ActivityDepartment, ActivityLog, ActivityType, CreateActivityLogDto } from "../types/activity-log.types"
 
-export function useCreateActivityLog(types: ActivityType[]) {
+export function useCreateActivityLog(types: ActivityType[], department?: ActivityDepartment) {
 
   const queryClient = useQueryClient()
+
+  const queryKey = myActivityLogQueryKey(department)
 
   const mutation = useMutation({
 
@@ -16,9 +18,9 @@ export function useCreateActivityLog(types: ActivityType[]) {
 
     onMutate: async (dto) => {
 
-      await queryClient.cancelQueries({ queryKey: myActivityLogQueryKey })
+      await queryClient.cancelQueries({ queryKey })
 
-      const previous = queryClient.getQueryData<ActivityLog[]>(myActivityLogQueryKey) ?? []
+      const previous = queryClient.getQueryData<ActivityLog[]>(queryKey) ?? []
 
       const activityType = types.find(t => t.id === dto.activityTypeId)
 
@@ -35,6 +37,7 @@ export function useCreateActivityLog(types: ActivityType[]) {
           // falta esperar la URL real de Supabase para mostrarla.
           photoUrl: dto.photoBase64 ?? null,
           shift: getCurrentShift(new Date()),
+          source: "MANUAL",
           loggedAt: new Date().toISOString(),
           activityType,
           // El preview optimista no tiene los datos completos de
@@ -45,7 +48,7 @@ export function useCreateActivityLog(types: ActivityType[]) {
         }
 
         queryClient.setQueryData<ActivityLog[]>(
-          myActivityLogQueryKey,
+          queryKey,
           [...previous, optimisticLog],
         )
 
@@ -57,12 +60,12 @@ export function useCreateActivityLog(types: ActivityType[]) {
 
     onError: (_err, _dto, context) => {
       if (context) {
-        queryClient.setQueryData(myActivityLogQueryKey, context.previous)
+        queryClient.setQueryData(queryKey, context.previous)
       }
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: myActivityLogQueryKey })
+      queryClient.invalidateQueries({ queryKey })
     },
 
   })

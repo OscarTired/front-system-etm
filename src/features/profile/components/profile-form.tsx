@@ -116,7 +116,8 @@ export function ProfileForm({ onClose }: Props) {
         </button>
 
         <PrimaryAction
-          label={loading ? "Guardando..." : "Guardar"}
+          label="Guardar"
+          isLoading={loading}
           disabled={loading}
           onClick={handleSave}
         />

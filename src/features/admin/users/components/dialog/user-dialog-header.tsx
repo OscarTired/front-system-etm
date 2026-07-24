@@ -9,6 +9,14 @@ import {
 } from "./level-select"
 
 import {
+  AreaSelect,
+} from "@/features/areas/components/area-select"
+
+import type {
+  Area,
+} from "@/features/areas/types/area.types"
+
+import {
   DynamicBadge,
 } from "@/shared/ui/badge/dynamic-badge"
 
@@ -29,12 +37,16 @@ type Props = {
   roles: Role[]
   selectedRole?: Role
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+  area?: Area | null
   error?: string
   onRoleChange: (
     roleId: string,
   ) => void
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
+  ) => void
+  onAreaChange: (
+    areaId: string | null,
   ) => void
 }
 
@@ -47,9 +59,11 @@ export function UserDialogHeader({
   roles,
   selectedRole,
   level,
+  area,
   error,
   onRoleChange,
   onLevelChange,
+  onAreaChange,
 }: Props) {
   const isProduccion =
     selectedRole?.code === "PRODUCCION"
@@ -98,6 +112,19 @@ export function UserDialogHeader({
                   : null
               }
               onChange={onLevelChange}
+            />
+          </div>
+        )}
+
+        {isProduccion && level === "OPERARIO" && (
+          <div className="w-full tablet:w-[320px]">
+            <div className="mb-2 text-xs font-medium text-neutral-500">
+              Área
+            </div>
+
+            <AreaSelect
+              value={area}
+              onChange={next => onAreaChange(next?.id ?? null)}
             />
           </div>
         )}
