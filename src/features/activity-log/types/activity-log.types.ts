@@ -74,6 +74,10 @@ export interface CreateActivityLogDto {
   activityTypeId: string
   projectId?: string
   taskId?: string
+  // Franja elegida a mano en el picker — si no viene, el backend
+  // cae a calcularla por la hora real (ver
+  // ActivityLogService.create()).
+  shift?: DayShift
   note?: string
   // Data URI (resultado de FileReader.readAsDataURL) — mismo
   // mecanismo que CommentComposer.

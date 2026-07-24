@@ -36,7 +36,7 @@ export function useCreateActivityLog(types: ActivityType[], department?: Activit
           // El data URI ya sirve como preview directa — no hace
           // falta esperar la URL real de Supabase para mostrarla.
           photoUrl: dto.photoBase64 ?? null,
-          shift: getCurrentShift(new Date()),
+          shift: dto.shift ?? getCurrentShift(new Date()),
           source: "MANUAL",
           loggedAt: new Date().toISOString(),
           activityType,

@@ -249,6 +249,11 @@ export function ActivityPickerDialog({
       projectId: context.projectId,
       taskId:
         context.taskId || undefined,
+      // La franja que la persona tocó a mano — se respeta tal cual
+      // aunque ya haya pasado (se olvidó y lo registra tarde). Sin
+      // esto, el backend recalculaba la franja por la hora real y
+      // el registro terminaba en la franja equivocada.
+      shift: activeSlot?.shift,
       note:
         note.trim() || undefined,
       photoBase64,
@@ -280,10 +285,9 @@ export function ActivityPickerDialog({
         {activeSlot && activeSlot.shift !== getCurrentShift(new Date()) && (
 
           <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
-            Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — esto se
-            va a guardar en la franja que corresponde a la hora
-            actual, no en esa. Si querés, contá abajo por qué se
-            registra recién ahora.
+            Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — se
+            va a guardar igual en esa franja. Si querés, contá abajo
+            por qué se registra recién ahora.
           </p>
 
         )}
