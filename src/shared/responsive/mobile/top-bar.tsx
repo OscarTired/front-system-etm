@@ -10,7 +10,6 @@ import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-sto
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 
 export function TopBar() {
-
   const toggleDrawer = useMobileNavStore(s => s.toggleDrawer)
   const title = usePageTitleStore(s => s.title)
 
@@ -33,34 +32,37 @@ export function TopBar() {
   )
 
   return (
-
     <>
-
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
-
       <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
-
+        {/* Botón de menú con badge flotante sin bordes */}
         <button
           type="button"
           onClick={toggleDrawer}
           aria-label="Abrir navegación"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 text-neutral-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900"
         >
           <Menu size={18} strokeWidth={2.2} />
         </button>
 
-        <span className="min-w-0 flex-1 truncate text-base font-semibold text-neutral-100">
-          {title}
-        </span>
+        {/* Título con badge flotante sin bordes */}
+        <div className="min-w-0 flex-1">
+          <div className="inline-flex max-w-full items-center rounded-full bg-neutral-900/80 px-3.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl">
+            <span className="truncate text-sm font-semibold text-neutral-100">
+              {title}
+            </span>
+          </div>
+        </div>
 
+        {/* Notificaciones (Asegúrate de que su variante o contenedor interno use este estilo si lo permite) */}
         <NotificationBell variant="topbar" />
 
+        {/* Botón de perfil con badge flotante sin bordes */}
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
           aria-label="Perfil"
           disabled={!user}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20 disabled:opacity-50"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900 disabled:opacity-50"
         >
           <div className="relative size-7 shrink-0">
             {user ? (
@@ -70,13 +72,9 @@ export function TopBar() {
             )}
           </div>
         </button>
-
       </header>
 
       <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} />
-
     </>
-
   )
-
 }
