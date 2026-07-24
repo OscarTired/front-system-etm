@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ListChecks } from "lucide-react"
 
 import { useMyAreaTasks } from "../../../../areas/hooks/use-my-area-tasks"
-import { TaskAreaPanel } from "../../../../areas/components/task-area-panel"
+import { TaskAreaPanel } from "./task-area-panel"
 
 // Vive en el header de Bitácora (al lado de "Registrar") — mismo
 // motivo que el resto de los *Actions: dueño de su propio panel,
