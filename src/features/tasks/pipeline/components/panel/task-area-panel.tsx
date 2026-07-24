@@ -97,7 +97,10 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
         <SheetHeader>
 
-          <div className="flex items-center justify-between gap-2">
+          {/* pr-10: la X de cerrar del Sheet es absolute
+              right-3/top-3 (32px) — sin este espacio reservado acá,
+              el botón de configuración quedaba solapado con ella. */}
+          <div className="flex items-center justify-between gap-2 pr-10">
 
             <div className="min-w-0">
 
