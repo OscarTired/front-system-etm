@@ -266,7 +266,10 @@ export function UsersPageContent() {
         {isMobile && (
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             {!selectedRole && (
-              <div className="space-y-3">
+              // pb-28: mismo motivo que el resto — reserva espacio
+              // para que el último rol no quede tapado por el
+              // bottom nav.
+              <div className="space-y-3 pb-28">
                 {loadingRoles ? (
                   <RoleMobileSkeleton />
                 ) : filteredRoles.length === 0 ? (
@@ -321,11 +324,16 @@ export function UsersPageContent() {
                   )}
                 </header>
 
-                <ScrollArea
-                  data-entity-table-scroll
-                  className="min-h-0 flex-1 p-1.5"
-                >
-                  <div className="space-y-3">
+                {/* Plano, sin ScrollArea acá: mismo bug que tenía
+                    role-permissions-page-content.tsx — en mobile el
+                    root de la página no define un alto fijo, así
+                    que ScrollArea calculaba un alto ambiguo y
+                    recortaba su propio viewport contra el bottom
+                    nav, sin importar el padding de adentro. */}
+                <div className="min-h-0 flex-1 p-1.5">
+                  {/* pb-28: reserva espacio para que el último
+                      usuario no quede tapado por el bottom nav. */}
+                  <div className="space-y-3 pb-28">
                     {loading ? (
                       <UserMobileSkeleton />
                     ) : filteredUsersInRole.length === 0 ? (
@@ -348,8 +356,7 @@ export function UsersPageContent() {
                       ))
                     )}
                   </div>
-                  <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
-                </ScrollArea>
+                </div>
               </>
             )}
           </div>
