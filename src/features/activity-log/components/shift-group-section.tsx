@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Trash2, Image as ImageIcon } from "lucide-react"
+import { Trash2, Image as ImageIcon, Plus } from "lucide-react"
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
 import { cn } from "@/shared/utils/utils"
@@ -29,7 +29,6 @@ export function ShiftGroupSection({
   canCreate,
   canDelete,
 }: Props) {
-
   const now = new Date()
 
   // Un solo dialog compartido por todo el grupo — CommentImageDialog
@@ -45,72 +44,73 @@ export function ShiftGroupSection({
   )
 
   return (
-
     <div
       className={cn(
         "rounded-2xl bg-white/3 p-4",
         groupUpcoming && "opacity-50",
       )}
     >
-
       <div className="flex items-center gap-2.5">
-
         <group.icon size={16} className="text-neutral-400" />
 
         <span className="text-sm font-semibold text-neutral-200">
           {group.label}
         </span>
-
       </div>
 
       <div className="mt-3 flex flex-col gap-4">
-
         {group.slots.map((slot, index) => {
-
           const state = getSlotState(slot, now)
           const logs = logsBySlot[slot.shift] ?? []
 
           return (
-
             <div key={slot.shift} className="flex flex-col gap-2">
-
-              {group.slots.length > 1 && (
-
-                <div className="flex items-center gap-2">
-
-                  <span className="text-xs font-medium text-neutral-400">
-                    {slot.hours}
-                  </span>
-
-                  {index > 0 && (
-                    <span className="h-px flex-1 bg-white/8" />
+              {/* Cabecera de la sub-franja */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-1 items-center gap-2 min-w-0">
+                  {group.slots.length > 1 && (
+                    <span className="text-xs font-medium text-neutral-400 shrink-0">
+                      {slot.hours}
+                    </span>
                   )}
 
+                  {!slot.required && (
+                    <span className="rounded-full bg-white/6 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500 shrink-0">
+                      Opcional
+                    </span>
+                  )}
+
+                  {(group.slots.length > 1 || !slot.required) && (
+                    <span className="h-px flex-1 bg-white/8" />
+                  )}
                 </div>
 
-              )}
+                {/* Botón "+" rápido en la cabecera si la franja está activa y ya contiene registros */}
+                {state !== "upcoming" && logs.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={!canCreate}
+                    onClick={() => onLogClick(slot)}
+                    title="Agregar otra actividad"
+                    aria-label="Agregar otra actividad"
+                    className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Plus size={14} />
+                    <span>Agregar</span>
+                  </button>
+                )}
+              </div>
 
-              {!slot.required && (
-
-                <span className="w-fit rounded-full bg-white/6 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
-                  Opcional
-                </span>
-
-              )}
-
+              {/* Lista de registros */}
               <div className="flex flex-col gap-2">
-
                 {logs.map((log) => {
-
                   const LogIcon = getActivityIcon(log.activityType.icon)
 
                   return (
-
                     <div
                       key={log.id}
                       className="group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5"
                     >
-
                       <div
                         className="flex size-8 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor: `${log.activityType.color}22`, color: log.activityType.color }}
@@ -119,7 +119,6 @@ export function ShiftGroupSection({
                       </div>
 
                       <div className="min-w-0 flex-1">
-
                         <p className="text-sm font-medium text-neutral-200">
                           {log.activityType.label}
                         </p>
@@ -138,7 +137,6 @@ export function ShiftGroupSection({
                         )}
 
                         {log.photoUrl && (
-
                           <button
                             type="button"
                             onClick={() => setOpenPhotoUrl(log.photoUrl)}
@@ -147,13 +145,10 @@ export function ShiftGroupSection({
                             <ImageIcon size={13} />
                             Ver foto adjunta
                           </button>
-
                         )}
-
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2">
-
                         <span className="text-xs text-neutral-500">
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                             hour: "2-digit",
@@ -170,23 +165,19 @@ export function ShiftGroupSection({
                         >
                           <Trash2 size={14} />
                         </button>
-
                       </div>
-
                     </div>
-
                   )
-
                 })}
 
+                {/* Sin registros aún en esta franja activa */}
                 {logs.length === 0 && state !== "upcoming" && (
-
                   <button
                     type="button"
                     disabled={!canCreate}
                     onClick={() => onLogClick(slot)}
                     className={cn(
-                      "flex items-center justify-center rounded-xl border border-dashed py-3 text-sm font-medium transition-colors",
+                      "flex items-center justify-center gap-1.5 rounded-xl border border-dashed py-3 text-sm font-medium transition-colors",
                       canCreate
                         ? "hover:bg-white/4 hover:text-neutral-300"
                         : "cursor-not-allowed opacity-50",
@@ -195,36 +186,42 @@ export function ShiftGroupSection({
                         : "border-white/6 text-neutral-600",
                     )}
                   >
-                    + Registrar qué hiciste
+                    <Plus size={15} />
+                    <span>Registrar qué hiciste</span>
                   </button>
-
                 )}
 
-                {logs.length === 0 && state === "upcoming" && (
+                {/* Si ya hay registros en la franja, botón para agregar uno nuevo */}
+                {logs.length > 0 && state !== "upcoming" && (
+                  <button
+                    type="button"
+                    disabled={!canCreate}
+                    onClick={() => onLogClick(slot)}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/6 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-white/10 hover:bg-white/4 hover:text-neutral-200 disabled:cursor-not-allowed disabled:opacity-50",
+                    )}
+                  >
+                    <Plus size={14} />
+                    <span>Agregar otra actividad</span>
+                  </button>
+                )}
 
+                {/* Franja que aún no llega */}
+                {logs.length === 0 && state === "upcoming" && (
                   <p className="py-2 text-center text-xs text-neutral-600">
                     Todavía no llega esta franja
                   </p>
-
                 )}
-
               </div>
-
             </div>
-
           )
-
         })}
-
       </div>
 
       <CommentImageDialog
         imageUrl={openPhotoUrl}
         onClose={() => setOpenPhotoUrl(null)}
       />
-
     </div>
-
   )
-
 }
