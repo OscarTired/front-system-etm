@@ -65,7 +65,7 @@ export function AppLoadingScreen({
   }, [progress, onComplete])
 
   return (
-    <div className="fixed inset-0 z-9999 flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505]">
+    <div className="fixed inset-0 z-9999 flex min-h-dvh flex-col items-center justify-center overflow-hidden select-none bg-[#050505]">
       <LoadingBackground />
 
       <div className="relative z-10 flex flex-col items-center justify-center">

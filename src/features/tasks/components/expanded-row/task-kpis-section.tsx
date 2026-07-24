@@ -16,8 +16,8 @@ import {
 } from "@/shared/ui/mini-card/process-mini-card"
 
 import {
-  KpiCarousel,
-} from "@/shared/ui/mini-card/kpi-carousel"
+  KpiPanel,
+} from "@/shared/ui/mini-card/kpi-panel"
 
 import {
   useResponsive,
@@ -148,17 +148,8 @@ export function TaskKpisSection({
 
   return(
 
-    <KpiCarousel
+    <KpiPanel
       cards={cards}
-      summary={{
-        icon: Puzzle,
-        color: PIEZAS_COLOR,
-        label: "Piezas",
-        values: [
-          { label: "Piezas", value: task.pieces },
-          { label: "Lote", value: `L${task.lotNumber}` },
-        ],
-      }}
     />
 
   )

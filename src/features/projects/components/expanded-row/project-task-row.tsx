@@ -223,9 +223,11 @@ export function ProjectTaskRow({
       task.workflowSteps,
     ])
 
+  // En mobile sigue exigiendo estar expandida primero (comportamiento
+  // sin cambios). En desktop no hay ese paso de "expandir" — el
+  // long-press queda siempre habilitado directo sobre KanbanCardView.
   const longPressEnabled =
-    isMobile &&
-    expanded
+    isMobile ? expanded : true
 
   const {
     bind,
@@ -272,6 +274,13 @@ export function ProjectTaskRow({
             )
           }
 
+          return
+        }
+
+        // El long-press ya abrió el overlay — el mouseup que sigue
+        // no debería además disparar la navegación normal del
+        // click.
+        if (overlayOpen) {
           return
         }
 
@@ -355,14 +364,13 @@ export function ProjectTaskRow({
         />
       )}
 
-      {isMobile &&
-        expanded && (
-          <ProjectTaskActionsOverlay
-            task={task}
-            visible={overlayOpen}
-            onClose={closeOverlay}
-          />
-        )}
+      {(isMobile ? expanded : true) && (
+        <ProjectTaskActionsOverlay
+          task={task}
+          visible={overlayOpen}
+          onClose={closeOverlay}
+        />
+      )}
 
       {!overlayOpen && (
         <button

@@ -282,7 +282,8 @@ export function ActivityPickerDialog({
           <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
             Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — esto se
             va a guardar en la franja que corresponde a la hora
-            actual, no en esa.
+            actual, no en esa. Si querés, contá abajo por qué se
+            registra recién ahora.
           </p>
 
         )}
@@ -407,7 +408,11 @@ export function ActivityPickerDialog({
                   onChange={event =>
                     setNote(event.target.value)
                   }
-                  placeholder="Detalle opcional..."
+                  placeholder={
+                    activeSlot && activeSlot.shift !== getCurrentShift(new Date())
+                      ? "Ej: se me pasó registrarlo antes..."
+                      : "Detalle opcional..."
+                  }
                   className="min-h-16 min-w-0 flex-1 resize-none bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"
                 />
 

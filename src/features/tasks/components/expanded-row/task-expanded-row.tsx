@@ -1,5 +1,8 @@
 "use client"
 
+import { useState } from "react"
+import { Activity, ClipboardList, MessageSquare } from "lucide-react"
+
 import type {
   Task,
 } from "../../types/task.types"
@@ -8,16 +11,13 @@ import {
   EntityExpandedContent,
   EntityExpandedHeader,
   EntityExpandedRow,
-  EntityExpandedSection,
+  EntityExpandedToggle,
+  EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
 
 import {
-  useContainerWidth,
-} from "@/shared/hooks/use-container-width"
-
-import {
-  cn,
-} from "@/shared/utils/utils"
+  useResponsive,
+} from "@/shared/responsive/hooks/use-responsive"
 
 import {
   TaskKpisSection,
@@ -31,25 +31,49 @@ import {
   TaskCommentsPanel,
 } from "./comments/task-comments-panel"
 
+import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
+
 type Props={
   task:Task
 }
-
-// Debajo de este ancho REAL del contenedor, WORKFLOW OPERATIVO y
-// MENSAJES uno al lado del otro al 50% quedan demasiado angostos
-// (el stepper de pasos y el panel de comentarios necesitan un
-// mínimo de espacio cada uno) — se apilan en columna. No usa
-// isMobile: esta fila puede vivir en contextos angostos aunque el
-// viewport sea "desktop".
-const STACK_BREAKPOINT_PX = 640
 
 export function TaskExpandedRow({
   task,
 }:Props){
 
-  const { ref, width } = useContainerWidth()
+  const { isMobile } = useResponsive()
 
-  const isNarrow = width !== null && width < STACK_BREAKPOINT_PX
+  // Antes Workflow/Mensajes vivían siempre lado a lado (o apilados
+  // en angosto) y KPIs siempre arriba, fijo — ahora las 3 son
+  // opciones de un mismo toggle, igual que ya se hizo en
+  // ProjectExpandedRow.
+  const [
+    activeView,
+    setActiveView,
+  ] = useState<"workflow" | "comments" | "kpis">("workflow")
+
+  const [
+    commentsDialogOpen,
+    setCommentsDialogOpen,
+  ] = useState(false)
+
+  // Mismo criterio que ProjectExpandedRow: en mobile, "Mensajes"
+  // abre el diálogo completo (composer + historial) en vez de
+  // cambiar la vista inline — no entra bien apretado en pantalla
+  // chica. En desktop cambia activeView y muestra TaskCommentsPanel
+  // ahí mismo, como el resto de las opciones.
+  const handleViewChange = (
+    next: "workflow" | "comments" | "kpis",
+  ) => {
+
+    if (isMobile && next === "comments") {
+      setCommentsDialogOpen(true)
+      return
+    }
+
+    setActiveView(next)
+
+  }
 
   return(
 
@@ -64,51 +88,85 @@ export function TaskExpandedRow({
         metricLabel="procesos definidos"
       />
 
-      <TaskKpisSection
-        task={task}
-      />
-
       <EntityExpandedContent>
 
-        <div
-          ref={ref}
-          className={cn(
-            "flex min-h-43.5 gap-4 select-none",
-            isNarrow ? "flex-col" : "flex-row",
-          )}
-        >
+        <div className="mb-2 flex items-center justify-between select-none">
 
-          <div className={isNarrow ? "w-full" : "w-[50%]"}>
-
-            <EntityExpandedSection
-              title="WORKFLOW OPERATIVO"
-            >
-
-              <TaskProductionPanel
-                task={task}
-              />
-
-            </EntityExpandedSection>
-
+          <div className="mb-2 hidden items-center justify-between select-none tablet:flex">
+            <span className="text-xs font-semibold tracking-widest text-neutral-500">
+              {activeView === "workflow"
+                ? "WORKFLOW OPERATIVO"
+                : activeView === "comments"
+                  ? "MENSAJES"
+                  : "INDICADORES"}
+            </span>
           </div>
 
-          <div className={isNarrow ? "w-full" : "w-[50%]"}>
-
-            <EntityExpandedSection
-              title="MENSAJES"
-            >
-
-              <TaskCommentsPanel
-                taskId={task.id}
-              />
-
-            </EntityExpandedSection>
-
-          </div>
+          <EntityExpandedToggle
+            value={activeView}
+            onChange={handleViewChange}
+            fullWidth={isMobile}
+            options={[
+              {
+                value: "workflow",
+                label: "Workflow",
+                icon: ClipboardList,
+              },
+              {
+                value: "comments",
+                label: "Mensajes",
+                icon: MessageSquare,
+              },
+              {
+                value: "kpis",
+                label: "KPIs",
+                icon: Activity,
+              },
+            ]}
+          />
 
         </div>
 
+        <EntityExpandedSlider
+          value={activeView}
+          panels={[
+            {
+              value: "workflow",
+              content: (
+                <TaskProductionPanel
+                  task={task}
+                />
+              ),
+            },
+            {
+              value: "comments",
+              content: (
+                <TaskCommentsPanel
+                  taskId={task.id}
+                />
+              ),
+            },
+            {
+              value: "kpis",
+              content: (
+                <TaskKpisSection
+                  task={task}
+                />
+              ),
+            },
+          ]}
+        />
+
       </EntityExpandedContent>
+
+      {/* Solo relevante en mobile — en desktop activeView ya
+          maneja "Mensajes" mostrando TaskCommentsPanel inline (ver
+          handleViewChange). */}
+      <CommentHistoryDialog
+        target={{ scope: "task", taskId: task.id }}
+        open={commentsDialogOpen}
+        onOpenChange={setCommentsDialogOpen}
+      />
 
     </EntityExpandedRow>
 

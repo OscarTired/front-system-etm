@@ -68,7 +68,7 @@ export function ProcessMiniCard({
         "flex h-full select-none flex-col overflow-hidden rounded-xl p-4",
         isLarge
           ? "justify-center gap-5 p-6"
-          : isMobile ? "gap-3" : "h-28",
+          : isMobile ? "gap-3" : "min-h-43.5",
       )}
       style={{
         background:

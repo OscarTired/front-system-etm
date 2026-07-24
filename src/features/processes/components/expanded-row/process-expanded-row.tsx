@@ -1,6 +1,7 @@
 "use client"
 
-import { Activity } from "lucide-react"
+import { useState } from "react"
+import { Activity, MessageSquare } from "lucide-react"
 
 import type { ProcessTask } from "../../types/process.types"
 
@@ -8,13 +9,12 @@ import {
   EntityExpandedContent,
   EntityExpandedHeader,
   EntityExpandedRow,
-  EntityExpandedSection,
+  EntityExpandedToggle,
+  EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
 
-import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
+import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-
-import { getProcessProgress } from "../../selectors/get-process-progress"
 
 import { ProcessProductionCard } from "./cards/process-production-card"
 import { ProcessMaterialCard } from "./cards/process-material-card"
@@ -28,8 +28,6 @@ import { ProcessCommentsPanel } from "./comments/process-comments-panel"
 type Props={
   processTask:ProcessTask
 }
-
-const PROGRESS_COLOR = "#22C55E"
 
 export function ProcessExpandedRow({
   processTask,
@@ -58,9 +56,6 @@ export function ProcessExpandedRow({
     processCode==="DS"
 
   const cardSize = isMobile ? "large" : "default"
-
-  const { percent, statusLabel } =
-    getProcessProgress(processTask)
 
   const cards: React.ReactNode[] = [
 
@@ -140,6 +135,20 @@ export function ProcessExpandedRow({
 
   ]
 
+  // Sin "tareas" acá (un proceso no tiene sub-tareas propias) — a
+  // diferencia de Project/Task, solo 2 opciones. Si no hay
+  // workflowStepId todavía, Mensajes no tiene sentido (no hay a qué
+  // step engancharlo) y arranca directo en KPIs.
+  //
+  // KPIs queda como default SIEMPRE (no solo cuando falta
+  // workflowStepId) — es la primera opción del toggle acá, a
+  // diferencia de Project/Task donde el default es la vista de
+  // contenido (Tareas/Workflow).
+  const [
+    activeView,
+    setActiveView,
+  ] = useState<"comments" | "kpis">("kpis")
+
   return(
 
     <EntityExpandedRow rowId={processTask.task.id}>
@@ -151,35 +160,61 @@ export function ProcessExpandedRow({
         metricLabel="orden"
       />
 
-      <KpiCarousel
-        cards={cards}
-        defaultExpanded
-        summary={{
-          icon: Activity,
-          color: PROGRESS_COLOR,
-          label: "Progreso",
-          values: [
-            { label: "Avance", value: `${percent}%` },
-            { label: "Estado", value: statusLabel },
-          ],
-        }}
-      />
-
       <EntityExpandedContent>
 
-        {workflowStepId&&(
+        <div className="mb-2 flex items-center justify-between select-none">
 
-          <EntityExpandedSection
-            title="MENSAJES"
-          >
+          <div className="mb-2 hidden items-center justify-between select-none tablet:flex">
+            <span className="text-xs font-semibold tracking-widest text-neutral-500">
+              {activeView === "comments"
+                ? "MENSAJES"
+                : "INDICADORES"}
+            </span>
+          </div>
 
-            <ProcessCommentsPanel
-              workflowStepId={workflowStepId}
-            />
+          <EntityExpandedToggle
+            value={activeView}
+            onChange={setActiveView}
+            fullWidth={isMobile}
+            options={[
+              {
+                value: "kpis" as const,
+                label: "KPIs",
+                icon: Activity,
+              },
+              ...(workflowStepId
+                ? [{
+                    value: "comments" as const,
+                    label: "Mensajes",
+                    icon: MessageSquare,
+                  }]
+                : []),
+            ]}
+          />
 
-          </EntityExpandedSection>
+        </div>
 
-        )}
+        <EntityExpandedSlider
+          value={activeView}
+          panels={[
+            {
+              value: "kpis" as const,
+              content: (
+                <KpiPanel cards={cards} />
+              ),
+            },
+            ...(workflowStepId
+              ? [{
+                  value: "comments" as const,
+                  content: (
+                    <ProcessCommentsPanel
+                      workflowStepId={workflowStepId}
+                    />
+                  ),
+                }]
+              : []),
+          ]}
+        />
 
       </EntityExpandedContent>
 

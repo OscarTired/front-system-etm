@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle,CheckCircle2,ClipboardList,MessageSquare,Puzzle } from "lucide-react"
+import { Activity,AlertTriangle,CheckCircle2,ClipboardList,MessageSquare,Puzzle } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import type { Project } from "../../types/project.types"
@@ -9,7 +9,7 @@ import type { Task } from "@/features/tasks/types/task.types"
 import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
 import { ProcessMiniCard } from "@/shared/ui/mini-card/process-mini-card"
-import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
+import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import {
@@ -17,6 +17,7 @@ import {
   EntityExpandedHeader,
   EntityExpandedRow,
   EntityExpandedToggle,
+  EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
 
 import { ProjectTasksList } from "./project-tasks-list"
@@ -84,7 +85,7 @@ export function ProjectExpandedRow({
   const [
     activeView,
     setActiveView,
-  ] = useState<"tasks" | "comments">("tasks")
+  ] = useState<"tasks" | "comments" | "kpis">("tasks")
 
   const [
     commentsDialogOpen,
@@ -95,8 +96,10 @@ export function ProjectExpandedRow({
   // inline (el panel completo, con composer + historial, no entra
   // bien apretado en pantalla chica). En desktop se queda igual que
   // antes: cambia activeView y muestra ProjectCommentsPanel ahí mismo.
+  // "kpis" no tiene ese problema (no hay composer) — cambia de vista
+  // en ambos breakpoints.
   const handleViewChange = (
-    next: "tasks" | "comments",
+    next: "tasks" | "comments" | "kpis",
   ) => {
 
     if (isMobile && next === "comments") {
@@ -201,24 +204,6 @@ export function ProjectExpandedRow({
         metricLabel="tareas asociadas"
       />
 
-      <KpiCarousel
-        cards={cards}
-        summary={{
-          icon: CheckCircle2,
-          color: "#22C55E",
-          label: "Avance",
-          values: [
-            { label: "Finalizadas", value: completedTasks },
-            {
-              label: "Progreso",
-              value: totalTasks>0
-                ?`${Math.round((completedTasks/totalTasks)*100)}%`
-                :"0%",
-            },
-          ],
-        }}
-      />
-
       <EntityExpandedContent>
 
         <div className="mb-2 flex items-center justify-between select-none">
@@ -227,7 +212,9 @@ export function ProjectExpandedRow({
             <span className="text-xs font-semibold tracking-widest text-neutral-500">
               {activeView === "tasks"
                 ? "TAREAS OPERATIVAS"
-                : "MENSAJES"}
+                : activeView === "comments"
+                  ? "MENSAJES"
+                  : "INDICADORES"}
             </span>
           </div>
 
@@ -247,25 +234,44 @@ export function ProjectExpandedRow({
                 label: "Mensajes",
                 icon: MessageSquare,
               },
+              {
+                value: "kpis",
+                label: "KPIs",
+                icon: Activity,
+              },
             ]}
           />
 
         </div>
 
-        {activeView === "tasks" ? (
-
-          <ProjectTasksList
-            projectId={project.id}
-            tasks={tasks}
-          />
-
-        ) : (
-
-          <ProjectCommentsPanel
-            projectId={project.id}
-          />
-
-        )}
+        <EntityExpandedSlider
+          value={activeView}
+          panels={[
+            {
+              value: "tasks",
+              content: (
+                <ProjectTasksList
+                  projectId={project.id}
+                  tasks={tasks}
+                />
+              ),
+            },
+            {
+              value: "comments",
+              content: (
+                <ProjectCommentsPanel
+                  projectId={project.id}
+                />
+              ),
+            },
+            {
+              value: "kpis",
+              content: (
+                <KpiPanel cards={cards} />
+              ),
+            },
+          ]}
+        />
 
       </EntityExpandedContent>
 
