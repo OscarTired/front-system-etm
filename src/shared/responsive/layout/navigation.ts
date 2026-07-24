@@ -99,12 +99,6 @@ export const NAVIGATION = [
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
       },
-      {
-        label: "Bitácora del Equipo",
-        href: "/bitacora/equipo",
-        icon: NotebookPen,
-        permission: PermissionCode.ACTIVITY_LOG_READ_ANY,
-      },
       // A diferencia del resto: además del permiso (compartido con
       // toda la bitácora), acá se exige también el rol — es la
       // única forma de que este ítem quede oculto para cualquiera
@@ -119,6 +113,12 @@ export const NAVIGATION = [
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
         roles: ["INGENIERIA", "ADMIN"],
+      },
+      {
+        label: "Bitácora del Equipo",
+        href: "/bitacora/equipo",
+        icon: NotebookPen,
+        permission: PermissionCode.ACTIVITY_LOG_READ_ANY,
       },
     ],
   },
