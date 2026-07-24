@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
@@ -9,7 +9,6 @@ import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 
 import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
 import { TaskProcessColumn } from "../../table/task-process-column"
@@ -25,6 +24,9 @@ type Props = {
   activeOverlayKey: string | null
   onOverlayOpenChange: (key: string, isOpen: boolean) => void
 }
+
+const FADE_MIN = 12
+const FADE_MAX = 40
 
 // Mismo mecanismo que la rama desktop de TaskPipelineBoard: un solo
 // contenedor con scroll (useDragScroll) — sin hooks de sync propios,
@@ -59,24 +61,99 @@ export function MobilePipelineCarousel({
     stopDragging,
   } = useDragScroll()
 
-  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
+  // El fade del borde (mask-image) se escribe DIRECTO al DOM, sin
+  // pasar por React state — un intento anterior lo manejaba con
+  // isScrolling+setState en cada evento de scroll, y el re-render
+  // en pleno gesto interrumpía el scroll nativo por touch (se movía
+  // unos pixeles y se trababa). Escribiendo el mask a mano dentro
+  // de un rAF, el scroll nunca dispara un render de React — solo
+  // mutación de estilo, que el compositor puede aplicar sin
+  // interferir con el momentum scroll táctil.
+  const maskRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number | null>(null)
 
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  const updateArrows = useCallback(() => {
+  useLayoutEffect(() => {
 
-    const el = containerRef.current
+    const container = containerRef.current
+    const mask = maskRef.current
 
-    if (!el) {
+    if (!container || !mask) {
       return
     }
 
-    setCanScrollLeft(el.scrollLeft > 4)
+    const applyMask = (leftFade: number, rightFade: number) => {
 
-    setCanScrollRight(
-      el.scrollLeft + el.clientWidth < el.scrollWidth - 4
-    )
+      const value =
+        `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`
+
+      mask.style.maskImage = value
+      mask.style.webkitMaskImage = value
+
+    }
+
+    const update = () => {
+
+      const { scrollLeft, clientWidth, scrollWidth } = container
+
+      const maxScroll = Math.max(scrollWidth - clientWidth, 0)
+
+      if (maxScroll <= 0) {
+        applyMask(0, 0)
+        return
+      }
+
+      const fadeSize = Math.min(
+        Math.max(Math.round(clientWidth * 0.04), FADE_MIN),
+        FADE_MAX,
+      )
+
+      applyMask(
+        Math.min(scrollLeft, fadeSize),
+        Math.min(maxScroll - scrollLeft, fadeSize),
+      )
+
+    }
+
+    const scheduleUpdate = () => {
+
+      if (rafRef.current !== null) {
+        return
+      }
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null
+        update()
+      })
+
+    }
+
+    mask.style.maskRepeat = "no-repeat"
+    mask.style.webkitMaskRepeat = "no-repeat"
+    mask.style.maskSize = "100% 100%"
+    mask.style.webkitMaskSize = "100% 100%"
+
+    update()
+
+    container.addEventListener("scroll", scheduleUpdate, { passive: true })
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate)
+
+    resizeObserver.observe(container)
+
+    return () => {
+
+      container.removeEventListener("scroll", scheduleUpdate)
+
+      resizeObserver.disconnect()
+
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
+      }
+
+    }
 
   }, [containerRef])
 
@@ -86,6 +163,20 @@ export function MobilePipelineCarousel({
 
     if (!el) {
       return
+    }
+
+    function updateArrows() {
+
+      if (!el) {
+        return
+      }
+
+      setCanScrollLeft(el.scrollLeft > 4)
+
+      setCanScrollRight(
+        el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+      )
+
     }
 
     updateArrows()
@@ -103,7 +194,7 @@ export function MobilePipelineCarousel({
 
     }
 
-  }, [updateArrows, containerRef])
+  }, [containerRef])
 
   function scrollToPrevious() {
 
@@ -156,14 +247,7 @@ export function MobilePipelineCarousel({
       </button>
 
       <div
-        style={{
-          WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-          maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-          WebkitMaskRepeat: "no-repeat",
-          maskRepeat: "no-repeat",
-          WebkitMaskSize: "100% 100%",
-          maskSize: "100% 100%",
-        }}
+        ref={maskRef}
         className="overflow-hidden"
       >
 
