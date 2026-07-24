@@ -132,7 +132,10 @@ export function RolePermissionsPageContent() {
       >
         {/* PANEL ROLES */}
         {showRolesPanel && isMobile && (
-          <div className="space-y-3">
+          // pb-28: reserva espacio abajo para que el último rol no
+          // quede tapado por el bottom nav (mismo patrón que
+          // task-pipeline-board.tsx).
+          <div className="space-y-3 pb-28">
             {loadingRoles && <RoleMobileSkeleton />}
 
             {!loadingRoles && filteredRoles.length === 0 && (
@@ -163,7 +166,7 @@ export function RolePermissionsPageContent() {
 
             <ScrollArea
               data-entity-table-scroll
-              className="min-h-0 flex-1 p-1.5"
+              className="min-h-0 min-w-0 flex-1 p-1.5"
             >
               <div className="flex flex-col gap-2.5">
                 {loadingRoles && <RoleDesktopRowSkeleton />}
@@ -192,7 +195,7 @@ export function RolePermissionsPageContent() {
 
         {/* PANEL PERMISOS */}
         {showPermissionsPanel && isMobile && (
-          <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
             <header className="flex shrink-0 items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 {selectedRole && (
@@ -241,12 +244,15 @@ export function RolePermissionsPageContent() {
 
             <ScrollArea
               data-entity-table-scroll
-              className="min-h-0 flex-1 p-1.5"
+              className="min-h-0 min-w-0 flex-1 p-1.5"
             >
               {selectedRole && permissionsLoading && <RolePermissionsSkeleton />}
 
               {selectedRole && !permissionsLoading && (
-                <div className="flex flex-col gap-4">
+                // pb-28: mismo motivo que el panel de ROLES — sin
+                // esto el último grupo de permisos queda tapado por
+                // el bottom nav (regresión de este último commit).
+                <div className="flex flex-col gap-4 pb-28">
                   {grouped.map(([groupKey, groupPermissions]) => (
                     <PermissionGroup
                       key={groupKey}
@@ -315,7 +321,7 @@ export function RolePermissionsPageContent() {
 
                 <ScrollArea
                   data-entity-table-scroll
-                  className="min-h-0 flex-1 p-1.5"
+                  className="min-h-0 min-w-0 flex-1 p-1.5"
                 >
                   {permissionsLoading && <RolePermissionsSkeleton />}
 
