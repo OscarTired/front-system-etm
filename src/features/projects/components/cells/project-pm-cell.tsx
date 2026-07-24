@@ -13,8 +13,8 @@ import {
 } from "@/features/permissions/hooks/use-permissions"
 
 import {
-  useUsers,
-} from "@/features/users/hooks/use-users"
+  useUsersDirectory,
+} from "@/features/users/hooks/use-users-directory"
 
 import {
   useProjectField,
@@ -38,7 +38,7 @@ export function ProjectPmCell({
 
   const{
     users,
-  }=useUsers()
+  }=useUsersDirectory()
 
   const updateField=
     useProjectField()
