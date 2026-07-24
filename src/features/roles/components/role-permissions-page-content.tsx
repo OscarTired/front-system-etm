@@ -242,10 +242,13 @@ export function RolePermissionsPageContent() {
               />
             </header>
 
-            <ScrollArea
-              data-entity-table-scroll
-              className="min-h-0 min-w-0 flex-1 p-1.5"
-            >
+            {/* Plano, sin ScrollArea acá: en mobile el root de la
+                página NO define un alto fijo (fluye con la página,
+                como el panel de ROLES de al lado) — envolver esto en
+                ScrollArea (pensado para el "h-full" de desktop)
+                hacía que calculara un alto ambiguo y recortara su
+                propio viewport, sin importar el pb-28 de adentro. */}
+            <div className="min-h-0 min-w-0 flex-1 p-1.5">
               {selectedRole && permissionsLoading && <RolePermissionsSkeleton />}
 
               {selectedRole && !permissionsLoading && (
@@ -268,9 +271,7 @@ export function RolePermissionsPageContent() {
                   ))}
                 </div>
               )}
-
-              <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
-            </ScrollArea>
+            </div>
           </div>
         )}
 
