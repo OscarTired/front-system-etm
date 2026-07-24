@@ -102,14 +102,6 @@ export function TaskMobileCard({
                 />
               </button>
 
-              {/*
-                Project muestra acá Cliente/Etapa/Estado/PM como 4
-                EntitySelect editables. Task no tiene esos 4 campos
-                propios: Cliente viene del proyecto, Etapa/Estado se
-                derivan de workflowSteps (no son settable directo) —
-                la única celda realmente editable a este nivel es
-                Prioridad, así que es lo único que va acá.
-              */}
               <TaskPriorityCell task={task} triggerVariant="row" rowLabel="Prioridad" />
             </div>
           ) : (
@@ -155,7 +147,7 @@ export function TaskMobileCard({
             </button>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-start gap-1">
             <IconAction
               icon={MoreHorizontal}
               onClick={() =>

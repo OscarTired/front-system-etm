@@ -151,7 +151,7 @@ export function ProjectMobileCard({
             </button>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-start gap-1">
             <IconAction
               icon={MoreHorizontal}
               onClick={() =>
