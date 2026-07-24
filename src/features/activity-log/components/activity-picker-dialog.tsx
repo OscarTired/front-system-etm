@@ -286,7 +286,7 @@ export function ActivityPickerDialog({
 
           <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
             Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — se
-            va a guardar igual en esa franja. Si querés, contá abajo
+            va a guardar igual en esta franja. Si quieres, detalla abajo
             por qué se registra recién ahora.
           </p>
 
