@@ -150,7 +150,7 @@ export function KpiPanel({ cards }: Props) {
 
     return (
 
-      <div className="grid grid-cols-2 gap-4 p-1 laptop:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 laptop:grid-cols-4">
 
         {cards}
 
@@ -165,7 +165,7 @@ export function KpiPanel({ cards }: Props) {
 
   return (
 
-    <div className="relative h-full w-full">
+    <div className="relative w-full">
 
       <button
         type="button"
@@ -206,7 +206,7 @@ export function KpiPanel({ cards }: Props) {
           WebkitMaskSize: "100% 100%",
           maskSize: "100% 100%",
         }}
-        className="h-full overflow-hidden"
+        className="overflow-hidden"
       >
 
         <div
@@ -216,7 +216,7 @@ export function KpiPanel({ cards }: Props) {
           onMouseUp={stopDragging}
           onMouseLeave={stopDragging}
           onClickCapture={handleClickCapture}
-          className="hide-scrollbar flex h-full snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
+          className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
         >
 
           {cards.map((card, index) => (
