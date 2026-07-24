@@ -526,8 +526,8 @@ export function ContextPicker({
                   <SelectOption
                     key={task.id}
                     label={`#${String(task.taskNumber).padStart(3, "0")} · ${task.reference} — ${task.project.projectCode}`}
-                    icon="circle"
-                    color="#64748B"
+                    icon="clipboard"
+                    color={task.project.client.color}
                     selected={task.id === value.taskId}
                     disableCheckAnimation
                     onSelect={() =>
