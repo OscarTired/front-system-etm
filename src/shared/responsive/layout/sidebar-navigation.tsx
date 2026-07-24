@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { NAVIGATION } from "./navigation"
@@ -74,7 +74,7 @@ export function SidebarNavigation({
         </div>
       )}
 
-      {NAVIGATION.map((section, sectionIndex) => {
+      {NAVIGATION.map((section) => {
         const items = section.items.filter(
           item =>
             (!("permission" in item) || has(item.permission)) &&
@@ -87,83 +87,90 @@ export function SidebarNavigation({
         }
 
         return (
-          <Fragment key={section.title}>
-            <SidebarSection
-              title={section.title}
-              collapsed={collapsed}
-              isDrawer={isDrawer}
-            >
-              {items.map(item => {
-                const currentIndex = globalItemIndex++
-                const { isActive, count } = getNavItemMeta({
-                  item,
-                  pathname,
-                  searchParams,
-                  projectsCount,
-                  activeTasksCount,
-                  processCounts,
-                })
+          <SidebarSection
+            key={section.title}
+            title={section.title}
+            collapsed={collapsed}
+            isDrawer={isDrawer}
+          >
+            {items.map(item => {
+              const currentIndex = globalItemIndex++
+              const { isActive, count } = getNavItemMeta({
+                item,
+                pathname,
+                searchParams,
+                projectsCount,
+                activeTasksCount,
+                processCounts,
+              })
 
-                const hasQuery = item.href.includes("?")
+              const hasQuery = item.href.includes("?")
 
-                return (
-                  <div
-                    key={item.href}
-                    className={cn(
-                      "w-full",
-                      isMounting && "animate-gemini-in opacity-0"
-                    )}
-                    style={
-                      isMounting
-                        ? { animationDelay: `${120 + currentIndex * 35}ms` }
+              return (
+                <div
+                  key={item.href}
+                  className={cn(
+                    "w-full",
+                    isMounting && "animate-gemini-in opacity-0"
+                  )}
+                  style={
+                    isMounting
+                      ? { animationDelay: `${120 + currentIndex * 35}ms` }
+                      : undefined
+                  }
+                >
+                  <SidebarItem
+                    collapsed={collapsed}
+                    isDrawer={isDrawer}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isActive}
+                    count={count}
+                    onMouseEnter={
+                      hasQuery
+                        ? () => prefetchOnHover?.(item.href)
                         : undefined
                     }
-                  >
-                    <SidebarItem
-                      collapsed={collapsed}
-                      isDrawer={isDrawer}
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                      active={isActive}
-                      count={count}
-                      onMouseEnter={
-                        hasQuery
-                          ? () => prefetchOnHover?.(item.href)
-                          : undefined
-                      }
-                      onTouchStart={
-                        hasQuery
-                          ? () => prefetchOnHover?.(item.href)
-                          : undefined
-                      }
-                    />
-                  </div>
-                )
-              })}
-            </SidebarSection>
-
-            {sectionIndex === NAVIGATION.length - 1 && (
-              <div
-                className={cn(
-                  "w-full",
-                  isMounting && "animate-gemini-in opacity-0"
-                )}
-                style={
-                  isMounting
-                    ? { animationDelay: `${140 + globalItemIndex * 35}ms` }
-                    : undefined
-                }
-              >
-                <SidebarPresence
-                  collapsed={presenceCollapsed}
-                  presenceRef={presenceRef}
-                />
-              </div>
-            )}
-          </Fragment>
+                    onTouchStart={
+                      hasQuery
+                        ? () => prefetchOnHover?.(item.href)
+                        : undefined
+                    }
+                  />
+                </div>
+              )
+            })}
+          </SidebarSection>
         )
       })}
+
+      {/* Antes esto vivía DENTRO del .map() de arriba, pegado a la
+          última sección de NAVIGATION ("Administración"). Si a un rol
+          le sacaban todos los permisos de esa sección (USER_READ,
+          ROLE_MANAGE, ACTIVITY_TYPE_MANAGE), esa sección quedaba con
+          0 items y el .map() cortaba con `return null` ANTES de
+          llegar a este bloque — haciendo desaparecer "En línea" sin
+          ninguna relación real con permisos de usuarios. Se saca del
+          bucle para que su visibilidad dependa solo de si hay
+          usuarios conectados, nunca de qué secciones de navegación
+          quedaron vacías. */}
+      <div
+        className={cn(
+          "w-full",
+          isMounting && "animate-gemini-in opacity-0"
+        )}
+        style={
+          isMounting
+            ? { animationDelay: `${140 + globalItemIndex * 35}ms` }
+            : undefined
+        }
+      >
+        <SidebarPresence
+          collapsed={presenceCollapsed}
+          presenceRef={presenceRef}
+        />
+      </div>
     </VerticalScroll>
   )
 }
