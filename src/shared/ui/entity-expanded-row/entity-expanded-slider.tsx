@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 
 type Panel<T extends string> = {
   value: T
@@ -40,7 +40,16 @@ export function EntityExpandedSlider<T extends string>({
     () => panels.map(() => 0),
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+
+    // Medición inicial SÍNCRONA (antes de pintar) — sin esto, el
+    // primer render arranca en height:undefined (auto) y recién
+    // unos ms después el ResizeObserver dispara con el número real,
+    // lo que se ve como un salto al montar. Ahora particularmente
+    // notorio en Process, que arranca directo en la pestaña KPIs.
+    setHeights(
+      panelRefs.current.map(el => el?.scrollHeight ?? 0),
+    )
 
     const observers = panelRefs.current.map((el, i) => {
 

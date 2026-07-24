@@ -65,10 +65,10 @@ export function ProcessMiniCard({
 
     <div
       className={cn(
-        "flex h-full select-none flex-col overflow-hidden rounded-xl p-4",
+        "flex h-full select-none flex-col overflow-hidden rounded-xl",
         isLarge
           ? "justify-center gap-5 p-6"
-          : isMobile ? "gap-3" : "min-h-43.5",
+          : isMobile ? "gap-3 p-4" : "min-h-43.5 p-5",
       )}
       style={{
         background:
@@ -220,7 +220,7 @@ export function ProcessMiniCard({
 
       ) : (
 
-        <div className="flex min-w-0 flex-1 gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
 
           {rows.map(
             row=>(
@@ -239,8 +239,8 @@ export function ProcessMiniCard({
                 <div
                   className={
                     row.editable===false
-                      ?"mt-1 text-sm font-semibold leading-tight truncate text-neutral-400"
-                      :"mt-1 text-sm font-bold leading-tight truncate"
+                      ?"mt-1.5 text-lg font-semibold leading-tight truncate text-neutral-400"
+                      :"mt-1.5 text-lg font-bold leading-tight truncate"
                   }
                   style={
                     row.editable===false
@@ -255,7 +255,7 @@ export function ProcessMiniCard({
 
                 {row.secondary && (
 
-                  <p className="mt-0.5 text-xs leading-tight truncate text-neutral-400">
+                  <p className="mt-1 text-xs leading-tight truncate text-neutral-400">
 
                     {row.secondary}
 
