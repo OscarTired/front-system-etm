@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import type { TaskView } from "../actions/task-view-toggle"
 
-const DEFAULT_VIEW: TaskView = "kanban"
+const DEFAULT_VIEW: TaskView = "card"
 
 function isValidView(value: string | null): value is TaskView {
   return value === "card" || value === "kanban" || value === "tabla"
