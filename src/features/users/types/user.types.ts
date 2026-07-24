@@ -16,6 +16,18 @@ export interface UserRole {
 
 }
 
+export interface UserArea {
+
+  id:string
+
+  code:string
+
+  label:string
+
+  processCode:string | null
+
+}
+
 export interface User{
 
   id:string
@@ -49,5 +61,7 @@ export interface User{
   role:UserRole
 
   level:"GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+
+  area:UserArea | null
 
 }
