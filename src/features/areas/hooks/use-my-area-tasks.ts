@@ -50,12 +50,14 @@ function getStoredSupervisorAreas(): ProcessCode[] {
 // Perfil del usuario (Rol + Nivel + Área):
 // - OPERARIO con área fija asignada (User.area) → esa sola, fijo,
 //   no elegible por el usuario.
-// - SUPERVISOR → elige libremente qué área(s) supervisar (guardado
+// - SUPERVISOR o ADMIN → elige libremente qué área(s) ver (guardado
 //   en localStorage, es una preferencia de UI, no un permiso — ver
-//   plan: "configurable por usuario").
-// - Cualquier otro caso (GENERAL, sin área, o rol sin sentido para
-//   esto) → sin áreas, el panel no debería ni mostrarse (ver
-//   hasAreaPanel más abajo).
+//   plan: "configurable por usuario"). Admin entra acá con el mismo
+//   criterio que ya tiene en el resto de la app (ve todo, sin
+//   restricción de área fija).
+// - Cualquier otro caso (GENERAL sin ser Admin, sin área, o rol sin
+//   sentido para esto) → sin áreas, el panel no debería ni
+//   mostrarse (ver hasAreaPanel más abajo).
 export function useMyAreaTasks() {
 
   const user = useAuthStore(state => state.user) as User | null
@@ -79,26 +81,32 @@ export function useMyAreaTasks() {
   const isOperarioWithArea =
     user?.level === "OPERARIO" && !!user.area?.processCode
 
-  const isSupervisor = user?.level === "SUPERVISOR"
+  const isAdmin = user?.role?.code === "ADMIN"
+
+  // Supervisor y Admin comparten el mismo mecanismo de selección
+  // libre — Admin no tiene un "área fija" más que nadie, así que no
+  // tiene sentido darle un comportamiento distinto acá.
+  const canChooseFreely = user?.level === "SUPERVISOR" || isAdmin
 
   const areas: ProcessCode[] =
     isOperarioWithArea
       ? [user!.area!.processCode as ProcessCode]
-      : isSupervisor
+      : canChooseFreely
         ? supervisorAreas
         : []
 
   return {
     areas,
-    // Solo el supervisor puede elegir — el operario ve su área fija,
-    // asignada desde su Perfil, no algo que edite acá.
-    canChooseAreas: isSupervisor,
+    // Solo quien elige libremente puede editar la selección — el
+    // operario ve su área fija, asignada desde su Perfil, no algo
+    // que edite acá.
+    canChooseAreas: canChooseFreely,
     supervisorAreas,
     setSupervisorAreas,
     allAreas: ALL_PROCESS_CODES,
-    // Si no aplica ninguno de los dos casos, ni vale la pena
-    // ofrecer el panel (ver trigger).
-    hasAreaPanel: isOperarioWithArea || isSupervisor,
+    // Si no aplica ninguno de los casos, ni vale la pena ofrecer el
+    // panel (ver trigger).
+    hasAreaPanel: isOperarioWithArea || canChooseFreely,
   }
 
 }
