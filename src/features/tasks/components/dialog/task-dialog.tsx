@@ -119,7 +119,6 @@ export function TaskDialog({
   const{
     form,
     update,
-    reset,
     buildTask,
     canSave,
   }=useTaskForm(
@@ -269,7 +268,11 @@ export function TaskDialog({
         error,
       )
 
-      reset()
+      // No se llama reset() acá a propósito: si el guardado falla
+      // (ej. lote duplicado/menor, error de servidor), el
+      // formulario debe quedar tal cual el usuario lo dejó para que
+      // pueda corregir el campo puntual y reintentar — no perder
+      // todo lo que ya cargó.
 
     }finally{
 

@@ -215,9 +215,9 @@ export function EntitySelect<T extends EntityBase>({
                 className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-white/3 px-3 py-2.5 text-left transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
 
-                {/* Mobile: label a la izquierda, valor a la derecha
-                    (layout original). Desktop: invertido — valor
-                    primero (izquierda), label después (derecha). */}
+                {/* Mobile: label a la izquierda, valor a la derecha.
+                    Desktop: invertido — label primero (izquierda), y el 
+                    valor con el chevrondown a la izquierda de este después. */}
                 {isMobile ? (
                   <>
                     {labelEl}
@@ -225,7 +225,30 @@ export function EntitySelect<T extends EntityBase>({
                   </>
                 ) : (
                   <>
-                    {valueEl}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      {!disabled && (
+                        <ChevronDown
+                          size={14}
+                          className={cn(
+                            "shrink-0 text-neutral-500 transition-transform duration-200",
+                            open && "rotate-180",
+                          )}
+                        />
+                      )}
+                      {RowIcon && (
+                        <RowIcon
+                          size={14}
+                          className="shrink-0"
+                          style={{ color: value?.color ?? "#737373" }}
+                        />
+                      )}
+                      <span
+                        className="truncate text-sm font-semibold"
+                        style={{ color: value?.color ?? "#737373" }}
+                      >
+                        {value?.name ?? placeholder}
+                      </span>
+                    </span>
                     {labelEl}
                   </>
                 )}

@@ -26,6 +26,8 @@ import { UserDesktopRowSkeleton } from "./user-desktop-row-skeleton"
 import { UserForm } from "./form/user-form"
 import { UserDialog } from "./dialog/user-dialog"
 
+import { generateUserDefaultsFromEmail } from "@/features/users/utils/generate-user-defaults-from-email"
+
 import {
   RoleDesktopRow,
   RoleDesktopRowSkeleton,
@@ -567,7 +569,28 @@ export function UsersPageContent() {
                       onUsernameChange={val =>
                         setFormData(c => ({ ...c, username: val }))
                       }
-                      onEmailChange={val => setFormData(c => ({ ...c, email: val }))}
+                      onEmailChange={val => {
+
+                        if (isCreating) {
+
+                          const defaults = generateUserDefaultsFromEmail(val)
+
+                          setFormData(c => ({
+                            ...c,
+                            email: val,
+                            name: defaults.name,
+                            username: defaults.username,
+                            password: defaults.password,
+                            confirmPassword: defaults.confirmPassword,
+                          }))
+
+                        } else {
+
+                          setFormData(c => ({ ...c, email: val }))
+
+                        }
+
+                      }}
                       onPasswordChange={val =>
                         setFormData(c => ({ ...c, password: val }))
                       }

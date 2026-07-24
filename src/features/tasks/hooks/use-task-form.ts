@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useProjects } from "@/features/projects/hooks/use-projects"
+import { useTasks } from "./use-tasks"
 import type { Task, ProcessCode } from "../types/task.types"
 
 export interface TaskFormValue {
@@ -22,6 +23,7 @@ export interface TaskFormValue {
 
 export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
   const { projects = [] } = useProjects()
+  const { tasks = [] } = useTasks()
 
   const [form, setForm] = useState<TaskFormValue>({
     projectId: initialProjectId || initialTask?.project?.id || "",
@@ -57,6 +59,38 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
       deliveryDate: !initialTask && !prev.deliveryDate ? formattedDate : prev.deliveryDate,
     }))
   }, [activeProjectId, projects, initialTask])
+
+  // Sugerencia automática de Lote: al elegir/cambiar de proyecto en
+  // una tarea NUEVA, se propone max(lote de las tareas existentes
+  // de ese proyecto) + 1 — sigue siendo editable, es solo el punto
+  // de partida. Se guarda en un ref qué proyecto ya recibió su
+  // sugerencia para no pisarla de nuevo si el efecto se vuelve a
+  // ejecutar por otro motivo (ej. la lista de tasks se refresca en
+  // segundo plano) sin que la persona haya cambiado de proyecto.
+  const lastSuggestedProjectId = useRef<string | null>(null)
+
+  useEffect(() => {
+
+    if (initialTask) return
+    if (!activeProjectId) return
+    if (lastSuggestedProjectId.current === activeProjectId) return
+
+    lastSuggestedProjectId.current = activeProjectId
+
+    const lotsInProject = tasks
+      .filter(t => t.project.id === activeProjectId)
+      .map(t => t.lotNumber)
+
+    const nextLot = lotsInProject.length > 0
+      ? Math.max(...lotsInProject) + 1
+      : 1
+
+    setForm(prev => ({
+      ...prev,
+      lotNumber: nextLot,
+    }))
+
+  }, [activeProjectId, tasks, initialTask])
 
   const update = (fields: Partial<TaskFormValue>) => {
     setForm((prev) => ({ ...prev, ...fields }))
