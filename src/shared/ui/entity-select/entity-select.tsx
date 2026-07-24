@@ -177,18 +177,6 @@ export function EntitySelect<T extends EntityBase>({
             const valueEl = (
               <span className="flex min-w-0 items-center gap-1.5">
 
-                {!disabled && (
-
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      "shrink-0 text-neutral-500 transition-transform duration-200",
-                      open && "rotate-180",
-                    )}
-                  />
-
-                )}
-
                 {RowIcon && (
                   <RowIcon
                     size={14}
@@ -203,6 +191,18 @@ export function EntitySelect<T extends EntityBase>({
                 >
                   {value?.name ?? placeholder}
                 </span>
+
+                {!disabled && (
+
+                  <ChevronDown
+                    size={14}
+                    className={cn(
+                      "shrink-0 text-neutral-500 transition-transform duration-200",
+                      open && "rotate-180",
+                    )}
+                  />
+
+                )}
 
               </span>
             )
