@@ -13,8 +13,12 @@ import {
 } from "@/features/permissions/hooks/use-permissions"
 
 import {
-  useUsersDirectory,
-} from "@/features/users/hooks/use-users-directory"
+  useUsers,
+} from "@/features/users/hooks/use-users"
+
+import {
+  isProjectManager,
+} from "@/features/users/utils/is-project-manager"
 
 import {
   useProjectField,
@@ -38,7 +42,7 @@ export function ProjectPmCell({
 
   const{
     users,
-  }=useUsersDirectory()
+  }=useUsers()
 
   const updateField=
     useProjectField()
@@ -54,7 +58,7 @@ export function ProjectPmCell({
 
   const pms=
     users.filter(
-      user=>user.role?.code==="PROYECTOS",
+      isProjectManager,
     )
 
   return(

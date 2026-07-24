@@ -29,6 +29,10 @@ import {
 } from "@/features/processes/constants/process-definitions"
 
 import {
+  isProjectManager,
+} from "@/features/users/utils/is-project-manager"
+
+import {
   WORKFLOW_STATUS_DEFINITIONS,
 } from "@/features/workflow/constants/workflow-status-definitions"
 
@@ -199,8 +203,7 @@ export function getFilterOptions({
 
       return users
         .filter(
-          user=>
-            user.role.code==="PROYECTOS",
+          isProjectManager,
         )
         .map(
           item=>({

@@ -68,6 +68,18 @@ export function UserDialogHeader({
   const isProduccion =
     selectedRole?.code === "PRODUCCION"
 
+  // Ingeniería y Proyectos todavía no tienen sub-niveles propios
+  // como Producción (sin Operario, sin Área) — hoy lo único que
+  // necesitan es poder marcar a alguien como Supervisor, para
+  // diferenciar quién puede ser Project Manager (ver
+  // isProjectManager en features/users/utils) de quién no.
+  const isPmDepartment =
+    selectedRole?.code === "INGENIERIA"
+    || selectedRole?.code === "PROYECTOS"
+
+  const showLevelSelect =
+    isProduccion || isPmDepartment
+
   return (
     <div className="rounded-2xl bg-white/2 p-4 tablet:p-5">
       <div className="space-y-4">
@@ -99,10 +111,12 @@ export function UserDialogHeader({
           </div>
         </div>
 
-        {isProduccion && (
+        {showLevelSelect && (
           <div className="w-full tablet:w-[320px]">
             <div className="mb-2 text-xs font-medium text-neutral-500">
-              Sub-nivel en Producción
+              {isProduccion
+                ? "Sub-nivel en Producción"
+                : "Sub-nivel"}
             </div>
 
             <LevelSelect
@@ -110,6 +124,11 @@ export function UserDialogHeader({
                 level === "OPERARIO" || level === "SUPERVISOR"
                   ? level
                   : null
+              }
+              levels={
+                isProduccion
+                  ? undefined
+                  : ["SUPERVISOR"]
               }
               onChange={onLevelChange}
             />

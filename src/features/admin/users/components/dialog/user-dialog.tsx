@@ -419,12 +419,38 @@ export function UserDialog({
           const nextRole =
             roles.find(role => role.id === roleId)
 
+          // Mismo criterio que el backend (assertLevelMatchesRole):
+          // PRODUCCION admite OPERARIO/SUPERVISOR, Ingeniería y
+          // Proyectos admiten solo SUPERVISOR, el resto no admite
+          // sub-nivel. Si el level actual ya no es válido para el
+          // rol nuevo, se limpia (junto con areaId, que solo tiene
+          // sentido para OPERARIO en Producción) — pero si venimos
+          // de PRODUCCION-SUPERVISOR hacia INGENIERIA/PROYECTOS, o
+          // viceversa, el SUPERVISOR se conserva.
+          const allowedLevels: Record<string, ("OPERARIO" | "SUPERVISOR")[]> = {
+            PRODUCCION: ["OPERARIO", "SUPERVISOR"],
+            INGENIERIA: ["SUPERVISOR"],
+            PROYECTOS: ["SUPERVISOR"],
+          }
+
+          const nextAllowed =
+            allowedLevels[nextRole?.code ?? ""] ?? []
+
+          const levelStillValid =
+            form.level != null
+            && (nextAllowed as string[]).includes(form.level)
+
           update({
             roleId,
-            ...(nextRole?.code !== "PRODUCCION" && {
+            ...(!levelStillValid && {
               level: null,
               areaId: null,
             }),
+            ...(levelStillValid
+              && form.level !== "OPERARIO"
+              && {
+                areaId: null,
+              }),
           })
         }}
         onLevelChange={level =>

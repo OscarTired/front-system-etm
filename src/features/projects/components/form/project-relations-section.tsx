@@ -8,7 +8,8 @@ import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { EntitySelect } from "@/shared/ui/entity-select/entity-select"
 import { UserSelect } from "@/features/users/components/user-select"
 
-import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
+import { useUsers } from "@/features/users/hooks/use-users"
+import { isProjectManager } from "@/features/users/utils/is-project-manager"
 import { useClients } from "@/features/clients/hooks/use-clients"
 
 import type { ProjectFormSectionProps } from "./types"
@@ -20,11 +21,9 @@ export function ProjectRelationsSection({
 }: ProjectFormSectionProps) {
 
   const { clients, create, update: updateClient, remove: removeClient } = useClients()
-  const { users } = useUsersDirectory()
+  const { users } = useUsers()
 
-  const pms = users.filter(
-    (u) => u.role?.code === "PROYECTOS"
-  )
+  const pms = users.filter(isProjectManager)
 
   const selectedClient = clients.find((i) => i.id === form.clientId)
   const selectedPm = pms.find((i) => i.id === form.pmId)

@@ -55,19 +55,32 @@ const LEVEL_OPTIONS: {
 type Props = {
   value: Level | null
   placeholder?: string
+  // Subconjunto de niveles a ofrecer. Por defecto los 2 (Producción,
+  // que tiene Operario y Supervisor). Departamentos que solo usan
+  // Supervisor (Ingeniería, Proyectos) pasan ["SUPERVISOR"] acá en
+  // vez de esconder manualmente la opción Operario en cada caller.
+  levels?: Level[]
   onChange: (level: Level | null) => void
 }
 
 export function LevelSelect({
   value,
   placeholder = "Seleccionar sub-nivel",
+  levels,
   onChange,
 }: Props) {
 
   const [open, setOpen] = useState(false)
 
+  const options =
+    levels
+      ? LEVEL_OPTIONS.filter(
+          option => levels.includes(option.value),
+        )
+      : LEVEL_OPTIONS
+
   const selected =
-    LEVEL_OPTIONS.find(
+    options.find(
       option => option.value === value,
     )
 
@@ -102,7 +115,7 @@ export function LevelSelect({
 
             <CommandGroup>
 
-              {LEVEL_OPTIONS.map(option => (
+              {options.map(option => (
 
                 <SelectOption
                   key={option.value}
