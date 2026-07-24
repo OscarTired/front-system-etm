@@ -2,6 +2,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
+import { usePathname } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar-show-button"
@@ -65,6 +66,7 @@ const SIDEBAR_COLLAPSED_WIDTH = 72
 
 function DesktopShell({ children }: Props) {
 
+  const pathname = usePathname()
   const lastVisibleMode = useSidebarStore(state => state.lastVisibleMode)
   const visualState = useSidebarStore(state => state.visualState)
   const notifyContentTransitionEnd = useSidebarStore(
@@ -133,7 +135,7 @@ function DesktopShell({ children }: Props) {
 
         <DesktopTopBar />
 
-        <div className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
 
           {children}
 
@@ -161,6 +163,7 @@ const CLOSE_THRESHOLD_RATIO = 0.6
 const DIRECTION_LOCK_THRESHOLD = 6
 
 function CompactShell({ children }: Props) {
+  const pathname = usePathname()
   const visualState = useMobileNavStore(s => s.visualState)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
   const notifyContentTransitionEnd = useMobileNavStore(s => s.notifyContentTransitionEnd)
@@ -405,6 +408,14 @@ function CompactShell({ children }: Props) {
         <TopBar />
 
         <VerticalScroll
+          // key={pathname}: fuerza un remount completo (DOM nuevo,
+          // scrollTop nuevo en 0) al navegar entre páginas. Sin esto,
+          // el <div> con overflow-y-auto conserva el scrollTop de la
+          // página anterior; si el contenido nuevo es más corto, el
+          // navegador lo "clampea" de golpe al máximo válido apenas
+          // termina de montar — eso es el salto/franja que se ve al
+          // cerrar el drawer y entrar a otra página con scroll medio.
+          key={pathname}
           containerClassName="h-full"
           className="overflow-x-hidden pt-14 pb-20"
           arrowTopOffset={64}

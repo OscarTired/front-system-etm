@@ -36,9 +36,9 @@ export function TopBar() {
 
     <>
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-14 z-10 h-10 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
 
-      <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
+      <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 bg-[#050505]/85 px-3 backdrop-blur-xl">
 
         <button
           type="button"

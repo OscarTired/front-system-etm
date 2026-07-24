@@ -98,6 +98,8 @@
 
 html, body {
   background-color: #050505;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 .dark {
