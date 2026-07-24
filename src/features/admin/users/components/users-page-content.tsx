@@ -53,7 +53,6 @@ export function UsersPageContent() {
   const { isMobile } = useResponsive()
   const { users, loading } = useUsers()
   const { roles, loading: loadingRoles } = useRoles()
-  const { areas } = useAreas()
   const { createUser, updateUser, deleteUser } = useUserMutations()
   const { has } = usePermissions()
 
@@ -116,6 +115,12 @@ export function UsersPageContent() {
     () => users.find(u => u.id === selectedUserId),
     [users, selectedUserId],
   )
+
+  // Gateado: /areas exige MASTER_DATA_READ, que no todos los roles
+  // tienen (ej. Administración) — sin este enabled, cualquiera que
+  // entre a Usuarios dispara esta query enseguida y le sale
+  // "Insufficient permissions" sin haber tocado nada todavía.
+  const { areas } = useAreas(isCreating || !!selectedUser)
 
   useEffect(() => {
     if (isCreating || !selectedUser) return

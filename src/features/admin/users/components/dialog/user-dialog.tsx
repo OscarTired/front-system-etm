@@ -150,7 +150,7 @@ export function UserDialog({
 
   const {
     areas,
-  } = useAreas()
+  } = useAreas(open)
 
   const {
     createUser,
