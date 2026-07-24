@@ -119,7 +119,7 @@ export function VerticalScroll({
   )
 
   return (
-    <div className={cn("relative flex min-h-0 flex-col", containerClassName)}>
+    <div className={cn("relative flex min-h-0 min-w-0 flex-col", containerClassName)}>
       <button
         type="button"
         onClick={scrollUp}

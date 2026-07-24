@@ -355,7 +355,7 @@ function CompactShell({ children }: Props) {
       <div
         ref={contentRef}
         onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-full min-h-0 flex-col overflow-hidden bg-[#050505]"
+        className="relative z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
         style={{
           transform: `translateX(${offset}px)`,
           borderRadius: visualState === "hidden" || visualState === "curve-closing" ? CURVE_SQUARE : CURVE_ROUNDED,
