@@ -80,7 +80,7 @@ export function SheetContent({
         onOpenAutoFocus={event => event.preventDefault()}
         className={cn(
           "fixed inset-y-0 right-0 z-40 flex h-dvh w-full max-w-md flex-col",
-          "border-l border-white/8 bg-[#101012] shadow-2xl outline-none select-none",
+          "bg-[#101012] shadow-2xl outline-none select-none",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           "data-[state=closed]:duration-200 data-[state=open]:duration-300",
@@ -116,7 +116,7 @@ export function SheetHeader({
 
   return (
     <div
-      className={cn("flex shrink-0 flex-col gap-1 border-b border-white/8 px-5 py-4", className)}
+      className={cn("flex shrink-0 flex-col gap-1 px-5 py-4", className)}
       {...props}
     />
   )
