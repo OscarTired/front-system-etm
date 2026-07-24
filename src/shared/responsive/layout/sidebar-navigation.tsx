@@ -41,7 +41,7 @@ export function SidebarNavigation({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { has } = usePermissions()
-  const currentRole = useAuthStore(state => state.user?.role)
+  const currentRole = useAuthStore(state => state.user?.role?.code)
 
   const [isMounting, setIsMounting] = useState(true)
 
