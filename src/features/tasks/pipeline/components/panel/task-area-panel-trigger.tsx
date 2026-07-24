@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { usePathname, useSearchParams } from "next/navigation"
 import { ListChecks } from "lucide-react"
 
 import { useMyAreaTasks } from "../../../../areas/hooks/use-my-area-tasks"
@@ -17,6 +18,27 @@ export function TaskAreaPanelTrigger() {
   const [open, setOpen] = useState(false)
 
   const { hasAreaPanel } = useMyAreaTasks()
+
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Si el panel queda abierto y la ruta cambia, este componente se
+  // desmonta de golpe con el Sheet todavía "abierto" — la limpieza
+  // normal de Radix (bloqueo de scroll del body, animación de
+  // salida, etc.) no llega a correr, y eso es justo lo que se ve
+  // como "el panel que quiere salir" al cambiar de página. Mismo
+  // mecanismo que ya usa SidebarDrawer con closeDrawer(): cerrar
+  // explícito ANTES de que la navegación desmonte el árbol, para
+  // que el cierre pase por su transición normal.
+  useEffect(() => {
+
+    // Reset intencional al cambiar de ruta (ver comentario arriba),
+    // no una derivación de estado que debería vivir en el render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpen(false)
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, searchParams.toString()])
 
   if (!hasAreaPanel) {
     return null
