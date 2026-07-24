@@ -94,7 +94,7 @@ export function ActivityPickerDialog({
   open,
   onOpenChange,
   activeSlot,
-  department,
+  department = "PRODUCCION",
 }: Props) {
 
   const {

@@ -25,7 +25,7 @@ type Props = {
 // franja vacía; cada uno maneja su propia instancia, es liviano y
 // evita pasar estado de la página al contenido y viceversa).
 export function ActivityLogActions({
-  department,
+  department = "PRODUCCION",
 }: Props = {}) {
 
   const [open, setOpen] = useState(false)
