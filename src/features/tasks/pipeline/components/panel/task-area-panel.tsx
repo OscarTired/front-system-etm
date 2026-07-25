@@ -20,6 +20,9 @@ import { getTaskProcesses } from "@/features/tasks/pipeline/utils/get-task-proce
 import { TaskProcessColumn } from "@/features/tasks/pipeline/table/task-process-column"
 import { useMyAreaTasks } from "@/features/areas/hooks/use-my-area-tasks"
 
+import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
+import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
+
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 
 type Props = {
@@ -51,13 +54,31 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
   const [activeOverlayKey, setActiveOverlayKey] = useState<string | null>(null)
   const [configOpen, setConfigOpen] = useState(false)
 
+  // Mismo criterio que el Kanban de Tareas (usePipelineTasks +
+  // HistoryToggleButton en TaskPageContent): por default se
+  // esconden las tareas cuyo workflow está 100% REVIEWED, y el
+  // botón las vuelve a mostrar.
+  const [showHistory, setShowHistory] = useState(false)
+
+  const completedCount = useMemo(
+    () => tasks.filter(task => isWorkflowCompleted(task.workflowSteps)).length,
+    [tasks],
+  )
+
+  const visibleTasks = useMemo(
+    () => showHistory
+      ? tasks
+      : tasks.filter(task => !isWorkflowCompleted(task.workflowSteps)),
+    [tasks, showHistory],
+  )
+
   const columns = useMemo(() => {
 
     const grouped = new Map<ProcessCode, Task[]>(
       areas.map(code => [code, [] as Task[]]),
     )
 
-    for (const task of tasks) {
+    for (const task of visibleTasks) {
 
       const processes = getTaskProcesses(task)
 
@@ -69,7 +90,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
     return grouped
 
-  }, [tasks, areas])
+  }, [visibleTasks, areas])
 
   function handleToggleCard(key: string) {
 
@@ -114,18 +135,28 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
             </div>
 
-            {canChooseAreas && (
+            <div className="flex shrink-0 items-center gap-1">
 
-              <button
-                type="button"
-                onClick={() => setConfigOpen(v => !v)}
-                aria-label="Elegir áreas"
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
-              >
-                <Settings2 size={16} />
-              </button>
+              <HistoryToggleButton
+                count={completedCount}
+                active={showHistory}
+                onClick={() => setShowHistory(value => !value)}
+              />
 
-            )}
+              {canChooseAreas && (
+
+                <button
+                  type="button"
+                  onClick={() => setConfigOpen(v => !v)}
+                  aria-label="Elegir áreas"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <Settings2 size={16} />
+                </button>
+
+              )}
+
+            </div>
 
           </div>
 
@@ -176,7 +207,10 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
         {/* Quitamos contentOnly de TaskProcessColumn para que las tarjetas
             mantengan habilitado por completo su overlay interactivo con las
-            acciones de workflow (iniciar, pausar, completar, etc.). */}
+            acciones de workflow (iniciar, pausar, completar, etc.).
+            fullWidth: acá las columnas van apiladas verticalmente
+            (no una al lado de otra como en el Kanban), así que deben
+            ocupar el ancho completo del panel en vez del w-72 fijo. */}
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
 
           {loading ? (
@@ -221,11 +255,12 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                   <TaskProcessColumn
                     processCode={code}
                     tasks={columns.get(code) ?? []}
-                    allTasks={tasks}
+                    allTasks={visibleTasks}
                     expandedKey={expandedKey}
                     onToggleCard={handleToggleCard}
                     activeOverlayKey={activeOverlayKey}
                     onOverlayOpenChange={handleOverlayOpenChange}
+                    fullWidth
                   />
 
                 </div>

@@ -27,13 +27,17 @@ type ContentProps = SharedProps & {
   onOverlayOpenChange: (key: string, isOpen: boolean) => void
 }
 
-function ColumnHeader({ processCode, tasks }: SharedProps) {
+function ColumnHeader({
+  processCode,
+  tasks,
+  fullWidth,
+}: SharedProps & { fullWidth?: boolean }) {
   const definition = PROCESS_DEFINITIONS[processCode]
   const Icon = ENTITY_ICONS[definition.icon]
   const badge = getBadgeColors(definition.color, "subtle")
 
   return (
-    <div className="w-72 shrink-0">
+    <div className={cn("shrink-0", fullWidth ? "w-full" : "w-72")}>
       <header
         className="flex items-center gap-2 border-b px-3 py-3"
         style={{ borderColor: definition.color }}
@@ -76,7 +80,8 @@ function ColumnContent({
   onToggleCard,
   activeOverlayKey,
   onOverlayOpenChange,
-}: ContentProps) {
+  fullWidth,
+}: ContentProps & { fullWidth?: boolean }) {
   const { isMobile } = useResponsive()
   const columnScrollRef = useColumnScroll()
 
@@ -90,7 +95,7 @@ function ColumnContent({
   return (
     <div className={cn(
       "flex shrink-0 flex-col",
-      isMobile ? "w-full" : "h-full w-72 overflow-hidden",
+      isMobile || fullWidth ? "w-full" : "h-full w-72 overflow-hidden",
     )}>
       <div
         ref={isMobile ? undefined : columnScrollRef}
@@ -188,6 +193,7 @@ type Props = SharedProps & {
   onCreateTask?: () => void
   headerOnly?: boolean
   contentOnly?: boolean
+  fullWidth?: boolean
 }
 
 export function TaskProcessColumn({
@@ -200,9 +206,10 @@ export function TaskProcessColumn({
   onOverlayOpenChange,
   headerOnly = false,
   contentOnly = false,
+  fullWidth = false,
 }: Props) {
   if (headerOnly) {
-    return <ColumnHeader processCode={processCode} tasks={tasks} />
+    return <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
   }
 
   if (contentOnly) {
@@ -215,13 +222,19 @@ export function TaskProcessColumn({
         onToggleCard={onToggleCard}
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={onOverlayOpenChange}
+        fullWidth={fullWidth}
       />
     )
   }
 
   return (
-    <section className="flex h-full min-h-0 w-72 shrink-0 flex-col overflow-hidden">
-      <ColumnHeader processCode={processCode} tasks={tasks} />
+    <section
+      className={cn(
+        "flex h-full min-h-0 shrink-0 flex-col overflow-hidden",
+        fullWidth ? "w-full" : "w-72",
+      )}
+    >
+      <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
       <ColumnContent
         processCode={processCode}
         tasks={tasks}
@@ -230,6 +243,7 @@ export function TaskProcessColumn({
         onToggleCard={onToggleCard}
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={onOverlayOpenChange}
+        fullWidth={fullWidth}
       />
     </section>
   )
