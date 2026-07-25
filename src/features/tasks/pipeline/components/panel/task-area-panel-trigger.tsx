@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { ListChecks } from "lucide-react"
 
 import { useMyAreaTasks } from "../../../../areas/hooks/use-my-area-tasks"
-import { useMyAreaPendingTasksCount } from "../../../../areas/hooks/use-pending-tasks-count"
+import { useMyAreaPendingTasksCount } from "../../../../areas/hooks/use-my-area-pending-tasks-count"
 import { TaskAreaPanel } from "./task-area-panel"
 
 // Vive en el header de Bitácora (al lado de "Registrar") — mismo

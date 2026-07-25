@@ -219,7 +219,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
       }}
     >
 
-      <div className="flex max-w-64 items-center gap-2.5 rounded-xl bg-neutral-900 px-3 py-2.5 ring-1 ring-white/10 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]">
+      <div className="flex max-w-64 items-center gap-2.5 rounded-xl bg-neutral-900 px-3 py-2.5 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]">
 
         {(() => {
           const Icon = getActivityIcon(draggingLog.activityType.icon)
