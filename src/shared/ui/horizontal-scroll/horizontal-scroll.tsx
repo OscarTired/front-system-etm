@@ -17,6 +17,10 @@ import {
   useHorizontalFade,
 } from "../../hooks/use-horizontal-fade"
 
+import {
+  getHorizontalMaskStyle,
+} from "./get-horizontal-mask-style"
+
 type Props =
   PropsWithChildren<{
     className?: string
@@ -50,35 +54,7 @@ export function HorizontalScroll({
       return undefined
     }
 
-    return {
-
-      WebkitMaskImage: `
-        linear-gradient(
-          to right,
-          transparent 0,
-          black ${leftFade}px,
-          black calc(100% - ${rightFade}px),
-          transparent 100%
-        )
-      `,
-
-      maskImage: `
-        linear-gradient(
-          to right,
-          transparent 0,
-          black ${leftFade}px,
-          black calc(100% - ${rightFade}px),
-          transparent 100%
-        )
-      `,
-
-      WebkitMaskRepeat: "no-repeat",
-      maskRepeat: "no-repeat",
-
-      WebkitMaskSize: "100% 100%",
-      maskSize: "100% 100%",
-
-    }
+    return getHorizontalMaskStyle(leftFade, rightFade)
 
   }, [
     fade,
