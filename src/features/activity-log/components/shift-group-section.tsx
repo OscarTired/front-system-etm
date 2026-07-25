@@ -14,7 +14,7 @@ type Props = {
   group: ShiftGroupDefinition
   logsBySlot: Record<string, ActivityLog[]>
   onLogClick: (slot: ShiftSlotDefinition) => void
-  onDeleteLog: (id: string) => void
+  onDeleteLog: (log: ActivityLog) => void
   beginDrag: (e: ReactPointerEvent<HTMLElement>, log: ActivityLog) => void
   registerSlot: (shift: DayShift, el: HTMLElement | null) => void
   draggingLogId: string | null
@@ -22,6 +22,13 @@ type Props = {
   deletingLogId?: string | null
   canCreate: boolean
   canDelete: boolean
+  // Contra qué hora se calcula "¿ya llegó esta franja?" (getSlotState).
+  // Default: ahora mismo, para el día de hoy. Cuando se está viendo
+  // un día PASADO, el caller pasa las 23:59 de ESE día — comparar
+  // las franjas de un día anterior contra la hora actual real no
+  // tiene sentido (diría "todavía no llega" una franja que ya pasó
+  // hace días).
+  referenceNow?: Date
 }
 
 export function ShiftGroupSection({
@@ -36,8 +43,9 @@ export function ShiftGroupSection({
   deletingLogId,
   canCreate,
   canDelete,
+  referenceNow,
 }: Props) {
-  const now = new Date()
+  const now = referenceNow ?? new Date()
 
   // Un solo dialog compartido por todo el grupo — CommentImageDialog
   // es genérico (solo necesita una URL), no depende de comentarios.
@@ -142,7 +150,7 @@ export function ShiftGroupSection({
                 className={cn(
                   "flex flex-col gap-2 rounded-xl p-1.5 -m-1.5 transition-all",
                   hoverShift === slot.shift
-                    ? "duration-150 bg-emerald-500/6 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
+                    ? "duration-150 bg-emerald-500/[0.06] shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
                     : "duration-0",
                 )}
               >
@@ -214,7 +222,7 @@ export function ShiftGroupSection({
                         <button
                           type="button"
                           data-activity-drag-ignore
-                          onClick={() => onDeleteLog(log.id)}
+                          onClick={() => onDeleteLog(log)}
                           disabled={!canDelete || deletingLogId === log.id}
                           aria-label="Eliminar entrada"
                           className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400 focus-visible:opacity-100 disabled:opacity-35 disabled:cursor-not-allowed tablet:opacity-0 tablet:group-hover:opacity-100"

@@ -1,9 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+
+import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+
+import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
+import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
+import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 
 import { useMyActivityLog } from "../hooks/use-my-activity-log"
 import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
@@ -11,17 +17,11 @@ import { useMoveActivityLog } from "../hooks/use-move-activity-log"
 import { useActivityDrag } from "../hooks/use-activity-drag"
 import type { ShiftSlotDefinition } from "../constants/shift-definitions"
 import { SHIFT_GROUPS, getSlotState } from "../constants/shift-definitions"
-import type { ActivityDepartment } from "../types/activity-log.types"
+import type { ActivityDepartment, ActivityLog } from "../types/activity-log.types"
 import { ShiftGroupSection } from "./shift-group-section"
 import { AutoActivitySection } from "./auto-activity-section"
 import { ActivityPickerDialog } from "./activity-picker-dialog"
 import { ActivityLogSkeleton } from "./activity-log-skeleton"
-
-const TODAY_LABEL = new Date().toLocaleDateString("es-PE", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-})
 
 type Props = {
   // Bitácora de Producción (default, con franjas + auto-registro) o
@@ -35,17 +35,34 @@ export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
 
-  const { logs, loading } = useMyActivityLog(department)
+  // Mismo mecanismo de navegación por día que Bitácora del Equipo
+  // (DateNavigator), pero sin selector de usuario — acá siempre es
+  // "yo", no hace falta elegir a quién ver.
+  const [date, setDate] = useState<Date>(new Date())
+
+  const dateISO = toISODateString(date)
+  const isToday = dateISO === toISODateString(new Date())
+
+  // Si es hoy, no se manda `date` al hook — mismo query key "sin
+  // fecha" que usan los hooks de mutación (crear/borrar/mover), que
+  // solo se habilitan viendo el día de hoy. Así el cache de fetch y
+  // el de las mutaciones optimistas apuntan al mismo lugar.
+  const { logs, loading } = useMyActivityLog(department, isToday ? undefined : dateISO)
   const { deleteLog } = useDeleteActivityLog(department)
   const { moveLog } = useMoveActivityLog(department)
 
   const { has } = usePermissions()
-  const canCreate = has(PermissionCode.ACTIVITY_LOG_CREATE)
-  const canDelete = has(PermissionCode.ACTIVITY_LOG_DELETE)
+
+  // Editar/registrar/mover/borrar solo tiene sentido para el día de
+  // HOY — un día pasado es historial. Ver un día anterior nunca
+  // debería permitir tocar sus entradas, ni aunque el permiso lo
+  // habilite en general.
+  const canCreate = isToday && has(PermissionCode.ACTIVITY_LOG_CREATE)
+  const canDelete = isToday && has(PermissionCode.ACTIVITY_LOG_DELETE)
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [activeSlot, setActiveSlot] = useState<ShiftSlotDefinition | null>(null)
-  const [deletingLogId, setDeletingLogId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<ActivityLog | null>(null)
 
   function handleOpenPicker(slot: ShiftSlotDefinition) {
     if (!canCreate) return
@@ -66,6 +83,10 @@ export function ActivityLogPageContent({
 
   function isShiftAvailable(shift: ShiftSlotDefinition["shift"]) {
 
+    if (!isToday) {
+      return false
+    }
+
     const slot = SHIFT_GROUPS
       .flatMap(group => group.slots)
       .find(s => s.shift === shift)
@@ -80,17 +101,29 @@ export function ActivityLogPageContent({
       isShiftAvailable,
     })
 
-  async function handleDeleteLog(id: string) {
+  // Contra qué hora se decide "¿ya llegó esta franja?" en cada
+  // grupo — ver comentario en ShiftGroupSection.referenceNow. Un
+  // día pasado usa las 23:59 de ESE día (todas sus franjas ya
+  // "llegaron" hace tiempo), no la hora real de ahora.
+  const referenceNow = useMemo(
+    () =>
+      isToday
+        ? new Date()
+        : new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59),
+    [isToday, date],
+  )
 
+  function handleDeleteLog(log: ActivityLog) {
     if (!canDelete) return
+    setPendingDelete(log)
+  }
 
-    setDeletingLogId(id)
+  async function handleConfirmDelete() {
 
-    try {
-      await deleteLog(id)
-    } finally {
-      setDeletingLogId(null)
-    }
+    if (!pendingDelete) return
+
+    await deleteLog(pendingDelete.id)
+    setPendingDelete(null)
 
   }
 
@@ -98,15 +131,20 @@ export function ActivityLogPageContent({
 
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
 
-      {/* En desktop esto es redundante con "BITÁCORA..." del
-          header (que ya dice el nombre de la página) — pero en
-          mobile el header queda oculto y el TopBar solo muestra
-          "Bitácora", sin fecha. Esta línea es la única referencia a
-          "qué día es hoy" que le queda a la persona en mobile, así
-          que se mantiene en ambos breakpoints. */}
-      <p className="text-xs capitalize text-neutral-500">
-        {TODAY_LABEL}
-      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white/2 p-4">
+
+        <DateNavigator
+          value={date}
+          onChange={next => setDate(next ?? new Date())}
+          placeholder="Fecha"
+          maxDate={new Date()}
+        />
+
+        <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400">
+          {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+        </div>
+
+      </div>
 
       <div className="flex flex-col gap-3">
 
@@ -146,9 +184,10 @@ export function ActivityLogPageContent({
                   registerSlot={registerSlot}
                   draggingLogId={draggingLogId}
                   hoverShift={hoverShift}
-                  deletingLogId={deletingLogId}
+                  deletingLogId={null}
                   canCreate={canCreate}
                   canDelete={canDelete}
+                  referenceNow={referenceNow}
                 />
 
               )
@@ -174,6 +213,21 @@ export function ActivityLogPageContent({
       />
 
       {overlay}
+
+      <ActionDialog
+        open={!!pendingDelete}
+        title="Eliminar actividad"
+        description={
+          pendingDelete
+            ? `¿Eliminar "${pendingDelete.activityType.label}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        icon={Trash2}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
 
     </div>
 

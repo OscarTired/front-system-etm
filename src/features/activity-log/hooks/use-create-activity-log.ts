@@ -27,7 +27,15 @@ export function useCreateActivityLog(types: ActivityType[], department?: Activit
       if (activityType) {
 
         const optimisticLog: ActivityLog = {
-          id: `optimistic-${Date.now()}`,
+          // crypto.randomUUID() en vez de Date.now(): con el
+          // multiselect del picker se disparan varias creaciones
+          // casi en simultáneo (Promise.all), y Date.now() tiene
+          // resolución de milisegundo — dos o más entradas caían en
+          // el mismo instante y terminaban con el MISMO id optimista,
+          // lo que rompe el key de React (dos hijos con la misma
+          // key) y duplica visualmente las tarjetas hasta que el
+          // servidor confirma.
+          id: `optimistic-${crypto.randomUUID()}`,
           userId: "",
           activityTypeId: dto.activityTypeId,
           projectId: dto.projectId ?? null,

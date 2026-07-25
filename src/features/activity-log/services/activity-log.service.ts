@@ -55,10 +55,13 @@ export const activityLogService = {
     return response.data
   },
 
-  async getMyToday(department?: ActivityDepartment, signal?: AbortSignal) {
+  async getMyToday(department?: ActivityDepartment, date?: string, signal?: AbortSignal) {
     const response = await api.get<ActivityLog[]>("/activity-log/me/today", {
       signal,
-      params: department ? { department } : undefined,
+      params: {
+        ...(department ? { department } : {}),
+        ...(date ? { date } : {}),
+      },
     })
     return response.data
   },

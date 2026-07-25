@@ -116,6 +116,19 @@ export function getMinutesOfDayNow(now: Date): number {
   return now.getHours() * 60 + now.getMinutes()
 }
 
+// Deriva un lookup shift -> "hours" (ej. "08:30 – 11:00") a partir
+// de SHIFT_GROUPS en vez de repetir los textos de las franjas en
+// otro lado — cualquier vista que solo necesite mostrar "en qué
+// franja fue esto" (ej. las cards de Bitácora del Equipo) usa esto,
+// sin tener que recorrer SHIFT_GROUPS a mano ni mantener un segundo
+// mapa de labels en paralelo.
+export const SHIFT_HOURS_LABEL: Record<DayShift, string> =
+  Object.fromEntries(
+    SHIFT_GROUPS.flatMap(
+      group => group.slots.map(slot => [slot.shift, slot.hours]),
+    ),
+  ) as Record<DayShift, string>
+
 // Misma franja que calcula el backend (getShiftForDate) — se
 // duplica acá para el preview optimista y para poder avisarle a la
 // persona, en el picker, si el slot que tocó ya no es la franja

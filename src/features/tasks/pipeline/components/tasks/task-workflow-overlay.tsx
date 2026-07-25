@@ -203,6 +203,40 @@ export function TaskWorkflowOverlay({
 
     )
 
+  // Si el paso "complete" ya tenía estos campos guardados de una
+  // sesión anterior (ej. se llenaron, se cerró el overlay, se
+  // volvió a abrir), WorkflowNumericField los muestra con el check
+  // verde de entrada — pero ese botón queda deshabilitado
+  // (isSaved=true bloquea canSave), así que nunca dispara onSaved()
+  // y savedFields se queda vacío para siempre: el overlay no
+  // avanza al paso de completar aunque todo se vea "listo". Acá se
+  // sincroniza savedFields con lo que el backend ya tiene apenas se
+  // entra al paso "complete" — backCount > 0 es la excepción a
+  // propósito: significa que el usuario tocó "Volver" y quiere
+  // reconfirmar de verdad, no que se autocompleten los checks de
+  // nuevo con el valor viejo.
+  useEffect(() => {
+
+    if (displayVariant !== "complete" || backCount > 0) {
+      return
+    }
+
+    const alreadySaved = numericFields.filter(field => {
+
+      const value = workflowAccess.numericField(processTask, field)
+
+      return value !== null && value !== undefined
+
+    })
+
+    if (alreadySaved.length === 0) {
+      return
+    }
+
+    setSavedFields(prev => new Set([...prev, ...alreadySaved]))
+
+  }, [displayVariant, backCount, numericFields, processTask])
+
   const allFieldsSaved =
     displayVariant === "complete" &&
     numericFields.length > 0 &&

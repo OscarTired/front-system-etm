@@ -52,6 +52,22 @@ export const workflowAccess = {
     return item.workflowStep?.paintKgReal ?? null
   },
 
+  // Accessor genérico por key para los 3 de arriba — evita que
+  // cualquier lugar que necesite "el valor de TAL campo numérico,
+  // sea cual sea" (ej. TaskWorkflowOverlay decidiendo qué campos ya
+  // vienen guardados de antes) tenga que reimplementar el mismo
+  // switch piecesOutput/plRtReal/paintKgReal por su cuenta.
+  numericField(
+    item: ProcessTask,
+    field: "piecesOutput" | "plRtReal" | "paintKgReal",
+  ) {
+    return field === "piecesOutput"
+      ? this.piecesOutput(item)
+      : field === "plRtReal"
+        ? this.plRtReal(item)
+        : this.paintKgReal(item)
+  },
+
   startedAt(item: ProcessTask) {
     return item.workflowStep?.startedAt ?? null
   },

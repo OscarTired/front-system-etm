@@ -45,11 +45,7 @@ export function WorkflowNumericField({
   const stepId = workflowAccess.stepId(processTask)
 
   const savedValue =
-    field === "piecesOutput"
-      ? workflowAccess.piecesOutput(processTask)
-      : field === "plRtReal"
-        ? workflowAccess.plRtReal(processTask)
-        : workflowAccess.paintKgReal(processTask)
+    workflowAccess.numericField(processTask, field)
 
   const [draft, setDraft] = useState(
     forceEmpty || savedValue === null || savedValue === undefined

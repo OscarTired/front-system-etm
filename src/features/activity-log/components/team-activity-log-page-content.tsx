@@ -11,6 +11,7 @@ import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
 import { getActivityIcon } from "../constants/activity-icons"
+import { SHIFT_HOURS_LABEL } from "../constants/shift-definitions"
 import { useTeamActivityLog } from "../hooks/use-team-activity-log"
 import { TeamActivityLogSkeleton } from "./team-activity-log-skeleton"
 
@@ -50,12 +51,22 @@ function ActivityLogCard({
               {log.user?.name ?? "—"}
             </span>
 
-            <span className="text-xs text-neutral-500">
-              {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+
+              {log.shift && (
+                <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                  {SHIFT_HOURS_LABEL[log.shift]}
+                </span>
+              )}
+
+              <span className="text-xs text-neutral-500">
+                {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+
+            </div>
           </div>
 
           <p className="mt-1 text-sm text-neutral-300">

@@ -156,7 +156,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
               <SheetDescription>
                 {areas.length > 0
                   ? areas.map(code => PROCESS_DEFINITIONS[code].label).join(" · ")
-                  : "Elegí qué área(s) supervisar"}
+                  : "Selecciona qué área(s) supervisar"}
               </SheetDescription>
 
             </div>
@@ -248,7 +248,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
           ) : areas.length === 0 ? (
 
             <div className="flex h-24 items-center justify-center text-center text-sm text-neutral-500">
-              Elegí al menos un área con el botón de arriba
+              Selecciona al menos un área con el botón de arriba
               para ver sus tareas acá.
             </div>
 
