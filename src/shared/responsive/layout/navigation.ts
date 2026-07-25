@@ -88,7 +88,7 @@ export const NAVIGATION = [
     title: "Bitácoras",
     items: [
       {
-        label: "Bitácora Personal",
+        label: "Bitácora de Producción",
         href: "/bitacora",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
@@ -106,6 +106,7 @@ export const NAVIGATION = [
         href: "/bitacora/equipo",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ_ANY,
+        roles: ["PROYECTOS", "ADMIN"],
       },
     ],
   },

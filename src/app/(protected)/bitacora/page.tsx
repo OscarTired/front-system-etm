@@ -10,7 +10,7 @@ import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel
 
 export default function BitacoraPage() {
 
-  usePageTitle("Bitácora")
+  usePageTitle("Bitácora de Producción")
 
   return (
 
@@ -21,13 +21,13 @@ export default function BitacoraPage() {
         <div className="hidden min-w-0 flex-1 items-center gap-2 tablet:flex">
 
           <h1 className="shrink-0 text-xl font-bold tracking-widest tablet:text-2xl">
-            BITÁCORA
+            BITÁCORA DE PRODUCCIÓN
           </h1>
 
           <span className="hidden h-1 w-1 shrink-0 rounded-full bg-neutral-700 tablet:block" />
 
           <p className="min-w-0 truncate text-sm text-neutral-500">
-            Qué hiciste hoy, por franja horaria
+            Qué hiciste hoy
           </p>
 
         </div>

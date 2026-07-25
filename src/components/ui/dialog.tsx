@@ -154,6 +154,7 @@ export function DialogContent({
           "-translate-x-1/2",
           "-translate-y-1/2",
           "overflow-y-auto",
+          "hide-scrollbar",
           "overscroll-contain",
           "rounded-2xl",
           "bg-[#101012]",

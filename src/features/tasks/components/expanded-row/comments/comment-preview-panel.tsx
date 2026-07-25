@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 export function CommentPreviewPanel() {
 
   return (
@@ -25,7 +27,7 @@ export function CommentPreviewPanel() {
 
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+      <ScrollArea className="min-h-0 flex-1 px-3 pb-3">
 
         <div className="flex h-full items-center justify-center">
 
@@ -41,7 +43,7 @@ export function CommentPreviewPanel() {
 
         </div>
 
-      </div>
+      </ScrollArea>
 
     </div>
 

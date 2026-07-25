@@ -107,9 +107,9 @@ export function ActivityPickerDialog({
   } = useCreateActivityLog(types, department)
 
   const [
-    selectedTypeId,
-    setSelectedTypeId,
-  ] = useState<string | null>(null)
+    selectedTypeIds,
+    setSelectedTypeIds,
+  ] = useState<string[]>([])
 
   const [
     note,
@@ -165,9 +165,15 @@ export function ActivityPickerDialog({
   const primaryTypes = types.filter(type => type.pinned)
   const otherTypes = types.filter(type => !type.pinned)
 
-  const selectedOtherType = otherTypes.find(
-    type => type.id === selectedTypeId,
+  const selectedOtherTypes = otherTypes.filter(
+    type => selectedTypeIds.includes(type.id),
   )
+
+  // Solo se usa para el ícono/color del botón "Otros" cuando hay
+  // exactamente uno elegido de ahí — con más de uno se muestra un
+  // contador en vez de un ícono puntual (ver botón más abajo).
+  const selectedOtherType =
+    selectedOtherTypes.length === 1 ? selectedOtherTypes[0] : undefined
 
   // Genera/limpia la preview local de la foto
   useEffect(() => {
@@ -184,7 +190,7 @@ export function ActivityPickerDialog({
 
   function handleClose() {
 
-    setSelectedTypeId(null)
+    setSelectedTypeIds([])
     setNote("")
     setContext(EMPTY_CONTEXT)
     setSubmitAttempted(false)
@@ -197,7 +203,7 @@ export function ActivityPickerDialog({
   }
 
   const canSave =
-    !!selectedTypeId && !!context.projectId
+    selectedTypeIds.length > 0 && !!context.projectId
 
   const errors = {
 
@@ -213,13 +219,11 @@ export function ActivityPickerDialog({
 
   function handleSelectType(typeId: string) {
 
-    const isDeselecting = selectedTypeId === typeId
-
-    setSelectedTypeId(isDeselecting ? null : typeId)
-
-    if (!isDeselecting) {
-      setOtherTypesOpen(false)
-    }
+    setSelectedTypeIds(prev =>
+      prev.includes(typeId)
+        ? prev.filter(id => id !== typeId)
+        : [...prev, typeId],
+    )
 
   }
 
@@ -244,22 +248,26 @@ export function ActivityPickerDialog({
       ? await fileToBase64(photo).catch(() => undefined)
       : undefined
 
-    await createLog({
-      activityTypeId: selectedTypeId!,
-      projectId: context.projectId,
-      taskId:
-        context.taskId || undefined,
-      // La franja que la persona tocó a mano — se respeta tal cual
-      // aunque ya haya pasado (se olvidó y lo registra tarde). Sin
-      // esto, el backend recalculaba la franja por la hora real y
-      // el registro terminaba en la franja equivocada.
-      shift: activeSlot?.shift,
-      note:
-        note.trim() || undefined,
-      photoBase64,
-    }).catch(() => {
+    await Promise.all(
+      selectedTypeIds.map(activityTypeId =>
+        createLog({
+          activityTypeId,
+          projectId: context.projectId,
+          taskId:
+            context.taskId || undefined,
+          // La franja que la persona tocó a mano — se respeta tal cual
+          // aunque ya haya pasado (se olvidó y lo registra tarde). Sin
+          // esto, el backend recalculaba la franja por la hora real y
+          // el registro terminaba en la franja equivocada.
+          shift: activeSlot?.shift,
+          note:
+            note.trim() || undefined,
+          photoBase64,
+        }),
+      ),
+    ).catch(() => {
       // El rollback (si falla de verdad)
-      // ya lo maneja useCreateActivityLog.
+      // ya lo maneja useCreateActivityLog, por cada mutación.
     })
 
     handleClose()
@@ -272,9 +280,9 @@ export function ActivityPickerDialog({
       open={open}
       title="¿Qué estás haciendo?"
       icon={Search}
-      canSave={!!selectedTypeId}
+      canSave={canSave}
       saving={creating}
-      saveLabel="Registrar"
+      saveLabel={selectedTypeIds.length > 1 ? `Registrar (${selectedTypeIds.length})` : "Registrar"}
       savingLabel="Guardando..."
       onClose={handleClose}
       onSave={handleSubmit}
@@ -458,25 +466,27 @@ export function ActivityPickerDialog({
               getActivityIcon(type.icon)
 
             const isSelected =
-              selectedTypeId === type.id
+              selectedTypeIds.includes(type.id)
 
             return (
 
               <button
                 key={type.id}
                 type="button"
-                onClick={() =>
-                  setSelectedTypeId(prev =>
-                    prev === type.id ? null : type.id,
-                  )
-                }
+                onClick={() => handleSelectType(type.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                  "relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                   isSelected
                     ? "bg-white/12"
                     : "bg-white/4 hover:bg-white/8",
                 )}
               >
+
+                {isSelected && (
+                  <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-black">
+                    ✓
+                  </span>
+                )}
 
                 <div
                   className="flex size-9 items-center justify-center rounded-full"
@@ -510,12 +520,18 @@ export function ActivityPickerDialog({
                 <button
                   type="button"
                   className={cn(
-                    "flex w-full flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
-                    selectedOtherType || otherTypesOpen
+                    "relative flex w-full flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                    selectedOtherTypes.length > 0 || otherTypesOpen
                       ? "bg-white/12"
                       : "bg-white/4 hover:bg-white/8",
                   )}
                 >
+
+                  {selectedOtherTypes.length > 1 && (
+                    <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-black">
+                      {selectedOtherTypes.length}
+                    </span>
+                  )}
 
                   <div
                     className="flex size-9 items-center justify-center rounded-full"
@@ -539,7 +555,11 @@ export function ActivityPickerDialog({
                   </div>
 
                   <span className="truncate text-[11px] font-medium leading-tight text-neutral-300">
-                    {selectedOtherType ? selectedOtherType.label : "Otros"}
+                    {selectedOtherType
+                      ? selectedOtherType.label
+                      : selectedOtherTypes.length > 1
+                        ? "Varios"
+                        : "Otros"}
                   </span>
 
                 </button>
@@ -562,7 +582,7 @@ export function ActivityPickerDialog({
                 <div className="grid grid-cols-3 gap-2">
                   {otherTypes.map(type => {
                     const Icon = getActivityIcon(type.icon)
-                    const isSelected = selectedTypeId === type.id
+                    const isSelected = selectedTypeIds.includes(type.id)
 
                     return (
                       <button
@@ -570,12 +590,17 @@ export function ActivityPickerDialog({
                         type="button"
                         onClick={() => handleSelectType(type.id)}
                         className={cn(
-                          "flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors",
+                          "relative flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors",
                           isSelected
                             ? "bg-white/12"
                             : "bg-white/4 hover:bg-white/8",
                         )}
                       >
+                        {isSelected && (
+                          <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-black">
+                            ✓
+                          </span>
+                        )}
                         <div
                           className="flex size-8 items-center justify-center rounded-full"
                           style={{

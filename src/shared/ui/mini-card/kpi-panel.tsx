@@ -122,7 +122,10 @@ export function KpiPanel({ cards }: Props) {
 
   if (!isMobile) {
     return (
-      <div className="grid grid-cols-2 gap-4 laptop:grid-cols-4">
+      <div
+        className="grid gap-4"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))" }}
+      >
         {cards}
       </div>
     )

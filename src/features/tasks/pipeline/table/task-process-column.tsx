@@ -98,11 +98,11 @@ function ColumnContent({
       isMobile || fullWidth ? "w-full" : "h-full w-72 overflow-hidden",
     )}>
       <div
-        ref={isMobile ? undefined : columnScrollRef}
+        ref={isMobile || fullWidth ? undefined : columnScrollRef}
         style={isMobile ? undefined : { touchAction: "pan-y" }}
         className={cn(
           "hide-scrollbar overflow-x-hidden px-2 py-2",
-          isMobile
+          isMobile || fullWidth
             ? ""
             : "min-h-0 flex-1 overflow-y-auto overscroll-contain cursor-grab active:cursor-grabbing",
         )}

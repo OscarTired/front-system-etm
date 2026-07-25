@@ -31,7 +31,7 @@ export default function TeamBitacoraPage() {
           <span className="hidden h-1 w-1 shrink-0 rounded-full bg-neutral-700 tablet:block" />
 
           <p className="min-w-0 truncate text-sm text-neutral-500">
-            Qué hizo cada persona, por día
+            Qué hizo cada persona
           </p>
 
         </div>

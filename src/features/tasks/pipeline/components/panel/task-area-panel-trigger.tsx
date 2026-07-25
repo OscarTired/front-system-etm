@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { ListChecks } from "lucide-react"
 
 import { useMyAreaTasks } from "../../../../areas/hooks/use-my-area-tasks"
+import { useMyAreaPendingTasksCount } from "../../../../areas/hooks/use-pending-tasks-count"
 import { TaskAreaPanel } from "./task-area-panel"
 
 // Vive en el header de Bitácora (al lado de "Registrar") — mismo
@@ -18,6 +19,7 @@ export function TaskAreaPanelTrigger() {
   const [open, setOpen] = useState(false)
 
   const { hasAreaPanel } = useMyAreaTasks()
+  const pendingCount = useMyAreaPendingTasksCount()
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -58,6 +60,14 @@ export function TaskAreaPanelTrigger() {
         <ListChecks size={16} />
 
         Mis tareas
+
+        {pendingCount > 0 && (
+
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-white/10 px-1 text-[10px] font-bold text-white/80">
+            {pendingCount}
+          </span>
+
+        )}
 
       </button>
 

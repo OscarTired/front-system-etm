@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { Trash2 } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { useComments } from "../hooks/use-comments"
 import { useDeleteComment } from "../hooks/use-delete-comment"
@@ -103,7 +104,7 @@ export function CommentTimeline({
           Ajustar max-h-32 si CommentItem cambia de alto (ej: texto
           de 2 líneas más seguido) — ver CommentList/CommentItem.
         */}
-        <div className="max-h-32 overflow-y-auto px-3 pb-3">
+        <ScrollArea className="max-h-32 px-3 pb-3">
           {loading?(
             <div className="flex h-full items-center justify-center">
               <p className="text-sm text-neutral-500">
@@ -119,7 +120,7 @@ export function CommentTimeline({
               onDelete={setPendingDelete}
             />
           )}
-        </div>
+        </ScrollArea>
         <CommentHistoryDialog
           target={target}
           open={historyOpen}

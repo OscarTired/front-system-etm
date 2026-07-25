@@ -6,6 +6,7 @@ import type {
   ActivityType,
   CreateActivityLogDto,
   CreateActivityTypeDto,
+  DayShift,
   UpdateActivityTypeDto,
 } from "../types/activity-log.types"
 
@@ -43,6 +44,15 @@ export const activityLogService = {
 
   async remove(id: string) {
     await api.delete(`/activity-log/${id}`)
+  },
+
+  // Mueve una entrada a otra franja — usado por el drag & drop de
+  // ShiftGroupSection. Único campo editable hoy (ver
+  // UpdateActivityLogDto en el backend): activityType/project/note
+  // siguen siendo "borrar y volver a crear" a propósito.
+  async updateShift(id: string, shift: DayShift) {
+    const response = await api.patch<ActivityLog>(`/activity-log/${id}`, { shift })
+    return response.data
   },
 
   async getMyToday(department?: ActivityDepartment, signal?: AbortSignal) {

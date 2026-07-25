@@ -33,7 +33,7 @@ export default function BitacoraIngenieriaPage() {
           <span className="hidden h-1 w-1 shrink-0 rounded-full bg-neutral-700 tablet:block" />
 
           <p className="min-w-0 truncate text-sm text-neutral-500">
-            Qué hiciste hoy, por franja horaria
+            Qué hiciste hoy
           </p>
 
         </div>

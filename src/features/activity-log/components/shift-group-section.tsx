@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { Trash2, Image as ImageIcon, Plus } from "lucide-react"
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
@@ -8,13 +8,17 @@ import { cn } from "@/shared/utils/utils"
 import { CommentImageDialog } from "@/features/comments/components/comment-image-dialog"
 
 import type { ShiftGroupDefinition, ShiftSlotDefinition } from "../constants/shift-definitions"
-import type { ActivityLog } from "../types/activity-log.types"
+import type { ActivityLog, DayShift } from "../types/activity-log.types"
 
 type Props = {
   group: ShiftGroupDefinition
   logsBySlot: Record<string, ActivityLog[]>
   onLogClick: (slot: ShiftSlotDefinition) => void
   onDeleteLog: (id: string) => void
+  beginDrag: (e: ReactPointerEvent<HTMLElement>, log: ActivityLog) => void
+  registerSlot: (shift: DayShift, el: HTMLElement | null) => void
+  draggingLogId: string | null
+  hoverShift: DayShift | null
   deletingLogId?: string | null
   canCreate: boolean
   canDelete: boolean
@@ -25,6 +29,10 @@ export function ShiftGroupSection({
   logsBySlot,
   onLogClick,
   onDeleteLog,
+  beginDrag,
+  registerSlot,
+  draggingLogId,
+  hoverShift,
   deletingLogId,
   canCreate,
   canDelete,
@@ -34,6 +42,30 @@ export function ShiftGroupSection({
   // Un solo dialog compartido por todo el grupo — CommentImageDialog
   // es genérico (solo necesita una URL), no depende de comentarios.
   const [openPhotoUrl, setOpenPhotoUrl] = useState<string | null>(null)
+
+  // Un callback de ref estable POR slot (no uno nuevo en cada
+  // render): "ref={(el) => registerSlot(slot.shift, el)}" inline
+  // crea una función distinta en cada render, y como hoverShift
+  // cambia en cada pointermove durante el drag, este componente se
+  // re-renderiza todo el tiempo — con un callback nuevo cada vez,
+  // React desregistra (llama con null) y vuelve a registrar TODOS
+  // los refs de slot en cada uno de esos renders, no solo el que
+  // está bajo el puntero. Cacheando un callback por shift, React ve
+  // la misma función entre renders y no la vuelve a disparar.
+  const slotRefCallbacks = useRef<Map<DayShift, (el: HTMLElement | null) => void>>(new Map())
+
+  const getSlotRefCallback = useCallback((shift: DayShift) => {
+
+    let callback = slotRefCallbacks.current.get(shift)
+
+    if (!callback) {
+      callback = (el: HTMLElement | null) => registerSlot(shift, el)
+      slotRefCallbacks.current.set(shift, callback)
+    }
+
+    return callback
+
+  }, [registerSlot])
 
   // El grupo entero se ve "apagado" solo si TODAS sus sub-franjas
   // todavía no llegan (ej. es de mañana y falta para las 8:30) —
@@ -101,15 +133,37 @@ export function ShiftGroupSection({
                 )}
               </div>
 
-              {/* Lista de registros */}
-              <div className="flex flex-col gap-2">
+              {/* Lista de registros — drop zone: solo franjas ya
+                  activas (no "upcoming") aceptan una tarjeta
+                  arrastrada; registerSlot le da al hook de drag el
+                  elemento DOM contra el que chequea el puntero. */}
+              <div
+                ref={getSlotRefCallback(slot.shift)}
+                className={cn(
+                  "flex flex-col gap-2 rounded-xl p-1.5 -m-1.5 transition-all",
+                  hoverShift === slot.shift
+                    ? "duration-150 bg-emerald-500/[0.06] shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
+                    : "duration-0",
+                )}
+              >
                 {logs.map((log) => {
                   const LogIcon = getActivityIcon(log.activityType.icon)
+                  const isManual = log.source === "MANUAL"
+                  const isDraggingThis = draggingLogId === log.id
 
                   return (
                     <div
                       key={log.id}
-                      className="group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5"
+                      onPointerDown={(e) => {
+                        if (!isManual || !canCreate) return
+                        if ((e.target as HTMLElement).closest("[data-activity-drag-ignore]")) return
+                        beginDrag(e, log)
+                      }}
+                      className={cn(
+                        "group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
+                        isManual && canCreate && "cursor-grab touch-none active:cursor-grabbing",
+                        isDraggingThis && "opacity-40",
+                      )}
                     >
                       <div
                         className="flex size-8 shrink-0 items-center justify-center rounded-full"
@@ -139,6 +193,7 @@ export function ShiftGroupSection({
                         {log.photoUrl && (
                           <button
                             type="button"
+                            data-activity-drag-ignore
                             onClick={() => setOpenPhotoUrl(log.photoUrl)}
                             className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
                           >
@@ -158,6 +213,7 @@ export function ShiftGroupSection({
 
                         <button
                           type="button"
+                          data-activity-drag-ignore
                           onClick={() => onDeleteLog(log.id)}
                           disabled={!canDelete || deletingLogId === log.id}
                           aria-label="Eliminar entrada"

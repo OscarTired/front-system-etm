@@ -163,12 +163,29 @@ export function ProcessMiniCard({
           )}
         </div>
       ) : (
-        <div className="flex min-w-0 flex-1 items-center gap-4">
+        // grid + auto-fit/minmax en vez de flex-1 a partes iguales:
+        // con flex-1, 3 renglones SIEMPRE se dividen en 3 franjas
+        // iguales sin importar cuánto ancho real haya, así que en
+        // una card angosta con 3 renglones cada uno queda apretado
+        // aunque la pantalla sea enorme (el resto del ancho lo
+        // absorben las OTRAS cards del grid de 4 columnas, no esta).
+        // Con auto-fit, cada renglón pide un mínimo (minmax) y el
+        // browser decide solo cuántos entran por línea: si hay
+        // espacio de sobra, todos caben en una fila y crecen para
+        // llenarlo (sin truncar); si no alcanza, el que no entra
+        // pasa a una segunda línea en vez de comprimirse a la
+        // fuerza. Se sacan los divisores border-l porque con wrap
+        // ya no hay un "primero de la fila" fijo — un borde
+        // colgando al inicio de la segunda línea se vería roto.
+        <div
+          className="grid min-w-0 flex-1 content-center gap-x-4 gap-y-2.5"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(6.5rem, 1fr))" }}
+        >
           {rows.map(
             row => (
               <div
                 key={row.label}
-                className="min-w-0 flex-1 border-l border-white/10 pl-3 first:border-l-0 first:pl-0"
+                className="min-w-0"
               >
                 <p className="text-xs font-bold uppercase truncate tracking-[0.16em] text-neutral-500">
                   {row.label}

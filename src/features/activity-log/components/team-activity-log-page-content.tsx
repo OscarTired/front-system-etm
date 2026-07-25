@@ -6,7 +6,7 @@ import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 
-import { DatePicker } from "@/shared/ui/date-picker/components/date-picker"
+import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
@@ -149,10 +149,11 @@ export function TeamActivityLogPageContent() {
           />
         </div>
 
-        <DatePicker
+        <DateNavigator
           value={date}
           onChange={setDate}
           placeholder="Fecha"
+          maxDate={new Date()}
         />
 
         <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400">

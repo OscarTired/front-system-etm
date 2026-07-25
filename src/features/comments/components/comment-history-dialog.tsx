@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Search, Trash2 } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import {
   Dialog,
@@ -117,7 +118,7 @@ export function CommentHistoryDialog({
           onInteractOutside={preventNestedDialogClose}
         >
 
-          <DialogHeader className="border-b border-white/5 px-4 py-3.5">
+          <DialogHeader className="px-4 py-3.5">
             <DialogTitle className="text-sm font-semibold text-neutral-200">
               Historial
             </DialogTitle>
@@ -126,7 +127,7 @@ export function CommentHistoryDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="border-b border-white/5 px-4 py-2.5">
+          <div className="px-4 py-2.5">
             <CommentComposer
               target={target}
               editingComment={editingComment}
@@ -134,7 +135,7 @@ export function CommentHistoryDialog({
             />
           </div>
 
-          <div className="border-b border-white/5 px-4 py-2.5">
+          <div className="px-4 py-2.5">
 
             <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
               <Search size={15} className="shrink-0 text-neutral-500" />
@@ -148,7 +149,7 @@ export function CommentHistoryDialog({
 
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+          <ScrollArea className="min-h-0 flex-1 px-4 py-3">
 
             {loading ? (
               <div className="flex h-full items-center justify-center">
@@ -164,7 +165,7 @@ export function CommentHistoryDialog({
               />
             )}
 
-          </div>
+          </ScrollArea>
 
         </DialogContent>
 
