@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 function ScrollArea({
   className,
   children,
-  scrollHideDelay = 1000, // Aumentamos el tiempo de espera por defecto (1 segundo) para que no desaparezca rápido
+  scrollHideDelay = 1000,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   scrollHideDelay?: number
@@ -16,7 +16,7 @@ function ScrollArea({
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      type="hover"
+      type="scroll"
       scrollHideDelay={scrollHideDelay}
       className={cn("relative overflow-hidden", className)}
       {...props}
@@ -44,11 +44,11 @@ function ScrollBar({
       data-orientation={orientation}
       orientation={orientation}
       className={cn(
-        // Transición fluida general para el contenedor del scrollbar
-        "absolute flex touch-none select-none transition-all duration-500 ease-out p-0.5",
-        // Desaparición con un desvanecimiento más suave
-        "data-[state=hidden]:opacity-0 data-[state=hidden]:pointer-events-none data-[state=hidden]:scale-95",
-        "data-[state=visible]:opacity-100 data-[state=visible]:scale-100",
+        // Duración reducida a 200ms para que reaccione al instante sin sentirse lento
+        "absolute flex touch-none select-none transition-opacity duration-200 ease-out p-0.5",
+        // Desaparición limpia y rápida sin escalas pesadas
+        "data-[state=hidden]:opacity-0 data-[state=hidden]:pointer-events-none",
+        "data-[state=visible]:opacity-100",
         // Dimensiones exactas según orientación
         orientation === "vertical" &&
           "h-full w-2.5 right-0 top-0 bottom-0",
@@ -60,9 +60,9 @@ function ScrollBar({
     >
       <ScrollAreaPrimitive.ScrollAreaThumb
         data-slot="scroll-area-thumb"
-        // Efecto "serpiente": transition-all permite que tanto el alto/ancho como el color se estiren de forma elástica
+        // Eliminado el transition-all pesado. Solo animamos colores para máxima agilidad visual.
         className={cn(
-          "relative flex-1 rounded-full bg-neutral-600/60 transition-all duration-500 ease-in-out hover:bg-neutral-500/90 active:bg-neutral-400",
+          "relative flex-1 rounded-full bg-neutral-600/60 transition-colors duration-200 hover:bg-neutral-500/90 active:bg-neutral-400",
           orientation === "vertical" && "w-full min-h-10",
           orientation === "horizontal" && "h-full min-w-10"
         )}

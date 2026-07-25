@@ -26,9 +26,15 @@ export function SummonConfirmBar({
 
   return (
 
-    <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+    // absolute, no fixed — SheetContent (el panel) ya es position:fixed
+    // por su cuenta, así que esto se ancla al PANEL (su containing
+    // block), no al viewport completo. Antes, como fixed+z-50 vivía
+    // FUERA del Portal de Radix (era hermano de <Sheet>, no hijo de
+    // SheetContent), terminaba pintándose en otra capa de stacking y
+    // quedaba tapado por el overlay con blur del Sheet.
+    <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/8 bg-[#101012] px-4 py-3">
 
-      <div className="flex w-full max-w-lg items-center gap-3 rounded-2xl bg-neutral-900 px-4 py-3 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
+      <div className="flex items-center gap-3">
 
         <div className="min-w-0 flex-1">
 

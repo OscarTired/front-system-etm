@@ -198,12 +198,19 @@ function ColumnContent({
             const isSelected = selectedStepIds?.has(step.id) ?? false
 
             return (
-              <button
+              <div
                 key={key}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => onToggleStepSelection?.(step.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    onToggleStepSelection?.(step.id)
+                  }
+                }}
                 className={cn(
-                  "relative rounded-xl text-left transition-all",
+                  "relative cursor-pointer rounded-xl text-left transition-all",
                   isSelected && "ring-2 ring-emerald-400/70",
                 )}
               >
@@ -219,7 +226,7 @@ function ColumnContent({
 
                 <div
                   className={cn(
-                    "absolute right-2.5 top-2.5 z-10 flex size-6 items-center justify-center rounded-full transition-colors",
+                    "absolute right-2.5 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full transition-colors",
                     isSelected
                       ? "bg-emerald-500 text-white"
                       : "bg-black/40 text-transparent ring-1 ring-white/25 backdrop-blur-sm",
@@ -228,7 +235,7 @@ function ColumnContent({
                   <CheckCircle2 size={16} strokeWidth={2.5} />
                 </div>
 
-              </button>
+              </div>
             )
           })}
 

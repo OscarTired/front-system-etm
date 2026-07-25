@@ -318,7 +318,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
             fullWidth: acá las columnas van apiladas verticalmente
             (no una al lado de otra como en el Kanban), así que deben
             ocupar el ancho completo del panel en vez del w-72 fijo. */}
-        <ScrollArea className="min-h-0 flex-1 p-4">
+        <ScrollArea className={cn("min-h-0 flex-1 p-4", summonTarget && "pb-24")}>
 
           {loading ? (
 
@@ -475,19 +475,19 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
         </ScrollArea>
 
-      </SheetContent>
+        {summonTarget && (
+          <SummonConfirmBar
+            operatorName={summonTarget.operator.name}
+            count={selectedStepIds.size}
+            mode={summonMode}
+            onModeChange={setSummonMode}
+            onConfirm={handleConfirmSummon}
+            onCancel={handleCancelSummon}
+            confirming={summoning}
+          />
+        )}
 
-      {summonTarget && (
-        <SummonConfirmBar
-          operatorName={summonTarget.operator.name}
-          count={selectedStepIds.size}
-          mode={summonMode}
-          onModeChange={setSummonMode}
-          onConfirm={handleConfirmSummon}
-          onCancel={handleCancelSummon}
-          confirming={summoning}
-        />
-      )}
+      </SheetContent>
 
     </Sheet>
 
