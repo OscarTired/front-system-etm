@@ -134,4 +134,50 @@ export const workflowService={
 
   },
 
+  // "Convocar" desde TaskAreaPanel. A diferencia del resto de estos
+  // métodos, no devuelve {taskId, updated} (afecta varios steps, de
+  // varias tareas, a la vez) — el caller invalida la query de tasks
+  // en vez de propagar la respuesta puntualmente.
+  async summon(dto:{
+    stepIds:string[]
+    operatorId:string
+    mode:"ASSIGN"|"INVITE"
+  }){
+
+    const res=
+      await api.post<{ success:boolean; count:number }>(
+        "/workflow/summon",
+        dto,
+      )
+
+    return res.data
+
+  },
+
+  async acceptInvite(
+    stepId:string,
+  ){
+
+    const res=
+      await api.patch<{ success:boolean }>(
+        `/workflow/${stepId}/accept-invite`,
+      )
+
+    return res.data
+
+  },
+
+  async declineInvite(
+    stepId:string,
+  ){
+
+    const res=
+      await api.patch<{ success:boolean }>(
+        `/workflow/${stepId}/decline-invite`,
+      )
+
+    return res.data
+
+  },
+
 }

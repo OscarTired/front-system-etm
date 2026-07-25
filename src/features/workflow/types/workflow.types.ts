@@ -33,6 +33,23 @@ export interface WorkflowStep{
 
   operator:User | null
 
+  // Quién puso a `operator` ahí vía "Convocar" (modo ASSIGN) — null
+  // cuando el propio operario se autoasignó al iniciar. Separa
+  // "Asignadas" de "Disponibles" en Mis tareas.
+  assignedById:string | null
+
+  // Invitación pendiente ("Convocar" modo INVITE) — operatorId
+  // todavía NO se tocó, queda así hasta que el operario invitado la
+  // acepte/rechace desde su propio Mis tareas. El backend solo manda
+  // el id (no un User anidado) — para mostrar nombre/color se cruza
+  // con useUsersDirectory en el frontend, igual que ya se hace en
+  // otros lados con operatorId suelto.
+  invitedOperatorId:string | null
+
+  invitedById:string | null
+
+  invitedAt:string | null
+
   startedAt:string | null
 
   completedAt:string | null

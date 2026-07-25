@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
@@ -20,7 +20,17 @@ type SharedProps = {
   allTasks?: Task[]
 }
 
-type ContentProps = SharedProps & {
+type SelectionProps = {
+  // Modo selección para "Convocar" (TaskAreaPanel) — con esto
+  // activo, tocar una card la marca/desmarca en vez de expandirla.
+  // Prop opcional que nadie más pasa: el Kanban normal sigue
+  // exactamente igual, sin ningún cambio de comportamiento.
+  selectionMode?: boolean
+  selectedStepIds?: Set<string>
+  onToggleStepSelection?: (stepId: string) => void
+}
+
+type ContentProps = SharedProps & SelectionProps & {
   expandedKey: string | null
   onToggleCard: (key: string) => void
   activeOverlayKey: string | null
@@ -81,6 +91,9 @@ function ColumnContent({
   activeOverlayKey,
   onOverlayOpenChange,
   fullWidth,
+  selectionMode,
+  selectedStepIds,
+  onToggleStepSelection,
 }: ContentProps & { fullWidth?: boolean }) {
   const { isMobile } = useResponsive()
   const columnScrollRef = useColumnScroll()
@@ -161,9 +174,10 @@ function ColumnContent({
               )
             }
 
-            return (
+            const step = task.workflowSteps.find(s => s.processCode === processCode)
+
+            const card = (
               <TaskPipelineCard
-                key={key}
                 task={task}
                 processCode={processCode}
                 expanded={expandedKey === key}
@@ -171,6 +185,50 @@ function ColumnContent({
                 overlayLocked={activeOverlayKey !== null && activeOverlayKey !== key}
                 onOverlayOpenChange={(isOpen) => onOverlayOpenChange(key, isOpen)}
               />
+            )
+
+            // Sin step real para este proceso (no debería pasar acá
+            // porque included=true implica que existe, pero
+            // TypeScript no lo sabe) — no hay stepId para convocar,
+            // se muestra la card normal sin overlay de selección.
+            if (!selectionMode || !step) {
+              return <div key={key}>{card}</div>
+            }
+
+            const isSelected = selectedStepIds?.has(step.id) ?? false
+
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onToggleStepSelection?.(step.id)}
+                className={cn(
+                  "relative rounded-xl text-left transition-all",
+                  isSelected && "ring-2 ring-emerald-400/70",
+                )}
+              >
+
+                {/* pointer-events-none: la card sigue ahí visualmente
+                    (mismo diseño, nada duplicado a mano) pero sin
+                    poder interactuar con sus propios botones/overlay
+                    mientras se está en modo selección — el click lo
+                    captura este wrapper entero. */}
+                <div className="pointer-events-none">
+                  {card}
+                </div>
+
+                <div
+                  className={cn(
+                    "absolute right-2.5 top-2.5 z-10 flex size-6 items-center justify-center rounded-full transition-colors",
+                    isSelected
+                      ? "bg-emerald-500 text-white"
+                      : "bg-black/40 text-transparent ring-1 ring-white/25 backdrop-blur-sm",
+                  )}
+                >
+                  <CheckCircle2 size={16} strokeWidth={2.5} />
+                </div>
+
+              </button>
             )
           })}
 
@@ -185,7 +243,7 @@ function ColumnContent({
   )
 }
 
-type Props = SharedProps & {
+type Props = SharedProps & SelectionProps & {
   expandedKey: string | null
   onToggleCard: (key: string) => void
   activeOverlayKey: string | null
@@ -207,6 +265,9 @@ export function TaskProcessColumn({
   headerOnly = false,
   contentOnly = false,
   fullWidth = false,
+  selectionMode,
+  selectedStepIds,
+  onToggleStepSelection,
 }: Props) {
   if (headerOnly) {
     return <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
@@ -223,6 +284,9 @@ export function TaskProcessColumn({
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={onOverlayOpenChange}
         fullWidth={fullWidth}
+        selectionMode={selectionMode}
+        selectedStepIds={selectedStepIds}
+        onToggleStepSelection={onToggleStepSelection}
       />
     )
   }
@@ -244,6 +308,9 @@ export function TaskProcessColumn({
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={onOverlayOpenChange}
         fullWidth={fullWidth}
+        selectionMode={selectionMode}
+        selectedStepIds={selectedStepIds}
+        onToggleStepSelection={onToggleStepSelection}
       />
     </section>
   )
