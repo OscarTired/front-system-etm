@@ -40,7 +40,7 @@ const AUTO_KIND: Record<string, AutoKind> = {
 
   TASK_COMPLETED: {
     icon: CheckCircle2,
-    verb: "Completó",
+    verb: "Completado",
     iconClass: "text-emerald-400",
     badgeClass: "bg-emerald-500/15 text-emerald-400",
   },

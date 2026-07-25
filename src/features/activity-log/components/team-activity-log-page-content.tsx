@@ -11,7 +11,7 @@ import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
 import { getActivityIcon } from "../constants/activity-icons"
-import { SHIFT_HOURS_LABEL } from "../constants/shift-definitions"
+import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../constants/shift-definitions"
 import { useTeamActivityLog } from "../hooks/use-team-activity-log"
 import { TeamActivityLogSkeleton } from "./team-activity-log-skeleton"
 
@@ -23,14 +23,62 @@ function endOfDayISO(date: string) {
   return new Date(`${date}T23:59:59`).toISOString()
 }
 
+type Log = ReturnType<typeof useTeamActivityLog>["logs"][number]
+
+// Mismas franjas visuales que la Bitácora personal (SHIFT_GROUPS),
+// pero acá agrupando logs ya existentes en vez de slots vacíos para
+// llenar. Los AUTO (Tarea iniciada/completada) no tienen `shift`
+// guardado — nunca pasan por el picker manual — pero sí tienen una
+// hora real (loggedAt), así que se les calcula la franja que les
+// tocaría con el mismo criterio que usa el picker (getCurrentShift),
+// solo para poder agruparlos visualmente junto con las manuales acá.
+// Esto es puramente de presentación: no se toca el `shift` real
+// guardado en el AUTO (sigue null en la base), es un derivado
+// efímero solo para esta vista.
+function groupLogsByShift(logs: Log[]) {
+
+  const buckets: {
+    key: string
+    label: string
+    icon: (typeof SHIFT_GROUPS)[number]["icon"]
+    logs: Log[]
+  }[] = []
+
+  for (const group of SHIFT_GROUPS) {
+
+    const shiftsInGroup = new Set(group.slots.map(slot => slot.shift))
+
+    const matched = logs.filter(log => {
+
+      const effectiveShift = log.shift ?? getCurrentShift(new Date(log.loggedAt))
+
+      return shiftsInGroup.has(effectiveShift)
+
+    })
+
+    if (matched.length > 0) {
+      buckets.push({ key: group.key, label: group.label, icon: group.icon, logs: matched })
+    }
+
+  }
+
+  return buckets
+
+}
+
 type ActivityCardProps = {
-  log: ReturnType<typeof useTeamActivityLog>["logs"][number]
+  log: Log
 }
 
 function ActivityLogCard({
   log,
 }: ActivityCardProps) {
   const Icon = getActivityIcon(log.activityType.icon)
+
+  // Igual que en groupLogsByShift: los AUTO no tienen `shift`
+  // guardado, se deriva de su hora real solo para mostrarlo acá —
+  // así el badge se ve igual sea manual o automática.
+  const effectiveShift = log.shift ?? getCurrentShift(new Date(log.loggedAt))
 
   return (
     <div className="rounded-2xl bg-white/3 p-4 transition-colors hover:bg-white/5">
@@ -53,11 +101,9 @@ function ActivityLogCard({
 
             <div className="flex shrink-0 items-center gap-2">
 
-              {log.shift && (
-                <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
-                  {SHIFT_HOURS_LABEL[log.shift]}
-                </span>
-              )}
+              <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                {SHIFT_HOURS_LABEL[effectiveShift]}
+              </span>
 
               <span className="text-xs text-neutral-500">
                 {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
@@ -90,6 +136,43 @@ function ActivityLogCard({
       </div>
     </div>
   )
+}
+
+function ShiftBucketedLogs({
+  logs,
+}: {
+  logs: Log[]
+}) {
+
+  const buckets = groupLogsByShift(logs)
+
+  return (
+    <div className="flex flex-col gap-4">
+      {buckets.map(bucket => {
+        const BucketIcon = bucket.icon
+
+        return (
+          <div key={bucket.key} className="flex flex-col gap-2">
+
+            <div className="flex items-center gap-2 px-1">
+              <BucketIcon size={13} className="text-neutral-500" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                {bucket.label}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {bucket.logs.map(log => (
+                <ActivityLogCard key={log.id} log={log} />
+              ))}
+            </div>
+
+          </div>
+        )
+      })}
+    </div>
+  )
+
 }
 
 export function TeamActivityLogPageContent() {
@@ -180,14 +263,7 @@ export function TeamActivityLogPageContent() {
             Sin entradas para este filtro
           </div>
         ) : selectedUser ? (
-          <div className="flex flex-col gap-3">
-            {logs.map(log => (
-              <ActivityLogCard
-                key={log.id}
-                log={log}
-              />
-            ))}
-          </div>
+          <ShiftBucketedLogs logs={logs} />
         ) : (
           <div className="flex flex-col gap-8">
             {groupedLogs.map(group => (
@@ -213,14 +289,7 @@ export function TeamActivityLogPageContent() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  {group.logs.map(log => (
-                    <ActivityLogCard
-                      key={log.id}
-                      log={log}
-                    />
-                  ))}
-                </div>
+                <ShiftBucketedLogs logs={group.logs} />
               </section>
             ))}
           </div>

@@ -79,6 +79,16 @@ const EMPTY_CONTEXT: ContextPickerValue = {
   taskId: "",
 }
 
+// Bitácora de Producción: una entrada = un tipo de actividad, sin
+// excepción (así se factura/reporta hoy). Bitácora de Ingeniería:
+// sí se puede registrar más de un tipo a la vez (ej. "Diseño
+// Mecánico" + "CAM" en la misma franja), pero con tope — más de 3
+// ya es ruido y probablemente un toque accidental.
+const MAX_SELECTION_BY_DEPARTMENT: Record<ActivityDepartment, number> = {
+  PRODUCCION: 1,
+  INGENIERIA: 3,
+}
+
 // Convierte un File a data URI (base64) — mismo mecanismo que usa
 // CommentComposer para adjuntar fotos.
 function fileToBase64(file: File): Promise<string> {
@@ -217,13 +227,33 @@ export function ActivityPickerDialog({
 
   }
 
+  const maxSelection = MAX_SELECTION_BY_DEPARTMENT[department]
+
   function handleSelectType(typeId: string) {
 
-    setSelectedTypeIds(prev =>
-      prev.includes(typeId)
-        ? prev.filter(id => id !== typeId)
-        : [...prev, typeId],
-    )
+    setSelectedTypeIds(prev => {
+
+      // Deseleccionar siempre está permitido, en cualquier departamento.
+      if (prev.includes(typeId)) {
+        return prev.filter(id => id !== typeId)
+      }
+
+      // Producción: comportamiento tipo radio-button — elegir un tipo
+      // nuevo reemplaza al anterior, nunca conviven dos a la vez.
+      if (maxSelection === 1) {
+        return [typeId]
+      }
+
+      // Ingeniería: multiselección hasta el tope. Si ya se llegó al
+      // tope, el tap no hace nada (los botones no elegidos además
+      // quedan deshabilitados visualmente, ver más abajo).
+      if (prev.length >= maxSelection) {
+        return prev
+      }
+
+      return [...prev, typeId]
+
+    })
 
   }
 
@@ -458,6 +488,28 @@ export function ActivityPickerDialog({
         </div>
 
         {/* 4. Iconos / Tipos de Actividad */}
+
+        {/* Solo tiene sentido mostrar el contador cuando el
+            departamento permite multiselección (Ingeniería) — en
+            Producción siempre es 1, aclarar "1/1" no aporta nada. */}
+        {maxSelection > 1 && (
+          <div className="mb-1 flex items-center justify-between px-0.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+              Tipos de actividad
+            </span>
+            <span
+              className={cn(
+                "text-[11px] font-medium",
+                selectedTypeIds.length >= maxSelection
+                  ? "text-amber-400"
+                  : "text-neutral-500",
+              )}
+            >
+              {selectedTypeIds.length}/{maxSelection}
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-2">
 
           {primaryTypes.map(type => {
@@ -468,17 +520,30 @@ export function ActivityPickerDialog({
             const isSelected =
               selectedTypeIds.includes(type.id)
 
+            // Deshabilitado solo cuando: ya se llegó al tope, el tipo
+            // no es el que está seleccionado (a ese siempre se lo
+            // puede destildar), y estamos en modo multiselección
+            // (en Producción el click reemplaza, así que nunca se
+            // deshabilita nada ahí).
+            const isDisabled =
+              maxSelection > 1 &&
+              !isSelected &&
+              selectedTypeIds.length >= maxSelection
+
             return (
 
               <button
                 key={type.id}
                 type="button"
+                disabled={isDisabled}
                 onClick={() => handleSelectType(type.id)}
                 className={cn(
                   "relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                   isSelected
                     ? "bg-white/12"
-                    : "bg-white/4 hover:bg-white/8",
+                    : isDisabled
+                      ? "cursor-not-allowed bg-white/4 opacity-40"
+                      : "bg-white/4 hover:bg-white/8",
                 )}
               >
 
@@ -584,16 +649,24 @@ export function ActivityPickerDialog({
                     const Icon = getActivityIcon(type.icon)
                     const isSelected = selectedTypeIds.includes(type.id)
 
+                    const isDisabled =
+                      maxSelection > 1 &&
+                      !isSelected &&
+                      selectedTypeIds.length >= maxSelection
+
                     return (
                       <button
                         key={type.id}
                         type="button"
+                        disabled={isDisabled}
                         onClick={() => handleSelectType(type.id)}
                         className={cn(
                           "relative flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors",
                           isSelected
                             ? "bg-white/12"
-                            : "bg-white/4 hover:bg-white/8",
+                            : isDisabled
+                              ? "cursor-not-allowed bg-white/4 opacity-40"
+                              : "bg-white/4 hover:bg-white/8",
                         )}
                       >
                         {isSelected && (
