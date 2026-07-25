@@ -107,7 +107,7 @@ export function KanbanCardView({
 
     <div
       className={cn(
-        "flex h-43.5 w-full flex-col justify-between rounded-xl p-4",
+        "flex h-43.5 w-full flex-col justify-between rounded-xl p-4 transition",
         dragPreview
           ?[
               "pointer-events-none",
@@ -119,9 +119,8 @@ export function KanbanCardView({
               "ring-1 ring-white/5",
             ]
           :[
-              "bg-white/2",
-              "transition",
-              "hover:bg-white/4",
+              "bg-white/6",
+              "hover:bg-white/10",
             ],
       )}
       style={

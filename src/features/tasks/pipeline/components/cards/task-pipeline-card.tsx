@@ -95,11 +95,8 @@ export function TaskPipelineCard({
     stepStatus === "REVIEWED"
 
   const isDimmed =
-    !finalized &&
-    (
-      isFutureStage ||
-      isCompletedStage
-    )
+    isFutureStage ||
+    isCompletedStage
 
   const isReachedStage =
     !isFutureStage &&
@@ -140,6 +137,9 @@ export function TaskPipelineCard({
     commentsOpen,
     setCommentsOpen,
   ] = useState(false)
+
+  // Verificamos si la tarea ya está finalizada o si el paso actual ya fue revisado/completado
+  const isFinished = finalized || stepStatus === "REVIEWED"
 
   return (
     <div
@@ -196,13 +196,10 @@ export function TaskPipelineCard({
           />
         )}
 
-      {/* Ícono flotante, afuera del <button> y sin tocar
-          KanbanCardView (se comparte con la lista de tareas de
-          Proyectos, que no debería ganar este ícono por tarea) —
-          se posiciona encima, en el hueco vacío de abajo a la
-          derecha que ya existía en esa card. */}
+      {/* Se agregó '!isFinished' para ocultar el botón del comentario cuando la tarea/paso esté finalizado o revisado */}
       {expanded &&
         !overlayOpen &&
+        !isFinished &&
         processTask.workflowStep && (
 
           <button

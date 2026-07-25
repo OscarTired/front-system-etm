@@ -17,15 +17,6 @@ import { cn } from "@/lib/utils"
 type SharedProps = {
   processCode: ProcessCode
   tasks: Task[]
-  // Orden maestro de TODAS las tareas del board (sin filtrar por
-  // proceso). Cuando se pasa, el contenido de la columna deja de
-  // armarse solo con "tasks" (que ya viene filtrado a las tareas
-  // que SÍ pasan por este proceso) y en cambio recorre este orden
-  // completo, insertando un placeholder mudo donde una tarea no
-  // pasa por acá — así la fila N es la misma tarea en todas las
-  // columnas del pipeline (desktop) o mantiene la misma numeración
-  // entre procesos (mobile), en vez de desalinearse cada vez que
-  // una tarea se salta un proceso (ver TaskPipelineBoard).
   allTasks?: Task[]
 }
 
@@ -37,20 +28,16 @@ type ContentProps = SharedProps & {
 }
 
 function ColumnHeader({ processCode, tasks }: SharedProps) {
-
   const definition = PROCESS_DEFINITIONS[processCode]
   const Icon = ENTITY_ICONS[definition.icon]
   const badge = getBadgeColors(definition.color, "subtle")
 
   return (
-
     <div className="w-72 shrink-0">
-
       <header
         className="flex items-center gap-2 border-b px-3 py-3"
         style={{ borderColor: definition.color }}
       >
-
         <span
           className="flex size-6 items-center justify-center rounded-md text-xs font-bold"
           style={{ color: badge.text, backgroundColor: badge.background }}
@@ -69,22 +56,16 @@ function ColumnHeader({ processCode, tasks }: SharedProps) {
         <span className="ml-auto text-xs font-semibold text-neutral-500">
           {tasks.length}
         </span>
-
       </header>
 
       <div className="border-b border-white/5 px-2 py-1">
-
         <TaskColumnOperator
           processCode={processCode}
           tasks={tasks}
         />
-
       </div>
-
     </div>
-
   )
-
 }
 
 function ColumnContent({
@@ -96,19 +77,9 @@ function ColumnContent({
   activeOverlayKey,
   onOverlayOpenChange,
 }: ContentProps) {
-
   const { isMobile } = useResponsive()
-
   const columnScrollRef = useColumnScroll()
 
-  // allTasks: recorremos el orden completo del board (no solo las
-  // tareas filtradas a este proceso) y marcamos cuáles pasan por
-  // acá, para insertar un placeholder mudo en el resto y mantener
-  // las filas alineadas — tanto en desktop (columnas lado a lado)
-  // como en mobile (una columna a la vez, pero con la misma
-  // numeración de fila que tendría en desktop). Sin allTasks, cae
-  // al comportamiento anterior: todas las tareas de "tasks" se
-  // consideran incluidas.
   const rows = allTasks
     ? allTasks.map(task => ({
         task,
@@ -117,12 +88,10 @@ function ColumnContent({
     : tasks.map(task => ({ task, included: true }))
 
   return (
-
     <div className={cn(
       "flex shrink-0 flex-col",
       isMobile ? "w-full" : "h-full w-72 overflow-hidden",
     )}>
-
       <div
         ref={isMobile ? undefined : columnScrollRef}
         style={isMobile ? undefined : { touchAction: "pan-y" }}
@@ -133,15 +102,11 @@ function ColumnContent({
             : "min-h-0 flex-1 overflow-y-auto overscroll-contain cursor-grab active:cursor-grabbing",
         )}
       >
-
         <div className="flex flex-col gap-2 pb-2">
-
           {rows.map(({ task, included }) => {
-
             const key = `${task.id}:${processCode}`
 
             if (!included) {
-
               const nextProcess =
                 getNextIncludedProcess(task, processCode)
 
@@ -160,82 +125,38 @@ function ColumnContent({
                   ? getBadgeColors(nextDefinition.color, "subtle")
                   : null
 
-              const noApplyBadge =
-                getBadgeColors("#64748B", "subtle")
-
               return (
-
                 <div
                   key={key}
-                  className="flex h-12 shrink-0 items-center justify-end rounded-xl bg-white/4 px-3"
+                  className="flex h-12 shrink-0 items-center justify-end rounded-xl bg-white/4 px-3 opacity-50"
                 >
-
-                  {/*
-                    Slot de ancho fijo para la flecha — SIEMPRE
-                    ocupa este espacio, tenga o no ícono adentro.
-                    Sin esto, el chip/badge que sigue arranca en una
-                    posición distinta según haya o no próximo
-                    proceso (con flecha se corre a la izquierda, sin
-                    ella queda solo, "desplazado" respecto a las
-                    demás filas). Reservando el ancho, el badge
-                    siempre empieza en el mismo punto.
-                  */}
                   <span className="flex w-4 shrink-0 items-center justify-center">
-
                     {nextDefinition && (
-
                       <ArrowRight
                         size={13}
                         strokeWidth={2.75}
                         className="text-neutral-600"
                       />
-
                     )}
-
                   </span>
 
                   {nextDefinition && nextBadge ? (
-
                     <span
-                      className="ml-1.5 inline-flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-bold opacity-60"
+                      className="ml-1.5 inline-flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-bold"
                       style={{
                         color: nextBadge.text,
                         backgroundColor: nextBadge.background,
                       }}
                     >
-
                       {NextIcon && <NextIcon size={15} />}
-
                       <span>{nextProcess}</span>
-
                     </span>
-
-                  ) : (
-
-                    // Mismo estilo exacto que el badge de estado
-                    // "En cola" de TaskPipelineCardCompact (h-5,
-                    // rounded-md, texto gris #64748B) — no un
-                    // simple guion suelto sin contexto.
-                    <span
-                      className="ml-1.5 flex h-5 shrink-0 items-center whitespace-nowrap rounded-md px-2 text-xs font-semibold leading-none opacity-60"
-                      style={{
-                        color: noApplyBadge.text,
-                        backgroundColor: noApplyBadge.background,
-                      }}
-                    >
-                      No aplica
-                    </span>
-
-                  )}
-
+                  ) : null}
                 </div>
-
               )
-
             }
 
             return (
-
               <TaskPipelineCard
                 key={key}
                 task={task}
@@ -245,27 +166,18 @@ function ColumnContent({
                 overlayLocked={activeOverlayKey !== null && activeOverlayKey !== key}
                 onOverlayOpenChange={(isOpen) => onOverlayOpenChange(key, isOpen)}
               />
-
             )
-
           })}
 
           {rows.length === 0 && (
-
             <div className="flex h-12 items-center justify-center rounded-xl bg-white/4 px-3 text-sm font-medium text-neutral-500">
               Sin tareas
             </div>
-
           )}
-
         </div>
-
       </div>
-
     </div>
-
   )
-
 }
 
 type Props = SharedProps & {
@@ -289,7 +201,6 @@ export function TaskProcessColumn({
   headerOnly = false,
   contentOnly = false,
 }: Props) {
-
   if (headerOnly) {
     return <ColumnHeader processCode={processCode} tasks={tasks} />
   }
@@ -309,11 +220,8 @@ export function TaskProcessColumn({
   }
 
   return (
-
     <section className="flex h-full min-h-0 w-72 shrink-0 flex-col overflow-hidden">
-
       <ColumnHeader processCode={processCode} tasks={tasks} />
-
       <ColumnContent
         processCode={processCode}
         tasks={tasks}
@@ -323,9 +231,6 @@ export function TaskProcessColumn({
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={onOverlayOpenChange}
       />
-
     </section>
-
   )
-
 }

@@ -5,7 +5,6 @@ import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-titl
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 import { ActivityLogPageContent } from "@/features/activity-log/components/activity-log-page-content"
-import { ActivityLogActions } from "@/features/activity-log/components/activity-log-actions"
 
 // Calco de /bitacora (Producción) — mismo motor, mismo layout,
 // única diferencia real es department="INGENIERIA" pasado a ambos
@@ -39,13 +38,11 @@ export default function BitacoraIngenieriaPage() {
 
         </div>
 
-        {/* Siempre montado: mismo motivo que en Projects/Tasks/Users
-            /ActivityTypes — el FAB de mobile no se pintaría si
-            quedara adentro de un padre con display:none. */}
-        <div className="shrink-0">
-
-          <ActivityLogActions department="INGENIERIA" />
-
+        {/* Espacio reservado invisible para mantener la alineación idéntica del layout con el botón primary */}
+        <div className="invisible shrink-0 pointer-events-none select-none" aria-hidden="true">
+          <div className="inline-flex h-10 items-center justify-center px-5 text-sm font-semibold">
+            Placeholder
+          </div>
         </div>
 
       </header>

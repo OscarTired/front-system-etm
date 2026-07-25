@@ -174,6 +174,9 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
         </SheetHeader>
 
+        {/* Quitamos contentOnly de TaskProcessColumn para que las tarjetas
+            mantengan habilitado por completo su overlay interactivo con las
+            acciones de workflow (iniciar, pausar, completar, etc.). */}
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
 
           {loading ? (
@@ -223,7 +226,6 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                     onToggleCard={handleToggleCard}
                     activeOverlayKey={activeOverlayKey}
                     onOverlayOpenChange={handleOverlayOpenChange}
-                    contentOnly
                   />
 
                 </div>

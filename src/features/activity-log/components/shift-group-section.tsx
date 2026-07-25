@@ -191,21 +191,6 @@ export function ShiftGroupSection({
                   </button>
                 )}
 
-                {/* Si ya hay registros en la franja, botón para agregar uno nuevo */}
-                {logs.length > 0 && state !== "upcoming" && (
-                  <button
-                    type="button"
-                    disabled={!canCreate}
-                    onClick={() => onLogClick(slot)}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/6 py-2 text-xs font-medium text-neutral-400 transition-colors hover:border-white/10 hover:bg-white/4 hover:text-neutral-200 disabled:cursor-not-allowed disabled:opacity-50",
-                    )}
-                  >
-                    <Plus size={14} />
-                    <span>Agregar otra actividad</span>
-                  </button>
-                )}
-
                 {/* Franja que aún no llega */}
                 {logs.length === 0 && state === "upcoming" && (
                   <p className="py-2 text-center text-xs text-neutral-600">

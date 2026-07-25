@@ -39,8 +39,6 @@ export default function BitacoraPage() {
 
           <TaskAreaPanelTrigger />
 
-          <ActivityLogActions />
-
         </div>
 
       </header>
