@@ -40,6 +40,10 @@ import {
 } from "@/features/processes/constants/process-definitions"
 
 import {
+  ENTITY_ICONS,
+} from "@/shared/constants/entity-icons"
+
+import {
   cn,
 } from "@/shared/utils/utils"
 
@@ -325,18 +329,18 @@ export function TaskProductionPanel({
           <div className="overflow-hidden">
             <div className="flex flex-col gap-3.5 rounded-xl bg-white/2 p-3.5">
 
-              <div className="flex items-center gap-2 rounded-xl bg-white/3 p-3">
+              <div className="flex items-center gap-1 rounded-lg bg-white/3 px-1 py-2.5">
 
                 <button
                   type="button"
                   onClick={handlePrevStep}
                   disabled={displayIndex === 0}
-                  className="shrink-0 p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-1.5 text-neutral-500 disabled:opacity-20 disabled:cursor-not-allowed hover:text-white transition-colors"
                 >
                   <ChevronLeft size={16} />
                 </button>
 
-                <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
                   {(() => {
 
                     const def = currentRouteCode ? PROCESS_DEFINITIONS[currentRouteCode] : undefined
@@ -344,52 +348,47 @@ export function TaskProductionPanel({
 
                     const stepObj = task.workflowSteps.find(s => s.processCode === currentRouteCode)
                     const stepStatusDef = stepObj ? WORKFLOW_STATUS_DEFINITIONS[stepObj.status] : undefined
+                    const StatusIcon = stepStatusDef ? ENTITY_ICONS[stepStatusDef.icon] : undefined
+                    const ProcessIcon = def ? ENTITY_ICONS[def.icon] : undefined
 
                     return (
                       <>
 
-                        {/* Fila 1: proceso + paginación — van juntos
-                            porque describen lo mismo ("qué proceso,
-                            en qué posición de la ruta"). */}
-                        <div className="flex items-center gap-2">
-                          {def && (
+                        {ProcessIcon && (
+                          <ProcessIcon size={13} style={{ color: def?.color }} />
+                        )}
 
-                            <EntityChip
-                              label={def.code}
-                              color={def.color}
-                              icon={def.icon}
-                              compact
-                            />
+                        <span
+                          className="text-sm font-bold"
+                          style={{ color: def?.color }}
+                        >
+                          {def?.code}
+                        </span>
 
-                          )}
-                          <span className="whitespace-nowrap text-xs font-medium text-neutral-400">
-                            ({displayIndex + 1} de {routeSteps.length})
-                          </span>
-                        </div>
+                        <span className="whitespace-nowrap text-xs text-neutral-500">
+                          ({displayIndex + 1}/{routeSteps.length})
+                        </span>
 
-                        {/* Fila 2: estado — separado del proceso, en
-                            su propia fila, en vez de venir aplastado
-                            al lado del texto de paginación dentro
-                            del mismo renglón. */}
+                        <span className="text-neutral-700">·</span>
+
                         {isCurrent ? (
 
                           <span
-                            className="whitespace-nowrap text-[9px] font-bold uppercase tracking-widest"
-                            style={{
-                              color: def?.color,
-                            }}
+                            className="whitespace-nowrap text-xs font-bold uppercase tracking-wide"
+                            style={{ color: def?.color }}
                           >
                             Actual
                           </span>
 
                         ) : stepStatusDef ? (
 
-                          <EntityChip
-                            label={stepStatusDef.label}
-                            color={stepStatusDef.color}
-                            icon={stepStatusDef.icon}
-                            compact
-                          />
+                          <span
+                            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium"
+                            style={{ color: stepStatusDef.color }}
+                          >
+                            {StatusIcon && <StatusIcon size={12} />}
+                            {stepStatusDef.label}
+                          </span>
 
                         ) : null}
 
@@ -402,7 +401,7 @@ export function TaskProductionPanel({
                   type="button"
                   onClick={handleNextStep}
                   disabled={displayIndex === routeSteps.length - 1}
-                  className="shrink-0 p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-1.5 text-neutral-500 disabled:opacity-20 disabled:cursor-not-allowed hover:text-white transition-colors"
                 >
                   <ChevronRight size={16} />
                 </button>
