@@ -63,7 +63,7 @@ export function HistoryToggleButton({
         <span
           className={cn(
 
-            "flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-bold select-none transition-all duration-200",
+            "flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-bold select-none transition-colors duration-200",
 
             active
 

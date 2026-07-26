@@ -75,7 +75,7 @@ export function SummonOperatorButton({ processCode, active, selectedOperatorId, 
             // tenía al lado) saltaba de ancho cada vez que
             // cambiabas de estado. Con un ancho mínimo fijo, el
             // contenido cambia adentro de una caja que ya está.
-            "flex min-w-30 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
+            "flex min-w-[7.5rem] items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
             active
               ? "bg-white/20 text-white shadow-sm"
               : "bg-white/5 text-neutral-300 hover:bg-white/10",
