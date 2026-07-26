@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 
+import Link from "next/link"
+
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
@@ -46,10 +48,17 @@ export function TaskMobileCard({
       <div className="flex items-center gap-1 px-1">
         <DragCell />
 
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              onToggle()
+            }
+          }}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-3 pr-2 text-left"
         >
           {/* ID con el color del cliente aplicado dinámicamente */}
           <span
@@ -67,9 +76,21 @@ export function TaskMobileCard({
               {task.reference}
             </p>
 
-            <p className="mt-0.5 truncate text-xs text-neutral-500">
+            {/* Mismo destino que la columna "PRY" en modo tabla
+                (/projects?projectId=...) — antes esto era texto
+                plano acá, no navegaba a ningún lado. stopPropagation
+                para que tocar el código no dispare TAMBIÉN el
+                onToggle del wrapper (que ahora es un div, no un
+                button real, justamente para poder anidar este Link
+                sin romper el HTML — <a> dentro de <button> tampoco
+                es válido). */}
+            <Link
+              href={`/projects?projectId=${task.project.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-0.5 block w-fit truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
+            >
               {task.project.projectCode}
-            </p>
+            </Link>
           </div>
 
           <span className="shrink-0 text-xs text-neutral-500">
@@ -83,7 +104,7 @@ export function TaskMobileCard({
               expanded && "rotate-180",
             )}
           />
-        </button>
+        </div>
       </div>
 
       {expanded && (

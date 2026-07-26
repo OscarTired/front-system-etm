@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 
+import Link from "next/link"
+
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
@@ -92,13 +94,26 @@ export function ProcessMobileCard({
           </span>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
+            {/* Mismos 2 destinos que las columnas "REFERENCIA"/"PRY"
+                en modo tabla (buildProcessColumns) — antes texto
+                plano acá, no navegaban a ningún lado.
+                stopPropagation para que tocarlos no dispare TAMBIÉN
+                el onToggle del wrapper. */}
+            <Link
+              href={`/tasks?taskId=${task.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="block truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
+            >
               {task.reference}
-            </p>
+            </Link>
 
-            <p className="mt-0.5 truncate text-xs text-neutral-500">
+            <Link
+              href={`/projects?projectId=${project.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-0.5 block w-fit truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
+            >
               {project.projectCode}
-            </p>
+            </Link>
           </div>
 
           <span className="shrink-0 text-xs text-neutral-500">
