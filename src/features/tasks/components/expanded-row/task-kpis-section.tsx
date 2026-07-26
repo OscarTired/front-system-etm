@@ -1,13 +1,6 @@
 "use client"
 
 import {
-  useEffect,
-  useRef,
-  useState,
-} from "react"
-
-import {
-  ChevronDown,
   InspectionPanel,
   Layers3,
   PaintBucket,
@@ -27,12 +20,12 @@ import {
 } from "@/shared/ui/mini-card/kpi-panel"
 
 import {
-  useResponsive,
-} from "@/shared/responsive/hooks/use-responsive"
+  KpiCarousel,
+} from "@/shared/ui/mini-card/kpi-carousel"
 
 import {
-  cn,
-} from "@/shared/utils/utils"
+  useResponsive,
+} from "@/shared/responsive/hooks/use-responsive"
 
 type Props={
   task:Task
@@ -45,50 +38,6 @@ export function TaskKpisSection({
 }:Props){
 
   const { isMobile } = useResponsive()
-
-  // En desktop KpiPanel ya se ve bien (grid auto-fit, sin necesidad
-  // de resumen/detalle) — esto solo aplica en mobile, mismo motivo
-  // que TaskProductionPanel: antes eran 4 cards enteras siempre
-  // visibles (aunque KpiPanel ya las mostraba de una por vez en un
-  // carrusel, seguía siendo bastante alto de por sí). Ahora arranca
-  // en un resumen de una línea, y el carrusel completo solo aparece
-  // si lo tocás.
-  const [
-    expanded,
-    setExpanded,
-  ] = useState(false)
-
-  // Mismo motivo que en TaskProductionPanel: {expanded && (...)}
-  // solo anima al ABRIR (mount), al cerrar desaparece de golpe
-  // porque desmonta sin ninguna animación de salida. Midiendo la
-  // altura real y animando max-height, la transición queda
-  // simétrica en los dos sentidos.
-  const contentRef = useRef<HTMLDivElement>(null)
-
-  const [
-    contentHeight,
-    setContentHeight,
-  ] = useState(0)
-
-  useEffect(() => {
-
-    if (!contentRef.current) return
-
-    const measure = () => {
-      if (contentRef.current) {
-        setContentHeight(contentRef.current.scrollHeight)
-      }
-    }
-
-    measure()
-
-    const resizeObserver = new ResizeObserver(measure)
-
-    resizeObserver.observe(contentRef.current)
-
-    return () => resizeObserver.disconnect()
-
-  }, [])
 
   const hasAssemblyProcess=
     task.route.includes("EN")
@@ -209,73 +158,24 @@ export function TaskKpisSection({
     )
   }
 
+  // KpiCarousel — mismo componente genérico que ya usa
+  // TaskPipelineHeader para su barra "AVANCE" (colapsado: fila con
+  // fondo tinteado + ícono + label + 2 valores + "..."; expandido:
+  // las cards completas) — antes esto era una versión armada a
+  // mano con texto plano estilo Kanban, que no era lo que se pedía.
   return (
-
-    <div>
-
-      {/* Mismo estilo denso y sin caja que ya usa KanbanCardView
-          para esta misma info (L{lote} • MATERIAL espesor • PIEZAS)
-          — antes esto era un botón con fondo/padding tipo dropdown,
-          que no es el lenguaje visual que se pidió acá. Sigue siendo
-          clickeable (el div entero, no cada span), solo que ahora
-          se ve como texto plano en vez de una pill. */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setExpanded(v => !v)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            setExpanded(v => !v)
-          }
-        }}
-        className="flex cursor-pointer items-center justify-between gap-2"
-      >
-
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm text-neutral-300">
-
-          <span>L{task.lotNumber}</span>
-          <span className="text-neutral-600">•</span>
-          <span>{task.material.name.toUpperCase()} {task.thickness.name}</span>
-          <span className="text-neutral-600">•</span>
-          <span>{task.pieces} PIEZAS</span>
-          <span className="text-neutral-600">•</span>
-          <span>
-            {hasPaintProcess
-              ? `${task.color?.name.toUpperCase() ?? "-"} ${task.paintKg}kg`
-              : "NATURAL"}
-          </span>
-
-        </div>
-
-        <ChevronDown
-          size={15}
-          className={cn(
-            "shrink-0 text-neutral-500 transition-transform duration-200",
-            expanded && "rotate-180",
-          )}
-        />
-
-      </div>
-
-      <div
-        className={cn(
-          "overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out",
-          expanded ? "mt-3 opacity-100" : "opacity-0",
-        )}
-        style={{
-          maxHeight: expanded ? contentHeight : 0,
-        }}
-      >
-        <div ref={contentRef}>
-          <KpiPanel
-            cards={cards}
-          />
-        </div>
-      </div>
-
-    </div>
-
+    <KpiCarousel
+      cards={cards}
+      summary={{
+        icon: Layers3,
+        color: "#d4d2a6",
+        label: "Producción",
+        values: [
+          { label: "Lote", value: `L${task.lotNumber}` },
+          { label: "Piezas", value: task.pieces },
+        ],
+      }}
+    />
   )
 
 }
