@@ -181,7 +181,12 @@ export function TaskTable({
 
           return (
 
-            <div key={task.id}>
+            // data-expanded-row-id: es lo que useFocusedRow busca
+            // para hacer scrollIntoView cuando se navega acá con un
+            // taskId puntual (ej. desde una notificación) — el modo
+            // tabla real (EntityTable) ya lo tenía, esto le faltaba
+            // al modo card para tener el mismo comportamiento.
+            <div key={task.id} data-expanded-row-id={task.id}>
 
               {/* templateColumns vacío porque la card maneja su
                   propio layout, no un grid de columnas. */}

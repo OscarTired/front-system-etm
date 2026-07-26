@@ -306,26 +306,30 @@ export function ProjectTaskRow({
       {isMobile ? (
         expanded &&
         activeProcessCode ? (
-          <div
-            className={cn(
-              "overflow-hidden rounded-xl transition-all duration-200",
-              pressed &&
-                !overlayOpen &&
-                "scale-[0.98] shadow-lg",
-            )}
-          >
-            <KanbanCardFromTask
-              task={task}
-              processCode={
-                activeProcessCode
-              }
-            />
+          <div key="expanded" className="animate-comment-in">
+            <div
+              className={cn(
+                "overflow-hidden rounded-xl transition-all duration-200",
+                pressed &&
+                  !overlayOpen &&
+                  "scale-[0.98] shadow-lg",
+              )}
+            >
+              <KanbanCardFromTask
+                task={task}
+                processCode={
+                  activeProcessCode
+                }
+              />
+            </div>
           </div>
         ) : (
-          <TaskPipelineCardCompact
-            processTask={processTask}
-            reserveActionsSpace
-          />
+          <div key="compact" className="animate-comment-in">
+            <TaskPipelineCardCompact
+              processTask={processTask}
+              reserveActionsSpace
+            />
+          </div>
         )
       ) : (
         <KanbanCardView

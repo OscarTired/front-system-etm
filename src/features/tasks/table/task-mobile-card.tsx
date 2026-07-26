@@ -87,7 +87,7 @@ export function TaskMobileCard({
       </div>
 
       {expanded && (
-        <div className="space-y-3 px-3 pb-3 pt-3">
+        <div className="animate-comment-in space-y-3 px-3 pb-3 pt-3">
           {showFields ? (
             <div className="flex flex-col gap-2">
               <button

@@ -157,18 +157,21 @@ export function ProcessTableCard({
 
         return (
 
-          <ProcessMobileCard
-            key={id}
-            processTask={processTask}
-            expanded={expand.expandedRowId === id}
-            onToggle={() =>
-              expand.setExpandedRowId(
-                expand.expandedRowId === id
-                  ? null
-                  : id,
-              )
-            }
-          />
+          <div key={id} data-expanded-row-id={id}>
+
+            <ProcessMobileCard
+              processTask={processTask}
+              expanded={expand.expandedRowId === id}
+              onToggle={() =>
+                expand.setExpandedRowId(
+                  expand.expandedRowId === id
+                    ? null
+                    : id,
+                )
+              }
+            />
+
+          </div>
 
         )
 

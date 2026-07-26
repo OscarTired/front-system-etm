@@ -74,7 +74,11 @@ export function EntityTable<T>({
 
               }
 
-              {isExpanded && renderExpandedRow?.(item)}
+              {isExpanded && (
+                <div className="animate-comment-in">
+                  {renderExpandedRow?.(item)}
+                </div>
+              )}
 
             </div>
 

@@ -90,8 +90,6 @@ function OperatorRow({
   entry: ActiveEntry
 }) {
 
-  const { isMobile } = useResponsive()
-
   const { operator, status, taskNumber, reference } = entry
 
   const isWorking = status === "PROGRESS"
@@ -113,23 +111,19 @@ function OperatorRow({
   return (
 
     <div
-      className={cn(
-        "flex h-10 items-center gap-2 px-1",
-        // En desktop, columna angosta (w-72): separar operario y
-        // estado a los extremos (justify-between) usa bien el poco
-        // ancho disponible. En mobile, a todo el ancho de pantalla,
-        // separarlos a los extremos se sentía desparramado — se
-        // centran como un solo grupo en cambio.
-        isMobile ? "justify-center" : "justify-between",
-      )}
+      // grid en vez de flex acá a propósito: con flex-1 + min-w-0
+      // (lo que había antes) el navegador todavía podía dejar que el
+      // contenido intrínseco de la píldora (el doble de ancho, por
+      // el loop del marquee) empujara el layout — es una limitación
+      // conocida de flexbox. minmax(0,1fr) en un grid-template-columns
+      // SÍ es una cota dura: esa columna nunca crece más allá del
+      // espacio que le toca, pase lo que pase adentro.
+      className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-1"
     >
 
       {/* Badge del operario + tarea */}
       <div
-        className={cn(
-          "flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1",
-          isMobile ? "shrink-0" : "flex-1",
-        )}
+        className="flex min-w-0 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1"
         style={{
           backgroundColor: `${operator.color ?? "#64748B"}14`,
         }}

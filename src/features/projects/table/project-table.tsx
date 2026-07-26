@@ -169,7 +169,7 @@ export function ProjectTable({
 
           return (
 
-            <div key={project.id}>
+            <div key={project.id} data-expanded-row-id={project.id}>
 
               {/* templateColumns vacío porque la card maneja su
                   propio layout, no un grid de columnas. */}

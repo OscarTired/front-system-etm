@@ -127,7 +127,7 @@ export function ProductionProcessCard({
 
       {expanded && (
 
-        <div className="flex flex-col gap-2 bg-white/2 p-2 pt-3">
+        <div className="animate-comment-in flex flex-col gap-2 bg-white/2 p-2 pt-3">
 
           {processTasks.length === 0 && (
 

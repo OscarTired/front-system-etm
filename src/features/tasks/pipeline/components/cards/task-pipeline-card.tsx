@@ -212,7 +212,7 @@ export function TaskPipelineCard({
               event.stopPropagation()
               setCommentsOpen(true)
             }}
-            className="absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white/8 text-neutral-300 transition-colors hover:bg-white/15 hover:text-white"
+            className="animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white/8 text-neutral-300 transition-colors hover:bg-white/15 hover:text-white"
           >
             <MessageCircle size={15} />
           </button>
