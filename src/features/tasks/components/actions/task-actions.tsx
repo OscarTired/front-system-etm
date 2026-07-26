@@ -73,7 +73,7 @@ export function TaskActions(){
           onClick={handleOpen}
           aria-label="Nueva tarea"
           className={cn(
-            "fixed bottom-20 right-4 z-30 flex size-12 items-center justify-center rounded-full transition-all duration-200",
+            "fixed bottom-20 right-4 z-30 flex size-12 items-center justify-center rounded-full transition duration-200",
             canCreate
               ? [
                   "bg-white text-black",

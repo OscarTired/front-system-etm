@@ -221,7 +221,7 @@ export function ProjectExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
-            fullWidth={isMobile}
+            fullWidth
             options={[
               {
                 value: "tasks",

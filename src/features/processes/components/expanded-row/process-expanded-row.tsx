@@ -175,7 +175,7 @@ export function ProcessExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={setActiveView}
-            fullWidth={isMobile}
+            fullWidth
             options={[
               {
                 value: "kpis" as const,

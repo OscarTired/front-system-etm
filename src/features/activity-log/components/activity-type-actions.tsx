@@ -44,7 +44,7 @@ export function ActivityTypeActions() {
           }}
           aria-label="Nueva actividad"
           className={cn(
-            "fixed bottom-20 right-4 z-30 flex size-12 items-center justify-center rounded-full transition-all duration-200",
+            "fixed bottom-20 right-4 z-30 flex size-12 items-center justify-center rounded-full transition duration-200",
             canManage
               ? "bg-white text-black hover:scale-105 hover:bg-neutral-100 active:scale-95"
               : "cursor-not-allowed bg-white/20 text-white/40",

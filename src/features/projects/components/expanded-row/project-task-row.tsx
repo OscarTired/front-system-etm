@@ -386,7 +386,7 @@ export function ProjectTaskRow({
             "flex h-8 w-8 items-center justify-center rounded-xl",
             "bg-white/4",
             "text-white/40",
-            "transition-all duration-200",
+            "transition duration-200",
             "hover:bg-white/[0.07] hover:text-white hover:scale-105",
             "active:scale-95",
             "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",

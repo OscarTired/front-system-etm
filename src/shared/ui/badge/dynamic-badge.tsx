@@ -198,7 +198,7 @@ export function DynamicBadge({
           ? "h-8"
           : "min-h-8 py-1.5",
 
-        "transition-all duration-150 ease-out",
+        "transition duration-150 ease-out",
 
         pulse && "animate-pulse",
 
@@ -306,7 +306,7 @@ export function DynamicBadge({
                 }}
                 className={cn(
 
-                  "absolute inset-0 transition-all duration-200 ease-out",
+                  "absolute inset-0 transition duration-200 ease-out",
 
                   showRemove &&
                     "opacity-0 tablet:opacity-50 tablet:group-hover:scale-75 tablet:group-hover:opacity-0",
@@ -354,7 +354,7 @@ export function DynamicBadge({
                 }}
                 className={cn(
 
-                  "absolute inset-0 flex cursor-pointer items-center justify-center transition-all duration-200 ease-out",
+                  "absolute inset-0 flex cursor-pointer items-center justify-center transition duration-200 ease-out",
 
                   "scale-100 opacity-100 tablet:scale-75 tablet:opacity-0 tablet:group-hover:scale-100 tablet:group-hover:opacity-100",
 
