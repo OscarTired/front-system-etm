@@ -1,186 +1,396 @@
 "use client"
 
-import type { Task } from "@/features/tasks/types/task.types"
-import type { EntityBase } from "@/shared/types/entity-base.types"
+import type {
+  Task,
+} from "@/features/tasks/types/task.types"
 
-import { useMemo, useState, useEffect, useRef } from "react"
-import { ChevronDown, Check } from "lucide-react"
+import type {
+  EntityBase,
+} from "@/shared/types/entity-base.types"
 
-import { createWorkflowView } from "@/features/workflow/view/create-workflow-view"
-import { getCurrentStep } from "@/features/workflow/selectors/get-current-step"
-import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { cn } from "@/shared/utils/utils"
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+
+import {
+  Check,
+  ChevronDown,
+} from "lucide-react"
+
+import {
+  createWorkflowView,
+} from "@/features/workflow/view/create-workflow-view"
+
+import {
+  getCurrentStep,
+} from "@/features/workflow/selectors/get-current-step"
+
+import {
+  WORKFLOW_STATUS_DEFINITIONS,
+} from "@/features/workflow/constants/workflow-status-definitions"
+
+import {
+  PROCESS_DEFINITIONS,
+} from "@/features/processes/constants/process-definitions"
+
+import {
+  ENTITY_ICONS,
+} from "@/shared/constants/entity-icons"
+
+import {
+  cn,
+} from "@/shared/utils/utils"
+
+import {
+  TaskRouteViewer,
+} from "./task-route-viewer"
 
 type Props = {
   task: Task
 }
 
-export function TaskProductionPanel({ task }: Props) {
-  const [expanded, setExpanded] = useState(false)
+export function TaskProductionPanel({
+  task,
+}: Props) {
+
+  const [
+    expanded,
+    setExpanded,
+  ] = useState(false)
+
+  // Autoscroll al paso activo cuando se expande en mobile — así no
+  // hay que buscarlo a mano si está lejos en la ruta (ej. tarea con
+  // 8 procesos y el activo es el 6°).
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const workflowView = createWorkflowView(task.workflowSteps)
-  const currentStep = getCurrentStep(task.workflowSteps)
+  const workflowView =
+    createWorkflowView(
+      task.workflowSteps,
+    )
 
-  // Autoscroll para centrar el paso activo en móvil cuando se expande
-  useEffect(() => {
-    if (expanded && scrollRef.current) {
-      const activeElement = scrollRef.current.querySelector('[data-active="true"]')
-      if (activeElement) {
-        activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+  const currentStep =
+    getCurrentStep(
+      task.workflowSteps,
+    )
+
+  const status =
+    useMemo<EntityBase | undefined>(() => {
+
+      if (
+        workflowView.completed
+      ) {
+
+        return {
+          id: "finalized",
+          name: "Finalizado",
+          icon: "check",
+          color: "#22C55E",
+        }
+
       }
-    }
+
+      if (
+        !currentStep
+      ) {
+        return undefined
+      }
+
+      const definition =
+        WORKFLOW_STATUS_DEFINITIONS[
+          currentStep.status
+        ]
+
+      return {
+        id: currentStep.status,
+        name: definition.label,
+        icon: definition.icon,
+        color: definition.color,
+      }
+
+    }, [
+      workflowView.completed,
+      currentStep,
+    ])
+
+  const StatusIcon =
+    status?.icon
+      ? ENTITY_ICONS[status.icon]
+      : undefined
+
+  useEffect(() => {
+
+    if (!expanded || !scrollRef.current) return
+
+    const activeEl = scrollRef.current.querySelector('[data-active="true"]')
+
+    activeEl?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    })
+
   }, [expanded])
 
-  const status = useMemo<EntityBase | undefined>(() => {
-    if (workflowView.completed) {
-      return { id: "finalized", name: "Finalizado", icon: "check", color: "#22C55E" }
-    }
-    if (!currentStep) return undefined
+  const progressContent = (
 
-    const definition = WORKFLOW_STATUS_DEFINITIONS[currentStep.status]
-    return {
-      id: currentStep.status,
-      name: definition.label,
-      icon: definition.icon,
-      color: definition.color,
-    }
-  }, [workflowView.completed, currentStep])
+    <div className="flex min-w-0 flex-col gap-1.5">
 
-  const StatusIcon = status?.icon ? ENTITY_ICONS[status.icon] : undefined
+      <div className="flex min-w-0 items-center justify-between gap-2">
+
+        <div className="flex min-w-0 items-center gap-1.5">
+
+          {StatusIcon && status && (
+            <StatusIcon size={13} style={{ color: status.color }} />
+          )}
+
+          <span
+            className="truncate text-xs font-bold uppercase tracking-wide"
+            style={{ color: status?.color ?? "#737373" }}
+          >
+            {status?.name ?? "Sin estado"}
+          </span>
+
+        </div>
+
+        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-neutral-500">
+          {workflowView.completedSteps}/{workflowView.totalSteps} completados · <span className="text-cyan-400">{workflowView.progress}%</span>
+        </span>
+
+      </div>
+
+      <div className="h-2 min-w-0 overflow-hidden rounded-full bg-white/5">
+
+        <div
+          className="h-full rounded-full bg-cyan-500 transition-all"
+          style={{
+            width: `${workflowView.progress}%`,
+          }}
+        />
+
+      </div>
+
+    </div>
+
+  )
 
   return (
-    <div className="flex h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4">
-      
-      {/* --- DESKTOP VIEW (Mantenida intacta según tu lógica) --- */}
-      <div className="hidden xl:block">{/* ... tu código desktop ... */}</div>
 
-      {/* --- MOBILE VIEW --- */}
+    <div className="flex h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4">
+
+      {/* Vista de Escritorio — esta ya funcionaba bien, sin cambios. */}
+      <div className="hidden xl:block">
+        <div className="flex justify-center">
+
+          <TaskRouteViewer
+            taskId={task.id}
+            route={task.route}
+            currentProcess={
+              currentStep?.processCode
+            }
+          />
+
+        </div>
+
+        <div className="mt-3 flex justify-center">
+
+          <div className="w-full max-w-3xl rounded-xl bg-white/2 px-5 py-3.5">
+
+            {progressContent}
+
+          </div>
+
+        </div>
+      </div>
+
+      {/* Vista Móvil / pantallas angostas — rediseñada. Antes había
+          un carrusel a mano que repetía EXACTAMENTE la misma info
+          que ya mostraba el header colapsado (mismo código, mismo
+          estado, dos veces), más 3 cajas tipo pill apiladas
+          (header / completados / progreso) sin ninguna jerarquía
+          entre ellas — "badge sobre badge". Ahora:
+          1. El header colapsado muestra SOLO lo esencial de un
+             vistazo (paso actual + % ), nunca se repite abajo.
+          2. Al expandir, se reusa TaskRouteViewer — el MISMO
+             componente que ya usa desktop, ya tiene su propia
+             animación, ya resuelve "ver los 6 procesos de un
+             vistazo" sin necesitar flechas para navegar uno por
+             uno (eso era lo redundante: para ver otro paso había
+             que tocar flechas en vez de simplemente mirarlos todos
+             juntos, que es lo que la ruta ya hace bien).
+          3. Estado + contador + % + barra quedan en UNA sola
+             tarjeta cohesiva, no tres piezas sueltas. */}
       <div className="xl:hidden">
-        {/* Cabecera del Acordeón (Ahora incluye una mini barra de progreso absoluta en la base) */}
+
         <button
           type="button"
           onClick={() => setExpanded(v => !v)}
-          className="group relative flex w-full flex-col overflow-hidden rounded-xl bg-white/4 transition duration-200 hover:bg-white/6"
+          className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/4 px-3.5 py-3 text-left transition duration-200 hover:bg-white/6"
         >
-          <div className="flex w-full items-center justify-between gap-3 px-4 py-3.5">
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="min-w-0 truncate text-sm font-bold text-neutral-200">
-                Ruta de producción
-              </span>
-              {!expanded && status && (
-                <span className="text-xs font-medium" style={{ color: status.color }}>
-                  {status.name} • {workflowView.progress}%
-                </span>
-              )}
-            </div>
 
-            <ChevronDown
-              size={18}
-              className={cn(
-                "text-neutral-400 transition-transform duration-300 ease-in-out",
-                expanded && "rotate-180"
-              )}
-            />
+          <div className="flex min-w-0 flex-col gap-0.5">
+
+            <span className="min-w-0 truncate text-sm font-bold text-neutral-200">
+              Ruta de producción
+            </span>
+
+            {/* Solo visible colapsado — al expandir ya se ve en el
+                stepper de abajo, mostrar los dos a la vez sí sería
+                la repetición que señalaste antes. */}
+            {!expanded && status && (
+              <span
+                className="truncate text-xs font-semibold"
+                style={{ color: status.color }}
+              >
+                {status.name} · {workflowView.progress}%
+              </span>
+            )}
+
           </div>
 
-          {/* Barra de progreso sutil en la base del botón cuando está colapsado */}
-          <div 
+          <ChevronDown
+            size={18}
             className={cn(
-              "absolute bottom-0 left-0 h-0.5 bg-cyan-500 transition-all duration-300",
-              expanded ? "opacity-0" : "opacity-100"
+              "shrink-0 text-neutral-400 transition-transform duration-300 ease-in-out",
+              expanded && "rotate-180",
             )}
-            style={{ width: `${workflowView.progress}%` }}
           />
+
         </button>
 
-        {/* Contenido Expandido */}
         <div
           className={cn(
             "grid overflow-hidden transition-all duration-300 ease-in-out",
-            expanded ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
+            expanded ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
           )}
         >
-          <div className="overflow-hidden rounded-xl bg-black/20 p-4 ring-1 ring-white/5">
-            
-            {/* 1. Header del estado actual dentro del panel */}
-            <div className="mb-6 flex items-center justify-between">
-               <div className="flex items-center gap-2">
-                  {StatusIcon && status && (
-                    <StatusIcon size={16} style={{ color: status.color }} />
-                  )}
-                  <span
-                    className="text-sm font-bold uppercase tracking-wider"
-                    style={{ color: status?.color ?? "#737373" }}
-                  >
-                    {status?.name ?? "Sin estado"}
-                  </span>
-               </div>
-               <span className="text-xs font-semibold text-neutral-500">
-                 {workflowView.completedSteps}/{workflowView.totalSteps}
-               </span>
-            </div>
+          <div className="overflow-hidden">
+            <div className="flex flex-col gap-4 rounded-xl bg-white/2 p-3.5">
 
-            {/* 2. El Stepper Horizontal (Reemplazo conceptual del TaskRouteViewer) */}
-            <div 
-              ref={scrollRef}
-              className="hide-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto px-4 pb-2"
-            >
-              <div className="flex items-center">
-                {task.workflowSteps.map((step, index) => {
-                  const isCompleted = step.status === 'COMPLETED'; // Ajusta según tu lógica
-                  const isActive = currentStep?.id === step.id;
-                  const isLast = index === task.workflowSteps.length - 1;
+              {/* Stepper horizontal — cada nodo usa el color/ícono
+                  real de PROCESS_DEFINITIONS (no un círculo neutro
+                  genérico), y el estado real del workflow decide
+                  completado/actual/pendiente en vez de un TODO sin
+                  resolver. task.route es la fuente de la ruta (no
+                  task.workflowSteps directo, que no garantiza venir
+                  en ese orden). */}
+              <div
+                ref={scrollRef}
+                className="hide-scrollbar -mx-3.5 flex snap-x snap-mandatory overflow-x-auto px-3.5 pb-1"
+              >
 
-                  return (
-                    <div 
-                      key={step.id} 
-                      className="flex items-center snap-center"
-                      data-active={isActive}
-                    >
-                      {/* Nodo del paso */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div 
-                          className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300",
-                            isActive ? "border-cyan-500 bg-cyan-500/10 shadow-[0_0_12px_rgba(6,182,212,0.3)]" : 
-                            isCompleted ? "border-neutral-700 bg-neutral-800" : 
-                            "border-neutral-800 bg-transparent opacity-50"
-                          )}
-                        >
-                          {isCompleted ? (
-                            <Check size={16} className="text-neutral-400" />
-                          ) : (
-                            <span className={cn(
-                              "text-xs font-bold", 
-                              isActive ? "text-cyan-400" : "text-neutral-500"
-                            )}>
-                              {step.processCode} {/* ej: CT, PL */}
-                            </span>
-                          )}
+                <div className="flex items-center">
+
+                  {task.route.map((code, index) => {
+
+                    const definition = PROCESS_DEFINITIONS[code]
+                    const ProcessIcon = ENTITY_ICONS[definition.icon]
+
+                    const step = task.workflowSteps.find(
+                      s => s.processCode === code,
+                    )
+
+                    const isActive = currentStep?.processCode === code
+
+                    const isDone =
+                      step?.status === "COMPLETED" ||
+                      step?.status === "REVIEWED"
+
+                    const isLast = index === task.route.length - 1
+
+                    return (
+
+                      <div
+                        key={code}
+                        data-active={isActive}
+                        className="flex items-center"
+                      >
+
+                        <div className="flex flex-col items-center gap-1.5">
+
+                          <div
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300"
+                            style={{
+                              borderColor:
+                                isActive || isDone
+                                  ? definition.color
+                                  : "#292929",
+                              backgroundColor:
+                                isActive || isDone
+                                  ? `${definition.color}1a`
+                                  : "transparent",
+                              opacity: isActive || isDone ? 1 : 0.45,
+                              boxShadow: isActive
+                                ? `0 0 12px -2px ${definition.color}4d`
+                                : undefined,
+                            }}
+                          >
+
+                            {isDone ? (
+                              <Check size={16} style={{ color: definition.color }} />
+                            ) : (
+                              <ProcessIcon
+                                size={16}
+                                style={{ color: isActive ? definition.color : "#737373" }}
+                              />
+                            )}
+
+                          </div>
+
+                          <span
+                            className="text-[10px] font-bold"
+                            style={{
+                              color:
+                                isActive || isDone
+                                  ? definition.color
+                                  : "#525252",
+                            }}
+                          >
+                            {definition.code}
+                          </span>
+
                         </div>
+
+                        {!isLast && (
+
+                          <div className="mx-1.5 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8">
+
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: isDone ? "100%" : "0%",
+                                backgroundColor: `${definition.color}80`,
+                              }}
+                            />
+
+                          </div>
+
+                        )}
+
                       </div>
 
-                      {/* Línea conectora */}
-                      {!isLast && (
-                        <div className="mx-2 h-0.5 w-8 shrink-0 rounded-full bg-neutral-800">
-                           {/* Llenado de la línea si el paso actual ya se completó */}
-                           <div 
-                             className="h-full bg-cyan-500/50 transition-all duration-500" 
-                             style={{ width: isCompleted ? '100%' : '0%' }}
-                           />
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+                    )
 
+                  })}
+
+                </div>
+
+              </div>
+
+              <div className="rounded-xl bg-white/3 px-3.5 py-3">
+                {progressContent}
+              </div>
+
+            </div>
           </div>
         </div>
+
       </div>
+
     </div>
+
   )
+
 }
