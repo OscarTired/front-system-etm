@@ -9,14 +9,18 @@ import type {
 } from "@/shared/types/entity-base.types"
 
 import {
-  useEffect,
+  useCallback,
   useMemo,
-  useRef,
 } from "react"
 
 import {
+  Activity,
   Check,
 } from "lucide-react"
+
+import {
+  KpiCarousel,
+} from "@/shared/ui/mini-card/kpi-carousel"
 
 import {
   createWorkflowView,
@@ -54,10 +58,26 @@ export function TaskProductionPanel({
   task,
 }: Props) {
 
-  // Siempre visible, sin colapsar — a diferencia de TaskKpisSection
-  // (que sí colapsa, con el estilo denso del Kanban), esto se dejó
-  // sin acordeón por pedido explícito.
-  const scrollRef = useRef<HTMLDivElement>(null)
+  // Autoscroll al paso activo — callback ref en vez de
+  // ref+useEffect: el stepper solo existe en el DOM cuando el
+  // KpiCarousel de abajo está expandido (arranca colapsado), así
+  // que un efecto corriendo al montar TaskProductionPanel se
+  // disparaba ANTES de que el nodo existiera. Un callback ref se
+  // ejecuta exactamente cuando el elemento se adjunta al DOM de
+  // verdad, sea cuando sea (al expandir, no al montar el panel).
+  const scrollToActive = useCallback((node: HTMLDivElement | null) => {
+
+    if (!node) return
+
+    const activeEl = node.querySelector('[data-active="true"]')
+
+    activeEl?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    })
+
+  }, [])
 
   const workflowView =
     createWorkflowView(
@@ -115,20 +135,6 @@ export function TaskProductionPanel({
 
   // Centra el paso activo apenas monta — antes esto corría al
   // expandir; como ya no hay colapso, corre una sola vez al montar.
-  useEffect(() => {
-
-    if (!scrollRef.current) return
-
-    const activeEl = scrollRef.current.querySelector('[data-active="true"]')
-
-    activeEl?.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    })
-
-  }, [])
-
   const progressContent = (
 
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -174,7 +180,7 @@ export function TaskProductionPanel({
   const stepper = (
 
     <div
-      ref={scrollRef}
+      ref={scrollToActive}
       className="hide-scrollbar -mx-5 flex snap-x snap-mandatory overflow-x-auto px-5 xl:-mx-0 xl:px-0 xl:justify-center"
     >
 
@@ -307,20 +313,42 @@ export function TaskProductionPanel({
         </div>
       </div>
 
-      {/* Mobile — siempre visible, sin acordeón. Misma card con
-          gradiente sutil (mismo tratamiento que ProcessMiniCard)
-          conteniendo el stepper y el progreso, pero sin botón de
-          colapsar encima. */}
-      <div
-        className="flex flex-col gap-6 rounded-2xl p-5 xl:hidden"
-        style={{
-          background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
-        }}
-      >
+      {/* Mobile — mismo componente genérico que ya usa TaskKpisSection
+          (KpiCarousel: colapsado = barra con fondo tinteado + ícono
+          + label + 2 valores; expandido = el contenido de abajo).
+          Al stepper+progreso no le hace falta un array de varias
+          cards intercambiables como sí necesitan los KPIs — se le
+          pasa UNA sola "card" (todo el bloque junto), KpiCarousel lo
+          renderiza igual, solo que sin flechas de carrusel (no hay
+          nada más para deslizar). */}
+      <div className="xl:hidden">
 
-        {stepper}
+        <KpiCarousel
+          cards={[
+            <div
+              key="route"
+              className="flex flex-col gap-6 rounded-2xl p-5"
+              style={{
+                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
+              }}
+            >
 
-        {progressContent}
+              {stepper}
+
+              {progressContent}
+
+            </div>,
+          ]}
+          summary={{
+            icon: StatusIcon ?? Activity,
+            color: status?.color ?? "#737373",
+            label: status?.name ?? "Producción",
+            values: [
+              { label: "Completados", value: `${workflowView.completedSteps}/${workflowView.totalSteps}` },
+              { label: "Avance", value: `${workflowView.progress}%` },
+            ],
+          }}
+        />
 
       </div>
 
