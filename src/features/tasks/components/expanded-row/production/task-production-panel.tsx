@@ -30,10 +30,6 @@ import {
 } from "@/features/workflow/constants/workflow-status-definitions"
 
 import {
-  PROCESS_DEFINITIONS,
-} from "@/features/processes/constants/process-definitions"
-
-import {
   ENTITY_ICONS,
 } from "@/shared/constants/entity-icons"
 
@@ -67,16 +63,6 @@ export function TaskProductionPanel({
     getCurrentStep(
       task.workflowSteps,
     )
-
-  const currentDefinition =
-    currentStep
-      ? PROCESS_DEFINITIONS[currentStep.processCode]
-      : undefined
-
-  const CurrentIcon =
-    currentDefinition
-      ? ENTITY_ICONS[currentDefinition.icon]
-      : undefined
 
   const status =
     useMemo<EntityBase | undefined>(() => {
@@ -218,43 +204,9 @@ export function TaskProductionPanel({
           className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/4 px-3.5 py-3 text-left transition duration-200 hover:bg-white/6"
         >
 
-          <div className="flex min-w-0 items-center gap-2">
-
-            {CurrentIcon && currentDefinition && (
-
-              <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: `${currentDefinition.color}22`,
-                  color: currentDefinition.color,
-                }}
-              >
-                <CurrentIcon size={14} />
-              </span>
-
-            )}
-
-            <div className="min-w-0">
-
-              <p
-                className="truncate text-sm font-bold"
-                style={{ color: currentDefinition?.color ?? "#F5F5F5" }}
-              >
-                {currentDefinition?.label ?? "Sin proceso activo"}
-              </p>
-
-              {status && (
-                <p
-                  className="truncate text-[11px] font-semibold uppercase tracking-wide"
-                  style={{ color: status.color }}
-                >
-                  {status.name}
-                </p>
-              )}
-
-            </div>
-
-          </div>
+          <span className="min-w-0 truncate text-sm font-bold text-neutral-200">
+            Ruta de producción
+          </span>
 
           <div className="flex shrink-0 items-center gap-3">
 
