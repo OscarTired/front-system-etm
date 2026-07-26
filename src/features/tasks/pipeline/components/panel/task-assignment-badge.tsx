@@ -41,7 +41,7 @@ export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
 
     <div
       className={cn(
-        "absolute left-2.5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium backdrop-blur-sm",
+        "animate-fade-in absolute left-2.5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium backdrop-blur-sm",
         invited ? "bg-sky-500/20 text-sky-300" : "bg-emerald-500/20 text-emerald-300",
       )}
     >

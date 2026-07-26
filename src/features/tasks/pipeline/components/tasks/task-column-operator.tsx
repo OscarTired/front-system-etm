@@ -27,6 +27,7 @@ export type ActiveEntry = {
   operator: NonNullable<WorkflowStep["operator"]>
   status: WorkflowStep["status"]
   taskNumber: number
+  reference: string
 }
 
 // Estados en los que el operario sigue "vivo" en esta estación: ya fue
@@ -59,6 +60,7 @@ export function getActiveOperatorEntries(
         operator: step.operator,
         status: step.status,
         taskNumber: task.taskNumber,
+        reference: task.reference,
       })
 
     }
@@ -90,7 +92,7 @@ function OperatorRow({
 
   const { isMobile } = useResponsive()
 
-  const { operator, status, taskNumber } = entry
+  const { operator, status, taskNumber, reference } = entry
 
   const isWorking = status === "PROGRESS"
 
@@ -155,7 +157,7 @@ function OperatorRow({
 
         )}
 
-        <MarqueeText className="min-w-0 flex-1">
+        <MarqueeText className="min-w-0 flex-1" always>
 
           <span
             className="text-xs font-semibold whitespace-nowrap"
@@ -165,10 +167,10 @@ function OperatorRow({
           </span>
 
           <span
-            className="shrink-0 text-xs font-semibold opacity-60"
+            className="shrink-0 text-xs font-semibold opacity-60 whitespace-nowrap"
             style={{ color: operator.color ?? "#64748B" }}
           >
-            #{taskNumber}
+            #{taskNumber} · {reference}
           </span>
 
         </MarqueeText>

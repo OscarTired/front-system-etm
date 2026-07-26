@@ -66,7 +66,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
 
             <div
               key={invite.stepId}
-              className="flex items-center gap-3 rounded-xl bg-white/4 p-3"
+              className="animate-comment-in flex items-center gap-3 rounded-xl bg-white/4 p-3"
             >
 
               <div

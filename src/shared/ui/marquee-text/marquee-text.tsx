@@ -9,31 +9,37 @@ type Props = {
   className?: string
   // px/segundo — más alto = desliza más rápido.
   speed?: number
+  // true: loop continuo SIEMPRE, como un cartel LED real (se mueve
+  // aunque el contenido entre cómodo en el ancho disponible). Sin
+  // esto, sería un marquee "inteligente" que solo anima cuando hace
+  // falta — pero un cartel LED de tienda no le importa si el texto
+  // entra o no, se mueve todo el tiempo, ese es el efecto que se
+  // pidió acá.
+  always?: boolean
 }
 
-// Como los carteles LED de las tiendas: si el contenido entra
-// cómodo en el ancho disponible, se queda quieto (no tiene sentido
-// animar algo que ya se ve completo). Si NO entra, se desliza hacia
-// la izquierda hasta mostrar el final, pausa, y vuelve a arrancar
-// desde el principio — en vez de truncar con "..." y perder
-// información (el caso real: "Sebastian #3" truncando a solo "#3"
-// no le dice nada a nadie).
-export function MarqueeText({ children, className, speed = 35 }: Props) {
+// Loop continuo real (contenido duplicado + translateX a -50%), no
+// un "va y viene" con pausa en los extremos — así el texto
+// desaparece por la izquierda y reaparece por la derecha sin salto
+// ni corte, igual que un cartel LED de tienda de verdad.
+export function MarqueeText({ children, className, speed = 35, always = false }: Props) {
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
+  const singleCopyRef = useRef<HTMLDivElement>(null)
 
-  const [distance, setDistance] = useState(0)
+  const [copyWidth, setCopyWidth] = useState(0)
+  const [overflowing, setOverflowing] = useState(false)
 
   useEffect(() => {
 
     function measure() {
 
-      if (!containerRef.current || !contentRef.current) return
+      if (!containerRef.current || !singleCopyRef.current) return
 
-      const overflow = contentRef.current.scrollWidth - containerRef.current.clientWidth
+      const width = singleCopyRef.current.scrollWidth
 
-      setDistance(overflow > 4 ? overflow : 0)
+      setCopyWidth(width)
+      setOverflowing(width > containerRef.current.clientWidth)
 
     }
 
@@ -49,27 +55,39 @@ export function MarqueeText({ children, className, speed = 35 }: Props) {
 
   }, [children])
 
-  const overflowing = distance > 0
+  const shouldAnimate = (always || overflowing) && copyWidth > 0
 
-  const duration = overflowing ? Math.max(distance / speed, 2.5) : 0
+  const duration = shouldAnimate ? Math.max(copyWidth / speed, 4) : 0
 
   return (
 
     <div ref={containerRef} className={cn("min-w-0 overflow-hidden", className)}>
 
       <div
-        ref={contentRef}
-        className={cn("flex w-max items-center gap-1.5", overflowing && "animate-marquee-scroll")}
+        className={cn("flex w-max items-center", shouldAnimate && "animate-marquee-loop")}
         style={
-          overflowing
+          shouldAnimate
             ? ({
-                "--marquee-distance": `${distance}px`,
+                "--marquee-width": `${copyWidth}px`,
                 animationDuration: `${duration}s`,
               } as CSSProperties)
             : undefined
         }
       >
-        {children}
+
+        <div ref={singleCopyRef} className="flex shrink-0 items-center gap-1.5 pr-8">
+          {children}
+        </div>
+
+        {/* Segunda copia — recién visible cuando el loop arranca a
+            desplazarse, es lo que hace que el "final" del texto se
+            encuentre sin corte con su propio "principio" otra vez. */}
+        {shouldAnimate && (
+          <div aria-hidden className="flex shrink-0 items-center gap-1.5 pr-8">
+            {children}
+          </div>
+        )}
+
       </div>
 
     </div>

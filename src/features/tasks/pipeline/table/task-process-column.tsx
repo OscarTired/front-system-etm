@@ -218,24 +218,29 @@ function ColumnContent({
 
             const isSelected = selectedStepIds?.has(step.id) ?? false
 
-            // Ya la está trabajando alguien ahora mismo — no tiene
-            // sentido convocar a otra persona a una tarea que ya
-            // está en curso, así que ni se deja seleccionar.
-            const isInProgress = step.status === "PROGRESS"
+            // No seleccionable: ya la está trabajando alguien ahora
+            // mismo (PROGRESS), o el paso ya se terminó del todo
+            // (COMPLETED/REVIEWED) — convocar a cualquiera de estos
+            // tres no tiene sentido, el trabajo ahí ya está en curso
+            // o cerrado.
+            const isLocked =
+              step.status === "PROGRESS" ||
+              step.status === "COMPLETED" ||
+              step.status === "REVIEWED"
 
             return (
 
               <div
                 key={key}
                 role="button"
-                tabIndex={isInProgress ? -1 : 0}
-                aria-disabled={isInProgress}
+                tabIndex={isLocked ? -1 : 0}
+                aria-disabled={isLocked}
                 onClick={() => {
-                  if (isInProgress) return
+                  if (isLocked) return
                   onToggleStepSelection?.(step.id)
                 }}
                 onKeyDown={(e) => {
-                  if (isInProgress) return
+                  if (isLocked) return
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
                     onToggleStepSelection?.(step.id)
@@ -243,7 +248,7 @@ function ColumnContent({
                 }}
                 className={cn(
                   "flex items-center gap-2",
-                  isInProgress ? "cursor-not-allowed" : "cursor-pointer",
+                  isLocked ? "cursor-not-allowed" : "cursor-pointer",
                 )}
               >
 
@@ -257,13 +262,13 @@ function ColumnContent({
                 <div
                   className={cn(
                     "pointer-events-none min-w-0 flex-1 transition-opacity duration-200",
-                    isInProgress && "opacity-45",
+                    isLocked && "opacity-45",
                   )}
                 >
                   {card}
                 </div>
 
-                {isInProgress ? (
+                {isLocked ? (
 
                   // Nada de checkbox acá — en su lugar, un indicador
                   // chico de por qué no se puede tocar. Mismo ancho

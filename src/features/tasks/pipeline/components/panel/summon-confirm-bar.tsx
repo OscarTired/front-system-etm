@@ -32,7 +32,7 @@ export function SummonConfirmBar({
     // FUERA del Portal de Radix (era hermano de <Sheet>, no hijo de
     // SheetContent), terminaba pintándose en otra capa de stacking y
     // quedaba tapado por el overlay con blur del Sheet.
-    <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/8 bg-[#101012] px-4 py-3">
+    <div className="animate-slide-up-in absolute inset-x-0 bottom-0 z-10 border-t border-white/8 bg-[#101012] px-4 py-3">
 
       <div className="flex items-center gap-3">
 
