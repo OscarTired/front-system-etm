@@ -41,6 +41,10 @@ import {
 } from "@/shared/constants/entity-icons"
 
 import {
+  getBadgeColors,
+} from "@/shared/utils/badge-colors"
+
+import {
   cn,
 } from "@/shared/utils/utils"
 
@@ -156,7 +160,7 @@ export function TaskProductionPanel({
         </div>
 
         <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-neutral-500">
-          {workflowView.completedSteps}/{workflowView.totalSteps} completados · <span className="text-cyan-400">{workflowView.progress}%</span>
+          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-400">{workflowView.progress}%</span>
         </span>
 
       </div>
@@ -267,7 +271,21 @@ export function TaskProductionPanel({
           )}
         >
           <div className="overflow-hidden">
-            <div className="flex flex-col gap-4 rounded-xl bg-white/2 p-3.5">
+
+            {/* Una sola card, mismo tratamiento que ya usa
+                ProcessMiniCard (KPIs) — gradiente sutil con el
+                color del estado actual, padding generoso. Antes
+                había 3 rounded-xl anidados (contenedor > stepper
+                envuelto en otro rounded-xl > progreso en OTRO
+                rounded-xl más) sin necesidad; con gap-6 alcanza
+                para separar las dos secciones sin encajonarlas
+                cada una en su propia caja. */}
+            <div
+              className="flex flex-col gap-6 rounded-2xl p-5"
+              style={{
+                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
+              }}
+            >
 
               {/* Stepper horizontal — cada nodo usa el color/ícono
                   real de PROCESS_DEFINITIONS (no un círculo neutro
@@ -278,7 +296,7 @@ export function TaskProductionPanel({
                   en ese orden). */}
               <div
                 ref={scrollRef}
-                className="hide-scrollbar -mx-3.5 flex snap-x snap-mandatory overflow-x-auto px-3.5 pb-1"
+                className="hide-scrollbar -mx-5 flex snap-x snap-mandatory overflow-x-auto px-5"
               >
 
                 <div className="flex items-center">
@@ -300,6 +318,13 @@ export function TaskProductionPanel({
 
                     const isLast = index === task.route.length - 1
 
+                    // Mismo tratamiento de color que ya usa
+                    // DynamicBadge (fondo tenue del color + texto
+                    // aclarado, cero glow) — antes esto tenía un
+                    // borde saturado + box-shadow difuminado
+                    // ("neón"), acá directamente no hay sombra.
+                    const colors = getBadgeColors(definition.color, "subtle")
+
                     return (
 
                       <div
@@ -311,29 +336,29 @@ export function TaskProductionPanel({
                         <div className="flex flex-col items-center gap-1.5">
 
                           <div
-                            className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300"
-                            style={{
-                              borderColor:
-                                isActive || isDone
-                                  ? definition.color
-                                  : "#292929",
-                              backgroundColor:
-                                isActive || isDone
-                                  ? `${definition.color}1a`
-                                  : "transparent",
-                              opacity: isActive || isDone ? 1 : 0.45,
-                              boxShadow: isActive
-                                ? `0 0 12px -2px ${definition.color}4d`
-                                : undefined,
-                            }}
+                            className={cn(
+                              "flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-300",
+                              isActive && "ring-1 ring-inset",
+                            )}
+                            style={
+                              isActive || isDone
+                                ? {
+                                    backgroundColor: colors.background,
+                                    ...(isActive ? { "--tw-ring-color": colors.text } as React.CSSProperties : {}),
+                                  }
+                                : {
+                                    backgroundColor: "rgba(255,255,255,0.03)",
+                                    opacity: 0.45,
+                                  }
+                            }
                           >
 
                             {isDone ? (
-                              <Check size={16} style={{ color: definition.color }} />
+                              <Check size={16} style={{ color: colors.text }} />
                             ) : (
                               <ProcessIcon
                                 size={16}
-                                style={{ color: isActive ? definition.color : "#737373" }}
+                                style={{ color: isActive ? colors.text : "#737373" }}
                               />
                             )}
 
@@ -344,7 +369,7 @@ export function TaskProductionPanel({
                             style={{
                               color:
                                 isActive || isDone
-                                  ? definition.color
+                                  ? colors.text
                                   : "#525252",
                             }}
                           >
@@ -361,7 +386,7 @@ export function TaskProductionPanel({
                               className="h-full rounded-full transition-all duration-500"
                               style={{
                                 width: isDone ? "100%" : "0%",
-                                backgroundColor: `${definition.color}80`,
+                                backgroundColor: colors.text,
                               }}
                             />
 
@@ -379,11 +404,10 @@ export function TaskProductionPanel({
 
               </div>
 
-              <div className="rounded-xl bg-white/3 px-3.5 py-3">
-                {progressContent}
-              </div>
+              {progressContent}
 
             </div>
+
           </div>
         </div>
 
