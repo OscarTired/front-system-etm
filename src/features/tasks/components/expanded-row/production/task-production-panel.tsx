@@ -90,7 +90,6 @@ export function TaskProductionPanel({
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null)
 
   const displayIndex = activeStepIndex !== null ? activeStepIndex : currentIndex
-  const currentRouteCode = routeSteps[displayIndex]
 
   const handlePrevStep = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -195,10 +194,79 @@ export function TaskProductionPanel({
 
     )
 
-  const currentDefinition =
-    currentStep
-      ? PROCESS_DEFINITIONS[currentStep.processCode]
-      : undefined
+  // Mismo formato para el header colapsado (siempre muestra el paso
+  // ACTUAL) y cada entrada del carrusel (muestra el paso que se esté
+  // navegando) — antes el header tenía su propio chip suelto,
+  // coloreado por el proceso en vez de por el estado, así que no se
+  // veía igual que el resto ("los demás estados" del carrusel).
+  function renderStepContent(index: number) {
+
+    const code = routeSteps[index]
+    const def = code ? PROCESS_DEFINITIONS[code] : undefined
+    const isCurrent = index === currentIndex
+
+    const stepObj = task.workflowSteps.find(s => s.processCode === code)
+    const stepStatusDef = stepObj ? WORKFLOW_STATUS_DEFINITIONS[stepObj.status] : undefined
+    const StatusIcon = stepStatusDef ? ENTITY_ICONS[stepStatusDef.icon] : undefined
+    const ProcessIcon = def ? ENTITY_ICONS[def.icon] : undefined
+
+    // Coloreado por ESTADO, no por proceso — "Pendiente" azul,
+    // "Trabajando" cyan, etc., como pediste. isCurrent usa el color
+    // del proceso (matchea el "Actual" en cyan/lo que sea de esa
+    // estación) solo porque no hay un status real todavía distinto
+    // de PENDING en ese caso puntual.
+    const tintColor =
+      isCurrent
+        ? def?.color
+        : stepStatusDef?.color
+
+    return (
+
+      <>
+
+        {ProcessIcon && (
+          <ProcessIcon size={13} style={{ color: tintColor }} />
+        )}
+
+        <span
+          className="text-sm font-bold"
+          style={{ color: tintColor }}
+        >
+          {def?.code}
+        </span>
+
+        <span className="whitespace-nowrap text-xs text-neutral-500">
+          ({index + 1}/{routeSteps.length})
+        </span>
+
+        <span className="text-neutral-700">·</span>
+
+        {isCurrent ? (
+
+          <span
+            className="whitespace-nowrap text-xs font-bold uppercase tracking-wide"
+            style={{ color: tintColor }}
+          >
+            Actual
+          </span>
+
+        ) : stepStatusDef ? (
+
+          <span
+            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium"
+            style={{ color: stepStatusDef.color }}
+          >
+            {StatusIcon && <StatusIcon size={12} />}
+            {stepStatusDef.label}
+          </span>
+
+        ) : null}
+
+      </>
+
+    )
+
+  }
 
   return (
 
@@ -269,35 +337,22 @@ export function TaskProductionPanel({
         <button
           type="button"
           onClick={() => setExpanded(v => !v)}
-          className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/4 px-3.5 py-3 text-left transition-all duration-200 hover:bg-white/6"
+          className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/4 px-3.5 py-3 text-left transition duration-200 hover:bg-white/6"
         >
 
-          <div className="flex min-w-0 items-center gap-2.5">
-            {currentDefinition && (
-
-              <EntityChip
-                label={currentDefinition.code}
-                color={currentDefinition.color}
-                icon={currentDefinition.icon}
-                compact
-              />
-
-            )}
+          <div className="flex min-w-0 items-center gap-1.5">
+            {renderStepContent(currentIndex)}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-3">
             <span
               className={cn(
-                "text-sm font-bold text-cyan-400 transition-all duration-300",
-                expanded ? "opacity-0 scale-95 w-0 overflow-hidden" : "opacity-100 scale-100",
+                "text-sm font-bold text-cyan-400 transition-[opacity,transform] duration-300",
+                expanded ? "w-0 scale-95 overflow-hidden opacity-0" : "opacity-100 scale-100",
               )}
             >
               {workflowView.progress}%
             </span>
-
-            <div className="min-w-0 shrink-0">
-              {statusContent}
-            </div>
 
             <ChevronDown
               size={16}
@@ -310,20 +365,14 @@ export function TaskProductionPanel({
 
         </button>
 
-        <div className="mt-2 px-1">
-          <div className="flex items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-300">
-            <span className="text-neutral-400 tracking-wide">COMPLETADOS</span>
-            <span className="font-bold text-neutral-100 text-sm">
-              {workflowView.completedSteps}
-              <span className="text-neutral-500 font-normal"> / {workflowView.totalSteps}</span>
-            </span>
-          </div>
-        </div>
-
+        {/* Un solo contenedor animado para TODO (ruta/carrusel +
+            completados + progreso) — antes COMPLETADOS vivía afuera
+            de este grid-rows, siempre visible sin animar, mientras
+            que el resto sí colapsaba/expandía con la flecha. */}
         <div
           className={cn(
-            "grid transition-all duration-300 ease-in-out overflow-hidden",
-            expanded ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0",
+            "grid overflow-hidden transition-all duration-300 ease-in-out",
+            expanded ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
           )}
         >
           <div className="overflow-hidden">
@@ -335,76 +384,31 @@ export function TaskProductionPanel({
                   type="button"
                   onClick={handlePrevStep}
                   disabled={displayIndex === 0}
-                  className="shrink-0 p-1.5 text-neutral-500 disabled:opacity-20 disabled:cursor-not-allowed hover:text-white transition-colors"
+                  className="shrink-0 p-1.5 text-neutral-500 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
                 >
                   <ChevronLeft size={16} />
                 </button>
 
                 <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
-                  {(() => {
-
-                    const def = currentRouteCode ? PROCESS_DEFINITIONS[currentRouteCode] : undefined
-                    const isCurrent = displayIndex === currentIndex
-
-                    const stepObj = task.workflowSteps.find(s => s.processCode === currentRouteCode)
-                    const stepStatusDef = stepObj ? WORKFLOW_STATUS_DEFINITIONS[stepObj.status] : undefined
-                    const StatusIcon = stepStatusDef ? ENTITY_ICONS[stepStatusDef.icon] : undefined
-                    const ProcessIcon = def ? ENTITY_ICONS[def.icon] : undefined
-
-                    return (
-                      <>
-
-                        {ProcessIcon && (
-                          <ProcessIcon size={13} style={{ color: def?.color }} />
-                        )}
-
-                        <span
-                          className="text-sm font-bold"
-                          style={{ color: def?.color }}
-                        >
-                          {def?.code}
-                        </span>
-
-                        <span className="whitespace-nowrap text-xs text-neutral-500">
-                          ({displayIndex + 1}/{routeSteps.length})
-                        </span>
-
-                        <span className="text-neutral-700">·</span>
-
-                        {isCurrent ? (
-
-                          <span
-                            className="whitespace-nowrap text-xs font-bold uppercase tracking-wide"
-                            style={{ color: def?.color }}
-                          >
-                            Actual
-                          </span>
-
-                        ) : stepStatusDef ? (
-
-                          <span
-                            className="flex items-center gap-1 whitespace-nowrap text-xs font-medium"
-                            style={{ color: stepStatusDef.color }}
-                          >
-                            {StatusIcon && <StatusIcon size={12} />}
-                            {stepStatusDef.label}
-                          </span>
-
-                        ) : null}
-
-                      </>
-                    )
-                  })()}
+                  {renderStepContent(displayIndex)}
                 </div>
 
                 <button
                   type="button"
                   onClick={handleNextStep}
                   disabled={displayIndex === routeSteps.length - 1}
-                  className="shrink-0 p-1.5 text-neutral-500 disabled:opacity-20 disabled:cursor-not-allowed hover:text-white transition-colors"
+                  className="shrink-0 p-1.5 text-neutral-500 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
                 >
                   <ChevronRight size={16} />
                 </button>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-300">
+                <span className="tracking-wide text-neutral-400">COMPLETADOS</span>
+                <span className="text-sm font-bold text-neutral-100">
+                  {workflowView.completedSteps}
+                  <span className="font-normal text-neutral-500"> / {workflowView.totalSteps}</span>
+                </span>
               </div>
 
               <div className="flex flex-col gap-2 pt-1">
