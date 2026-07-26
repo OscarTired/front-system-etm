@@ -2,6 +2,8 @@
 
 import { ArrowRight, CheckCircle2 } from "lucide-react"
 
+import { TaskAssignmentBadge } from "../components/panel/task-assignment-badge"
+
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
@@ -28,6 +30,12 @@ type SelectionProps = {
   selectionMode?: boolean
   selectedStepIds?: Set<string>
   onToggleStepSelection?: (stepId: string) => void
+  // "Desconvocar" — solo se muestra el badge (y el botón para
+  // deshacer) cuando el caller pasa esto, y nunca durante
+  // selectionMode (ver ColumnContent). TaskAreaPanel es el único
+  // que lo pasa hoy.
+  onUnsummon?: (stepId: string) => void
+  unsummoning?: boolean
 }
 
 type ContentProps = SharedProps & SelectionProps & {
@@ -94,6 +102,8 @@ function ColumnContent({
   selectionMode,
   selectedStepIds,
   onToggleStepSelection,
+  onUnsummon,
+  unsummoning,
 }: ContentProps & { fullWidth?: boolean }) {
   const { isMobile } = useResponsive()
   const columnScrollRef = useColumnScroll()
@@ -192,7 +202,18 @@ function ColumnContent({
             // TypeScript no lo sabe) — no hay stepId para convocar,
             // se muestra la card normal sin overlay de selección.
             if (!selectionMode || !step) {
-              return <div key={key}>{card}</div>
+              return (
+                <div key={key} className="relative">
+                  {card}
+                  {step && onUnsummon && (
+                    <TaskAssignmentBadge
+                      step={step}
+                      onUnsummon={onUnsummon}
+                      unsummoning={unsummoning}
+                    />
+                  )}
+                </div>
+              )
             }
 
             const isSelected = selectedStepIds?.has(step.id) ?? false
@@ -226,10 +247,10 @@ function ColumnContent({
 
                 <div
                   className={cn(
-                    "absolute right-2.5 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full transition-colors",
+                    "absolute right-2.5 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full backdrop-blur-sm transition-colors",
                     isSelected
                       ? "bg-emerald-500 text-white"
-                      : "bg-black/40 text-transparent ring-1 ring-white/25 backdrop-blur-sm",
+                      : "bg-black/40 text-transparent ring-1 ring-white/25",
                   )}
                 >
                   <CheckCircle2 size={16} strokeWidth={2.5} />
@@ -275,6 +296,8 @@ export function TaskProcessColumn({
   selectionMode,
   selectedStepIds,
   onToggleStepSelection,
+  onUnsummon,
+  unsummoning,
 }: Props) {
   if (headerOnly) {
     return <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
@@ -294,6 +317,8 @@ export function TaskProcessColumn({
         selectionMode={selectionMode}
         selectedStepIds={selectedStepIds}
         onToggleStepSelection={onToggleStepSelection}
+        onUnsummon={onUnsummon}
+        unsummoning={unsummoning}
       />
     )
   }
@@ -318,6 +343,8 @@ export function TaskProcessColumn({
         selectionMode={selectionMode}
         selectedStepIds={selectedStepIds}
         onToggleStepSelection={onToggleStepSelection}
+        onUnsummon={onUnsummon}
+        unsummoning={unsummoning}
       />
     </section>
   )

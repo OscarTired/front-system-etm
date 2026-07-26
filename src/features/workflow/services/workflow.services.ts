@@ -180,4 +180,19 @@ export const workflowService={
 
   },
 
+  // "Desconvocar" — deshace summon() (ASSIGN o INVITE) y retira la
+  // notificación que se había mandado.
+  async unsummon(
+    stepId:string,
+  ){
+
+    const res=
+      await api.patch<{ success:boolean }>(
+        `/workflow/${stepId}/unsummon`,
+      )
+
+    return res.data
+
+  },
+
 }

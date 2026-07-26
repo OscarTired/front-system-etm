@@ -83,7 +83,18 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
   const [selectedStepIds, setSelectedStepIds] = useState<Set<string>>(new Set())
   const [summonMode, setSummonMode] = useState<"ASSIGN" | "INVITE">("ASSIGN")
 
-  const { summon, summoning } = useWorkflowSummon()
+  const { summon, summoning, unsummon, unsummoning } = useWorkflowSummon()
+
+  async function handleUnsummon(stepId: string) {
+
+    try {
+      await unsummon(stepId)
+      toast.success("Convocatoria deshecha")
+    } catch {
+      toast.error("No se pudo deshacer la convocatoria. Intenta de nuevo.")
+    }
+
+  }
 
   function handleToggleStepSelection(stepId: string) {
 
@@ -132,7 +143,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
     } catch {
 
-      toast.error("No se pudo enviar la convocatoria — probá de nuevo")
+      toast.error("No se pudo enviar la convocatoria. Intenta de nuevo.")
 
     }
 
@@ -367,15 +378,21 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
                     {/* Solo quien puede elegir áreas (Supervisor/Admin)
                         tiene sentido que convoque — un operario de área
-                        fija viendo su propia cola no asigna nada. */}
-                    {canChooseAreas && !summonTarget && (
-                      <SummonOperatorButton
-                        processCode={code}
-                        onSelect={(operator) => {
-                          setSummonTarget({ processCode: code, operator })
-                          setSelectedStepIds(new Set())
-                        }}
-                      />
+                        fija viendo su propia cola no asigna nada.
+                        invisible en vez de no-renderizar: reserva el
+                        mismo espacio siempre, así el resto de las áreas
+                        no salta de lugar en cuanto se activa el modo
+                        selección en cualquiera de ellas. */}
+                    {canChooseAreas && (
+                      <div className={cn(!!summonTarget && "invisible")}>
+                        <SummonOperatorButton
+                          processCode={code}
+                          onSelect={(operator) => {
+                            setSummonTarget({ processCode: code, operator })
+                            setSelectedStepIds(new Set())
+                          }}
+                        />
+                      </div>
                     )}
 
                   </div>
@@ -393,6 +410,8 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                       selectionMode={summonTarget?.processCode === code}
                       selectedStepIds={selectedStepIds}
                       onToggleStepSelection={handleToggleStepSelection}
+                      onUnsummon={canChooseAreas ? handleUnsummon : undefined}
+                      unsummoning={unsummoning}
                     />
 
                   ) : (

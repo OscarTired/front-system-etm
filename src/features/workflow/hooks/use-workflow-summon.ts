@@ -33,6 +33,11 @@ export function useWorkflowSummon() {
     onSuccess: invalidateTasks,
   })
 
+  const unsummon = useMutation({
+    mutationFn: workflowService.unsummon,
+    onSuccess: invalidateTasks,
+  })
+
   return {
     summon: summon.mutateAsync,
     summoning: summon.isPending,
@@ -40,6 +45,8 @@ export function useWorkflowSummon() {
     accepting: acceptInvite.isPending,
     declineInvite: declineInvite.mutateAsync,
     declining: declineInvite.isPending,
+    unsummon: unsummon.mutateAsync,
+    unsummoning: unsummon.isPending,
   }
 
 }
