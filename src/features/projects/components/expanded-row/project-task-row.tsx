@@ -73,6 +73,14 @@ import {
 
 type Props = {
   task: Task
+  // Opcionales: si el padre los pasa (ProjectTasksList en mobile,
+  // para que solo una tarea esté abierta a la vez entre todas las
+  // de un mismo proyecto), se usan esos. Si no, cae al estado local
+  // de siempre — así el uso en desktop (que ni siquiera usa
+  // `expanded` de verdad, ver "isMobile ? expanded : true" abajo)
+  // sigue funcionando sin tener que pasar nada.
+  expanded?: boolean
+  onToggle?: () => void
 }
 
 type StageEntity = EntityBase & {
@@ -81,6 +89,8 @@ type StageEntity = EntityBase & {
 
 export function ProjectTaskRow({
   task,
+  expanded: expandedProp,
+  onToggle,
 }: Props) {
   const router =
     useRouter()
@@ -91,10 +101,23 @@ export function ProjectTaskRow({
     useResponsive()
 
   const [
-    expanded,
-    setExpanded,
+    localExpanded,
+    setLocalExpanded,
   ] =
     useState(false)
+
+  const expanded = expandedProp ?? localExpanded
+
+  const toggleExpanded = useCallback(
+    () => {
+      if (onToggle) {
+        onToggle()
+      } else {
+        setLocalExpanded(current => !current)
+      }
+    },
+    [onToggle],
+  )
 
   const {
     stage,
@@ -269,9 +292,7 @@ export function ProjectTaskRow({
       ) => {
         if (isMobile) {
           if (!overlayOpen) {
-            setExpanded(
-              current => !current,
-            )
+            toggleExpanded()
           }
 
           return
