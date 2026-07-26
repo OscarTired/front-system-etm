@@ -10,6 +10,7 @@ import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
 import { ProcessMiniCard } from "@/shared/ui/mini-card/process-mini-card"
 import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
+import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import {
@@ -266,8 +267,30 @@ export function ProjectExpandedRow({
             },
             {
               value: "kpis",
-              content: (
+              content: !isMobile ? (
+
                 <KpiPanel cards={cards} />
+
+              ) : (
+
+                <KpiCarousel
+                  cards={cards}
+                  summary={{
+                    icon: CheckCircle2,
+                    color: "#22C55E",
+                    label: "Avance",
+                    values: [
+                      { label: "Finalizadas", value: completedTasks },
+                      {
+                        label: "Progreso",
+                        value: totalTasks > 0
+                          ? `${Math.round((completedTasks / totalTasks) * 100)}%`
+                          : "0%",
+                      },
+                    ],
+                  }}
+                />
+
               ),
             },
           ]}
