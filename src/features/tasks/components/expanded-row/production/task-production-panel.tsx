@@ -286,10 +286,11 @@ export function TaskProductionPanel({
 
   return (
 
-    <div className="flex h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4">
+    <>
 
       {/* Desktop — sin cambios. */}
-      <div className="hidden xl:block">
+      <div className="hidden h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4 xl:flex">
+
         <div className="flex justify-center">
 
           <TaskRouteViewer
@@ -311,16 +312,16 @@ export function TaskProductionPanel({
           </div>
 
         </div>
+
       </div>
 
       {/* Mobile — mismo componente genérico que ya usa TaskKpisSection
           (KpiCarousel: colapsado = barra con fondo tinteado + ícono
           + label + 2 valores; expandido = el contenido de abajo).
-          Al stepper+progreso no le hace falta un array de varias
-          cards intercambiables como sí necesitan los KPIs — se le
-          pasa UNA sola "card" (todo el bloque junto), KpiCarousel lo
-          renderiza igual, solo que sin flechas de carrusel (no hay
-          nada más para deslizar). */}
+          Sin wrapper extra alrededor — KpiCarousel ya trae su propia
+          tarjeta con gradiente; envolverla en OTRO contenedor con
+          fondo/padding (lo que había antes) se veía como una card
+          metida dentro de otra card. */}
       <div className="xl:hidden">
 
         <KpiCarousel
@@ -344,7 +345,7 @@ export function TaskProductionPanel({
             color: status?.color ?? "#737373",
             label: status?.name ?? "Producción",
             values: [
-              { label: "Completados", value: `${workflowView.completedSteps}/${workflowView.totalSteps}` },
+              { label: "Listas", value: `${workflowView.completedSteps}/${workflowView.totalSteps}` },
               { label: "Avance", value: `${workflowView.progress}%` },
             ],
           }}
@@ -352,7 +353,7 @@ export function TaskProductionPanel({
 
       </div>
 
-    </div>
+    </>
 
   )
 
