@@ -14,7 +14,9 @@ import {
 } from "@/shared/ui/entity-expanded-row"
 
 import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
+import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { getProcessProgress } from "@/features/processes/selectors/get-process-progress"
 
 import { ProcessProductionCard } from "./cards/process-production-card"
 import { ProcessMaterialCard } from "./cards/process-material-card"
@@ -149,6 +151,12 @@ export function ProcessExpandedRow({
     setActiveView,
   ] = useState<"comments" | "kpis">("kpis")
 
+  // KpiCarousel maneja su propio expand/collapse internamente — no
+  // hace falta estado ni medición de altura acá, solo el resumen
+  // (getProcessProgress ya da percent/statusLabel sin importar qué
+  // combinación de cards toque mostrar según el tipo de proceso).
+  const { percent, statusLabel } = getProcessProgress(processTask)
+
   return(
 
     <EntityExpandedRow rowId={processTask.task.id}>
@@ -175,7 +183,7 @@ export function ProcessExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={setActiveView}
-            fullWidth
+            fullWidth={isMobile}
             options={[
               {
                 value: "kpis" as const,
@@ -199,8 +207,30 @@ export function ProcessExpandedRow({
           panels={[
             {
               value: "kpis" as const,
-              content: (
+              content: !isMobile ? (
+
                 <KpiPanel cards={cards} />
+
+              ) : (
+
+                // KpiCarousel — mismo componente genérico que ya usa
+                // TaskPipelineHeader (barra "AVANCE" con fondo
+                // tinteado). getProcessProgress ya da percent/status
+                // sin importar qué combinación de cards toque
+                // mostrar según el tipo de proceso.
+                <KpiCarousel
+                  cards={cards}
+                  summary={{
+                    icon: Activity,
+                    color: "#22C55E",
+                    label: "Progreso",
+                    values: [
+                      { label: "Estado", value: statusLabel },
+                      { label: "Avance", value: `${percent}%` },
+                    ],
+                  }}
+                />
+
               ),
             },
             ...(workflowStepId
