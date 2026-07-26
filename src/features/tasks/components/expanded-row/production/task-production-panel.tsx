@@ -10,11 +10,18 @@ import type {
 
 import {
   useMemo,
+  useState,
 } from "react"
 
 import {
-  DynamicBadge,
-} from "@/shared/ui/badge/dynamic-badge"
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
+
+import {
+  EntityChip,
+} from "@/shared/ui/entity-chip/entity-chip"
 
 import {
   createWorkflowView,
@@ -29,81 +36,117 @@ import {
 } from "@/features/workflow/constants/workflow-status-definitions"
 
 import {
-  ENTITY_ICONS,
-} from "@/shared/constants/entity-icons"
+  PROCESS_DEFINITIONS,
+} from "@/features/processes/constants/process-definitions"
+
+import {
+  cn,
+} from "@/shared/utils/utils"
 
 import {
   TaskRouteViewer,
 } from "./task-route-viewer"
 
-type Props={
-  task:Task
+type Props = {
+  task: Task
 }
 
 export function TaskProductionPanel({
   task,
-}:Props){
+}: Props) {
 
-  const workflowView=
+  const [
+    expanded,
+    setExpanded,
+  ] = useState(false)
+
+  const workflowView =
     createWorkflowView(
       task.workflowSteps,
     )
 
-  const currentStep=
+  const currentStep =
     getCurrentStep(
       task.workflowSteps,
     )
 
-  const status=
-    useMemo<EntityBase|undefined>(()=>{
+  // task.route ya viene tipado como ProcessCode[] (nunca objetos ni
+  // null) — se memoiza solo para que la referencia sea estable entre
+  // renders y no dispare de más el useMemo de abajo.
+  const routeSteps = useMemo(
+    () => task.route ?? [],
+    [task.route],
+  )
 
-      if(
+  const currentIndex = useMemo(() => {
+    if (!currentStep) return 0
+    const idx = routeSteps.findIndex(
+      code => code === currentStep.processCode
+    )
+    return idx !== -1 ? idx : 0
+  }, [routeSteps, currentStep])
+
+  const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null)
+
+  const displayIndex = activeStepIndex !== null ? activeStepIndex : currentIndex
+  const currentRouteCode = routeSteps[displayIndex]
+
+  const handlePrevStep = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setActiveStepIndex(prev => {
+      const current = prev !== null ? prev : currentIndex
+      return current > 0 ? current - 1 : current
+    })
+  }
+
+  const handleNextStep = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setActiveStepIndex(prev => {
+      const current = prev !== null ? prev : currentIndex
+      return current < routeSteps.length - 1 ? current + 1 : current
+    })
+  }
+
+  const status =
+    useMemo<EntityBase | undefined>(() => {
+
+      if (
         workflowView.completed
-      ){
+      ) {
 
-        return{
-          id:"finalized",
-          name:"Finalizado",
-          icon:"check",
-          color:"#22C55E",
+        return {
+          id: "finalized",
+          name: "Finalizado",
+          icon: "check",
+          color: "#22C55E",
         }
 
       }
 
-      if(
+      if (
         !currentStep
-      ){
+      ) {
         return undefined
       }
 
-      const definition=
+      const definition =
         WORKFLOW_STATUS_DEFINITIONS[
           currentStep.status
         ]
 
-      return{
-        id:currentStep.status,
-        name:definition.label,
-        icon:definition.icon,
-        color:definition.color,
+      return {
+        id: currentStep.status,
+        name: definition.label,
+        icon: definition.icon,
+        color: definition.color,
       }
 
-    },[
+    }, [
       workflowView.completed,
       currentStep,
     ])
 
-  const StatusIcon=
-
-    status?.icon
-
-      ?ENTITY_ICONS[
-        status.icon
-      ]
-
-      :undefined
-
-  const progressContent=(
+  const progressContent = (
 
     <div className="flex min-w-0 flex-col items-center gap-1">
 
@@ -114,7 +157,7 @@ export function TaskProductionPanel({
           <div
             className="h-full rounded-full bg-cyan-500 transition-all"
             style={{
-              width:`${workflowView.progress}%`,
+              width: `${workflowView.progress}%`,
             }}
           />
 
@@ -138,102 +181,231 @@ export function TaskProductionPanel({
 
   )
 
-  const completedContent=(
+  const statusContent =
 
-    <div className="flex shrink-0 flex-col items-center">
+    status && (
 
-      <span className="text-lg font-bold leading-none text-neutral-100">
-
-        {workflowView.completedSteps}
-
-        /
-
-        {workflowView.totalSteps}
-
-      </span>
-
-      <span className="mt-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-
-        COMPLETADOS
-
-      </span>
-
-    </div>
-
-  )
-
-  const statusContent=
-
-    status&&(
-
-      <DynamicBadge
+      <EntityChip
         label={status.name}
         color={status.color}
-        iconComponent={StatusIcon}
+        icon={status.icon}
+        compact
       />
 
     )
 
-  return(
+  const currentDefinition =
+    currentStep
+      ? PROCESS_DEFINITIONS[currentStep.processCode]
+      : undefined
+
+  return (
 
     <div className="flex h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4">
 
-      <div className="flex justify-center">
+      {/* Vista de Escritorio */}
+      <div className="hidden xl:block">
+        <div className="flex justify-center">
 
-        <TaskRouteViewer
-          taskId={task.id}
-          route={task.route}
-          currentProcess={
-            currentStep?.processCode
-          }
-        />
+          <TaskRouteViewer
+            taskId={task.id}
+            route={task.route}
+            currentProcess={
+              currentStep?.processCode
+            }
+          />
 
-      </div>
+        </div>
 
-      <div className="mt-3 flex justify-center">
+        <div className="mt-3 flex justify-center">
 
-        <div className="w-full max-w-5xl rounded-xl bg-white/2 px-4 py-3">
+          <div className="w-full max-w-5xl rounded-xl bg-white/2 px-4 py-3">
 
-          <div className="hidden items-center justify-center gap-8 xl:flex">
+            <div className="flex items-center justify-center gap-8">
 
-            <div className="max-w-36 min-w-0 shrink">
-
-              {statusContent}
-
-            </div>
-
-            <div className="w-80">
-
-              {progressContent}
-
-            </div>
-
-            {completedContent}
-
-          </div>
-
-          <div className="xl:hidden">
-
-            {status&&(
-
-              <div className="mb-3 flex justify-center">
+              <div className="max-w-36 min-w-0 shrink">
 
                 {statusContent}
 
               </div>
 
-            )}
+              <div className="w-80">
 
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1">
+                {progressContent}
 
-              {progressContent}
+              </div>
 
-              {completedContent}
+              <div className="flex shrink-0 flex-col items-center">
+
+                <span className="text-lg font-bold leading-none text-neutral-100">
+
+                  {workflowView.completedSteps}
+
+                  /
+
+                  {workflowView.totalSteps}
+
+                </span>
+
+                <span className="mt-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+
+                  COMPLETADOS
+
+                </span>
+
+              </div>
 
             </div>
 
           </div>
 
+        </div>
+      </div>
+
+      {/* Vista Móvil / Pantallas angostas */}
+      <div className="xl:hidden">
+
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/4 px-3.5 py-3 text-left transition-all duration-200 hover:bg-white/6"
+        >
+
+          <div className="flex min-w-0 items-center gap-2.5">
+            {currentDefinition && (
+
+              <EntityChip
+                label={currentDefinition.code}
+                color={currentDefinition.color}
+                icon={currentDefinition.icon}
+                compact
+              />
+
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span
+              className={cn(
+                "text-sm font-bold text-cyan-400 transition-all duration-300",
+                expanded ? "opacity-0 scale-95 w-0 overflow-hidden" : "opacity-100 scale-100",
+              )}
+            >
+              {workflowView.progress}%
+            </span>
+
+            <div className="min-w-0 shrink-0">
+              {statusContent}
+            </div>
+
+            <ChevronDown
+              size={16}
+              className={cn(
+                "text-neutral-400 transition-transform duration-300 ease-in-out",
+                expanded && "rotate-180",
+              )}
+            />
+          </div>
+
+        </button>
+
+        <div className="mt-2 px-1">
+          <div className="flex items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-300">
+            <span className="text-neutral-400 tracking-wide">COMPLETADOS</span>
+            <span className="font-bold text-neutral-100 text-sm">
+              {workflowView.completedSteps}
+              <span className="text-neutral-500 font-normal"> / {workflowView.totalSteps}</span>
+            </span>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out overflow-hidden",
+            expanded ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0",
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="flex flex-col gap-3.5 rounded-xl bg-white/2 p-3.5">
+
+              <div className="flex items-center justify-between bg-white/3 rounded-xl p-2">
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  disabled={displayIndex === 0}
+                  className="p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {(() => {
+
+                    const def = currentRouteCode ? PROCESS_DEFINITIONS[currentRouteCode] : undefined
+                    const isCurrent = displayIndex === currentIndex
+
+                    const stepObj = task.workflowSteps.find(s => s.processCode === currentRouteCode)
+                    const stepStatusDef = stepObj ? WORKFLOW_STATUS_DEFINITIONS[stepObj.status] : undefined
+
+                    return (
+                      <div className="flex items-center gap-2">
+                        {def && (
+
+                          <EntityChip
+                            label={def.code}
+                            color={def.color}
+                            icon={def.icon}
+                            compact
+                          />
+
+                        )}
+                        <span className="text-xs text-neutral-400 font-medium flex items-center gap-1.5">
+                          <span>({displayIndex + 1} de {routeSteps.length})</span>
+                          {isCurrent ? (
+                            // Mismo tratamiento que "Actual" en la vista de
+                            // escritorio (TaskRouteViewer): texto chico,
+                            // bold, uppercase, con el color propio del
+                            // proceso — no un color fijo hardcodeado.
+                            <span
+                              className="whitespace-nowrap text-[9px] font-bold uppercase tracking-widest"
+                              style={{
+                                color: def?.color,
+                              }}
+                            >
+                              Actual
+                            </span>
+                          ) : stepStatusDef ? (
+
+                            <EntityChip
+                              label={stepStatusDef.label}
+                              color={stepStatusDef.color}
+                              icon={stepStatusDef.icon}
+                              compact
+                            />
+
+                          ) : null}
+                        </span>
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={displayIndex === routeSteps.length - 1}
+                  className="p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-1">
+                {progressContent}
+              </div>
+
+            </div>
+          </div>
         </div>
 
       </div>

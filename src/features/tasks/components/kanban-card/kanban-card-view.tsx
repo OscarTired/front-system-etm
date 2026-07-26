@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  ENTITY_ICONS,
   type EntityIcon,
 } from "@/shared/constants/entity-icons"
 
@@ -10,8 +9,8 @@ import {
 } from "@/shared/utils/date-format"
 
 import {
-  getBadgeColors,
-} from "@/shared/utils/badge-colors"
+  EntityChip,
+} from "@/shared/ui/entity-chip/entity-chip"
 
 import {
   cn,
@@ -83,25 +82,11 @@ export function KanbanCardView({
 
 }:Props){
 
-  const StageIcon=
-    stageIcon &&
-    ENTITY_ICONS[stageIcon]
-
-  const StatusIcon=
-    statusIcon &&
-    ENTITY_ICONS[statusIcon]
-
   const isFinalized=
     statusName==="Finalizado"
 
   const placeholderColor=
     "#64748B"
-
-  const stageBadge=
-    getBadgeColors(stageColor ?? "#64748B","subtle")
-
-  const statusBadge=
-    getBadgeColors(statusColor ?? "#64748B","subtle")
 
   return(
 
@@ -223,35 +208,19 @@ export function KanbanCardView({
 
           {!isFinalized&&stageName&&(
 
-            <div
-              className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold"
-              style={{
-                color:stageBadge.text,
-                backgroundColor:stageBadge.background,
-              }}
-            >
-
-              {StageIcon&&<StageIcon size={15}/>}
-
-              <span>{stageCode ?? stageName}</span>
-
-            </div>
+            <EntityChip
+              label={stageCode ?? stageName}
+              color={stageColor}
+              icon={stageIcon}
+            />
 
           )}
 
-          <div
-            className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold"
-            style={{
-              color:statusBadge.text,
-              backgroundColor:statusBadge.background,
-            }}
-          >
-
-            {StatusIcon&&<StatusIcon size={15}/>}
-
-            <span>{statusName}</span>
-
-          </div>
+          <EntityChip
+            label={statusName ?? ""}
+            color={statusColor}
+            icon={statusIcon}
+          />
 
         </div>
 
