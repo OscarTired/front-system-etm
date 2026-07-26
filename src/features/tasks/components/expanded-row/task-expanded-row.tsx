@@ -105,7 +105,7 @@ export function TaskExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
-            fullWidth
+            fullWidth={isMobile}
             options={[
               {
                 value: "workflow",
