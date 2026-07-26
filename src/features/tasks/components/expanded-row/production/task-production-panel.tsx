@@ -70,6 +70,39 @@ export function TaskProductionPanel({
   // 8 procesos y el activo es el 6°).
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // grid-template-rows animado (lo que había antes) es interpolado
+  // por el navegador de forma poco confiable, sobre todo al
+  // CERRAR — algunos navegadores lo animan bien al abrir y de golpe
+  // al cerrar. Midiendo la altura real del contenido con JS y
+  // animando max-height directo, la transición queda simétrica en
+  // los dos sentidos siempre.
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  const [
+    contentHeight,
+    setContentHeight,
+  ] = useState(0)
+
+  useEffect(() => {
+
+    if (!contentRef.current) return
+
+    const measure = () => {
+      if (contentRef.current) {
+        setContentHeight(contentRef.current.scrollHeight)
+      }
+    }
+
+    measure()
+
+    const resizeObserver = new ResizeObserver(measure)
+
+    resizeObserver.observe(contentRef.current)
+
+    return () => resizeObserver.disconnect()
+
+  }, [])
+
   const workflowView =
     createWorkflowView(
       task.workflowSteps,
@@ -266,11 +299,14 @@ export function TaskProductionPanel({
 
         <div
           className={cn(
-            "grid overflow-hidden transition-all duration-300 ease-in-out",
-            expanded ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+            "overflow-hidden transition-[max-height,opacity,margin-top] duration-300 ease-in-out",
+            expanded ? "mt-3 opacity-100" : "mt-0 opacity-0",
           )}
+          style={{
+            maxHeight: expanded ? contentHeight : 0,
+          }}
         >
-          <div className="overflow-hidden">
+          <div ref={contentRef}>
 
             {/* Una sola card, mismo tratamiento que ya usa
                 ProcessMiniCard (KPIs) — gradiente sutil con el
@@ -336,15 +372,18 @@ export function TaskProductionPanel({
                         <div className="flex flex-col items-center gap-1.5">
 
                           <div
-                            className={cn(
-                              "flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-300",
-                              isActive && "ring-1 ring-inset",
-                            )}
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-300"
                             style={
                               isActive || isDone
                                 ? {
-                                    backgroundColor: colors.background,
-                                    ...(isActive ? { "--tw-ring-color": colors.text } as React.CSSProperties : {}),
+                                    // Mismo color, distinta intensidad:
+                                    // activo usa el fondo "fuerte" que
+                                    // ya expone getBadgeColors,
+                                    // completado el sutil normal — sin
+                                    // necesitar un ring aparte.
+                                    backgroundColor: isActive
+                                      ? colors.backgroundActive
+                                      : colors.background,
                                   }
                                 : {
                                     backgroundColor: "rgba(255,255,255,0.03)",
