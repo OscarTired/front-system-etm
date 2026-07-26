@@ -301,6 +301,47 @@ input:focus-visible {
   animation: comment-in 0.2s ease-out;
 }
 
+/* Desliza hasta el final, pausa, y vuelve a arrancar — igual que un
+   cartel LED de tienda. --marquee-distance lo pone MarqueeText en
+   línea (JS mide cuánto contenido sobra, no se puede saber en CSS
+   puro). Los porcentajes con pausa al principio y al final (en vez
+   de un scroll continuo) son a propósito: da tiempo a leer el
+   arranque del texto y el final antes de reiniciar. */
+@keyframes marquee-scroll {
+  0%, 12% {
+    transform: translateX(0);
+  }
+  88%, 100% {
+    transform: translateX(calc(-1 * var(--marquee-distance)));
+  }
+}
+
+.animate-marquee-scroll {
+  animation-name: marquee-scroll;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Al entrar en modo selección (TaskAreaPanel > Convocar), este slot
+   arranca en 0 de ancho y crece hasta su tamaño real — como el slot
+   vive al lado de la card en un flex row, la card (flex-1) se ve
+   "empujada"/encogida en el mismo movimiento, sin tener que animar
+   su ancho por separado. */
+@keyframes checkbox-reveal {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 2.25rem;
+    opacity: 1;
+  }
+}
+
+.animate-checkbox-reveal {
+  animation: checkbox-reveal 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (max-width: 767px) {
   input,
   select,

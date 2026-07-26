@@ -62,6 +62,12 @@ export function useCreateComment(target:CommentTarget){
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
+        parentId: dto.parentId ?? null,
+        // null hasta que se reemplace por el real — el composer ya
+        // muestra a qué se está respondiendo mientras se escribe, así
+        // que no hace falta reconstruir el preview acá para esta
+        // ventana optimista tan corta.
+        parent: null,
         // Flag interno (no existe en la respuesta real del servidor):
         // permite que el ítem de la lista muestre su propio loader y
         // bloquee edición/borrado SOLO en este comentario, sin tocar el

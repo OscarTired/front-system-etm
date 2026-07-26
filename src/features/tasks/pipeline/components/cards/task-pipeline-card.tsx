@@ -174,14 +174,18 @@ export function TaskPipelineCard({
           )}
         >
           {expanded ? (
-            <KanbanCardFromTask
-              task={task}
-              processCode={processCode}
-            />
+            <div key="expanded" className="animate-comment-in">
+              <KanbanCardFromTask
+                task={task}
+                processCode={processCode}
+              />
+            </div>
           ) : (
-            <TaskPipelineCardCompact
-              processTask={processTask}
-            />
+            <div key="compact" className="animate-comment-in">
+              <TaskPipelineCardCompact
+                processTask={processTask}
+              />
+            </div>
           )}
         </div>
       </button>

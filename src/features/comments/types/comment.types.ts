@@ -9,6 +9,13 @@ export interface CommentUser{
   icon:EntityIcon
 }
 
+export interface CommentParentPreview{
+  id:string
+  message:string
+  deletedAt:string|null
+  user:{ id:string; name:string }
+}
+
 export interface Comment{
   id:string
   taskId:string|null
@@ -20,6 +27,8 @@ export interface Comment{
   createdAt:string
   updatedAt:string
   user:CommentUser
+  parentId:string|null
+  parent:CommentParentPreview|null
   pending?: boolean
   deleting?: boolean
 }
@@ -28,6 +37,8 @@ export interface CreateCommentDto{
   // Opcional: un comentario puede ser solo una foto, sin texto.
   message?:string
   imageBase64?:string
+  // Presente = esto es una respuesta a otro comentario.
+  parentId?:string
 }
 
 export interface UpdateCommentDto{

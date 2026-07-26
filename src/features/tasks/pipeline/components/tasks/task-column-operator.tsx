@@ -12,6 +12,7 @@ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
 import { cn } from "@/shared/utils/utils"
 
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
@@ -22,7 +23,7 @@ type Props = {
   tasks: Task[]
 }
 
-type ActiveEntry = {
+export type ActiveEntry = {
   operator: NonNullable<WorkflowStep["operator"]>
   status: WorkflowStep["status"]
   taskNumber: number
@@ -36,7 +37,7 @@ const ACTIVE_STATUSES: WorkflowStep["status"][] = [
   "PAUSED",
 ]
 
-function getActiveOperatorEntries(
+export function getActiveOperatorEntries(
   tasks: Task[],
   processCode: ProcessCode,
 ): ActiveEntry[] {
@@ -154,19 +155,23 @@ function OperatorRow({
 
         )}
 
-        <span
-          className="min-w-0 truncate text-xs font-semibold"
-          style={{ color: operator.color ?? "#64748B" }}
-        >
-          {operator.name}
-        </span>
+        <MarqueeText className="min-w-0 flex-1">
 
-        <span
-          className="shrink-0 text-xs font-semibold opacity-60"
-          style={{ color: operator.color ?? "#64748B" }}
-        >
-          #{taskNumber}
-        </span>
+          <span
+            className="text-xs font-semibold whitespace-nowrap"
+            style={{ color: operator.color ?? "#64748B" }}
+          >
+            {operator.name}
+          </span>
+
+          <span
+            className="shrink-0 text-xs font-semibold opacity-60"
+            style={{ color: operator.color ?? "#64748B" }}
+          >
+            #{taskNumber}
+          </span>
+
+        </MarqueeText>
 
       </div>
 

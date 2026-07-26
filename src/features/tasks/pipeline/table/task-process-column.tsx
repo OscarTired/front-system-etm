@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, Check, Lock } from "lucide-react"
 
 import { TaskAssignmentBadge } from "../components/panel/task-assignment-badge"
 
@@ -218,21 +218,32 @@ function ColumnContent({
 
             const isSelected = selectedStepIds?.has(step.id) ?? false
 
+            // Ya la está trabajando alguien ahora mismo — no tiene
+            // sentido convocar a otra persona a una tarea que ya
+            // está en curso, así que ni se deja seleccionar.
+            const isInProgress = step.status === "PROGRESS"
+
             return (
+
               <div
                 key={key}
                 role="button"
-                tabIndex={0}
-                onClick={() => onToggleStepSelection?.(step.id)}
+                tabIndex={isInProgress ? -1 : 0}
+                aria-disabled={isInProgress}
+                onClick={() => {
+                  if (isInProgress) return
+                  onToggleStepSelection?.(step.id)
+                }}
                 onKeyDown={(e) => {
+                  if (isInProgress) return
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
                     onToggleStepSelection?.(step.id)
                   }
                 }}
                 className={cn(
-                  "relative cursor-pointer rounded-xl text-left transition-all",
-                  isSelected && "ring-2 ring-emerald-400/70",
+                  "flex items-center gap-2",
+                  isInProgress ? "cursor-not-allowed" : "cursor-pointer",
                 )}
               >
 
@@ -240,21 +251,53 @@ function ColumnContent({
                     (mismo diseño, nada duplicado a mano) pero sin
                     poder interactuar con sus propios botones/overlay
                     mientras se está en modo selección — el click lo
-                    captura este wrapper entero. */}
-                <div className="pointer-events-none">
+                    captura este wrapper entero. flex-1 es lo que hace
+                    que se "encoja": el checkbox de al lado le compite
+                    el espacio. */}
+                <div
+                  className={cn(
+                    "pointer-events-none min-w-0 flex-1 transition-opacity duration-200",
+                    isInProgress && "opacity-45",
+                  )}
+                >
                   {card}
                 </div>
 
-                <div
-                  className={cn(
-                    "absolute right-2.5 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full backdrop-blur-sm transition-colors",
-                    isSelected
-                      ? "bg-emerald-500 text-white"
-                      : "bg-black/40 text-transparent ring-1 ring-white/25",
-                  )}
-                >
-                  <CheckCircle2 size={16} strokeWidth={2.5} />
-                </div>
+                {isInProgress ? (
+
+                  // Nada de checkbox acá — en su lugar, un indicador
+                  // chico de por qué no se puede tocar. Mismo ancho
+                  // reservado que el checkbox real, para que todas
+                  // las filas de la columna sigan alineadas entre sí.
+                  <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-neutral-600">
+                    <Lock size={13} />
+                  </div>
+
+                ) : (
+
+                  // animate-checkbox-reveal corre UNA vez al montar
+                  // (que coincide con entrar en modo selección para
+                  // esta fila) — por eso la card "se encoge": este
+                  // slot arranca en 0 de ancho y crece, empujando al
+                  // vecino flex-1. El fill/borde del check sí anima
+                  // con transition normal (no es un mount, es un
+                  // toggle) cada vez que cambia isSelected.
+                  <div className="animate-checkbox-reveal flex w-9 shrink-0 items-center justify-center overflow-hidden">
+
+                    <div
+                      className={cn(
+                        "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : "border-white/25 bg-white/5 text-transparent",
+                      )}
+                    >
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+
+                  </div>
+
+                )}
 
               </div>
             )

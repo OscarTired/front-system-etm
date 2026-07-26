@@ -18,12 +18,21 @@ type Props = {
   target: CommentTarget
   editingComment?: Comment | null
   onCancelEdit?: () => void
+  // Modo respuesta — banner "Respondiendo a X" arriba del textarea,
+  // igual estructura visual que el de "Editando comentario" (mismo
+  // patrón, no un componente nuevo). Editar y responder son
+  // mutuamente excluyentes: si llega editingComment, ese gana (ver
+  // isEditing más abajo).
+  replyingTo?: Comment | null
+  onCancelReply?: () => void
 }
 
 export function CommentComposer({
   target,
   editingComment,
   onCancelEdit,
+  replyingTo,
+  onCancelReply,
 }: Props) {
 
   const [message, setMessage] = useState("")
@@ -37,6 +46,7 @@ export function CommentComposer({
   const { users } = useMentionableUsers()
 
   const isEditing = !!editingComment
+  const isReplying = !isEditing && !!replyingTo
 
   const { has } = usePermissions()
   // Editar un comentario propio no exige un permiso aparte (ver
@@ -49,6 +59,12 @@ export function CommentComposer({
   useEffect(() => {
     setMessage(editingComment?.message ?? "")
   }, [editingComment])
+
+  useEffect(() => {
+    if (replyingTo) {
+      requestAnimationFrame(() => textareaRef.current?.focus())
+    }
+  }, [replyingTo])
 
   const filteredUsers = mentionQuery === null
     ? []
@@ -99,6 +115,7 @@ export function CommentComposer({
     setMessage("")
     setSelectedImage(null)
     onCancelEdit?.()
+    onCancelReply?.()
   }
 
   const handleSelectImage = (e: ChangeEvent<HTMLInputElement>) => {
@@ -137,8 +154,11 @@ export function CommentComposer({
       createComment({
         message: trimmed || undefined,
         imageBase64: selectedImage ?? undefined,
+        parentId: replyingTo?.id,
       }).catch(() => {
       })
+
+      onCancelReply?.()
 
     }
 
@@ -173,7 +193,7 @@ export function CommentComposer({
       handleSubmit()
     }
 
-    if (e.key === "Escape" && isEditing && mentionQuery === null) {
+    if (e.key === "Escape" && (isEditing || isReplying) && mentionQuery === null) {
       handleCancel()
     }
 
@@ -188,6 +208,25 @@ export function CommentComposer({
         <div className="mb-1.5 flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
           <span className="text-xs font-medium text-cyan-300">Editando comentario</span>
           <IconAction icon={X} onClick={handleCancel} />
+        </div>
+
+      )}
+
+      {isReplying && replyingTo && (
+
+        <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5">
+
+          <div className="min-w-0">
+            <span className="text-xs font-medium text-cyan-300">
+              Respondiendo a {replyingTo.user.name}
+            </span>
+            <p className="truncate text-xs text-neutral-500">
+              {replyingTo.message || "📷 Foto"}
+            </p>
+          </div>
+
+          <IconAction icon={X} onClick={handleCancel} />
+
         </div>
 
       )}

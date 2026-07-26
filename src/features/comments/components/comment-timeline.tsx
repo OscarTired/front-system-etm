@@ -16,6 +16,7 @@ import type {
 type Props={
   target:CommentTarget
   onEditComment?:(comment:Comment)=>void
+  onReplyComment?:(comment:Comment)=>void
 }
 
 // Extrae un id estable del target, sin importar el scope, solo para
@@ -29,6 +30,7 @@ function getTargetId(target: CommentTarget) {
 export function CommentTimeline({
   target,
   onEditComment,
+  onReplyComment,
 }:Props){
   const[
     historyOpen,
@@ -118,6 +120,7 @@ export function CommentTimeline({
               comments={comments}
               onEdit={onEditComment}
               onDelete={setPendingDelete}
+              onReply={onReplyComment}
             />
           )}
         </ScrollArea>

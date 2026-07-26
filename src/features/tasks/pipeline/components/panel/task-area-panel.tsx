@@ -384,7 +384,12 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                         no salta de lugar en cuanto se activa el modo
                         selección en cualquiera de ellas. */}
                     {canChooseAreas && (
-                      <div className={cn(!!summonTarget && "invisible")}>
+                      <div
+                        className={cn(
+                          "transition-opacity duration-200",
+                          !!summonTarget && "pointer-events-none opacity-0",
+                        )}
+                      >
                         <SummonOperatorButton
                           processCode={code}
                           onSelect={(operator) => {

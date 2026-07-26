@@ -23,6 +23,7 @@ export function ProjectCommentsPanel({ projectId }: Props) {
   const isNarrow = width !== null && width < STACK_BREAKPOINT_PX
 
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
   const target = { scope: "project" as const, projectId }
 
   return (
@@ -41,9 +42,15 @@ export function ProjectCommentsPanel({ projectId }: Props) {
             target={target}
             editingComment={editingComment}
             onCancelEdit={() => setEditingComment(null)}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
           />
         </div>
-        <CommentTimeline target={target} onEditComment={setEditingComment} />
+        <CommentTimeline
+          target={target}
+          onEditComment={setEditingComment}
+          onReplyComment={setReplyingTo}
+        />
       </div>
     </div>
 

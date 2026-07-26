@@ -512,7 +512,7 @@ export function ActivityPickerDialog({
 
         <div className="grid grid-cols-3 gap-2">
 
-          {primaryTypes.map(type => {
+          {primaryTypes.map((type, index) => {
 
             const Icon =
               getActivityIcon(type.icon)
@@ -537,8 +537,9 @@ export function ActivityPickerDialog({
                 type="button"
                 disabled={isDisabled}
                 onClick={() => handleSelectType(type.id)}
+                style={{ animationDelay: `${Math.min(index, 8) * 25}ms` }}
                 className={cn(
-                  "relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                  "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                   isSelected
                     ? "bg-white/12"
                     : isDisabled

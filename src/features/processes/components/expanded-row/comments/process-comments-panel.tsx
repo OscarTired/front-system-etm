@@ -18,6 +18,7 @@ export function ProcessCommentsPanel({ workflowStepId }: Props) {
   const isNarrow = width !== null && width < STACK_BREAKPOINT_PX
 
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
   const target = { scope: "workflowStep" as const, workflowStepId }
 
   return (
@@ -38,9 +39,15 @@ export function ProcessCommentsPanel({ workflowStepId }: Props) {
             target={target}
             editingComment={editingComment}
             onCancelEdit={() => setEditingComment(null)}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
           />
         </div>
-        <CommentTimeline target={target} onEditComment={setEditingComment} />
+        <CommentTimeline
+          target={target}
+          onEditComment={setEditingComment}
+          onReplyComment={setReplyingTo}
+        />
       </div>
     </div>
 

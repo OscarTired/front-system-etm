@@ -54,6 +54,13 @@ export function CommentHistoryDialog({
   // acá.
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
 
+  // A diferencia de editingComment, esto NO se delega hacia afuera
+  // — el diálogo ya tiene su propio composer visible ahí mismo, así
+  // que responder se queda acá sin cerrar el historial (editar sí
+  // cierra y delega, porque el consumidor puede querer esa edición
+  // en SU composer externo, con más espacio).
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
+
   const { comments, loading } = useComments(target, open)
   const { deleteComment } = useDeleteComment(target)
 
@@ -118,7 +125,7 @@ export function CommentHistoryDialog({
           onInteractOutside={preventNestedDialogClose}
         >
 
-          <DialogHeader className="px-4 py-3.5">
+          <DialogHeader className="border-b border-white/5 px-4 py-3.5">
             <DialogTitle className="text-sm font-semibold text-neutral-200">
               Historial
             </DialogTitle>
@@ -127,15 +134,17 @@ export function CommentHistoryDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-4 py-2.5">
+          <div className="border-b border-white/5 px-4 py-2.5">
             <CommentComposer
               target={target}
               editingComment={editingComment}
               onCancelEdit={() => setEditingComment(null)}
+              replyingTo={replyingTo}
+              onCancelReply={() => setReplyingTo(null)}
             />
           </div>
 
-          <div className="px-4 py-2.5">
+          <div className="border-b border-white/5 px-4 py-2.5">
 
             <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
               <Search size={15} className="shrink-0 text-neutral-500" />
@@ -162,6 +171,7 @@ export function CommentHistoryDialog({
                 comments={filteredComments}
                 onEdit={handleEdit}
                 onDelete={setPendingDelete}
+                onReply={setReplyingTo}
               />
             )}
 

@@ -4,6 +4,7 @@ import {
   CheckCheck,
   ImageIcon,
   Pencil,
+  Reply,
   Trash2,
 } from "lucide-react"
 import { useState } from "react"
@@ -21,12 +22,18 @@ type Props={
   comment:Comment
   onEdit?:(comment:Comment)=>void
   onDelete?:(comment:Comment)=>void
+  onReply?:(comment:Comment)=>void
+  // Solo para el indent visual — ver comment-list.tsx, que agrupa
+  // respuestas debajo de su comentario padre.
+  isReply?:boolean
 }
 
 export function CommentItem({
   comment,
   onEdit,
   onDelete,
+  onReply,
+  isReply,
 }:Props){
   const currentUser=useAuthStore(s=>s.user)
   const { has }=usePermissions()
@@ -42,6 +49,7 @@ export function CommentItem({
   const canDeleteAny=has(PermissionCode.COMMENT_DELETE_ANY)
   const canEdit=isOwner&&!isPending&&!isDeleting
   const canDelete=(isOwner||canDeleteAny)&&!isPending&&!isDeleting
+  const canReply=has(PermissionCode.COMMENT_CREATE)&&!isPending&&!isDeleting
 
   // La foto NO se muestra abierta acá adentro — en paneles chicos
   // (como "Últimos comentarios") eso rompía todo el layout, empujando
@@ -63,6 +71,8 @@ export function CommentItem({
     <div
       className={`group animate-comment-in flex gap-2.5 rounded-lg bg-white/3 px-3 py-2.5 transition-colors hover:bg-white/6 ${
         isPending||isDeleting?"opacity-60":""
+      } ${
+        isReply?"ml-8 border-l-2 border-white/8 pl-3":""
       }`}
     >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-white/8 text-xs font-semibold text-white shadow-inner">
@@ -101,8 +111,16 @@ export function CommentItem({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            {(canEdit||canDelete)&&(
+            {(canEdit||canDelete||canReply)&&(
               <div className="flex items-center gap-0.5 opacity-100 transition-opacity duration-200 tablet:opacity-0 tablet:group-hover:opacity-100">
+                {canReply&&(
+                  <IconAction
+                    icon={Reply}
+                    onClick={()=>
+                      onReply?.(comment)
+                    }
+                  />
+                )}
                 {canEdit&&(
                   <IconAction
                     icon={Pencil}
@@ -160,6 +178,19 @@ export function CommentItem({
             )}
           </div>
         </div>
+        {comment.parent && (
+
+          <div className="mt-1 flex items-center gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
+            <Reply size={11} className="shrink-0 -scale-x-100" />
+            <span className="truncate">
+              {comment.parent.deletedAt
+                ? "Comentario eliminado"
+                : <>{comment.parent.user.name}: {comment.parent.message || "📷 Foto"}</>}
+            </span>
+          </div>
+
+        )}
+
         {comment.message && (
 
           <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-neutral-300">
