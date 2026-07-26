@@ -201,17 +201,6 @@ export function TaskKpisSection({
 
   ]
 
-  // Resumen de una línea, mismos datos que las 4 cards pero
-  // condensados — nada nuevo, solo otra forma de mostrar lo mismo.
-  const summaryText = [
-    `L${task.lotNumber}`,
-    `${task.material.name.toUpperCase()} ${task.thickness.name}`,
-    `${task.pieces} pzs`,
-    hasPaintProcess
-      ? `${task.color?.name.toUpperCase() ?? "-"} ${task.paintKg}kg`
-      : "Natural",
-  ].join(" · ")
-
   if (!isMobile) {
     return (
       <KpiPanel
@@ -224,25 +213,50 @@ export function TaskKpisSection({
 
     <div>
 
-      <button
-        type="button"
+      {/* Mismo estilo denso y sin caja que ya usa KanbanCardView
+          para esta misma info (L{lote} • MATERIAL espesor • PIEZAS)
+          — antes esto era un botón con fondo/padding tipo dropdown,
+          que no es el lenguaje visual que se pidió acá. Sigue siendo
+          clickeable (el div entero, no cada span), solo que ahora
+          se ve como texto plano en vez de una pill. */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setExpanded(v => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-xl bg-white/3 px-3 py-2.5 text-left transition hover:bg-white/5"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            setExpanded(v => !v)
+          }
+        }}
+        className="flex cursor-pointer items-center justify-between gap-2"
       >
 
-        <span className="min-w-0 truncate text-sm font-medium text-neutral-300">
-          {summaryText}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm text-neutral-300">
+
+          <span>L{task.lotNumber}</span>
+          <span className="text-neutral-600">•</span>
+          <span>{task.material.name.toUpperCase()} {task.thickness.name}</span>
+          <span className="text-neutral-600">•</span>
+          <span>{task.pieces} PIEZAS</span>
+          <span className="text-neutral-600">•</span>
+          <span>
+            {hasPaintProcess
+              ? `${task.color?.name.toUpperCase() ?? "-"} ${task.paintKg}kg`
+              : "NATURAL"}
+          </span>
+
+        </div>
 
         <ChevronDown
-          size={16}
+          size={15}
           className={cn(
             "shrink-0 text-neutral-500 transition-transform duration-200",
             expanded && "rotate-180",
           )}
         />
 
-      </button>
+      </div>
 
       <div
         className={cn(
