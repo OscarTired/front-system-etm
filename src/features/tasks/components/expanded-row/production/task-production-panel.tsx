@@ -70,9 +70,6 @@ export function TaskProductionPanel({
       task.workflowSteps,
     )
 
-  // task.route ya viene tipado como ProcessCode[] (nunca objetos ni
-  // null) — se memoiza solo para que la referencia sea estable entre
-  // renders y no dispare de más el useMemo de abajo.
   const routeSteps = useMemo(
     () => task.route ?? [],
     [task.route],
@@ -328,17 +325,18 @@ export function TaskProductionPanel({
           <div className="overflow-hidden">
             <div className="flex flex-col gap-3.5 rounded-xl bg-white/2 p-3.5">
 
-              <div className="flex items-center justify-between bg-white/3 rounded-xl p-2">
+              <div className="flex items-center gap-2 rounded-xl bg-white/3 p-3">
+
                 <button
                   type="button"
                   onClick={handlePrevStep}
                   disabled={displayIndex === 0}
-                  className="p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                 >
                   <ChevronLeft size={16} />
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
                   {(() => {
 
                     const def = currentRouteCode ? PROCESS_DEFINITIONS[currentRouteCode] : undefined
@@ -348,44 +346,54 @@ export function TaskProductionPanel({
                     const stepStatusDef = stepObj ? WORKFLOW_STATUS_DEFINITIONS[stepObj.status] : undefined
 
                     return (
-                      <div className="flex items-center gap-2">
-                        {def && (
+                      <>
 
-                          <EntityChip
-                            label={def.code}
-                            color={def.color}
-                            icon={def.icon}
-                            compact
-                          />
-
-                        )}
-                        <span className="text-xs text-neutral-400 font-medium flex items-center gap-1.5">
-                          <span>({displayIndex + 1} de {routeSteps.length})</span>
-                          {isCurrent ? (
-                            // Mismo tratamiento que "Actual" en la vista de
-                            // escritorio (TaskRouteViewer): texto chico,
-                            // bold, uppercase, con el color propio del
-                            // proceso — no un color fijo hardcodeado.
-                            <span
-                              className="whitespace-nowrap text-[9px] font-bold uppercase tracking-widest"
-                              style={{
-                                color: def?.color,
-                              }}
-                            >
-                              Actual
-                            </span>
-                          ) : stepStatusDef ? (
+                        {/* Fila 1: proceso + paginación — van juntos
+                            porque describen lo mismo ("qué proceso,
+                            en qué posición de la ruta"). */}
+                        <div className="flex items-center gap-2">
+                          {def && (
 
                             <EntityChip
-                              label={stepStatusDef.label}
-                              color={stepStatusDef.color}
-                              icon={stepStatusDef.icon}
+                              label={def.code}
+                              color={def.color}
+                              icon={def.icon}
                               compact
                             />
 
-                          ) : null}
-                        </span>
-                      </div>
+                          )}
+                          <span className="whitespace-nowrap text-xs font-medium text-neutral-400">
+                            ({displayIndex + 1} de {routeSteps.length})
+                          </span>
+                        </div>
+
+                        {/* Fila 2: estado — separado del proceso, en
+                            su propia fila, en vez de venir aplastado
+                            al lado del texto de paginación dentro
+                            del mismo renglón. */}
+                        {isCurrent ? (
+
+                          <span
+                            className="whitespace-nowrap text-[9px] font-bold uppercase tracking-widest"
+                            style={{
+                              color: def?.color,
+                            }}
+                          >
+                            Actual
+                          </span>
+
+                        ) : stepStatusDef ? (
+
+                          <EntityChip
+                            label={stepStatusDef.label}
+                            color={stepStatusDef.color}
+                            icon={stepStatusDef.icon}
+                            compact
+                          />
+
+                        ) : null}
+
+                      </>
                     )
                   })()}
                 </div>
@@ -394,7 +402,7 @@ export function TaskProductionPanel({
                   type="button"
                   onClick={handleNextStep}
                   disabled={displayIndex === routeSteps.length - 1}
-                  className="p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-1.5 rounded-lg bg-white/5 text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                 >
                   <ChevronRight size={16} />
                 </button>
