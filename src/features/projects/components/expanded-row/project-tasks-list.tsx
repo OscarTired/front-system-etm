@@ -55,6 +55,16 @@ export function ProjectTasksList({
     setShowCompleted,
   ] = useState(false)
 
+  // Solo una tarea abierta a la vez entre todas las de este
+  // proyecto en mobile — antes cada ProjectTaskRow manejaba su
+  // propio expanded local, así que podían quedar 2+ abiertas al
+  // mismo tiempo. En desktop no hace falta (las cards siempre
+  // muestran todo, ProjectTaskRow ni usa expanded ahí de verdad).
+  const [
+    expandedTaskId,
+    setExpandedTaskId,
+  ] = useState<string | null>(null)
+
   const projectTasks = useMemo(
     () => tasks.filter(
       task => task.project.id === projectId,
@@ -148,6 +158,12 @@ export function ProjectTasksList({
 
             <ProjectTaskRow
               task={task}
+              expanded={expandedTaskId === task.id}
+              onToggle={() =>
+                setExpandedTaskId(current =>
+                  current === task.id ? null : task.id,
+                )
+              }
             />
 
           </div>
