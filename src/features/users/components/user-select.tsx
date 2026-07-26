@@ -66,17 +66,11 @@ type Props = {
 
   disabled?:boolean
 
-  // "badge" (default): sin cambios. "row": fila compacta — mismo
-  // patrón que EntitySelect: en mobile label a la izquierda / valor
-  // a la derecha; en desktop se invierte (valor primero) y el
-  // popover abre alineado a "start".
+  // "badge" (default): sin cambios. "row": fila compacta, mismo
+  // layout siempre (mobile y desktop) — ícono+valor+chevron primero,
+  // label al final.
   triggerVariant?:"badge"|"row"
   rowLabel?:string
-
-  // Ver el mismo comentario en EntitySelect — modo card existe
-  // tanto en mobile como en desktop, y ahí la fila siempre es
-  // angosta sin importar el ancho real de la ventana.
-  forceCompactRow?:boolean
 
 }
 
@@ -94,7 +88,6 @@ export function UserSelect({
 
   triggerVariant="badge",
   rowLabel,
-  forceCompactRow=false,
 
 }:Props){
 
@@ -107,9 +100,7 @@ export function UserSelect({
   const inputRef=
     useRef<HTMLInputElement>(null)
 
-  const { isCompact, isMobile } = useResponsive()
-
-  const compactRow = isMobile || forceCompactRow
+  const { isCompact } = useResponsive()
 
   const RowIcon = value?.icon
     ? ENTITY_ICONS[value.icon]
@@ -206,39 +197,6 @@ export function UserSelect({
             </span>
           )
 
-          const valueEl = (
-            <span className="flex min-w-0 items-center gap-1.5">
-
-              {!disabled && (
-
-                <ChevronDown
-                  size={14}
-                  className={cn(
-                    "shrink-0 text-neutral-500 transition-transform duration-200",
-                    open && "rotate-180",
-                  )}
-                />
-
-              )}
-
-              {RowIcon && (
-                <RowIcon
-                  size={14}
-                  className="shrink-0"
-                  style={{ color: value?.color ?? "#737373" }}
-                />
-              )}
-
-              <span
-                className="truncate text-sm font-semibold"
-                style={{ color: value?.color ?? "#737373" }}
-              >
-                {value?.name ?? placeholder}
-              </span>
-
-            </span>
-          )
-
           return (
 
             <button
@@ -247,20 +205,38 @@ export function UserSelect({
               className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-white/3 px-3 py-2.5 text-left transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
 
-              {/* Mismo criterio que EntitySelect: mobile mantiene
-                  label a la izquierda / valor a la derecha; desktop
-                  lo invierte (valor primero). */}
-              {compactRow ? (
-                <>
-                  {labelEl}
-                  {valueEl}
-                </>
-              ) : (
-                <>
-                  {valueEl}
-                  {labelEl}
-                </>
-              )}
+              {/* Un solo layout siempre (mobile y desktop) — el
+                  orden que ya funcionaba bien en desktop. */}
+              <span className="flex min-w-0 items-center gap-1.5">
+
+                {!disabled && (
+                  <ChevronDown
+                    size={14}
+                    className={cn(
+                      "shrink-0 text-neutral-500 transition-transform duration-200",
+                      open && "rotate-180",
+                    )}
+                  />
+                )}
+
+                {RowIcon && (
+                  <RowIcon
+                    size={14}
+                    className="shrink-0"
+                    style={{ color: value?.color ?? "#737373" }}
+                  />
+                )}
+
+                <span
+                  className="truncate text-sm font-semibold"
+                  style={{ color: value?.color ?? "#737373" }}
+                >
+                  {value?.name ?? placeholder}
+                </span>
+
+              </span>
+
+              {labelEl}
 
             </button>
 
@@ -300,7 +276,7 @@ export function UserSelect({
       <PopoverContent
         sideOffset={8}
         className="w-72 p-2"
-        align={triggerVariant === "row" && !compactRow ? "start" : "center"}
+        align={triggerVariant === "row" ? "start" : "center"}
       >
 
         <Command

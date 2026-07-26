@@ -63,16 +63,6 @@ type Props<T extends EntityBase> = {
   // quede descentrado en filas anchas.
   triggerVariant?: "badge" | "row"
   rowLabel?: string
-
-  // Forzar el layout "mobile" (label primero, valor+chevron a la
-  // derecha) sin importar el ancho real de la ventana. useResponsive
-  // mide el VIEWPORT completo, no el contenedor donde vive esto —
-  // en modo card (que existe tanto en mobile como en desktop, es
-  // una vista alternativa a la tabla, no un sinónimo de "mobile"),
-  // la fila siempre es angosta aunque el dispositivo sea desktop.
-  // Sin esto, en desktop+card el orden invertido (valor primero)
-  // quedaba descolocado en un espacio que en realidad es angosto.
-  forceCompactRow?: boolean
 }
 
 export function EntitySelect<T extends EntityBase>({
@@ -88,7 +78,6 @@ export function EntitySelect<T extends EntityBase>({
   variant = "default",
   triggerVariant = "badge",
   rowLabel,
-  forceCompactRow = false,
 }: Props<T>) {
 
   const {
@@ -122,9 +111,7 @@ export function EntitySelect<T extends EntityBase>({
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { isCompact, isMobile } = useResponsive()
-
-  const compactRow = isMobile || forceCompactRow
+  const { isCompact } = useResponsive()
 
   const definition = collectionRegistry[collection]
 
@@ -187,39 +174,6 @@ export function EntitySelect<T extends EntityBase>({
               </span>
             )
 
-            const valueEl = (
-              <span className="flex min-w-0 items-center gap-1.5">
-
-                {RowIcon && (
-                  <RowIcon
-                    size={14}
-                    className="shrink-0"
-                    style={{ color: value?.color ?? "#737373" }}
-                  />
-                )}
-
-                <span
-                  className="truncate text-sm font-semibold"
-                  style={{ color: value?.color ?? "#737373" }}
-                >
-                  {value?.name ?? placeholder}
-                </span>
-
-                {!disabled && (
-
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      "shrink-0 text-neutral-500 transition-transform duration-200",
-                      open && "rotate-180",
-                    )}
-                  />
-
-                )}
-
-              </span>
-            )
-
             return (
 
               <button
@@ -228,43 +182,39 @@ export function EntitySelect<T extends EntityBase>({
                 className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-white/3 px-3 py-2.5 text-left transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
 
-                {/* Mobile: label a la izquierda, valor a la derecha.
-                    Desktop: invertido — label primero (izquierda), y el 
-                    valor con el chevrondown a la izquierda de este después. */}
-                {compactRow ? (
-                  <>
-                    {labelEl}
-                    {valueEl}
-                  </>
-                ) : (
-                  <>
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      {!disabled && (
-                        <ChevronDown
-                          size={14}
-                          className={cn(
-                            "shrink-0 text-neutral-500 transition-transform duration-200",
-                            open && "rotate-180",
-                          )}
-                        />
+                {/* Un solo layout siempre, mobile y desktop — el
+                    orden de desktop (el que ya funcionaba bien) es
+                    el que se sigue en los dos. */}
+                <span className="flex min-w-0 items-center gap-1.5">
+
+                  {!disabled && (
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        "shrink-0 text-neutral-500 transition-transform duration-200",
+                        open && "rotate-180",
                       )}
-                      {RowIcon && (
-                        <RowIcon
-                          size={14}
-                          className="shrink-0"
-                          style={{ color: value?.color ?? "#737373" }}
-                        />
-                      )}
-                      <span
-                        className="truncate text-sm font-semibold"
-                        style={{ color: value?.color ?? "#737373" }}
-                      >
-                        {value?.name ?? placeholder}
-                      </span>
-                    </span>
-                    {labelEl}
-                  </>
-                )}
+                    />
+                  )}
+
+                  {RowIcon && (
+                    <RowIcon
+                      size={14}
+                      className="shrink-0"
+                      style={{ color: value?.color ?? "#737373" }}
+                    />
+                  )}
+
+                  <span
+                    className="truncate text-sm font-semibold"
+                    style={{ color: value?.color ?? "#737373" }}
+                  >
+                    {value?.name ?? placeholder}
+                  </span>
+
+                </span>
+
+                {labelEl}
 
               </button>
 
@@ -297,7 +247,7 @@ export function EntitySelect<T extends EntityBase>({
 
         <PopoverContent
           className="w-72 p-2"
-          align={triggerVariant === "row" && !compactRow ? "start" : "center"}
+          align={triggerVariant === "row" ? "start" : "center"}
         >
           <Command>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
