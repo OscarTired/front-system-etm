@@ -30,6 +30,12 @@ type Props = {
   disableCheckAnimation?: boolean
   rightSlot?: React.ReactNode
   variant?: "default" | "color"
+  // Segunda línea opcional debajo del label — ej. el estado de
+  // disponibilidad de un operario ("Libre", "Trabajando · #003").
+  // Nadie más lo usaba hasta ahora, así que no rompe ningún caller
+  // existente.
+  description?: string
+  descriptionColor?: string
   onSelect: () => void
   onEdit?: () => void
   onDelete?: () => void
@@ -44,6 +50,8 @@ export function SelectOption({
   disableCheckAnimation,
   rightSlot,
   variant = "default",
+  description,
+  descriptionColor,
   onSelect,
   onEdit,
   onDelete,
@@ -113,16 +121,27 @@ export function SelectOption({
               />
             </div>
           )}
-          <EntityNameLabel
-            name={label}
-            className="truncate text-xs font-semibold tracking-[-0.01em]"
-            style={{
-              color:
-                isColor && selected
-                  ? badge.text
-                  : "#F5F5F5",
-            }}
-          />
+          <div className="min-w-0 flex-1">
+            <EntityNameLabel
+              name={label}
+              className="truncate text-xs font-semibold tracking-[-0.01em]"
+              style={{
+                color:
+                  isColor && selected
+                    ? badge.text
+                    : "#F5F5F5",
+              }}
+            />
+
+            {description && (
+              <p
+                className="truncate text-[11px] font-medium"
+                style={{ color: descriptionColor ?? "#737373" }}
+              >
+                {description}
+              </p>
+            )}
+          </div>
         </div>
         <div className="relative flex h-8 min-w-8 items-center justify-end gap-2">
           {rightSlot}

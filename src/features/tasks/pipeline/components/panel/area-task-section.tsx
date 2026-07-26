@@ -31,7 +31,12 @@ export function AreaTaskSection({ code, panel }: AreaTaskSectionProps) {
             <SummonOperatorButton
               processCode={code}
               active={isSummoningThis}
-              onSelect={(operator) => actions.setSummonTarget({ processCode: code, operator })}
+              selectedOperatorId={isSummoningThis ? state.summonTarget?.operator.id : undefined}
+              onSelect={(operator) =>
+                actions.setSummonTarget(
+                  operator ? { processCode: code, operator } : null,
+                )
+              }
             />
           </div>
         )}

@@ -14,119 +14,103 @@ import {
   cn,
 } from "@/shared/utils/utils"
 
-type Props={
-  value:string
-  onChange:(value:string)=>void
+type Props = {
+  value: string
+  onChange: (value: string) => void
 }
 
 export function EntityToolbarSearch({
   value,
   onChange,
-}:Props){
+}: Props) {
+  const [open, setOpen] = useState(
+    Boolean(value)
+  )
 
-  const [open,setOpen]=
-    useState(
-      Boolean(value)
-    )
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const ignoreBlurRef = useRef(false)
 
-  const inputRef=
-    useRef<HTMLInputElement>(
-      null
-    )
-
-  const ignoreBlurRef=
-    useRef(false)
-
-  useEffect(()=>{
-
-    if(open){
-
+  useEffect(() => {
+    if (open) {
       inputRef.current?.focus()
+    }
+  }, [open])
 
+  // Listener para cerrar al hacer clic fuera del componente
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        if (!value) {
+          setOpen(false)
+        }
+      }
     }
 
-  },[
-    open,
-  ])
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [value])
 
-  const handleToggle=()=>{
+  const handleToggle = () => {
+    ignoreBlurRef.current = true
 
-    ignoreBlurRef.current=
-      true
-
-    if(open){
-
+    if (open) {
       onChange("")
-
       setOpen(false)
-
       return
-
     }
 
     setOpen(true)
-
   }
 
-  const handleBlur=()=>{
-
-    if(
+  const handleBlur = () => {
+    if (
       ignoreBlurRef.current
-    ){
-
-      ignoreBlurRef.current=
+    ) {
+      ignoreBlurRef.current =
         false
 
       return
-
     }
 
-    if(!value){
-
+    if (!value) {
       setOpen(false)
-
     }
-
   }
 
-  return(
-
+  return (
     <div className="flex justify-end">
-
       <div
+        ref={containerRef}
         className={cn(
-
           "flex items-center overflow-hidden transition-all duration-200 ease-out",
-
           open
             ? "w-60"
             : "w-8"
-
         )}
       >
-
         <button
           type="button"
-          onMouseDown={event=>
+          onMouseDown={event =>
             event.preventDefault()
           }
           onClick={handleToggle}
           className={cn(
-
             "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white transition-all duration-200",
-
             open
               ? "bg-[#101012]"
               : "hover:bg-[#101012]"
-
           )}
         >
-
           <Search
             size={14}
             strokeWidth={2}
           />
-
         </button>
 
         <div
@@ -140,7 +124,7 @@ export function EntityToolbarSearch({
           <input
             ref={inputRef}
             value={value}
-            onChange={event=>
+            onChange={event =>
               onChange(
                 event.target.value
               )
@@ -150,11 +134,7 @@ export function EntityToolbarSearch({
             className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
           />
         </div>
-
       </div>
-
     </div>
-
   )
-
 }

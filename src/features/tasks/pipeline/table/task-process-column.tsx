@@ -197,23 +197,12 @@ function ColumnContent({
               />
             )
 
-            // Sin step real para este proceso (no debería pasar acá
-            // porque included=true implica que existe, pero
-            // TypeScript no lo sabe) — no hay stepId para convocar,
-            // se muestra la card normal sin overlay de selección.
-            if (!selectionMode || !step) {
-              return (
-                <div key={key} className="relative">
-                  {card}
-                  {step && onUnsummon && (
-                    <TaskAssignmentBadge
-                      step={step}
-                      onUnsummon={onUnsummon}
-                      unsummoning={unsummoning}
-                    />
-                  )}
-                </div>
-              )
+            // No debería pasar acá (included=true implica que el
+            // step existe), pero TypeScript no lo sabe — corta
+            // temprano, no es parte del flujo normal de selección
+            // así que no afecta la animación.
+            if (!step) {
+              return <div key={key}>{card}</div>
             }
 
             const isSelected = selectedStepIds?.has(step.id) ?? false
@@ -228,79 +217,112 @@ function ColumnContent({
               step.status === "COMPLETED" ||
               step.status === "REVIEWED"
 
+            // Una sola estructura de DOM para los dos modos (a
+            // propósito): antes selectionMode=true/false renderizaba
+            // dos árboles DISTINTOS (otro wrapper, otra jerarquía), y
+            // React no podía reconciliar eso como "el mismo nodo" —
+            // desmontaba y volvía a montar TaskPipelineCard entera
+            // cada vez que se entraba/salía del modo selección, y la
+            // card repetía su propia animación de entrada (el
+            // "salto"). Con un solo árbol que solo cambia clases/
+            // atributos según selectionMode, la card nunca se
+            // desmonta — lo único que aparece/desaparece de verdad
+            // es el checkbox (su propio animate-checkbox-reveal), y
+            // la card simplemente se reacomoda con el reflow natural
+            // del flex, sin animación propia de "aparición".
             return (
 
               <div
                 key={key}
-                role="button"
-                tabIndex={isLocked ? -1 : 0}
-                aria-disabled={isLocked}
-                onClick={() => {
-                  if (isLocked) return
-                  onToggleStepSelection?.(step.id)
-                }}
-                onKeyDown={(e) => {
-                  if (isLocked) return
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    onToggleStepSelection?.(step.id)
-                  }
-                }}
+                role={selectionMode ? "button" : undefined}
+                tabIndex={selectionMode ? (isLocked ? -1 : 0) : undefined}
+                aria-disabled={selectionMode ? isLocked : undefined}
+                onClick={
+                  selectionMode
+                    ? () => {
+                        if (isLocked) return
+                        onToggleStepSelection?.(step.id)
+                      }
+                    : undefined
+                }
+                onKeyDown={
+                  selectionMode
+                    ? (e) => {
+                        if (isLocked) return
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          onToggleStepSelection?.(step.id)
+                        }
+                      }
+                    : undefined
+                }
                 className={cn(
                   "flex items-center gap-2",
-                  isLocked ? "cursor-not-allowed" : "cursor-pointer",
+                  selectionMode && (isLocked ? "cursor-not-allowed" : "cursor-pointer"),
                 )}
               >
 
-                {/* pointer-events-none: la card sigue ahí visualmente
-                    (mismo diseño, nada duplicado a mano) pero sin
-                    poder interactuar con sus propios botones/overlay
-                    mientras se está en modo selección — el click lo
-                    captura este wrapper entero. flex-1 es lo que hace
-                    que se "encoja": el checkbox de al lado le compite
-                    el espacio. */}
                 <div
                   className={cn(
-                    "pointer-events-none min-w-0 flex-1 transition-opacity duration-200",
-                    isLocked && "opacity-45",
+                    "relative min-w-0 flex-1 transition-opacity duration-200",
+                    selectionMode && "pointer-events-none",
+                    selectionMode && isLocked && "opacity-45",
                   )}
                 >
+
                   {card}
+
+                  {!selectionMode && onUnsummon && (
+                    <TaskAssignmentBadge
+                      step={step}
+                      onUnsummon={onUnsummon}
+                      unsummoning={unsummoning}
+                    />
+                  )}
+
                 </div>
 
-                {isLocked ? (
+                {selectionMode && (
 
-                  // Nada de checkbox acá — en su lugar, un indicador
-                  // chico de por qué no se puede tocar. Mismo ancho
-                  // reservado que el checkbox real, para que todas
-                  // las filas de la columna sigan alineadas entre sí.
-                  <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-neutral-600">
-                    <Lock size={13} />
-                  </div>
+                  isLocked ? (
 
-                ) : (
-
-                  // animate-checkbox-reveal corre UNA vez al montar
-                  // (que coincide con entrar en modo selección para
-                  // esta fila) — por eso la card "se encoge": este
-                  // slot arranca en 0 de ancho y crece, empujando al
-                  // vecino flex-1. El fill/borde del check sí anima
-                  // con transition normal (no es un mount, es un
-                  // toggle) cada vez que cambia isSelected.
-                  <div className="animate-checkbox-reveal flex w-9 shrink-0 items-center justify-center overflow-hidden">
-
-                    <div
-                      className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
-                        isSelected
-                          ? "border-emerald-500 bg-emerald-500 text-white"
-                          : "border-white/25 bg-white/5 text-transparent",
-                      )}
-                    >
-                      <Check size={14} strokeWidth={3} />
+                    // Nada de checkbox acá — en su lugar, un
+                    // indicador chico de por qué no se puede tocar.
+                    // Mismo ancho reservado que el checkbox real,
+                    // para que todas las filas de la columna sigan
+                    // alineadas entre sí.
+                    <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-neutral-600">
+                      <Lock size={13} />
                     </div>
 
-                  </div>
+                  ) : (
+
+                    // animate-checkbox-reveal corre UNA vez al
+                    // montar ESTE slot puntual (que ahora sí
+                    // coincide de verdad con "recién entré en modo
+                    // selección", ya que la card de al lado no se
+                    // remonta más) — por eso la card "se encoge":
+                    // este slot arranca en 0 de ancho y crece,
+                    // empujando al vecino flex-1. El fill/borde del
+                    // check sí anima con transition normal (no es
+                    // un mount, es un toggle) cada vez que cambia
+                    // isSelected.
+                    <div className="animate-checkbox-reveal flex w-9 shrink-0 items-center justify-center overflow-hidden">
+
+                      <div
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
+                          isSelected
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-white/25 bg-white/5 text-transparent",
+                        )}
+                      >
+                        <Check size={14} strokeWidth={3} />
+                      </div>
+
+                    </div>
+
+                  )
 
                 )}
 

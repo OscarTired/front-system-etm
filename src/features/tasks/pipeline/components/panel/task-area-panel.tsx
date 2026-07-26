@@ -77,7 +77,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                       )
                     }
                     className={cn(
-                      "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all active:scale-95",
+                      "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
                       selected
                         ? "bg-white/15 text-white shadow-sm"
                         : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200",

@@ -110,7 +110,7 @@ export function TaskMobileCard({
       {expanded && (
         <div className="animate-comment-in space-y-3 px-3 pb-3 pt-3">
           {showFields ? (
-            <div className="flex flex-col gap-2">
+            <div className="animate-comment-in flex flex-col gap-2">
               <button
                 type="button"
                 onClick={() => setShowFields(false)}
@@ -129,7 +129,7 @@ export function TaskMobileCard({
             <button
               type="button"
               onClick={() => setShowFields(true)}
-              className="flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+              className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
             >
               <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
                 <span
@@ -180,7 +180,9 @@ export function TaskMobileCard({
           </div>
 
           {showPipeline && (
-            <TaskExpandedRow task={task} />
+            <div className="animate-comment-in">
+              <TaskExpandedRow task={task} />
+            </div>
           )}
         </div>
       )}

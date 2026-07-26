@@ -73,6 +73,11 @@ type Props = {
   triggerVariant?:"badge"|"row"
   rowLabel?:string
 
+  // Ver el mismo comentario en EntitySelect — modo card existe
+  // tanto en mobile como en desktop, y ahí la fila siempre es
+  // angosta sin importar el ancho real de la ventana.
+  forceCompactRow?:boolean
+
 }
 
 export function UserSelect({
@@ -89,6 +94,7 @@ export function UserSelect({
 
   triggerVariant="badge",
   rowLabel,
+  forceCompactRow=false,
 
 }:Props){
 
@@ -102,6 +108,8 @@ export function UserSelect({
     useRef<HTMLInputElement>(null)
 
   const { isCompact, isMobile } = useResponsive()
+
+  const compactRow = isMobile || forceCompactRow
 
   const RowIcon = value?.icon
     ? ENTITY_ICONS[value.icon]
@@ -242,7 +250,7 @@ export function UserSelect({
               {/* Mismo criterio que EntitySelect: mobile mantiene
                   label a la izquierda / valor a la derecha; desktop
                   lo invierte (valor primero). */}
-              {isMobile ? (
+              {compactRow ? (
                 <>
                   {labelEl}
                   {valueEl}
@@ -292,7 +300,7 @@ export function UserSelect({
       <PopoverContent
         sideOffset={8}
         className="w-72 p-2"
-        align={triggerVariant === "row" && !isMobile ? "start" : "center"}
+        align={triggerVariant === "row" && !compactRow ? "start" : "center"}
       >
 
         <Command

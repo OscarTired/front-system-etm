@@ -63,6 +63,16 @@ type Props<T extends EntityBase> = {
   // quede descentrado en filas anchas.
   triggerVariant?: "badge" | "row"
   rowLabel?: string
+
+  // Forzar el layout "mobile" (label primero, valor+chevron a la
+  // derecha) sin importar el ancho real de la ventana. useResponsive
+  // mide el VIEWPORT completo, no el contenedor donde vive esto —
+  // en modo card (que existe tanto en mobile como en desktop, es
+  // una vista alternativa a la tabla, no un sinónimo de "mobile"),
+  // la fila siempre es angosta aunque el dispositivo sea desktop.
+  // Sin esto, en desktop+card el orden invertido (valor primero)
+  // quedaba descolocado en un espacio que en realidad es angosto.
+  forceCompactRow?: boolean
 }
 
 export function EntitySelect<T extends EntityBase>({
@@ -78,6 +88,7 @@ export function EntitySelect<T extends EntityBase>({
   variant = "default",
   triggerVariant = "badge",
   rowLabel,
+  forceCompactRow = false,
 }: Props<T>) {
 
   const {
@@ -112,6 +123,8 @@ export function EntitySelect<T extends EntityBase>({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { isCompact, isMobile } = useResponsive()
+
+  const compactRow = isMobile || forceCompactRow
 
   const definition = collectionRegistry[collection]
 
@@ -218,7 +231,7 @@ export function EntitySelect<T extends EntityBase>({
                 {/* Mobile: label a la izquierda, valor a la derecha.
                     Desktop: invertido — label primero (izquierda), y el 
                     valor con el chevrondown a la izquierda de este después. */}
-                {isMobile ? (
+                {compactRow ? (
                   <>
                     {labelEl}
                     {valueEl}
@@ -284,7 +297,7 @@ export function EntitySelect<T extends EntityBase>({
 
         <PopoverContent
           className="w-72 p-2"
-          align={triggerVariant === "row" && !isMobile ? "start" : "center"}
+          align={triggerVariant === "row" && !compactRow ? "start" : "center"}
         >
           <Command>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
