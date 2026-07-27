@@ -10,7 +10,7 @@ export function EntityExpandedContent({
 
   return (
 
-    <div className="mt-3">
+    <div>
 
       {children}
 

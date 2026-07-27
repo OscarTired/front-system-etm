@@ -17,7 +17,6 @@ export function EntityExpandedRow({
   return(
 
     <div
-      className="m-2 mb-3 rounded-xl bg-[#0D0D10] p-3"
     >
 
       {children}
