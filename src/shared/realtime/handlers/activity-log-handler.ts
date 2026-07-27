@@ -15,9 +15,7 @@ import type { RealtimeEvent } from "../types/realtime-event"
 export function activityLogHandler(
   _event: RealtimeEvent,
 ) {
-  const queryClient = getQueryClient()
-
-  queryClient.invalidateQueries({
+  getQueryClient().invalidateQueries({
     queryKey: ["activity-log"],
   })
 }

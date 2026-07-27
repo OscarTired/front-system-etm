@@ -180,13 +180,27 @@ export function CommentItem({
         </div>
         {comment.parent && (
 
-          <div className="mt-1 flex items-center gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
-            <Reply size={11} className="shrink-0 -scale-x-100" />
-            <span className="truncate">
-              {comment.parent.deletedAt
-                ? "Comentario eliminado"
-                : <>{comment.parent.user.name}: {comment.parent.message || "📷 Foto"}</>}
-            </span>
+          <div className="mt-1 flex items-start gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
+            <Reply
+              size={11}
+              className="mt-0.5 shrink-0 -scale-x-100"
+            />
+
+            <div className="min-w-0 flex-1">
+              {comment.parent.deletedAt ? (
+                <span>Comentario eliminado</span>
+              ) : (
+                <>
+                  <span className="font-medium text-neutral-400">
+                    {comment.parent.user.name}:
+                  </span>{" "}
+                  <span className="whitespace-pre-wrap wrap-break-word">
+                    {comment.parent.message || "📷 Foto"}
+                  </span>
+                </>
+              )}
+            </div>
+
           </div>
 
         )}
