@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { NAVIGATION } from "./navigation"
@@ -41,7 +41,20 @@ export function SidebarNavigation({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { has } = usePermissions()
-  const currentRoles = useAuthStore(state => state.user?.roles?.map((role: { code: string }) => role.code) ?? [])
+  const userRoles = useAuthStore(state => state.user?.roles)
+
+  // El .map() de acá abajo tiene que estar en useMemo, NO adentro
+  // del selector de useAuthStore: un selector que arma un array
+  // nuevo en cada llamada (aunque el contenido sea igual) rompe la
+  // comparación por referencia de useSyncExternalStore y entra en
+  // loop infinito de renders — React lo corta con el warning
+  // "getSnapshot should be cached". `userRoles` (la referencia que
+  // vive en el store) sí es estable entre renders mientras no
+  // cambie el usuario.
+  const currentRoles = useMemo(
+    () => userRoles?.map(role => role.code) ?? [],
+    [userRoles],
+  )
 
   const [isMounting, setIsMounting] = useState(true)
 
@@ -79,7 +92,7 @@ export function SidebarNavigation({
           item =>
             (!("permission" in item) || has(item.permission)) &&
             (!("roles" in item) ||
-              currentRoles.some((role: string) => (item.roles as readonly string[]).includes(role))),
+              currentRoles.some(code => (item.roles as readonly string[]).includes(code))),
         )
 
         if (items.length === 0) {

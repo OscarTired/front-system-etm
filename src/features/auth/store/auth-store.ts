@@ -2,11 +2,13 @@
 
 import { create } from "zustand"
 
+import type { User } from "@/features/users/types/user.types"
+
 type AuthStore = {
-  user: any | null
+  user: User | null
 
   setUser: (
-    user: any | null,
+    user: User | null,
   ) => void
 
   logout: () => void
