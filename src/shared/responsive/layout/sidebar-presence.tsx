@@ -131,16 +131,16 @@ export function SidebarPresence({
               type="button"
               title={`${onlineUsers.length} en línea`}
               className={cn(
-                "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-all duration-150",
+                "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
                 open
-                  ? "bg-accent text-accent-foreground shadow-sm"
-                  : "text-muted-foreground"
+                  ? "bg-white/6 text-white"
+                  : "text-neutral-400 hover:bg-white/4 hover:text-white"
               )}
             >
               <span className="relative flex items-center justify-center">
-                <Users size={14} className="opacity-80" />
-                <span className="absolute -right-2.5 -top-2.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
-                  {onlineUsers.length}
+                <Users size={14} />
+                <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+                  {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
                 </span>
               </span>
             </button>
@@ -157,14 +157,14 @@ export function SidebarPresence({
               <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
                 <Search
                   size={14}
-                  className="text-muted-foreground/50 shrink-0"
+                  className="text-neutral-500 shrink-0"
                 />
                 <Input
                   ref={inputRef}
                   value={query}
                   onChange={event => setQuery(event.target.value)}
                   placeholder="Buscar miembro..."
-                  className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
                 />
               </div>
 
@@ -205,18 +205,26 @@ export function SidebarPresence({
           <button
             type="button"
             className={cn(
-              "mx-1 flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-xs font-medium transition-all duration-150 w-[calc(100%-8px)]",
+              "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
               open
-                ? "bg-accent text-accent-foreground shadow-sm"
-                : "text-muted-foreground"
+                ? "bg-white/6 text-white"
+                : "text-neutral-400 hover:bg-white/4 hover:text-white"
             )}
           >
+            <span className="relative flex shrink-0 items-center justify-center">
+              <Users size={14} />
+            </span>
+
+            <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+              Activos
+            </span>
+
             {onlineUsers.length > 0 && (
               <div className="flex items-center -space-x-1.5 shrink-0 py-0.5">
                 {onlineUsers.slice(0, 3).map((user, index) => (
                   <div
                     key={user.id}
-                    className="relative h-5 w-5 rounded-full overflow-hidden bg-muted ring-1 ring-background"
+                    className="relative h-4 w-4 rounded-full overflow-hidden bg-neutral-800 ring-1 ring-neutral-900"
                     style={{ zIndex: 3 - index }}
                   >
                     {user.avatarUrl ? (
@@ -226,26 +234,22 @@ export function SidebarPresence({
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[9px] font-medium text-muted-foreground">
+                      <div className="flex h-full w-full items-center justify-center text-[8px] font-medium text-neutral-300">
                         {user.name[0]?.toUpperCase()}
                       </div>
                     )}
                   </div>
                 ))}
                 {onlineUsers.length > 3 && (
-                  <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-mono text-muted-foreground ring-1 ring-background" style={{ zIndex: 0 }}>
+                  <div className="relative flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800 text-[8px] font-mono text-neutral-400 ring-1 ring-neutral-900" style={{ zIndex: 0 }}>
                     +{onlineUsers.length - 3}
                   </div>
                 )}
               </div>
             )}
 
-            <span className="min-w-0 flex-1 truncate text-left font-medium text-muted-foreground flex items-center justify-between">
-              <span>Miembros activos</span>
-              <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {onlineUsers.length}
-              </span>
+            <span className="ml-1 flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+              {onlineUsers.length}
             </span>
           </button>
         </PopoverTrigger>
@@ -261,14 +265,14 @@ export function SidebarPresence({
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
               <Search
                 size={14}
-                className="text-muted-foreground/50 shrink-0"
+                className="text-neutral-500 shrink-0"
               />
               <Input
                 ref={inputRef}
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Buscar miembro..."
-                className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
               />
             </div>
 
