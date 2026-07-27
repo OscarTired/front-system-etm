@@ -100,10 +100,9 @@ export function AppSidebar({
           // 💡 Transición fluida con curva Bézier de Material 3 / Gemini (450ms):
           "transition-[width,transform] duration-450 ease-[cubic-bezier(0.2,0,0,1)]",
 
-          // Anchos explícitos arbitrarios en px para evitar inconsistencias de versión en Tailwind
           collapsed
-            ? "w-[72px]"
-            : "w-[248px]",
+            ? "w-18"
+            : "w-62",
 
           isVisible
             ? "translate-x-0"

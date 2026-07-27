@@ -73,7 +73,11 @@ export function SidebarNavigation({
           <NotificationBell collapsed={collapsed} />
         </div>
       )}
-
+        <SidebarPresence
+          collapsed={presenceCollapsed}
+          presenceRef={presenceRef}
+        />
+        
       {NAVIGATION.map((section) => {
         const items = section.items.filter(
           item =>
@@ -166,10 +170,6 @@ export function SidebarNavigation({
             : undefined
         }
       >
-        <SidebarPresence
-          collapsed={presenceCollapsed}
-          presenceRef={presenceRef}
-        />
       </div>
     </VerticalScroll>
   )
