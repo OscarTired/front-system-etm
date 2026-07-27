@@ -48,8 +48,8 @@ function getStoredSupervisorAreas(): ProcessCode[] {
 
 // Resuelve qué área(s) le corresponden al panel lateral según el
 // Perfil del usuario (Rol + Nivel + Área):
-// - OPERARIO con área fija asignada (User.area) → esa sola, fijo,
-//   no elegible por el usuario.
+// - OPERARIO con área(s) fija(s) asignada(s) (User.areas) → esas,
+//   fijas, no elegibles por el usuario (puede ser más de una).
 // - SUPERVISOR o ADMIN → elige libremente qué área(s) ver (guardado
 //   en localStorage, es una preferencia de UI, no un permiso — ver
 //   plan: "configurable por usuario"). Admin entra acá con el mismo
@@ -78,8 +78,16 @@ export function useMyAreaTasks() {
 
   }
 
+  // Antes era "!!user.area?.processCode" (una sola). Ahora un
+  // OPERARIO puede tener varias áreas fijas a la vez — alcanza con
+  // que tenga AL MENOS una con processCode válido.
+  const operarioAreaCodes: ProcessCode[] =
+    (user?.areas ?? [])
+      .map(area => area.processCode)
+      .filter((code): code is ProcessCode => !!code && isProcessCode(code))
+
   const isOperarioWithArea =
-    user?.level === "OPERARIO" && !!user.area?.processCode
+    user?.level === "OPERARIO" && operarioAreaCodes.length > 0
 
   const isAdmin = user?.role?.code === "ADMIN"
 
@@ -90,7 +98,7 @@ export function useMyAreaTasks() {
 
   const areas: ProcessCode[] =
     isOperarioWithArea
-      ? [user!.area!.processCode as ProcessCode]
+      ? operarioAreaCodes
       : canChooseFreely
         ? supervisorAreas
         : []

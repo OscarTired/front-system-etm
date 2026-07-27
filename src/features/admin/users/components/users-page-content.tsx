@@ -45,7 +45,7 @@ type UserFormData = {
   isChangingPassword: boolean
   roleId: string
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
-  areaId: string | null
+  areaIds: string[]
   icon: EntityIcon
   color: string
   active: boolean
@@ -79,7 +79,7 @@ export function UsersPageContent() {
     isChangingPassword: false,
     roleId: "",
     level: null,
-    areaId: null,
+    areaIds: [],
     icon: "user",
     color: "#7C3AED",
     active: true,
@@ -136,7 +136,7 @@ export function UsersPageContent() {
       isChangingPassword: false,
       roleId: selectedUser.role.id,
       level: selectedUser.level ?? null,
-      areaId: selectedUser.area?.id ?? null,
+      areaIds: selectedUser.areas?.map(a => a.id) ?? [],
       icon: (selectedUser.icon as EntityIcon) ?? "user",
       color: selectedUser.color ?? "#7C3AED",
       active: selectedUser.active,
@@ -196,7 +196,7 @@ export function UsersPageContent() {
       isChangingPassword: true,
       roleId: selectedRoleId,
       level: null,
-      areaId: null,
+      areaIds: [],
       icon: "user",
       color: "#7C3AED",
       active: true,
@@ -216,7 +216,7 @@ export function UsersPageContent() {
       email: formData.email,
       roleId: formData.roleId,
       level: formData.level,
-      areaId: formData.areaId,
+      areaIds: formData.areaIds,
       icon: formData.icon,
       color: formData.color,
       active: formData.active,
@@ -544,14 +544,14 @@ export function UsersPageContent() {
                       roles={roles}
                       selectedRole={selectedFormRole}
                       level={formData.level}
-                      area={areas.find(a => a.id === formData.areaId) ?? null}
+                      areas={areas.filter(a => formData.areaIds.includes(a.id))}
                       errors={attempted ? errors : undefined}
                       onRoleChange={roleId => {
                         const nextRole = roles.find(r => r.id === roleId)
                         setFormData(c => ({
                           ...c,
                           roleId,
-                          ...(nextRole?.code !== "PRODUCCION" && { level: null, areaId: null }),
+                          ...(nextRole?.code !== "PRODUCCION" && { level: null, areaIds: [] }),
                         }))
                       }}
                       onLevelChange={level => setFormData(c => ({
@@ -559,9 +559,9 @@ export function UsersPageContent() {
                         level,
                         // Mismo criterio que en UserDialog/backend: el
                         // área solo aplica a OPERARIO.
-                        ...(level !== "OPERARIO" && { areaId: null }),
+                        ...(level !== "OPERARIO" && { areaIds: [] }),
                       }))}
-                      onAreaChange={areaId => setFormData(c => ({ ...c, areaId }))}
+                      onAreasChange={nextAreas => setFormData(c => ({ ...c, areaIds: nextAreas.map(a => a.id) }))}
                       onChangingPasswordChange={val =>
                         setFormData(c => ({ ...c, isChangingPassword: val }))
                       }

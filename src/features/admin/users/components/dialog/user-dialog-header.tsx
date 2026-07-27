@@ -9,8 +9,8 @@ import {
 } from "./level-select"
 
 import {
-  AreaSelect,
-} from "@/features/areas/components/area-select"
+  AreaMultiSelect,
+} from "@/features/areas/components/area-multi-select"
 
 import type {
   Area,
@@ -37,7 +37,7 @@ type Props = {
   roles: Role[]
   selectedRole?: Role
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
-  area?: Area | null
+  areas: Area[]
   error?: string
   onRoleChange: (
     roleId: string,
@@ -45,8 +45,8 @@ type Props = {
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
   ) => void
-  onAreaChange: (
-    areaId: string | null,
+  onAreasChange: (
+    areas: Area[],
   ) => void
 }
 
@@ -59,11 +59,11 @@ export function UserDialogHeader({
   roles,
   selectedRole,
   level,
-  area,
+  areas,
   error,
   onRoleChange,
   onLevelChange,
-  onAreaChange,
+  onAreasChange,
 }: Props) {
   const isProduccion =
     selectedRole?.code === "PRODUCCION"
@@ -138,12 +138,12 @@ export function UserDialogHeader({
         {isProduccion && level === "OPERARIO" && (
           <div className="w-full tablet:w-[320px]">
             <div className="mb-2 text-xs font-medium text-neutral-500">
-              Área
+              Áreas
             </div>
 
-            <AreaSelect
-              value={area}
-              onChange={next => onAreaChange(next?.id ?? null)}
+            <AreaMultiSelect
+              value={areas}
+              onChange={onAreasChange}
             />
           </div>
         )}

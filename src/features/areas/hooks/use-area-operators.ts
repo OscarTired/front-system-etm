@@ -45,7 +45,10 @@ export function useAreaOperators(processCode: ProcessCode | null) {
       user =>
         user.role?.code === "PRODUCCION" &&
         user.level === "OPERARIO" &&
-        user.area?.processCode === processCode,
+        // Antes era user.area?.processCode === processCode (1 a 1)
+        // — ahora un operario puede estar en varias áreas, así que
+        // basta con que UNA de ellas matchee esta.
+        user.areas?.some(area => area.processCode === processCode),
     )
 
     return candidates.map(user => {

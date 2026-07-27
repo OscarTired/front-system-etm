@@ -67,7 +67,7 @@ type UserFormValue = {
   isChangingPassword: boolean
   roleId: string
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
-  areaId: string | null
+  areaIds: string[]
   icon: EntityIcon
   color: string
   active: boolean
@@ -100,7 +100,7 @@ function createInitialForm(
     isChangingPassword: false,
     roleId: user?.role.id ?? "",
     level: user?.level ?? null,
-    areaId: user?.area?.id ?? null,
+    areaIds: user?.areas?.map(area => area.id) ?? [],
     icon: user?.icon ?? "user",
     color: user?.color ?? "#7C3AED",
     active: user?.active ?? true,
@@ -179,10 +179,10 @@ export function UserDialog({
       role => role.id === form.roleId,
     )
 
-  const selectedArea =
-    areas.find(
-      area => area.id === form.areaId,
-    ) ?? null
+  const selectedAreas =
+    areas.filter(
+      area => form.areaIds.includes(area.id),
+    )
 
   const isEditing =
     Boolean(user)
@@ -383,7 +383,7 @@ export function UserDialog({
         roles={roles}
         selectedRole={selectedRole}
         level={form.level}
-        area={selectedArea}
+        areas={selectedAreas}
         errors={visibleErrors}
         step={step}
         onRoleChange={roleId => {
@@ -394,7 +394,7 @@ export function UserDialog({
           // PRODUCCION admite OPERARIO/SUPERVISOR, Ingeniería y
           // Proyectos admiten solo SUPERVISOR, el resto no admite
           // sub-nivel. Si el level actual ya no es válido para el
-          // rol nuevo, se limpia (junto con areaId, que solo tiene
+          // rol nuevo, se limpia (junto con areaIds, que solo tiene
           // sentido para OPERARIO en Producción) — pero si venimos
           // de PRODUCCION-SUPERVISOR hacia INGENIERIA/PROYECTOS, o
           // viceversa, el SUPERVISOR se conserva.
@@ -415,12 +415,12 @@ export function UserDialog({
             roleId,
             ...(!levelStillValid && {
               level: null,
-              areaId: null,
+              areaIds: [],
             }),
             ...(levelStillValid
               && form.level !== "OPERARIO"
               && {
-                areaId: null,
+                areaIds: [],
               }),
           })
         }}
@@ -428,18 +428,18 @@ export function UserDialog({
           update({
             level,
             // Mismo criterio que el backend
-            // (assertAreaMatchesLevel): el área solo tiene sentido
+            // (assertAreasMatchLevel): el área solo tiene sentido
             // para OPERARIO, así que se limpia sola al cambiar a
             // cualquier otro sub-nivel — evita que quede una
             // selección vieja "fantasma" que después el backend
             // igual iba a descartar.
             ...(level !== "OPERARIO" && {
-              areaId: null,
+              areaIds: [],
             }),
           })
         }
-        onAreaChange={areaId =>
-          update({ areaId })
+        onAreasChange={nextAreas =>
+          update({ areaIds: nextAreas.map(area => area.id) })
         }
         onChangingPasswordChange={
           isChangingPassword =>

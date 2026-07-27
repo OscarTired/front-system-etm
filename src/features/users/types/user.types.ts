@@ -62,6 +62,8 @@ export interface User{
 
   level:"GENERAL" | "OPERARIO" | "SUPERVISOR" | null
 
-  area:UserArea | null
+  // Array ahora (m2m) — un operario puede pertenecer a más de un
+  // área a la vez (antes era 1 a 1, area:UserArea|null).
+  areas:UserArea[]
 
 }

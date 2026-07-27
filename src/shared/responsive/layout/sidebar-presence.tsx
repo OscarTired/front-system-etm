@@ -170,7 +170,7 @@ export function SidebarPresence({
 
               <CommandList className="max-h-64 overflow-y-auto">
                 <CommandEmpty>
-                  Sin resultados
+                  {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
                 </CommandEmpty>
 
                 <CommandGroup>
@@ -211,40 +211,34 @@ export function SidebarPresence({
                 : "text-muted-foreground"
             )}
           >
-            <div className="flex items-center -space-x-1.5 shrink-0 py-0.5">
-              {onlineUsers.length > 0 ? (
-                <>
-                  {onlineUsers.slice(0, 3).map((user, index) => (
-                    <div
-                      key={user.id}
-                      className="relative h-5 w-5 rounded-full overflow-hidden bg-muted ring-1 ring-background"
-                      style={{ zIndex: 3 - index }}
-                    >
-                      {user.avatarUrl ? (
-                        <img
-                          src={user.avatarUrl}
-                          alt={user.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[9px] font-medium text-muted-foreground">
-                          {user.name[0]?.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {onlineUsers.length > 3 && (
-                    <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-mono text-muted-foreground ring-1 ring-background" style={{ zIndex: 0 }}>
-                      +{onlineUsers.length - 3}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground ring-1 ring-background">
-                  0
-                </div>
-              )}
-            </div>
+            {onlineUsers.length > 0 && (
+              <div className="flex items-center -space-x-1.5 shrink-0 py-0.5">
+                {onlineUsers.slice(0, 3).map((user, index) => (
+                  <div
+                    key={user.id}
+                    className="relative h-5 w-5 rounded-full overflow-hidden bg-muted ring-1 ring-background"
+                    style={{ zIndex: 3 - index }}
+                  >
+                    {user.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[9px] font-medium text-muted-foreground">
+                        {user.name[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {onlineUsers.length > 3 && (
+                  <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-mono text-muted-foreground ring-1 ring-background" style={{ zIndex: 0 }}>
+                    +{onlineUsers.length - 3}
+                  </div>
+                )}
+              </div>
+            )}
 
             <span className="min-w-0 flex-1 truncate text-left font-medium text-muted-foreground flex items-center justify-between">
               <span>Miembros activos</span>
@@ -280,7 +274,7 @@ export function SidebarPresence({
 
             <CommandList className="max-h-64 overflow-y-auto">
               <CommandEmpty>
-                Sin resultados
+                {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
               </CommandEmpty>
 
               <CommandGroup>

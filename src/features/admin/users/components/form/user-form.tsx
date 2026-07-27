@@ -48,14 +48,14 @@ type Props = {
   roles: Role[]
   selectedRole?: Role
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
-  area?: Area | null
+  areas: Area[]
   errors?: UserErrors
   step?: number
   onRoleChange: (roleId: string) => void
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
   ) => void
-  onAreaChange: (areaId: string | null) => void
+  onAreasChange: (areas: Area[]) => void
   onChangingPasswordChange: (value: boolean) => void
   onNameChange: (value: string) => void
   onUsernameChange: (value: string) => void
@@ -78,12 +78,12 @@ export function UserForm({
   roles,
   selectedRole,
   level,
-  area,
+  areas,
   errors,
   step = 0,
   onRoleChange,
   onLevelChange,
-  onAreaChange,
+  onAreasChange,
   onChangingPasswordChange,
   onNameChange,
   onUsernameChange,
@@ -104,11 +104,11 @@ export function UserForm({
       roles={roles}
       selectedRole={selectedRole}
       level={level}
-      area={area}
+      areas={areas}
       error={errors?.roleId}
       onRoleChange={onRoleChange}
       onLevelChange={onLevelChange}
-      onAreaChange={onAreaChange}
+      onAreasChange={onAreasChange}
     />
   )
 
