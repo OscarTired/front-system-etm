@@ -10,17 +10,17 @@ import type {
 
 import {
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
+  useState,
 } from "react"
 
 import {
   Activity,
   Check,
+  MoreHorizontal,
 } from "lucide-react"
-
-import {
-  KpiCarousel,
-} from "@/shared/ui/mini-card/kpi-carousel"
 
 import {
   createWorkflowView,
@@ -57,6 +57,45 @@ type Props = {
 export function TaskProductionPanel({
   task,
 }: Props) {
+
+  // Collapse propio (no KpiCarousel) — KpiCarousel fuerza un alto
+  // fijo (h-44, pensado para cards uniformes tipo ProcessMiniCard)
+  // en su carrusel mobile expandido, y el stepper+progreso acá es
+  // más alto que eso: el contenido se salía/rompía el layout. El
+  // BOTÓN colapsado sí replica el mismo estilo visual de
+  // KpiCarousel (para que se vea igual que KPIs), pero el expand
+  // usa altura medida en vez de un valor fijo.
+  const [
+    expanded,
+    setExpanded,
+  ] = useState(false)
+
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  const [
+    contentHeight,
+    setContentHeight,
+  ] = useState(0)
+
+  useEffect(() => {
+
+    if (!contentRef.current) return
+
+    const measure = () => {
+      if (contentRef.current) {
+        setContentHeight(contentRef.current.scrollHeight)
+      }
+    }
+
+    measure()
+
+    const resizeObserver = new ResizeObserver(measure)
+
+    resizeObserver.observe(contentRef.current)
+
+    return () => resizeObserver.disconnect()
+
+  }, [])
 
   // Autoscroll al paso activo — callback ref en vez de
   // ref+useEffect: el stepper solo existe en el DOM cuando el
@@ -132,6 +171,9 @@ export function TaskProductionPanel({
     status?.icon
       ? ENTITY_ICONS[status.icon]
       : undefined
+
+  const summaryTextColor =
+    getBadgeColors(status?.color ?? "#737373", "subtle").text
 
   // Centra el paso activo apenas monta — antes esto corría al
   // expandir; como ya no hay colapso, corre una sola vez al montar.
@@ -315,41 +357,86 @@ export function TaskProductionPanel({
 
       </div>
 
-      {/* Mobile — mismo componente genérico que ya usa TaskKpisSection
-          (KpiCarousel: colapsado = barra con fondo tinteado + ícono
-          + label + 2 valores; expandido = el contenido de abajo).
-          Sin wrapper extra alrededor — KpiCarousel ya trae su propia
-          tarjeta con gradiente; envolverla en OTRO contenedor con
-          fondo/padding (lo que había antes) se veía como una card
-          metida dentro de otra card. */}
+      {/* Mobile — mismo estilo visual que el botón resumen de
+          KpiCarousel (para verse consistente con KPIs), pero con
+          altura medida en vez de un carrusel de alto fijo — este
+          contenido no es uniforme como las ProcessMiniCard. */}
       <div className="xl:hidden">
 
-        <KpiCarousel
-          cards={[
-            <div
-              key="route"
-              className="flex flex-col gap-6 rounded-2xl p-5"
-              style={{
-                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
-              }}
-            >
-
-              {stepper}
-
-              {progressContent}
-
-            </div>,
-          ]}
-          summary={{
-            icon: StatusIcon ?? Activity,
-            color: status?.color ?? "#737373",
-            label: status?.name ?? "Producción",
-            values: [
-              { label: "Listas", value: `${workflowView.completedSteps}/${workflowView.totalSteps}` },
-              { label: "Avance", value: `${workflowView.progress}%` },
-            ],
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
+          style={{
+            background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, #101012)`,
           }}
-        />
+        >
+
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+
+            {StatusIcon ? (
+              <StatusIcon size={20} style={{ color: summaryTextColor }} />
+            ) : (
+              <Activity size={20} style={{ color: summaryTextColor }} />
+            )}
+
+          </div>
+
+          <span
+            className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] tablet:block"
+            style={{ color: summaryTextColor }}
+          >
+            {status?.name ?? "Producción"}
+          </span>
+
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
+
+            <div className="min-w-0 text-right">
+              <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Listas</p>
+              <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
+                {workflowView.completedSteps}/{workflowView.totalSteps}
+              </p>
+            </div>
+
+            <div className="min-w-0 text-right">
+              <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Avance</p>
+              <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
+                {workflowView.progress}%
+              </p>
+            </div>
+
+          </div>
+
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-neutral-400">
+            <MoreHorizontal size={18} />
+          </div>
+
+        </button>
+
+        <div
+          className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+          style={{
+            maxHeight: expanded ? contentHeight : 0,
+            opacity: expanded ? 1 : 0,
+            marginTop: expanded ? "0.75rem" : 0,
+          }}
+        >
+
+          <div
+            ref={contentRef}
+            className="flex flex-col gap-6 rounded-2xl p-5"
+            style={{
+              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
+            }}
+          >
+
+            {stepper}
+
+            {progressContent}
+
+          </div>
+
+        </div>
 
       </div>
 
