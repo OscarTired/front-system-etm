@@ -414,7 +414,7 @@ export function TaskProductionPanel({
         </button>
 
         <div
-          className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+          className="overflow-hidden transition-[max-height,opacity,margin-top] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{
             maxHeight: expanded ? contentHeight : 0,
             opacity: expanded ? 1 : 0,
