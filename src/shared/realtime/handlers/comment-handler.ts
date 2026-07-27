@@ -55,7 +55,27 @@ export function commentHandler(
 
       queryClient.setQueryData<Comment[]>(
         queryKey,
-        current => (current ?? []).map(c => c.id === comment.id ? comment : c),
+        current => (current ?? []).map(c => {
+
+          if (c.id === comment.id) {
+            return comment
+          }
+
+          if (c.parent?.id === comment.id) {
+            return {
+              ...c,
+              parent: {
+                id: comment.id,
+                message: comment.message,
+                deletedAt: null,
+                user: { id: comment.user.id, name: comment.user.name },
+              },
+            }
+          }
+
+          return c
+
+        }),
       )
 
       return
@@ -79,7 +99,14 @@ export function commentHandler(
 
       queryClient.setQueryData<Comment[]>(
         queryKey,
-        current => (current ?? []).filter(c => c.id !== payload.id),
+        current => (current ?? [])
+          .filter(c => c.id !== payload.id)
+
+          .map(c =>
+            c.parent?.id === payload.id
+              ? { ...c, parent: { ...c.parent, deletedAt: new Date().toISOString() } }
+              : c,
+          ),
       )
 
       return

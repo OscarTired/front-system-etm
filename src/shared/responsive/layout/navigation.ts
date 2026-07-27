@@ -99,7 +99,7 @@ export const NAVIGATION = [
         href: "/bitacora/ingenieria",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
-        roles: ["INGENIERIA", "ADMIN"],
+        roles: ["INGENIERIA", "PROYECTOS", "ADMIN"],
       },
       {
         label: "Bitácora del Equipo",

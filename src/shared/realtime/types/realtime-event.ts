@@ -15,6 +15,7 @@ export type RealtimeEntity=
   |"CLIENT"
   |"COMMENT"
   |"COMMENT_READ_STATUS"
+  |"ACTIVITY_LOG"
   |"COLOR"
   |"MATERIAL"
   |"PRIORITY"

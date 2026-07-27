@@ -8,6 +8,7 @@ import { userHandler } from "../handlers/user-handler"
 import { notificationHandler } from "../handlers/notification-handler"
 import { commentHandler } from "../handlers/comment-handler"
 import { commentReadStatusHandler } from "../handlers/comment-read-status-handler"
+import { activityLogHandler } from "../handlers/activity-log-handler"
 import { clientHandler } from "../handlers/client-handler"
 import { colorHandler } from "../handlers/color-handler"
 import { materialHandler } from "../handlers/material-handler"
@@ -26,6 +27,7 @@ const handlers = {
   NOTIFICATION: notificationHandler,
   COMMENT: commentHandler,
   COMMENT_READ_STATUS: commentReadStatusHandler,
+  ACTIVITY_LOG: activityLogHandler,
   CLIENT: clientHandler,
   COLOR: colorHandler,
   MATERIAL: materialHandler,
