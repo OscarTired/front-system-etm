@@ -6,31 +6,23 @@ import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 import { ActivityLogPageContent } from "@/features/activity-log/components/activity-log-page-content"
 
-// Calco de /bitacora (Producción) — mismo motor, mismo layout,
-// única diferencia real es department="INGENIERIA" pasado a ambos
-// hijos. El acceso ya está restringido en dos capas: el ítem de
-// navegación no aparece para quien no sea de Ingeniería/Admin (ver
-// navigation.ts + sidebar-navigation.tsx), y aunque alguien entrara
-// directo por URL, el backend igual rechaza la lectura/escritura
-// (ActivityLogService.assertEngineeringAccess) — esta página no
-// hace ningún chequeo de rol propio, confía en esas dos capas.
 export default function BitacoraIngenieriaPage() {
 
   usePageTitle("Bitácora de Ingeniería")
 
   return (
 
-    <main className="flex flex-col bg-[#050505] px-4 pt-3 pb-5 text-white select-none tablet:h-full tablet:px-8 tablet:py-10">
+    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:h-full tablet:px-8 tablet:pt-0 desktop:py-10">
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="hidden flex-wrap items-center justify-between gap-4 mb-4 desktop:flex">
 
-        <div className="hidden min-w-0 flex-1 items-center gap-2 tablet:flex">
+        <div className="min-w-0 flex-1 items-center gap-2 flex">
 
-          <h1 className="shrink-0 text-xl font-bold tracking-widest tablet:text-2xl">
+          <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             BITÁCORA DE INGENIERÍA
           </h1>
 
-          <span className="hidden h-1 w-1 shrink-0 rounded-full bg-neutral-700 tablet:block" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
 
           <p className="min-w-0 truncate text-sm text-neutral-500">
             Qué hiciste hoy
@@ -38,7 +30,6 @@ export default function BitacoraIngenieriaPage() {
 
         </div>
 
-        {/* Espacio reservado invisible para mantener la alineación idéntica del layout con el botón primary */}
         <div className="invisible shrink-0 pointer-events-none select-none" aria-hidden="true">
           <div className="inline-flex h-10 items-center justify-center px-5 text-sm font-semibold">
             Placeholder

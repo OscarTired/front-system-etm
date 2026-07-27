@@ -28,9 +28,9 @@ export default function TasksPage() {
 
   return (
 
-    <main className="flex flex-col bg-[#050505] px-4 pt-3 pb-5 text-white select-none tablet:px-8 tablet:py-10 tablet:h-full">
+    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10 tablet:h-full">
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="hidden desktop:flex flex-wrap items-center justify-between gap-4 mb-4">
 
         {/*
           Título y descripción en la misma línea (items-baseline),
@@ -41,13 +41,13 @@ export default function TasksPage() {
           para que en pantallas angostas se corte en vez de forzar
           un wrap que vuelva a sumar altura.
         */}
-        <div className="hidden min-w-0 flex-1 items-center gap-2 tablet:flex">
+        <div className="min-w-0 flex-1 items-center gap-2 flex">
 
-          <h1 className="shrink-0 text-xl font-bold tracking-widest tablet:text-2xl">
+          <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             TAREAS
           </h1>
 
-          <span className="hidden h-1 w-1 shrink-0 rounded-full bg-neutral-700 tablet:block" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
 
           <p className="min-w-0 truncate text-sm text-neutral-500">
             Gestión de tareas y procesos
@@ -55,17 +55,16 @@ export default function TasksPage() {
 
         </div>
 
-        {/* Siempre montado: TaskActions decide su propio render
-            según breakpoint (botón normal en desktop, FAB fixed en
-            mobile) — adentro de un padre hidden, el FAB no se
-            pintaría en mobile. */}
         <div className="shrink-0">
-
           <TaskActions />
-
         </div>
 
       </header>
+
+      {/* Siempre montado para que el FAB funcione correctamente en mobile */}
+      <div className="desktop:hidden">
+        <TaskActions />
+      </div>
 
       <section className="mt-2 flex-1 min-h-0 tablet:mt-3">
 
