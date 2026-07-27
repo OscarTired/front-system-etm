@@ -8,7 +8,6 @@ import { userHandler } from "../handlers/user-handler"
 import { notificationHandler } from "../handlers/notification-handler"
 import { commentHandler } from "../handlers/comment-handler"
 import { commentReadStatusHandler } from "../handlers/comment-read-status-handler"
-import { activityLogHandler } from "../handlers/activity-log-handler"
 import { clientHandler } from "../handlers/client-handler"
 import { colorHandler } from "../handlers/color-handler"
 import { materialHandler } from "../handlers/material-handler"
@@ -17,6 +16,7 @@ import { stageHandler } from "../handlers/stage-handler"
 import { statusHandler } from "../handlers/status-handler"
 import { thicknessHandler } from "../handlers/thickness-handler"
 import { rolePermissionsHandler } from "../handlers/role-permissions-handler"
+import { activityLogHandler } from "../handlers/activity-log-handler"
 
 const handlers = {
   TASK: taskHandler,
@@ -27,7 +27,6 @@ const handlers = {
   NOTIFICATION: notificationHandler,
   COMMENT: commentHandler,
   COMMENT_READ_STATUS: commentReadStatusHandler,
-  ACTIVITY_LOG: activityLogHandler,
   CLIENT: clientHandler,
   COLOR: colorHandler,
   MATERIAL: materialHandler,
@@ -36,6 +35,7 @@ const handlers = {
   STATUS: statusHandler,
   THICKNESS: thicknessHandler,
   ROLE_PERMISSIONS: rolePermissionsHandler,
+  ACTIVITY_LOG: activityLogHandler,
 } satisfies Record<RealtimeEntity, (event: RealtimeEvent) => void>
 
 export function realtimeRegistry(

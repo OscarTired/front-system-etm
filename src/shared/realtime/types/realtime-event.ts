@@ -15,7 +15,6 @@ export type RealtimeEntity=
   |"CLIENT"
   |"COMMENT"
   |"COMMENT_READ_STATUS"
-  |"ACTIVITY_LOG"
   |"COLOR"
   |"MATERIAL"
   |"PRIORITY"
@@ -23,6 +22,7 @@ export type RealtimeEntity=
   |"STATUS"
   |"THICKNESS"
   |"ROLE_PERMISSIONS"
+  |"ACTIVITY_LOG"
 
 export type RealtimeAction=
   |"CREATED"
