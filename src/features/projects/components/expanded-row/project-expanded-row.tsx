@@ -93,12 +93,6 @@ export function ProjectExpandedRow({
     setCommentsDialogOpen,
   ] = useState(false)
 
-  // En mobile, "Mensajes" abre el diálogo en vez de cambiar la vista
-  // inline (el panel completo, con composer + historial, no entra
-  // bien apretado en pantalla chica). En desktop se queda igual que
-  // antes: cambia activeView y muestra ProjectCommentsPanel ahí mismo.
-  // "kpis" no tiene ese problema (no hay composer) — cambia de vista
-  // en ambos breakpoints.
   const handleViewChange = (
     next: "tasks" | "comments" | "kpis",
   ) => {
@@ -207,18 +201,7 @@ export function ProjectExpandedRow({
 
       <EntityExpandedContent>
 
-        <div className="mb-2 flex items-center justify-between select-none">
-
-          <div className="mb-2 hidden items-center justify-between select-none tablet:flex">
-            <span className="text-xs font-semibold tracking-widest text-neutral-500">
-              {activeView === "tasks"
-                ? "TAREAS OPERATIVAS"
-                : activeView === "comments"
-                  ? "MENSAJES"
-                  : "INDICADORES"}
-            </span>
-          </div>
-
+        <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
@@ -242,7 +225,6 @@ export function ProjectExpandedRow({
               },
             ]}
           />
-
         </div>
 
         <EntityExpandedSlider
@@ -268,11 +250,8 @@ export function ProjectExpandedRow({
             {
               value: "kpis",
               content: !isMobile ? (
-
                 <KpiPanel cards={cards} />
-
               ) : (
-
                 <KpiCarousel
                   cards={cards}
                   summary={{
@@ -290,17 +269,13 @@ export function ProjectExpandedRow({
                     ],
                   }}
                 />
-
               ),
             },
           ]}
-        />
+      />
 
       </EntityExpandedContent>
 
-      {/* Solo relevante en mobile — en desktop activeView ya
-          maneja "Mensajes" mostrando ProjectCommentsPanel inline
-          (ver handleViewChange). */}
       <CommentHistoryDialog
         target={{ scope: "project", projectId: project.id }}
         open={commentsDialogOpen}

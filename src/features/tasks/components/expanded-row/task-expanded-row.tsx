@@ -43,10 +43,6 @@ export function TaskExpandedRow({
 
   const { isMobile } = useResponsive()
 
-  // Antes Workflow/Mensajes vivían siempre lado a lado (o apilados
-  // en angosto) y KPIs siempre arriba, fijo — ahora las 3 son
-  // opciones de un mismo toggle, igual que ya se hizo en
-  // ProjectExpandedRow.
   const [
     activeView,
     setActiveView,
@@ -57,11 +53,6 @@ export function TaskExpandedRow({
     setCommentsDialogOpen,
   ] = useState(false)
 
-  // Mismo criterio que ProjectExpandedRow: en mobile, "Mensajes"
-  // abre el diálogo completo (composer + historial) en vez de
-  // cambiar la vista inline — no entra bien apretado en pantalla
-  // chica. En desktop cambia activeView y muestra TaskCommentsPanel
-  // ahí mismo, como el resto de las opciones.
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",
   ) => {
@@ -90,41 +81,29 @@ export function TaskExpandedRow({
 
       <EntityExpandedContent>
 
-        <div className="mb-2 flex items-center justify-between select-none">
-
-          <div className="mb-2 hidden items-center justify-between select-none tablet:flex">
-            <span className="text-xs font-semibold tracking-widest text-neutral-500">
-              {activeView === "workflow"
-                ? "WORKFLOW OPERATIVO"
-                : activeView === "comments"
-                  ? "MENSAJES"
-                  : "INDICADORES"}
-            </span>
-          </div>
-
+        <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
             fullWidth={isMobile}
             options={[
               {
-                value: "workflow",
-                label: "Workflow",
-                icon: ClipboardList,
+                  value: "workflow",
+                  label: "Workflow",
+                  icon: ClipboardList,
               },
               {
-                value: "comments",
-                label: "Mensajes",
-                icon: MessageSquare,
+                  value: "comments",
+                  label: "Mensajes",
+                  icon: MessageSquare,
               },
               {
-                value: "kpis",
-                label: "KPIs",
-                icon: Activity,
+                  value: "kpis",
+                  label: "KPIs",
+                  icon: Activity,
               },
             ]}
           />
-
         </div>
 
         <EntityExpandedSlider
@@ -155,13 +134,10 @@ export function TaskExpandedRow({
               ),
             },
           ]}
-        />
+      />
 
       </EntityExpandedContent>
 
-      {/* Solo relevante en mobile — en desktop activeView ya
-          maneja "Mensajes" mostrando TaskCommentsPanel inline (ver
-          handleViewChange). */}
       <CommentHistoryDialog
         target={{ scope: "task", taskId: task.id }}
         open={commentsDialogOpen}

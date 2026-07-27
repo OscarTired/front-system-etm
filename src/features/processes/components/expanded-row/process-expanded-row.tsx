@@ -137,24 +137,11 @@ export function ProcessExpandedRow({
 
   ]
 
-  // Sin "tareas" acá (un proceso no tiene sub-tareas propias) — a
-  // diferencia de Project/Task, solo 2 opciones. Si no hay
-  // workflowStepId todavía, Mensajes no tiene sentido (no hay a qué
-  // step engancharlo) y arranca directo en KPIs.
-  //
-  // KPIs queda como default SIEMPRE (no solo cuando falta
-  // workflowStepId) — es la primera opción del toggle acá, a
-  // diferencia de Project/Task donde el default es la vista de
-  // contenido (Tareas/Workflow).
   const [
     activeView,
     setActiveView,
   ] = useState<"comments" | "kpis">("kpis")
 
-  // KpiCarousel maneja su propio expand/collapse internamente — no
-  // hace falta estado ni medición de altura acá, solo el resumen
-  // (getProcessProgress ya da percent/statusLabel sin importar qué
-  // combinación de cards toque mostrar según el tipo de proceso).
   const { percent, statusLabel } = getProcessProgress(processTask)
 
   return(
@@ -170,16 +157,7 @@ export function ProcessExpandedRow({
 
       <EntityExpandedContent>
 
-        <div className="mb-2 flex items-center justify-between select-none">
-
-          <div className="mb-2 hidden items-center justify-between select-none tablet:flex">
-            <span className="text-xs font-semibold tracking-widest text-neutral-500">
-              {activeView === "comments"
-                ? "MENSAJES"
-                : "INDICADORES"}
-            </span>
-          </div>
-
+        <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
             onChange={setActiveView}
@@ -199,7 +177,6 @@ export function ProcessExpandedRow({
                 : []),
             ]}
           />
-
         </div>
 
         <EntityExpandedSlider
@@ -208,16 +185,8 @@ export function ProcessExpandedRow({
             {
               value: "kpis" as const,
               content: !isMobile ? (
-
                 <KpiPanel cards={cards} />
-
               ) : (
-
-                // KpiCarousel — mismo componente genérico que ya usa
-                // TaskPipelineHeader (barra "AVANCE" con fondo
-                // tinteado). getProcessProgress ya da percent/status
-                // sin importar qué combinación de cards toque
-                // mostrar según el tipo de proceso.
                 <KpiCarousel
                   cards={cards}
                   summary={{
@@ -230,7 +199,6 @@ export function ProcessExpandedRow({
                     ],
                   }}
                 />
-
               ),
             },
             ...(workflowStepId

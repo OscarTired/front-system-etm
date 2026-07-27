@@ -58,13 +58,6 @@ export function TaskProductionPanel({
   task,
 }: Props) {
 
-  // Collapse propio (no KpiCarousel) — KpiCarousel fuerza un alto
-  // fijo (h-44, pensado para cards uniformes tipo ProcessMiniCard)
-  // en su carrusel mobile expandido, y el stepper+progreso acá es
-  // más alto que eso: el contenido se salía/rompía el layout. El
-  // BOTÓN colapsado sí replica el mismo estilo visual de
-  // KpiCarousel (para que se vea igual que KPIs), pero el expand
-  // usa altura medida en vez de un valor fijo.
   const [
     expanded,
     setExpanded,
@@ -97,13 +90,6 @@ export function TaskProductionPanel({
 
   }, [])
 
-  // Autoscroll al paso activo — callback ref en vez de
-  // ref+useEffect: el stepper solo existe en el DOM cuando el
-  // KpiCarousel de abajo está expandido (arranca colapsado), así
-  // que un efecto corriendo al montar TaskProductionPanel se
-  // disparaba ANTES de que el nodo existiera. Un callback ref se
-  // ejecuta exactamente cuando el elemento se adjunta al DOM de
-  // verdad, sea cuando sea (al expandir, no al montar el panel).
   const scrollToActive = useCallback((node: HTMLDivElement | null) => {
 
     if (!node) return
@@ -175,8 +161,6 @@ export function TaskProductionPanel({
   const summaryTextColor =
     getBadgeColors(status?.color ?? "#737373", "subtle").text
 
-  // Centra el paso activo apenas monta — antes esto corría al
-  // expandir; como ya no hay colapso, corre una sola vez al montar.
   const progressContent = (
 
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -258,7 +242,7 @@ export function TaskProductionPanel({
               <div className="flex flex-col items-center gap-1.5">
 
                 <div
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-300"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
                   style={
                     isActive || isDone
                       ? {
@@ -279,8 +263,8 @@ export function TaskProductionPanel({
                     <ProcessIcon
                       size={16}
                       style={{ color: isActive ? colors.text : "#737373" }}
-                    />
-                  )}
+                  />
+                )}
 
                 </div>
 
@@ -291,38 +275,38 @@ export function TaskProductionPanel({
                       isActive || isDone
                         ? colors.text
                         : "#525252",
-                  }}
-                >
-                  {definition.code}
-                </span>
+                }}
+              >
+                {definition.code}
+            </span>
 
-              </div>
+          </div>
 
-              {!isLast && (
+          {!isLast && (
 
-                <div className="mx-1.5 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8">
+            <div className="mx-1.5 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8">
 
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: isDone ? "100%" : "0%",
-                      backgroundColor: colors.text,
-                    }}
-                  />
-
-                </div>
-
-              )}
+              <div
+                className="h-full rounded-full transition-all duration-200"
+                style={{
+                  width: isDone ? "100%" : "0%",
+                  backgroundColor: colors.text,
+                }}
+              />
 
             </div>
 
-          )
+          )}
 
-        })}
+        </div>
 
-      </div>
+      )
+
+    })}
 
     </div>
+
+  </div>
 
   )
 
@@ -330,7 +314,6 @@ export function TaskProductionPanel({
 
     <>
 
-      {/* Desktop — sin cambios. */}
       <div className="hidden h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4 xl:flex">
 
         <div className="flex justify-center">
@@ -357,10 +340,6 @@ export function TaskProductionPanel({
 
       </div>
 
-      {/* Mobile — mismo estilo visual que el botón resumen de
-          KpiCarousel (para verse consistente con KPIs), pero con
-          altura medida en vez de un carrusel de alto fijo — este
-          contenido no es uniforme como las ProcessMiniCard. */}
       <div className="xl:hidden">
 
         <button
@@ -414,7 +393,7 @@ export function TaskProductionPanel({
         </button>
 
         <div
-          className="overflow-hidden transition-[max-height,opacity,margin-top] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          className="overflow-hidden transition-[max-height,opacity,margin-top] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{
             maxHeight: expanded ? contentHeight : 0,
             opacity: expanded ? 1 : 0,

@@ -115,7 +115,7 @@ export function TaskRouteViewer({
                     )
 
                   }}
-                  className="transition-all duration-150 disabled:pointer-events-none"
+                  className="transition-all duration-200 disabled:pointer-events-none"
                 >
 
                   <DynamicBadge
