@@ -12,68 +12,51 @@ import type {
   ProcessTask,
 } from "../../../types/process.types"
 
-type Props={
-
-  processTask:ProcessTask
-
-  size?:"default"|"large"
-
+type Props = {
+  processTask: ProcessTask
+  size?: "default" | "large"
 }
 
 export function ProcessMaterialCard({
-
   processTask,
   size,
-
-}:Props){
-
-  const material=
+}: Props) {
+  const material =
     processTask.task.material
 
-  const thickness=
+  const thickness =
     processTask.task.thickness
 
-  return(
+  const lotNumber =
+    processTask.task.lotNumber
 
+  return (
     <ProcessMiniCard
-
       size={size}
-
       label="Material"
-
       icon={InspectionPanel}
-
       color={
         material?.color ??
         "#64748B"
       }
-
       rows={[
-
         {
-
-          label:"Material",
-
-          value:
-            material?.name ??
-            "-",
-
+          label: "Lote",
+          value: lotNumber ? `L${lotNumber}` : "-",
         },
-
         {
-
-          label:"Espesor",
-
+          label: "Material",
+          value:
+            material?.name?.toUpperCase() ??
+            "-",
+        },
+        {
+          label: "Espesor",
           value:
             thickness?.name ??
             "-",
-
         },
-
       ]}
-
     />
-
   )
-
 }
