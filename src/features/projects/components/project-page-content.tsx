@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react"
 
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
-
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
 import { EntityExpandProvider } from "@/shared/ui/entity-table/features/expansion"
@@ -14,10 +11,7 @@ import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-s
 
 import { FilterBar } from "@/shared/filter/components/filter-bar"
 
-import { ProjectTable, ProjectTableTabla } from "@/features/projects/table"
-
-import { ProjectViewToggle } from "@/features/projects/components/actions/project-view-toggle"
-import { useProjectView } from "@/features/projects/hooks/use-project-view"
+import { ProjectTable } from "@/features/projects/table"
 
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { ProjectSortButton } from "@/shared/sorting/components/project-sort-button"
@@ -39,8 +33,6 @@ export function ProjectPageContent({
   initialShowHistory=false,
 }:Props){
 
-  const { isMobile } = useResponsive()
-
   const[
     search,
     setSearch,
@@ -50,11 +42,6 @@ export function ProjectPageContent({
     showHistory,
     setShowHistory,
   ]=useState(initialShowHistory)
-
-  const{
-    view,
-    setView,
-  }=useProjectView()
 
   const{
     projects,
@@ -78,19 +65,7 @@ export function ProjectPageContent({
 
   return(
 
-    // Mismo patrón que TaskPageContent: vista "tabla" (EntityTable)
-    // vive en h-full/min-h-0/overflow-hidden — una sola pantalla, el
-    // contenido interno scrollea dentro de su propio contenedor
-    // (patrón app fija). Vista "card" fluye libre con su alto real,
-    // como el resto de la página. Mobile: siempre libre (fuerza
-    // "card"), el <main overflow-y-auto> del AppShell scrollea la
-    // página completa.
-    <div className={cn(
-      "relative mx-auto flex w-full max-w-400 flex-col",
-      !isMobile && view === "tabla"
-        ? "h-full min-h-0 overflow-hidden"
-        : "",
-    )}>
+    <div className="relative mx-auto flex w-full max-w-400 flex-col">
 
       <div className="shrink-0">
 
@@ -114,18 +89,6 @@ export function ProjectPageContent({
                   onClick={()=>setShowHistory(v=>!v)}
                 />,
               ]}
-              right={
-
-                !isMobile && (
-
-                  <ProjectViewToggle
-                    value={view}
-                    onChange={setView}
-                  />
-
-                )
-
-              }
             />
 
           }
@@ -133,41 +96,20 @@ export function ProjectPageContent({
 
       </div>
 
-      <div className={cn(
-        !isMobile && view === "tabla"
-          ? "min-h-0 flex-1 overflow-hidden"
-          : "",
-      )}>
+      <div>
 
         <EntityExpandProvider>
 
-          {view==="card"?(
-
-            <ProjectTable
-              projects={projects}
-              tasks={tasks}
-              loading={loading}
-              focusedProjectId={focusedProjectId}
-              focusToken={focusToken}
-              search={search}
-              showHistory={showHistory}
-              reorderProjects={reorderProjects}
-            />
-
-          ):(
-
-            <ProjectTableTabla
-              projects={projects}
-              tasks={tasks}
-              loading={loading}
-              focusedProjectId={focusedProjectId}
-              focusToken={focusToken}
-              search={search}
-              showHistory={showHistory}
-              reorderProjects={reorderProjects}
-            />
-
-          )}
+          <ProjectTable
+            projects={projects}
+            tasks={tasks}
+            loading={loading}
+            focusedProjectId={focusedProjectId}
+            focusToken={focusToken}
+            search={search}
+            showHistory={showHistory}
+            reorderProjects={reorderProjects}
+          />
 
         </EntityExpandProvider>
 

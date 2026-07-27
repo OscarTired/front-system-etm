@@ -2,7 +2,7 @@
 
 import { cn } from "@/shared/utils/utils"
 
-export type TaskView = "card" | "tabla" | "kanban"
+export type TaskView = "card" | "kanban"
 
 type Props = {
   value: TaskView
@@ -22,7 +22,6 @@ export function TaskViewToggle({
         [
           { key: "card", label: "Card" },
           { key: "kanban", label: "Kanban" },
-          { key: "tabla", label: "Tabla" },
         ] as const
       ).map(
         option => (

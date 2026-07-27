@@ -2,9 +2,6 @@
 
 import { useState } from "react"
 
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
-
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
@@ -27,11 +24,7 @@ import { HistoryToggleButton } from "@/shared/history/components/history-toggle-
 
 import { useProductionSheet } from "@/features/reports/hooks/use-production-sheet"
 import { useProcesses } from "../hooks/use-processes"
-import { ProcessTable } from "../table/process-table"
 import { ProcessTableCard } from "../table/process-table-card"
-
-import { ProcessViewToggle } from "../components/actions/process-view-toggle"
-import { useProcessView } from "../hooks/use-process-view"
 
 type Props = {
   processCode: ProcessCode
@@ -47,19 +40,12 @@ export function ProcessPageContent({
   initialShowHistory = false,
 }: Props) {
 
-  const { isMobile } = useResponsive()
-
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] =
     useState(initialShowHistory)
 
   const [resolvingFocus, setResolvingFocus] =
     useState(false)
-
-  const {
-    view,
-    setView,
-  } = useProcessView()
 
   const {
     tasks,
@@ -115,15 +101,7 @@ export function ProcessPageContent({
 
   return (
 
-    // Mismo patrón que Tareas/Proyectos: en desktop, contenedor fijo
-    // con scroll interno acotado. En mobile, sin esas restricciones
-    // — la página entera scrollea de forma natural.
-    <div className={cn(
-      "relative mx-auto flex w-full max-w-400 flex-col",
-      !isMobile && view === "tabla"
-        ? "h-full min-h-0 overflow-hidden"
-        : "",
-    )}>
+    <div className="relative mx-auto flex w-full max-w-400 flex-col">
 
       <div className="shrink-0">
 
@@ -157,18 +135,6 @@ export function ProcessPageContent({
                   onExport={handleExport}
                 />,
               ]}
-              right={
-
-                !isMobile && (
-
-                  <ProcessViewToggle
-                    value={view}
-                    onChange={setView}
-                  />
-
-                )
-
-              }
             />
 
           }
@@ -176,56 +142,25 @@ export function ProcessPageContent({
 
       </div>
 
-      <div className={cn(
-        !isMobile && view === "tabla"
-          ? "min-h-0 flex-1 overflow-hidden"
-          : "",
-      )}>
+      <div>
 
         <EntityExpandProvider>
 
-          {/* En mobile, ProcessTable resuelve su propio caso (fuerza
-              TaskProcessColumn) sin importar `view` — el toggle está
-              oculto ahí, así que este estado no aplica. En desktop,
-              `view` decide entre TABLA (EntityTable genérico) y CARD
-              (ProcessTableCard, nueva). */}
-          {(isMobile || view === "tabla") ? (
-
-            <ProcessTable
-              processDefinition={processDefinition}
-              processTasks={processTasks}
-              search={search}
-              loading={loading}
-              focusedTaskId={focusedTaskId}
-              focusToken={focusToken}
-              showHistory={showHistory}
-              onHistoryRequired={() =>
-                setShowHistory(true)
-              }
-              onResolvingChange={
-                setResolvingFocus
-              }
-            />
-
-          ) : (
-
-            <ProcessTableCard
-              processDefinition={processDefinition}
-              processTasks={processTasks}
-              search={search}
-              loading={loading}
-              focusedTaskId={focusedTaskId}
-              focusToken={focusToken}
-              showHistory={showHistory}
-              onHistoryRequired={() =>
-                setShowHistory(true)
-              }
-              onResolvingChange={
-                setResolvingFocus
-              }
-            />
-
-          )}
+          <ProcessTableCard
+            processDefinition={processDefinition}
+            processTasks={processTasks}
+            search={search}
+            loading={loading}
+            focusedTaskId={focusedTaskId}
+            focusToken={focusToken}
+            showHistory={showHistory}
+            onHistoryRequired={() =>
+              setShowHistory(true)
+            }
+            onResolvingChange={
+              setResolvingFocus
+            }
+          />
 
         </EntityExpandProvider>
 
