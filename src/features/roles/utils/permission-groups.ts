@@ -77,6 +77,7 @@ export function getPermissionActionLabel(code:string,groupKey:string):string{
     READ_ANY:"Ver (de cualquiera)",
     MANAGE:"Administrar",
     MANAGE_TYPES:"Administrar tipos",
+    PERMISSION_OVERRIDE_MANAGE:"Gestionar excepciones",
   }
 
   return labels[action]??action
