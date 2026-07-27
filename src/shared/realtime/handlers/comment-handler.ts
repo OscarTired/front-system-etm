@@ -4,17 +4,23 @@ import { getQueryClient } from "@/lib/query-client"
 
 import type { RealtimeEvent } from "../types/realtime-event"
 
-function resolveQueryKey(comment: Comment) {
+type CommentLocation = {
+  taskId: string | null
+  workflowStepId: string | null
+  projectId: string | null
+}
 
-  if (comment.workflowStepId) {
-    return ["comments", "workflowStep", comment.workflowStepId] as const
+function resolveQueryKey(location: CommentLocation) {
+
+  if (location.workflowStepId) {
+    return ["comments", "workflowStep", location.workflowStepId] as const
   }
 
-  if (comment.projectId) {
-    return ["comments", "project", comment.projectId] as const
+  if (location.projectId) {
+    return ["comments", "project", location.projectId] as const
   }
 
-  return ["comments", "task", comment.taskId] as const
+  return ["comments", "task", location.taskId] as const
 
 }
 
@@ -68,7 +74,10 @@ export function commentHandler(
                 id: comment.id,
                 message: comment.message,
                 deletedAt: null,
-                user: { id: comment.user.id, name: comment.user.name },
+                user: {
+                  id: comment.user.id,
+                  name: comment.user.name,
+                },
               },
             }
           }
@@ -85,28 +94,31 @@ export function commentHandler(
     case "DELETED": {
 
       const payload = event.payload as
-        | { id: string; taskId: string | null; workflowStepId: string | null; projectId: string | null }
+        | CommentLocation & { id: string }
         | undefined
 
-      if (!payload) return
+      if (!payload) {
+        return
+      }
 
-      const queryKey =
-        payload.workflowStepId
-          ? (["comments", "workflowStep", payload.workflowStepId] as const)
-          : payload.projectId
-            ? (["comments", "project", payload.projectId] as const)
-            : (["comments", "task", payload.taskId] as const)
+      const queryKey = resolveQueryKey(payload)
 
       queryClient.setQueryData<Comment[]>(
         queryKey,
-        current => (current ?? [])
-          .filter(c => c.id !== payload.id)
-
-          .map(c =>
-            c.parent?.id === payload.id
-              ? { ...c, parent: { ...c.parent, deletedAt: new Date().toISOString() } }
-              : c,
-          ),
+        current =>
+          (current ?? [])
+            .filter(c => c.id !== payload.id)
+            .map(c =>
+              c.parent?.id === payload.id
+                ? {
+                    ...c,
+                    parent: {
+                      ...c.parent,
+                      deletedAt: new Date().toISOString(),
+                    },
+                  }
+                : c,
+            ),
       )
 
       return
