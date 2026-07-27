@@ -46,12 +46,12 @@ type Props = {
   icon: EntityIcon
   color: string
   roles: Role[]
-  selectedRole?: Role
+  selectedRoles: Role[]
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
   areas: Area[]
   errors?: UserErrors
   step?: number
-  onRoleChange: (roleId: string) => void
+  onRolesChange: (roles: Role[]) => void
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
   ) => void
@@ -76,12 +76,12 @@ export function UserForm({
   icon,
   color,
   roles,
-  selectedRole,
+  selectedRoles,
   level,
   areas,
   errors,
   step = 0,
-  onRoleChange,
+  onRolesChange,
   onLevelChange,
   onAreasChange,
   onChangingPasswordChange,
@@ -102,11 +102,11 @@ export function UserForm({
       icon={icon}
       color={color}
       roles={roles}
-      selectedRole={selectedRole}
+      selectedRoles={selectedRoles}
       level={level}
       areas={areas}
-      error={errors?.roleId}
-      onRoleChange={onRoleChange}
+      error={errors?.roleIds}
+      onRolesChange={onRolesChange}
       onLevelChange={onLevelChange}
       onAreasChange={onAreasChange}
     />

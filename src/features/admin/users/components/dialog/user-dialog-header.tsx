@@ -1,8 +1,8 @@
 "use client"
 
 import {
-  RoleSelect,
-} from "@/features/roles/components/roles-select"
+  RoleMultiSelect,
+} from "@/features/roles/components/role-multi-select"
 
 import {
   LevelSelect,
@@ -35,12 +35,12 @@ type Props = {
   color: string
   icon: EntityIcon
   roles: Role[]
-  selectedRole?: Role
+  selectedRoles: Role[]
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
   areas: Area[]
   error?: string
-  onRoleChange: (
-    roleId: string,
+  onRolesChange: (
+    roles: Role[],
   ) => void
   onLevelChange: (
     level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null,
@@ -57,25 +57,27 @@ export function UserDialogHeader({
   color,
   icon,
   roles,
-  selectedRole,
+  selectedRoles,
   level,
   areas,
   error,
-  onRoleChange,
+  onRolesChange,
   onLevelChange,
   onAreasChange,
 }: Props) {
   const isProduccion =
-    selectedRole?.code === "PRODUCCION"
+    selectedRoles.some(role => role.code === "PRODUCCION")
 
   // Ingeniería y Proyectos todavía no tienen sub-niveles propios
   // como Producción (sin Operario, sin Área) — hoy lo único que
   // necesitan es poder marcar a alguien como Supervisor, para
   // diferenciar quién puede ser Project Manager (ver
-  // isProjectManager en features/users/utils) de quién no.
+  // isProjectManager en features/users/utils) de quién no. Con
+  // varios roles a la vez, alcanza con que UNO sea de este tipo.
   const isPmDepartment =
-    selectedRole?.code === "INGENIERIA"
-    || selectedRole?.code === "PROYECTOS"
+    selectedRoles.some(
+      role => role.code === "INGENIERIA" || role.code === "PROYECTOS",
+    )
 
   const showLevelSelect =
     isProduccion || isPmDepartment
@@ -92,15 +94,11 @@ export function UserDialogHeader({
           />
 
           <div className="w-full">
-            <RoleSelect
-              value={selectedRole}
+            <RoleMultiSelect
+              value={selectedRoles}
               items={roles}
-              placeholder="Seleccionar rol"
-              onChange={role =>
-                onRoleChange(
-                  role?.id ?? "",
-                )
-              }
+              placeholder="Seleccionar roles"
+              onChange={onRolesChange}
             />
 
             {error && (

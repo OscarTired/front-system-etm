@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
@@ -39,7 +41,7 @@ export function SidebarNavigation({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { has } = usePermissions()
-  const currentRole = useAuthStore(state => state.user?.role?.code)
+  const currentRoles = useAuthStore(state => state.user?.roles?.map((role: { code: string }) => role.code) ?? [])
 
   const [isMounting, setIsMounting] = useState(true)
 
@@ -72,36 +74,12 @@ export function SidebarNavigation({
         </div>
       )}
 
-      {/* Sección Equipo integrada con SidebarSection */}
-      <div
-        className={cn(
-          "w-full",
-          isMounting && "animate-gemini-in opacity-0"
-        )}
-        style={
-          isMounting
-            ? { animationDelay: "120ms" }
-            : undefined
-        }
-      >
-        <SidebarSection
-          title="Equipo"
-          collapsed={collapsed}
-          isDrawer={isDrawer}
-        >
-          <SidebarPresence
-            collapsed={presenceCollapsed}
-            presenceRef={presenceRef}
-          />
-        </SidebarSection>
-      </div>
-        
       {NAVIGATION.map((section) => {
         const items = section.items.filter(
           item =>
             (!("permission" in item) || has(item.permission)) &&
             (!("roles" in item) ||
-              (currentRole != null && (item.roles as readonly string[]).includes(currentRole))),
+              currentRoles.some((role: string) => (item.roles as readonly string[]).includes(role))),
         )
 
         if (items.length === 0) {
@@ -137,7 +115,7 @@ export function SidebarNavigation({
                   )}
                   style={
                     isMounting
-                      ? { animationDelay: `${150 + currentIndex * 35}ms` }
+                      ? { animationDelay: `${120 + currentIndex * 35}ms` }
                       : undefined
                   }
                 >
@@ -166,6 +144,33 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
+
+      {/* Antes esto vivía DENTRO del .map() de arriba, pegado a la
+          última sección de NAVIGATION ("Administración"). Si a un rol
+          le sacaban todos los permisos de esa sección (USER_READ,
+          ROLE_MANAGE, ACTIVITY_TYPE_MANAGE), esa sección quedaba con
+          0 items y el .map() cortaba con `return null` ANTES de
+          llegar a este bloque — haciendo desaparecer "En línea" sin
+          ninguna relación real con permisos de usuarios. Se saca del
+          bucle para que su visibilidad dependa solo de si hay
+          usuarios conectados, nunca de qué secciones de navegación
+          quedaron vacías. */}
+      <div
+        className={cn(
+          "w-full",
+          isMounting && "animate-gemini-in opacity-0"
+        )}
+        style={
+          isMounting
+            ? { animationDelay: `${140 + globalItemIndex * 35}ms` }
+            : undefined
+        }
+      >
+        <SidebarPresence
+          collapsed={presenceCollapsed}
+          presenceRef={presenceRef}
+        />
+      </div>
     </VerticalScroll>
   )
 }

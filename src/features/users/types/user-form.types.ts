@@ -10,9 +10,14 @@ export interface UserForm{
 
   email:string
 
-  roleId:string
+  roleIds:string[]
 
   level?:"GENERAL" | "OPERARIO" | "SUPERVISOR" | null
+
+  // Faltaba por completo — se me había pasado en la migración de
+  // áreas (esta interfaz es la que usa el service/mutation, no la
+  // vi en esa vuelta).
+  areaIds?:string[]
 
   icon:EntityIcon
 

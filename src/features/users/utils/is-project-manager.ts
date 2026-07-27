@@ -14,11 +14,11 @@ const PM_DEPARTMENTS = [
 ] as const
 
 export function isProjectManager(
-  user: Pick<User, "role" | "level">,
+  user: Pick<User, "roles" | "level">,
 ): boolean {
   return (
-    PM_DEPARTMENTS.includes(
-      user.role?.code as typeof PM_DEPARTMENTS[number],
+    user.roles.some(
+      role => PM_DEPARTMENTS.includes(role.code as typeof PM_DEPARTMENTS[number]),
     )
     && user.level === "SUPERVISOR"
   )

@@ -43,7 +43,7 @@ type UserFormData = {
   password: string
   confirmPassword: string
   isChangingPassword: boolean
-  roleId: string
+  roleIds: string[]
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
   areaIds: string[]
   icon: EntityIcon
@@ -77,7 +77,7 @@ export function UsersPageContent() {
     password: "",
     confirmPassword: "",
     isChangingPassword: false,
-    roleId: "",
+    roleIds: [],
     level: null,
     areaIds: [],
     icon: "user",
@@ -99,7 +99,7 @@ export function UsersPageContent() {
 
   const usersInSelectedRole = useMemo(() => {
     if (!selectedRoleId) return []
-    return users.filter(u => u.role.id === selectedRoleId)
+    return users.filter(u => u.roles.some(r => r.id === selectedRoleId))
   }, [users, selectedRoleId])
 
   const filteredUsersInRole = useMemo(() => {
@@ -134,7 +134,7 @@ export function UsersPageContent() {
       password: "",
       confirmPassword: "",
       isChangingPassword: false,
-      roleId: selectedUser.role.id,
+      roleIds: selectedUser.roles?.map(r => r.id) ?? [],
       level: selectedUser.level ?? null,
       areaIds: selectedUser.areas?.map(a => a.id) ?? [],
       icon: (selectedUser.icon as EntityIcon) ?? "user",
@@ -150,7 +150,7 @@ export function UsersPageContent() {
     email: formData.email,
     password: formData.password,
     confirmPassword: formData.confirmPassword,
-    roleId: formData.roleId,
+    roleIds: formData.roleIds,
     isEditing: !isCreating,
     isChangingPassword: formData.isChangingPassword,
   })
@@ -194,7 +194,7 @@ export function UsersPageContent() {
       password: "",
       confirmPassword: "",
       isChangingPassword: true,
-      roleId: selectedRoleId,
+      roleIds: selectedRoleId ? [selectedRoleId] : [],
       level: null,
       areaIds: [],
       icon: "user",
@@ -214,7 +214,7 @@ export function UsersPageContent() {
       name: formData.name,
       username: formData.username,
       email: formData.email,
-      roleId: formData.roleId,
+      roleIds: formData.roleIds,
       level: formData.level,
       areaIds: formData.areaIds,
       icon: formData.icon,
@@ -239,7 +239,7 @@ export function UsersPageContent() {
     setSelectedUserId(null)
   }
 
-  const selectedFormRole = roles.find(r => r.id === formData.roleId)
+  const selectedFormRoles = roles.filter(r => formData.roleIds.includes(r.id))
   const showRightPanel = isCreating || !!selectedUserId
 
   return (
@@ -542,16 +542,17 @@ export function UsersPageContent() {
                       icon={formData.icon}
                       color={formData.color}
                       roles={roles}
-                      selectedRole={selectedFormRole}
+                      selectedRoles={selectedFormRoles}
                       level={formData.level}
                       areas={areas.filter(a => formData.areaIds.includes(a.id))}
                       errors={attempted ? errors : undefined}
-                      onRoleChange={roleId => {
-                        const nextRole = roles.find(r => r.id === roleId)
+                      onRolesChange={nextRoles => {
+                        const stillProduccion =
+                          nextRoles.some(r => r.code === "PRODUCCION")
                         setFormData(c => ({
                           ...c,
-                          roleId,
-                          ...(nextRole?.code !== "PRODUCCION" && { level: null, areaIds: [] }),
+                          roleIds: nextRoles.map(r => r.id),
+                          ...(!stillProduccion && { level: null, areaIds: [] }),
                         }))
                       }}
                       onLevelChange={level => setFormData(c => ({

@@ -58,7 +58,10 @@ export interface User{
 
   updatedAt:string
 
-  role:UserRole
+  // Array ahora (m2m) — un usuario puede tener más de un rol a la
+  // vez (ej. Ingeniería + Proyectos), sumando los permisos de
+  // todos (antes era 1 a 1, role:UserRole).
+  roles:UserRole[]
 
   level:"GENERAL" | "OPERARIO" | "SUPERVISOR" | null
 

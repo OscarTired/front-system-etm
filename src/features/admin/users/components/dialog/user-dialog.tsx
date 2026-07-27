@@ -65,7 +65,7 @@ type UserFormValue = {
   password: string
   confirmPassword: string
   isChangingPassword: boolean
-  roleId: string
+  roleIds: string[]
   level: "GENERAL" | "OPERARIO" | "SUPERVISOR" | null
   areaIds: string[]
   icon: EntityIcon
@@ -77,7 +77,7 @@ const STEP_ERROR_KEYS: Record<
   number,
   (keyof UserErrors)[]
 > = {
-  0: ["roleId"],
+  0: ["roleIds"],
   1: [
     "name",
     "username",
@@ -98,7 +98,7 @@ function createInitialForm(
     password: "",
     confirmPassword: "",
     isChangingPassword: false,
-    roleId: user?.role.id ?? "",
+    roleIds: user?.roles?.map(role => role.id) ?? [],
     level: user?.level ?? null,
     areaIds: user?.areas?.map(area => area.id) ?? [],
     icon: user?.icon ?? "user",
@@ -174,9 +174,9 @@ export function UserDialog({
     }))
   }
 
-  const selectedRole =
-    roles.find(
-      role => role.id === form.roleId,
+  const selectedRoles =
+    roles.filter(
+      role => form.roleIds.includes(role.id),
     )
 
   const selectedAreas =
@@ -194,7 +194,7 @@ export function UserDialog({
       email: form.email,
       password: form.password,
       confirmPassword: form.confirmPassword,
-      roleId: form.roleId,
+      roleIds: form.roleIds,
       isEditing,
       isChangingPassword:
         form.isChangingPassword,
@@ -381,44 +381,48 @@ export function UserDialog({
         icon={form.icon}
         color={form.color}
         roles={roles}
-        selectedRole={selectedRole}
+        selectedRoles={selectedRoles}
         level={form.level}
         areas={selectedAreas}
         errors={visibleErrors}
         step={step}
-        onRoleChange={roleId => {
-          const nextRole =
-            roles.find(role => role.id === roleId)
+        onRolesChange={nextRoles => {
 
           // Mismo criterio que el backend (assertLevelMatchesRole):
           // PRODUCCION admite OPERARIO/SUPERVISOR, Ingeniería y
           // Proyectos admiten solo SUPERVISOR, el resto no admite
-          // sub-nivel. Si el level actual ya no es válido para el
-          // rol nuevo, se limpia (junto con areaIds, que solo tiene
-          // sentido para OPERARIO en Producción) — pero si venimos
-          // de PRODUCCION-SUPERVISOR hacia INGENIERIA/PROYECTOS, o
-          // viceversa, el SUPERVISOR se conserva.
+          // sub-nivel. Con varios roles a la vez, el nivel es
+          // válido si CUALQUIERA de los roles elegidos lo permite
+          // (unión, no intersección) — así alguien Producción +
+          // Ingeniería puede seguir siendo Operario, que Ingeniería
+          // sola no permitiría. Si el level actual no queda válido
+          // para ningún rol nuevo, se limpia (junto con areaIds,
+          // que solo tiene sentido para OPERARIO en Producción).
           const allowedLevels: Record<string, ("OPERARIO" | "SUPERVISOR")[]> = {
             PRODUCCION: ["OPERARIO", "SUPERVISOR"],
             INGENIERIA: ["SUPERVISOR"],
             PROYECTOS: ["SUPERVISOR"],
           }
 
-          const nextAllowed =
-            allowedLevels[nextRole?.code ?? ""] ?? []
+          const nextAllowed = new Set(
+            nextRoles.flatMap(role => allowedLevels[role.code] ?? []),
+          )
 
           const levelStillValid =
             form.level != null
-            && (nextAllowed as string[]).includes(form.level)
+            && nextAllowed.has(form.level as "OPERARIO" | "SUPERVISOR")
+
+          const stillProduccion =
+            nextRoles.some(role => role.code === "PRODUCCION")
 
           update({
-            roleId,
+            roleIds: nextRoles.map(role => role.id),
             ...(!levelStillValid && {
               level: null,
               areaIds: [],
             }),
             ...(levelStillValid
-              && form.level !== "OPERARIO"
+              && (form.level !== "OPERARIO" || !stillProduccion)
               && {
                 areaIds: [],
               }),

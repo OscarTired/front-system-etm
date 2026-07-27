@@ -102,12 +102,16 @@ EntityColumn<User>[]{
       width:TABLE_WIDTHS.large,
       render:user=>(
 
-        <DynamicBadge
-          label={user.role.name}
-          icon={user.role.icon}
-          color={user.role.color}
-          width="field"
-        />
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {user.roles.map(role => (
+            <DynamicBadge
+              key={role.id}
+              label={role.name}
+              icon={role.icon}
+              color={role.color}
+            />
+          ))}
+        </div>
 
       ),
     },

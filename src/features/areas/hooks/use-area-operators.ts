@@ -43,7 +43,7 @@ export function useAreaOperators(processCode: ProcessCode | null) {
 
     const candidates = (users as User[]).filter(
       user =>
-        user.role?.code === "PRODUCCION" &&
+        user.roles?.some(role => role.code === "PRODUCCION") &&
         user.level === "OPERARIO" &&
         // Antes era user.area?.processCode === processCode (1 a 1)
         // — ahora un operario puede estar en varias áreas, así que

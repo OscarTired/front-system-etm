@@ -4,7 +4,7 @@ type UserFormValues = {
   email: string
   password: string
   confirmPassword: string
-  roleId: string
+  roleIds: string[]
   isEditing: boolean
   isChangingPassword: boolean
 }
@@ -14,7 +14,7 @@ export type UserErrors = Partial<
     | "name"
     | "username"
     | "email"
-    | "roleId"
+    | "roleIds"
     | "password"
     | "confirmPassword",
     string
@@ -49,8 +49,8 @@ export function validateUser(
       `El correo debe terminar en ${EMAIL_DOMAIN}`
   }
 
-  if (!form.roleId) {
-    errors.roleId = "Selecciona un rol"
+  if (form.roleIds.length === 0) {
+    errors.roleIds = "Selecciona al menos un rol"
   }
 
   const changingPassword =

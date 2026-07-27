@@ -183,7 +183,7 @@ export function getFilterOptions({
       return users
         .filter(
           user=>
-            user.role.code==="PRODUCCION" && user.level==="OPERARIO",
+            user.roles.some(role => role.code==="PRODUCCION") && user.level==="OPERARIO",
         )
         .map(
           item=>({

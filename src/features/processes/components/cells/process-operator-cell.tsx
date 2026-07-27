@@ -109,7 +109,7 @@ export function ProcessOperatorCell({
 
   const operators =
     users
-      .filter(user => user.role?.code === "PRODUCCION" && user.level === "OPERARIO")
+      .filter(user => user.roles?.some(role => role.code === "PRODUCCION") && user.level === "OPERARIO")
       .filter(user =>
         // Siempre mostramos el operario ya asignado a este step,
         // aunque esté en PROGRESS (puede ser el mismo que estamos editando).

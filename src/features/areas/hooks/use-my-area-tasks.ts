@@ -89,7 +89,7 @@ export function useMyAreaTasks() {
   const isOperarioWithArea =
     user?.level === "OPERARIO" && operarioAreaCodes.length > 0
 
-  const isAdmin = user?.role?.code === "ADMIN"
+  const isAdmin = user?.roles?.some(role => role.code === "ADMIN") ?? false
 
   // Supervisor y Admin comparten el mismo mecanismo de selección
   // libre — Admin no tiene un "área fija" más que nadie, así que no
