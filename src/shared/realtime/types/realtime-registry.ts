@@ -16,6 +16,7 @@ import { stageHandler } from "../handlers/stage-handler"
 import { statusHandler } from "../handlers/status-handler"
 import { thicknessHandler } from "../handlers/thickness-handler"
 import { rolePermissionsHandler } from "../handlers/role-permissions-handler"
+import { userPermissionOverrideHandler } from "../handlers/user-permission-override-handler"
 import { activityLogHandler } from "../handlers/activity-log-handler"
 
 const handlers = {
@@ -35,6 +36,7 @@ const handlers = {
   STATUS: statusHandler,
   THICKNESS: thicknessHandler,
   ROLE_PERMISSIONS: rolePermissionsHandler,
+  USER_PERMISSION_OVERRIDE: userPermissionOverrideHandler,
   ACTIVITY_LOG: activityLogHandler,
 } satisfies Record<RealtimeEntity, (event: RealtimeEvent) => void>
 

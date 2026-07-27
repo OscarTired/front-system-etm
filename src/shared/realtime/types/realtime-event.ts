@@ -22,6 +22,7 @@ export type RealtimeEntity=
   |"STATUS"
   |"THICKNESS"
   |"ROLE_PERMISSIONS"
+  |"USER_PERMISSION_OVERRIDE"
   |"ACTIVITY_LOG"
 
 export type RealtimeAction=
