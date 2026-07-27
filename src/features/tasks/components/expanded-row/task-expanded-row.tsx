@@ -9,7 +9,6 @@ import type {
 
 import {
   EntityExpandedContent,
-  EntityExpandedHeader,
   EntityExpandedRow,
   EntityExpandedToggle,
   EntityExpandedSlider,
@@ -71,13 +70,6 @@ export function TaskExpandedRow({
     <EntityExpandedRow
       rowId={task.id}
     >
-
-      <EntityExpandedHeader
-        section="TAREA OPERATIVA"
-        title={task.reference}
-        metric={task.route.length}
-        metricLabel="procesos definidos"
-      />
 
       <EntityExpandedContent>
 

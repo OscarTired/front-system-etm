@@ -7,7 +7,6 @@ import type { ProcessTask } from "../../types/process.types"
 
 import {
   EntityExpandedContent,
-  EntityExpandedHeader,
   EntityExpandedRow,
   EntityExpandedToggle,
   EntityExpandedSlider,
@@ -147,13 +146,6 @@ export function ProcessExpandedRow({
   return(
 
     <EntityExpandedRow rowId={processTask.task.id}>
-
-      <EntityExpandedHeader
-        section="PROCESO OPERATIVO"
-        title={processTask.task.reference}
-        metric={processTask.workflowStep?.order??"-"}
-        metricLabel="orden"
-      />
 
       <EntityExpandedContent>
 

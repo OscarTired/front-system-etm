@@ -15,7 +15,6 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import {
   EntityExpandedContent,
-  EntityExpandedHeader,
   EntityExpandedRow,
   EntityExpandedToggle,
   EntityExpandedSlider,
@@ -191,13 +190,6 @@ export function ProjectExpandedRow({
   return(
 
     <EntityExpandedRow rowId={project.id}>
-
-      <EntityExpandedHeader
-        section="PIPELINE OPERATIVO"
-        title={project.name}
-        metric={totalTasks}
-        metricLabel="tareas asociadas"
-      />
 
       <EntityExpandedContent>
 
