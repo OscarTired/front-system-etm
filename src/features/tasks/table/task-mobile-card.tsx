@@ -1,16 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
 import Link from "next/link"
-
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
 import type { Task } from "../types/task.types"
-
 import { taskAccess } from "../access/task-access"
 
 import { TaskPriorityCell } from "../components/cells/task-priority-cell"
@@ -60,7 +57,6 @@ export function TaskMobileCard({
           }}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* ID con el color del cliente aplicado dinámicamente */}
           <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
             style={{
@@ -71,23 +67,16 @@ export function TaskMobileCard({
             {String(task.taskNumber).padStart(3, "0")}
           </span>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
+          {/* Ajuste: flex-col e items-start para que los hijos ajusten su hit area al texto */}
+          <div className="flex min-w-0 flex-1 flex-col items-start">
+            <p className="max-w-full truncate text-sm font-semibold text-white">
               {task.reference}
             </p>
 
-            {/* Mismo destino que la columna "PRY" en modo tabla
-                (/projects?projectId=...) — antes esto era texto
-                plano acá, no navegaba a ningún lado. stopPropagation
-                para que tocar el código no dispare TAMBIÉN el
-                onToggle del wrapper (que ahora es un div, no un
-                button real, justamente para poder anidar este Link
-                sin romper el HTML — <a> dentro de <button> tampoco
-                es válido). */}
             <Link
               href={`/projects?projectId=${task.project.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="mt-0.5 block w-fit truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
+              className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
             >
               {task.project.projectCode}
             </Link>
@@ -122,7 +111,6 @@ export function TaskMobileCard({
                   className="shrink-0 rotate-180 text-neutral-500"
                 />
               </button>
-
               <TaskPriorityCell task={task} triggerVariant="row" rowLabel="Prioridad" />
             </div>
           ) : (
@@ -137,30 +125,23 @@ export function TaskMobileCard({
                   style={{ backgroundColor: task.project.client.color }}
                 />
                 <span className="shrink-0 truncate">{task.project.client.name}</span>
-
                 <span className="shrink-0 text-neutral-600">·</span>
-
                 <span
                   className="shrink-0 truncate"
                   style={{ color: stage.color }}
                 >
                   {stage.label}
                 </span>
-
                 <span className="shrink-0 text-neutral-600">·</span>
-
                 <span
                   className="shrink-0 truncate"
                   style={{ color: status.color }}
                 >
                   {status.label}
                 </span>
-
                 <span className="shrink-0 text-neutral-600">·</span>
-
                 <span className="min-w-0 truncate text-neutral-400">{task.priority.name}</span>
               </span>
-
               <ChevronDown
                 size={14}
                 className="shrink-0 text-neutral-500"
@@ -175,7 +156,6 @@ export function TaskMobileCard({
                 setShowPipeline(current => !current)
               }
             />
-
             <TaskRowActions task={task} />
           </div>
 

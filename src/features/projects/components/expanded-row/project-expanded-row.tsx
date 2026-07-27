@@ -1,7 +1,8 @@
 "use client"
 
-import { Activity,AlertTriangle,CheckCircle2,ClipboardList,MessageSquare,Puzzle } from "lucide-react"
+import { Activity, AlertTriangle, CheckCircle2, ClipboardList, MessageSquare, Puzzle } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 import type { Project } from "../../types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
@@ -24,58 +25,60 @@ import { ProjectTasksList } from "./project-tasks-list"
 import { ProjectCommentsPanel } from "../comments/project-comments-panel"
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 
-type Props={
-  project:Project
-  tasks:Task[]
+type Props = {
+  project: Project
+  tasks: Task[]
 }
 
-const CRITICAL_PRIORITY_CODE="URGENTE"
+const CRITICAL_PRIORITY_CODE = "URGENTE"
 
 export function ProjectExpandedRow({
   project,
   tasks,
-}:Props){
+}: Props) {
+  const searchParams = useSearchParams()
 
-  const{
+  const urlProjectId = searchParams.get("projectId")
+  const isTarget = urlProjectId === project.id
+  const tabParam = searchParams.get("tab")
+
+  const initialTab = isTarget && tabParam === "comments" ? "comments" : "tasks"
+
+  const {
     totalTasks,
     totalPieces,
     criticalPriorityTasks,
     completedTasks,
-  }=useMemo(()=>{
+  } = useMemo(() => {
+    let totalTasks = 0
+    let totalPieces = 0
+    let criticalPriorityTasks = 0
+    let completedTasks = 0
 
-    let totalTasks=0
-    let totalPieces=0
-    let criticalPriorityTasks=0
-    let completedTasks=0
-
-    for(const task of tasks){
-
-      if(task.project.id!==project.id){
+    for (const task of tasks) {
+      if (task.project.id !== project.id) {
         continue
       }
 
       totalTasks++
+      totalPieces += task.pieces
 
-      totalPieces+=task.pieces
-
-      if(task.priority.code===CRITICAL_PRIORITY_CODE){
+      if (task.priority.code === CRITICAL_PRIORITY_CODE) {
         criticalPriorityTasks++
       }
 
-      if(isWorkflowCompleted(task.workflowSteps)){
+      if (isWorkflowCompleted(task.workflowSteps)) {
         completedTasks++
       }
-
     }
 
-    return{
+    return {
       totalTasks,
       totalPieces,
       criticalPriorityTasks,
       completedTasks,
     }
-
-  },[
+  }, [
     tasks,
     project.id,
   ])
@@ -85,7 +88,7 @@ export function ProjectExpandedRow({
   const [
     activeView,
     setActiveView,
-  ] = useState<"tasks" | "comments" | "kpis">("tasks")
+  ] = useState<"tasks" | "comments" | "kpis">(initialTab)
 
   const [
     commentsDialogOpen,
@@ -95,18 +98,15 @@ export function ProjectExpandedRow({
   const handleViewChange = (
     next: "tasks" | "comments" | "kpis",
   ) => {
-
     if (isMobile && next === "comments") {
       setCommentsDialogOpen(true)
       return
     }
 
     setActiveView(next)
-
   }
 
   const cards = [
-
     <ProcessMiniCard
       key="tasks"
       size={isMobile ? "large" : "default"}
@@ -115,12 +115,12 @@ export function ProjectExpandedRow({
       color={"#afafaf"}
       rows={[
         {
-          label:"Total",
-          value:totalTasks,
+          label: "Total",
+          value: totalTasks,
         },
         {
-          label:"Con ruta",
-          value:totalTasks,
+          label: "Con ruta",
+          value: totalTasks,
         },
       ]}
     />,
@@ -133,14 +133,14 @@ export function ProjectExpandedRow({
       color={"#a6c7d4"}
       rows={[
         {
-          label:"Total",
-          value:totalPieces,
+          label: "Total",
+          value: totalPieces,
         },
         {
-          label:"Promedio",
-          value:totalTasks>0
-            ?Math.round(totalPieces/totalTasks)
-            :0,
+          label: "Promedio",
+          value: totalTasks > 0
+            ? Math.round(totalPieces / totalTasks)
+            : 0,
         },
       ]}
     />,
@@ -153,14 +153,14 @@ export function ProjectExpandedRow({
       color={"#EF4444"}
       rows={[
         {
-          label:"Total",
-          value:criticalPriorityTasks,
+          label: "Total",
+          value: criticalPriorityTasks,
         },
         {
-          label:"Porcentaje",
-          value:totalTasks>0
-            ?`${Math.round((criticalPriorityTasks/totalTasks)*100)}%`
-            :"0%",
+          label: "Porcentaje",
+          value: totalTasks > 0
+            ? `${Math.round((criticalPriorityTasks / totalTasks) * 100)}%`
+            : "0%",
         },
       ]}
     />,
@@ -173,26 +173,22 @@ export function ProjectExpandedRow({
       color={"#22C55E"}
       rows={[
         {
-          label:"Finalizadas",
-          value:completedTasks,
+          label: "Finalizadas",
+          value: completedTasks,
         },
         {
-          label:"Progreso",
-          value:totalTasks>0
-            ?`${Math.round((completedTasks/totalTasks)*100)}%`
-            :"0%",
+          label: "Progreso",
+          value: totalTasks > 0
+            ? `${Math.round((completedTasks / totalTasks) * 100)}%`
+            : "0%",
         },
       ]}
     />,
-
   ]
 
-  return(
-
+  return (
     <EntityExpandedRow rowId={project.id}>
-
       <EntityExpandedContent>
-
         <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
@@ -263,8 +259,7 @@ export function ProjectExpandedRow({
               ),
             },
           ]}
-      />
-
+        />
       </EntityExpandedContent>
 
       <CommentHistoryDialog
@@ -272,9 +267,6 @@ export function ProjectExpandedRow({
         open={commentsDialogOpen}
         onOpenChange={setCommentsDialogOpen}
       />
-
     </EntityExpandedRow>
-
   )
-
 }

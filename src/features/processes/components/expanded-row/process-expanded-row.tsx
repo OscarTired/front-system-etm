@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Activity, MessageSquare } from "lucide-react"
 
 import type { ProcessTask } from "../../types/process.types"
@@ -26,40 +27,46 @@ import { ProcessTimeCard } from "./cards/process-time-card"
 import { ProcessProgressCard } from "./cards/process-progress-card"
 import { ProcessCommentsPanel } from "./comments/process-comments-panel"
 
-type Props={
-  processTask:ProcessTask
+type Props = {
+  processTask: ProcessTask
 }
 
 export function ProcessExpandedRow({
   processTask,
-}:Props){
-
+}: Props) {
   const { isMobile, ready } = useResponsive()
+  const searchParams = useSearchParams()
 
-  const processCode=
+  const urlTaskId = searchParams.get("taskId")
+  const isTarget = urlTaskId === processTask.task.id
+  const tabParam = searchParams.get("tab") as "comments" | "kpis"
+
+  // Si esta fila es la destinataria de la notificación y pide tab=comments, se inicia en comments
+  const initialTab = isTarget && tabParam === "comments" ? "comments" : "kpis"
+
+  const processCode =
     processTask.workflowStep?.processCode
 
-  const workflowStepId=
+  const workflowStepId =
     processTask.workflowStep?.id
 
-  const isMaterialProcess=
-    processCode==="CT"||
-    processCode==="PL"||
-    processCode==="SD"
+  const isMaterialProcess =
+    processCode === "CT" ||
+    processCode === "PL" ||
+    processCode === "SD"
 
-  const isPaintProcess=
-    processCode==="PT"
+  const isPaintProcess =
+    processCode === "PT"
 
-  const isAssemblyProcess=
-    processCode==="EN"
+  const isAssemblyProcess =
+    processCode === "EN"
 
-  const isDispatchProcess=
-    processCode==="DS"
+  const isDispatchProcess =
+    processCode === "DS"
 
   const cardSize = isMobile ? "large" : "default"
 
   const cards: React.ReactNode[] = [
-
     ...(isMaterialProcess
       ? [
           <ProcessProductionCard
@@ -133,22 +140,18 @@ export function ProcessExpandedRow({
       size={cardSize}
       processTask={processTask}
     />,
-
   ]
 
   const [
     activeView,
     setActiveView,
-  ] = useState<"comments" | "kpis">("kpis")
+  ] = useState<"comments" | "kpis">(initialTab)
 
   const { percent, statusLabel } = getProcessProgress(processTask)
 
-  return(
-
+  return (
     <EntityExpandedRow rowId={processTask.task.id}>
-
       <EntityExpandedContent>
-
         <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
@@ -204,11 +207,7 @@ export function ProcessExpandedRow({
               : []),
           ]}
         />
-
       </EntityExpandedContent>
-
     </EntityExpandedRow>
-
   )
-
 }

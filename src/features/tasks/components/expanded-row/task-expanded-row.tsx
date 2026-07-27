@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Activity, ClipboardList, MessageSquare } from "lucide-react"
 
 import type {
@@ -40,11 +41,18 @@ export function TaskExpandedRow({
   task,
 }: Props) {
   const { isMobile } = useResponsive()
+  const searchParams = useSearchParams()
+
+  const urlTaskId = searchParams.get("taskId")
+  const isTarget = urlTaskId === task.id
+  const tabParam = searchParams.get("tab")
+
+  const initialTab = isTarget && tabParam === "comments" ? "comments" : "workflow"
 
   const [
     activeView,
     setActiveView,
-  ] = useState<"workflow" | "comments" | "kpis">("workflow")
+  ] = useState<"workflow" | "comments" | "kpis">(initialTab)
 
   const [
     commentsDialogOpen,
