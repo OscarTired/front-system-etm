@@ -30,6 +30,10 @@ import {
 } from "@/features/users/hooks/use-user-mutations"
 
 import {
+  isLevelAllowedForRoles,
+} from "@/features/users/utils/allowed-levels-for-roles"
+
+import {
   useRoles,
 } from "@/features/roles/hooks/use-roles"
 
@@ -388,29 +392,13 @@ export function UserDialog({
         step={step}
         onRolesChange={nextRoles => {
 
-          // Mismo criterio que el backend (assertLevelMatchesRole):
-          // PRODUCCION admite OPERARIO/SUPERVISOR, Ingeniería y
-          // Proyectos admiten solo SUPERVISOR, el resto no admite
-          // sub-nivel. Con varios roles a la vez, el nivel es
-          // válido si CUALQUIERA de los roles elegidos lo permite
-          // (unión, no intersección) — así alguien Producción +
-          // Ingeniería puede seguir siendo Operario, que Ingeniería
-          // sola no permitiría. Si el level actual no queda válido
-          // para ningún rol nuevo, se limpia (junto con areaIds,
-          // que solo tiene sentido para OPERARIO en Producción).
-          const allowedLevels: Record<string, ("OPERARIO" | "SUPERVISOR")[]> = {
-            PRODUCCION: ["OPERARIO", "SUPERVISOR"],
-            INGENIERIA: ["SUPERVISOR"],
-            PROYECTOS: ["SUPERVISOR"],
-          }
-
-          const nextAllowed = new Set(
-            nextRoles.flatMap(role => allowedLevels[role.code] ?? []),
-          )
-
+          // Mismo criterio que el backend (assertLevelMatchesRole) y
+          // que users-page-content.tsx — ver getAllowedLevelsForRoles.
+          // Si el level actual no queda válido para ningún rol nuevo,
+          // se limpia (junto con areaIds, que solo tiene sentido para
+          // OPERARIO en Producción).
           const levelStillValid =
-            form.level != null
-            && nextAllowed.has(form.level as "OPERARIO" | "SUPERVISOR")
+            isLevelAllowedForRoles(form.level, nextRoles)
 
           const stillProduccion =
             nextRoles.some(role => role.code === "PRODUCCION")

@@ -56,7 +56,7 @@ export function ProfilePreviewPanel({
   }, [])
 
   const copyValue = async(
-    value: string,
+    value: string | null,
     key: string,
   ) => {
 

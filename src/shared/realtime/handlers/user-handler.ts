@@ -158,7 +158,7 @@ export function userHandler(
 
       )
 
-      // El payload trae al usuario ya actualizado (nuevo roleId,
+      // El payload trae al usuario ya actualizado (nuevos roleIds,
       // active, etc). Si el usuario editado es UNO MISMO, hay que
       // reemitir el JWT: el backend arma request.user.permissions
       // desde lo firmado en el token, no contra la base de datos en

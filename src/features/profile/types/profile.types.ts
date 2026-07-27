@@ -1,33 +1,21 @@
-export type Profile = {
+import type { User } from "@/features/users/types/user.types"
 
-  id: string
-
-  name: string
-
-  email: string
-
-  username: string | null
-
-  avatarUrl: string | null
-
-  phone: string | null
-
-  position: string | null
-
-  color: string
-
-  icon: string
-
-  role: {
-    id: string
-    code: string
-    name: string
-    icon: string
-    color: string
-    active: boolean
-  }
-
-}
+// Deriva de User con Pick en vez de redeclarar los campos a mano —
+// así, si User cambia (como pasó con role→roles), TypeScript avisa
+// acá también en vez de quedar un tipo hermano desincronizado.
+export type Profile = Pick<
+  User,
+  | "id"
+  | "name"
+  | "email"
+  | "username"
+  | "avatarUrl"
+  | "phone"
+  | "position"
+  | "color"
+  | "icon"
+  | "roles"
+>
 
 export type UpdateProfileDto = {
 

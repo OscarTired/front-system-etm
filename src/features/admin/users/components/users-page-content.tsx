@@ -27,6 +27,7 @@ import { UserForm } from "./form/user-form"
 import { UserDialog } from "./dialog/user-dialog"
 
 import { generateUserDefaultsFromEmail } from "@/features/users/utils/generate-user-defaults-from-email"
+import { isLevelAllowedForRoles } from "@/features/users/utils/allowed-levels-for-roles"
 
 import {
   RoleDesktopRow,
@@ -547,12 +548,19 @@ export function UsersPageContent() {
                       areas={areas.filter(a => formData.areaIds.includes(a.id))}
                       errors={attempted ? errors : undefined}
                       onRolesChange={nextRoles => {
+                        const levelStillValid =
+                          isLevelAllowedForRoles(formData.level, nextRoles)
+
                         const stillProduccion =
                           nextRoles.some(r => r.code === "PRODUCCION")
+
                         setFormData(c => ({
                           ...c,
                           roleIds: nextRoles.map(r => r.id),
-                          ...(!stillProduccion && { level: null, areaIds: [] }),
+                          ...(!levelStillValid && { level: null, areaIds: [] }),
+                          ...(levelStillValid
+                            && (c.level !== "OPERARIO" || !stillProduccion)
+                            && { areaIds: [] }),
                         }))
                       }}
                       onLevelChange={level => setFormData(c => ({

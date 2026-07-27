@@ -28,10 +28,12 @@ export function useProfile() {
       const updated =
         await profileService.updateProfile(dto)
 
-      setUser({
-        ...user,
-        ...updated,
-      })
+      if (user) {
+        setUser({
+          ...user,
+          ...updated,
+        })
+      }
 
       return updated
 
@@ -55,10 +57,12 @@ export function useProfile() {
       const { avatarUrl } =
         await profileService.uploadAvatar(base64)
 
-      setUser({
-        ...user,
-        avatarUrl,
-      })
+      if (user) {
+        setUser({
+          ...user,
+          avatarUrl,
+        })
+      }
 
       return avatarUrl
 
@@ -78,10 +82,12 @@ export function useProfile() {
 
       await profileService.removeAvatar()
 
-      setUser({
-        ...user,
-        avatarUrl: null,
-      })
+      if (user) {
+        setUser({
+          ...user,
+          avatarUrl: null,
+        })
+      }
 
     } finally {
 

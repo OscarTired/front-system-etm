@@ -100,20 +100,36 @@ EntityColumn<User>[]{
       title:"ROL",
       skeletonShape:"badge",
       width:TABLE_WIDTHS.large,
-      render:user=>(
+      render:user=>{
 
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          {user.roles.map(role => (
+        const [firstRole, ...restRoles] = user.roles
+
+        if (!firstRole) {
+          return null
+        }
+
+        return (
+
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+
             <DynamicBadge
-              key={role.id}
-              label={role.name}
-              icon={role.icon}
-              color={role.color}
+              label={firstRole.name}
+              icon={firstRole.icon}
+              color={firstRole.color}
             />
-          ))}
-        </div>
 
-      ),
+            {restRoles.length > 0 && (
+              <DynamicBadge
+                label={`+${restRoles.length}`}
+                color="#64748B"
+              />
+            )}
+
+          </div>
+
+        )
+
+      },
     },
 
     {
