@@ -32,14 +32,13 @@ import {
 
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 
-type Props={
-  task:Task
+type Props = {
+  task: Task
 }
 
 export function TaskExpandedRow({
   task,
-}:Props){
-
+}: Props) {
   const { isMobile } = useResponsive()
 
   const [
@@ -55,44 +54,39 @@ export function TaskExpandedRow({
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",
   ) => {
-
     if (isMobile && next === "comments") {
       setCommentsDialogOpen(true)
       return
     }
 
     setActiveView(next)
-
   }
 
-  return(
-
+  return (
     <EntityExpandedRow
       rowId={task.id}
     >
-
       <EntityExpandedContent>
-
+        {/* Contenedor del toggle unificado con el comportamiento de ProjectExpandedRow */}
         <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
-            fullWidth={isMobile}
             options={[
               {
-                  value: "workflow",
-                  label: "Workflow",
-                  icon: ClipboardList,
+                value: "workflow",
+                label: "Workflow",
+                icon: ClipboardList,
               },
               {
-                  value: "comments",
-                  label: "Mensajes",
-                  icon: MessageSquare,
+                value: "comments",
+                label: "Mensajes",
+                icon: MessageSquare,
               },
               {
-                  value: "kpis",
-                  label: "KPIs",
-                  icon: Activity,
+                value: "kpis",
+                label: "KPIs",
+                icon: Activity,
               },
             ]}
           />
@@ -126,8 +120,7 @@ export function TaskExpandedRow({
               ),
             },
           ]}
-      />
-
+        />
       </EntityExpandedContent>
 
       <CommentHistoryDialog
@@ -135,9 +128,6 @@ export function TaskExpandedRow({
         open={commentsDialogOpen}
         onOpenChange={setCommentsDialogOpen}
       />
-
     </EntityExpandedRow>
-
   )
-
 }

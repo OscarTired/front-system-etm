@@ -80,7 +80,7 @@ export function ProjectExpandedRow({
     project.id,
   ])
 
-  const { isMobile } = useResponsive()
+  const { isMobile, ready } = useResponsive()
 
   const [
     activeView,
@@ -197,7 +197,6 @@ export function ProjectExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
-            fullWidth={isMobile}
             options={[
               {
                 value: "tasks",
@@ -241,7 +240,7 @@ export function ProjectExpandedRow({
             },
             {
               value: "kpis",
-              content: !isMobile ? (
+              content: !ready ? null : !isMobile ? (
                 <KpiPanel cards={cards} />
               ) : (
                 <KpiCarousel

@@ -144,11 +144,11 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
 
   return (
     <div className="flex w-full flex-col">
-      {/* ---------- Estado colapsado (Con animación de cierre suave) ---------- */}
+      {/* ---------- Estado colapsado ---------- */}
       <div
         className={cn(
           "grid transition-all duration-300 ease-in-out",
-          !expanded ? "grid-rows-[1fr] opacity-150" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+          !expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
         )}
       >
         <div className="overflow-hidden">
@@ -171,14 +171,14 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
               {summary.label}
             </span>
 
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-6 tablet:gap-8">
               {summary.values.map((v) => (
                 <div key={v.label} className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+                  <p className="truncate text-[10px] sm:text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
                     {v.label}
                   </p>
                   <p
-                    className="text-lg font-bold leading-tight"
+                    className="text-base sm:text-lg font-bold leading-tight"
                     style={{ color: textColor }}
                   >
                     {v.value}
@@ -194,11 +194,11 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
         </div>
       </div>
 
-      {/* ---------- Estado expandido (Con animación de apertura y cierre suave) ---------- */}
+      {/* ---------- Estado expandido con diseño ultra adaptativo ---------- */}
       <div
         className={cn(
           "grid transition-all duration-300 ease-in-out",
-          expanded ? "grid-rows-[1fr] opacity-150" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
         )}
       >
         <div className="overflow-hidden">
@@ -215,11 +215,11 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
             </div>
 
             {!isMobile ? (
-              <div className="grid grid-cols-2 gap-4 laptop:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-4">
                 {cards}
               </div>
             ) : (
-              <div className="relative h-44 w-full">
+              <div className="relative w-full">
                 <button
                   type="button"
                   onClick={scrollLeft}
@@ -259,7 +259,7 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
                     WebkitMaskSize: "100% 100%",
                     maskSize: "100% 100%",
                   }}
-                  className="h-full overflow-hidden"
+                  className="w-full overflow-hidden py-1"
                 >
                   <div
                     ref={containerRef}
@@ -268,11 +268,16 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
                     onMouseUp={stopDragging}
                     onMouseLeave={stopDragging}
                     onClickCapture={handleClickCapture}
-                    className="hide-scrollbar flex h-full snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
+                    className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
                   >
                     {cards.map((card, index) => (
-                      <div key={index} className="w-full shrink-0 snap-center">
-                        {card}
+                      <div 
+                        key={index} 
+                        className="w-[85%] sm:w-[70%] md:w-[50%] shrink-0 snap-center flex flex-col h-auto min-h-27.5"
+                      >
+                        <div className="flex-1 flex flex-col *:h-full *:w-full">
+                          {card}
+                        </div>
                       </div>
                     ))}
                   </div>

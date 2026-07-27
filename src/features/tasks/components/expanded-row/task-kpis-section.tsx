@@ -37,7 +37,7 @@ export function TaskKpisSection({
   task,
 }:Props){
 
-  const { isMobile } = useResponsive()
+  const { isMobile, ready } = useResponsive()
 
   const hasAssemblyProcess=
     task.route.includes("EN")
@@ -149,6 +149,10 @@ export function TaskKpisSection({
     />,
 
   ]
+
+  if (!ready) {
+    return null
+  }
 
   if (!isMobile) {
     return (

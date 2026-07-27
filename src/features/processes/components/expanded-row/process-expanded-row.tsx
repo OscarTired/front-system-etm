@@ -34,7 +34,7 @@ export function ProcessExpandedRow({
   processTask,
 }:Props){
 
-  const { isMobile } = useResponsive()
+  const { isMobile, ready } = useResponsive()
 
   const processCode=
     processTask.workflowStep?.processCode
@@ -153,7 +153,6 @@ export function ProcessExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={setActiveView}
-            fullWidth={isMobile}
             options={[
               {
                 value: "kpis" as const,
@@ -176,7 +175,7 @@ export function ProcessExpandedRow({
           panels={[
             {
               value: "kpis" as const,
-              content: !isMobile ? (
+              content: !ready ? null : !isMobile ? (
                 <KpiPanel cards={cards} />
               ) : (
                 <KpiCarousel

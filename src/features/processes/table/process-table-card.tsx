@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
+
+import { TaskProcessColumn } from "@/features/tasks/pipeline/table/task-process-column"
 
 import { ProcessMobileCard } from "./process-mobile-card"
 import { ProcessCardSkeleton } from "./process-card-skeleton"
@@ -37,13 +40,13 @@ type Props = {
   onResolvingChange?: (resolving: boolean) => void
 }
 
-// Vista CARD de Procesos (solo desktop — en mobile ProcessTable
-// sigue forzando su propio TaskProcessColumn, sin tocar). Misma
-// fuente de datos/filtros/orden que ProcessTable (TABLA); la única
-// diferencia real es la fila: ProcessMobileCard en vez de
-// EntityTable + buildProcessColumns. No hay drag reorder acá — el
-// orden de Procesos lo da el workflow, no el usuario (igual que en
-// TABLA).
+// Vista CARD de Procesos — la única vista que queda (se borró la
+// vista tabla). En desktop es ProcessMobileCard (fila con acciones
+// siempre visibles). En mobile se restauró lo que ya existía antes
+// de unificar todo: TaskProcessColumn, la misma kanban card que usa
+// el tablero de Tareas — se había perdido sin querer al borrar
+// process-table.tsx (la vista TABLA), que era donde vivía esta
+// rama mobile.
 export function ProcessTableCard({
   processDefinition,
   processTasks,
@@ -56,7 +59,26 @@ export function ProcessTableCard({
   onResolvingChange,
 }: Props) {
 
+  const { isMobile } = useResponsive()
+
   const expand = useEntityExpand()
+
+  // Estado del pipeline mobile — esta página es standalone (no vive
+  // dentro de TaskPipelineBoard), así que necesita su propio lock de
+  // overlay Y su propia clave de expansión, con el formato
+  // "taskId:processCode" que espera TaskProcessColumn — NO se puede
+  // reusar expand.expandedRowId acá porque ese es solo el taskId
+  // (formato de ProcessMobileCard/EntityTable, pensado para
+  // desktop), nunca matchea.
+  const [mobileExpandedKey, setMobileExpandedKey] =
+    useState<string | null>(null)
+
+  const [activeOverlayKey, setActiveOverlayKey] =
+    useState<string | null>(null)
+
+  const handleOverlayOpenChange = (key: string, isOpen: boolean) => {
+    setActiveOverlayKey(isOpen ? key : null)
+  }
 
   const taskSortMode = useSortStore(
     s => s.taskSortMode,
@@ -143,8 +165,53 @@ export function ProcessTableCard({
     onResolvingChange,
   })
 
+  // Si llega un foco a una tarea específica (ej. desde una
+  // notificación) mientras estamos en mobile, expandirla
+  // automáticamente con la clave en el formato correcto.
+  useEffect(() => {
+
+    if (!isMobile || !focusedTaskId) {
+      return
+    }
+
+    const exists = displayedTasks.some(
+      pt => pt.task.id === focusedTaskId,
+    )
+
+    if (exists) {
+      setMobileExpandedKey(`${focusedTaskId}:${processDefinition.code}`)
+    }
+
+  }, [isMobile, focusedTaskId, displayedTasks, processDefinition.code])
+
   if (loading) {
     return <ProcessCardSkeleton />
+  }
+
+  if (isMobile) {
+
+    const tasks = displayedTasks.map(
+      processTask => processTask.task,
+    )
+
+    return (
+
+      <TaskProcessColumn
+        processCode={processDefinition.code}
+        tasks={tasks}
+        expandedKey={mobileExpandedKey}
+        onToggleCard={(key) =>
+          setMobileExpandedKey(current =>
+            current === key ? null : key,
+          )
+        }
+        activeOverlayKey={activeOverlayKey}
+        onOverlayOpenChange={handleOverlayOpenChange}
+        contentOnly
+      />
+
+    )
+
   }
 
   return (
