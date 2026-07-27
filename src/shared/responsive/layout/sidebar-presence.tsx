@@ -219,36 +219,7 @@ export function SidebarPresence({
               Activos
             </span>
 
-            {onlineUsers.length > 0 && (
-              <div className="flex items-center -space-x-1.5 shrink-0 py-0.5">
-                {onlineUsers.slice(0, 3).map((user, index) => (
-                  <div
-                    key={user.id}
-                    className="relative h-4 w-4 rounded-full overflow-hidden bg-neutral-800 ring-1 ring-neutral-900"
-                    style={{ zIndex: 3 - index }}
-                  >
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt={user.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[8px] font-medium text-neutral-300">
-                        {user.name[0]?.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {onlineUsers.length > 3 && (
-                  <div className="relative flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800 text-[8px] font-mono text-neutral-400 ring-1 ring-neutral-900" style={{ zIndex: 0 }}>
-                    +{onlineUsers.length - 3}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <span className="ml-1 flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+            <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
               {onlineUsers.length}
             </span>
           </button>
