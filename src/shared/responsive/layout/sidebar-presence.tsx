@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Users } from "lucide-react"
+import { useMemo, useState, useRef } from "react"
+import { Users, Search } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
@@ -13,9 +13,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandList,
+  CommandItem,
+} from "@/components/ui/command"
 
-const MAX_LIST_HEIGHT = 168
+import { Input } from "@/components/ui/input"
 
 type Props = {
   collapsed?: boolean
@@ -28,31 +34,34 @@ function UserRow({
   user: { id: string; name: string; avatarUrl?: string | null }
 }) {
   return (
-    <div
-      key={user.id}
-      className="flex items-center gap-2 rounded-xl bg-white/3 px-2.5 py-2 transition-all duration-200 hover:bg-white/6"
-    >
-      <div className="relative h-5 w-5 shrink-0">
-        <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white/8 text-[10px] font-semibold text-white">
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            user.name[0]?.toUpperCase() ?? "?"
-          )}
+    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="relative h-5 w-5 shrink-0">
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              user.name[0]?.toUpperCase() ?? "?"
+            )}
+          </div>
+          <span
+            aria-hidden="true"
+            className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-neutral-900"
+          />
         </div>
-        <span
-          aria-hidden="true"
-          className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#0A0A0A]"
-        />
+
+        <span className="truncate text-xs font-medium text-neutral-300 transition-colors">
+          {user.name}
+        </span>
       </div>
 
-      <span className="truncate text-xs font-medium text-neutral-300">
-        {user.name}
-      </span>
+      <div className="flex items-center gap-1.5 opacity-0 transition-opacity">
+        <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+      </div>
     </div>
   )
 }
@@ -62,6 +71,8 @@ export function SidebarPresence({
   presenceRef,
 }: Props) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const currentUser = useAuthStore(s => s.user)
   const { users } = useUsersDirectory()
@@ -74,60 +85,62 @@ export function SidebarPresence({
     [users, currentUser?.id],
   )
 
-  const hasOnlineUsers = onlineUsers.length > 0
+  const filteredUsers = useMemo(() => {
+    const search = query.trim().toLowerCase()
+    if (!search) return onlineUsers
+    return onlineUsers.filter(user => user.name.toLowerCase().includes(search))
+  }, [onlineUsers, query])
 
   if (!currentUser) {
     if (collapsed) {
       return (
         <div ref={presenceRef} className="mx-1 my-1 px-0 flex justify-center">
-          <div className="h-8 w-8 rounded-md bg-white/5 animate-pulse" />
+          <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
         </div>
       )
     }
 
     return (
       <div ref={presenceRef} className="mx-1 my-1 px-3 py-1">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
-            En línea
-          </span>
-        </div>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 rounded-xl bg-white/3 px-2.5 py-2">
-            <div className="h-5 w-5 shrink-0 rounded-full bg-white/5 animate-pulse" />
-            <div className="h-2.5 w-20 rounded bg-white/5 animate-pulse" />
+          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5">
+            <div className="h-5 w-5 shrink-0 rounded-full bg-muted animate-pulse" />
+            <div className="h-2.5 w-20 rounded bg-muted animate-pulse" />
           </div>
         </div>
       </div>
     )
   }
 
-  if (!hasOnlineUsers) {
-    return null
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      setQuery("")
+    }
   }
 
   // ==========================================
-  // ESTADO COLAPSADO (Idéntico a SidebarItem colapsado)
+  // ESTADO COLAPSADO
   // ==========================================
   if (collapsed) {
     return (
       <div ref={presenceRef} className="select-none my-1">
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <button
               type="button"
               title={`${onlineUsers.length} en línea`}
               className={cn(
-                "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+                "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-all duration-150",
                 open
-                  ? "bg-white/6 text-white"
-                  : "text-neutral-400 hover:bg-white/4 hover:text-white"
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-muted-foreground"
               )}
             >
               <span className="relative flex items-center justify-center">
-                <Users size={14} />
-                <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
-                  {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
+                <Users size={14} className="opacity-80" />
+                <span className="absolute -right-2.5 -top-2.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+                  {onlineUsers.length}
                 </span>
               </span>
             </button>
@@ -138,25 +151,44 @@ export function SidebarPresence({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-90 w-72 p-0 border-none bg-[#171717] text-white shadow-xl"
+            className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-3.5 py-3">
-              <span className="text-sm font-semibold text-neutral-200">
-                En línea
-              </span>
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500/15 px-1.5 text-[11px] font-semibold text-emerald-400">
-                {onlineUsers.length}
-              </span>
-            </div>
+            <Command className="bg-transparent" shouldFilter={false}>
+              <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
+                <Search
+                  size={14}
+                  className="text-muted-foreground/50 shrink-0"
+                />
+                <Input
+                  ref={inputRef}
+                  value={query}
+                  onChange={event => setQuery(event.target.value)}
+                  placeholder="Buscar miembro..."
+                  className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
 
-            <VerticalScroll
-              className="space-y-1 px-2 pb-2"
-              style={{ maxHeight: 320 }}
-            >
-              {onlineUsers.map(user => (
-                <UserRow key={user.id} user={user} />
-              ))}
-            </VerticalScroll>
+              <CommandList className="max-h-64 overflow-y-auto">
+                <CommandEmpty>
+                  Sin resultados
+                </CommandEmpty>
+
+                <CommandGroup>
+                  {filteredUsers.map(user => (
+                    <CommandItem
+                      key={user.id}
+                      value={user.name}
+                      onSelect={() => {}}
+                      className="p-0 rounded-lg cursor-pointer bg-transparent aria-selected:bg-transparent aria-selected:text-accent-foreground"
+                    >
+                      <div className="w-full">
+                        <UserRow user={user} />
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
           </PopoverContent>
         </Popover>
       </div>
@@ -164,37 +196,62 @@ export function SidebarPresence({
   }
 
   // ==========================================
-  // ESTADO EXPANDIDO (Idéntico a SidebarItem expandido)
+  // ESTADO EXPANDIDO
   // ==========================================
   return (
     <div ref={presenceRef} className="select-none my-1">
-      <Popover open={open} onOpenChange={setOpen}>
-        <div className="mb-2 px-3 h-4">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
-            En línea
-          </span>
-        </div>
-
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <button
             type="button"
             className={cn(
-              "mx-1 flex h-8 min-w-0 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors w-[calc(100%-8px)]",
+              "mx-1 flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-xs font-medium transition-all duration-150 w-[calc(100%-8px)]",
               open
-                ? "bg-white/6 text-white"
-                : "text-neutral-400 hover:bg-white/4 hover:text-white"
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "text-muted-foreground"
             )}
           >
-            <span className="relative flex shrink-0 items-center justify-center">
-              <Users size={14} />
-            </span>
+            <div className="flex items-center -space-x-1.5 shrink-0 py-0.5">
+              {onlineUsers.length > 0 ? (
+                <>
+                  {onlineUsers.slice(0, 3).map((user, index) => (
+                    <div
+                      key={user.id}
+                      className="relative h-5 w-5 rounded-full overflow-hidden bg-muted ring-1 ring-background"
+                      style={{ zIndex: 3 - index }}
+                    >
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt={user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[9px] font-medium text-muted-foreground">
+                          {user.name[0]?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {onlineUsers.length > 3 && (
+                    <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-mono text-muted-foreground ring-1 ring-background" style={{ zIndex: 0 }}>
+                      +{onlineUsers.length - 3}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground ring-1 ring-background">
+                  0
+                </div>
+              )}
+            </div>
 
-            <span className="min-w-0 flex-1 truncate text-left">
-              En línea
-            </span>
-
-            <span className="ml-auto flex h-6 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs font-semibold text-emerald-400">
-              {onlineUsers.length}
+            <span className="min-w-0 flex-1 truncate text-left font-medium text-muted-foreground flex items-center justify-between">
+              <span>Miembros activos</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {onlineUsers.length}
+              </span>
             </span>
           </button>
         </PopoverTrigger>
@@ -204,25 +261,44 @@ export function SidebarPresence({
           side="right"
           align="start"
           sideOffset={8}
-          className="z-90 w-72 p-0 border-none bg-[#171717] text-white shadow-xl"
+          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden"
         >
-          <div className="flex items-center justify-between px-3.5 py-3">
-            <span className="text-sm font-semibold text-neutral-200">
-              En línea
-            </span>
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500/15 px-1.5 text-[11px] font-semibold text-emerald-400">
-              {onlineUsers.length}
-            </span>
-          </div>
+          <Command className="bg-transparent" shouldFilter={false}>
+            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
+              <Search
+                size={14}
+                className="text-muted-foreground/50 shrink-0"
+              />
+              <Input
+                ref={inputRef}
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Buscar miembro..."
+                className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
 
-          <VerticalScroll
-            className="space-y-1 px-2 pb-2"
-            style={{ maxHeight: MAX_LIST_HEIGHT }}
-          >
-            {onlineUsers.map(user => (
-              <UserRow key={user.id} user={user} />
-            ))}
-          </VerticalScroll>
+            <CommandList className="max-h-64 overflow-y-auto">
+              <CommandEmpty>
+                Sin resultados
+              </CommandEmpty>
+
+              <CommandGroup>
+                {filteredUsers.map(user => (
+                  <CommandItem
+                    key={user.id}
+                    value={user.name}
+                    onSelect={() => {}}
+                    className="p-0 rounded-lg cursor-pointer bg-transparent aria-selected:bg-transparent aria-selected:text-accent-foreground"
+                  >
+                    <div className="w-full">
+                      <UserRow user={user} />
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
         </PopoverContent>
       </Popover>
     </div>

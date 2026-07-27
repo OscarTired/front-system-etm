@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
@@ -73,10 +71,30 @@ export function SidebarNavigation({
           <NotificationBell collapsed={collapsed} />
         </div>
       )}
-        <SidebarPresence
-          collapsed={presenceCollapsed}
-          presenceRef={presenceRef}
-        />
+
+      {/* Sección Equipo integrada con SidebarSection */}
+      <div
+        className={cn(
+          "w-full",
+          isMounting && "animate-gemini-in opacity-0"
+        )}
+        style={
+          isMounting
+            ? { animationDelay: "120ms" }
+            : undefined
+        }
+      >
+        <SidebarSection
+          title="Equipo"
+          collapsed={collapsed}
+          isDrawer={isDrawer}
+        >
+          <SidebarPresence
+            collapsed={presenceCollapsed}
+            presenceRef={presenceRef}
+          />
+        </SidebarSection>
+      </div>
         
       {NAVIGATION.map((section) => {
         const items = section.items.filter(
@@ -119,7 +137,7 @@ export function SidebarNavigation({
                   )}
                   style={
                     isMounting
-                      ? { animationDelay: `${120 + currentIndex * 35}ms` }
+                      ? { animationDelay: `${150 + currentIndex * 35}ms` }
                       : undefined
                   }
                 >
@@ -148,29 +166,6 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
-
-      {/* Antes esto vivía DENTRO del .map() de arriba, pegado a la
-          última sección de NAVIGATION ("Administración"). Si a un rol
-          le sacaban todos los permisos de esa sección (USER_READ,
-          ROLE_MANAGE, ACTIVITY_TYPE_MANAGE), esa sección quedaba con
-          0 items y el .map() cortaba con `return null` ANTES de
-          llegar a este bloque — haciendo desaparecer "En línea" sin
-          ninguna relación real con permisos de usuarios. Se saca del
-          bucle para que su visibilidad dependa solo de si hay
-          usuarios conectados, nunca de qué secciones de navegación
-          quedaron vacías. */}
-      <div
-        className={cn(
-          "w-full",
-          isMounting && "animate-gemini-in opacity-0"
-        )}
-        style={
-          isMounting
-            ? { animationDelay: `${140 + globalItemIndex * 35}ms` }
-            : undefined
-        }
-      >
-      </div>
     </VerticalScroll>
   )
 }
