@@ -12,10 +12,6 @@ import {
   usePageTitle,
 } from "@/shared/responsive/navigation/hooks/use-page-title"
 
-import {
-  VerticalScroll,
-} from "@/shared/ui/vertical-scroll/vertical-scroll"
-
 export default function ActivityTypesPage() {
 
   usePageTitle("Actividades")
@@ -52,15 +48,7 @@ export default function ActivityTypesPage() {
         <ActivityTypeActions />
       </div>
 
-      <section className="mt-2 min-h-0 flex-1 overflow-hidden tablet:mt-3">
-
-        <VerticalScroll containerClassName="h-full">
-
-          <ActivityTypesPageContent />
-
-        </VerticalScroll>
-
-      </section>
+      <ActivityTypesPageContent />
 
     </main>
 

@@ -2,8 +2,6 @@
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
-
 import { ActivityLogPageContent } from "@/features/activity-log/components/activity-log-page-content"
 
 export default function BitacoraIngenieriaPage() {
@@ -12,7 +10,7 @@ export default function BitacoraIngenieriaPage() {
 
   return (
 
-    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:h-full tablet:px-8 tablet:pt-0 desktop:py-10">
+    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10">
 
       <header className="hidden flex-wrap items-center justify-between gap-4 mb-4 desktop:flex">
 
@@ -38,15 +36,7 @@ export default function BitacoraIngenieriaPage() {
 
       </header>
 
-      <section className="mt-2 min-h-0 flex-1 overflow-hidden tablet:mt-3">
-
-        <VerticalScroll containerClassName="h-full">
-
-          <ActivityLogPageContent department="INGENIERIA" />
-
-        </VerticalScroll>
-
-      </section>
+      <ActivityLogPageContent department="INGENIERIA" />
 
     </main>
 

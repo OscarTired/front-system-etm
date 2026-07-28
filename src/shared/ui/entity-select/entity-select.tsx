@@ -262,7 +262,7 @@ export function EntitySelect<T extends EntityBase>({
               />
             </div>
 
-            <CommandList className="erp-scrollbar max-h-64 overflow-y-auto">
+            <CommandList className="max-h-64 overflow-y-auto">
               <CommandEmpty>Sin resultados</CommandEmpty>
 
               <CommandGroup>

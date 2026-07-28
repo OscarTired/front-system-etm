@@ -2,8 +2,6 @@
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
-
 import { ActivityLogPageContent } from "@/features/activity-log/components/activity-log-page-content"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
 
@@ -13,7 +11,7 @@ export default function BitacoraPage() {
 
   return (
 
-    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:h-full tablet:px-8 tablet:pt-0 desktop:py-10">
+    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10">
 
       <header className="hidden flex-wrap items-center justify-between gap-4 mb-4 desktop:flex">
 
@@ -43,15 +41,7 @@ export default function BitacoraPage() {
         <TaskAreaPanelTrigger />
       </div>
 
-      <section className="mt-2 min-h-0 flex-1 overflow-hidden tablet:mt-3">
-
-        <VerticalScroll containerClassName="h-full">
-
-          <ActivityLogPageContent />
-
-        </VerticalScroll>
-
-      </section>
+      <ActivityLogPageContent />
 
     </main>
 

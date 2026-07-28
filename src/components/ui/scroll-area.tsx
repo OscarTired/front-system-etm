@@ -49,11 +49,11 @@ function ScrollBar({
         // Desaparición limpia y rápida sin escalas pesadas
         "data-[state=hidden]:opacity-0 data-[state=hidden]:pointer-events-none",
         "data-[state=visible]:opacity-100",
-        // Dimensiones exactas según orientación
+        // Dimensiones exactas según orientación (ancho controlado a 2 (8px))
         orientation === "vertical" &&
-          "h-full w-2.5 right-0 top-0 bottom-0",
+          "h-full w-2 right-0 top-0 bottom-0",
         orientation === "horizontal" &&
-          "w-full h-2.5 bottom-0 left-0 right-0",
+          "w-full h-2 bottom-0 left-0 right-0",
         className
       )}
       {...props}
@@ -70,5 +70,5 @@ function ScrollBar({
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   )
 }
-
+ 
 export { ScrollArea, ScrollBar }

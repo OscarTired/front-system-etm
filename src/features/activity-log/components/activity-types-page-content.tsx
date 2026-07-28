@@ -7,8 +7,6 @@ import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { IconAction } from "@/shared/ui/actions/icon-action"
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -93,7 +91,6 @@ function ActivityTypeRow({
 
 export function ActivityTypesPageContent() {
 
-  const { isMobile } = useResponsive()
   const [search, setSearch] = useState("")
 
   // true: trae también los desactivados, para poder reactivarlos.
@@ -158,10 +155,7 @@ export function ActivityTypesPageContent() {
 
   return (
 
-    <div className={cn(
-      "mx-auto flex w-full max-w-400 flex-col",
-      isMobile ? "" : "h-full min-h-0 overflow-hidden",
-    )}>
+    <div className="mx-auto flex w-full max-w-400 flex-col">
 
       <div className="shrink-0">
 
@@ -184,12 +178,7 @@ export function ActivityTypesPageContent() {
 
       </div>
 
-      <div className={cn(
-        "flex flex-col gap-6",
-        isMobile
-          ? ""
-          : "erp-scrollbar min-h-0 flex-1 overflow-y-auto",
-      )}>
+      <div className="flex flex-col gap-6">
 
         {loading ? (
 
