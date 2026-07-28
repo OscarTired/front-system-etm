@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ProfileDialog } from "@/features/profile"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
+import { SidebarPresence } from "../../responsive/layout/sidebar-presence"
 import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 
@@ -34,7 +35,7 @@ export function TopBar() {
   return (
     <>
       <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
-        {/* Botón de menú con badge flotante sin bordes */}
+        {/* Botón de menú */}
         <button
           type="button"
           onClick={toggleDrawer}
@@ -44,7 +45,7 @@ export function TopBar() {
           <Menu size={18} strokeWidth={2.2} />
         </button>
 
-        {/* Título con badge flotante sin bordes */}
+        {/* Título */}
         <div className="min-w-0 flex-1">
           <div className="inline-flex max-w-full items-center rounded-full bg-neutral-900/80 px-3.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl">
             <span className="truncate text-sm font-semibold text-neutral-100">
@@ -53,10 +54,13 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Notificaciones (Asegúrate de que su variante o contenedor interno use este estilo si lo permite) */}
+        {/* Presencia en línea con contador explícito */}
+        <SidebarPresence variant="topbar" />
+
+        {/* Notificaciones con contador explícito */}
         <NotificationBell variant="topbar" />
 
-        {/* Botón de perfil con badge flotante sin bordes */}
+        {/* Botón de perfil */}
         <button
           type="button"
           onClick={() => setProfileOpen(true)}

@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input"
 
 type Props = {
   collapsed?: boolean
+  isDrawer?: boolean
+  variant?: "sidebar" | "topbar"
   presenceRef?: (node: HTMLDivElement | null) => void
 }
 
@@ -68,6 +70,8 @@ function UserRow({
 
 export function SidebarPresence({
   collapsed = false,
+  isDrawer = false,
+  variant = "sidebar",
   presenceRef,
 }: Props) {
   const [open, setOpen] = useState(false)
@@ -91,7 +95,12 @@ export function SidebarPresence({
     return onlineUsers.filter(user => user.name.toLowerCase().includes(search))
   }, [onlineUsers, query])
 
+  const isTopbar = variant === "topbar"
+
   if (!currentUser) {
+    if (isTopbar) {
+      return <div className="size-10 shrink-0 rounded-full bg-white/10 animate-pulse" />
+    }
     if (collapsed) {
       return (
         <div ref={presenceRef} className="mx-1 my-1 px-0 flex justify-center">
@@ -119,14 +128,65 @@ export function SidebarPresence({
     }
   }
 
-  // ==========================================
-  // ESTADO COLAPSADO
-  // ==========================================
-  if (collapsed) {
-    return (
-      <div ref={presenceRef} className="select-none my-1">
-        <Popover open={open} onOpenChange={handleOpenChange}>
-          <PopoverTrigger asChild>
+  return (
+    <div ref={presenceRef} className={cn(!isTopbar && "select-none my-1")}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          {isTopbar ? (
+            // ==========================================
+            // VARIANTE TOPBAR (Estilo idéntico a NotificationBell)
+            // ==========================================
+            <button
+              type="button"
+              aria-label="Usuarios en línea"
+              className={cn(
+                "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
+                open && "bg-white/20 text-white",
+              )}
+            >
+              <Users size={17} strokeWidth={2.2} />
+              {onlineUsers.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+                  {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
+                </span>
+              )}
+            </button>
+          ) : isDrawer ? (
+            // ==========================================
+            // VARIANTE DRAWER MOBILE
+            // ==========================================
+            <button
+              type="button"
+              className={cn(
+                "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
+                open
+                  ? "bg-white/10 text-white"
+                  : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
+              )}
+            >
+              <span className="relative flex shrink-0 items-center justify-center">
+                <Users size={19} />
+              </span>
+
+              <span className="min-w-0 flex-1 truncate text-left">
+                Activos
+              </span>
+
+              {onlineUsers.length > 0 && (
+                <span
+                  className={cn(
+                    "shrink-0 text-sm font-semibold tabular-nums",
+                    open ? "text-white" : "text-neutral-500",
+                  )}
+                >
+                  {onlineUsers.length}
+                </span>
+              )}
+            </button>
+          ) : collapsed ? (
+            // ==========================================
+            // VARIANTE SIDEBAR DESKTOP (COLAPSADO)
+            // ==========================================
             <button
               type="button"
               title={`${onlineUsers.length} en línea`}
@@ -144,93 +204,40 @@ export function SidebarPresence({
                 </span>
               </span>
             </button>
-          </PopoverTrigger>
+          ) : (
+            // ==========================================
+            // VARIANTE SIDEBAR DESKTOP (EXPANDIDO)
+            // ==========================================
+            <button
+              type="button"
+              className={cn(
+                "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
+                open
+                  ? "bg-white/6 text-white"
+                  : "text-neutral-400 hover:bg-white/4 hover:text-white"
+              )}
+            >
+              <span className="relative flex shrink-0 items-center justify-center">
+                <Users size={14} />
+              </span>
 
-          <PopoverContent
-            data-sidebar-popover
-            side="right"
-            align="start"
-            sideOffset={8}
-            className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden"
-          >
-            <Command className="bg-transparent" shouldFilter={false}>
-              <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
-                <Search
-                  size={14}
-                  className="text-neutral-500 shrink-0"
-                />
-                <Input
-                  ref={inputRef}
-                  value={query}
-                  onChange={event => setQuery(event.target.value)}
-                  placeholder="Buscar miembro..."
-                  className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
-                />
-              </div>
+              <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+                Activos
+              </span>
 
-              <CommandList className="max-h-64 overflow-y-auto">
-                <CommandEmpty>
-                  {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
-                </CommandEmpty>
-
-                <CommandGroup>
-                  {filteredUsers.map(user => (
-                    <CommandItem
-                      key={user.id}
-                      value={user.name}
-                      onSelect={() => {}}
-                      className="p-0 rounded-lg cursor-pointer bg-transparent aria-selected:bg-transparent aria-selected:text-accent-foreground"
-                    >
-                      <div className="w-full">
-                        <UserRow user={user} />
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
-    )
-  }
-
-  // ==========================================
-  // ESTADO EXPANDIDO
-  // ==========================================
-  return (
-    <div ref={presenceRef} className="select-none my-1">
-      <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
-              open
-                ? "bg-white/6 text-white"
-                : "text-neutral-400 hover:bg-white/4 hover:text-white"
-            )}
-          >
-            <span className="relative flex shrink-0 items-center justify-center">
-              <Users size={14} />
-            </span>
-
-            <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-              Activos
-            </span>
-
-            <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
-              {onlineUsers.length}
-            </span>
-          </button>
+              <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+                {onlineUsers.length}
+              </span>
+            </button>
+          )}
         </PopoverTrigger>
 
         <PopoverContent
           data-sidebar-popover
-          side="right"
-          align="start"
+          side={isTopbar ? "bottom" : "right"}
+          align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden"
+          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">

@@ -43,14 +43,6 @@ export function SidebarNavigation({
   const { has } = usePermissions()
   const userRoles = useAuthStore(state => state.user?.roles)
 
-  // El .map() de acá abajo tiene que estar en useMemo, NO adentro
-  // del selector de useAuthStore: un selector que arma un array
-  // nuevo en cada llamada (aunque el contenido sea igual) rompe la
-  // comparación por referencia de useSyncExternalStore y entra en
-  // loop infinito de renders — React lo corta con el warning
-  // "getSnapshot should be cached". `userRoles` (la referencia que
-  // vive en el store) sí es estable entre renders mientras no
-  // cambie el usuario.
   const currentRoles = useMemo(
     () => userRoles?.map(role => role.code) ?? [],
     [userRoles],
@@ -76,15 +68,34 @@ export function SidebarNavigation({
       arrowClassName="bg-[#18181b]/5 backdrop-blur-md"
     >
       {!isDrawer && (
-        <div
-          className={cn(
-            collapsed ? "mb-3 flex justify-end" : "mb-3",
-            isMounting && "animate-gemini-in opacity-0"
-          )}
-          style={isMounting ? { animationDelay: "100ms" } : undefined}
-        >
-          <NotificationBell collapsed={collapsed} />
-        </div>
+        <>
+          <div
+            className={cn(
+              collapsed ? "mb-3 flex justify-end" : "mb-3",
+              isMounting && "animate-gemini-in opacity-0"
+            )}
+            style={isMounting ? { animationDelay: "100ms" } : undefined}
+          >
+            <NotificationBell collapsed={collapsed} />
+          </div>
+
+          <div
+            className={cn(
+              "w-full mb-3",
+              isMounting && "animate-gemini-in opacity-0"
+            )}
+            style={
+              isMounting
+                ? { animationDelay: `${110 + globalItemIndex * 35}ms` }
+                : undefined
+            }
+          >
+            <SidebarPresence
+              collapsed={presenceCollapsed}
+              presenceRef={presenceRef}
+            />
+          </div>
+        </>
       )}
 
       {NAVIGATION.map((section) => {
@@ -157,33 +168,6 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
-
-      {/* Antes esto vivía DENTRO del .map() de arriba, pegado a la
-          última sección de NAVIGATION ("Administración"). Si a un rol
-          le sacaban todos los permisos de esa sección (USER_READ,
-          ROLE_MANAGE, ACTIVITY_TYPE_MANAGE), esa sección quedaba con
-          0 items y el .map() cortaba con `return null` ANTES de
-          llegar a este bloque — haciendo desaparecer "En línea" sin
-          ninguna relación real con permisos de usuarios. Se saca del
-          bucle para que su visibilidad dependa solo de si hay
-          usuarios conectados, nunca de qué secciones de navegación
-          quedaron vacías. */}
-      <div
-        className={cn(
-          "w-full",
-          isMounting && "animate-gemini-in opacity-0"
-        )}
-        style={
-          isMounting
-            ? { animationDelay: `${140 + globalItemIndex * 35}ms` }
-            : undefined
-        }
-      >
-        <SidebarPresence
-          collapsed={presenceCollapsed}
-          presenceRef={presenceRef}
-        />
-      </div>
     </VerticalScroll>
   )
 }

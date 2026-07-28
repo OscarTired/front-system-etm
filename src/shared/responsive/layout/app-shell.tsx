@@ -13,7 +13,6 @@ import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 type Props = {
   children: ReactNode
@@ -136,15 +135,11 @@ function DesktopShell({ children }: Props) {
 
         <DesktopTopBar />
 
-        <ScrollArea key={pathname} className="min-h-0 flex-1">
+        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
 
-          <div className="overflow-x-hidden">
-            {children}
-          </div>
+          {children}
 
-          <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
-
-        </ScrollArea>
+        </div>
 
       </main>
 
