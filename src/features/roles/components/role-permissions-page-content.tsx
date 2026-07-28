@@ -16,13 +16,22 @@ import {
 
 import { RolePermissionsSkeleton } from "./role-permissions-skeleton"
 import { PermissionGroup } from "./permissions/permission-group"
+import { PermissionsModeTabs, type PermissionsMode } from "./permissions-mode-tabs"
 import {
   RoleDesktopRow,
   RoleDesktopRowSkeleton,
   RoleMobileCard,
   RoleMobileSkeleton,
+  UserDesktopRow,
+  UserMobileCard,
 } from "../table"
 import { useRoles } from "../hooks/use-roles"
+
+import { useUsers } from "@/features/users/hooks/use-users"
+import { useUserBasePermissions } from "@/features/users/hooks/use-user-base-permissions"
+import { useUserPermissionOverrides } from "@/features/users/hooks/use-user-permission-overrides"
+import { useSaveUserPermissionOverrides } from "@/features/users/hooks/use-save-user-permission-overrides"
+import type { User } from "@/features/users/types/user.types"
 
 import { PrimaryAction } from "@/shared/ui/actions/primary-action"
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
@@ -36,27 +45,84 @@ import type { Role } from "../types/role.types"
 export function RolePermissionsPageContent() {
   const { isMobile } = useResponsive()
   const [search, setSearch] = useState("")
+  const [mode, setMode] = useState<PermissionsMode>("roles")
+
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [dirty, setDirty] = useState(false)
 
-  const { roles, loading: loadingRoles } = useRoles()
+  const handleModeChange = (nextMode: PermissionsMode) => {
+    setMode(nextMode)
+    setSearch("")
+    setSelectedRole(null)
+    setSelectedUser(null)
+    setCheckedIds(new Set())
+    setDirty(false)
+  }
+
+  const { roles, loading: loadingRoles } = useRoles(mode === "roles")
+  const { users, loading: loadingUsers } = useUsers()
   const { permissions: catalog, loading: loadingCatalog } = usePermissionCatalog()
+
+  // ---- Modo ROLES ----
   const { permissions: rolePermissions, loading: loadingRolePermissions } = useRolePermissions(
-    selectedRole?.id ?? null
+    mode === "roles" ? selectedRole?.id ?? null : null
   )
-  const { updatePermissions, saving } = useUpdateRolePermissions(selectedRole?.id ?? null)
+  const { updatePermissions, saving: savingRole } = useUpdateRolePermissions(selectedRole?.id ?? null)
+
+  // ---- Modo USUARIOS ----
+  const { basePermissionIds, loading: loadingBasePermissions } = useUserBasePermissions(
+    mode === "usuarios" ? selectedUser : null
+  )
+  const { overrides, loading: loadingOverrides } = useUserPermissionOverrides(
+    mode === "usuarios" ? selectedUser?.id ?? null : null
+  )
+  const { save: saveUserOverrides, saving: savingOverrides } = useSaveUserPermissionOverrides(
+    selectedUser?.id ?? null
+  )
 
   const [loadedForRoleId, setLoadedForRoleId] = useState<string | null>(null)
+  const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null)
 
-  if (selectedRole && !loadingRolePermissions && loadedForRoleId !== selectedRole.id) {
+  if (
+    mode === "roles" &&
+    selectedRole &&
+    !loadingRolePermissions &&
+    loadedForRoleId !== selectedRole.id
+  ) {
     setLoadedForRoleId(selectedRole.id)
     setCheckedIds(new Set(rolePermissions.map((p) => p.id)))
     setDirty(false)
   }
 
-  if (!selectedRole && loadedForRoleId !== null) {
+  if (mode === "roles" && !selectedRole && loadedForRoleId !== null) {
     setLoadedForRoleId(null)
+  }
+
+  const userDataLoading = loadingBasePermissions || loadingOverrides
+
+  if (
+    mode === "usuarios" &&
+    selectedUser &&
+    !userDataLoading &&
+    loadedForUserId !== selectedUser.id
+  ) {
+    setLoadedForUserId(selectedUser.id)
+
+    const initial = new Set(basePermissionIds)
+    for (const override of overrides) {
+      if (override.effect === "ALLOW") initial.add(override.permission.id)
+      else initial.delete(override.permission.id)
+    }
+
+    setCheckedIds(initial)
+    setDirty(false)
+  }
+
+  if (mode === "usuarios" && !selectedUser && loadedForUserId !== null) {
+    setLoadedForUserId(null)
   }
 
   const filteredRoles = useMemo(() => {
@@ -64,6 +130,12 @@ export function RolePermissionsPageContent() {
     if (!query) return roles
     return roles.filter((role) => role.name.toLowerCase().includes(query))
   }, [roles, search])
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return users
+    return users.filter((user) => user.name.toLowerCase().includes(query))
+  }, [users, search])
 
   const grouped = useMemo(() => {
     const groups = new Map<string, typeof catalog>()
@@ -75,6 +147,21 @@ export function RolePermissionsPageContent() {
       ([a], [b]) => getGroupOrder(a) - getGroupOrder(b)
     )
   }, [catalog])
+
+  // Solo tiene sentido en modo Usuarios: qué permisos quedaron
+  // distintos de lo que el usuario ya tenía "de fábrica" por sus
+  // roles -- eso es justamente lo que se va a guardar como excepción.
+  const overriddenIds = useMemo(() => {
+    if (mode !== "usuarios") return undefined
+
+    const ids = new Set<string>()
+    for (const permission of catalog) {
+      const checked = checkedIds.has(permission.id)
+      const base = basePermissionIds.has(permission.id)
+      if (checked !== base) ids.add(permission.id)
+    }
+    return ids
+  }, [mode, catalog, checkedIds, basePermissionIds])
 
   const handleToggle = (permissionId: string) => {
     setCheckedIds((current) => {
@@ -99,13 +186,32 @@ export function RolePermissionsPageContent() {
   }
 
   const handleSave = async () => {
-    await updatePermissions(Array.from(checkedIds))
+    if (mode === "roles") {
+      await updatePermissions(Array.from(checkedIds))
+    } else if (selectedUser) {
+      await saveUserOverrides({
+        checkedIds,
+        basePermissionIds,
+        existingOverrides: overrides,
+      })
+    }
     setDirty(false)
   }
 
-  const permissionsLoading = loadingCatalog || loadingRolePermissions
-  const showRolesPanel = !isMobile || !selectedRole
-  const showPermissionsPanel = !isMobile || !!selectedRole
+  const permissionsLoading =
+    mode === "roles"
+      ? loadingCatalog || loadingRolePermissions
+      : loadingCatalog || userDataLoading
+
+  const saving = mode === "roles" ? savingRole : savingOverrides
+  const saveLabel = mode === "roles" ? "Guardar cambios" : "Guardar excepciones"
+
+  const selectedName = mode === "roles" ? selectedRole?.name : selectedUser?.name
+  const selectedColor = mode === "roles" ? selectedRole?.color : selectedUser?.color
+  const hasSelection = mode === "roles" ? !!selectedRole : !!selectedUser
+
+  const showLeftPanel = !isMobile || !hasSelection
+  const showPermissionsPanel = !isMobile || hasSelection
 
   return (
     <div
@@ -121,6 +227,7 @@ export function RolePermissionsPageContent() {
               <EntityToolbarSearch value={search} onChange={setSearch} />
             </div>
           }
+          right={<PermissionsModeTabs mode={mode} onChange={handleModeChange} />}
         />
       </div>
 
@@ -130,37 +237,61 @@ export function RolePermissionsPageContent() {
           isMobile ? "flex-col" : "overflow-hidden"
         )}
       >
-        {/* PANEL ROLES */}
-        {showRolesPanel && isMobile && (
-          // pb-28: reserva espacio abajo para que el último rol no
+        {/* PANEL IZQUIERDO: ROLES o USUARIOS */}
+        {showLeftPanel && isMobile && (
+          // pb-28: reserva espacio abajo para que el último item no
           // quede tapado por el bottom nav (mismo patrón que
           // task-pipeline-board.tsx).
           <div className="space-y-3 pb-28">
-            {loadingRoles && <RoleMobileSkeleton />}
+            {mode === "roles" ? (
+              <>
+                {loadingRoles && <RoleMobileSkeleton />}
 
-            {!loadingRoles && filteredRoles.length === 0 && (
-              <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
-                {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
-              </div>
+                {!loadingRoles && filteredRoles.length === 0 && (
+                  <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                    {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
+                  </div>
+                )}
+
+                {!loadingRoles &&
+                  filteredRoles.map((role, index) => (
+                    <RoleMobileCard
+                      key={role.id}
+                      role={role}
+                      index={index}
+                      onSelect={() => setSelectedRole(role)}
+                    />
+                  ))}
+              </>
+            ) : (
+              <>
+                {loadingUsers && <RoleMobileSkeleton />}
+
+                {!loadingUsers && filteredUsers.length === 0 && (
+                  <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                    {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
+                  </div>
+                )}
+
+                {!loadingUsers &&
+                  filteredUsers.map((user, index) => (
+                    <UserMobileCard
+                      key={user.id}
+                      user={user}
+                      index={index}
+                      onSelect={() => setSelectedUser(user)}
+                    />
+                  ))}
+              </>
             )}
-
-            {!loadingRoles &&
-              filteredRoles.map((role, index) => (
-                <RoleMobileCard
-                  key={role.id}
-                  role={role}
-                  index={index}
-                  onSelect={() => setSelectedRole(role)}
-                />
-              ))}
           </div>
         )}
 
-        {showRolesPanel && !isMobile && (
+        {showLeftPanel && !isMobile && (
           <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3">
             <div className="shrink-0 px-4 py-3">
               <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                Roles
+                {mode === "roles" ? "Roles" : "Usuarios"}
               </p>
             </div>
 
@@ -169,23 +300,47 @@ export function RolePermissionsPageContent() {
               className="min-h-0 min-w-0 flex-1 p-1.5"
             >
               <div className="flex flex-col gap-2.5">
-                {loadingRoles && <RoleDesktopRowSkeleton />}
+                {mode === "roles" ? (
+                  <>
+                    {loadingRoles && <RoleDesktopRowSkeleton />}
 
-                {!loadingRoles && filteredRoles.length === 0 && (
-                  <p className="px-3 py-6 text-center text-sm text-neutral-500">
-                    {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
-                  </p>
+                    {!loadingRoles && filteredRoles.length === 0 && (
+                      <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                        {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
+                      </p>
+                    )}
+
+                    {!loadingRoles &&
+                      filteredRoles.map((role) => (
+                        <RoleDesktopRow
+                          key={role.id}
+                          role={role}
+                          selected={selectedRole?.id === role.id}
+                          onSelect={() => setSelectedRole(role)}
+                        />
+                      ))}
+                  </>
+                ) : (
+                  <>
+                    {loadingUsers && <RoleDesktopRowSkeleton />}
+
+                    {!loadingUsers && filteredUsers.length === 0 && (
+                      <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                        {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
+                      </p>
+                    )}
+
+                    {!loadingUsers &&
+                      filteredUsers.map((user) => (
+                        <UserDesktopRow
+                          key={user.id}
+                          user={user}
+                          selected={selectedUser?.id === user.id}
+                          onSelect={() => setSelectedUser(user)}
+                        />
+                      ))}
+                  </>
                 )}
-
-                {!loadingRoles &&
-                  filteredRoles.map((role) => (
-                    <RoleDesktopRow
-                      key={role.id}
-                      role={role}
-                      selected={selectedRole?.id === role.id}
-                      onSelect={() => setSelectedRole(role)}
-                    />
-                  ))}
               </div>
 
               <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
@@ -198,29 +353,32 @@ export function RolePermissionsPageContent() {
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
             <header className="flex shrink-0 items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                {selectedRole && (
+                {hasSelection && (
                   <button
                     type="button"
-                    onClick={() => setSelectedRole(null)}
+                    onClick={() => {
+                      setSelectedRole(null)
+                      setSelectedUser(null)
+                    }}
                     className="flex size-8 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
                   >
                     <ArrowLeft size={16} />
                   </button>
                 )}
 
-                {selectedRole && (
+                {hasSelection && (
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                      Permisos
+                      {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
                     <div className="mt-1 flex items-center gap-2.5">
                       <div className="flex items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: selectedRole.color || "#71717a" }}
+                          style={{ backgroundColor: selectedColor || "#71717a" }}
                         />
                         <span className="truncate text-sm font-medium text-white">
-                          {selectedRole.name}
+                          {selectedName}
                         </span>
                       </div>
                       {dirty && (
@@ -229,30 +387,35 @@ export function RolePermissionsPageContent() {
                         </span>
                       )}
                     </div>
+                    {mode === "usuarios" && (
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Por encima de lo que ya le dan sus roles.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
 
               <PrimaryAction
-                label="Guardar cambios"
+                label={saveLabel}
                 icon={Save}
                 isLoading={saving}
                 onClick={handleSave}
-                disabled={!selectedRole || !dirty || saving}
+                disabled={!hasSelection || !dirty || saving}
               />
             </header>
 
             {/* Plano, sin ScrollArea acá: en mobile el root de la
                 página NO define un alto fijo (fluye con la página,
-                como el panel de ROLES de al lado) — envolver esto en
+                como el panel de al lado) — envolver esto en
                 ScrollArea (pensado para el "h-full" de desktop)
                 hacía que calculara un alto ambiguo y recortara su
                 propio viewport, sin importar el pb-28 de adentro. */}
             <div className="min-h-0 min-w-0 flex-1 p-1.5">
-              {selectedRole && permissionsLoading && <RolePermissionsSkeleton />}
+              {hasSelection && permissionsLoading && <RolePermissionsSkeleton />}
 
-              {selectedRole && !permissionsLoading && (
-                // pb-28: mismo motivo que el panel de ROLES — sin
+              {hasSelection && !permissionsLoading && (
+                // pb-28: mismo motivo que el panel de al lado — sin
                 // esto el último grupo de permisos queda tapado por
                 // el bottom nav (regresión de este último commit).
                 <div className="flex flex-col gap-4 pb-28">
@@ -264,6 +427,7 @@ export function RolePermissionsPageContent() {
                       checkedIds={checkedIds}
                       onToggle={handleToggle}
                       onToggleAll={handleToggleAll}
+                      overriddenIds={overriddenIds}
                       getLabel={(permission) =>
                         getPermissionActionLabel(permission.code, groupKey)
                       }
@@ -277,12 +441,16 @@ export function RolePermissionsPageContent() {
 
         {showPermissionsPanel && !isMobile && (
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
-            {!selectedRole ? (
+            {!hasSelection ? (
               <div className="flex h-full w-full items-center justify-center bg-transparent">
                 <div className="text-center">
-                  <p className="text-base font-medium text-neutral-300">Ningún rol seleccionado</p>
+                  <p className="text-base font-medium text-neutral-300">
+                    {mode === "roles" ? "Ningún rol seleccionado" : "Ningún usuario seleccionado"}
+                  </p>
                   <p className="mt-2 text-sm text-neutral-500">
-                    Elegí un rol desde el panel izquierdo para comenzar.
+                    {mode === "roles"
+                      ? "Elegí un rol desde el panel izquierdo para comenzar."
+                      : "Elegí un usuario desde el panel izquierdo para gestionar sus excepciones."}
                   </p>
                 </div>
               </div>
@@ -291,16 +459,16 @@ export function RolePermissionsPageContent() {
                 <header className="flex shrink-0 items-start justify-between gap-4 px-5 py-4">
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                      Permisos
+                      {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
                     <div className="mt-1 flex items-center gap-2.5">
                       <div className="flex items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: selectedRole.color || "#71717a" }}
+                          style={{ backgroundColor: selectedColor || "#71717a" }}
                         />
                         <span className="truncate text-sm font-medium text-white">
-                          {selectedRole.name}
+                          {selectedName}
                         </span>
                       </div>
                       {dirty && (
@@ -309,10 +477,16 @@ export function RolePermissionsPageContent() {
                         </span>
                       )}
                     </div>
+                    {mode === "usuarios" && (
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Por encima de lo que ya le dan sus roles. Lo marcado como{" "}
+                        <span className="text-amber-400">Excepción</span> es distinto de su base.
+                      </p>
+                    )}
                   </div>
 
                   <PrimaryAction
-                    label="Guardar cambios"
+                    label={saveLabel}
                     icon={Save}
                     isLoading={saving}
                     onClick={handleSave}
@@ -336,6 +510,7 @@ export function RolePermissionsPageContent() {
                           checkedIds={checkedIds}
                           onToggle={handleToggle}
                           onToggleAll={handleToggleAll}
+                          overriddenIds={overriddenIds}
                           getLabel={(permission) =>
                             getPermissionActionLabel(permission.code, groupKey)
                           }

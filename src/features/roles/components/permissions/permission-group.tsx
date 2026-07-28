@@ -15,6 +15,9 @@ type Props = {
   onToggle: (permissionId: string) => void
   onToggleAll: (permissionIds: string[], nextChecked: boolean) => void
   getLabel: (permission: Permission) => string
+  // Solo en modo "Usuarios": ids de permisos que tienen una
+  // excepción puntual aplicada (distinta de lo que da el rol solo).
+  overriddenIds?: Set<string>
 }
 
 // Un grupo de permisos (ej: "PROYECTOS") con su título y un toggle
@@ -27,6 +30,7 @@ export function PermissionGroup({
   onToggle,
   onToggleAll,
   getLabel,
+  overriddenIds,
 }: Props) {
   const ids = useMemo(() => permissions.map((p) => p.id), [permissions])
   const allChecked = ids.every((id) => checkedIds.has(id))
@@ -60,6 +64,7 @@ export function PermissionGroup({
             label={getLabel(permission)}
             checked={checkedIds.has(permission.id)}
             onToggle={() => onToggle(permission.id)}
+            overridden={overriddenIds?.has(permission.id) ?? false}
           />
         ))}
       </div>

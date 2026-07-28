@@ -34,11 +34,6 @@ export const NAVIGATION = [
         icon: ClipboardList,
         permission: PermissionCode.TASK_READ,
       },
-      {
-        label: "Engineering",
-        href: "/engineering",
-        icon: DraftingCompass,
-      },
     ],
   },
 
@@ -88,21 +83,21 @@ export const NAVIGATION = [
     title: "Bitácoras",
     items: [
       {
-        label: "Bitácora de Producción",
+        label: "B - Producción",
         href: "/bitacora",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
         roles: ["PRODUCCION", "ADMIN"],
       },
       {
-        label: "Bitácora Ingeniería",
+        label: "B - Ingeniería",
         href: "/bitacora/ingenieria",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
         roles: ["INGENIERIA", "PROYECTOS", "ADMIN"],
       },
       {
-        label: "Bitácora del Equipo",
+        label: "B - Equipo",
         href: "/bitacora/equipo",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ_ANY,

@@ -8,6 +8,10 @@ type Props = {
   label: string
   checked: boolean
   onToggle: () => void
+  // Solo se usa en el modo "Usuarios": marca que este permiso ya no
+  // coincide con lo que le daría el rol solo -- o sea, hay una
+  // excepción puntual (ALLOW o DENY) aplicada a este usuario.
+  overridden?: boolean
 }
 
 // Checkbox accesible propio en vez de <input type="checkbox"> con
@@ -15,7 +19,7 @@ type Props = {
 // aria-checked + soporte de teclado (Enter/Espacio) para que siga
 // siendo un checkbox real para lectores de pantalla, solo que
 // dibujado a mano para que combine con el resto del diseño.
-export function PermissionToggle({ label, checked, onToggle }: Props) {
+export function PermissionToggle({ label, checked, onToggle, overridden = false }: Props) {
   return (
     <div
       role="checkbox"
@@ -52,6 +56,12 @@ export function PermissionToggle({ label, checked, onToggle }: Props) {
       >
         {label}
       </span>
+
+      {overridden && (
+        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+          Excepción
+        </span>
+      )}
     </div>
   )
 }
