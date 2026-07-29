@@ -240,6 +240,7 @@ export function CommentComposer({
       />
 
       <Popover
+        forceFloating
         open={mentionOpen}
         onOpenChange={(next) => {
           if (!next) setMentionQuery(null)

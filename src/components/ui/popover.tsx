@@ -2,15 +2,41 @@
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 import {
   cn,
 } from "@/shared/utils/utils"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+
+// Un popover flotante (menú que sale pegado al trigger) no es un
+// patrón mobile-friendly: en pantallas chicas termina recortado,
+// tapado por el teclado, o con el dedo lejos de las opciones. En
+// mobile queremos el patrón nativo de iOS/Android: un bottom sheet
+// que sube desde abajo con su propio drag handle.
+//
+// En vez de que cada uno de los ~25 lugares de la app que usan
+// <Popover> decida esto por su cuenta, el propio componente cambia
+// de primitivo por debajo según el breakpoint: mobile usa
+// DialogPrimitive (mismo que Sheet/Dialog) estilado como bottom
+// sheet, tablet+ sigue usando PopoverPrimitive tal cual estaba.
+// Root/Trigger/Content tienen que ser todos del mismo primitivo (el
+// contexto de Radix no es intercambiable entre paquetes), así que
+// este modo se guarda en un contexto propio y chico para que los
+// tres se pongan de acuerdo.
+const PopoverModeContext =
+  React.createContext(false)
 
 type PopoverProps =
   React.ComponentProps<
     typeof PopoverPrimitive.Root
-  >
+  > & {
+    // Escape hatch puntual: casos como el autocomplete de menciones
+    // (sigue al cursor mientras se escribe, no es un menú que se
+    // "abre") no tienen sentido como bottom sheet ni en mobile.
+    forceFloating?: boolean
+  }
 
 type PopoverTriggerProps =
   React.ComponentProps<
@@ -29,16 +55,38 @@ type PopoverAnchorProps =
     typeof PopoverPrimitive.Anchor
   >
 
-export function Popover(
-  props: PopoverProps
-) {
+export function Popover({
+  forceFloating = false,
+  children,
+  ...props
+}: PopoverProps) {
+
+  const { isMobile } = useResponsive()
+
+  const useSheet = isMobile && !forceFloating
+
+  if (useSheet) {
+    return (
+
+      <PopoverModeContext.Provider value={true}>
+        <DialogPrimitive.Root {...props}>
+          {children}
+        </DialogPrimitive.Root>
+      </PopoverModeContext.Provider>
+
+    )
+  }
 
   return (
 
-    <PopoverPrimitive.Root
-      data-slot="popover"
-      {...props}
-    />
+    <PopoverModeContext.Provider value={false}>
+      <PopoverPrimitive.Root
+        data-slot="popover"
+        {...props}
+      >
+        {children}
+      </PopoverPrimitive.Root>
+    </PopoverModeContext.Provider>
 
   )
 
@@ -48,6 +96,19 @@ export function PopoverTrigger({
   className,
   ...props
 }: PopoverTriggerProps) {
+
+  const isSheet =
+    React.useContext(PopoverModeContext)
+
+  if (isSheet) {
+    return (
+      <DialogPrimitive.Trigger
+        data-slot="popover-trigger"
+        className={className}
+        {...props}
+      />
+    )
+  }
 
   return (
 
@@ -69,8 +130,91 @@ export function PopoverContent({
   avoidCollisions = true,
   collisionPadding = 12,
   portal = true,
+  children,
   ...props
 }: PopoverContentProps) {
+
+  const isSheet =
+    React.useContext(PopoverModeContext)
+
+  if (isSheet) {
+
+    const mobileContentClass =
+      isSheet
+        ? undefined
+        : className
+
+    return (
+
+      <DialogPrimitive.Portal>
+
+        <DialogPrimitive.Overlay
+          className={cn(
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          )}
+        />
+
+        <DialogPrimitive.Content
+          data-drag-scroll-ignore
+          onOpenAutoFocus={event => {
+            event.preventDefault()
+          }}
+          onCloseAutoFocus={event => {
+            event.preventDefault()
+          }}
+          className={cn(
+            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col",
+            "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "data-[state=closed]:duration-200 data-[state=open]:duration-300",
+          )}
+        >
+
+          <VisuallyHidden asChild>
+            <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
+          </VisuallyHidden>
+
+          {/* Drag handle — mismo lenguaje visual que el bottom sheet nativo de iOS */}
+          <div className="flex shrink-0 justify-center pb-1 pt-2.5">
+            <div className="h-1.5 w-9 rounded-full bg-white/15" />
+          </div>
+
+          <div
+            onWheel={event => {
+
+              const element =
+                event.currentTarget
+
+              const isScrollable =
+                element.scrollHeight >
+                element.clientHeight
+
+              if (isScrollable) {
+                event.stopPropagation()
+              }
+
+            }}
+            className={cn(
+              "flex flex-col gap-2.5 overflow-y-auto overscroll-contain",
+              "px-2.5 pt-1 text-sm",
+              "pb-[calc(env(safe-area-inset-bottom)+14px)]",
+              mobileContentClass,
+            )}
+            {...props}
+          >
+            {children}
+          </div>
+
+        </DialogPrimitive.Content>
+
+      </DialogPrimitive.Portal>
+
+    )
+
+  }
 
   const content = (
 
@@ -167,7 +311,9 @@ export function PopoverContent({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </PopoverPrimitive.Content>
 
   )
 
@@ -184,16 +330,42 @@ export function PopoverContent({
   )
 
 }
-export function PopoverAnchor(
-  props: PopoverAnchorProps
-) {
+export function PopoverAnchor({
+  asChild,
+  children,
+  ...props
+}: PopoverAnchorProps) {
+
+  const isSheet =
+    React.useContext(PopoverModeContext)
+
+  if (isSheet) {
+
+    // Sin equivalente en un bottom sheet (no hay nada que anclar
+    // espacialmente a un punto de la pantalla) — se limita a dejar
+    // pasar los children tal cual para no romper el layout del
+    // consumidor.
+    if (asChild && React.isValidElement(children)) {
+      return children
+    }
+
+    return (
+      <span {...props}>
+        {children}
+      </span>
+    )
+
+  }
 
   return (
 
     <PopoverPrimitive.Anchor
       data-slot="popover-anchor"
+      asChild={asChild}
       {...props}
-    />
+    >
+      {children}
+    </PopoverPrimitive.Anchor>
 
   )
 

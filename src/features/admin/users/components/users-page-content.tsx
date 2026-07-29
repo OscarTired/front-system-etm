@@ -519,7 +519,7 @@ export function UsersPageContent() {
                         label={
                           isCreating
                             ? "Crear usuario"
-                            : "Guardar cambios"
+                            : "Guardar"
                         }
                         isLoading={isSaving}
                         disabled={!canUpdate || isSaving}

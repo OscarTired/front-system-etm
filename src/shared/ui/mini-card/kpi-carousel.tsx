@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import {
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react"
@@ -13,6 +12,7 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { cn } from "@/shared/utils/utils"
+import { CollapsibleSummaryPanel } from "@/shared/ui/collapsible-summary-panel/collapsible-summary-panel"
 
 const SCROLL_SETTLE_DELAY = 300
 const KPI_FADE_SIZE = 24
@@ -144,14 +144,11 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
 
   return (
     <div className="flex w-full flex-col">
-      {/* ---------- Estado colapsado ---------- */}
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          !expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-        )}
-      >
-        <div className="overflow-hidden">
+
+      <CollapsibleSummaryPanel
+        expanded={expanded}
+        onCollapse={() => setExpanded(false)}
+        collapsed={
           <button
             type="button"
             onClick={() => setExpanded(true)}
@@ -191,102 +188,82 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
               <MoreHorizontal size={18} />
             </div>
           </button>
-        </div>
-      </div>
-
-      {/* ---------- Estado expandido con diseño ultra adaptativo ---------- */}
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-        )}
+        }
       >
-        <div className="overflow-hidden">
-          <div className="flex flex-col">
-            <div className="mb-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setExpanded(false)}
-                className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-white/10 hover:text-neutral-200 active:scale-95"
-              >
-                <ChevronUp size={14} strokeWidth={2.4} className="transition-transform duration-300" />
-                Ocultar indicadores
-              </button>
-            </div>
 
-            {!isMobile ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-4">
-                {cards}
-              </div>
-            ) : (
-              <div className="relative w-full">
-                <button
-                  type="button"
-                  onClick={scrollLeft}
-                  aria-label="Anterior"
-                  tabIndex={-1}
-                  className={cn(
-                    "absolute left-1 top-1/2 z-20 -translate-y-1/2",
-                    "flex h-8 w-8 items-center justify-center rounded-full",
-                    "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
-                    showLeftArrow ? "opacity-100" : "pointer-events-none opacity-0",
-                  )}
-                >
-                  <ChevronLeft size={15} strokeWidth={2.5} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={scrollRight}
-                  aria-label="Siguiente"
-                  tabIndex={-1}
-                  className={cn(
-                    "absolute right-1 top-1/2 z-20 -translate-y-1/2",
-                    "flex h-8 w-8 items-center justify-center rounded-full",
-                    "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
-                    showRightArrow ? "opacity-100" : "pointer-events-none opacity-0",
-                  )}
-                >
-                  <ChevronRight size={15} strokeWidth={2.5} />
-                </button>
-
-                <div
-                  style={{
-                    WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-                    maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskSize: "100% 100%",
-                    maskSize: "100% 100%",
-                  }}
-                  className="w-full overflow-hidden py-1"
-                >
-                  <div
-                    ref={containerRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={stopDragging}
-                    onMouseLeave={stopDragging}
-                    onClickCapture={handleClickCapture}
-                    className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
-                  >
-                    {cards.map((card, index) => (
-                      <div 
-                        key={index} 
-                        className="w-[85%] sm:w-[70%] md:w-[50%] shrink-0 snap-center flex flex-col h-auto min-h-27.5"
-                      >
-                        <div className="flex-1 flex flex-col *:h-full *:w-full">
-                          {card}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+        {!isMobile ? (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-4">
+            {cards}
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="relative w-full">
+            <button
+              type="button"
+              onClick={scrollLeft}
+              aria-label="Anterior"
+              tabIndex={-1}
+              className={cn(
+                "absolute left-1 top-1/2 z-20 -translate-y-1/2",
+                "flex h-8 w-8 items-center justify-center rounded-full",
+                "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+                showLeftArrow ? "opacity-100" : "pointer-events-none opacity-0",
+              )}
+            >
+              <ChevronLeft size={15} strokeWidth={2.5} />
+            </button>
+
+            <button
+              type="button"
+              onClick={scrollRight}
+              aria-label="Siguiente"
+              tabIndex={-1}
+              className={cn(
+                "absolute right-1 top-1/2 z-20 -translate-y-1/2",
+                "flex h-8 w-8 items-center justify-center rounded-full",
+                "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+                showRightArrow ? "opacity-100" : "pointer-events-none opacity-0",
+              )}
+            >
+              <ChevronRight size={15} strokeWidth={2.5} />
+            </button>
+
+            <div
+              style={{
+                WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+                maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                WebkitMaskSize: "100% 100%",
+                maskSize: "100% 100%",
+              }}
+              className="w-full overflow-hidden py-1"
+            >
+              <div
+                ref={containerRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={stopDragging}
+                onMouseLeave={stopDragging}
+                onClickCapture={handleClickCapture}
+                className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
+              >
+                {cards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="w-[85%] sm:w-[70%] md:w-[50%] shrink-0 snap-center flex flex-col h-auto min-h-27.5"
+                  >
+                    <div className="flex-1 flex flex-col *:h-full *:w-full">
+                      {card}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </CollapsibleSummaryPanel>
+
     </div>
   )
 }

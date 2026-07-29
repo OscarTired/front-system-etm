@@ -16,9 +16,12 @@ import {
 import {
   Activity,
   Check,
-  ChevronUp,
   MoreHorizontal,
 } from "lucide-react"
+
+import {
+  CollapsibleSummaryPanel,
+} from "@/shared/ui/collapsible-summary-panel/collapsible-summary-panel"
 
 import {
   createWorkflowView,
@@ -51,10 +54,6 @@ import {
 import {
   TaskRouteViewer,
 } from "./task-route-viewer"
-
-import {
-  cn,
-} from "@/shared/utils/utils"
 
 type Props = {
   task: Task
@@ -300,14 +299,10 @@ export function TaskProductionPanel({
 
       <div className="w-full xl:hidden flex flex-col">
 
-        {/* ---------- Estado colapsado (Oculto suavemente cuando se expande) ---------- */}
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            !expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-          )}
-        >
-          <div className="overflow-hidden">
+        <CollapsibleSummaryPanel
+          expanded={expanded}
+          onCollapse={() => setExpanded(false)}
+          collapsed={
             <button
               type="button"
               onClick={() => setExpanded(true)}
@@ -357,46 +352,23 @@ export function TaskProductionPanel({
               </div>
 
             </button>
-          </div>
-        </div>
-
-        {/* ---------- Estado expandido (Aparece con animación idéntica a Kpis) ---------- */}
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-          )}
+          }
         >
-          <div className="overflow-hidden">
-            <div className="flex flex-col">
 
-              <div className="mb-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setExpanded(false)}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-white/10 hover:text-neutral-200 active:scale-95"
-                >
-                  <ChevronUp size={14} strokeWidth={2.4} className="transition-transform duration-300" />
-                  Ocultar indicadores
-                </button>
-              </div>
+          <div
+            className="flex w-full flex-col gap-6 rounded-2xl p-4 tablet:p-5"
+            style={{
+              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
+            }}
+          >
 
-              <div
-                className="flex w-full flex-col gap-6 rounded-2xl p-4 tablet:p-5"
-                style={{
-                  background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
-                }}
-              >
+            {stepper}
 
-                {stepper}
+            {progressContent}
 
-                {progressContent}
-
-              </div>
-
-            </div>
           </div>
-        </div>
+
+        </CollapsibleSummaryPanel>
 
       </div>
 

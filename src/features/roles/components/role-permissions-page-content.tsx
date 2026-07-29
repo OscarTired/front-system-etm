@@ -148,9 +148,6 @@ export function RolePermissionsPageContent() {
     )
   }, [catalog])
 
-  // Solo tiene sentido en modo Usuarios: qué permisos quedaron
-  // distintos de lo que el usuario ya tenía "de fábrica" por sus
-  // roles -- eso es justamente lo que se va a guardar como excepción.
   const overriddenIds = useMemo(() => {
     if (mode !== "usuarios") return undefined
 
@@ -204,7 +201,7 @@ export function RolePermissionsPageContent() {
       : loadingCatalog || userDataLoading
 
   const saving = mode === "roles" ? savingRole : savingOverrides
-  const saveLabel = mode === "roles" ? "Guardar cambios" : "Guardar excepciones"
+  const saveLabel = "Guardar"
 
   const selectedName = mode === "roles" ? selectedRole?.name : selectedUser?.name
   const selectedColor = mode === "roles" ? selectedRole?.color : selectedUser?.color
@@ -239,9 +236,6 @@ export function RolePermissionsPageContent() {
       >
         {/* PANEL IZQUIERDO: ROLES o USUARIOS */}
         {showLeftPanel && isMobile && (
-          // pb-28: reserva espacio abajo para que el último item no
-          // quede tapado por el bottom nav (mismo patrón que
-          // task-pipeline-board.tsx).
           <div className="space-y-3 pb-28">
             {mode === "roles" ? (
               <>
@@ -371,8 +365,9 @@ export function RolePermissionsPageContent() {
                     <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
                       {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
-                    <div className="mt-1 flex items-center gap-2.5">
-                      <div className="flex items-center gap-2">
+                    {/* Cambiado a flex-col o flex-wrap controlado para acomodar el estado */}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selectedColor || "#71717a" }}
@@ -389,7 +384,7 @@ export function RolePermissionsPageContent() {
                     </div>
                     {mode === "usuarios" && (
                       <p className="mt-1 text-xs text-neutral-500">
-                        Por encima de lo que ya le dan sus roles.
+                        Por usuario
                       </p>
                     )}
                   </div>
@@ -405,19 +400,10 @@ export function RolePermissionsPageContent() {
               />
             </header>
 
-            {/* Plano, sin ScrollArea acá: en mobile el root de la
-                página NO define un alto fijo (fluye con la página,
-                como el panel de al lado) — envolver esto en
-                ScrollArea (pensado para el "h-full" de desktop)
-                hacía que calculara un alto ambiguo y recortara su
-                propio viewport, sin importar el pb-28 de adentro. */}
             <div className="min-h-0 min-w-0 flex-1 p-1.5">
               {hasSelection && permissionsLoading && <RolePermissionsSkeleton />}
 
               {hasSelection && !permissionsLoading && (
-                // pb-28: mismo motivo que el panel de al lado — sin
-                // esto el último grupo de permisos queda tapado por
-                // el bottom nav (regresión de este último commit).
                 <div className="flex flex-col gap-4 pb-28">
                   {grouped.map(([groupKey, groupPermissions]) => (
                     <PermissionGroup
@@ -449,20 +435,21 @@ export function RolePermissionsPageContent() {
                   </p>
                   <p className="mt-2 text-sm text-neutral-500">
                     {mode === "roles"
-                      ? "Elegí un rol desde el panel izquierdo para comenzar."
-                      : "Elegí un usuario desde el panel izquierdo para gestionar sus excepciones."}
+                      ? "Seleccione un rol"
+                      : "Gestione las excepciones"}
                   </p>
                 </div>
               </div>
             ) : (
               <>
                 <header className="flex shrink-0 items-start justify-between gap-4 px-5 py-4">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
                       {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
-                    <div className="mt-1 flex items-center gap-2.5">
-                      <div className="flex items-center gap-2">
+                    {/* Cambiado a flex-wrap para que se mueva fluidamente o baje si falta espacio */}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selectedColor || "#71717a" }}
@@ -479,8 +466,8 @@ export function RolePermissionsPageContent() {
                     </div>
                     {mode === "usuarios" && (
                       <p className="mt-1 text-xs text-neutral-500">
-                        Por encima de lo que ya le dan sus roles. Lo marcado como{" "}
-                        <span className="text-amber-400">Excepción</span> es distinto de su base.
+                        Por encima de lo que ya otorgan sus roles. Lo marcado como{" "}
+                        <span className="text-amber-400">Excepción</span> es distinto a su base.
                       </p>
                     )}
                   </div>
