@@ -123,7 +123,7 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
   function scrollLeft() {
     const el = containerRef.current
     el?.scrollBy({
-      left: -el.clientWidth,
+      left: -el.clientWidth * 0.75,
       behavior: "smooth",
     })
   }
@@ -131,7 +131,7 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
   function scrollRight() {
     const el = containerRef.current
     el?.scrollBy({
-      left: el.clientWidth,
+      left: el.clientWidth * 0.75,
       behavior: "smooth",
     })
   }
@@ -144,7 +144,6 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
 
   return (
     <div className="flex w-full flex-col">
-
       <CollapsibleSummaryPanel
         expanded={expanded}
         onCollapse={() => setExpanded(false)}
@@ -190,43 +189,45 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
           </button>
         }
       >
-
         {!isMobile ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-4">
             {cards}
           </div>
         ) : (
           <div className="relative w-full">
+            {/* Botón Izquierdo */}
             <button
               type="button"
               onClick={scrollLeft}
               aria-label="Anterior"
               tabIndex={-1}
               className={cn(
-                "absolute left-1 top-1/2 z-20 -translate-y-1/2",
+                "absolute left-1.5 top-1/2 z-20 -translate-y-1/2",
                 "flex h-8 w-8 items-center justify-center rounded-full",
-                "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+                "bg-[#18181b]/90 backdrop-blur-xl text-neutral-200 transition-opacity duration-200 shadow-lg border border-white/10",
                 showLeftArrow ? "opacity-100" : "pointer-events-none opacity-0",
               )}
             >
-              <ChevronLeft size={15} strokeWidth={2.5} />
+              <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
 
+            {/* Botón Derecho */}
             <button
               type="button"
               onClick={scrollRight}
               aria-label="Siguiente"
               tabIndex={-1}
               className={cn(
-                "absolute right-1 top-1/2 z-20 -translate-y-1/2",
+                "absolute right-1.5 top-1/2 z-20 -translate-y-1/2",
                 "flex h-8 w-8 items-center justify-center rounded-full",
-                "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+                "bg-[#18181b]/90 backdrop-blur-xl text-neutral-200 transition-opacity duration-200 shadow-lg border border-white/10",
                 showRightArrow ? "opacity-100" : "pointer-events-none opacity-0",
               )}
             >
-              <ChevronRight size={15} strokeWidth={2.5} />
+              <ChevronRight size={16} strokeWidth={2.5} />
             </button>
 
+            {/* Contenedor con Máscara de Desvanecimiento */}
             <div
               style={{
                 WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
@@ -245,14 +246,14 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
                 onMouseUp={stopDragging}
                 onMouseLeave={stopDragging}
                 onClickCapture={handleClickCapture}
-                className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-contain scroll-smooth px-1 cursor-grab select-none active:cursor-grabbing"
+                className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-2.5 overflow-x-auto overscroll-contain scroll-smooth px-2 cursor-grab select-none active:cursor-grabbing"
               >
                 {cards.map((card, index) => (
                   <div
                     key={index}
-                    className="w-[85%] sm:w-[70%] md:w-[50%] shrink-0 snap-center flex flex-col h-auto min-h-27.5"
+                    className="w-[88%] sm:w-[70%] shrink-0 snap-center flex flex-col h-auto min-h-27.5"
                   >
-                    <div className="flex-1 flex flex-col *:h-full *:w-full">
+                    <div className="flex-1 flex flex-col rounded-xl bg-white/3 p-1 transition-all *:h-full *:w-full">
                       {card}
                     </div>
                   </div>
@@ -261,9 +262,7 @@ export function KpiCarousel({ cards, summary, defaultExpanded = false }: Props) 
             </div>
           </div>
         )}
-
       </CollapsibleSummaryPanel>
-
     </div>
   )
 }

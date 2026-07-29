@@ -254,7 +254,7 @@ export function SidebarPresence({
               />
             </div>
 
-            <CommandList className="max-h-64 overflow-y-auto">
+            <CommandList className="max-h-64 select-none overflow-y-auto">
               <CommandEmpty>
                 {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
               </CommandEmpty>
