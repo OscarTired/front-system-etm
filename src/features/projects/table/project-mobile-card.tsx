@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
-import { useAnimatedPresence } from "@/shared/hooks/use-animated-presence"
+import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
@@ -35,9 +35,6 @@ export function ProjectMobileCard({
 }: Props) {
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
-
-  const { shouldRender, isClosing } = useAnimatedPresence(expanded)
-  const pipeline = useAnimatedPresence(showPipeline)
 
   useEffect(() => {
     if (!expanded) {
@@ -91,93 +88,84 @@ export function ProjectMobileCard({
         </button>
       </div>
 
-      {shouldRender && (
-        <div
-          className={cn(
-            "space-y-3 px-3 pb-3 pt-3",
-            isClosing ? "animate-comment-out" : "animate-comment-in",
-          )}
-        >
-          {showFields ? (
-            <div className="animate-comment-in flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setShowFields(false)}
-                className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
-              >
-                Ocultar campos
-                <ChevronDown
-                  size={14}
-                  className="shrink-0 rotate-180 text-neutral-500"
-                />
-              </button>
-
-              <ProjectClientCell project={project} triggerVariant="row" rowLabel="Cliente" />
-              <ProjectStageCell project={project} triggerVariant="row" rowLabel="Etapa" />
-              <ProjectStatusCell project={project} triggerVariant="row" rowLabel="Estado" />
-              <ProjectPmCell project={project} triggerVariant="row" rowLabel="PM" />
-            </div>
-          ) : (
+      <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+        {showFields ? (
+          <div className="animate-comment-in flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => setShowFields(true)}
-              className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+              onClick={() => setShowFields(false)}
+              className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
             >
-              <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-                <span
-                  className="size-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: project.client.color }}
-                />
-                <span className="shrink-0 truncate">{project.client.name}</span>
-
-                <span className="shrink-0 text-neutral-600">·</span>
-
-                <span
-                  className="shrink-0 truncate"
-                  style={{ color: project.stage.color }}
-                >
-                  {project.stage.name}
-                </span>
-
-                <span className="shrink-0 text-neutral-600">·</span>
-
-                <span
-                  className="shrink-0 truncate"
-                  style={{ color: project.status.color }}
-                >
-                  {project.status.name}
-                </span>
-
-                <span className="shrink-0 text-neutral-600">·</span>
-
-                <span className="min-w-0 truncate text-neutral-400">{project.pm.name}</span>
-              </span>
-
+              Ocultar campos
               <ChevronDown
                 size={14}
-                className="shrink-0 text-neutral-500"
+                className="shrink-0 rotate-180 text-neutral-500"
               />
             </button>
-          )}
 
-          <div className="flex items-center justify-start gap-1">
-            <IconAction
-              icon={MoreHorizontal}
-              onClick={() =>
-                setShowPipeline(current => !current)
-              }
-            />
-
-            <ProjectRowActions project={project} />
+            <ProjectClientCell project={project} triggerVariant="row" rowLabel="Cliente" />
+            <ProjectStageCell project={project} triggerVariant="row" rowLabel="Etapa" />
+            <ProjectStatusCell project={project} triggerVariant="row" rowLabel="Estado" />
+            <ProjectPmCell project={project} triggerVariant="row" rowLabel="PM" />
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowFields(true)}
+            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+          >
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: project.client.color }}
+              />
+              <span className="shrink-0 truncate">{project.client.name}</span>
 
-          {pipeline.shouldRender && (
-            <div className={pipeline.isClosing ? "animate-comment-out" : "animate-comment-in"}>
-              <ProjectExpandedRow project={project} tasks={tasks} />
-            </div>
-          )}
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              <span
+                className="shrink-0 truncate"
+                style={{ color: project.stage.color }}
+              >
+                {project.stage.name}
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              <span
+                className="shrink-0 truncate"
+                style={{ color: project.status.color }}
+              >
+                {project.status.name}
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              <span className="min-w-0 truncate text-neutral-400">{project.pm.name}</span>
+            </span>
+
+            <ChevronDown
+              size={14}
+              className="shrink-0 text-neutral-500"
+            />
+          </button>
+        )}
+
+        <div className="flex items-center justify-start gap-1">
+          <IconAction
+            icon={MoreHorizontal}
+            onClick={() =>
+              setShowPipeline(current => !current)
+            }
+          />
+
+          <ProjectRowActions project={project} />
         </div>
-      )}
+
+        <CollapsibleHeightSection open={showPipeline}>
+          <ProjectExpandedRow project={project} tasks={tasks} />
+        </CollapsibleHeightSection>
+      </CollapsibleHeightSection>
     </div>
   )
 }

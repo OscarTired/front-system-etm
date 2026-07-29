@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 
-import { useAnimatedPresence } from "@/shared/hooks/use-animated-presence"
+import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
@@ -28,8 +28,6 @@ export function ProcessMobileCard({
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
-
-  const { shouldRender, isClosing } = useAnimatedPresence(expanded)
 
   useEffect(() => {
     if (!expanded) {
@@ -123,74 +121,67 @@ export function ProcessMobileCard({
         </button>
       </div>
 
-      {shouldRender && (
-        <div
-          className={cn(
-            "space-y-3 px-3 pb-3 pt-3",
-            isClosing ? "animate-comment-out" : "animate-comment-in",
-          )}
-        >
-          {showFields ? (
-            <div className="animate-comment-in flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setShowFields(false)}
-                className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
-              >
-                Ocultar campos
-                <ChevronDown
-                  size={14}
-                  className="shrink-0 rotate-180 text-neutral-500"
-                />
-              </button>
-
-              <ProcessOperatorCell
-                processTask={processTask}
-                triggerVariant="row"
-                rowLabel="Operario"
-              />
-            </div>
-          ) : (
+      <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+        {showFields ? (
+          <div className="animate-comment-in flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => setShowFields(true)}
-              className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+              onClick={() => setShowFields(false)}
+              className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
             >
-              <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-                <span
-                  className="size-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: project.client.color }}
-                />
-                <span className="shrink-0 truncate">{project.client.name}</span>
-                <span className="shrink-0 text-neutral-600">·</span>
-                <span
-                  className="shrink-0 truncate"
-                  style={{ color: priority.color }}
-                >
-                  {priority.name}
-                </span>
-                <span className="shrink-0 text-neutral-600">·</span>
-                <span
-                  className="shrink-0 truncate"
-                  style={{ color: statusLabel.color }}
-                >
-                  {statusLabel.label}
-                </span>
-                <span className="shrink-0 text-neutral-600">·</span>
-                <span className="min-w-0 truncate text-neutral-400">
-                  {operator?.name ?? "Sin asignar operario"}
-                </span>
-              </span>
+              Ocultar campos
               <ChevronDown
                 size={14}
-                className="shrink-0 text-neutral-500"
+                className="shrink-0 rotate-180 text-neutral-500"
               />
             </button>
-          )}
 
-          <ProcessExpandedRow processTask={processTask} />
-        </div>
-      )}
+            <ProcessOperatorCell
+              processTask={processTask}
+              triggerVariant="row"
+              rowLabel="Operario"
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowFields(true)}
+            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+          >
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: project.client.color }}
+              />
+              <span className="shrink-0 truncate">{project.client.name}</span>
+              <span className="shrink-0 text-neutral-600">·</span>
+              <span
+                className="shrink-0 truncate"
+                style={{ color: priority.color }}
+              >
+                {priority.name}
+              </span>
+              <span className="shrink-0 text-neutral-600">·</span>
+              <span
+                className="shrink-0 truncate"
+                style={{ color: statusLabel.color }}
+              >
+                {statusLabel.label}
+              </span>
+              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="min-w-0 truncate text-neutral-400">
+                {operator?.name ?? "Sin asignar"}
+              </span>
+            </span>
+            <ChevronDown
+              size={14}
+              className="shrink-0 text-neutral-500"
+            />
+          </button>
+        )}
+
+        <ProcessExpandedRow processTask={processTask} />
+      </CollapsibleHeightSection>
     </div>
   )
 }
