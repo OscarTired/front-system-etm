@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 
+import { useAnimatedPresence } from "@/shared/hooks/use-animated-presence"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
@@ -27,6 +28,8 @@ export function ProcessMobileCard({
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
+
+  const { shouldRender, isClosing } = useAnimatedPresence(expanded)
 
   useEffect(() => {
     if (!expanded) {
@@ -120,8 +123,13 @@ export function ProcessMobileCard({
         </button>
       </div>
 
-      {expanded && (
-        <div className="animate-comment-in space-y-3 px-3 pb-3 pt-3">
+      {shouldRender && (
+        <div
+          className={cn(
+            "space-y-3 px-3 pb-3 pt-3",
+            isClosing ? "animate-comment-out" : "animate-comment-in",
+          )}
+        >
           {showFields ? (
             <div className="animate-comment-in flex flex-col gap-2">
               <button

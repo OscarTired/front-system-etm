@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
+import { useAnimatedPresence } from "@/shared/hooks/use-animated-presence"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
@@ -29,6 +30,9 @@ export function TaskMobileCard({
 }: Props) {
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
+
+  const { shouldRender, isClosing } = useAnimatedPresence(expanded)
+  const pipeline = useAnimatedPresence(showPipeline)
 
   useEffect(() => {
     if (!expanded) {
@@ -96,8 +100,13 @@ export function TaskMobileCard({
         </div>
       </div>
 
-      {expanded && (
-        <div className="animate-comment-in space-y-3 px-3 pb-3 pt-3">
+      {shouldRender && (
+        <div
+          className={cn(
+            "space-y-3 px-3 pb-3 pt-3",
+            isClosing ? "animate-comment-out" : "animate-comment-in",
+          )}
+        >
           {showFields ? (
             <div className="animate-comment-in flex flex-col gap-2">
               <button
@@ -159,8 +168,8 @@ export function TaskMobileCard({
             <TaskRowActions task={task} />
           </div>
 
-          {showPipeline && (
-            <div className="animate-comment-in">
+          {pipeline.shouldRender && (
+            <div className={pipeline.isClosing ? "animate-comment-out" : "animate-comment-in"}>
               <TaskExpandedRow task={task} />
             </div>
           )}

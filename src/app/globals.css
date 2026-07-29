@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "../shared/styles/scrollbar.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -299,6 +298,21 @@ input:focus-visible {
 
 .animate-comment-in {
   animation: comment-in 0.2s ease-out;
+}
+
+@keyframes comment-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.animate-comment-out {
+  animation: comment-out 0.2s ease-in;
 }
 
 /* Loop continuo real: --marquee-width lo mide MarqueeText en JS (el

@@ -1,9 +1,15 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 import {
   ScrollArea,
   ScrollBar,
 } from "@/components/ui/scroll-area"
+
+import {
+  useAnimatedPresence,
+} from "@/shared/hooks/use-animated-presence"
 
 import {
   EntityTableCardRow,
@@ -12,6 +18,32 @@ import {
 import type {
   EntityTableProps,
 } from "./types"
+
+// Envuelve el contenido expandido para poder usar useAnimatedPresence
+// (un hook no puede llamarse directo dentro del .map() de abajo).
+function ExpandedRowSlot({
+  isExpanded,
+  children,
+}: {
+  isExpanded: boolean
+  children: ReactNode
+}) {
+
+  const { shouldRender, isClosing } = useAnimatedPresence(isExpanded)
+
+  if (!shouldRender) {
+    return null
+  }
+
+  return (
+
+    <div className={isClosing ? "animate-comment-out" : "animate-comment-in"}>
+      {children}
+    </div>
+
+  )
+
+}
 
 export function EntityTable<T>({
   data,
@@ -74,11 +106,9 @@ export function EntityTable<T>({
 
               }
 
-              {isExpanded && (
-                <div className="animate-comment-in">
-                  {renderExpandedRow?.(item)}
-                </div>
-              )}
+              <ExpandedRowSlot isExpanded={isExpanded}>
+                {renderExpandedRow?.(item)}
+              </ExpandedRowSlot>
 
             </div>
 
