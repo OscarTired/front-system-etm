@@ -21,6 +21,7 @@ import {
 
 import {
   KpiCarousel,
+  type KpiItem,
 } from "@/shared/ui/mini-card/kpi-carousel"
 
 import {
@@ -150,6 +151,76 @@ export function TaskKpisSection({
 
   ]
 
+  // Mismo dato que las cards de arriba, pero aplanado en filas
+  // sueltas (una por métrica) para el carousel mobile — ahí no se
+  // muestra como card sino como ítem compacto tipo stepper.
+  const items: KpiItem[] = [
+
+    {
+      icon: Layers3,
+      color: "#d4d2a6",
+      label: "Asignación",
+      value: `L${task.lotNumber}`,
+    },
+
+    {
+      icon: InspectionPanel,
+      color: task.material.color,
+      label: "Material",
+      value: task.material.name.toUpperCase(),
+    },
+    {
+      icon: InspectionPanel,
+      color: task.material.color,
+      label: "Espesor",
+      value: task.thickness.name,
+    },
+
+    {
+      icon: Puzzle,
+      color: PIEZAS_COLOR,
+      label: "Piezas",
+      value: task.pieces,
+    },
+    ...(hasAssemblyProcess ? [
+      {
+        icon: Puzzle,
+        color: PIEZAS_COLOR,
+        label: "Unidades",
+        value: task.assemblyCount,
+      },
+      {
+        icon: Puzzle,
+        color: PIEZAS_COLOR,
+        label: "Entrega",
+        value: `${task.assemblyCount} UND`,
+      },
+    ] : []),
+
+    hasPaintProcess
+      ? {
+          icon: PaintBucket,
+          color: task.color?.color ?? "#64748B",
+          label: "Color",
+          value: task.color?.name.toUpperCase() ?? "-",
+        }
+      : {
+          icon: PaintBucket,
+          color: "#BBBBBB",
+          label: "Tipo",
+          value: "NATURAL",
+        },
+    ...(hasPaintProcess ? [
+      {
+        icon: PaintBucket,
+        color: task.color?.color ?? "#64748B",
+        label: "Pedido",
+        value: `${task.paintKg} KG`,
+      },
+    ] : []),
+
+  ]
+
   if (!ready) {
     return null
   }
@@ -162,14 +233,10 @@ export function TaskKpisSection({
     )
   }
 
-  // KpiCarousel — mismo componente genérico que ya usa
-  // TaskPipelineHeader para su barra "AVANCE" (colapsado: fila con
-  // fondo tinteado + ícono + label + 2 valores + "..."; expandido:
-  // las cards completas) — antes esto era una versión armada a
-  // mano con texto plano estilo Kanban, que no era lo que se pedía.
   return (
     <KpiCarousel
       cards={cards}
+      items={items}
       summary={{
         icon: Layers3,
         color: "#d4d2a6",

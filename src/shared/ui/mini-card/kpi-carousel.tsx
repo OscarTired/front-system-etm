@@ -37,14 +37,24 @@ type Summary = {
   values: [SummaryValue, SummaryValue]
 }
 
+export type KpiItem = {
+  icon: LucideIcon
+  color: string
+  label: string
+  value: string | number
+  rows?: { label: string; value: string | number }[]
+}
+
 type Props = {
   cards: React.ReactNode[]
+  items?: KpiItem[]
   summary: Summary
   defaultExpanded?: boolean
 }
 
 export function KpiCarousel({
   cards,
+  items,
   summary,
   defaultExpanded = false,
 }: Props) {
@@ -57,6 +67,11 @@ export function KpiCarousel({
     expanded,
     setExpanded,
   ] = useState(defaultExpanded)
+
+  const [
+    selectedIndex,
+    setSelectedIndex,
+  ] = useState(0)
 
   const Icon = summary.icon
 
@@ -124,32 +139,59 @@ export function KpiCarousel({
 
   )
 
-  // Igual criterio que el stepper de TaskProductionPanel: HorizontalScroll
-  // + cards con altura NATURAL (h-auto), sin min-height impuesta.
-  //
-  // Antes, cada card vivía en un div con "min-h-27.5" fijo sin importar
-  // cuánto contenido tuviera. Si el card traía pocos rows (ej. 1 solo
-  // row tipo LOTE/ASIGNACIÓN), el contenido ocupaba una fracción chica
-  // de esa altura mínima y quedaba un bloque vacío enorme debajo — el
-  // padre le exigía al card ser más alto de lo que necesitaba.
-  //
-  // Acá el wrapper de cada card ya no impone una altura: cada uno mide
-  // lo que su propio contenido pide (como el stepper, donde el alto lo
-  // define el contenido — icono + label — no un valor arbitrario).
-  const mobileScroll = (
+  const currentItems = items ?? []
+  const activeItem = currentItems[selectedIndex] || currentItems[0]
+  const activeColors = activeItem ? getBadgeColors(activeItem.color, "subtle") : { background: "#333", text: "#fff" }
+  const ActiveIcon = activeItem ? activeItem.icon : Icon
 
-    <div className="w-full">
+  const mobileChips = (
+
+    <div className="w-full h-15.5">
       <HorizontalScroll>
-        {cards.map((card, index) => (
+        {currentItems.map((item, index) => {
 
-          <div
-            key={index}
-            className="w-[88%] shrink-0 sm:w-[70%]"
-          >
-            {card}
-          </div>
+          const ItemIcon = item.icon
+          const colors = getBadgeColors(item.color, "subtle")
+          const isSelected = selectedIndex === index
 
-        ))}
+          return (
+
+            <button
+              key={index}
+              type="button"
+              onClick={() => setSelectedIndex(index)}
+              className="flex items-center shrink-0 focus:outline-none transition-transform active:scale-95"
+            >
+
+              <div className="flex flex-col items-center gap-1.5 cursor-pointer">
+
+                <div
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
+                  style={{
+                    backgroundColor: colors.background,
+                    border: isSelected ? `2px solid ${colors.text}` : "2px solid transparent",
+                    boxShadow: isSelected ? `0 0 10px ${colors.text}66` : "none"
+                  }}
+                >
+                  <ItemIcon size={16} style={{ color: colors.text }} />
+                </div>
+
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wide"
+                  style={{
+                    color: isSelected ? colors.text : "#737373"
+                  }}
+                >
+                  {item.label}
+                </span>
+
+              </div>
+
+            </button>
+
+          )
+
+        })}
       </HorizontalScroll>
     </div>
 
@@ -165,7 +207,64 @@ export function KpiCarousel({
         collapsed={collapsedView}
       >
 
-        {isMobile ? mobileScroll : desktopGrid}
+        {isMobile ? (
+          <div
+            className="flex w-full flex-col rounded-2xl p-4 tablet:p-5"
+            style={{
+              background: `linear-gradient(135deg, ${summary.color}14, #101012)`,
+            }}
+          >
+            {mobileChips}
+
+            <div className="mt-3 flex justify-center">
+              <div
+                className="w-full max-w-3xl rounded-xl px-5 py-3.5 transition-all duration-200"
+                style={{
+                  background: `linear-gradient(135deg, ${activeItem?.color ?? summary.color}15, rgba(255,255,255,0.02))`,
+                }}
+              >
+                <div className="flex w-full min-w-0 flex-col gap-1.5">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <ActiveIcon size={13} style={{ color: activeColors.text }} />
+                      <span
+                        className="truncate text-xs font-bold uppercase tracking-wide"
+                        style={{ color: activeColors.text }}
+                      >
+                        {activeItem?.label ?? summary.label}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {activeItem?.rows && activeItem.rows.length > 0 ? (
+                        activeItem.rows.map((row, rIdx) => (
+                          <div key={rIdx} className="flex items-center gap-1.5 text-right">
+                            {activeItem.rows!.length > 1 && (
+                              <span className="text-[10px] font-bold uppercase text-neutral-500">
+                                {row.label}:
+                              </span>
+                            )}
+                            <span className="text-xs font-bold" style={{ color: activeColors.text }}>
+                              {row.value}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs font-bold" style={{ color: activeColors.text }}>
+                          {activeItem?.value ?? ""}
+                        </span>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          desktopGrid
+        )}
 
       </CollapsibleSummaryPanel>
 
