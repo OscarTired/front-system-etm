@@ -87,14 +87,14 @@ export function TaskExpandedRow({
                 icon: ClipboardList,
               },
               {
-                value: "comments",
-                label: "Mensajes",
-                icon: MessageSquare,
-              },
-              {
                 value: "kpis",
                 label: "KPIs",
                 icon: Activity,
+              },
+              {
+                value: "comments",
+                label: "Mensajes",
+                icon: MessageSquare,
               },
             ]}
           />
@@ -112,18 +112,18 @@ export function TaskExpandedRow({
               ),
             },
             {
-              value: "comments",
-              content: (
-                <TaskCommentsPanel
-                  taskId={task.id}
-                />
-              ),
-            },
-            {
               value: "kpis",
               content: (
                 <TaskKpisSection
                   task={task}
+                />
+              ),
+            },
+            {
+              value: "comments",
+              content: (
+                <TaskCommentsPanel
+                  taskId={task.id}
                 />
               ),
             },

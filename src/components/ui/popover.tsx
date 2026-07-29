@@ -28,6 +28,13 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 const PopoverModeContext =
   React.createContext(false)
 
+// Expone el `onOpenChange` del Root al Content, para que el bottom
+// sheet pueda cerrarse a sí mismo en respuesta a un gesto de swipe
+// (el drag handle vive dentro del Content, no tiene forma de tocar
+// el Root directamente salvo por contexto).
+const PopoverCloseContext =
+  React.createContext<() => void>(() => {})
+
 type PopoverProps =
   React.ComponentProps<
     typeof PopoverPrimitive.Root
@@ -66,12 +73,17 @@ export function Popover({
   const useSheet = isMobile && !forceFloating
 
   if (useSheet) {
+
+    const close = () => props.onOpenChange?.(false)
+
     return (
 
       <PopoverModeContext.Provider value={true}>
-        <DialogPrimitive.Root {...props}>
-          {children}
-        </DialogPrimitive.Root>
+        <PopoverCloseContext.Provider value={close}>
+          <DialogPrimitive.Root {...props}>
+            {children}
+          </DialogPrimitive.Root>
+        </PopoverCloseContext.Provider>
       </PopoverModeContext.Provider>
 
     )
@@ -122,6 +134,69 @@ export function PopoverTrigger({
 
 }
 
+// Umbral de distancia (px) o velocidad (px/ms) a partir del cual un
+// swipe hacia abajo se interpreta como "cerrar" en vez de "soltó a
+// mitad de camino, que vuelva a su lugar" — mismos valores que usan
+// los bottom sheets nativos de iOS/Android como referencia.
+const SHEET_DISMISS_DISTANCE = 90
+const SHEET_DISMISS_VELOCITY = 0.5
+
+function useSheetDragToDismiss(close: () => void) {
+
+  const [dragY, setDragY] = React.useState(0)
+
+  const draggingRef = React.useRef(false)
+  const startYRef = React.useRef(0)
+  const startTimeRef = React.useRef(0)
+
+  function onPointerDown(event: React.PointerEvent) {
+    draggingRef.current = true
+    startYRef.current = event.clientY
+    startTimeRef.current = performance.now()
+
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    } catch {
+      // noop
+    }
+  }
+
+  function onPointerMove(event: React.PointerEvent) {
+    if (!draggingRef.current) return
+
+    // Solo permitimos arrastrar hacia abajo — hacia arriba no tiene
+    // a dónde ir, el sheet ya está en su altura máxima.
+    const delta = Math.max(0, event.clientY - startYRef.current)
+    setDragY(delta)
+  }
+
+  function endDrag() {
+    if (!draggingRef.current) return
+    draggingRef.current = false
+
+    const elapsed = Math.max(performance.now() - startTimeRef.current, 1)
+    const velocity = dragY / elapsed
+
+    if (dragY > SHEET_DISMISS_DISTANCE || velocity > SHEET_DISMISS_VELOCITY) {
+      close()
+    }
+
+    setDragY(0)
+  }
+
+  return {
+    dragY,
+    isDragging: draggingRef.current,
+    dragHandleProps: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: endDrag,
+      onPointerCancel: endDrag,
+    },
+  }
+
+}
+
 export function PopoverContent({
   className,
   align = "center",
@@ -136,6 +211,12 @@ export function PopoverContent({
 
   const isSheet =
     React.useContext(PopoverModeContext)
+
+  const close =
+    React.useContext(PopoverCloseContext)
+
+  const { dragY, isDragging, dragHandleProps } =
+    useSheetDragToDismiss(close)
 
   if (isSheet) {
 
@@ -171,14 +252,24 @@ export function PopoverContent({
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
             "data-[state=closed]:duration-200 data-[state=open]:duration-300",
           )}
+          style={{
+            transform: dragY ? `translateY(${dragY}px)` : undefined,
+            transition: isDragging ? "none" : "transform 200ms ease-out",
+          }}
         >
 
           <VisuallyHidden asChild>
             <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
           </VisuallyHidden>
 
-          {/* Drag handle — mismo lenguaje visual que el bottom sheet nativo de iOS */}
-          <div className="flex shrink-0 justify-center pb-1 pt-2.5">
+          {/* Drag handle — mismo lenguaje visual que el bottom sheet
+              nativo de iOS, ahora también arrastrable: mantiene el
+              cierre por tap-afuera (Overlay de Radix) y suma el
+              gesto de swipe hacia abajo desde acá. */}
+          <div
+            {...dragHandleProps}
+            className="flex shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
+          >
             <div className="h-1.5 w-9 rounded-full bg-white/15" />
           </div>
 

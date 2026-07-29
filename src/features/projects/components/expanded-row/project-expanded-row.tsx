@@ -201,14 +201,14 @@ export function ProjectExpandedRow({
                 count: totalTasks,
               },
               {
-                value: "comments",
-                label: "Mensajes",
-                icon: MessageSquare,
-              },
-              {
                 value: "kpis",
                 label: "KPIs",
                 icon: Activity,
+              },
+              {
+                value: "comments",
+                label: "Mensajes",
+                icon: MessageSquare,
               },
             ]}
           />
@@ -223,14 +223,6 @@ export function ProjectExpandedRow({
                 <ProjectTasksList
                   projectId={project.id}
                   tasks={tasks}
-                />
-              ),
-            },
-            {
-              value: "comments",
-              content: (
-                <ProjectCommentsPanel
-                  projectId={project.id}
                 />
               ),
             },
@@ -255,6 +247,14 @@ export function ProjectExpandedRow({
                       },
                     ],
                   }}
+                />
+              ),
+            },
+            {
+              value: "comments",
+              content: (
+                <ProjectCommentsPanel
+                  projectId={project.id}
                 />
               ),
             },
