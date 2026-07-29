@@ -170,7 +170,7 @@ export function ProcessMobileCard({
               </span>
               <span className="shrink-0 text-neutral-600">·</span>
               <span className="min-w-0 truncate text-neutral-400">
-                {operator?.name ?? "Sin asignar"}
+                {operator?.name ?? "Sin asignar operario"}
               </span>
             </span>
             <ChevronDown

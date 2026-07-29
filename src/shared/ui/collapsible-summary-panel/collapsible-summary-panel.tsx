@@ -40,7 +40,7 @@ export function CollapsibleSummaryPanel({
             <button
               type="button"
               onClick={onCollapse}
-              className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-white/10 hover:text-neutral-200 active:scale-95"
+              className="flex items-center gap-1.5 rounded-2xl bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-white/10 hover:text-neutral-200 active:scale-95"
             >
               <ChevronUp size={14} strokeWidth={2.4} />
               Ocultar indicadores

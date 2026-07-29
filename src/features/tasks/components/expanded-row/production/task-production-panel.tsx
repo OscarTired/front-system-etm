@@ -170,7 +170,7 @@ export function TaskProductionPanel({
   const stepper = (
 
     <div className="w-full h-16">
-      <HorizontalScroll fade={true}>
+      <HorizontalScroll>
         {task.route.map((code, index) => {
 
           const definition = PROCESS_DEFINITIONS[code]
