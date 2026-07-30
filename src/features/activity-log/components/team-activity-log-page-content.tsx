@@ -25,16 +25,6 @@ function endOfDayISO(date: string) {
 
 type Log = ReturnType<typeof useTeamActivityLog>["logs"][number]
 
-// Mismas franjas visuales que la Bitácora personal (SHIFT_GROUPS),
-// pero acá agrupando logs ya existentes en vez de slots vacíos para
-// llenar. Los AUTO (Tarea iniciada/completada) no tienen `shift`
-// guardado — nunca pasan por el picker manual — pero sí tienen una
-// hora real (loggedAt), así que se les calcula la franja que les
-// tocaría con el mismo criterio que usa el picker (getCurrentShift),
-// solo para poder agruparlos visualmente junto con las manuales acá.
-// Esto es puramente de presentación: no se toca el `shift` real
-// guardado en el AUTO (sigue null en la base), es un derivado
-// efímero solo para esta vista.
 function groupLogsByShift(logs: Log[]) {
 
   const buckets: {
