@@ -34,12 +34,6 @@ export const NAVIGATION = [
         icon: ClipboardList,
         permission: PermissionCode.TASK_READ,
       },
-      {
-        label: "Asignación",
-        href: "/production",
-        icon: UserCog,
-        permission: PermissionCode.WORKFLOW_READ,
-      },
     ],
   },
 
