@@ -82,11 +82,14 @@ export function EntityExpandedToggle<T extends string>({
                   : "text-neutral-500 hover:text-neutral-300",
               )}
             >
-              <Icon
-                size={13}
-                strokeWidth={2.5}
-                className="shrink-0"
-              />
+              {/* Contenedor reservado y rígido para el icono para evitar micro-saltos */}
+              <span className="flex shrink-0 items-center justify-center">
+                <Icon
+                  size={13}
+                  strokeWidth={2.5}
+                  className="shrink-0"
+                />
+              </span>
 
               {!fullWidth && (
                 <span className="min-w-0 truncate">
