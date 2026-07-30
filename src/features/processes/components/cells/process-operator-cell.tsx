@@ -26,23 +26,11 @@ import type {
 
 type Props={
   processTask:ProcessTask
-  // Avisa al padre cuando el guardado del operario está en curso —
-  // mismo patrón que WorkflowNumericField.onSavingChange. Sin esto,
-  // nada le decía a "Iniciar" que esperara a que este guardado
-  // terminara, permitiendo iniciar el step con el operario todavía
-  // sin confirmarse en el backend.
   onSavingChange?:(saving:boolean)=>void
-  // Mismo patrón que TaskPriorityCell/ProjectPmCell: "row" para la
-  // fila compacta dentro del panel de campos expandido de la card
-  // mobile (ProcessMobileCard). Sin esto, no había forma de pedirle
-  // a UserSelect el trigger de fila — siempre caía en "badge".
   triggerVariant?:"badge"|"row"
   rowLabel?:string
 }
 
-// Mismo criterio que WorkflowService.update() en el backend
-// (validateEditable): una vez completado, el step deja de ser editable
-// hasta que se reabra explícitamente.
 const NON_EDITABLE_STATUSES=[
   "COMPLETED",
   "REVIEWED",
@@ -78,8 +66,9 @@ export function ProcessOperatorCell({
       status as typeof NON_EDITABLE_STATUSES[number],
     )
 
-  // Operarios ocupados: tienen un step en PROGRESS
-  // en un step distinto al actual.
+  // Obtenemos el processCode directamente usando el workflowAccess que me pasaste
+  const currentProcessCode = workflowAccess.processCode(processTask)
+
   const busyOperatorIds = useMemo(() => {
 
     const tasks =
@@ -107,15 +96,23 @@ export function ProcessOperatorCell({
 
   }, [queryClient, currentStepId])
 
-  const operators =
-    users
+  const operators = useMemo(() => {
+
+    return users
       .filter(user => user.roles?.some(role => role.code === "PRODUCCION") && user.level === "OPERARIO")
+      // Filtramos por el área/proceso correcto usando workflowAccess.processCode(item)
+      .filter(user => {
+        if (!currentProcessCode) return true
+        return user.areas?.some(area => area.processCode === currentProcessCode)
+      })
       .filter(user =>
         // Siempre mostramos el operario ya asignado a este step,
         // aunque esté en PROGRESS (puede ser el mismo que estamos editando).
         user.id === currentOperatorId ||
         !busyOperatorIds.has(user.id)
       )
+
+  }, [users, currentProcessCode, currentOperatorId, busyOperatorIds])
 
   return(
 

@@ -86,7 +86,7 @@ export const NAVIGATION = [
   },
 
   {
-    title: "Bitácoras",
+    title: "Bitácora",
     items: [
       {
         label: "Registros",
