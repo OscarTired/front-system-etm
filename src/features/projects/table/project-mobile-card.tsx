@@ -11,6 +11,8 @@ import { formatDate } from "@/shared/utils/date-format"
 import type { Project } from "../types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
 
+import { isProjectCompleted } from "../selectors/is-project-completed"
+
 import { ProjectClientCell } from "../components/cells/project-client-cell"
 import { ProjectStageCell } from "../components/cells/project-stage-cell"
 import { ProjectStatusCell } from "../components/cells/project-status-cell"
@@ -43,8 +45,13 @@ export function ProjectMobileCard({
     }
   }, [expanded])
 
+  // Mismo criterio que ya usa TaskPipelineCard/TaskMobileCard/
+  // ProcessMobileCard: un proyecto finalizado, mostrado solo porque
+  // el historial está activo, queda atenuado.
+  const isDimmed = isProjectCompleted(project)
+
   return (
-    <div className="overflow-hidden rounded-xl bg-white/2">
+    <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell />
 
