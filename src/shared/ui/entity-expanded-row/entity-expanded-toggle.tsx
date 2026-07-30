@@ -66,6 +66,8 @@ export function EntityExpandedToggle<T extends string>({
         {options.map(option => {
           const isActive = option.value === value
           const Icon = option.icon
+          // Si quieres que siempre aparezca el contador (incluso en 0 si no se especifica)
+          const displayCount = option.count ?? 0
 
           return (
             <button
@@ -82,7 +84,7 @@ export function EntityExpandedToggle<T extends string>({
                   : "text-neutral-500 hover:text-neutral-300",
               )}
             >
-              {/* Contenedor reservado y rígido para el icono para evitar micro-saltos */}
+              {/* Contenedor reservado y rígido para el icono */}
               <span className="flex shrink-0 items-center justify-center">
                 <Icon
                   size={13}
@@ -97,18 +99,19 @@ export function EntityExpandedToggle<T extends string>({
                 </span>
               )}
 
-              {option.count !== undefined && (
+              {/* Contenedor rígido para el contador (siempre visible con el número o 0) */}
+              <span className="flex shrink-0 items-center justify-center">
                 <span
                   className={cn(
-                    "shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold",
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums leading-none",
                     isActive
-                      ? "bg-white/10 text-neutral-200"
+                      ? "bg-white/15 text-neutral-200"
                       : "bg-white/5 text-neutral-500",
                   )}
                 >
-                  {option.count}
+                  {displayCount}
                 </span>
-              )}
+              </span>
             </button>
           )
         })}
