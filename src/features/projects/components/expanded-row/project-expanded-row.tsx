@@ -10,8 +10,7 @@ import type { Task } from "@/features/tasks/types/task.types"
 import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
 import { ProcessMiniCard } from "@/shared/ui/mini-card/process-mini-card"
-import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
-import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
+import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import {
@@ -186,6 +185,73 @@ export function ProjectExpandedRow({
     />,
   ]
 
+  // Mismo dato que las cards de arriba, pero aplanado en filas
+  // sueltas (una por métrica) para el carousel mobile — sin esto
+  // KpiCarousel no tenía nada que mostrar en la fila de chips y el
+  // tab de KPIs quedaba vacío en mobile (items es opcional, así que
+  // no rompía en compilación, solo en runtime).
+  const items: KpiItem[] = [
+
+    {
+      icon: ClipboardList,
+      color: "#afafaf",
+      label: "Total tareas",
+      value: totalTasks,
+    },
+    {
+      icon: ClipboardList,
+      color: "#afafaf",
+      label: "Con ruta",
+      value: totalTasks,
+    },
+
+    {
+      icon: Puzzle,
+      color: "#a6c7d4",
+      label: "Piezas",
+      value: totalPieces,
+    },
+    {
+      icon: Puzzle,
+      color: "#a6c7d4",
+      label: "Promedio",
+      value: totalTasks > 0
+        ? Math.round(totalPieces / totalTasks)
+        : 0,
+    },
+
+    {
+      icon: AlertTriangle,
+      color: "#EF4444",
+      label: "Urgentes",
+      value: criticalPriorityTasks,
+    },
+    {
+      icon: AlertTriangle,
+      color: "#EF4444",
+      label: "% urgentes",
+      value: totalTasks > 0
+        ? `${Math.round((criticalPriorityTasks / totalTasks) * 100)}%`
+        : "0%",
+    },
+
+    {
+      icon: CheckCircle2,
+      color: "#22C55E",
+      label: "Finalizadas",
+      value: completedTasks,
+    },
+    {
+      icon: CheckCircle2,
+      color: "#22C55E",
+      label: "Progreso",
+      value: totalTasks > 0
+        ? `${Math.round((completedTasks / totalTasks) * 100)}%`
+        : "0%",
+    },
+
+  ]
+
   return (
     <EntityExpandedRow rowId={project.id}>
       <EntityExpandedContent>
@@ -228,11 +294,10 @@ export function ProjectExpandedRow({
             },
             {
               value: "kpis",
-              content: !ready ? null : !isMobile ? (
-                <KpiPanel cards={cards} />
-              ) : (
+              content: !ready ? null : (
                 <KpiCarousel
                   cards={cards}
+                  items={items}
                   summary={{
                     icon: CheckCircle2,
                     color: "#22C55E",
