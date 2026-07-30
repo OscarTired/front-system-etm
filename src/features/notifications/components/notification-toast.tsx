@@ -35,7 +35,7 @@ export function NotificationToast({
     <button
       type="button"
       onClick={onNavigate}
-      className="flex w-full max-w-[380px] items-start gap-3 text-left"
+      className="flex w-full max-w-95 items-start gap-3 text-left"
     >
       <div className="relative shrink-0">
         <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-neutral-700 to-neutral-900 text-xs font-semibold text-neutral-200 ring-1 ring-white/10">

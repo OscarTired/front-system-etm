@@ -78,13 +78,21 @@ export default function RootLayout({
 
               </div>
 
+              {/* Adentro de ResponsiveProvider a propósito — antes
+                  estaba afuera de TODOS los providers (hermano de
+                  QueryProvider), así que cualquier cosa que sonner
+                  renderice dentro de un toast (ej. NotificationToast,
+                  que usa DynamicBadge, que usa useResponsive() por su
+                  cuenta) explotaba con "useResponsive debe usarse
+                  dentro de un ResponsiveProvider" — el toast vivía
+                  fuera del árbol de React que provee ese contexto. */}
+              <Sonner />
+
             </ResponsiveProvider>
 
           </RealtimeProvider>
 
         </QueryProvider>
-
-        <Sonner />
 
       </body>
 
