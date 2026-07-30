@@ -51,7 +51,7 @@ export function CommentComposer({
   const { has } = usePermissions()
   // Editar un comentario propio no exige un permiso aparte (ver
   // CommentItem: canEdit depende solo de isOwner) — COMMENT_CREATE
-  // solo aplica al flujo de publicar uno nuevo.
+  // solo aplica al flujo de enviar uno nuevo.
   const canCreate = isEditing || has(PermissionCode.COMMENT_CREATE)
 
   const busy = updating
@@ -310,7 +310,7 @@ export function CommentComposer({
         )}
 
         <PrimaryAction
-          label={isEditing ? "Guardar" : "Publicar"}
+          label={isEditing ? "Guardar" : "Enviar"}
           icon={SendHorizontal}
           isLoading={busy}
           onClick={handleSubmit}

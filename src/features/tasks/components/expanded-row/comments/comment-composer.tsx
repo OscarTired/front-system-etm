@@ -26,7 +26,7 @@ export function CommentComposer({
       <div className="mt-1 flex justify-end">
 
         <PrimaryAction
-          label="Publicar"
+          label="Enviar"
           onClick={() => {}}
         />
 

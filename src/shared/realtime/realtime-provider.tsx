@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 import {
   fetchEventSource,
@@ -11,6 +13,10 @@ import {
 import { authSession } from "@/lib/auth-session"
 import { apiBaseUrl } from "@/lib/api-url"
 import { useAuthStore } from "@/features/auth/store/auth-store"
+
+import { NotificationToast } from "@/features/notifications/components/notification-toast"
+import { resolveNotificationHref } from "@/features/notifications/utils/resolve-notification-href"
+import type { Notification } from "@/features/notifications/types/notification.types"
 
 import { realtimeRegistry } from "./types/realtime-registry"
 
@@ -29,6 +35,7 @@ export function RealtimeProvider({
 
   const user = useAuthStore(s => s.user)
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   useEffect(() => {
 
@@ -146,6 +153,42 @@ export function RealtimeProvider({
           }
 
           realtimeRegistry(event)
+
+          // El registry ya actualizó la campana/el contador — esto
+          // de acá es aparte: un toast visible aunque la campana
+          // esté cerrada. Solo para comentarios/menciones nuevos
+          // (CREATED), no para BULK_READ/DELETED/etc., que no tiene
+          // sentido "anunciar".
+          if (
+            event.entity === "NOTIFICATION" &&
+            event.action === "CREATED"
+          ) {
+
+            const notification = event.payload as Notification
+
+            toast.custom(
+              (id) => (
+                <NotificationToast
+                  notification={notification}
+                  onNavigate={() => {
+                    router.push(
+                      resolveNotificationHref(notification),
+                    )
+                    toast.dismiss(id)
+                  }}
+                />
+              ),
+              {
+                // Sin duration fijo (o Infinity), sonner lo saca
+                // solo a los 4s por default — acá se pidió a
+                // propósito que se quede hasta que el usuario lo
+                // cierre (X, que ya pone sonner solo) o lo toque
+                // (navega y se cierra).
+                duration: Infinity,
+              },
+            )
+
+          }
 
         },
 
