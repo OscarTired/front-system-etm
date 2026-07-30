@@ -159,11 +159,11 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
               <div className="min-w-0 flex-1">
 
                 <DialogTitle className="text-lg font-bold text-neutral-100">
-                  Historial
+                  Notificaciones
                 </DialogTitle>
 
                 <DialogDescription className="sr-only">
-                  Historial completo de notificaciones
+                  Lista completa de notificaciones
                 </DialogDescription>
 
               </div>

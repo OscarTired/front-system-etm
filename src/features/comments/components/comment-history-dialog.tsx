@@ -122,11 +122,11 @@ export function CommentHistoryDialog({
               <div className="min-w-0 flex-1">
 
                 <DialogTitle className="text-lg font-bold text-neutral-100">
-                  Historial
+                  Mensajes
                 </DialogTitle>
 
                 <DialogDescription className="sr-only">
-                  Historial completo de comentarios
+                  Lista completa de mensajes
                 </DialogDescription>
 
               </div>
@@ -152,7 +152,7 @@ export function CommentHistoryDialog({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar en comentarios..."
+                placeholder="Buscar en mensajes..."
                 className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
               />
             </div>
@@ -184,10 +184,10 @@ export function CommentHistoryDialog({
 
       <ActionDialog
         open={!!pendingDelete}
-        title="Eliminar comentario"
+        title="Eliminar mensaje"
         description={
           pendingDelete
-            ? `¿Eliminar el comentario de ${pendingDelete.user.name}? Esta acción no se puede deshacer.`
+            ? `¿Eliminar el mensaje de ${pendingDelete.user.name}? Esta acción no se puede deshacer.`
             : ""
         }
         icon={Trash2}

@@ -11,7 +11,7 @@ export function EmptyComments() {
       <MessageSquare className="h-6 w-6 text-neutral-600" />
 
       <p className="text-sm font-medium text-neutral-400">
-        No existen comentarios
+        No existen mensajes
       </p>
 
       <p className="text-xs text-neutral-500">
