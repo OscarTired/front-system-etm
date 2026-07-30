@@ -54,22 +54,27 @@ export default function BitacoraPage() {
   }
 
   return (
-    <main className="flex flex-col bg-[#050505] px-3 pt-3 pb-5 text-white select-none sm:px-4 tablet:px-8 desktop:py-10">
-      
-      {/* Header Limpio sin el trigger de tareas (movido a ActivityLogPageContent) */}
-      <header className="flex flex-col gap-4 mb-6 tablet:flex-row tablet:items-center tablet:justify-between">
+    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10 tablet:h-full">
+
+      {/* Header adaptable con estructura idéntica a la vista de Usuarios */}
+      <header className="hidden desktop:flex flex-wrap items-center justify-between gap-4 mb-4">
         
-        {/* Bloque principal izquierdo: Título + Navegación */}
-        <div className="flex flex-col tablet:flex-row tablet:items-center gap-3 w-full tablet:w-auto min-w-0 flex-1">
-          <div className="flex items-center justify-between w-full tablet:w-auto gap-3">
-            <h1 className="text-xl font-bold tracking-widest tablet:text-2xl">
-              BITÁCORA
-            </h1>
-            <span className="hidden tablet:inline-block h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
-          </div>
-          
-          {/* Navegación sin scrollbar */}
-          <nav className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl w-full tablet:w-auto overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
+        {/* Título y subtítulo izquierdo */}
+        <div className="min-w-0 flex-1 items-center gap-2 flex">
+          <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+            BITÁCORA
+          </h1>
+
+          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+
+          <p className="min-w-0 truncate text-sm text-neutral-500">
+            Control y registro de actividades
+          </p>
+        </div>
+
+        {/* Acciones o navegación derecha en desktop */}
+        <div className="shrink-0">
+          <nav className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl">
             {tabs.map(tab => {
               const IconComponent = tab.icon
               const isActive = activeView === tab.id
@@ -79,14 +84,14 @@ export default function BitacoraPage() {
                   key={tab.id}
                   onClick={() => setActiveView(tab.id)}
                   title={tab.label}
-                  className={`flex-1 tablet:flex-initial flex items-center justify-center gap-2 px-3 py-2 tablet:py-1.5 text-xs font-medium rounded-lg transition-colors shrink-0 ${
+                  className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors shrink-0 ${
                     isActive 
-                      ? "bg-neutral-800 text-white shadow" 
+                      ? "bg-neutral-800 text-white shadow-sm" 
                       : "text-neutral-400 hover:text-white"
                   }`}
                 >
                   <IconComponent className="h-4 w-4 shrink-0" />
-                  <span className="max-[420px]:hidden tablet:max-lg:hidden desktop:inline truncate">
+                  <span className="truncate">
                     {tab.label}
                   </span>
                 </button>
@@ -94,10 +99,49 @@ export default function BitacoraPage() {
             })}
           </nav>
         </div>
+
       </header>
 
+      {/* Vista para dispositivos móviles / tabletas (Header alternativo) */}
+      <div className="desktop:hidden flex flex-col gap-3 mb-4 pt-4">
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold tracking-widest">
+            BITÁCORA
+          </h1>
+          <span className="h-1 w-1 rounded-full bg-neutral-700" />
+          <p className="text-xs text-neutral-500 truncate">
+            Control de actividades
+          </p>
+        </div>
+
+        <nav className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
+          {tabs.map(tab => {
+            const IconComponent = tab.icon
+            const isActive = activeView === tab.id
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveView(tab.id)}
+                title={tab.label}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-colors shrink-0 ${
+                  isActive 
+                    ? "bg-neutral-800 text-white shadow-sm" 
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <IconComponent className="h-4 w-4 shrink-0" />
+                <span className="max-[420px]:hidden truncate">
+                  {tab.label}
+                </span>
+              </button>
+            )
+          })}
+        </nav>
+      </div>
+
       {/* Secciones de Contenido */}
-      <section className="flex flex-col flex-1 w-full">
+      <section className="mt-2 min-h-0 flex-1 tablet:mt-3 flex flex-col w-full">
         {activeView === "PRODUCCION" && (
           <BitacoraDepartmentPage
             config={BITACORA_DEPARTMENTS.PRODUCCION}

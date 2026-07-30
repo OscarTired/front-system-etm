@@ -10,6 +10,8 @@ import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
+import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
+
 import { getActivityIcon } from "../constants/activity-icons"
 import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../constants/shift-definitions"
 import { useTeamActivityLog } from "../hooks/use-team-activity-log"
@@ -166,6 +168,9 @@ function ShiftBucketedLogs({
 }
 
 export function TeamActivityLogPageContent() {
+
+  usePageTitle("Bitácora de Equipo")
+
   const { users } = useUsersDirectory()
 
   const [selectedUser, setSelectedUser] = useState<User>()
