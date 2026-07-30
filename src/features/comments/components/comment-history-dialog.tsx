@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search, Trash2 } from "lucide-react"
+import { MessageSquare, Search, Trash2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 import {
@@ -30,8 +30,6 @@ type Props = {
   onEditComment?: (comment: Comment) => void
 }
 
-// Extrae un id estable del target, sin importar el scope, solo para
-// usarlo como dependencia del useEffect de abajo (no se muestra en UI).
 function getTargetId(target: CommentTarget) {
   if (target.scope === "task") return target.taskId
   if (target.scope === "workflowStep") return target.workflowStepId
@@ -47,18 +45,7 @@ export function CommentHistoryDialog({
 
   const [search, setSearch] = useState("")
   const [pendingDelete, setPendingDelete] = useState<Comment | null>(null)
-  // Edición inline dentro del propio diálogo — separado del
-  // onEditComment externo (que algunos consumidores usan para editar
-  // desde OTRO composer, afuera de este diálogo). Si no se pasa
-  // onEditComment, este estado local se usa para editar sin salir de
-  // acá.
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
-
-  // A diferencia de editingComment, esto NO se delega hacia afuera
-  // — el diálogo ya tiene su propio composer visible ahí mismo, así
-  // que responder se queda acá sin cerrar el historial (editar sí
-  // cierra y delega, porque el consumidor puede querer esa edición
-  // en SU composer externo, con más espacio).
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
 
   const { comments, loading } = useComments(target, open)
@@ -66,22 +53,13 @@ export function CommentHistoryDialog({
 
   const targetId = getTargetId(target)
 
-  // Al abrir el historial, marcamos como leídas las notificaciones de
-  // esta tarea/step. Es la acción explícita de "vine y vi los
-  // comentarios" que dispara el doble check para quien comentó.
-  // Nota: para comentarios de proyecto esto es un no-op (ver
-  // commentsService.markCommentsAsRead), ya que no generan
-  // notificaciones.
   useEffect(() => {
 
     if (!open) return
 
     commentsService
       .markCommentsAsRead(target)
-      .catch(() => {
-        // no crítico: si falla, el usuario simplemente puede
-        // marcar como leído manualmente desde la campana
-      })
+      .catch(() => {})
 
   }, [open, target.scope, targetId])
 
@@ -119,22 +97,45 @@ export function CommentHistoryDialog({
 
       <Dialog open={open} onOpenChange={onOpenChange}>
 
+        {/*
+          Mismo armazón que NotificationHistoryDialog (size="large"):
+          en mobile pasa a pantalla completa edge-to-edge, igual que
+          los forms. Reemplaza al Dialog centrado de antes, que no
+          tenía tratamiento mobile propio ni drag-to-dismiss real —
+          de ahí el "salto" al intentar arrastrarlo para cerrarlo.
+        */}
         <DialogContent
-          className="flex h-[70vh] max-w-lg flex-col gap-0 overflow-hidden p-0"
+          size="large"
+          className="flex max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
 
-          <DialogHeader className="border-b border-white/5 px-4 py-3.5">
-            <DialogTitle className="text-sm font-semibold text-neutral-200">
-              Historial
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              Historial completo de comentarios
-            </DialogDescription>
+          <DialogHeader className="px-5 py-4">
+
+            <div className="flex items-start gap-4">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                <MessageSquare size={18} strokeWidth={2.4} />
+              </div>
+
+              <div className="min-w-0 flex-1">
+
+                <DialogTitle className="text-lg font-bold text-neutral-100">
+                  Historial
+                </DialogTitle>
+
+                <DialogDescription className="sr-only">
+                  Historial completo de comentarios
+                </DialogDescription>
+
+              </div>
+
+            </div>
+
           </DialogHeader>
 
-          <div className="border-b border-white/5 px-4 py-2.5">
+          <div className="shrink-0 px-5 py-3">
             <CommentComposer
               target={target}
               editingComment={editingComment}
@@ -144,7 +145,7 @@ export function CommentHistoryDialog({
             />
           </div>
 
-          <div className="border-b border-white/5 px-4 py-2.5">
+          <div className="shrink-0 px-5 py-3">
 
             <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
               <Search size={15} className="shrink-0 text-neutral-500" />
@@ -158,7 +159,7 @@ export function CommentHistoryDialog({
 
           </div>
 
-          <ScrollArea className="min-h-0 flex-1 px-4 py-3">
+          <ScrollArea className="min-h-0 flex-1 px-5 py-4">
 
             {loading ? (
               <div className="flex h-full items-center justify-center">
