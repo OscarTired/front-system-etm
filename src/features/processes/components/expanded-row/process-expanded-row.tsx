@@ -17,6 +17,7 @@ import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getProcessProgress } from "@/features/processes/selectors/get-process-progress"
 import { useComments } from "@/features/comments/hooks/use-comments"
+import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
 
 import { ProcessProductionCard } from "./cards/process-production-card"
 import { ProcessMaterialCard } from "./cards/process-material-card"
@@ -166,6 +167,20 @@ export function ProcessExpandedRow({
     isTarget,
     tabParam,
   ])
+
+  const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)
+
+  useEffect(() => {
+
+    if (activeView === "comments" && workflowStepId) {
+      setActiveTarget({ scope: "workflowStep", workflowStepId })
+    }
+
+    return () => {
+      setActiveTarget(null)
+    }
+
+  }, [activeView, workflowStepId, setActiveTarget])
 
   const { percent, statusLabel, nextProcessLabel } = getProcessProgress(processTask)
 

@@ -18,6 +18,7 @@ import { useMarkNotificationRead } from "@/features/notifications/hooks/use-mark
 import { NotificationToast } from "@/features/notifications/components/notification-toast"
 import { resolveNotificationHref } from "@/features/notifications/utils/resolve-notification-href"
 import type { Notification } from "@/features/notifications/types/notification.types"
+import { isViewingNotificationTarget } from "@/features/comments/store/active-comment-context-store"
 
 import { realtimeRegistry } from "./types/realtime-registry"
 
@@ -115,28 +116,51 @@ export function RealtimeProvider({
           ) {
             const notification = event.payload as Notification
 
-            toast.custom(
-              (id) => (
-                <NotificationToast
-                  notification={notification}
-                  onNavigate={async () => {
-                    if (!notification.read) {
-                      await markAsRead(notification.id)
-                    }
+            // Si ya estás mirando el mismo hilo (el composer/timeline
+            // de esa tarea/paso/proyecto está abierto ahora mismo),
+            // el toast es ruido — ya la estás viendo aparecer en la
+            // conversación misma. La notificación se guarda igual
+            // (eso ya lo maneja notificationHandler arriba), esto
+            // solo decide si además se anuncia con un toast.
+            const alreadyViewing = isViewingNotificationTarget({
+              taskId: notification.taskId,
+              projectId: notification.projectId,
+              workflowStepId: notification.workflowStepId,
+            })
 
-                    router.push(
-                      resolveNotificationHref(notification),
-                    )
+            if (!alreadyViewing) {
 
-                    toast.dismiss(id)
-                  }}
-                />
-              ),
-              {
-                id: `notification:${notification.id}`,
-                duration: Infinity,
-              },
-            )
+              toast.custom(
+                (id) => (
+                  <NotificationToast
+                    notification={notification}
+                    onNavigate={async () => {
+                      if (!notification.read) {
+                        await markAsRead(notification.id)
+                      }
+
+                      router.push(
+                        resolveNotificationHref(notification),
+                      )
+
+                      toast.dismiss(id)
+                    }}
+                  />
+                ),
+                {
+                  id: `notification:${notification.id}`,
+                  duration: Infinity,
+                },
+              )
+
+            } else if (!notification.read) {
+
+              // Ya la está viendo aparecer en vivo en la
+              // conversación misma — que no le quede pendiente en la
+              // campana algo que ya tiene delante de los ojos.
+              markAsRead(notification.id)
+
+            }
           }
         },
 

@@ -33,6 +33,7 @@ import {
 } from "./comments/task-comments-panel"
 
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
+import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
 
 type Props = {
   task: Task
@@ -88,6 +89,24 @@ export function TaskExpandedRow({
     tabParam,
     isMobile,
   ])
+
+  const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)
+
+  useEffect(() => {
+
+    const isViewingComments =
+      (!isMobile && activeView === "comments") ||
+      (isMobile && commentsDialogOpen)
+
+    if (isViewingComments) {
+      setActiveTarget({ scope: "task", taskId: task.id })
+    }
+
+    return () => {
+      setActiveTarget(null)
+    }
+
+  }, [activeView, commentsDialogOpen, isMobile, task.id, setActiveTarget])
 
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",

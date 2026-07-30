@@ -13,6 +13,7 @@ import { ProcessMiniCard } from "@/shared/ui/mini-card/process-mini-card"
 import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useComments } from "@/features/comments/hooks/use-comments"
+import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
 
 import {
   EntityExpandedContent,
@@ -122,6 +123,24 @@ export function ProjectExpandedRow({
     tabParam,
     isMobile,
   ])
+
+  const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)
+
+  useEffect(() => {
+
+    const isViewingComments =
+      (!isMobile && activeView === "comments") ||
+      (isMobile && commentsDialogOpen)
+
+    if (isViewingComments) {
+      setActiveTarget({ scope: "project", projectId: project.id })
+    }
+
+    return () => {
+      setActiveTarget(null)
+    }
+
+  }, [activeView, commentsDialogOpen, isMobile, project.id, setActiveTarget])
 
   const handleViewChange = (
     next: "tasks" | "comments" | "kpis",
