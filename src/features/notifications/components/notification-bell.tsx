@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { Eraser, Bell, History } from "lucide-react"
 import { Spinner } from "@/shared/ui/spinner/spinner"
+import { toast } from "sonner"
 
 import { cn } from "@/shared/utils/utils"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
@@ -45,6 +46,8 @@ export function NotificationBell({
   const router = useRouter()
   const sidebarMode = useSidebarStore(s => s.mode)
 
+  // Nota: Pasamos `open` para mantener la carga condicional si tu hook lo requiere,
+  // pero ya no afectará el estado de lectura automáticamente.
   const {
     notifications,
     loading,
@@ -57,6 +60,7 @@ export function NotificationBell({
   const { markAsRead } = useMarkNotificationRead()
   const { markAllAsRead } = useMarkAllNotificationsRead()
 
+  // Muestra todas las notificaciones no leídas sin alterar su estado al abrir el popover
   const visibleNotifications = notifications.filter(n => !n.read)
   const isTopbar = variant === "topbar"
 
@@ -66,6 +70,13 @@ export function NotificationBell({
       setOpen(false)
     }
   }, [sidebarMode, isTopbar])
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      toast.dismiss()
+    }
+    setOpen(nextOpen)
+  }
 
   const handleSelect = async (notification: Notification) => {
     if (notification.route.history) {
@@ -100,7 +111,7 @@ export function NotificationBell({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           {isTopbar ? (
             <button
@@ -119,9 +130,6 @@ export function NotificationBell({
               )}
             </button>
           ) : isDrawer ? (
-            // ==========================================
-            // VARIANTE DRAWER MOBILE (Filas grandes tipo Claude)
-            // ==========================================
             <button
               type="button"
               className={cn(
@@ -151,9 +159,6 @@ export function NotificationBell({
               )}
             </button>
           ) : (
-            // ==========================================
-            // VARIANTE SIDEBAR DESKTOP (Estructura propia colapsada / expandida)
-            // ==========================================
             <button
               type="button"
               title={collapsed ? "Notificaciones" : undefined}

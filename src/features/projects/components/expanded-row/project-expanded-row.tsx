@@ -12,6 +12,7 @@ import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { ProcessMiniCard } from "@/shared/ui/mini-card/process-mini-card"
 import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { useComments } from "@/features/comments/hooks/use-comments"
 
 import {
   EntityExpandedContent,
@@ -35,13 +36,16 @@ export function ProjectExpandedRow({
   project,
   tasks,
 }: Props) {
+  const { isMobile, ready } = useResponsive()
   const searchParams = useSearchParams()
 
   const urlProjectId = searchParams.get("projectId")
   const isTarget = urlProjectId === project.id
   const tabParam = searchParams.get("tab")
 
-  const initialTab = isTarget && tabParam === "comments" ? "comments" : "tasks"
+  // Obtenemos los comentarios del proyecto para contar los mensajes
+  const { comments } = useComments({ scope: "project", projectId: project.id })
+  const totalComments = comments.length
 
   const {
     totalTasks,
@@ -82,17 +86,42 @@ export function ProjectExpandedRow({
     project.id,
   ])
 
-  const { isMobile, ready } = useResponsive()
-
   const [
     activeView,
     setActiveView,
-  ] = useState<"tasks" | "comments" | "kpis">(initialTab)
+  ] = useState<"tasks" | "comments" | "kpis">("tasks")
 
   const [
     commentsDialogOpen,
     setCommentsDialogOpen,
   ] = useState(false)
+
+  useEffect(() => {
+    if (!isTarget) {
+      return
+    }
+
+    if (tabParam === "comments") {
+      setActiveView("comments")
+
+      if (isMobile) {
+        setCommentsDialogOpen(true)
+      }
+
+      return
+    }
+
+    if (tabParam === "kpis") {
+      setActiveView("kpis")
+      return
+    }
+
+    setActiveView("tasks")
+  }, [
+    isTarget,
+    tabParam,
+    isMobile,
+  ])
 
   const handleViewChange = (
     next: "tasks" | "comments" | "kpis",
@@ -185,13 +214,7 @@ export function ProjectExpandedRow({
     />,
   ]
 
-  // Mismo dato que las cards de arriba, pero aplanado en filas
-  // sueltas (una por métrica) para el carousel mobile — sin esto
-  // KpiCarousel no tenía nada que mostrar en la fila de chips y el
-  // tab de KPIs quedaba vacío en mobile (items es opcional, así que
-  // no rompía en compilación, solo en runtime).
   const items: KpiItem[] = [
-
     {
       icon: ClipboardList,
       color: "#afafaf",
@@ -204,7 +227,6 @@ export function ProjectExpandedRow({
       label: "Con ruta",
       value: totalTasks,
     },
-
     {
       icon: Puzzle,
       color: "#a6c7d4",
@@ -219,7 +241,6 @@ export function ProjectExpandedRow({
         ? Math.round(totalPieces / totalTasks)
         : 0,
     },
-
     {
       icon: AlertTriangle,
       color: "#EF4444",
@@ -234,7 +255,6 @@ export function ProjectExpandedRow({
         ? `${Math.round((criticalPriorityTasks / totalTasks) * 100)}%`
         : "0%",
     },
-
     {
       icon: CheckCircle2,
       color: "#22C55E",
@@ -249,7 +269,6 @@ export function ProjectExpandedRow({
         ? `${Math.round((completedTasks / totalTasks) * 100)}%`
         : "0%",
     },
-
   ]
 
   return (
@@ -275,6 +294,7 @@ export function ProjectExpandedRow({
                 value: "comments",
                 label: "Mensajes",
                 icon: MessageSquare,
+                count: totalComments,
               },
             ]}
           />

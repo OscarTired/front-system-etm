@@ -18,6 +18,7 @@ import {
 import {
   useResponsive,
 } from "@/shared/responsive/hooks/use-responsive"
+import { useComments } from "@/features/comments/hooks/use-comments"
 
 import {
   TaskKpisSection,
@@ -47,34 +48,46 @@ export function TaskExpandedRow({
   const isTarget = urlTaskId === task.id
   const tabParam = searchParams.get("tab")
 
-  const initialTab = isTarget && tabParam === "comments" ? "comments" : "workflow"
+  // Obtenemos los comentarios de la tarea para contar los mensajes
+  const { comments } = useComments({ scope: "task", taskId: task.id })
+  const totalComments = comments.length
 
   const [
     activeView,
     setActiveView,
-  ] = useState<"workflow" | "comments" | "kpis">(initialTab)
+  ] = useState<"workflow" | "comments" | "kpis">("workflow")
 
   const [
     commentsDialogOpen,
     setCommentsDialogOpen,
   ] = useState(false)
 
-  // Al llegar desde una notificación (o cualquier link con
-  // ?tab=comments) en mobile, el tab de Comentarios no es un tab
-  // normal — abre este diálogo aparte (ver handleViewChange abajo).
-  // Sin este efecto, aterrizar acá con tab=comments en mobile no
-  // hacía nada visible: activeView quedaba en "comments" pero como
-  // en mobile eso nunca se renderiza inline, había que tocar el tab
-  // OTRA VEZ a mano para que se abriera el diálogo — el deep-link
-  // de la notificación no cumplía lo que prometía.
   useEffect(() => {
-
-    if (isMobile && initialTab === "comments") {
-      setCommentsDialogOpen(true)
+    if (!isTarget) {
+      return
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (tabParam === "comments") {
+      setActiveView("comments")
+
+      if (isMobile) {
+        setCommentsDialogOpen(true)
+      }
+
+      return
+    }
+
+    if (tabParam === "kpis") {
+      setActiveView("kpis")
+      return
+    }
+
+    setActiveView("workflow")
+  }, [
+    isTarget,
+    tabParam,
+    isMobile,
+  ])
 
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",
@@ -92,7 +105,6 @@ export function TaskExpandedRow({
       rowId={task.id}
     >
       <EntityExpandedContent>
-        {/* Contenedor del toggle unificado con el comportamiento de ProjectExpandedRow */}
         <div className="mb-2 flex items-center justify-end select-none">
           <EntityExpandedToggle
             value={activeView}
@@ -112,6 +124,7 @@ export function TaskExpandedRow({
                 value: "comments",
                 label: "Mensajes",
                 icon: MessageSquare,
+                count: totalComments,
               },
             ]}
           />

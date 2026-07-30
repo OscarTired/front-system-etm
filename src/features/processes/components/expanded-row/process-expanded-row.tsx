@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Activity, ArrowRight, Clock, MessageSquare, Puzzle } from "lucide-react"
 
@@ -16,6 +16,7 @@ import {
 import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getProcessProgress } from "@/features/processes/selectors/get-process-progress"
+import { useComments } from "@/features/comments/hooks/use-comments"
 
 import { ProcessProductionCard } from "./cards/process-production-card"
 import { ProcessMaterialCard } from "./cards/process-material-card"
@@ -40,14 +41,18 @@ export function ProcessExpandedRow({
   const isTarget = urlTaskId === processTask.task.id
   const tabParam = searchParams.get("tab") as "comments" | "kpis"
 
-  // Si esta fila es la destinataria de la notificación y pide tab=comments, se inicia en comments
-  const initialTab = isTarget && tabParam === "comments" ? "comments" : "kpis"
-
   const processCode =
     processTask.workflowStep?.processCode
 
   const workflowStepId =
     processTask.workflowStep?.id
+
+  // Obtenemos los comentarios del workflow step (si existe) para contar los mensajes
+  const { comments } = useComments(
+    { scope: "workflowStep", workflowStepId: workflowStepId ?? "" },
+    !!workflowStepId
+  )
+  const totalComments = comments.length
 
   const isMaterialProcess =
     processCode === "CT" ||
@@ -144,20 +149,27 @@ export function ProcessExpandedRow({
   const [
     activeView,
     setActiveView,
-  ] = useState<"comments" | "kpis">(initialTab)
+  ] = useState<"comments" | "kpis">("kpis")
+
+  useEffect(() => {
+    if (!isTarget) {
+      return
+    }
+
+    if (tabParam === "comments") {
+      setActiveView("comments")
+      return
+    }
+
+    setActiveView("kpis")
+  }, [
+    isTarget,
+    tabParam,
+  ])
 
   const { percent, statusLabel, nextProcessLabel } = getProcessProgress(processTask)
 
-  // Las cards de arriba son componentes (ProcessProductionCard,
-  // ProcessMaterialCard, etc.) que calculan sus propios valores
-  // puertas adentro (piezas de salida, PL/RT...) — reconstruir eso
-  // acá duplicaría esa lógica y podría desincronizarse. En vez de
-  // eso, este items usa lo que ya está disponible sin duplicar
-  // nada (getProcessProgress + processTask.task): cubre lo esencial
-  // para que el carousel mobile no quede vacío, aunque sea menos
-  // granular que las cards de escritorio.
   const items: KpiItem[] = [
-
     {
       icon: Activity,
       color: "#22C55E",
@@ -188,7 +200,6 @@ export function ProcessExpandedRow({
       label: "Lote",
       value: `L${processTask.task.lotNumber}`,
     },
-
   ]
 
   return (
@@ -209,6 +220,7 @@ export function ProcessExpandedRow({
                     value: "comments" as const,
                     label: "Mensajes",
                     icon: MessageSquare,
+                    count: totalComments,
                   }]
                 : []),
             ]}
