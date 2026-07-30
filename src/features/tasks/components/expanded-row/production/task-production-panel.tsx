@@ -9,6 +9,10 @@ import type {
 } from "@/shared/types/entity-base.types"
 
 import {
+  useRouter,
+} from "next/navigation"
+
+import {
   useState,
   useMemo,
 } from "react"
@@ -62,6 +66,8 @@ type Props = {
 export function TaskProductionPanel({
   task,
 }: Props) {
+
+  const router = useRouter()
 
   const [
     expanded,
@@ -198,7 +204,22 @@ export function TaskProductionPanel({
               className="flex items-center shrink-0"
             >
 
-              <div className="flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+
+                  sessionStorage.setItem(
+                    "process-origin-task-id",
+                    task.id,
+                  )
+
+                  router.push(
+                    `/processes?code=${code}&taskId=${task.id}`,
+                  )
+
+                }}
+                className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+              >
 
                 <div
                   className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
@@ -239,7 +260,7 @@ export function TaskProductionPanel({
                   {definition.code}
                 </span>
 
-              </div>
+              </button>
 
               {!isLast && (
 
