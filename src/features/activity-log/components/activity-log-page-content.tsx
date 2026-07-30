@@ -100,27 +100,36 @@ export function ActivityLogPageContent({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
 
-      {/* Navegador de fecha y botón de Mis Tareas */}
-      <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white/2 p-4">
-        <DateNavigator
-          value={date}
-          onChange={next => setDate(next ?? new Date())}
-          placeholder="Fecha"
-          maxDate={new Date()}
-        />
+      {/* Navegador de fecha y acciones */}
+      <div className="rounded-2xl bg-white/2 p-4">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+          {/* Columna izquierda vacía para mantener el DateNavigator centrado */}
+          <div />
 
-        <div className="flex items-center gap-2">
-          {/* Badge con ancho y alto fijo para evitar saltos */}
-          <div className="flex h-9 w-[110px] items-center justify-center rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400 shrink-0">
-            {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+          {/* Siempre permanece exactamente en el centro */}
+          <div className="justify-self-center">
+            <DateNavigator
+              value={date}
+              onChange={next => setDate(next ?? new Date())}
+              placeholder="Fecha"
+              maxDate={new Date()}
+            />
           </div>
 
-          {/* Botón de mis tareas ubicado al lado de entradas en todas las vistas del contenido */}
-          {departmentQuery === "PRODUCCION" && (
-            <div className="shrink-0">
-              <TaskAreaPanelTrigger />
+          {/* Acciones a la derecha */}
+          <div className="justify-self-end">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+                {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+              </div>
+
+              {departmentQuery === "PRODUCCION" && (
+                <div className="hidden md:block">
+                  <TaskAreaPanelTrigger />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

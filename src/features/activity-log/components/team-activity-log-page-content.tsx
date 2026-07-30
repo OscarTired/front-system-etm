@@ -233,25 +233,60 @@ export function TeamActivityLogPageContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white/2 p-4">
-        <div className="w-56 shrink-0">
-          <UserSelect
-            value={selectedUser}
-            items={users as User[]}
-            placeholder="Todo el equipo"
-            onChange={handleUserChange}
+      <div className="rounded-2xl bg-white/2 p-4">
+        {/* Mobile */}
+        <div className="flex flex-wrap items-center justify-center gap-3 md:hidden">
+          <div className="w-56 shrink-0">
+            <UserSelect
+              value={selectedUser}
+              items={users as User[]}
+              placeholder="Todo el equipo"
+              onChange={handleUserChange}
+            />
+          </div>
+
+          <DateNavigator
+            value={date}
+            onChange={setDate}
+            placeholder="Fecha"
+            maxDate={new Date()}
           />
+
+          <div className="flex h-9 min-w-[110px] items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+            {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+          </div>
         </div>
 
-        <DateNavigator
-          value={date}
-          onChange={setDate}
-          placeholder="Fecha"
-          maxDate={new Date()}
-        />
+        {/* Desktop */}
+        <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-4">
+          {/* Izquierda */}
+          <div className="justify-self-start">
+            <div className="w-56">
+              <UserSelect
+                value={selectedUser}
+                items={users as User[]}
+                placeholder="Todo el equipo"
+                onChange={handleUserChange}
+              />
+            </div>
+          </div>
 
-        <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400">
-          {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+          {/* Centro */}
+          <div className="justify-self-center">
+            <DateNavigator
+              value={date}
+              onChange={setDate}
+              placeholder="Fecha"
+              maxDate={new Date()}
+            />
+          </div>
+
+          {/* Derecha */}
+          <div className="justify-self-end">
+            <div className="flex h-9 min-w-[110px] items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+              {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+            </div>
+          </div>
         </div>
       </div>
 

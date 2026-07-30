@@ -8,14 +8,7 @@ import { useMyAreaTasks } from "../../../../areas/hooks/use-my-area-tasks"
 import { useMyAreaPendingTasksCount } from "../../../../areas/hooks/use-my-area-pending-tasks-count"
 import { TaskAreaPanel } from "./task-area-panel"
 
-// Vive en el header de Bitácora (al lado de "Registrar") — mismo
-// motivo que el resto de los *Actions: dueño de su propio panel,
-// desacoplado del contenido de la página. Se devuelve null si el
-// Perfil del usuario no tiene sentido para esto (no es Operario con
-// área ni Supervisor) — no tiene caso mostrar un botón que abre un
-// panel vacío.
 export function TaskAreaPanelTrigger() {
-
   const [open, setOpen] = useState(false)
 
   const { hasAreaPanel, canChooseAreas } = useMyAreaTasks()
@@ -24,65 +17,42 @@ export function TaskAreaPanelTrigger() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Si el panel queda abierto y la ruta cambia, este componente se
-  // desmonta de golpe con el Sheet todavía "abierto" — la limpieza
-  // normal de Radix (bloqueo de scroll del body, animación de
-  // salida, etc.) no llega a correr, y eso es justo lo que se ve
-  // como "el panel que quiere salir" al cambiar de página. Mismo
-  // mecanismo que ya usa SidebarDrawer con closeDrawer(): cerrar
-  // explícito ANTES de que la navegación desmonte el árbol, para
-  // que el cierre pase por su transición normal.
   useEffect(() => {
-
-    // Reset intencional al cambiar de ruta (ver comentario arriba),
-    // no una derivación de estado que debería vivir en el render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams.toString()])
 
-  // Quien puede elegir áreas (Supervisor/Admin) usa la pantalla de
-  // Asignación (en el nav) para convocar — no tiene sentido que
-  // ADEMÁS tenga este botón acá, que abre un sheet llamado "Mis
-  // tareas" pensado para la vista personal de un Operario. Ver el
-  // comentario en app/(protected)/production/page.tsx.
   if (!hasAreaPanel || canChooseAreas) {
     return null
   }
 
   return (
-
     <>
-
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mis tareas"
-        className="flex h-10 items-center gap-2 rounded-xl bg-white/5 px-4 text-sm font-semibold text-neutral-200 transition-colors hover:bg-white/10"
+        className="flex h-10 max-w-full items-center gap-2 rounded-xl bg-white/5 px-4 text-sm font-semibold text-neutral-200 transition-colors hover:bg-white/10"
       >
+        <ListChecks size={16} className="shrink-0" />
 
-        <ListChecks size={16} />
-
-        Mis tareas
+        <span className="min-w-0 flex-1 truncate">
+          TAREAS
+        </span>
 
         {pendingCount > 0 && (
-
-          <span className="animate-badge-pulse flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-bold">
+          <span className="animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold">
             {pendingCount}
           </span>
-
         )}
-
       </button>
 
       <TaskAreaPanel
         open={open}
         onOpenChange={setOpen}
       />
-
     </>
-
   )
-
 }
