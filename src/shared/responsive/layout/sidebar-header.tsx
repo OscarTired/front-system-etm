@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { ChevronLeft, PanelLeftClose } from "lucide-react"
+import { ChevronLeft, PanelLeftClose, EyeOff } from "lucide-react"
 
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
@@ -103,7 +103,8 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
                 title="Ocultar barra lateral"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
               >
-                <ChevronLeft size={15} />
+                {/* Mostrar Chevron si es drawer, de lo contrario mostrar EyeOff */}
+                {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>
@@ -143,7 +144,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
                 title="Ocultar barra lateral"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
               >
-                <ChevronLeft size={15} />
+                {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>

@@ -1,4 +1,3 @@
-// app-sidebar.tsx
 "use client"
 
 import { useState } from "react"
@@ -139,6 +138,7 @@ export function AppSidebar({
 
             <SidebarProfile
               collapsed={collapsed}
+              isDrawer={isDrawer}
               onEditProfile={() => setProfileEditOpen(true)}
               profileOpen={profileOpen}
               setProfileOpen={setProfileOpen}

@@ -29,13 +29,11 @@ export function EntityExpandedToggle<T extends string>({
   onChange,
   options,
 }: Props<T>) {
-
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const [fullWidth, setFullWidth] = useState(false)
 
   useEffect(() => {
-
     if (!wrapperRef.current) return
 
     const measure = () => {
@@ -51,12 +49,10 @@ export function EntityExpandedToggle<T extends string>({
     resizeObserver.observe(wrapperRef.current)
 
     return () => resizeObserver.disconnect()
-
   }, [])
 
   return (
     <div ref={wrapperRef} className="flex w-full justify-end">
-
       <div
         className={cn(
           "inline-flex items-center gap-1 rounded-lg bg-white/5 p-1 select-none",
@@ -66,8 +62,7 @@ export function EntityExpandedToggle<T extends string>({
         {options.map(option => {
           const isActive = option.value === value
           const Icon = option.icon
-          // Si quieres que siempre aparezca el contador (incluso en 0 si no se especifica)
-          const displayCount = option.count ?? 0
+          const hasCount = option.count !== undefined
 
           return (
             <button
@@ -99,24 +94,25 @@ export function EntityExpandedToggle<T extends string>({
                 </span>
               )}
 
-              {/* Contenedor rígido para el contador (siempre visible con el número o 0) */}
-              <span className="flex shrink-0 items-center justify-center">
-                <span
-                  className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums leading-none",
-                    isActive
-                      ? "bg-white/15 text-neutral-200"
-                      : "bg-white/5 text-neutral-500",
-                  )}
-                >
-                  {displayCount}
+              {/* Contenedor rígido para el contador (solo se muestra si viene definido) */}
+              {hasCount && (
+                <span className="flex shrink-0 items-center justify-center">
+                  <span
+                    className={cn(
+                      "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums leading-none",
+                      isActive
+                        ? "bg-white/15 text-neutral-200"
+                        : "bg-white/5 text-neutral-500",
+                    )}
+                  >
+                    {option.count}
+                  </span>
                 </span>
-              </span>
+              )}
             </button>
           )
         })}
       </div>
-
     </div>
   )
 }

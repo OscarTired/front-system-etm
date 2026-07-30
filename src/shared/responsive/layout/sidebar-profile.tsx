@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type RefObject } from "react"
 import { useRouter } from "next/navigation"
-import { LogOut } from "lucide-react"
+import { LogOut, ChevronRight, EyeOff } from "lucide-react"
 
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ProfilePreviewPanel } from "@/features/profile"
@@ -18,6 +18,7 @@ import { cn } from "@/shared/utils/utils"
 
 type SidebarProfileProps = {
   collapsed?: boolean
+  isDrawer?: boolean
   onEditProfile: () => void
   profileOpen: boolean
   setProfileOpen: (open: boolean) => void
@@ -34,6 +35,7 @@ const OVERLAP = 24
 
 export function SidebarProfile({
   collapsed,
+  isDrawer = false,
   onEditProfile,
   profileOpen,
   setProfileOpen,
@@ -207,13 +209,18 @@ export function SidebarProfile({
               onClick={toggleProfile}
               disabled={!canOpenProfile}
               className={cn(
-                "shrink-0 rounded-md px-2 py-1 text-xs transition",
+                "flex items-center gap-1 shrink-0 rounded-md px-2 py-1 text-xs transition",
                 canOpenProfile
                   ? "text-neutral-400 hover:bg-white/5 hover:text-white"
                   : "cursor-not-allowed text-neutral-700",
               )}
             >
-              Mi perfil
+              <span>Mi perfil</span>
+              {isDrawer ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <EyeOff className="h-3.5 w-3.5" />
+              )}
             </button>
           </div>
 
