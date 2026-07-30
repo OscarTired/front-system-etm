@@ -283,7 +283,7 @@ export function TeamActivityLogPageContent() {
 
           {/* Derecha */}
           <div className="justify-self-end">
-            <div className="flex h-9 min-w-[110px] items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+            <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
               {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
             </div>
           </div>
