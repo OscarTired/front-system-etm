@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { Activity, MessageSquare } from "lucide-react"
+import { Activity, ArrowRight, Clock, MessageSquare, Puzzle } from "lucide-react"
 
 import type { ProcessTask } from "../../types/process.types"
 
@@ -13,8 +13,7 @@ import {
   EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
 
-import { KpiPanel } from "@/shared/ui/mini-card/kpi-panel"
-import { KpiCarousel } from "@/shared/ui/mini-card/kpi-carousel"
+import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getProcessProgress } from "@/features/processes/selectors/get-process-progress"
 
@@ -147,7 +146,50 @@ export function ProcessExpandedRow({
     setActiveView,
   ] = useState<"comments" | "kpis">(initialTab)
 
-  const { percent, statusLabel } = getProcessProgress(processTask)
+  const { percent, statusLabel, nextProcessLabel } = getProcessProgress(processTask)
+
+  // Las cards de arriba son componentes (ProcessProductionCard,
+  // ProcessMaterialCard, etc.) que calculan sus propios valores
+  // puertas adentro (piezas de salida, PL/RT...) — reconstruir eso
+  // acá duplicaría esa lógica y podría desincronizarse. En vez de
+  // eso, este items usa lo que ya está disponible sin duplicar
+  // nada (getProcessProgress + processTask.task): cubre lo esencial
+  // para que el carousel mobile no quede vacío, aunque sea menos
+  // granular que las cards de escritorio.
+  const items: KpiItem[] = [
+
+    {
+      icon: Activity,
+      color: "#22C55E",
+      label: "Estado",
+      value: statusLabel,
+    },
+    {
+      icon: Activity,
+      color: "#22C55E",
+      label: "Avance",
+      value: `${percent}%`,
+    },
+    {
+      icon: ArrowRight,
+      color: "#64748B",
+      label: "Siguiente",
+      value: nextProcessLabel,
+    },
+    {
+      icon: Puzzle,
+      color: "#a6c7d4",
+      label: "Piezas",
+      value: processTask.task.pieces,
+    },
+    {
+      icon: Clock,
+      color: "#d4d2a6",
+      label: "Lote",
+      value: `L${processTask.task.lotNumber}`,
+    },
+
+  ]
 
   return (
     <EntityExpandedRow rowId={processTask.task.id}>
@@ -178,11 +220,10 @@ export function ProcessExpandedRow({
           panels={[
             {
               value: "kpis" as const,
-              content: !ready ? null : !isMobile ? (
-                <KpiPanel cards={cards} />
-              ) : (
+              content: !ready ? null : (
                 <KpiCarousel
                   cards={cards}
+                  items={items}
                   summary={{
                     icon: Activity,
                     color: "#22C55E",
