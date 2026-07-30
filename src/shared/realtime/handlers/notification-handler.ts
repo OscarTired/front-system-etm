@@ -6,6 +6,7 @@ import { getQueryClient } from "@/lib/query-client"
 
 import type { RealtimeEvent } from "../types/realtime-event"
 import { consumePendingSelfDeletion } from "../pending-self-deletions"
+import { isViewingNotificationTarget } from "@/features/comments/store/active-comment-context-store"
 
 const MAX_TRACKED_IDS = 200
 const recentlyCountedIds = new Set<string>()
@@ -36,12 +37,32 @@ export function notificationHandler(
     case "CREATED": {
       const notification = event.payload as Notification
 
-      if (markCountedOnce(notification.id)) {
+      // Si ya está mirando ese mismo hilo (composer/timeline
+      // abiertos ahora mismo), ni el contador se toca ni se guarda
+      // como no-leída — directo entra como leída. Antes esto se
+      // "corregía" después con una mutación async (markAsRead en
+      // RealtimeProvider), que igual servía para persistirlo en el
+      // server, pero acá en el cache local dejaba un parpadeo del
+      // contador subiendo a 1 y bajando de nuevo cuando la mutación
+      // volvía — a veces visible, y si la mutación tardaba/fallaba,
+      // quedaba pegado en 1.
+      const alreadyViewing = isViewingNotificationTarget({
+        taskId: notification.taskId,
+        projectId: notification.projectId,
+        workflowStepId: notification.workflowStepId,
+      })
+
+      if (!alreadyViewing && markCountedOnce(notification.id)) {
         queryClient.setQueryData<number>(
           ["notifications", "unread-count"],
           current => (current ?? 0) + 1,
         )
       }
+
+      const notificationToStore =
+        alreadyViewing
+          ? { ...notification, read: true }
+          : notification
 
       queryClient.setQueryData<InfiniteData<NotificationsPage>>(
         ["notifications"],
@@ -49,7 +70,7 @@ export function notificationHandler(
           if (!current) return current
 
           const alreadyExists = current.pages.some(page =>
-            page.items.some(n => n.id === notification.id),
+            page.items.some(n => n.id === notificationToStore.id),
           )
 
           if (alreadyExists) return current
@@ -59,7 +80,7 @@ export function notificationHandler(
           return {
             ...current,
             pages: [
-              { ...firstPage, items: [notification, ...firstPage.items] },
+              { ...firstPage, items: [notificationToStore, ...firstPage.items] },
               ...rest,
             ],
           }
