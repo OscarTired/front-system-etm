@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { EyeOff, PanelLeftClose } from "lucide-react"
+import { ChevronLeft, PanelLeftClose } from "lucide-react"
 
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
@@ -60,7 +60,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
             title="Cerrar"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
           >
-            <EyeOff size={16} />
+            <ChevronLeft size={16} />
           </button>
         </div>
       </div>
@@ -103,7 +103,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
                 title="Ocultar barra lateral"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
               >
-                <EyeOff size={15} />
+                <ChevronLeft size={15} />
               </button>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
                 title="Ocultar barra lateral"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
               >
-                <EyeOff size={15} />
+                <ChevronLeft size={15} />
               </button>
             </div>
           </div>
