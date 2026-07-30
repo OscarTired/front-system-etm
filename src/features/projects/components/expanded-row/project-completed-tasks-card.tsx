@@ -40,7 +40,7 @@ export function ProjectCompletedTasksCard({
         </span>
 
         <span className="ml-auto shrink-0 text-xs text-neutral-500">
-          {expanded ? "Ocultar" : "Ver historial"}
+          {expanded ? "Ocultar" : "Ver más"}
         </span>
 
       </button>

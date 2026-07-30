@@ -1,6 +1,7 @@
 import {
   FolderKanban,
   ClipboardList,
+  UserCog,
   Scissors,
   FoldHorizontal,
   Wrench,
@@ -33,6 +34,15 @@ export const NAVIGATION = [
         href: "/tasks",
         icon: ClipboardList,
         permission: PermissionCode.TASK_READ,
+      },
+      {
+        // Antes vivía metida en TaskAreaPanel (el sheet "Mis
+        // tareas") — pasó a ser su propia pantalla, reemplazando al
+        // ProductionHub que tenía el bottom nav en mobile.
+        label: "Asignación",
+        href: "/production",
+        icon: UserCog,
+        permission: PermissionCode.WORKFLOW_READ,
       },
     ],
   },

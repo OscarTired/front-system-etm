@@ -12,7 +12,7 @@ export function CommentPreviewPanel() {
 
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-300">
 
-          Últimos comentarios
+          Últimos mensajes
 
         </span>
 
@@ -21,7 +21,7 @@ export function CommentPreviewPanel() {
           className="text-sm font-medium text-neutral-300 transition-colors hover:text-cyan-300"
         >
 
-          Ver historial →
+          Ver más →
 
         </button>
 

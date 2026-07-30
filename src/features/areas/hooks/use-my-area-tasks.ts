@@ -1,49 +1,15 @@
 "use client"
 
-import { useState } from "react"
-
 import { useAuthStore } from "@/features/auth/store/auth-store"
+import { useSupervisorAreasStore } from "@/features/areas/store/supervisor-areas-store"
 
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 import type { User } from "@/features/users/types/user.types"
-
-const STORAGE_KEY = "supervisor:areas"
 
 const ALL_PROCESS_CODES: ProcessCode[] = ["CT", "PL", "SD", "PT", "EN", "DS"]
 
 function isProcessCode(value: string): value is ProcessCode {
   return (ALL_PROCESS_CODES as string[]).includes(value)
-}
-
-function getStoredSupervisorAreas(): ProcessCode[] {
-
-  if (typeof window === "undefined") {
-    return []
-  }
-
-  try {
-
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-
-    if (!raw) {
-      return []
-    }
-
-    const parsed = JSON.parse(raw)
-
-    if (!Array.isArray(parsed)) {
-      return []
-    }
-
-    return parsed.filter(
-      (value): value is ProcessCode =>
-        typeof value === "string" && isProcessCode(value),
-    )
-
-  } catch {
-    return []
-  }
-
 }
 
 // Resuelve qué área(s) le corresponden al panel lateral según el
@@ -62,21 +28,8 @@ export function useMyAreaTasks() {
 
   const user = useAuthStore(state => state.user) as User | null
 
-  const [supervisorAreas, setSupervisorAreasState] =
-    useState<ProcessCode[]>(getStoredSupervisorAreas)
-
-  function setSupervisorAreas(next: ProcessCode[]) {
-
-    setSupervisorAreasState(next)
-
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    } catch {
-      // Preferencia de UI nomás — si no se puede persistir, sigue
-      // andando en memoria por esta sesión.
-    }
-
-  }
+  const supervisorAreas = useSupervisorAreasStore(state => state.supervisorAreas)
+  const setSupervisorAreas = useSupervisorAreasStore(state => state.setSupervisorAreas)
 
   // Antes era "!!user.area?.processCode" (una sola). Ahora un
   // OPERARIO puede tener varias áreas fijas a la vez — alcanza con

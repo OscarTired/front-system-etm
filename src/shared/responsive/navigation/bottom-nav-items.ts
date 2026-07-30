@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { Factory, FolderKanban, ClipboardList, NotebookPen } from "lucide-react"
+import { UserCog, FolderKanban, ClipboardList, NotebookPen } from "lucide-react"
 
 type BottomNavAction =
   | { type: "link"; href: string }
@@ -9,11 +9,12 @@ export type BottomNavItem = {
   label: string
   icon: LucideIcon
   action: BottomNavAction
-  // Puede ser más de un prefijo — "Producción" tiene que quedar
-  // activo tanto en /production como en cualquiera de las rutas
-  // independientes de proceso (/processes?code=ct para Corte,
-  // ?code=pl para Plegado, etc.), que antes no matcheaban con nada
-  // y el chip activo desaparecía al entrar a esas pantallas.
+  // Puede ser más de un prefijo — "Asignación" tiene que quedar
+  // activo tanto en /production (la ruta, sin cambiar — solo cambió
+  // el contenido) como en cualquiera de las rutas independientes de
+  // proceso (/processes?code=ct para Corte, ?code=pl para Plegado,
+  // etc.), que antes no matcheaban con nada y el chip activo
+  // desaparecía al entrar a esas pantallas.
   matchPrefix: string | string[]
 }
 
@@ -31,8 +32,13 @@ export const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
     matchPrefix: "/tasks",
   },
   {
-    label: "Producción",
-    icon: Factory,
+    // Antes "Producción" abría el ProductionHub (un listado de las
+    // 6 áreas para elegir cuál mirar) — se sacó del todo. La ruta
+    // /production ahora es la pantalla de Asignación (antes vivía
+    // metida en TaskAreaPanel, el sheet "Mis tareas" — ver el
+    // comentario en esa página para el porqué del cambio).
+    label: "Asignación",
+    icon: UserCog,
     action: { type: "link", href: "/production" },
     matchPrefix: ["/production", "/processes"],
   },

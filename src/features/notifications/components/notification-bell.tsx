@@ -260,7 +260,7 @@ export function NotificationBell({
               className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200"
             >
               <History size={13} />
-              Ver historial
+              Ver más
             </button>
           </div>
         </PopoverContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Activity, ClipboardList, MessageSquare } from "lucide-react"
 
@@ -58,6 +58,23 @@ export function TaskExpandedRow({
     commentsDialogOpen,
     setCommentsDialogOpen,
   ] = useState(false)
+
+  // Al llegar desde una notificación (o cualquier link con
+  // ?tab=comments) en mobile, el tab de Comentarios no es un tab
+  // normal — abre este diálogo aparte (ver handleViewChange abajo).
+  // Sin este efecto, aterrizar acá con tab=comments en mobile no
+  // hacía nada visible: activeView quedaba en "comments" pero como
+  // en mobile eso nunca se renderiza inline, había que tocar el tab
+  // OTRA VEZ a mano para que se abriera el diálogo — el deep-link
+  // de la notificación no cumplía lo que prometía.
+  useEffect(() => {
+
+    if (isMobile && initialTab === "comments") {
+      setCommentsDialogOpen(true)
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",

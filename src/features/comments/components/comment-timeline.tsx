@@ -82,7 +82,7 @@ export function CommentTimeline({
       <div className="flex h-full min-h-0 flex-col rounded-xl bg-white/2">
         <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-300">
-            Últimos comentarios
+            Últimos mensajes
           </span>
           <button
             type="button"
@@ -93,7 +93,7 @@ export function CommentTimeline({
             }
             className="text-sm font-medium text-neutral-300 transition-colors hover:text-cyan-300"
           >
-            Ver historial →
+            Ver más →
           </button>
         </div>
         {/*
