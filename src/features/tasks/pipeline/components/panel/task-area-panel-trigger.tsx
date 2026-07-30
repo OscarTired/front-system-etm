@@ -11,7 +11,7 @@ import { TaskAreaPanel } from "./task-area-panel"
 export function TaskAreaPanelTrigger() {
   const [open, setOpen] = useState(false)
 
-  const { hasAreaPanel, canChooseAreas } = useMyAreaTasks()
+  const { hasAreaPanel, canChooseAreas, isAdmin } = useMyAreaTasks()
   const pendingCount = useMyAreaPendingTasksCount()
 
   const pathname = usePathname()
@@ -24,7 +24,7 @@ export function TaskAreaPanelTrigger() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams.toString()])
 
-  if (!hasAreaPanel || canChooseAreas) {
+  if (!hasAreaPanel || (canChooseAreas && !isAdmin)) {
     return null
   }
 
@@ -34,7 +34,7 @@ export function TaskAreaPanelTrigger() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mis tareas"
-        className="flex h-10 max-w-full items-center gap-2 rounded-xl bg-white/5 px-4 text-sm font-semibold text-neutral-200 transition-colors hover:bg-white/10"
+        className="flex h-10 w-40 max-w-full items-center gap-2 rounded-xl bg-white/5 px-4 text-sm font-semibold text-neutral-200 transition-colors hover:bg-white/10"
       >
         <ListChecks size={16} className="shrink-0" />
 
