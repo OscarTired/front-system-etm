@@ -9,6 +9,7 @@ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
+import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
 
 import { useMyActivityLog } from "../hooks/use-my-activity-log"
 import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
@@ -99,7 +100,7 @@ export function ActivityLogPageContent({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
 
-      {/* Navegador de fecha */}
+      {/* Navegador de fecha y botón de Mis Tareas */}
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white/2 p-4">
         <DateNavigator
           value={date}
@@ -108,8 +109,18 @@ export function ActivityLogPageContent({
           maxDate={new Date()}
         />
 
-        <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400">
-          {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+        <div className="flex items-center gap-2">
+          {/* Badge con ancho y alto fijo para evitar saltos */}
+          <div className="flex h-9 w-[110px] items-center justify-center rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400 shrink-0">
+            {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+          </div>
+
+          {/* Botón de mis tareas ubicado al lado de entradas en todas las vistas del contenido */}
+          {departmentQuery === "PRODUCCION" && (
+            <div className="shrink-0">
+              <TaskAreaPanelTrigger />
+            </div>
+          )}
         </div>
       </div>
 
