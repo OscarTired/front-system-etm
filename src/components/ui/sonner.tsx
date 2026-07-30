@@ -39,7 +39,7 @@ export function Sonner() {
       toastOptions={{
         duration: 4000,
         classNames: {
-          toast: "!bg-[#18181b] !text-white !border !border-white/[0.08] !rounded-xl !p-4 !gap-3 shadow-lg",
+          toast: "!bg-[#18181b] !text-white !border !border-0 !border-white/[0.08] !rounded-xl !p-4 !gap-3 shadow-lg",
           icon: "!m-0 !shrink-0",
           content: "!gap-1",
           title: "!text-sm !font-medium !text-neutral-100",

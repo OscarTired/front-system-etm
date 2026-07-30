@@ -50,7 +50,7 @@ export function NotificationToast({
           )}
         </div>
 
-        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#18181b] bg-neutral-800">
+        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800">
           {isMention ? (
             <AtSign
               size={9}
@@ -80,12 +80,15 @@ export function NotificationToast({
           </p>
 
           {status && (
-            <DynamicBadge
-              compact
-              label={status.label}
-              color={status.color}
-              icon={status.icon}
-            />
+            /* Contenedor que reduce el tamaño visual del badge mediante escala */
+            <div className="origin-top-right scale-85 shrink-0">
+              <DynamicBadge
+                compact
+                label={status.label}
+                color={status.color}
+                icon={status.icon}
+              />
+            </div>
           )}
         </div>
 

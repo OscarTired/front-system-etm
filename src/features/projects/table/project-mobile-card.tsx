@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
@@ -38,12 +39,28 @@ export function ProjectMobileCard({
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
 
+  const searchParams = useSearchParams()
+  const isTarget = searchParams.get("projectId") === project.id
+
   useEffect(() => {
     if (!expanded) {
       setShowFields(false)
       setShowPipeline(false)
     }
   }, [expanded])
+
+  // Sin esto, useFocusedRow (el mecanismo que expande la card al
+  // llegar desde una notificación/link) solo abría el PRIMER nivel
+  // — el segundo nivel (el panel de abajo, con Tareas/Comentarios/
+  // KPIs) seguía requiriendo el toque manual en MoreHorizontal.
+  useEffect(() => {
+
+    if (expanded && isTarget) {
+      setShowPipeline(true)
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, isTarget])
 
   // Mismo criterio que ya usa TaskPipelineCard/TaskMobileCard/
   // ProcessMobileCard: un proyecto finalizado, mostrado solo porque

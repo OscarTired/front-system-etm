@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
@@ -34,6 +35,9 @@ export function TaskMobileCard({
   const [showPipeline, setShowPipeline] = useState(false)
 
   const { isMobile } = useResponsive()
+  const searchParams = useSearchParams()
+
+  const isTarget = searchParams.get("taskId") === task.id
 
   useEffect(() => {
     if (!expanded) {
@@ -41,6 +45,21 @@ export function TaskMobileCard({
       setShowPipeline(false)
     }
   }, [expanded])
+
+  // Sin esto, useFocusedRow (el mecanismo que expande la card al
+  // llegar desde una notificación/link) solo abría el PRIMER nivel
+  // (esta card) — el segundo nivel (el panel de abajo, con
+  // Workflow/Comentarios/KPIs) seguía requiriendo el toque manual en
+  // MoreHorizontal, así que "abrir la notificación" nunca mostraba
+  // de verdad los comentarios sin un segundo click extra.
+  useEffect(() => {
+
+    if (expanded && isTarget) {
+      setShowPipeline(true)
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, isTarget])
 
   const stage = taskAccess.stageLabel(task)
   const status = taskAccess.statusLabel(task)
