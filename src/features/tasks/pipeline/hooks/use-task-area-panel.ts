@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { toast } from "sonner"
 import { useMyAreaTasks } from "@/features/areas/hooks/use-my-area-tasks"
 import { useMyAreaTaskColumns } from "@/features/areas/hooks/use-my-area-task-columns"
@@ -84,6 +84,22 @@ export function useTaskAreaPanel() {
     setSummonTarget(null)
     setSelectedStepIds(new Set())
   }, [])
+
+  // Si el área que se está convocando deja de estar en la lista
+  // (ej. la desmarcás en el selector de áreas de arriba), esa
+  // sección de la página desaparece — pero summonTarget/
+  // selectedStepIds viven acá, en el hook compartido, no adentro de
+  // AreaTaskSection. Sin este efecto, quedaban huérfanos: "Convocar"
+  // seguía activo para un área que ya ni se ve, y si la volvías a
+  // marcar aparecía como si nunca hubieras salido del modo
+  // selección.
+  useEffect(() => {
+
+    if (summonTarget && !areas.includes(summonTarget.processCode)) {
+      handleCancelSummon()
+    }
+
+  }, [areas, summonTarget, handleCancelSummon])
 
   const handleConfirmSummon = useCallback(async () => {
     if (!summonTarget || selectedStepIds.size === 0) return

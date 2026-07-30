@@ -3,6 +3,7 @@
 import { UserCheck, Clock3, X } from "lucide-react"
 
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
+import { Spinner } from "@/shared/ui/spinner/spinner"
 import { cn } from "@/shared/utils/utils"
 
 import type { WorkflowStep } from "@/features/workflow/types/workflow.types"
@@ -14,13 +15,7 @@ type Props = {
   unsummoning?: boolean
 }
 
-// Se muestra en la esquina opuesta al checkbox de selección (ver
-// task-process-column.tsx) — solo visible para quien puede convocar
-// (canChooseAreas), y solo fuera del modo selección: mientras se
-// está eligiendo tareas para UNA convocatoria nueva, no tiene
-// sentido mezclar el estado de una convocatoria vieja encima.
 export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
-
   const { users } = useUsersDirectory()
 
   const invited = step.invitedOperatorId
@@ -38,17 +33,18 @@ export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
   const person = invited ?? assigned
 
   return (
-
     <div
       className={cn(
-        "animate-fade-in absolute left-2.5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium backdrop-blur-sm",
-        invited ? "bg-sky-500/20 text-sky-300" : "bg-emerald-500/20 text-emerald-300",
+        "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-opacity",
+        invited 
+          ? "bg-sky-500/10 text-sky-300" 
+          : "bg-emerald-500/10 text-emerald-300",
+        unsummoning && "opacity-60 pointer-events-none"
       )}
     >
+      {invited ? <Clock3 size={12} className="shrink-0" /> : <UserCheck size={12} className="shrink-0" />}
 
-      {invited ? <Clock3 size={11} /> : <UserCheck size={11} />}
-
-      <span className="max-w-20 truncate">
+      <span className="max-w-18 truncate">
         {person?.name ?? "—"}
       </span>
 
@@ -60,13 +56,20 @@ export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
           onUnsummon(step.id)
         }}
         aria-label="Deshacer convocatoria"
-        className="flex size-3.5 items-center justify-center rounded-full opacity-70 transition-opacity hover:opacity-100 disabled:opacity-30"
+        className={cn(
+          "flex size-4 shrink-0 items-center justify-center rounded-full transition-colors",
+          invited 
+            ? "hover:bg-sky-500/20 text-sky-400 hover:text-sky-200" 
+            : "hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-200",
+          "disabled:opacity-50"
+        )}
       >
-        <X size={11} />
+        {unsummoning ? (
+          <Spinner size={10} className={invited ? "text-sky-300" : "text-emerald-300"} />
+        ) : (
+          <X size={12} strokeWidth={2.5} />
+        )}
       </button>
-
     </div>
-
   )
-
 }

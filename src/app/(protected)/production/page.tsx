@@ -6,17 +6,21 @@ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { Popover, PopoverContent } from "@/components/ui/popover"
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
 import { PendingInvitesSection } from "@/features/tasks/pipeline/components/panel/pending-invites-section"
-import { SummonConfirmBar } from "@/features/tasks/pipeline/components/panel/summon-confirm-bar"
+import { SummonConfirmBar, SummonConfirmBarContent } from "@/features/tasks/pipeline/components/panel/summon-confirm-bar"
 import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area-task-section"
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
 
 export default function AssignmentPage() {
 
   usePageTitle("Asignación")
+
+  const { isMobile } = useResponsive()
 
   const panel = useTaskAreaPanel()
   const { state, actions } = panel
@@ -138,7 +142,7 @@ export default function AssignmentPage() {
 
       <div className={cn(
         "min-h-0 flex-1 overflow-y-auto pb-4",
-        state.summonTarget && "pb-24",
+        !isMobile && state.summonTarget && state.selectedStepIds.size > 0 && "pb-24",
       )}>
 
         {state.loading ? (
@@ -178,17 +182,49 @@ export default function AssignmentPage() {
 
       </div>
 
-      {state.summonTarget && (
+      {isMobile ? (
 
-        <SummonConfirmBar
-          operatorName={state.summonTarget.operator.name}
-          count={state.selectedStepIds.size}
-          mode={state.summonMode}
-          onModeChange={actions.setSummonMode}
-          onConfirm={actions.handleConfirmSummon}
-          onCancel={actions.handleCancelSummon}
-          confirming={state.summoning}
-        />
+        // Mismo mecanismo que ya usa toda la app para bottom sheets
+        // (Popover se convierte solo en mobile, con su propio drag
+        // handle y drag-to-dismiss) — antes esto era la misma barra
+        // fija que en desktop, con menos espacio real y sin ese
+        // gesto nativo.
+        <Popover
+          open={!!(state.summonTarget && state.selectedStepIds.size > 0)}
+          onOpenChange={(open) => {
+            if (!open) actions.handleCancelSummon()
+          }}
+        >
+          <PopoverContent>
+            {state.summonTarget && (
+              <SummonConfirmBarContent
+                operatorName={state.summonTarget.operator.name}
+                count={state.selectedStepIds.size}
+                mode={state.summonMode}
+                onModeChange={actions.setSummonMode}
+                onConfirm={actions.handleConfirmSummon}
+                onCancel={actions.handleCancelSummon}
+                confirming={state.summoning}
+              />
+            )}
+          </PopoverContent>
+        </Popover>
+
+      ) : (
+
+        state.summonTarget && state.selectedStepIds.size > 0 && (
+
+          <SummonConfirmBar
+            operatorName={state.summonTarget.operator.name}
+            count={state.selectedStepIds.size}
+            mode={state.summonMode}
+            onModeChange={actions.setSummonMode}
+            onConfirm={actions.handleConfirmSummon}
+            onCancel={actions.handleCancelSummon}
+            confirming={state.summoning}
+          />
+
+        )
 
       )}
 

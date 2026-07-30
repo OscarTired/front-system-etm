@@ -8,6 +8,8 @@ import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+
 import type { Task } from "../types/task.types"
 import { taskAccess } from "../access/task-access"
 
@@ -30,6 +32,8 @@ export function TaskMobileCard({
 }: Props) {
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
+
+  const { isMobile } = useResponsive()
 
   useEffect(() => {
     if (!expanded) {
@@ -74,13 +78,23 @@ export function TaskMobileCard({
               {task.reference}
             </p>
 
-            <Link
-              href={`/projects?projectId=${task.project.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
-            >
-              {task.project.projectCode}
-            </Link>
+            {isMobile ? (
+
+              <span className="mt-0.5 max-w-full truncate text-xs text-neutral-500">
+                {task.project.projectCode}
+              </span>
+
+            ) : (
+
+              <Link
+                href={`/projects?projectId=${task.project.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
+              >
+                {task.project.projectCode}
+              </Link>
+
+            )}
           </div>
 
           <span className="shrink-0 text-xs text-neutral-500">

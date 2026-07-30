@@ -26,7 +26,7 @@ export function AreaTaskSection({ code, panel }: AreaTaskSectionProps) {
 
         </div>
 
-        {state.canChooseAreas && (
+        {state.canChooseAreas && (allTasksForCode.length > 0 || isSummoningThis) && (
           <div className="flex items-center gap-2">
             <SummonOperatorButton
               processCode={code}

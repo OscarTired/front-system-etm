@@ -16,7 +16,7 @@ export function EntityToolbar({
 
   return(
 
-    <div className="flex min-h-12 items-center justify-between py-2">
+    <div className="flex min-h-15 items-center justify-between py-2">
 
       <div className="min-w-0 flex-1">
         {left}

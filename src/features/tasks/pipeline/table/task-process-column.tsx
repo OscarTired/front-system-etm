@@ -264,13 +264,15 @@ function ColumnContent({
 
                 <div
                   className={cn(
-                    "relative min-w-0 flex-1 transition-opacity duration-200",
+                    "flex min-w-0 flex-1 items-center gap-2 transition-opacity duration-200",
                     selectionMode && "pointer-events-none",
                     selectionMode && isLocked && "opacity-45",
                   )}
                 >
 
-                  {card}
+                  <div className="min-w-0 flex-1">
+                    {card}
+                  </div>
 
                   {!selectionMode && onUnsummon && (
                     <TaskAssignmentBadge

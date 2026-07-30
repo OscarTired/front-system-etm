@@ -8,6 +8,8 @@ import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
 
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+
 import { workflowAccess } from "@/features/workflow/access/workflow-access"
 import type { ProcessTask } from "../types/process.types"
 import { processAccess } from "../access/process-access"
@@ -28,6 +30,8 @@ export function ProcessMobileCard({
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
+
+  const { isMobile } = useResponsive()
 
   useEffect(() => {
     if (!expanded) {
@@ -70,21 +74,39 @@ export function ProcessMobileCard({
 
           {/* Ajuste: flex-col e items-start para que los hijos ajusten su hit area al texto */}
           <div className="flex min-w-0 flex-1 flex-col items-start">
-            <Link
-              href={`/tasks?taskId=${task.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
-            >
-              {task.reference}
-            </Link>
+            {isMobile ? (
 
-            <Link
-              href={`/projects?projectId=${project.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
-            >
-              {project.projectCode}
-            </Link>
+              <>
+                <span className="max-w-full truncate text-sm font-semibold text-white">
+                  {task.reference}
+                </span>
+
+                <span className="mt-0.5 max-w-full truncate text-xs text-neutral-500">
+                  {project.projectCode}
+                </span>
+              </>
+
+            ) : (
+
+              <>
+                <Link
+                  href={`/tasks?taskId=${task.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="max-w-full truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
+                >
+                  {task.reference}
+                </Link>
+
+                <Link
+                  href={`/projects?projectId=${project.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
+                >
+                  {project.projectCode}
+                </Link>
+              </>
+
+            )}
           </div>
 
           <span className="shrink-0 text-xs text-neutral-500">
