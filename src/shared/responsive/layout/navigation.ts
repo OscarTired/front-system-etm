@@ -9,7 +9,6 @@ import {
   Package,
   Truck,
   Users,
-  DraftingCompass,
   NotebookPen,
   ListChecks,
   ShieldCheck,
@@ -36,9 +35,6 @@ export const NAVIGATION = [
         permission: PermissionCode.TASK_READ,
       },
       {
-        // Antes vivía metida en TaskAreaPanel (el sheet "Mis
-        // tareas") — pasó a ser su propia pantalla, reemplazando al
-        // ProductionHub que tenía el bottom nav en mobile.
         label: "Asignación",
         href: "/production",
         icon: UserCog,
@@ -93,25 +89,10 @@ export const NAVIGATION = [
     title: "Bitácoras",
     items: [
       {
-        label: "B - Producción",
+        label: "Registros",
         href: "/bitacora",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,
-        roles: ["PRODUCCION", "ADMIN"],
-      },
-      {
-        label: "B - Ingeniería",
-        href: "/bitacora/ingenieria",
-        icon: NotebookPen,
-        permission: PermissionCode.ACTIVITY_LOG_READ,
-        roles: ["INGENIERIA", "PROYECTOS", "ADMIN"],
-      },
-      {
-        label: "B - Equipo",
-        href: "/bitacora/equipo",
-        icon: NotebookPen,
-        permission: PermissionCode.ACTIVITY_LOG_READ_ANY,
-        roles: ["PROYECTOS", "ADMIN"],
       },
     ],
   },

@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-
 import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
@@ -23,40 +22,29 @@ import { AutoActivitySection } from "./auto-activity-section"
 import { ActivityPickerDialog } from "./activity-picker-dialog"
 import { ActivityLogSkeleton } from "./activity-log-skeleton"
 
+type ViewTab = ActivityDepartment | "REGISTROS"
+
 type Props = {
-  // Bitácora de Producción (default, con franjas + auto-registro) o
-  // de Ingeniería (mismo motor, 100% manual, sin AutoActivitySection
-  // porque ahí nunca hay logs AUTO — no hay WorkflowStep que
-  // completar en Ingeniería).
-  department?: ActivityDepartment
+  department?: ViewTab
 }
 
 export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
-
-  // Mismo mecanismo de navegación por día que Bitácora del Equipo
-  // (DateNavigator), pero sin selector de usuario — acá siempre es
-  // "yo", no hace falta elegir a quién ver.
   const [date, setDate] = useState<Date>(new Date())
 
   const dateISO = toISODateString(date)
   const isToday = dateISO === toISODateString(new Date())
 
-  // Si es hoy, no se manda `date` al hook — mismo query key "sin
-  // fecha" que usan los hooks de mutación (crear/borrar/mover), que
-  // solo se habilitan viendo el día de hoy. Así el cache de fetch y
-  // el de las mutaciones optimistas apuntan al mismo lugar.
-  const { logs, loading } = useMyActivityLog(department, isToday ? undefined : dateISO)
-  const { deleteLog } = useDeleteActivityLog(department)
-  const { moveLog } = useMoveActivityLog(department)
+  // Si es "REGISTROS", mapeamos al departamento correspondiente para los hooks
+  const departmentQuery = department === "REGISTROS" ? "PRODUCCION" : department
+
+  const { logs, loading } = useMyActivityLog(departmentQuery, isToday ? undefined : dateISO)
+  const { deleteLog } = useDeleteActivityLog(departmentQuery)
+  const { moveLog } = useMoveActivityLog(departmentQuery)
 
   const { has } = usePermissions()
 
-  // Editar/registrar/mover/borrar solo tiene sentido para el día de
-  // HOY — un día pasado es historial. Ver un día anterior nunca
-  // debería permitir tocar sus entradas, ni aunque el permiso lo
-  // habilite en general.
   const canCreate = isToday && has(PermissionCode.ACTIVITY_LOG_CREATE)
   const canDelete = isToday && has(PermissionCode.ACTIVITY_LOG_DELETE)
 
@@ -71,28 +59,16 @@ export function ActivityLogPageContent({
   }
 
   function handleMoveLog(id: string, shift: ShiftSlotDefinition["shift"]) {
-
     if (!canCreate) return
-
-    moveLog({ id, shift }).catch(() => {
-      // El rollback ya lo maneja el onError del hook — no hay nada
-      // más que hacer acá, la tarjeta vuelve sola a su franja.
-    })
-
+    moveLog({ id, shift }).catch(() => {})
   }
 
   function isShiftAvailable(shift: ShiftSlotDefinition["shift"]) {
-
-    if (!isToday) {
-      return false
-    }
-
+    if (!isToday) return false
     const slot = SHIFT_GROUPS
       .flatMap(group => group.slots)
       .find(s => s.shift === shift)
-
     return !!slot && getSlotState(slot, new Date()) !== "upcoming"
-
   }
 
   const { beginDrag, registerSlot, draggingLogId, hoverShift, overlay } =
@@ -101,10 +77,6 @@ export function ActivityLogPageContent({
       isShiftAvailable,
     })
 
-  // Contra qué hora se decide "¿ya llegó esta franja?" en cada
-  // grupo — ver comentario en ShiftGroupSection.referenceNow. Un
-  // día pasado usa las 23:59 de ESE día (todas sus franjas ya
-  // "llegaron" hace tiempo), no la hora real de ahora.
   const referenceNow = useMemo(
     () =>
       isToday
@@ -119,20 +91,16 @@ export function ActivityLogPageContent({
   }
 
   async function handleConfirmDelete() {
-
     if (!pendingDelete) return
-
     await deleteLog(pendingDelete.id)
     setPendingDelete(null)
-
   }
 
   return (
-
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
 
+      {/* Navegador de fecha */}
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white/2 p-4">
-
         <DateNavigator
           value={date}
           onChange={next => setDate(next ?? new Date())}
@@ -143,29 +111,21 @@ export function ActivityLogPageContent({
         <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-neutral-400">
           {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
         </div>
-
       </div>
 
+      {/* Contenido principal */}
       <div className="flex flex-col gap-3">
-
         {loading ? (
-
           <ActivityLogSkeleton />
-
         ) : (
-
           <>
-
-            {department === "PRODUCCION" && (
-
+            {departmentQuery === "PRODUCCION" && department !== "REGISTROS" && (
               <AutoActivitySection
                 logs={logs.filter(log => log.source === "AUTO")}
               />
-
             )}
 
             {SHIFT_GROUPS.map((group) => {
-
               const logsBySlot: Record<string, typeof logs> = {}
 
               for (const slot of group.slots) {
@@ -173,7 +133,6 @@ export function ActivityLogPageContent({
               }
 
               return (
-
                 <ShiftGroupSection
                   key={group.key}
                   group={group}
@@ -189,21 +148,16 @@ export function ActivityLogPageContent({
                   canDelete={canDelete}
                   referenceNow={referenceNow}
                 />
-
               )
-
             })}
-
           </>
-
         )}
-
       </div>
 
       <ActivityPickerDialog
         open={canCreate && pickerOpen}
         activeSlot={activeSlot}
-        department={department}
+        department={departmentQuery}
         onOpenChange={(open) => {
           setPickerOpen(open)
           if (!open) {
@@ -230,7 +184,5 @@ export function ActivityLogPageContent({
       />
 
     </div>
-
   )
-
 }
