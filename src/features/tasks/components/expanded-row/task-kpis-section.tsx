@@ -16,10 +16,6 @@ import {
 } from "@/shared/ui/mini-card/process-mini-card"
 
 import {
-  KpiPanel,
-} from "@/shared/ui/mini-card/kpi-panel"
-
-import {
   KpiCarousel,
   type KpiItem,
 } from "@/shared/ui/mini-card/kpi-carousel"
@@ -223,14 +219,6 @@ export function TaskKpisSection({
 
   if (!ready) {
     return null
-  }
-
-  if (!isMobile) {
-    return (
-      <KpiPanel
-        cards={cards}
-      />
-    )
   }
 
   return (
