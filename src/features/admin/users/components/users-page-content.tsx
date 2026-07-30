@@ -475,8 +475,8 @@ export function UsersPageContent() {
                     </p>
                     <p className="mt-2 text-sm text-neutral-500">
                       {selectedRole
-                        ? "Elegí un usuario desde el panel izquierdo para ver o editar sus datos."
-                        : "Elegí un rol desde el panel izquierdo para ver sus usuarios."}
+                        ? "Selecciona un usuario desde el panel izquierdo para ver o editar sus datos."
+                        : "Selecciona un rol desde el panel izquierdo para ver sus usuarios."}
                     </p>
                   </div>
                 </div>

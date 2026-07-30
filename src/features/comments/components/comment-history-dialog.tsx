@@ -28,6 +28,9 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onEditComment?: (comment: Comment) => void
+  // Para tareas/pasos ya finalizados o revisados — se puede seguir
+  // viendo el historial completo, pero no agregar mensajes nuevos.
+  readOnly?: boolean
 }
 
 function getTargetId(target: CommentTarget) {
@@ -41,6 +44,7 @@ export function CommentHistoryDialog({
   open,
   onOpenChange,
   onEditComment,
+  readOnly = false,
 }: Props) {
 
   const [search, setSearch] = useState("")
@@ -136,13 +140,19 @@ export function CommentHistoryDialog({
           </DialogHeader>
 
           <div className="shrink-0 px-5 py-3">
-            <CommentComposer
-              target={target}
-              editingComment={editingComment}
-              onCancelEdit={() => setEditingComment(null)}
-              replyingTo={replyingTo}
-              onCancelReply={() => setReplyingTo(null)}
-            />
+            {readOnly ? (
+              <p className="rounded-lg bg-white/3 px-3 py-2.5 text-center text-xs text-neutral-500">
+                Esta tarea ya está finalizada — se puede ver el historial, pero no agregar mensajes nuevos.
+              </p>
+            ) : (
+              <CommentComposer
+                target={target}
+                editingComment={editingComment}
+                onCancelEdit={() => setEditingComment(null)}
+                replyingTo={replyingTo}
+                onCancelReply={() => setReplyingTo(null)}
+              />
+            )}
           </div>
 
           <div className="shrink-0 px-5 py-3">
@@ -170,9 +180,9 @@ export function CommentHistoryDialog({
             ) : (
               <CommentList
                 comments={filteredComments}
-                onEdit={handleEdit}
-                onDelete={setPendingDelete}
-                onReply={setReplyingTo}
+                onEdit={readOnly ? undefined : handleEdit}
+                onDelete={readOnly ? undefined : setPendingDelete}
+                onReply={readOnly ? undefined : setReplyingTo}
               />
             )}
 

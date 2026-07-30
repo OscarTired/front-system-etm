@@ -314,6 +314,15 @@ export function ProjectTaskRow({
       ],
     )
 
+  // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
+  // Tareas: una tarea finalizada, mostrada solo porque el historial
+  // está activo, se ve atenuada — para distinguirla de un vistazo de
+  // las que siguen activas.
+  const isDimmed =
+    isWorkflowCompleted(
+      task.workflowSteps,
+    )
+
   return (
     <div
       {...(
@@ -334,6 +343,8 @@ export function ProjectTaskRow({
                 pressed &&
                   !overlayOpen &&
                   "scale-[0.98] shadow-lg",
+                isDimmed &&
+                  "opacity-50",
               )}
             >
               <KanbanCardFromTask
@@ -345,7 +356,13 @@ export function ProjectTaskRow({
             </div>
           </div>
         ) : (
-          <div key="compact" className="animate-comment-in">
+          <div
+            key="compact"
+            className={cn(
+              "animate-comment-in",
+              isDimmed && "opacity-50",
+            )}
+          >
             <TaskPipelineCardCompact
               processTask={processTask}
               reserveActionsSpace
@@ -353,7 +370,13 @@ export function ProjectTaskRow({
           </div>
         )
       ) : (
-        <KanbanCardView
+        <div
+          className={cn(
+            "overflow-hidden rounded-xl",
+            isDimmed && "opacity-50",
+          )}
+        >
+          <KanbanCardView
           priorityName={
             task.priority.name
           }
@@ -386,7 +409,8 @@ export function ProjectTaskRow({
           statusColor={status?.color}
           statusIcon={status?.icon}
           taskNumber={task.taskNumber}
-        />
+          />
+        </div>
       )}
 
       {(isMobile ? expanded : true) && (

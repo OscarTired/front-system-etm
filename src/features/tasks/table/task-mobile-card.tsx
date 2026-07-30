@@ -45,8 +45,13 @@ export function TaskMobileCard({
   const stage = taskAccess.stageLabel(task)
   const status = taskAccess.statusLabel(task)
 
+  // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
+  // Tareas y las cards de Proyectos/Procesos: una tarea finalizada,
+  // mostrada solo porque el historial está activo, queda atenuada.
+  const isDimmed = taskAccess.isCompleted(task)
+
   return (
-    <div className="overflow-hidden rounded-xl bg-white/2">
+    <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell />
 

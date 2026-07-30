@@ -200,10 +200,16 @@ export function TaskPipelineCard({
           />
         )}
 
-      {/* Se agregó '!isFinished' para ocultar el botón del comentario cuando la tarea/paso esté finalizado o revisado */}
+      {/* Antes tenía "!isFinished" acá y se ocultaba del todo para
+          una tarea/paso finalizado o revisado — pero eso también
+          impedía VER el historial de mensajes viejos, no solo
+          agregar nuevos. Ahora el ícono sigue disponible siempre
+          (para poder abrir el historial), y es CommentHistoryDialog
+          el que, en modo readOnly, oculta el composer y las
+          acciones de editar/borrar/responder — se puede ver, no
+          comentar. */}
       {expanded &&
         !overlayOpen &&
-        !isFinished &&
         processTask.workflowStep && (
 
           <button
@@ -212,7 +218,19 @@ export function TaskPipelineCard({
               event.stopPropagation()
               setCommentsOpen(true)
             }}
-            className="animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white/8 text-neutral-300 transition-colors hover:bg-white/15 hover:text-white"
+            className={cn(
+              "animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white/8 text-neutral-300 transition duration-200 ease-out hover:bg-white/15 hover:text-white",
+              // No se puede anidar este <button> DENTRO del que
+              // envuelve la card (HTML inválido, button-en-button)
+              // para que escale como una sola pieza — en vez de eso,
+              // se replica acá la misma condición de escala que ya
+              // tiene la card, para que se vean sincronizados aunque
+              // sean elementos hermanos.
+              longPressEnabled &&
+                pressed &&
+                !overlayOpen &&
+                "scale-[0.98]",
+            )}
           >
             <MessageCircle size={15} />
           </button>
@@ -228,6 +246,7 @@ export function TaskPipelineCard({
           }}
           open={commentsOpen}
           onOpenChange={setCommentsOpen}
+          readOnly={isFinished}
         />
 
       )}

@@ -48,8 +48,14 @@ export function ProcessMobileCard({
   const stepId = workflowAccess.stepId(processTask)
   const processCode = workflowAccess.processCode(processTask)
 
+  // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
+  // Tareas: una tarea que solo se ve porque el historial está
+  // activo (ya revisada en este proceso) queda atenuada, para
+  // distinguirla de un vistazo de las que siguen activas.
+  const isDimmed = workflowAccess.isCompleted(processTask)
+
   return (
-    <div className="overflow-hidden rounded-xl bg-white/2">
+    <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <div
           role="button"

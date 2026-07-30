@@ -97,7 +97,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
             <div className="flex h-24 items-center justify-center text-sm text-neutral-500">Cargando…</div>
           ) : state.areas.length === 0 ? (
             <div className="flex h-24 items-center justify-center text-center text-sm text-neutral-500">
-              Elegí al menos un área con el botón de arriba para ver sus tareas acá.
+              Selecciona al menos un área con el botón de arriba para ver sus tareas acá.
             </div>
           ) : (
             <div className="flex flex-col gap-6">
