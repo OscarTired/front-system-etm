@@ -145,6 +145,18 @@ function useSheetDragToDismiss(close: () => void) {
 
   const [dragY, setDragY] = React.useState(0)
 
+  // Antes, al soltar más allá del umbral, se llamaba close() Y
+  // setDragY(0) en el mismo tick — eso hacía que el transform
+  // inline (dragY volviendo a 0, animado) compitiera con la propia
+  // animación data-[state=closed] de Radix (slide-out-to-bottom)
+  // sobre la MISMA propiedad transform, al mismo tiempo — de ahí la
+  // animación "rara"/no fina al arrastrar para cerrar. El fix: al
+  // descartar, seguir el MISMO movimiento hacia abajo desde donde
+  // quedó el dedo (nunca vuelve a 0), y recién llamar a close()
+  // cuando esa animación de salida termina — así solo hay UNA
+  // animación de transform en juego en todo momento.
+  const [dismissing, setDismissing] = React.useState(false)
+
   const draggingRef = React.useRef(false)
   const startYRef = React.useRef(0)
   const startTimeRef = React.useRef(0)
@@ -178,7 +190,19 @@ function useSheetDragToDismiss(close: () => void) {
     const velocity = dragY / elapsed
 
     if (dragY > SHEET_DISMISS_DISTANCE || velocity > SHEET_DISMISS_VELOCITY) {
-      close()
+
+      // Termina el gesto en la MISMA dirección, bien afuera de la
+      // pantalla — nunca vuelve a 0, así no hay ningún salto ni
+      // segunda animación compitiendo.
+      setDismissing(true)
+      setDragY(window.innerHeight)
+
+      // 220ms: un toque más que la transición de 200ms de abajo,
+      // para no cortarla a mitad de camino.
+      window.setTimeout(close, 220)
+
+      return
+
     }
 
     setDragY(0)
@@ -187,6 +211,7 @@ function useSheetDragToDismiss(close: () => void) {
   return {
     dragY,
     isDragging: draggingRef.current,
+    dismissing,
     dragHandleProps: {
       onPointerDown,
       onPointerMove,
@@ -215,7 +240,7 @@ export function PopoverContent({
   const close =
     React.useContext(PopoverCloseContext)
 
-  const { dragY, isDragging, dragHandleProps } =
+  const { dragY, isDragging, dismissing, dragHandleProps } =
     useSheetDragToDismiss(close)
 
   if (isSheet) {
@@ -248,13 +273,17 @@ export function PopoverContent({
           className={cn(
             "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            "data-[state=closed]:duration-200 data-[state=open]:duration-300",
+            !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            !dismissing && "data-[state=closed]:duration-200 data-[state=open]:duration-300",
           )}
           style={{
             transform: dragY ? `translateY(${dragY}px)` : undefined,
-            transition: isDragging ? "none" : "transform 200ms ease-out",
+            transition: isDragging
+              ? "none"
+              : dismissing
+                ? "transform 200ms cubic-bezier(0.32,0.72,0,1)"
+                : "transform 200ms ease-out",
           }}
         >
 
