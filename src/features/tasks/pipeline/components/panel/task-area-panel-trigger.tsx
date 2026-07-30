@@ -18,7 +18,7 @@ export function TaskAreaPanelTrigger() {
 
   const [open, setOpen] = useState(false)
 
-  const { hasAreaPanel } = useMyAreaTasks()
+  const { hasAreaPanel, canChooseAreas } = useMyAreaTasks()
   const pendingCount = useMyAreaPendingTasksCount()
 
   const pathname = usePathname()
@@ -42,7 +42,12 @@ export function TaskAreaPanelTrigger() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams.toString()])
 
-  if (!hasAreaPanel) {
+  // Quien puede elegir áreas (Supervisor/Admin) usa la pantalla de
+  // Asignación (en el nav) para convocar — no tiene sentido que
+  // ADEMÁS tenga este botón acá, que abre un sheet llamado "Mis
+  // tareas" pensado para la vista personal de un Operario. Ver el
+  // comentario en app/(protected)/production/page.tsx.
+  if (!hasAreaPanel || canChooseAreas) {
     return null
   }
 
