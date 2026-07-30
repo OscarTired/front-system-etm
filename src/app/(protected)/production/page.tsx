@@ -14,16 +14,6 @@ import { SummonConfirmBar } from "@/features/tasks/pipeline/components/panel/sum
 import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area-task-section"
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
 
-// Antes esto vivía metido dentro de TaskAreaPanel (el sheet "Mis
-// tareas"), pero esa es una vista PERSONAL — la de un Operario
-// viendo sus propias tareas. Convocar/asignar es una herramienta
-// distinta, la usa quien puede elegir áreas (Supervisor/Admin), y
-// no tiene sentido que esa persona tenga que abrir un panel que se
-// llama "Mis tareas" para hacer su trabajo — por eso pasa a ser una
-// pantalla propia (reemplaza el ProductionHub en el nav), con el
-// mismo entorno completo: config de áreas + historial + invitaciones
-// + tareas por área + convocar, todo junto (separarlos no tendría
-// sentido: para asignar hace falta ver las tareas).
 export default function AssignmentPage() {
 
   usePageTitle("Asignación")

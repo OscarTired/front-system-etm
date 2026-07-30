@@ -46,7 +46,7 @@ export function createTaskView<T>({
 
   if (mode === "sequence") {
     return view.sort((a, b) =>
-      extract(a).project.sequence - extract(b).project.sequence,
+      extract(a).taskNumber - extract(b).taskNumber,
     )
   }
 

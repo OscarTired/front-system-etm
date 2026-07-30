@@ -124,7 +124,7 @@ export function ActivityLogPageContent({
               </div>
 
               {departmentQuery === "PRODUCCION" && (
-                <div className="hidden md:block">
+                <div className="hidden tablet:block">
                   <TaskAreaPanelTrigger />
                 </div>
               )}

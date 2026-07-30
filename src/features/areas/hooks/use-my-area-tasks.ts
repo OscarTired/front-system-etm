@@ -45,6 +45,13 @@ export function useMyAreaTasks() {
   return {
     areas,
     canChooseAreas: canChooseFreely,
+    // Admin ve TODO (incluida la pantalla de Asignación dedicada),
+    // pero a diferencia de un Supervisor "puro" no tiene por qué
+    // perder el acceso rápido a "Mis tareas" — un Supervisor sí
+    // usa la pantalla de Asignación en vez de este trigger (ver
+    // TaskAreaPanelTrigger), pero para Admin ambos caminos tienen
+    // sentido a la vez.
+    isAdmin: hasGlobalManagementPermission,
     supervisorAreas,
     setSupervisorAreas,
     allAreas: ALL_PROCESS_CODES,

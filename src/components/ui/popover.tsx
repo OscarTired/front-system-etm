@@ -35,6 +35,14 @@ const PopoverModeContext =
 const PopoverCloseContext =
   React.createContext<() => void>(() => {})
 
+// Expone el `open` del Root al Content — sin esto, después de
+// cerrar arrastrando con el dedo, dragY/dismissing (el estado del
+// gesto) quedaban pegados en su último valor (el sheet empujado
+// bien afuera de la pantalla) para siempre, porque nada le avisaba
+// al Content que el sheet se había vuelto a abrir para resetearlos.
+const PopoverOpenContext =
+  React.createContext(false)
+
 type PopoverProps =
   React.ComponentProps<
     typeof PopoverPrimitive.Root
@@ -79,11 +87,13 @@ export function Popover({
     return (
 
       <PopoverModeContext.Provider value={true}>
-        <PopoverCloseContext.Provider value={close}>
-          <DialogPrimitive.Root {...props}>
-            {children}
-          </DialogPrimitive.Root>
-        </PopoverCloseContext.Provider>
+        <PopoverOpenContext.Provider value={props.open ?? false}>
+          <PopoverCloseContext.Provider value={close}>
+            <DialogPrimitive.Root {...props}>
+              {children}
+            </DialogPrimitive.Root>
+          </PopoverCloseContext.Provider>
+        </PopoverOpenContext.Provider>
       </PopoverModeContext.Provider>
 
     )
@@ -141,7 +151,7 @@ export function PopoverTrigger({
 const SHEET_DISMISS_DISTANCE = 90
 const SHEET_DISMISS_VELOCITY = 0.5
 
-function useSheetDragToDismiss(close: () => void) {
+function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
   const [dragY, setDragY] = React.useState(0)
 
@@ -208,6 +218,22 @@ function useSheetDragToDismiss(close: () => void) {
     setDragY(0)
   }
 
+  // Sin esto, después de descartar arrastrando (dragY termina en
+  // window.innerHeight, dismissing en true — ver endDrag arriba),
+  // la próxima vez que se abre el mismo sheet esos valores seguían
+  // ahí: el transform inline seguía empujándolo bien afuera de la
+  // pantalla, así que "se abría" (el estado open de Radix cambiaba)
+  // pero no se veía nada, solo el overlay con blur detrás. Cada vez
+  // que isOpen pasa a true, se resetea todo a su estado inicial.
+  React.useEffect(() => {
+
+    if (isOpen) {
+      setDragY(0)
+      setDismissing(false)
+    }
+
+  }, [isOpen])
+
   return {
     dragY,
     isDragging: draggingRef.current,
@@ -240,8 +266,11 @@ export function PopoverContent({
   const close =
     React.useContext(PopoverCloseContext)
 
+  const isOpen =
+    React.useContext(PopoverOpenContext)
+
   const { dragY, isDragging, dismissing, dragHandleProps } =
-    useSheetDragToDismiss(close)
+    useSheetDragToDismiss(close, isOpen)
 
   if (isSheet) {
 

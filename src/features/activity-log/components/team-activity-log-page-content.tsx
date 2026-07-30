@@ -225,7 +225,7 @@ export function TeamActivityLogPageContent() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <div className="rounded-2xl bg-white/2 p-4">
         {/* Mobile */}
-        <div className="flex flex-wrap items-center justify-center gap-3 md:hidden">
+        <div className="flex flex-wrap items-center justify-center gap-3 tablet:hidden">
           <div className="w-56 shrink-0">
             <UserSelect
               value={selectedUser}
@@ -248,7 +248,7 @@ export function TeamActivityLogPageContent() {
         </div>
 
         {/* Desktop */}
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-4">
+        <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
           {/* Izquierda */}
           <div className="justify-self-start">
             <div className="w-56">

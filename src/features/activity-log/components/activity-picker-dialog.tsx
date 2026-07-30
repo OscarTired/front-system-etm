@@ -390,7 +390,7 @@ export function ActivityPickerDialog({
               type="button"
               onClick={() => setShowDetail(prev => !prev)}
               className={cn(
-                "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors md:hidden",
+                "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
                 showDetail || note.trim() || photo
                   ? "bg-white/12 text-white"
                   : "bg-white/4 text-neutral-400 hover:bg-white/8 hover:text-white"
@@ -407,10 +407,10 @@ export function ActivityPickerDialog({
 
           <div
             className={cn(
-              "overflow-hidden transition-all duration-200 md:max-h-none md:opacity-100 md:pointer-events-auto",
+              "overflow-hidden transition-all duration-200 tablet:max-h-none tablet:opacity-100 tablet:pointer-events-auto",
               showDetail || note.trim() || photo
                 ? "max-h-40 opacity-100"
-                : "max-h-0 opacity-0 pointer-events-none md:max-h-none md:opacity-100"
+                : "max-h-0 opacity-0 pointer-events-none tablet:max-h-none tablet:opacity-100"
             )}
           >
 
