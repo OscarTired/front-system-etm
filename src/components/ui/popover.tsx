@@ -274,11 +274,6 @@ export function PopoverContent({
 
   if (isSheet) {
 
-    const mobileContentClass =
-      isSheet
-        ? undefined
-        : className
-
     return (
 
       <DialogPrimitive.Portal>
@@ -305,6 +300,13 @@ export function PopoverContent({
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
             !dismissing && "data-[state=closed]:duration-200 data-[state=open]:duration-300",
+            // Antes esta lista era puros strings fijos — el className
+            // que pasara quien use <PopoverContent> se ignoraba del
+            // todo en modo sheet (solo se usaba en el branch desktop
+            // de más abajo). Un consumidor que quisiera, por ejemplo,
+            // un ancho o padding distinto en mobile no tenía forma de
+            // lograrlo.
+            className,
           )}
           style={{
             transform: dragY ? `translateY(${dragY}px)` : undefined,
@@ -350,7 +352,6 @@ export function PopoverContent({
               "flex flex-col gap-2.5 overflow-y-auto overscroll-contain",
               "px-2.5 pt-1 text-sm",
               "pb-[calc(env(safe-area-inset-bottom)+14px)]",
-              mobileContentClass,
             )}
             {...props}
           >
