@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import {
@@ -21,76 +22,88 @@ export function EntitySelectActionMenu({
   onDelete,
   color,
 }: Props) {
-
+  const [open, setOpen] = useState(false)
   const hasActions = !!(onEdit || onDelete)
 
   if (!hasActions) {
     return null
   }
 
-  return (
-    <DropdownMenu>
+  // Cierra el menú al instante y luego abre el modal de edición
+  const handleEdit = () => {
+    setOpen(false)
+    requestAnimationFrame(() => {
+      onEdit?.()
+    })
+  }
 
+  // Cierra el menú al instante y luego invoca la eliminación
+  const handleDelete = () => {
+    setOpen(false)
+    requestAnimationFrame(() => {
+      onDelete?.()
+    })
+  }
+
+  return (
+    /* modal={false} es clave: evita conflicto de foco con el Popover padre */
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          className="flex h-8 w-8 items-center justify-center rounded-md transition-all hover:bg-white/5 hover:text-white"
-          style={{
-            color: color ?? "rgba(255,255,255,0.4)",
+          onClick={(e) => {
+            e.stopPropagation()
           }}
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-white/10 focus-visible:outline-none"
+          style={{
+            color: color ?? "rgba(255,255,255,0.5)",
+          }}
+          aria-label="Opciones"
         >
-          <MoreHorizontal
-            size={16}
-            strokeWidth={2.5}
-          />
+          <MoreHorizontal size={15} strokeWidth={2} />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
+        side="left"
         align="end"
-        sideOffset={8}
-        className="z-9999 w-44 rounded-lg border-none bg-[#141416] p-1"
+        sideOffset={4}
+        /* Evita que cerrar este sub-menú transmita un evento de cierre al Popover contenedor */
+        onPointerDownOutside={(e) => {
+          e.preventDefault()
+          setOpen(false)
+        }}
+        /* Evita que el foco salte de forma agresiva rompiendo el Popover padre */
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+        }}
+        className="z-50 min-w-32 rounded-xl bg-[#141416] p-1 shadow-2xl"
       >
-
         {onEdit && (
           <DropdownMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onEdit()
-            }}
-            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white"
+            onSelect={handleEdit}
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white"
           >
-            <Pencil
-              size={14}
-              className="text-white/50"
-            />
-            Editar
+            <Pencil size={13} className="text-zinc-400" />
+            <span>Editar</span>
           </DropdownMenuItem>
         )}
 
         {onEdit && onDelete && (
-          <DropdownMenuSeparator className="my-1 bg-white/10" />
+          <DropdownMenuSeparator className="my-1 h-px bg-white/10" />
         )}
 
         {onDelete && (
           <DropdownMenuItem
             variant="destructive"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onDelete()
-            }}
-            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm"
+            onSelect={handleDelete}
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 focus:bg-red-500/10 focus:text-red-300"
           >
-            <Trash2 size={14} />
-            Eliminar
+            <Trash2 size={13} />
+            <span>Eliminar</span>
           </DropdownMenuItem>
         )}
-
       </DropdownMenuContent>
-
     </DropdownMenu>
   )
 }
