@@ -110,7 +110,7 @@ export function CommentHistoryDialog({
         */}
         <DialogContent
           size="large"
-          className="flex max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+          className="flex min-w-lg max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
@@ -122,7 +122,7 @@ export function CommentHistoryDialog({
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                 <MessageSquare size={18} strokeWidth={2.4} />
               </div>
-
+          
               <div className="min-w-0 flex-1">
 
                 <DialogTitle className="text-lg font-bold text-neutral-100">

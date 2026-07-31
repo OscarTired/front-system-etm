@@ -37,8 +37,8 @@ function UserRow({
   user: { id: string; name: string; avatarUrl?: string | null }
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150">
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 w-full min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="relative h-5 w-5 shrink-0">
           <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
             {user.avatarUrl ? (
@@ -62,7 +62,7 @@ function UserRow({
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 opacity-0 transition-opacity">
+      <div className="flex items-center gap-1.5 shrink-0 pl-2">
         <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
       </div>
     </div>
@@ -129,123 +129,109 @@ export function SidebarPresence({
     }
   }
 
+  // --- Renderizado separado por variantes para mantener limpieza senior ---
+  const renderTriggerContent = () => {
+    if (isTopbar) {
+      return (
+        <button
+          type="button"
+          aria-label="Usuarios en línea"
+          className={cn(
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
+            open && "bg-white/20 text-white",
+          )}
+        >
+          <Users size={17} strokeWidth={2.2} />
+          {onlineUsers.length > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+              {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
+            </span>
+          )}
+        </button>
+      )
+    }
+
+    if (isDrawer) {
+      return (
+        <button
+          type="button"
+          className={cn(
+            "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
+            open
+              ? "bg-white/10 text-white"
+              : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
+          )}
+        >
+          <span className="relative flex shrink-0 items-center justify-center">
+            <Users size={19} />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-left">Activos</span>
+          {onlineUsers.length > 0 && (
+            <span className={cn("shrink-0 text-sm font-semibold tabular-nums", open ? "text-white" : "text-neutral-500")}>
+              {onlineUsers.length}
+            </span>
+          )}
+        </button>
+      )
+    }
+
+    if (collapsed) {
+      return (
+        <button
+          type="button"
+          title={`${onlineUsers.length} en línea`}
+          className={cn(
+            "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+            open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
+          )}
+        >
+          <span className="relative flex items-center justify-center">
+            <Users size={14} />
+            <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+              {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
+            </span>
+          </span>
+        </button>
+      )
+    }
+
+    // Sidebar Desktop Expandido
+    return (
+      <button
+        type="button"
+        className={cn(
+          "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
+          open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
+        )}
+      >
+        <span className="relative flex shrink-0 items-center justify-center">
+          <Users size={14} />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+          Activos
+        </span>
+        <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+          {onlineUsers.length}
+        </span>
+      </button>
+    )
+  }
+  
   return (
     <div ref={presenceRef} className={cn(!isTopbar && "select-none my-1")}>
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          {isTopbar ? (
-            // ==========================================
-            // VARIANTE TOPBAR (Estilo idéntico a NotificationBell)
-            // ==========================================
-            <button
-              type="button"
-              aria-label="Usuarios en línea"
-              className={cn(
-                "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
-                open && "bg-white/20 text-white",
-              )}
-            >
-              <Users size={17} strokeWidth={2.2} />
-              {onlineUsers.length > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
-                  {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
-                </span>
-              )}
-            </button>
-          ) : isDrawer ? (
-            // ==========================================
-            // VARIANTE DRAWER MOBILE
-            // ==========================================
-            <button
-              type="button"
-              className={cn(
-                "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
-                open
-                  ? "bg-white/10 text-white"
-                  : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
-              )}
-            >
-              <span className="relative flex shrink-0 items-center justify-center">
-                <Users size={19} />
-              </span>
-
-              <span className="min-w-0 flex-1 truncate text-left">
-                Activos
-              </span>
-
-              {onlineUsers.length > 0 && (
-                <span
-                  className={cn(
-                    "shrink-0 text-sm font-semibold tabular-nums",
-                    open ? "text-white" : "text-neutral-500",
-                  )}
-                >
-                  {onlineUsers.length}
-                </span>
-              )}
-            </button>
-          ) : collapsed ? (
-            // ==========================================
-            // VARIANTE SIDEBAR DESKTOP (COLAPSADO)
-            // ==========================================
-            <button
-              type="button"
-              title={`${onlineUsers.length} en línea`}
-              className={cn(
-                "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-                open
-                  ? "bg-white/6 text-white"
-                  : "text-neutral-400 hover:bg-white/4 hover:text-white"
-              )}
-            >
-              <span className="relative flex items-center justify-center">
-                <Users size={14} />
-                <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
-                  {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
-                </span>
-              </span>
-            </button>
-          ) : (
-            // ==========================================
-            // VARIANTE SIDEBAR DESKTOP (EXPANDIDO)
-            // ==========================================
-            <button
-              type="button"
-              className={cn(
-                "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
-                open
-                  ? "bg-white/6 text-white"
-                  : "text-neutral-400 hover:bg-white/4 hover:text-white"
-              )}
-            >
-              <span className="relative flex shrink-0 items-center justify-center">
-                <Users size={14} />
-              </span>
-
-              <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-                Activos
-              </span>
-
-              <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
-                {onlineUsers.length}
-              </span>
-            </button>
-          )}
-        </PopoverTrigger>
+        <PopoverTrigger asChild>{renderTriggerContent()}</PopoverTrigger>
 
         <PopoverContent
           data-sidebar-popover
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
+          className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
-              <Search
-                size={14}
-                className="text-neutral-500 shrink-0"
-              />
+              <Search size={14} className="text-neutral-500 shrink-0" />
               <Input
                 ref={inputRef}
                 value={query}

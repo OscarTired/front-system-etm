@@ -1,4 +1,4 @@
-"use client"
+// "use client"
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
@@ -11,10 +11,10 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 const SHEET_CONFIG = {
   DISMISS_THRESHOLD_PX: 90,
   DISMISS_VELOCITY_THRESHOLD: 0.5,
-  ANIMATION_DURATION_MS: 200,
+  ANIMATION_DURATION_MS: 250, // Ligeramente más suave estilo iOS
   UNMOUNT_BUFFER_MS: 20,
   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
-  EASING_RESET: "ease-out",
+  EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)", // Spring-out sutil de iOS
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
 } as const;
 
@@ -264,7 +264,7 @@ export function PopoverContent({
     const transitionStyle = isDragging
       ? "none"
       : dismissing
-        ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}`
+        ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
     return (
@@ -273,7 +273,8 @@ export function PopoverContent({
           className={cn(
             "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:duration-250 data-[state=open]:duration-200"
           )}
         />
 
@@ -297,7 +298,8 @@ export function PopoverContent({
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            !dismissing && "data-[state=closed]:duration-200 data-[state=open]:duration-300"
+            !dismissing && "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0", // Añade desvanecimiento sutil al salir hacia abajo
+            !dismissing && "data-[state=closed]:duration-250 data-[state=open]:duration-300"
           )}
           style={{
             ...style,
@@ -353,7 +355,6 @@ export function PopoverContent({
           event.preventDefault()
         }
       }}
-      /* Se removió el preventDefault duro para permitir a Radix limpiar la pila de foco al abrir Modales/Diálogos */
       onCloseAutoFocus={(event) => {
         onCloseAutoFocus?.(event)
       }}
@@ -375,8 +376,9 @@ export function PopoverContent({
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
         "data-[side=top]:slide-in-from-bottom-2",
-        "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
-        "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        // Animaciones de entrada y salida fluidas estilo iOS
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-200",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150",
         floatingClassName,
         className
       )}
