@@ -280,11 +280,13 @@ export function PopoverContent({
         <DialogPrimitive.Content
           data-drag-scroll-ignore
           onOpenAutoFocus={(event) => {
-            event.preventDefault()
-            onOpenAutoFocus?.(event)
+            if (onOpenAutoFocus) {
+              onOpenAutoFocus(event)
+            } else {
+              event.preventDefault()
+            }
           }}
           onCloseAutoFocus={(event) => {
-            event.preventDefault()
             onCloseAutoFocus?.(event)
           }}
           onPointerDownOutside={onPointerDownOutside}
@@ -345,11 +347,14 @@ export function PopoverContent({
       avoidCollisions={avoidCollisions}
       collisionPadding={collisionPadding}
       onOpenAutoFocus={(event) => {
-        event.preventDefault()
-        onOpenAutoFocus?.(event)
+        if (onOpenAutoFocus) {
+          onOpenAutoFocus(event)
+        } else {
+          event.preventDefault()
+        }
       }}
+      /* Se removió el preventDefault duro para permitir a Radix limpiar la pila de foco al abrir Modales/Diálogos */
       onCloseAutoFocus={(event) => {
-        event.preventDefault()
         onCloseAutoFocus?.(event)
       }}
       onPointerDownOutside={onPointerDownOutside}
