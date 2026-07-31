@@ -1,6 +1,6 @@
 "use client";
 
-import * as Popover from '@radix-ui/react-popover';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import { DateCalendar } from './date-calendar';
 import { DateInput } from './date-input';
@@ -21,7 +21,8 @@ function parsePartialDate(input: string): Date | null {
     }
 
     if (month >= 0 && month <= 11 && year > 1000 && year < 3000) {
-      return new Date(year, month, Math.min(day, 28));
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      return new Date(year, month, Math.min(day, daysInMonth));
     }
   }
   return null;
@@ -113,8 +114,8 @@ export function DatePicker({
   }, []);
 
   return (
-    <Popover.Root open={open} onOpenChange={disabled ? undefined : handleOpenChange}>
-      <Popover.Trigger asChild>
+    <Popover open={open} onOpenChange={disabled ? undefined : handleOpenChange}>
+      <PopoverTrigger asChild>
         <div className={className}>
           <DateInput
             ref={inputRef}
@@ -128,26 +129,24 @@ export function DatePicker({
             onCalendarClick={handleCalendarIconClick}
           />
         </div>
-      </Popover.Trigger>
+      </PopoverTrigger>
 
-      <Popover.Portal>
-        <Popover.Content
-          sideOffset={6}
-          // En Desktop no permitimos que el popover robe el foco inicial del input
-          onOpenAutoFocus={(e) => {
-            if (!isMobile) e.preventDefault();
-          }}
-          className="z-50 rounded-xl shadow-xl bg-popover animate-in fade-in-0 zoom-in-95"
-        >
-          <DateCalendar
-            value={value}
-            displayDate={livePreviewDate}
-            minDate={minDate}
-            maxDate={maxDate}
-            onSelect={handleSelectDay}
-          />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+      <PopoverContent
+        sideOffset={6}
+        // En Desktop no permitimos que el popover robe el foco inicial del input
+        onOpenAutoFocus={(e) => {
+          if (!isMobile) e.preventDefault();
+        }}
+        className="w-auto p-0 rounded-xl shadow-xl bg-popover"
+      >
+        <DateCalendar
+          value={value}
+          displayDate={livePreviewDate}
+          minDate={minDate}
+          maxDate={maxDate}
+          onSelect={handleSelectDay}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
