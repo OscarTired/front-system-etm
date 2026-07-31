@@ -304,7 +304,7 @@ export function SidebarPresence({
 
             <CommandList className={cn(
               "select-none overflow-y-auto transition-all duration-200 ease-in-out",
-              expanded || query.trim() ? "max-h-72" : "max-h-48",
+              expanded || query.trim() ? "min-h-80 max-h-96" : "min-h-50 max-h-64",
             )}>
               <CommandEmpty>
                 {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}

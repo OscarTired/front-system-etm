@@ -12,6 +12,7 @@ import {
   NotebookPen,
   ListChecks,
   ShieldCheck,
+  Boxes,
 } from "lucide-react"
 
 import {
@@ -75,6 +76,12 @@ export const NAVIGATION = [
         href: "/processes?code=ds",
         icon: Truck,
         permission: PermissionCode.WORKFLOW_READ,
+      },
+      {
+        label: "Nesting",
+        href: "/nesting",
+        icon: Boxes,
+        permission: PermissionCode.NESTING_READ,
       },
     ],
   },
