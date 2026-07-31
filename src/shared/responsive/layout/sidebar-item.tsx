@@ -36,7 +36,7 @@ export function SidebarItem({
           "flex h-12 min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
           active
             ? "bg-white/10 text-white pointer-events-none"
-            : "text-neutral-300 hover:bg-white/5 hover:text-white",
+            : "text-neutral-300 hover:bg-white/5 hover:text-white", // 👈 Quitamos active:
         )}
       >
         <Icon size={19} className="shrink-0" />
@@ -62,7 +62,7 @@ export function SidebarItem({
       onMouseEnter={onMouseEnter}
       onTouchStart={onTouchStart}
       className={cn(
-        "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-[background-color,color] duration-200 overflow-hidden",
+        "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors",
         collapsed ? "justify-center px-0" : "gap-2 px-3",
         active
           ? "bg-white/6 text-white pointer-events-none"
@@ -79,28 +79,22 @@ export function SidebarItem({
         )}
       </span>
 
-      {/* Contenedor con desvanecimiento de opacidad puro al estilo navegador */}
-      <div
-        className={cn(
-          "flex items-center flex-1 min-w-0 transition-opacity duration-300 ease-in-out whitespace-nowrap",
-          collapsed ? "opacity-0 pointer-events-none select-none" : "opacity-100"
-        )}
-      >
+      {!collapsed && (
         <span className="min-w-0 flex-1 truncate">
           {label}
         </span>
+      )}
 
-        {count !== undefined && (
-          <span
-            className={cn(
-              "ml-auto flex h-6 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs font-semibold",
-              active ? "text-white" : "text-neutral-400",
-            )}
-          >
-            {count}
-          </span>
-        )}
-      </div>
+      {!collapsed && count !== undefined && (
+        <span
+          className={cn(
+            "ml-auto flex h-6 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs font-semibold",
+            active ? "text-white" : "text-neutral-400",
+          )}
+        >
+          {count}
+        </span>
+      )}
     </Link>
   )
 }
