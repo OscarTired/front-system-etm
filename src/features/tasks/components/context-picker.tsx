@@ -65,17 +65,7 @@ type ContextPickerMode =
 type Props = {
   value: ContextPickerValue
   onChange: (value: ContextPickerValue) => void
-  // "both" (default): busca proyectos y tareas juntos, las tareas
-  // sólo aparecen una vez que hay texto escrito (para no mezclar
-  // TODAS las tareas de TODOS los proyectos sin filtrar).
-  // "projects": no ofrece tareas, sólo proyectos.
-  // "tasks": no ofrece proyectos, sólo tareas — y a diferencia de
-  // "both", las lista completas aunque no haya búsqueda todavía.
   mode?: ContextPickerMode
-  // Sólo aplica con mode="tasks": limita la lista a las tareas de
-  // este proyecto. Sin esto, "tasks" mostraría tareas de todos los
-  // proyectos mezcladas — pensado para usarse junto a otro
-  // ContextPicker en mode="projects" que defina este id primero.
   taskProjectId?: string
 }
 
@@ -142,35 +132,21 @@ export function ContextPicker({
     )
 
   const placeholder =
-
     mode === "projects"
-
       ? "Seleccionar proyecto"
-
       : mode === "tasks"
-
         ? "Seleccionar tarea"
-
         : "Proyecto o tarea (opcional)"
 
-  // El label no puede simplemente "caer" a selectedProject como
-  // fallback genérico: en mode="tasks" ambos pickers comparten el
-  // mismo `value` (incluye projectId), así que sin este chequeo el
-  // picker de tareas mostraría el nombre del proyecto apenas se
-  // elige uno, antes incluso de elegir una tarea.
   const label =
-
     mode === "tasks"
-
       ? selectedTask
         ? `#${String(selectedTask.taskNumber).padStart(3, "0")} · ${selectedTask.reference}`
         : placeholder
-
       : mode === "projects"
         ? selectedProject
           ? `${selectedProject.projectCode} · ${selectedProject.name}`
           : placeholder
-
         : selectedTask
           ? `#${String(selectedTask.taskNumber).padStart(3, "0")} · ${selectedTask.reference}`
           : selectedProject
@@ -189,17 +165,11 @@ export function ContextPicker({
         return []
       }
 
-      // Igual que antes: no ofrecer proyectos completados, salvo
-      // que sea el ya seleccionado, para no "perder" la selección
-      // actual si el proyecto se completó después.
       const availableProjects =
         projects.filter(
           project =>
-
             project.id === value.projectId ||
-
             !isProjectCompleted(project),
-
         )
 
       if (!search) {
@@ -208,20 +178,13 @@ export function ContextPicker({
 
       return availableProjects.filter(
         project =>
-
           [
-
             project.projectCode,
-
             project.name,
-
             project.client?.name ?? "",
-
             project.pm?.name ?? "",
-
           ].some(
             text =>
-
               text
                 .toLowerCase()
                 .includes(search),
@@ -242,11 +205,6 @@ export function ContextPicker({
         return []
       }
 
-      // En modo "both", listar tareas sólo tiene sentido cuando
-      // hay texto — si no, mostrar TODAS las tareas de TODOS los
-      // proyectos sería demasiado ruido junto a los proyectos.
-      // En modo "tasks" no hay ese problema porque no compite
-      // espacio con la lista de proyectos.
       if (!search && mode === "both") {
         return []
       }
@@ -265,20 +223,13 @@ export function ContextPicker({
 
       return scopedTasks.filter(
         task =>
-
           [
-
             String(task.taskNumber),
-
             task.reference,
-
             task.project.projectCode,
-
             task.project.name,
-
           ].some(
             text =>
-
               text
                 .toLowerCase()
                 .includes(search),
@@ -314,8 +265,6 @@ export function ContextPicker({
 
       projectId,
 
-      // Si la tarea seleccionada no pertenece a este proyecto,
-      // se descarta.
       taskId:
         selectedTask?.project.id === projectId
           ? value.taskId
@@ -345,28 +294,11 @@ export function ContextPicker({
 
   }
 
-  function handleClear() {
-
-    onChange({
-      projectId: "",
-      taskId: "",
-    })
-
-    setOpen(false)
-
-    setQuery("")
-
-  }
-
   const hasSelection =
-
     mode === "tasks"
-
       ? !!value.taskId
-
       : mode === "projects"
         ? !!value.projectId
-
         : !!value.projectId || !!value.taskId
 
   return (
@@ -385,9 +317,6 @@ export function ContextPicker({
 
         }
 
-        // Autofoco solo en desktop/laptop — en mobile y tablet
-        // abriría el teclado automáticamente apenas se muestra
-        // el popover, sin que el usuario haya tocado el campo.
         if (isCompact) {
           return
         }
@@ -429,15 +358,11 @@ export function ContextPicker({
 
       </PopoverTrigger>
 
-        <PopoverContent
-            sideOffset={8}
-            className={cn(
-                "p-2",
-                isCompact
-                ? "w-[calc(100vw-2rem)] max-w-96"
-                : "w-96",
-            )}
-        >
+      <PopoverContent
+        sideOffset={8}
+        floatingClassName="w-96"
+        className="w-full p-2"
+      >
 
         <Command
           className="bg-transparent"

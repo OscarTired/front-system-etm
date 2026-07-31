@@ -1,4 +1,6 @@
 "use client"
+
+import { useMemo } from "react"
 import { Check } from "lucide-react"
 import { CommandItem } from "@/components/ui/command"
 import {
@@ -30,10 +32,6 @@ type Props = {
   disableCheckAnimation?: boolean
   rightSlot?: React.ReactNode
   variant?: "default" | "color"
-  // Segunda línea opcional debajo del label — ej. el estado de
-  // disponibilidad de un operario ("Libre", "Trabajando · #003").
-  // Nadie más lo usaba hasta ahora, así que no rompe ningún caller
-  // existente.
   description?: string
   descriptionColor?: string
   onSelect: () => void
@@ -56,47 +54,45 @@ export function SelectOption({
   onEdit,
   onDelete,
 }: Props) {
-  const Icon =
-    icon
-      ? ENTITY_ICONS[icon]
-      : undefined
-  const resolvedColor =
-    swatchColor ?? color
-  const badge =
-    getBadgeColors(
-      resolvedColor,
-      "solid",
-    )
-  const isColor =
-    variant === "color"
+  // 1. Sanitización defensiva a nivel de componente.
+  // Remueve saltos de línea (\r, \n) y colapsa espacios múltiples.
+  const cleanLabel = useMemo(
+    () => label.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim(),
+    [label],
+  )
+
+  const cleanDescription = useMemo(
+    () =>
+      description
+        ? description.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim()
+        : undefined,
+    [description],
+  )
+
+  const Icon = icon ? ENTITY_ICONS[icon] : undefined
+  const resolvedColor = swatchColor ?? color
+  const badge = getBadgeColors(resolvedColor, "solid")
+  const isColor = variant === "color"
+
   const actions = {
     edit: onEdit,
     delete: onDelete,
   }
-  const hasActions =
-    !!(
-      actions.edit ||
-      actions.delete
-    )
-  const actionColor =
-    selected && isColor
-      ? badge.text
-      : "#A1A1AA" // zinc-400
+  const hasActions = !!(actions.edit || actions.delete)
+  const actionColor = selected && isColor ? badge.text : "#A1A1AA"
   const { isMobile } = useResponsive()
 
   return (
     <CommandItem
-      value={label}
+      value={cleanLabel}
       onSelect={onSelect}
       className="group mb-0.5 last:mb-0 w-full cursor-pointer rounded-xl border-0 px-3 py-2.5 transition-all duration-150"
       style={{
-        background:
-          selected && isColor
-            ? badge.background
-            : undefined,
+        background: selected && isColor ? badge.background : undefined,
       }}
     >
-      <div className="flex w-full items-center justify-between gap-3">
+      <div className="flex w-full items-center justify-between gap-3 min-w-0">
+        {/* Sección Izquierda: Ícono + Nombre + Descripción */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {Icon && (
             <div
@@ -105,46 +101,43 @@ export function SelectOption({
                 background: isColor
                   ? badge.background
                   : "rgba(255,255,255,0.05)",
-                boxShadow: isColor
-                  ? badge.shadow.default
-                  : undefined,
+                boxShadow: isColor ? badge.shadow.default : undefined,
               }}
             >
               <Icon
                 size={18}
                 strokeWidth={2}
                 style={{
-                  color: isColor
-                    ? badge.text
-                    : resolvedColor,
+                  color: isColor ? badge.text : resolvedColor,
                 }}
               />
             </div>
           )}
+
           <div className="min-w-0 flex-1">
             <EntityNameLabel
-              name={label}
-              className="truncate text-xs font-semibold tracking-[-0.01em]"
+              name={cleanLabel}
+              className="block truncate whitespace-nowrap text-xs font-semibold tracking-[-0.01em]"
               style={{
-                color:
-                  isColor && selected
-                    ? badge.text
-                    : "#F5F5F5",
+                color: isColor && selected ? badge.text : "#F5F5F5",
               }}
             />
 
-            {description && (
+            {cleanDescription && (
               <p
-                className="truncate text-[11px] font-medium"
+                className="truncate whitespace-nowrap text-[11px] font-medium"
                 style={{ color: descriptionColor ?? "#737373" }}
               >
-                {description}
+                {cleanDescription}
               </p>
             )}
           </div>
         </div>
-        <div className="relative flex h-8 min-w-8 items-center justify-end gap-2">
+
+        {/* Sección Derecha: Acciones / Checkmark (shrink-0 previene colapso en textos largos) */}
+        <div className="relative flex h-8 min-w-8 shrink-0 items-center justify-end gap-2">
           {rightSlot}
+
           {hasActions && (
             <div
               className={cn(
@@ -161,14 +154,13 @@ export function SelectOption({
               />
             </div>
           )}
+
           {selected && (
             <Check
               size={16}
               strokeWidth={2.5}
               style={{
-                color: isColor
-                  ? badge.text
-                  : resolvedColor,
+                color: isColor ? badge.text : resolvedColor,
               }}
               className={cn(
                 "transition-all duration-200",
