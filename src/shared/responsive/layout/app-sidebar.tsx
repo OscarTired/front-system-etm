@@ -112,7 +112,7 @@ export function AppSidebar({
       <aside
         aria-hidden={isFullyHidden}
         onTransitionEnd={handleTransitionEnd}
-        style={!isDrawer ? { width } : undefined}
+        style={!isDrawer ? { width, contain: "layout style" } : undefined}
         className={cn(
           !isDrawer && "shrink-0",
           isDrawer && "absolute left-0 top-0 h-full w-62",
