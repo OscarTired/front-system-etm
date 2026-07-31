@@ -67,17 +67,56 @@ export function Popover({
   )
 }
 
+// Tags/condiciones que identifican un control de formulario nativo con
+// comportamiento propio de foco/escritura (no debe ser "tragado" por el
+// toggle automático del Trigger cuando está anidado dentro de él).
+function isNestedFormControl(target: EventTarget | null, currentTarget: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  if (target === currentTarget) return false
+
+  const tag = target.tagName
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    target.isContentEditable
+  )
+}
+
 export function PopoverTrigger({
   className,
+  onClick,
   ...props
 }: PopoverTriggerProps) {
   const isSheet = React.useContext(PopoverModeContext)
+
+  // BLOQUEO SENIOR (centralizado): Radix compone `onClick` (el que
+  // pasemos) con su propio handler interno de toggle vía
+  // composeEventHandlers, y solo ejecuta el suyo si el evento llega
+  // sin `defaultPrevented`. Si el Trigger envuelve un control de
+  // formulario nativo (input, textarea, select) y el click se originó
+  // ahí y no en el propio elemento raíz del Trigger, prevenimos el
+  // default: así ese control conserva su comportamiento normal (foco,
+  // escritura, selección) y el popover/sheet NO hace toggle solo por
+  // haber tocado un campo interno. El toggle sigue funcionando normal
+  // para clicks en cualquier otra parte del Trigger (íconos, badges,
+  // el propio botón, etc.).
+  const guardedOnClick = React.useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (isNestedFormControl(event.target, event.currentTarget)) {
+        event.preventDefault()
+      }
+      onClick?.(event as React.MouseEvent<HTMLButtonElement>)
+    },
+    [onClick],
+  )
 
   if (isSheet) {
     return (
       <DialogPrimitive.Trigger
         data-slot="popover-trigger"
         className={className}
+        onClick={guardedOnClick}
         {...props}
       />
     )
@@ -87,6 +126,7 @@ export function PopoverTrigger({
     <PopoverPrimitive.Trigger
       data-slot="popover-trigger"
       className={className}
+      onClick={guardedOnClick}
       {...props}
     />
   )
