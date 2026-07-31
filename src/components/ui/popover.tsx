@@ -260,9 +260,6 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   }
 }
 
-/**
- * Hook para medir dinámicamente el tamaño del contenido y lograr una transición fluida en ancho y alto.
- */
 function useSmoothResize() {
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [size, setSize] = React.useState<{ width: number | undefined; height: number | undefined }>({
@@ -431,12 +428,9 @@ export function PopoverContent({
       className={cn(
         "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
-        "data-[side=bottom]:slide-in-from-top-2",
-        "data-[side=left]:slide-in-from-right-2",
-        "data-[side=right]:slide-in-from-left-2",
-        "data-[side=top]:slide-in-from-bottom-2",
-        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-200",
-        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150",
+        // Animaciones limpias de aparición basadas puramente en opacidad (sin zoom tembloroso)
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-150",
         floatingClassName,
         className
       )}
