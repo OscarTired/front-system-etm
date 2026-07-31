@@ -15,6 +15,7 @@ import {
 
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { preventNestedDialogClose } from "@/shared/ui/dialogs/prevent-nested-dialog-close"
+import { cn } from "@/shared/utils/utils"
 
 import { useNotifications } from "../hooks/use-notifications"
 import { useMarkNotificationRead } from "../hooks/use-mark-notification-read"
@@ -64,6 +65,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
   const hasUnread = notifications.some(n => !n.read)
   const hasAny = notifications.length > 0
+  const isEmptyState = !loading && filteredNotifications.length === 0
 
   const handleSelect = (notification: Notification) => {
 
@@ -128,17 +130,9 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
       <Dialog open={open} onOpenChange={onOpenChange}>
 
-        {/*
-          Mismo armazón que FormDialog (size="large" + estas clases)
-          para heredar el comportamiento full-screen en mobile que
-          ya tienen TaskDialog y ProfileDialog. El contenido interno
-          es propio (header con acciones + búsqueda + lista), porque
-          FormDialogHeader/Footer están pensados para un flujo con
-          un único "Guardar", que acá no existe.
-        */}
         <DialogContent
           size="large"
-          className="flex max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+          className="flex min-h-120 max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
@@ -186,14 +180,14 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
           </div>
 
-          <ScrollArea className="min-h-0 flex-1 px-5 py-4">
+          <ScrollArea className={cn("min-h-0 px-5 py-4", isEmptyState && "flex-1 flex flex-col")}>
 
             {loading ? (
-              <div className="flex h-full items-center justify-center">
+              <div className="flex h-full min-h-55 w-full items-center justify-center">
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredNotifications.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-1.5 text-center">
+              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-1.5 text-center my-auto min-h-70">
                 <p className="text-sm text-neutral-500">No hay notificaciones</p>
               </div>
             ) : (

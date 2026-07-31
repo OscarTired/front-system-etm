@@ -14,6 +14,7 @@ import {
 
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { preventNestedDialogClose } from "@/shared/ui/dialogs/prevent-nested-dialog-close"
+import { cn } from "@/shared/utils/utils"
 
 import { useComments } from "../hooks/use-comments"
 import { useDeleteComment } from "../hooks/use-delete-comment"
@@ -28,8 +29,6 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onEditComment?: (comment: Comment) => void
-  // Para tareas/pasos ya finalizados o revisados — se puede seguir
-  // viendo el historial completo, pero no agregar mensajes nuevos.
   readOnly?: boolean
 }
 
@@ -95,22 +94,17 @@ export function CommentHistoryDialog({
 
   }
 
+  const isEmptyState = !loading && filteredComments.length === 0
+
   return (
 
     <>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
 
-        {/*
-          Mismo armazón que NotificationHistoryDialog (size="large"):
-          en mobile pasa a pantalla completa edge-to-edge, igual que
-          los forms. Reemplaza al Dialog centrado de antes, que no
-          tenía tratamiento mobile propio ni drag-to-dismiss real —
-          de ahí el "salto" al intentar arrastrarlo para cerrarlo.
-        */}
         <DialogContent
           size="large"
-          className="flex min-w-lg max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+          className="flex min-h-120 max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
@@ -169,14 +163,16 @@ export function CommentHistoryDialog({
 
           </div>
 
-          <ScrollArea className="min-h-0 flex-1 px-5 py-4">
+          <ScrollArea className={cn("min-h-0 px-5 py-4", isEmptyState && "flex-1 flex flex-col")}>
 
             {loading ? (
-              <div className="flex h-full items-center justify-center">
+              <div className="flex h-full min-h-55 w-full items-center justify-center">
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredComments.length === 0 ? (
-              <EmptyComments />
+              <div className="flex h-full w-full flex-1 items-center justify-center my-auto min-h-70">
+                <EmptyComments />
+              </div>
             ) : (
               <CommentList
                 comments={filteredComments}
