@@ -65,7 +65,7 @@ export function EntitySelectActionMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        side="left"
+        side="bottom"
         align="end"
         sideOffset={4}
         /* Evita que cerrar este sub-menú transmita un evento de cierre al Popover contenedor */
