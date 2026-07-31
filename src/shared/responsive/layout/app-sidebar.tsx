@@ -105,21 +105,21 @@ export function AppSidebar({
           "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
           "overflow-hidden",
           "will-change-[width,transform]",
+          // Curva de Bezier estilo iOS (suave al detenerse)
           "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
           isDrawer && (isVisible ? "translate-x-0" : "-translate-x-full"),
           isFullyHidden && "pointer-events-none",
         )}
       >
-        {/* Contenedor interno con la misma transición de ancho sincronizada */}
+        {/* Contenedor interno con ancho estricto sincronizado para evitar saltos de contenido */}
         <div 
           className={cn(
-            "pt-6 pb-6 flex h-full flex-col whitespace-nowrap",
+            "pt-6 pb-6 flex h-full flex-col overflow-hidden",
             "transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
-          )}
+          )} 
           style={{ 
-            width: isDrawer 
-              ? undefined 
-              : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH) 
+            width: isDrawer ? undefined : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH),
+            minWidth: SIDEBAR_ASIDE_COLLAPSED_WIDTH 
           }}
         >
           <SidebarHeader
@@ -127,7 +127,7 @@ export function AppSidebar({
             isDrawer={isDrawer}
           />
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <SidebarNavigation
               collapsed={collapsed}
               isDrawer={isDrawer}
@@ -140,7 +140,7 @@ export function AppSidebar({
             />
           </div>
 
-          <div className="shrink-0 select-none p-3 pt-0 overflow-x-hidden">
+          <div className="shrink-0 select-none p-3 pt-0 overflow-hidden">
             <SidebarProfile
               collapsed={collapsed}
               onEditProfile={() => setProfileEditOpen(true)}

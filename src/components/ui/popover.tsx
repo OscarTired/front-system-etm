@@ -281,6 +281,24 @@ export function PopoverContent({
   const close = React.useContext(PopoverCloseContext)
   const isOpen = React.useContext(PopoverOpenContext)
 
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const [contentHeight, setContentHeight] = React.useState<number | 'auto'>('auto')
+
+  React.useLayoutEffect(() => {
+    if (contentRef.current) {
+      const observer = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          setContentHeight(entry.contentRect.height)
+        }
+      })
+
+      observer.observe(contentRef.current)
+      setContentHeight(contentRef.current.scrollHeight)
+
+      return () => observer.disconnect()
+    }
+  }, [children])
+
   const { dragY, isDragging, dismissing, dragHandleProps } =
     useSheetDragToDismiss(close, isOpen)
 
@@ -352,6 +370,8 @@ export function PopoverContent({
             }}
             className={cn(
               "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+              // Ocultar scrollbar en Sheet
+              "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
               "px-4 pt-1 text-sm",
               className
             )}
@@ -366,6 +386,7 @@ export function PopoverContent({
 
   const content = (
     <PopoverPrimitive.Content
+      data-slot="popover-content"
       data-drag-scroll-ignore
       align={align}
       side={side}
@@ -395,8 +416,7 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
-        "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+        "z-40 pointer-events-auto flex flex-col rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
@@ -406,10 +426,31 @@ export function PopoverContent({
         floatingClassName,
         className
       )}
-      style={style}
+      style={{
+        ...style,
+        overflow: "hidden"
+      }}
       {...props}
     >
-      {children}
+      <div
+        style={{
+          height: contentHeight === 'auto' ? 'auto' : `${contentHeight}px`,
+          transition: "height 300ms cubic-bezier(0.2, 0, 0, 1)",
+          willChange: "height",
+          boxSizing: 'content-box',
+          overflowY: contentHeight === 'auto' ? 'visible' : 'auto'
+        }}
+        // Ocultar scrollbar en el contenedor animado
+        className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
+        <div
+          ref={contentRef}
+          className="flex flex-col gap-2.5"
+          style={{ padding: '2px' }}
+        >
+          {children}
+        </div>
+      </div>
     </PopoverPrimitive.Content>
   )
 
