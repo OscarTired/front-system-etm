@@ -46,6 +46,11 @@ export interface User{
 
   online:boolean
 
+  // Cuándo se desconectó del todo por última vez — null si nunca
+  // se conectó, o si está online ahora mismo no hace falta mirarlo
+  // (el panel de Activos usa "online" para eso).
+  lastSeenAt:string | null
+
   avatarUrl:string | null
 
   phone:string | null

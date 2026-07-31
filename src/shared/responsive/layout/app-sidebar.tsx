@@ -18,12 +18,6 @@ type Props = {
   open?: boolean
 }
 
-// Antes eran clases Tailwind (w-18/w-62) aplicadas directo al
-// <aside> — ahora el ancho de éste tiene un tercer estado más
-// (0, cuando está "hidden"/"moving-out"/"curve-closing") que
-// Tailwind no puede expresar como transición fluida entre 3
-// valores con una sola clase, así que pasa a numérico + inline
-// style. Mismos valores que w-18 (4.5rem) / w-62 (15.5rem).
 const SIDEBAR_ASIDE_COLLAPSED_WIDTH = 72
 const SIDEBAR_ASIDE_OPEN_WIDTH = 248
 
@@ -53,15 +47,6 @@ export function AppSidebar({
 
   const isFullyHidden = !isDrawer && visualState === "hidden"
 
-  // Sin position:absolute, el propio ancho de <aside> es lo único
-  // que main necesita para saber cuánto espacio le queda — al ser
-  // hermano real de flex (ver DesktopShell), main es simplemente
-  // flex-1 y el navegador lo recalcula solo, en cada frame de esta
-  // misma transición de width, sin ningún estado ni lógica extra
-  // del lado de main. Antes "cerrado del todo" se lograba con
-  // translate-x-full (viable solo porque position:absolute no
-  // afecta el layout de nadie más) — ahora tiene que colapsar el
-  // ancho de verdad a 0.
   const width =
     isDrawer
       ? undefined
