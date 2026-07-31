@@ -119,9 +119,8 @@ export function AppSidebar({
           "h-full",
           "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
           "overflow-hidden",
-          // 🚀 Optimización clave de GPU para animaciones fluidas
           "will-change-[width,transform]",
-          "transition-[width,transform] duration-450 ease-[cubic-bezier(0.2,0,0,1)]",
+          "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
           isDrawer && (isVisible ? "translate-x-0" : "-translate-x-full"),
           isFullyHidden && "pointer-events-none",
         )}
