@@ -1,10 +1,11 @@
 "use client";
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
 import { DateCalendar } from './date-calendar';
 import { DateInput } from './date-input';
 import { useDateFormat } from '../hooks/use-date-format';
+import { useResponsive } from '@/shared/responsive/hooks/use-responsive';
 import type { DatePickerProps } from '../types/types';
 
 function parsePartialDate(input: string): Date | null {
@@ -38,18 +39,8 @@ export function DatePicker({
   className,
 }: DatePickerProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile } = useResponsive();
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Detección limpia de entorno móvil/touch
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const handleCommit = useCallback(
     (date: Date | null) => {
@@ -122,6 +113,7 @@ export function DatePicker({
             value={inputValue}
             placeholder={placeholder}
             disabled={disabled}
+            readOnly={isMobile}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
@@ -137,7 +129,7 @@ export function DatePicker({
         onOpenAutoFocus={(e) => {
           if (!isMobile) e.preventDefault();
         }}
-        className="w-auto p-0 rounded-xl shadow-xl bg-popover"
+        className={isMobile ? undefined : "w-auto p-0 rounded-xl shadow-xl bg-popover"}
       >
         <DateCalendar
           value={value}
