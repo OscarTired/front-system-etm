@@ -47,7 +47,7 @@ function UserRow({
   user: PresenceUser
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 w-full min-w-0">
+    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 w-full min-w-0 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="relative h-6 w-6 shrink-0">
           <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
@@ -184,7 +184,6 @@ export function SidebarPresence({
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
     if (!nextOpen) {
-      // Retardamos el reseteo para que ocurra de forma limpia justo después de cerrarse por completo
       setTimeout(() => {
         setQuery("")
         setExpanded(false)
@@ -292,7 +291,7 @@ export function SidebarPresence({
           className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
-            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
+            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717]">
               <Search size={14} className="text-neutral-500 shrink-0" />
               <Input
                 ref={inputRef}
@@ -304,8 +303,8 @@ export function SidebarPresence({
             </div>
 
             <CommandList className={cn(
-              "select-none overflow-y-auto",
-              expanded || query.trim() ? "max-h-64" : "",
+              "select-none overflow-y-auto transition-all duration-200 ease-in-out",
+              expanded || query.trim() ? "max-h-72" : "max-h-48",
             )}>
               <CommandEmpty>
                 {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
@@ -317,9 +316,9 @@ export function SidebarPresence({
                     key={user.id}
                     value={user.name}
                     onSelect={() => {}}
-                    className="p-0 rounded-lg cursor-pointer bg-transparent aria-selected:bg-transparent aria-selected:text-accent-foreground"
+                    className="p-0 rounded-lg bg-transparent hover:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none"
                   >
-                    <div className="w-full">
+                    <div className="w-full pointer-events-auto">
                       <UserRow user={user} />
                     </div>
                   </CommandItem>
@@ -329,8 +328,11 @@ export function SidebarPresence({
               {hasMore && (
                 <button
                   type="button"
-                  onClick={() => setExpanded(true)}
-                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+                  onClick={(e) => {
+                    e.currentTarget.blur()
+                    setExpanded(true)
+                  }}
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent hover:bg-white/5 hover:text-white"
                 >
                   Ver todos
                   <span className="text-neutral-600">
@@ -343,8 +345,11 @@ export function SidebarPresence({
               {expanded && !query.trim() && (
                 <button
                   type="button"
-                  onClick={() => setExpanded(false)}
-                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+                  onClick={(e) => {
+                    e.currentTarget.blur()
+                    setExpanded(false)
+                  }}
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent hover:bg-white/5 hover:text-white"
                 >
                   Mostrar menos
                   <ChevronUp size={13} />
