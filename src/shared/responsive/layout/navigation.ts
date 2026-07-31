@@ -81,7 +81,7 @@ export const NAVIGATION = [
         label: "Nesting",
         href: "/nesting",
         icon: Boxes,
-        permission: PermissionCode.NESTING_READ,
+        //permission: PermissionCode.NESTING_READ,
       },
     ],
   },
