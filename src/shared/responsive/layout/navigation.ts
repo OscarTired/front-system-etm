@@ -77,12 +77,6 @@ export const NAVIGATION = [
         icon: Truck,
         permission: PermissionCode.WORKFLOW_READ,
       },
-      {
-        label: "Nesting",
-        href: "/nesting",
-        icon: Boxes,
-        //permission: PermissionCode.NESTING_READ,
-      },
     ],
   },
 
@@ -98,6 +92,18 @@ export const NAVIGATION = [
     ],
   },
 
+  {
+    title: "Ingeniería",
+    items: [
+      {
+        label: "Nesting",
+        href: "/nesting",
+        icon: Boxes,
+        //permission: PermissionCode.NESTING_READ,
+      },
+    ],
+  },
+  
   {
     title: "Administración",
     items: [
