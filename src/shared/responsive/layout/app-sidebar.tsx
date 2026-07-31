@@ -55,8 +55,8 @@ export function AppSidebar({
         visualState === "curve-closing"
         ? 0
         : collapsed
-          ? SIDEBAR_ASIDE_COLLAPSED_WIDTH
-          : SIDEBAR_ASIDE_OPEN_WIDTH
+        ? SIDEBAR_ASIDE_COLLAPSED_WIDTH
+        : SIDEBAR_ASIDE_OPEN_WIDTH
 
   const [profileEditOpen, setProfileEditOpen] = useState(false)
 
@@ -110,13 +110,24 @@ export function AppSidebar({
           isFullyHidden && "pointer-events-none",
         )}
       >
-        <div className="pt-6 pb-6 flex h-full flex-col" style={{ width: isDrawer ? undefined : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH) }}>
+        {/* Contenedor interno con la misma transición de ancho sincronizada */}
+        <div 
+          className={cn(
+            "pt-6 pb-6 flex h-full flex-col whitespace-nowrap",
+            "transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
+          )}
+          style={{ 
+            width: isDrawer 
+              ? undefined 
+              : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH) 
+          }}
+        >
           <SidebarHeader
             collapsed={collapsed}
             isDrawer={isDrawer}
           />
 
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
             <SidebarNavigation
               collapsed={collapsed}
               isDrawer={isDrawer}
@@ -129,7 +140,7 @@ export function AppSidebar({
             />
           </div>
 
-          <div className="shrink-0 select-none p-3 pt-0">
+          <div className="shrink-0 select-none p-3 pt-0 overflow-x-hidden">
             <SidebarProfile
               collapsed={collapsed}
               onEditProfile={() => setProfileEditOpen(true)}

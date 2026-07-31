@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useRef } from "react"
-import { Users, Search, ChevronDown } from "lucide-react"
+import { Users, Search, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
@@ -184,8 +184,11 @@ export function SidebarPresence({
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
     if (!nextOpen) {
-      setQuery("")
-      setExpanded(false)
+      // Retardamos el reseteo para que ocurra de forma limpia justo después de cerrarse por completo
+      setTimeout(() => {
+        setQuery("")
+        setExpanded(false)
+      }, 200)
     }
   }
 
@@ -334,6 +337,17 @@ export function SidebarPresence({
                     ({allUsers.length})
                   </span>
                   <ChevronDown size={13} />
+                </button>
+              )}
+
+              {expanded && !query.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(false)}
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  Mostrar menos
+                  <ChevronUp size={13} />
                 </button>
               )}
             </CommandList>

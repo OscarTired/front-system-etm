@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState, KeyboardEvent, ChangeEvent } from "react"
+import { useEffect, useRef, useState, KeyboardEvent, ChangeEvent } from "react"
 import { Camera, SendHorizontal, X } from "lucide-react"
 import { PrimaryAction } from "@/shared/ui/actions/primary-action"
 import { IconAction } from "@/shared/ui/actions/icon-action"
@@ -18,11 +18,6 @@ type Props = {
   target: CommentTarget
   editingComment?: Comment | null
   onCancelEdit?: () => void
-  // Modo respuesta — banner "Respondiendo a X" arriba del textarea,
-  // igual estructura visual que el de "Editando comentario" (mismo
-  // patrón, no un componente nuevo). Editar y responder son
-  // mutuamente excluyentes: si llega editingComment, ese gana (ver
-  // isEditing más abajo).
   replyingTo?: Comment | null
   onCancelReply?: () => void
 }
@@ -49,9 +44,6 @@ export function CommentComposer({
   const isReplying = !isEditing && !!replyingTo
 
   const { has } = usePermissions()
-  // Editar un comentario propio no exige un permiso aparte (ver
-  // CommentItem: canEdit depende solo de isOwner) — COMMENT_CREATE
-  // solo aplica al flujo de enviar uno nuevo.
   const canCreate = isEditing || has(PermissionCode.COMMENT_CREATE)
 
   const busy = updating
@@ -76,23 +68,17 @@ export function CommentComposer({
   const mentionOpen = mentionQuery !== null && filteredUsers.length > 0
 
   const detectMentionQuery = (value: string, cursor: number) => {
-
     const upToCursor = value.slice(0, cursor)
     const match = upToCursor.match(/@([a-zA-Z0-9_.]*)$/)
-
     setMentionQuery(match ? match[1] : null)
-
   }
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-
     setMessage(e.target.value)
     detectMentionQuery(e.target.value, e.target.selectionStart)
-
   }
 
   const handleSelectMention = (username: string) => {
-
     const cursor = textareaRef.current?.selectionStart ?? message.length
     const upToCursor = message.slice(0, cursor)
     const afterCursor = message.slice(cursor)
@@ -104,7 +90,6 @@ export function CommentComposer({
     setMentionQuery(null)
 
     requestAnimationFrame(() => textareaRef.current?.focus())
-
   }
 
   const handleRemoveImage = () => {
@@ -119,9 +104,7 @@ export function CommentComposer({
   }
 
   const handleSelectImage = (e: ChangeEvent<HTMLInputElement>) => {
-
     const file = e.target.files?.[0]
-
     e.target.value = ""
 
     if (!file) return
@@ -133,33 +116,25 @@ export function CommentComposer({
     }
 
     reader.readAsDataURL(file)
-
   }
 
   const handleSubmit = () => {
-
     const trimmed = message.trim()
 
     if ((!trimmed && !selectedImage) || busy || !canCreate) return
 
     if (isEditing && editingComment) {
-
       updateComment({ id: editingComment.id, dto: { message: trimmed } })
         .then(() => onCancelEdit?.())
-        .catch(() => {
-        })
-
+        .catch(() => {})
     } else {
-
       createComment({
         message: trimmed || undefined,
         imageBase64: selectedImage ?? undefined,
         parentId: replyingTo?.id,
-      }).catch(() => {
-      })
+      }).catch(() => {})
 
       onCancelReply?.()
-
     }
 
     flushSync(() => {
@@ -169,17 +144,12 @@ export function CommentComposer({
     })
 
     const el = textareaRef.current
-
     if (el) {
-      // Fuerza un layout síncrono para que el navegador
-      // repinte completamente el ::placeholder.
       void el.offsetHeight
     }
-
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-
     if (mentionQuery !== null && filteredUsers.length > 0) {
       if (e.key === "Escape") {
         e.preventDefault()
@@ -196,26 +166,20 @@ export function CommentComposer({
     if (e.key === "Escape" && (isEditing || isReplying) && mentionQuery === null) {
       handleCancel()
     }
-
   }
 
   return (
-
     <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white/2 p-2.5">
 
       {isEditing && (
-
         <div className="mb-1.5 flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
           <span className="text-xs font-medium text-cyan-300">Editando comentario</span>
           <IconAction icon={X} onClick={handleCancel} />
         </div>
-
       )}
 
       {isReplying && replyingTo && (
-
         <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5">
-
           <div className="min-w-0">
             <span className="text-xs font-medium text-cyan-300">
               Respondiendo a {replyingTo.user.name}
@@ -224,11 +188,8 @@ export function CommentComposer({
               {replyingTo.message || "📷 Foto"}
             </p>
           </div>
-
           <IconAction icon={X} onClick={handleCancel} />
-
         </div>
-
       )}
 
       <input
@@ -246,21 +207,16 @@ export function CommentComposer({
           if (!next) setMentionQuery(null)
         }}
       >
-
         <PopoverAnchor asChild>
-
           <div className="flex min-h-0 flex-1 gap-4">
 
             {selectedImage && (
-
               <div className="relative shrink-0">
-
                 <img
                   src={selectedImage}
                   alt="Foto adjunta"
                   className="h-16 w-16 rounded-lg object-cover"
                 />
-
                 <button
                   type="button"
                   onClick={handleRemoveImage}
@@ -268,9 +224,7 @@ export function CommentComposer({
                 >
                   <X size={12} />
                 </button>
-
               </div>
-
             )}
 
             <textarea
@@ -284,29 +238,24 @@ export function CommentComposer({
                   ? "Escribe y usa @ para mencionar"
                   : "No tienes permisos para comentar"
               }
-              className="text-sm font-medium min-h-9 min-w-0 flex-1 resize-none bg-transparent text-white outline-none placeholder:text-neutral-600"
+              className="text-sm font-medium min-h-9 w-full flex-1 resize-none bg-transparent text-white outline-none placeholder:text-neutral-600"
             />
 
           </div>
-
         </PopoverAnchor>
 
         {mentionOpen && (
           <MentionSuggestions users={filteredUsers} onSelect={handleSelectMention} />
         )}
-
       </Popover>
 
       <div className="mt-1 flex items-center justify-between">
-
         {!isEditing && (
-
           <IconAction
             icon={Camera}
             disabled={!canCreate}
             onClick={() => fileInputRef.current?.click()}
           />
-
         )}
 
         <PrimaryAction
@@ -316,11 +265,8 @@ export function CommentComposer({
           onClick={handleSubmit}
           disabled={(!message.trim() && !selectedImage) || busy || !canCreate}
         />
-
       </div>
 
     </div>
-
   )
-
 }
