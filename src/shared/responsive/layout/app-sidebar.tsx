@@ -2,9 +2,7 @@
 "use client"
 
 import { useState } from "react"
-
 import { ProfileDialog } from "@/features/profile"
-
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { cn } from "@/shared/utils/utils"
 
@@ -24,7 +22,6 @@ export function AppSidebar({
   variant = "desktop",
   open = false,
 }: Props = {}) {
-
   const mode = useSidebarStore(s => s.mode)
   const lastVisibleMode = useSidebarStore(s => s.lastVisibleMode)
   const visualState = useSidebarStore(s => s.visualState)
@@ -34,30 +31,17 @@ export function AppSidebar({
       ? lastVisibleMode
       : mode
 
+  const isDrawer = variant === "drawer"
+  const collapsed = !isDrawer && visibleMode === "collapsed"
 
-  const isDrawer =
-    variant === "drawer"
-
-
-  const collapsed =
-    !isDrawer &&
-    visibleMode === "collapsed"
-
-
-  // El shell desktop nunca se lee desde `mode` directamente: solo
-  // `visualState` decide si el sidebar está mostrándose/moviéndose.
   const isVisible =
     isDrawer
       ? open
       : visualState === "visible" || visualState === "moving-in"
 
-  const isFullyHidden =
-    !isDrawer &&
-    visualState === "hidden"
-
+  const isFullyHidden = !isDrawer && visualState === "hidden"
 
   const [profileEditOpen, setProfileEditOpen] = useState(false)
-
 
   const {
     projectsCount,
@@ -65,11 +49,7 @@ export function AppSidebar({
     processCounts,
   } = useSidebarCounts()
 
-
-  const {
-    prefetchOnHover,
-  } = useSidebarPrefetch()
-
+  const { prefetchOnHover } = useSidebarPrefetch()
 
   const {
     profileOpen,
@@ -85,42 +65,29 @@ export function AppSidebar({
     cardRef,
   } = useProfilePanel()
 
-
   return (
     <>
-
       <aside
         aria-hidden={isFullyHidden}
         className={cn(
           "absolute left-0 top-0 h-full",
-
           "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
           "overflow-hidden shrink-0",
-
-          // 💡 Transición fluida con curva Bézier de Material 3 / Gemini (450ms):
+          // 🚀 Optimización clave de GPU para animaciones fluidas
+          "will-change-[width,transform]",
           "transition-[width,transform] duration-450 ease-[cubic-bezier(0.2,0,0,1)]",
-
-          collapsed
-            ? "w-18"
-            : "w-62",
-
-          isVisible
-            ? "translate-x-0"
-            : "-translate-x-full",
-
+          collapsed ? "w-18" : "w-62",
+          isVisible ? "translate-x-0" : "-translate-x-full",
           isFullyHidden && "pointer-events-none",
         )}
       >
-
         <div className="pt-6 pb-6 flex h-full flex-col">
-
           <SidebarHeader
             collapsed={collapsed}
             isDrawer={isDrawer}
           />
 
           <div className="flex min-h-0 flex-1 flex-col">
-
             <SidebarNavigation
               collapsed={collapsed}
               isDrawer={isDrawer}
@@ -131,12 +98,9 @@ export function AppSidebar({
               presenceRef={presenceRef}
               prefetchOnHover={prefetchOnHover}
             />
-
           </div>
 
-
           <div className="shrink-0 select-none p-3 pt-0">
-
             <SidebarProfile
               collapsed={collapsed}
               onEditProfile={() => setProfileEditOpen(true)}
@@ -150,19 +114,14 @@ export function AppSidebar({
               contentRef={contentRef}
               cardRef={cardRef}
             />
-
           </div>
-
         </div>
-
       </aside>
-
 
       <ProfileDialog
         open={profileEditOpen}
         onClose={() => setProfileEditOpen(false)}
       />
-
     </>
   )
 }
