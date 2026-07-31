@@ -32,26 +32,9 @@ const CURVE_SQUARE = "0px 0px 0px 0px"
 
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
-type ContentTransitionProperty = "transform" | "border-radius"
-
-function buildContentTransitionBase() {
-  return `transform ${TRANSITION_TIMING}`
-}
-
-function buildContentTransitionWithClip() {
-  return `transform ${TRANSITION_TIMING}, border-radius ${TRANSITION_TIMING}`
-}
-
-const SIDEBAR_OPEN_WIDTH = 248
-const SIDEBAR_COLLAPSED_WIDTH = 72
-
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
-  const lastVisibleMode = useSidebarStore(state => state.lastVisibleMode)
   const visualState = useSidebarStore(state => state.visualState)
-  const notifyContentTransitionEnd = useSidebarStore(
-    state => state.notifyContentTransitionEnd,
-  )
   const notifyClipTransitionEnd = useSidebarStore(
     state => state.notifyClipTransitionEnd,
   )
@@ -61,30 +44,23 @@ function DesktopShell({ children }: Props) {
       ? CURVE_SQUARE
       : CURVE_ROUNDED
 
-  const contentTransition =
-    visualState === "curve-closing"
-      ? buildContentTransitionWithClip()
-      : buildContentTransitionBase()
-
-  const targetOffset =
-    lastVisibleMode === "open"
-      ? SIDEBAR_OPEN_WIDTH
-      : SIDEBAR_COLLAPSED_WIDTH
-
-  const offset =
-    visualState === "visible" || visualState === "moving-in"
-      ? targetOffset
-      : 0
-
+  // Así es como lo resuelven las apps grandes (VS Code, Slack,
+  // Notion...): sidebar y contenido son HERMANOS REALES de flexbox,
+  // no un div posicionado con "left"/transform simulando el empuje
+  // a mano. AppSidebar ya anima su propio `width` con una
+  // transición de CSS normal (ver app-sidebar.tsx) — main acá
+  // abajo es simplemente flex-1, así que el navegador recalcula su
+  // ancho SOLO, en cada frame de ESA MISMA animación, sin que este
+  // componente necesite rastrear ningún offset ni estado propio.
+  // El contenido de adentro (lo que antes se veía "empujado sin
+  // acomodarse" o "deformándose") ahora se reacomoda de la forma
+  // más simple y correcta que existe: dejando que sea flexbox el
+  // que decide el ancho, no un cálculo manual en JS tratando de
+  // imitarlo.
   const handleTransitionEnd = (
     event: React.TransitionEvent<HTMLElement>,
   ) => {
     if (event.target !== event.currentTarget) return
-
-    if (event.propertyName === "transform") {
-      notifyContentTransitionEnd()
-      return
-    }
 
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
@@ -92,16 +68,15 @@ function DesktopShell({ children }: Props) {
   }
 
   return (
-    <div className="relative h-screen overflow-hidden bg-[#1d1c1c] text-white">
+    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
       <AppSidebar />
 
       <main
         onTransitionEnd={handleTransitionEnd}
-        className="absolute inset-0 z-10 flex h-screen min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
+        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
         style={{
-          transform: `translate3d(${offset}px, 0, 0)`,
           borderRadius,
-          transition: contentTransition,
+          transition: `border-radius ${TRANSITION_TIMING}`,
         }}
       >
         <DesktopTopBar />

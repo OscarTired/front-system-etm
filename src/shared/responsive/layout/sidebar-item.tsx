@@ -66,7 +66,7 @@ export function SidebarItem({
         collapsed ? "justify-center px-0" : "gap-2 px-3",
         active
           ? "bg-white/6 text-white pointer-events-none"
-          : "text-neutral-400 hover:bg-white/4 hover:text-white", // 👈 Quitamos active:bg-white/8 active:text-white de aquí también
+          : "text-neutral-400 hover:bg-white/4 hover:text-white",
       )}
     >
       <span className="relative flex shrink-0 items-center justify-center">
