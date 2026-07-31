@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { DatePicker } from "@/shared/ui/date-picker/components/date-picker"
+import { stripTime } from "@/shared/ui/date-picker/utils/dates"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {
@@ -37,8 +38,8 @@ export function DateNavigator({
 
   const current = value ?? new Date()
 
-  const atMin = minDate != null && current <= minDate
-  const atMax = maxDate != null && current >= maxDate
+  const atMin = minDate != null && stripTime(current) <= stripTime(minDate)
+  const atMax = maxDate != null && stripTime(current) >= stripTime(maxDate)
 
   function goTo(amount: number) {
     onChange(addDays(current, amount))
