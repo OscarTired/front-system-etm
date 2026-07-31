@@ -226,7 +226,7 @@ export function SidebarPresence({
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
           floatingClassName="w-72"
-          className="z-50 w-full p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
+          className="z-50 w-full min-w-90 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">

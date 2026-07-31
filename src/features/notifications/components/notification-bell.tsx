@@ -198,7 +198,7 @@ export function NotificationBell({
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
           floatingClassName="w-80"
-          className="z-90 w-full p-0 border-none bg-[#171717] text-white shadow-xl"
+          className="z-90 w-full min-w-90 p-0 border-none bg-[#171717] text-white shadow-xl"
         >
           <div className="flex items-center justify-between px-3.5 py-3">
             <span className="text-sm font-semibold text-neutral-200">
