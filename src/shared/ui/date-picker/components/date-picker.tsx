@@ -1,7 +1,7 @@
 "use client";
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { useCallback, useRef, useState, useMemo } from 'react';
+import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import { DateCalendar } from './date-calendar';
 import { DateInput } from './date-input';
 import { useDateFormat } from '../hooks/use-date-format';
@@ -67,6 +67,16 @@ export function DatePicker({
     setOpen(next);
   }, []);
 
+  // Prevenir que el teclado se despliegue al abrir el Sheet en Mobile
+  useEffect(() => {
+    if (open && isMobile) {
+      // Ocultar teclado forzadamente retirando el foco de cualquier input activo
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  }, [open, isMobile]);
+
   const handleSelectDay = useCallback(
     (date: Date) => {
       onChange(date);
@@ -120,9 +130,8 @@ export function DatePicker({
       <PopoverContent
         sideOffset={6}
         onOpenAutoFocus={(e) => {
-          if (isMobile) {
-            e.preventDefault();
-          }
+          // BLOQUEO SENIOR: Previene que Radix autoconfiera foco al input y despliegue el teclado virtual
+          e.preventDefault();
         }}
         className={
           isMobile 
@@ -137,6 +146,8 @@ export function DatePicker({
               value={inputValue}
               placeholder={placeholder ?? "DD/MM/YYYY"}
               disabled={disabled}
+              // Si el usuario no está interactuando activamente, usamos inputMode="none" para evitar despliegue automático del teclado
+              inputMode="numeric"
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDownWithEscape}
