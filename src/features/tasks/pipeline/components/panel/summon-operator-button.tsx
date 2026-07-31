@@ -89,7 +89,7 @@ export function SummonOperatorButton({ processCode, active, selectedOperatorId, 
 
       </PopoverTrigger>
 
-      <PopoverContent side="bottom" align="end" className="w-72 p-2">
+      <PopoverContent side="bottom" align="end" floatingClassName="w-72" className="p-2">
 
         <Command>
 

@@ -133,9 +133,6 @@ export function SidebarPresence({
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           {isTopbar ? (
-            // ==========================================
-            // VARIANTE TOPBAR (Estilo idéntico a NotificationBell)
-            // ==========================================
             <button
               type="button"
               aria-label="Usuarios en línea"
@@ -152,9 +149,6 @@ export function SidebarPresence({
               )}
             </button>
           ) : isDrawer ? (
-            // ==========================================
-            // VARIANTE DRAWER MOBILE
-            // ==========================================
             <button
               type="button"
               className={cn(
@@ -184,9 +178,6 @@ export function SidebarPresence({
               )}
             </button>
           ) : collapsed ? (
-            // ==========================================
-            // VARIANTE SIDEBAR DESKTOP (COLAPSADO)
-            // ==========================================
             <button
               type="button"
               title={`${onlineUsers.length} en línea`}
@@ -205,9 +196,6 @@ export function SidebarPresence({
               </span>
             </button>
           ) : (
-            // ==========================================
-            // VARIANTE SIDEBAR DESKTOP (EXPANDIDO)
-            // ==========================================
             <button
               type="button"
               className={cn(
@@ -237,7 +225,8 @@ export function SidebarPresence({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
+          floatingClassName="w-72"
+          className="z-50 w-full p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">

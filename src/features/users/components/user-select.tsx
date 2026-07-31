@@ -275,7 +275,8 @@ export function UserSelect({
 
       <PopoverContent
         sideOffset={8}
-        className="w-72 p-2"
+        floatingClassName="w-72"
+        className="p-2"
         align={triggerVariant === "row" ? "start" : "center"}
       >
 

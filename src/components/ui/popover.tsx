@@ -30,6 +30,12 @@ type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
 
 type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portal?: boolean
+  /**
+   * Clases que aplican ÚNICAMENTE al popover flotante de desktop (ej.
+   * un ancho fijo como "w-72" o "w-64" para que el popover no crezca
+   * según su contenido).
+   */
+  floatingClassName?: string
 }
 
 type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
@@ -67,9 +73,6 @@ export function Popover({
   )
 }
 
-// Tags/condiciones que identifican un control de formulario nativo con
-// comportamiento propio de foco/escritura (no debe ser "tragado" por el
-// toggle automático del Trigger cuando está anidado dentro de él).
 function isNestedFormControl(target: EventTarget | null, currentTarget: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   if (target === currentTarget) return false
@@ -90,17 +93,6 @@ export function PopoverTrigger({
 }: PopoverTriggerProps) {
   const isSheet = React.useContext(PopoverModeContext)
 
-  // BLOQUEO SENIOR (centralizado): Radix compone `onClick` (el que
-  // pasemos) con su propio handler interno de toggle vía
-  // composeEventHandlers, y solo ejecuta el suyo si el evento llega
-  // sin `defaultPrevented`. Si el Trigger envuelve un control de
-  // formulario nativo (input, textarea, select) y el click se originó
-  // ahí y no en el propio elemento raíz del Trigger, prevenimos el
-  // default: así ese control conserva su comportamiento normal (foco,
-  // escritura, selección) y el popover/sheet NO hace toggle solo por
-  // haber tocado un campo interno. El toggle sigue funcionando normal
-  // para clicks en cualquier otra parte del Trigger (íconos, badges,
-  // el propio botón, etc.).
   const guardedOnClick = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       if (isNestedFormControl(event.target, event.currentTarget)) {
@@ -140,6 +132,7 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   const startYRef = React.useRef(0)
   const startTimeRef = React.useRef(0)
   const timeoutRef = React.useRef<number | null>(null)
+  const hasCapturedRef = React.useRef(false)
 
   const clearPendingTimeout = React.useCallback(() => {
     if (timeoutRef.current !== null) {
@@ -149,26 +142,56 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   }, [])
 
   function onPointerDown(event: React.PointerEvent) {
+    const target = event.target as HTMLElement;
+
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    const scrollContainer = target.closest('.overflow-y-auto, [data-scrollable]');
+
+    if (scrollContainer && scrollContainer.scrollTop > 0) {
+      return;
+    }
+
     draggingRef.current = true
+    hasCapturedRef.current = false
     startYRef.current = event.clientY
     startTimeRef.current = performance.now()
-
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId)
-    } catch {
-      // noop
-    }
   }
 
   function onPointerMove(event: React.PointerEvent) {
     if (!draggingRef.current) return
+    
     const delta = Math.max(0, event.clientY - startYRef.current)
-    setDragY(delta)
+    const DRAG_THRESHOLD = 3;
+
+    if (delta > DRAG_THRESHOLD) {
+      if (!hasCapturedRef.current) {
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId)
+          hasCapturedRef.current = true
+        } catch {
+          // noop
+        }
+      }
+      setDragY(delta)
+    }
   }
 
-  function endDrag() {
+  function endDrag(event: React.PointerEvent) {
     if (!draggingRef.current) return
+
+    if (hasCapturedRef.current) {
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      } catch {
+        // noop
+      }
+    }
+
     draggingRef.current = false
+    hasCapturedRef.current = false
 
     const elapsed = Math.max(performance.now() - startTimeRef.current, 1)
     const velocity = dragY / elapsed
@@ -215,6 +238,7 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
 export function PopoverContent({
   className,
+  floatingClassName,
   align = "center",
   side = "bottom",
   sideOffset = 4,
@@ -224,6 +248,8 @@ export function PopoverContent({
   children,
   onPointerDownOutside,
   onInteractOutside,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   style,
   ...props
 }: PopoverContentProps) {
@@ -249,29 +275,27 @@ export function PopoverContent({
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           )}
-          onPointerDown={(e) => {
-            // Detiene la propagación para que el toque no active un botón de atrás,
-            // pero permite que Radix procese el evento para CERRAR el Dialog.
-            e.stopPropagation()
-          }}
         />
 
         <DialogPrimitive.Content
           data-drag-scroll-ignore
           onOpenAutoFocus={(event) => {
             event.preventDefault()
+            onOpenAutoFocus?.(event)
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
+            onCloseAutoFocus?.(event)
           }}
           onPointerDownOutside={onPointerDownOutside}
+          onInteractOutside={onInteractOutside}
+          {...dragHandleProps}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col items-center",
+            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            !dismissing && "data-[state=closed]:duration-200 data-[state=open]:duration-300",
-            className
+            !dismissing && "data-[state=closed]:duration-200 data-[state=open]:duration-300"
           )}
           style={{
             ...style,
@@ -283,10 +307,7 @@ export function PopoverContent({
             <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
           </VisuallyHidden>
 
-          <div
-            {...dragHandleProps}
-            className="flex w-full shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
-          >
+          <div className="flex w-full shrink-0 touch-none justify-center pb-1 pt-2.5">
             <div className="h-1.5 w-9 rounded-full bg-white/15" />
           </div>
 
@@ -302,8 +323,9 @@ export function PopoverContent({
               paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
             }}
             className={cn(
-              "flex w-full flex-col items-center gap-2.5 overflow-y-auto overscroll-contain",
-              "px-2.5 pt-1 text-sm"
+              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain",
+              "px-4 pt-1 text-sm",
+              className
             )}
             {...props}
           >
@@ -324,11 +346,14 @@ export function PopoverContent({
       collisionPadding={collisionPadding}
       onOpenAutoFocus={(event) => {
         event.preventDefault()
+        onOpenAutoFocus?.(event)
       }}
       onCloseAutoFocus={(event) => {
         event.preventDefault()
+        onCloseAutoFocus?.(event)
       }}
       onPointerDownOutside={onPointerDownOutside}
+      onInteractOutside={onInteractOutside}
       onWheel={(event) => {
         const element = event.currentTarget
         const isScrollable = element.scrollHeight > element.clientHeight
@@ -347,6 +372,7 @@ export function PopoverContent({
         "data-[side=top]:slide-in-from-bottom-2",
         "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
         "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        floatingClassName,
         className
       )}
       style={style}

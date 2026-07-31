@@ -92,7 +92,7 @@ export function AreaSelect({
 
       </PopoverTrigger>
 
-      <PopoverContent sideOffset={8} className="w-64 p-2">
+      <PopoverContent sideOffset={8} floatingClassName="w-64" className="p-2">
 
         <Command className="bg-transparent">
 

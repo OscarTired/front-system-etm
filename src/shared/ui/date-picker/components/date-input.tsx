@@ -50,8 +50,8 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           onFocus={onFocus}
           onClick={onClick}
           className={[
-            // Cambiado text-sm por text-xs (y h-10 por h-9 para mejor proporción)
-            'w-full h-9 pl-3 pr-9 rounded-xl text-xs font-medium text-center uppercase outline-none transition-colors',
+
+            'w-full h-9 pl-3 pr-9 rounded-xl text-sm font-medium text-center uppercase outline-none transition-colors',
             'bg-white/6 text-neutral-200 placeholder:text-neutral-600',
             'border border-transparent',
             'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',

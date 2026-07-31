@@ -106,7 +106,8 @@ export function LevelSelect({
 
       <PopoverContent
         sideOffset={8}
-        className="w-64 p-2"
+        floatingClassName="w-64"
+        className="p-2"
       >
 
         <Command className="bg-transparent">

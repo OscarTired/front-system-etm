@@ -134,7 +134,7 @@ export function RoleMultiSelect({
 
       </PopoverTrigger>
 
-      <PopoverContent sideOffset={8} className="w-72 p-2">
+      <PopoverContent sideOffset={8} floatingClassName="w-72" className="p-2">
 
         <Command className="bg-transparent">
 

@@ -3,6 +3,7 @@ import { CalendarGrid } from './calendar-grid';
 import { CalendarHeader } from './calendar-header';
 import { useCalendar } from '../hooks/use-calendar';
 import { getToday } from '../utils/dates';
+import { cn } from '@/shared/utils/utils';
 
 export interface DateCalendarProps {
   value?: Date | null;
@@ -10,6 +11,7 @@ export interface DateCalendarProps {
   maxDate?: Date;
   onSelect: (date: Date) => void;
   displayDate?: Date | null;
+  className?: string;
 }
 
 export function DateCalendar({
@@ -18,6 +20,7 @@ export function DateCalendar({
   maxDate,
   onSelect,
   displayDate,
+  className,
 }: DateCalendarProps): React.JSX.Element {
   const {
     weeks,
@@ -61,7 +64,10 @@ export function DateCalendar({
 
   return (
     <div
-      className="w-60 p-3 select-none touch-pan-y flex flex-col gap-2"
+      className={cn(
+        "w-full max-w-xs p-3 select-none touch-pan-y flex flex-col gap-2",
+        className
+      )}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

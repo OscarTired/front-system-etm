@@ -246,7 +246,8 @@ export function EntitySelect<T extends EntityBase>({
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-72 p-2"
+          floatingClassName="w-72"
+          className="p-2"
           align={triggerVariant === "row" ? "start" : "center"}
         >
           <Command>
@@ -304,7 +305,7 @@ export function EntitySelect<T extends EntityBase>({
       {dialogOpen && (
         <EntityDialog
           open={dialogOpen}
-          title={dialogTitle}
+          title={dialogTitle} 
           initialValue={
             editing
               ? {

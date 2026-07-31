@@ -36,7 +36,25 @@ export function parseDateString(raw: string): Date | null {
   return isRealDate ? candidate : null;
 }
 
-/** Permite solo dígitos y "/" mientras el usuario escribe, sin validar aún. */
+/**
+ * Enmascara la entrada del usuario en formato dd/MM/aaaa, insertando
+ * las "/" automáticamente a medida que escribe. Es necesario porque en
+ * mobile el input usa inputMode="numeric": ese teclado nativo NO tiene
+ * tecla "/", así que si no la insertamos nosotros el usuario nunca
+ * puede escribir una fecha con separadores (solo dígitos pegados).
+ *
+ * Se recalcula desde los dígitos crudos en cada pulsación (se descarta
+ * cualquier "/" que ya estuviera en `raw` y se reconstruye desde cero).
+ * Esto hace que backspace funcione de forma natural: al borrar el
+ * último dígito de un grupo, la "/" que lo seguía desaparece sola,
+ * sin necesidad de rastrear posición de cursor a mano.
+ */
 export function sanitizeDateInput(raw: string): string {
-  return raw.replace(/[^\d/]/g, '').slice(0, 10);
+  const digits = raw.replace(/\D/g, '').slice(0, 8); // dd(2) + MM(2) + aaaa(4)
+
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+
+  return [day, month, year].filter(Boolean).join('/');
 }

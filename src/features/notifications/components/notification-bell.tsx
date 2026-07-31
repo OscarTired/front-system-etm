@@ -46,8 +46,6 @@ export function NotificationBell({
   const router = useRouter()
   const sidebarMode = useSidebarStore(s => s.mode)
 
-  // Nota: Pasamos `open` para mantener la carga condicional si tu hook lo requiere,
-  // pero ya no afectará el estado de lectura automáticamente.
   const {
     notifications,
     loading,
@@ -60,7 +58,6 @@ export function NotificationBell({
   const { markAsRead } = useMarkNotificationRead()
   const { markAllAsRead } = useMarkAllNotificationsRead()
 
-  // Muestra todas las notificaciones no leídas sin alterar su estado al abrir el popover
   const visibleNotifications = notifications.filter(n => !n.read)
   const isTopbar = variant === "topbar"
 
@@ -200,7 +197,8 @@ export function NotificationBell({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          className="z-90 w-80 p-0 border-none bg-[#171717] text-white shadow-xl"
+          floatingClassName="w-80"
+          className="z-90 w-full p-0 border-none bg-[#171717] text-white shadow-xl"
         >
           <div className="flex items-center justify-between px-3.5 py-3">
             <span className="text-sm font-semibold text-neutral-200">

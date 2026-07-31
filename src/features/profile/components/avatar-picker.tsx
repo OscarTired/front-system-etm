@@ -96,7 +96,10 @@ export function AvatarPicker({
         </PopoverTrigger>
 
         {/* Contenido del Popover con tus opciones */}
-        <PopoverContent className="w-48 p-1.5 bg-neutral-900 border-white/10 text-neutral-200 shadow-xl rounded-xl">
+        <PopoverContent
+          floatingClassName="w-48"
+          className="p-1.5 bg-neutral-900 border-white/10 text-neutral-200 shadow-xl rounded-xl"
+        >
           <div className="flex flex-col gap-1">
             
             <button

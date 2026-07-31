@@ -67,10 +67,8 @@ export function DatePicker({
     setOpen(next);
   }, []);
 
-  // Prevenir que el teclado se despliegue al abrir el Sheet en Mobile
   useEffect(() => {
     if (open && isMobile) {
-      // Ocultar teclado forzadamente retirando el foco de cualquier input activo
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -115,18 +113,8 @@ export function DatePicker({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
             onClick={() => {
-              // El guard central en PopoverTrigger (src/components/ui/popover.tsx)
-              // bloquea el toggle automático de Radix para clicks originados
-              // en el input (es un control de formulario anidado). Por eso,
-              // en desktop, tenemos que abrir explícitamente aquí. En mobile
-              // no: queremos que el input solo permita escribir.
               if (!isMobile) setOpen(true);
             }}
-            // Sin onCalendarClick: el botón del ícono es un <button> normal,
-            // no un control de formulario, así que el guard central NO lo
-            // bloquea. El click burbujea de forma nativa hasta el div
-            // envuelto por PopoverTrigger y Radix togglea el popover/sheet
-            // solo (mismo toggle nativo que usaría cualquier otro trigger).
           />
         </div>
       </PopoverTrigger>
@@ -134,17 +122,13 @@ export function DatePicker({
       <PopoverContent
         sideOffset={6}
         onOpenAutoFocus={(e) => {
-          // BLOQUEO SENIOR: Previene que Radix autoconfiera foco al input y despliegue el teclado virtual
           e.preventDefault();
         }}
-        className={
-          isMobile 
-            ? "flex flex-col items-center justify-center w-full p-4 gap-3" 
-            : "w-auto p-0 rounded-xl shadow-xl bg-popover"
-        }
+        floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
+        className="flex flex-col w-full gap-3 p-4"
       >
         {isMobile && (
-          <div className="w-full max-w-[280px] px-1">
+          <div className="w-full">
             <DateInput
               ref={sheetInputRef}
               value={inputValue}

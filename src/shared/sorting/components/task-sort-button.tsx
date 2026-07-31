@@ -111,7 +111,8 @@ export function TaskSortButton(){
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="w-64 p-2"
+        floatingClassName="w-64"
+        className="p-2"
       >
 
         <Command
