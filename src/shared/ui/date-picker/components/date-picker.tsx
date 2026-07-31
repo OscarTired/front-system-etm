@@ -120,6 +120,9 @@ export function DatePicker({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
             onClick={() => {
+              // El fix de fondo (que un click en el input no abra el
+              // popover/sheet) vive centralizado en PopoverTrigger
+              // (src/components/ui/popover.tsx), no aquí.
               if (!isMobile) setOpen(true);
             }}
             onCalendarClick={handleCalendarIconClick}
