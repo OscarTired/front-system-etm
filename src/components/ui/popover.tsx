@@ -16,24 +16,24 @@ const SHEET_CONFIG = {
   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
   EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)",
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
-} as const
+} as const;
 
 const PopoverModeContext = React.createContext<boolean>(false)
 const PopoverCloseContext = React.createContext<() => void>(() => {})
 const PopoverOpenContext = React.createContext<boolean>(false)
 
-export type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
+type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
   forceFloating?: boolean
 }
 
-export type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
+type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
 
-export type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
+type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portal?: boolean
   floatingClassName?: string
 }
 
-export type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
+type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
 
 export function Popover({
   forceFloating = false,
@@ -103,9 +103,9 @@ function isNestedFormControl(target: EventTarget | null, currentTarget: EventTar
 
   const tag = target.tagName
   return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    tag === "SELECT" ||
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
     target.isContentEditable
   )
 }
@@ -124,7 +124,7 @@ export function PopoverTrigger({
       }
       onClick?.(event as React.MouseEvent<HTMLButtonElement>)
     },
-    [onClick]
+    [onClick],
   )
 
   if (isSheet) {
@@ -166,16 +166,16 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   }, [])
 
   function onPointerDown(event: React.PointerEvent) {
-    const target = event.target as HTMLElement
+    const target = event.target as HTMLElement;
 
-    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
-      return
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      return;
     }
 
-    const scrollContainer = target.closest(".overflow-y-auto, [data-scrollable]")
+    const scrollContainer = target.closest('.overflow-y-auto, [data-scrollable]');
 
     if (scrollContainer && scrollContainer.scrollTop > 0) {
-      return
+      return;
     }
 
     draggingRef.current = true
@@ -186,9 +186,9 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
   function onPointerMove(event: React.PointerEvent) {
     if (!draggingRef.current) return
-
+   
     const delta = Math.max(0, event.clientY - startYRef.current)
-    const DRAG_THRESHOLD = 3
+    const DRAG_THRESHOLD = 3;
 
     if (delta > DRAG_THRESHOLD) {
       if (!hasCapturedRef.current) {
@@ -260,6 +260,34 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   }
 }
 
+/**
+ * Hook para medir dinámicamente el tamaño del contenido y lograr una transición fluida en ancho y alto.
+ */
+function useSmoothResize() {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [size, setSize] = React.useState<{ width: number | undefined; height: number | undefined }>({
+    width: undefined,
+    height: undefined,
+  })
+
+  React.useEffect(() => {
+    const node = containerRef.current
+    if (!node) return
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        setSize({ width, height })
+      }
+    })
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
+  return { containerRef, size }
+}
+
 export function PopoverContent({
   className,
   floatingClassName,
@@ -284,12 +312,14 @@ export function PopoverContent({
   const { dragY, isDragging, dismissing, dragHandleProps } =
     useSheetDragToDismiss(close, isOpen)
 
+  const { containerRef, size } = useSmoothResize()
+
   if (isSheet) {
     const transitionStyle: string = isDragging
       ? "none"
       : dismissing
         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 350ms cubic-bezier(0.34, 1.56, 0.64, 1)`
+        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 300ms cubic-bezier(0.2,0,0,1)`
 
     return (
       <DialogPrimitive.Portal>
@@ -340,6 +370,7 @@ export function PopoverContent({
           </div>
 
           <div
+            ref={containerRef}
             onWheel={(event) => {
               const element = event.currentTarget
               const isScrollable = element.scrollHeight > element.clientHeight
@@ -349,15 +380,18 @@ export function PopoverContent({
             }}
             style={{
               paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
+              height: size.height ? `${size.height}px` : "auto",
             }}
             className={cn(
-              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+              "flex w-full flex-col gap-2.5 overflow-hidden transition-[height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
               "px-4 pt-1 text-sm",
               className
             )}
             {...props}
           >
-            {children}
+            <div className="flex flex-col gap-2.5 w-full overflow-y-auto overscroll-contain">
+              {children}
+            </div>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
@@ -395,10 +429,8 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none",
-        "max-h-[var(--radix-popover-content-available-height)] w-max max-w-[var(--radix-popover-content-available-width)]",
-        "overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        "transition-[width,height] duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
+        "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
@@ -408,10 +440,16 @@ export function PopoverContent({
         floatingClassName,
         className
       )}
-      style={style}
+      style={{
+        ...style,
+        width: size.width ? `${size.width}px` : undefined,
+        height: size.height ? `${size.height}px` : undefined,
+      }}
       {...props}
     >
-      {children}
+      <div ref={containerRef} className="flex flex-col gap-2.5 w-full h-full overflow-hidden">
+        {children}
+      </div>
     </PopoverPrimitive.Content>
   )
 
@@ -450,7 +488,7 @@ export function PopoverAnchor({
 export function PopoverHeader({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+} : React.ComponentProps<"div">) {
   return (
     <div
       data-slot="popover-header"
