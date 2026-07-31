@@ -8,24 +8,13 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { cn } from "@/shared/utils/utils"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
-/**
- * Configuración centralizada para el comportamiento táctil y las físicas del Sheet.
- * Evita números mágicos dispersos en la lógica del componente.
- */
 const SHEET_CONFIG = {
-  /** Distancia vertical en px requerida para confirmar el descarte por arrastre */
   DISMISS_THRESHOLD_PX: 90,
-  /** Velocidad de arrastre (px/ms) para disparar el descarte rápido */
   DISMISS_VELOCITY_THRESHOLD: 0.5,
-  /** Duración base de las transiciones de salida en milisegundos */
   ANIMATION_DURATION_MS: 200,
-  /** Buffer adicional de seguridad antes de invocar el unmount en React */
   UNMOUNT_BUFFER_MS: 20,
-  /** Curva de aceleración de descarte inspirada en la física de iOS */
   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
-  /** Curva de aceleración para el retorno cuando no se supera el umbral */
   EASING_RESET: "ease-out",
-  /** Inset inferior para acomodar el safe-area-inset de dispositivos móviles */
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
 } as const;
 
@@ -221,6 +210,8 @@ export function PopoverContent({
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           )}
           onPointerDown={(e) => {
+            // Detiene la propagación para que el toque no active un botón de atrás,
+            // pero permite que Radix procese el evento para CERRAR el Dialog.
             e.stopPropagation()
           }}
         />
@@ -233,10 +224,7 @@ export function PopoverContent({
           onCloseAutoFocus={(event) => {
             event.preventDefault()
           }}
-          onPointerDownOutside={(e) => {
-            e.preventDefault()
-            onPointerDownOutside?.(e)
-          }}
+          onPointerDownOutside={onPointerDownOutside}
           className={cn(
             "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col items-center",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
@@ -300,10 +288,7 @@ export function PopoverContent({
       onCloseAutoFocus={(event) => {
         event.preventDefault()
       }}
-      onPointerDownOutside={(e) => {
-        e.preventDefault()
-        onPointerDownOutside?.(e)
-      }}
+      onPointerDownOutside={onPointerDownOutside}
       onWheel={(event) => {
         const element = event.currentTarget
         const isScrollable = element.scrollHeight > element.clientHeight
