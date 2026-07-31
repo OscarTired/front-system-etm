@@ -16,24 +16,24 @@ const SHEET_CONFIG = {
   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
   EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)",
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
-} as const;
+} as const
 
 const PopoverModeContext = React.createContext<boolean>(false)
 const PopoverCloseContext = React.createContext<() => void>(() => {})
 const PopoverOpenContext = React.createContext<boolean>(false)
 
-type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
+export type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
   forceFloating?: boolean
 }
 
-type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
+export type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
 
-type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
+export type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portal?: boolean
   floatingClassName?: string
 }
 
-type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
+export type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
 
 export function Popover({
   forceFloating = false,
@@ -103,9 +103,9 @@ function isNestedFormControl(target: EventTarget | null, currentTarget: EventTar
 
   const tag = target.tagName
   return (
-    tag === 'INPUT' ||
-    tag === 'TEXTAREA' ||
-    tag === 'SELECT' ||
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
     target.isContentEditable
   )
 }
@@ -124,7 +124,7 @@ export function PopoverTrigger({
       }
       onClick?.(event as React.MouseEvent<HTMLButtonElement>)
     },
-    [onClick],
+    [onClick]
   )
 
   if (isSheet) {
@@ -166,16 +166,16 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   }, [])
 
   function onPointerDown(event: React.PointerEvent) {
-    const target = event.target as HTMLElement;
+    const target = event.target as HTMLElement
 
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-      return;
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+      return
     }
 
-    const scrollContainer = target.closest('.overflow-y-auto, [data-scrollable]');
+    const scrollContainer = target.closest(".overflow-y-auto, [data-scrollable]")
 
     if (scrollContainer && scrollContainer.scrollTop > 0) {
-      return;
+      return
     }
 
     draggingRef.current = true
@@ -186,9 +186,9 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
   function onPointerMove(event: React.PointerEvent) {
     if (!draggingRef.current) return
-   
+
     const delta = Math.max(0, event.clientY - startYRef.current)
-    const DRAG_THRESHOLD = 3;
+    const DRAG_THRESHOLD = 3
 
     if (delta > DRAG_THRESHOLD) {
       if (!hasCapturedRef.current) {
@@ -281,24 +281,6 @@ export function PopoverContent({
   const close = React.useContext(PopoverCloseContext)
   const isOpen = React.useContext(PopoverOpenContext)
 
-  const contentRef = React.useRef<HTMLDivElement>(null)
-  const [contentHeight, setContentHeight] = React.useState<number | 'auto'>('auto')
-
-  React.useLayoutEffect(() => {
-    if (contentRef.current) {
-      const observer = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          setContentHeight(entry.contentRect.height)
-        }
-      })
-
-      observer.observe(contentRef.current)
-      setContentHeight(contentRef.current.scrollHeight)
-
-      return () => observer.disconnect()
-    }
-  }, [children])
-
   const { dragY, isDragging, dismissing, dragHandleProps } =
     useSheetDragToDismiss(close, isOpen)
 
@@ -370,8 +352,6 @@ export function PopoverContent({
             }}
             className={cn(
               "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
-              // Ocultar scrollbar en Sheet
-              "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
               "px-4 pt-1 text-sm",
               className
             )}
@@ -386,7 +366,6 @@ export function PopoverContent({
 
   const content = (
     <PopoverPrimitive.Content
-      data-slot="popover-content"
       data-drag-scroll-ignore
       align={align}
       side={side}
@@ -416,7 +395,10 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none",
+        "max-h-[var(--radix-popover-content-available-height)] w-max max-w-[var(--radix-popover-content-available-width)]",
+        "overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
@@ -426,31 +408,10 @@ export function PopoverContent({
         floatingClassName,
         className
       )}
-      style={{
-        ...style,
-        overflow: "hidden"
-      }}
+      style={style}
       {...props}
     >
-      <div
-        style={{
-          height: contentHeight === 'auto' ? 'auto' : `${contentHeight}px`,
-          transition: "height 300ms cubic-bezier(0.2, 0, 0, 1)",
-          willChange: "height",
-          boxSizing: 'content-box',
-          overflowY: contentHeight === 'auto' ? 'visible' : 'auto'
-        }}
-        // Ocultar scrollbar en el contenedor animado
-        className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
-        <div
-          ref={contentRef}
-          className="flex flex-col gap-2.5"
-          style={{ padding: '2px' }}
-        >
-          {children}
-        </div>
-      </div>
+      {children}
     </PopoverPrimitive.Content>
   )
 
