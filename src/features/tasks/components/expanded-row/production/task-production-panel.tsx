@@ -175,114 +175,116 @@ export function TaskProductionPanel({
 
   const stepper = (
 
-    <div className="w-full h-16">
+    <div className="w-full h-16 flex items-center justify-center">
       <HorizontalScroll>
-        {task.route.map((code, index) => {
+        <div className="flex w-full items-center justify-center min-w-max px-2 mx-auto">
+          {task.route.map((code, index) => {
 
-          const definition = PROCESS_DEFINITIONS[code]
-          const ProcessIcon = ENTITY_ICONS[definition.icon]
+            const definition = PROCESS_DEFINITIONS[code]
+            const ProcessIcon = ENTITY_ICONS[definition.icon]
 
-          const step = task.workflowSteps.find(
-            s => s.processCode === code,
-          )
+            const step = task.workflowSteps.find(
+              s => s.processCode === code,
+            )
 
-          const isActive = currentStep?.processCode === code
+            const isActive = currentStep?.processCode === code
 
-          const isDone =
-            step?.status === "COMPLETED" ||
-            step?.status === "REVIEWED"
+            const isDone =
+              step?.status === "COMPLETED" ||
+              step?.status === "REVIEWED"
 
-          const isLast = index === task.route.length - 1
+            const isLast = index === task.route.length - 1
 
-          const colors = getBadgeColors(definition.color, "subtle")
+            const colors = getBadgeColors(definition.color, "subtle")
 
-          return (
+            return (
 
-            <div
-              key={code}
-              data-active={isActive}
-              className="flex items-center shrink-0"
-            >
-
-              <button
-                type="button"
-                onClick={() => {
-
-                  sessionStorage.setItem(
-                    "process-origin-task-id",
-                    task.id,
-                  )
-
-                  router.push(
-                    `/processes?code=${code}&taskId=${task.id}`,
-                  )
-
-                }}
-                className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+              <div
+                key={code}
+                data-active={isActive}
+                className="flex items-center shrink-0"
               >
 
-                <div
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
-                  style={
-                    isActive || isDone
-                      ? {
-                          backgroundColor: isActive
-                            ? colors.backgroundActive
-                            : colors.background,
-                        }
-                      : {
-                          backgroundColor: "rgba(255,255,255,0.03)",
-                          opacity: 0.45,
-                        }
-                  }
-                >
+                <button
+                  type="button"
+                  onClick={() => {
 
-                  {isDone ? (
-                    <Check size={16} style={{ color: colors.text }} />
-                  ) : (
-                    <ProcessIcon
-                      size={16}
-                      style={{ color: isActive ? colors.text : "#737373" }}
-                    />
-                  )}
+                    sessionStorage.setItem(
+                      "process-origin-task-id",
+                      task.id,
+                    )
 
-                </div>
+                    router.push(
+                      `/processes?code=${code}&taskId=${task.id}`,
+                    )
 
-                <span
-                  className="text-[10px] font-bold"
-                  style={{
-                    color:
-                      isActive || isDone
-                        ? colors.text
-                        : "#525252",
                   }}
+                  className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
                 >
-                  {definition.code}
-                </span>
-
-              </button>
-
-              {!isLast && (
-
-                <div className="mx-1.5 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8 self-center mb-4">
 
                   <div
-                    className="h-full rounded-full transition-all duration-200"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
+                    style={
+                      isActive || isDone
+                        ? {
+                            backgroundColor: isActive
+                              ? colors.backgroundActive
+                              : colors.background,
+                          }
+                        : {
+                            backgroundColor: "rgba(255,255,255,0.03)",
+                            opacity: 0.45,
+                          }
+                    }
+                  >
+
+                    {isDone ? (
+                      <Check size={16} style={{ color: colors.text }} />
+                    ) : (
+                      <ProcessIcon
+                        size={16}
+                        style={{ color: isActive ? colors.text : "#737373" }}
+                      />
+                    )}
+
+                  </div>
+
+                  <span
+                    className="text-[10px] font-bold"
                     style={{
-                      width: isDone ? "100%" : "0%",
-                      backgroundColor: colors.text,
+                      color:
+                        isActive || isDone
+                          ? colors.text
+                          : "#525252",
                     }}
-                  />
+                  >
+                    {definition.code}
+                  </span>
 
-                </div>
+                </button>
 
-              )}
+                {!isLast && (
 
-            </div>
+                  <div className="mx-2 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8 self-start mt-5">
 
-          )
+                    <div
+                      className="h-full rounded-full transition-all duration-200"
+                      style={{
+                        width: isDone ? "100%" : "0%",
+                        backgroundColor: colors.text,
+                      }}
+                    />
 
-        })}
+                  </div>
+
+                )}
+
+              </div>
+
+            )
+
+          })}
+        </div>
       </HorizontalScroll>
     </div>
 

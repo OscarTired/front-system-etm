@@ -1,10 +1,15 @@
 "use client"
 
 import {
+  Hash,
   InspectionPanel,
   Layers3,
+  Package,
   PaintBucket,
+  Palette,
   Puzzle,
+  Ruler,
+  Sparkles,
 } from "lucide-react"
 
 import type {
@@ -54,7 +59,7 @@ export function TaskKpisSection({
       color={"#d4d2a6"}
       rows={[
         {
-          label:"Asignación",
+          label:"Lote",
           value:`L${task.lotNumber}`,
         },
       ]}
@@ -149,24 +154,29 @@ export function TaskKpisSection({
 
   // Mismo dato que las cards de arriba, pero aplanado en filas
   // sueltas (una por métrica) para el carousel mobile — ahí no se
-  // muestra como card sino como ítem compacto tipo stepper.
+  // muestra como card sino como ítem compacto tipo stepper. Cada
+  // fila tiene su propio ícono (antes Material/Espesor compartían
+  // uno, y Piezas/Unidades/Entrega otro, y Color/Tipo/Pedido otro
+  // más — en la card no se notaba porque ahí es UN ícono por card
+  // completa, pero acá cada fila es su propio chip y quedaban
+  // repetidos entre sí).
   const items: KpiItem[] = [
 
     {
       icon: Layers3,
       color: "#d4d2a6",
-      label: "Asignación",
+      label: "Lote",
       value: `L${task.lotNumber}`,
     },
 
     {
-      icon: InspectionPanel,
+      icon: Package,
       color: task.material.color,
       label: "Material",
       value: task.material.name.toUpperCase(),
     },
     {
-      icon: InspectionPanel,
+      icon: Ruler,
       color: task.material.color,
       label: "Espesor",
       value: task.thickness.name,
@@ -180,13 +190,13 @@ export function TaskKpisSection({
     },
     ...(hasAssemblyProcess ? [
       {
-        icon: Puzzle,
+        icon: Hash,
         color: PIEZAS_COLOR,
         label: "Unidades",
         value: task.assemblyCount,
       },
       {
-        icon: Puzzle,
+        icon: InspectionPanel,
         color: PIEZAS_COLOR,
         label: "Entrega",
         value: `${task.assemblyCount} UND`,
@@ -195,13 +205,13 @@ export function TaskKpisSection({
 
     hasPaintProcess
       ? {
-          icon: PaintBucket,
+          icon: Palette,
           color: task.color?.color ?? "#64748B",
           label: "Color",
           value: task.color?.name.toUpperCase() ?? "-",
         }
       : {
-          icon: PaintBucket,
+          icon: Sparkles,
           color: "#BBBBBB",
           label: "Tipo",
           value: "NATURAL",
