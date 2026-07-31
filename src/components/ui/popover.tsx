@@ -289,7 +289,7 @@ export function PopoverContent({
       ? "none"
       : dismissing
         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 300ms cubic-bezier(0.2,0,0,1)`
+        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 350ms cubic-bezier(0.34, 1.56, 0.64, 1)`
 
     return (
       <DialogPrimitive.Portal>
@@ -351,7 +351,7 @@ export function PopoverContent({
               paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
             }}
             className={cn(
-              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
               "px-4 pt-1 text-sm",
               className
             )}
@@ -398,7 +398,8 @@ export function PopoverContent({
         "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none",
         "max-h-[var(--radix-popover-content-available-height)] w-max max-w-[var(--radix-popover-content-available-width)]",
         "overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+        /* AQUÍ ESTÁ EL TRUCO: Forzamos a Radix a animar el cambio de tamaño usando transition con el resorte */
+        "transition-[width,height] duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
