@@ -11,10 +11,10 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 const SHEET_CONFIG = {
   DISMISS_THRESHOLD_PX: 90,
   DISMISS_VELOCITY_THRESHOLD: 0.5,
-  ANIMATION_DURATION_MS: 250, // Ligeramente más suave estilo iOS
+  ANIMATION_DURATION_MS: 250,
   UNMOUNT_BUFFER_MS: 20,
   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
-  EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)", // Spring-out sutil de iOS
+  EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)",
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
 } as const;
 
@@ -30,11 +30,6 @@ type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
 
 type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portal?: boolean
-  /**
-   * Clases que aplican ÚNICAMENTE al popover flotante de desktop (ej.
-   * un ancho fijo como "w-72" o "w-64" para que el popover no crezca
-   * según su contenido).
-   */
   floatingClassName?: string
 }
 
@@ -64,7 +59,6 @@ export function Popover({
     [isControlled, onOpenChange]
   )
 
-  // Escuchar el evento global para cerrar este popover si se abre un diálogo
   React.useEffect(() => {
     const handleClosePopovers = () => {
       if (isOpen) {
@@ -291,11 +285,11 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   if (isSheet) {
-    const transitionStyle = isDragging
+    const transitionStyle: string = isDragging
       ? "none"
       : dismissing
         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
+        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 300ms cubic-bezier(0.2,0,0,1)`
 
     return (
       <DialogPrimitive.Portal>
@@ -324,7 +318,7 @@ export function PopoverContent({
           onInteractOutside={onInteractOutside}
           {...dragHandleProps}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col",
+            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col overflow-hidden",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
@@ -357,7 +351,7 @@ export function PopoverContent({
               paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
             }}
             className={cn(
-              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain",
+              "flex w-full flex-col gap-2.5 overflow-y-auto overscroll-contain transition-[height,width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
               "px-4 pt-1 text-sm",
               className
             )}
@@ -401,7 +395,8 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none overflow-hidden",
+        "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
