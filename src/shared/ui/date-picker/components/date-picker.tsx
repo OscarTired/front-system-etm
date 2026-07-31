@@ -102,11 +102,6 @@ export function DatePicker({
     [handleInputKeyDown, handleOpenChange],
   );
 
-  const handleCalendarIconClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    setOpen((prev) => !prev);
-  }, []);
-
   return (
     <Popover open={open} onOpenChange={disabled ? undefined : handleOpenChange}>
       <PopoverTrigger asChild>
@@ -120,12 +115,18 @@ export function DatePicker({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
             onClick={() => {
-              // El fix de fondo (que un click en el input no abra el
-              // popover/sheet) vive centralizado en PopoverTrigger
-              // (src/components/ui/popover.tsx), no aquí.
+              // El guard central en PopoverTrigger (src/components/ui/popover.tsx)
+              // bloquea el toggle automático de Radix para clicks originados
+              // en el input (es un control de formulario anidado). Por eso,
+              // en desktop, tenemos que abrir explícitamente aquí. En mobile
+              // no: queremos que el input solo permita escribir.
               if (!isMobile) setOpen(true);
             }}
-            onCalendarClick={handleCalendarIconClick}
+            // Sin onCalendarClick: el botón del ícono es un <button> normal,
+            // no un control de formulario, así que el guard central NO lo
+            // bloquea. El click burbujea de forma nativa hasta el div
+            // envuelto por PopoverTrigger y Radix togglea el popover/sheet
+            // solo (mismo toggle nativo que usaría cualquier otro trigger).
           />
         </div>
       </PopoverTrigger>
@@ -149,8 +150,6 @@ export function DatePicker({
               value={inputValue}
               placeholder={placeholder ?? "DD/MM/YYYY"}
               disabled={disabled}
-              // Si el usuario no está interactuando activamente, usamos inputMode="none" para evitar despliegue automático del teclado
-              inputMode="numeric"
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDownWithEscape}
