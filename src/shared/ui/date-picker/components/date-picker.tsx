@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import * as Popover from '@radix-ui/react-popover';
 import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
@@ -99,7 +99,7 @@ export function DatePicker({
     [handleInputKeyDown, handleOpenChange],
   );
 
-  // FLUXO DESKTOP: Clic en el input abre popover y mantiene el foco para escribir
+  // FLUJO DESKTOP: Clic en el input abre popover y mantiene el foco para escribir
   const handleInputClickDesktop = useCallback(() => {
     if (!isMobile) {
       setOpen(true);
@@ -133,11 +133,10 @@ export function DatePicker({
       <Popover.Portal>
         <Popover.Content
           sideOffset={6}
-          // En Desktop no permitimos que el popover robe el foco del input
+          // En Desktop no permitimos que el popover robe el foco inicial del input
           onOpenAutoFocus={(e) => {
             if (!isMobile) e.preventDefault();
           }}
-          onCloseAutoFocus={(e) => e.preventDefault()}
           className="z-50 rounded-xl shadow-xl bg-popover animate-in fade-in-0 zoom-in-95"
         >
           <DateCalendar
