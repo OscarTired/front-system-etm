@@ -41,6 +41,7 @@ export function DatePicker({
   const [open, setOpen] = useState(false);
   const { isMobile } = useResponsive();
   const inputRef = useRef<HTMLInputElement>(null);
+  const sheetInputRef = useRef<HTMLInputElement>(null);
 
   const handleCommit = useCallback(
     (date: Date | null) => {
@@ -91,14 +92,6 @@ export function DatePicker({
     [handleInputKeyDown, handleOpenChange],
   );
 
-  // FLUJO DESKTOP: Clic en el input abre popover y mantiene el foco para escribir
-  const handleInputClickDesktop = useCallback(() => {
-    if (!isMobile) {
-      setOpen(true);
-    }
-  }, [isMobile]);
-
-  // BARRERA O BOTÓN DE CALENDARIO: Funciona en ambas plataformas
   const handleCalendarIconClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setOpen((prev) => !prev);
@@ -113,11 +106,12 @@ export function DatePicker({
             value={inputValue}
             placeholder={placeholder}
             disabled={disabled}
-            readOnly={isMobile}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
-            onClick={handleInputClickDesktop}
+            onClick={() => {
+              if (!isMobile) setOpen(true);
+            }}
             onCalendarClick={handleCalendarIconClick}
           />
         </div>
@@ -125,19 +119,41 @@ export function DatePicker({
 
       <PopoverContent
         sideOffset={6}
-        // En Desktop no permitimos que el popover robe el foco inicial del input
         onOpenAutoFocus={(e) => {
-          if (!isMobile) e.preventDefault();
+          if (isMobile) {
+            e.preventDefault();
+          }
         }}
-        className={isMobile ? undefined : "w-auto p-0 rounded-xl shadow-xl bg-popover"}
+        className={
+          isMobile 
+            ? "flex flex-col items-center justify-center w-full p-4 gap-3" 
+            : "w-auto p-0 rounded-xl shadow-xl bg-popover"
+        }
       >
-        <DateCalendar
-          value={value}
-          displayDate={livePreviewDate}
-          minDate={minDate}
-          maxDate={maxDate}
-          onSelect={handleSelectDay}
-        />
+        {isMobile && (
+          <div className="w-full max-w-[280px] px-1">
+            <DateInput
+              ref={sheetInputRef}
+              value={inputValue}
+              placeholder={placeholder ?? "DD/MM/YYYY"}
+              disabled={disabled}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDownWithEscape}
+              onCalendarClick={() => setOpen(false)}
+            />
+          </div>
+        )}
+
+        <div className="flex w-full justify-center">
+          <DateCalendar
+            value={value}
+            displayDate={livePreviewDate}
+            minDate={minDate}
+            maxDate={maxDate}
+            onSelect={handleSelectDay}
+          />
+        </div>
       </PopoverContent>
     </Popover>
   );
