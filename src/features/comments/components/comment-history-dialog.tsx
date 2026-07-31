@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { MessageSquare, Search, Trash2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Spinner } from "@/shared/ui/spinner/spinner"
 
 import {
   Dialog,
@@ -94,7 +95,7 @@ export function CommentHistoryDialog({
 
   }
 
-  const isEmptyState = !loading && filteredComments.length === 0
+  const isCenteredState = loading || filteredComments.length === 0
 
   return (
 
@@ -163,14 +164,15 @@ export function CommentHistoryDialog({
 
           </div>
 
-          <ScrollArea className={cn("min-h-0 px-5 py-4", isEmptyState && "flex-1 flex flex-col")}>
+          <ScrollArea className={cn("min-h-0 px-5 py-4", isCenteredState && "flex-1 flex flex-col")}>
 
             {loading ? (
-              <div className="flex h-full min-h-55 w-full items-center justify-center">
+              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2.5 my-auto min-h-65">
+                <Spinner size={18} />
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredComments.length === 0 ? (
-              <div className="flex h-full w-full flex-1 items-center justify-center my-auto min-h-70">
+              <div className="flex h-full w-full flex-1 items-center justify-center my-auto min-h-65">
                 <EmptyComments />
               </div>
             ) : (

@@ -65,7 +65,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
   const hasUnread = notifications.some(n => !n.read)
   const hasAny = notifications.length > 0
-  const isEmptyState = !loading && filteredNotifications.length === 0
+  const isCenteredState = loading || filteredNotifications.length === 0
 
   const handleSelect = (notification: Notification) => {
 
@@ -180,14 +180,15 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
           </div>
 
-          <ScrollArea className={cn("min-h-0 px-5 py-4", isEmptyState && "flex-1 flex flex-col")}>
+          <ScrollArea className={cn("min-h-0 px-5 py-4", isCenteredState && "flex-1 flex flex-col")}>
 
             {loading ? (
-              <div className="flex h-full min-h-55 w-full items-center justify-center">
+              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2.5 my-auto min-h-65">
+                <Spinner size={18} />
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredNotifications.length === 0 ? (
-              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-1.5 text-center my-auto min-h-70">
+              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-1.5 text-center my-auto min-h-65">
                 <p className="text-sm text-neutral-500">No hay notificaciones</p>
               </div>
             ) : (
