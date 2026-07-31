@@ -398,7 +398,6 @@ export function PopoverContent({
         "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm shadow-xl outline-none",
         "max-h-[var(--radix-popover-content-available-height)] w-max max-w-[var(--radix-popover-content-available-width)]",
         "overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        /* AQUÍ ESTÁ EL TRUCO: Forzamos a Radix a animar el cambio de tamaño usando transition con el resorte */
         "transition-[width,height] duration-350 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
         "data-[side=bottom]:slide-in-from-top-2",
         "data-[side=left]:slide-in-from-right-2",
