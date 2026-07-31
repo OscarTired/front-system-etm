@@ -40,7 +40,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
         <div className="grid grid-cols-[32px_1fr_32px] items-center">
           <div />
           <div className="flex flex-col items-center">
-            <div className="relative h-12 w-12">
+            <div className="relative h-9 w-9">
               <Image
                 src="/icon.svg"
                 alt="ETM SAC"
@@ -78,7 +78,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
       >
         {collapsed ? (
           <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-2">
-            <div className="relative h-10 w-10">
+            <div className="relative h-9 w-9">
               <Image
                 src="/icon.svg"
                 alt="ETM SAC"
@@ -109,7 +109,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           </div>
         ) : (
           <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-4">
-            <div className="relative flex h-10 w-10 items-center justify-center">
+            <div className="relative flex h-9 w-9 items-center justify-center">
               <Image
                 src="/icon.svg"
                 alt="ETM SAC"

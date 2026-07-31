@@ -45,7 +45,10 @@ function placePiece(
     y,
     angle: variant.angle,
     outline: applyToOutline(finalTransform, piece.outline),
-    subOutlines: piece.subOutlines?.map((sub) => applyToOutline(finalTransform, sub)),
+    subEntities: piece.subEntities?.map((sub) => ({
+      outline: applyToOutline(finalTransform, sub.outline),
+      color: sub.color,
+    })),
     color: piece.color,
   };
 }

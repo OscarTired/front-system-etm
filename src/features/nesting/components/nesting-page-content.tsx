@@ -6,7 +6,7 @@ import { Plus, Trash2, Loader2, X, Upload, FileWarning } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useNesting } from "../hooks/use-nesting"
-import type { NestingPiece, PieceOutline } from "../engine/types"
+import type { NestingPiece, PieceOutline, SubEntity } from "../engine/types"
 import { readCadFile, isSupportedCadFile } from "../cad/cad-reader"
 
 interface ManualRow {
@@ -23,7 +23,7 @@ interface CadRow {
   source: "cad"
   fileName: string
   outline: PieceOutline
-  subOutlines: PieceOutline[]
+  subEntities: SubEntity[]
   width: number
   height: number
   quantity: string
@@ -130,7 +130,10 @@ export function NestingPageContent() {
         source: "cad",
         fileName: file.name,
         outline: cadData.outline,
-        subOutlines: cadData.entities.map((e) => e.outline),
+        // Preservamos el color REAL clasificado por entidad (verde=corte,
+        // naranja=doblez/marca) — nada de aplastarlo a un solo color de
+        // paleta genérico.
+        subEntities: cadData.entities.map((e) => ({ outline: e.outline, color: e.color })),
         width: cadData.width,
         height: cadData.height,
         quantity: "1",
@@ -168,7 +171,7 @@ export function NestingPageContent() {
         pieces.push({
           id: row.id,
           outline: row.outline,
-          subOutlines: row.subOutlines,
+          subEntities: row.subEntities,
           quantity,
           color: row.color,
         })
@@ -263,12 +266,16 @@ export function NestingPageContent() {
 
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
             {rows.map((row) => (
-              <div key={row.id} className="flex items-center gap-2">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-sm"
-                  style={{ backgroundColor: row.color }}
-                  aria-hidden
-                />
+              <div key={row.id} className="flex items-center gap-2 rounded-lg p-1">
+                {row.source === "cad" && <PieceThumbnail subEntities={row.subEntities} />}
+
+                {row.source === "manual" && (
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-sm"
+                    style={{ backgroundColor: row.color }}
+                    aria-hidden
+                  />
+                )}
 
                 {row.source === "manual" ? (
                   <>
@@ -382,6 +389,43 @@ export function NestingPageContent() {
   )
 }
 
+/** Miniatura de la pieza importada tal cual, con el color real de cada entidad (verde=corte, naranja=doblez/marca) — antes esto no existía, la fila solo mostraba texto. */
+function PieceThumbnail({ subEntities }: { subEntities: SubEntity[] }) {
+  const allPoints = subEntities.flatMap((e) => e.outline.points)
+  if (allPoints.length === 0) return <div className="h-8 w-8 shrink-0" />
+
+  let minX = allPoints[0].x, maxX = allPoints[0].x
+  let minY = allPoints[0].y, maxY = allPoints[0].y
+  for (const p of allPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
+  const w = Math.max(maxX - minX, 1)
+  const h = Math.max(maxY - minY, 1)
+  const pad = Math.max(w, h) * 0.05
+
+  return (
+    <svg
+      width={32}
+      height={32}
+      viewBox={`${minX - pad} ${minY - pad} ${w + pad * 2} ${h + pad * 2}`}
+      className="h-8 w-8 shrink-0 rounded-md bg-black/40"
+    >
+      {subEntities.map((e, i) => (
+        <polyline
+          key={i}
+          points={e.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
+          fill="none"
+          stroke={e.color ?? "#22c55e"}
+          strokeWidth={Math.max(w, h) / 60}
+        />
+      ))}
+    </svg>
+  )
+}
+
 function NestingSheetSvg({
   index,
   sheetWidth,
@@ -408,14 +452,14 @@ function NestingSheetSvg({
         className="rounded-lg border border-white/10 bg-black/40"
       >
         {pieces.map((piece, i) =>
-          piece.subOutlines && piece.subOutlines.length > 0 ? (
+          piece.subEntities && piece.subEntities.length > 0 ? (
             <g key={i}>
-              {piece.subOutlines.map((sub, j) => (
+              {piece.subEntities.map((sub, j) => (
                 <polyline
                   key={j}
-                  points={sub.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                  points={sub.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
                   fill="none"
-                  stroke={piece.color ?? "#22c55e"}
+                  stroke={sub.color ?? piece.color ?? "#22c55e"}
                   strokeWidth={0.6}
                 />
               ))}

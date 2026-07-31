@@ -23,13 +23,19 @@ export interface PieceOutline {
   points: Point2D[];
 }
 
+/** Un trazo individual con su color real clasificado (ej. corte vs doblez/marca). */
+export interface SubEntity {
+  outline: PieceOutline;
+  color?: string;
+}
+
 /** Pieza de entrada para el nesting. */
 export interface NestingPiece {
   id: string;
   /** Contorno fusionado — SOLO para bounding box/colisión. No dibujar como un único polígono relleno: es la unión de todas las entidades, no un trazo continuo real. */
   outline: PieceOutline;
-  /** Trazos individuales reales (contorno + huecos, cada uno su propia entidad) para render fiel. Si no se provee (ej. rectángulo manual), se usa `outline` como único trazo. */
-  subOutlines?: PieceOutline[];
+  /** Trazos individuales reales (contorno + huecos), cada uno con su propio color clasificado (verde=corte, naranja=doblez/marca). Si no se provee (ej. rectángulo manual), se usa `outline` + `color` como único trazo. */
+  subEntities?: SubEntity[];
   color?: string;
   /** Cantidad de copias de esta pieza a acomodar. Default 1. */
   quantity?: number;
@@ -44,8 +50,8 @@ export interface PlacedPiece {
   angle: number;
   /** Contorno fusionado ya transformado — SOLO para bounding box, no para dibujar como polígono relleno (ver NestingPiece.outline). */
   outline: PieceOutline;
-  /** Trazos individuales ya transformados a la posición/rotación final, listos para dibujar tal cual. */
-  subOutlines?: PieceOutline[];
+  /** Trazos individuales ya transformados a la posición/rotación final, cada uno con su color real, listos para dibujar tal cual. */
+  subEntities?: SubEntity[];
   color?: string;
 }
 
