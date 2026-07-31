@@ -1,3 +1,4 @@
+// app-shell.tsx
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
@@ -18,11 +19,17 @@ type Props = {
 }
 
 function DesktopTopBar() {
+
   return (
+
     <div className="flex h-12 shrink-0 items-center px-3">
+
       <SidebarShowButton />
+
     </div>
+
   )
+
 }
 
 const CURVE_RADIUS = 28
@@ -58,6 +65,7 @@ const SIDEBAR_OPEN_WIDTH = 248
 const SIDEBAR_COLLAPSED_WIDTH = 72
 
 function DesktopShell({ children }: Props) {
+
   const pathname = usePathname()
   const lastVisibleMode = useSidebarStore(state => state.lastVisibleMode)
   const visualState = useSidebarStore(state => state.visualState)
@@ -94,6 +102,7 @@ function DesktopShell({ children }: Props) {
   const handleTransitionEnd = (
     event: React.TransitionEvent<HTMLElement>,
   ) => {
+
     if (event.target !== event.currentTarget) return
 
     if (event.propertyName === "margin-left") {
@@ -105,10 +114,13 @@ function DesktopShell({ children }: Props) {
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
     }
+
   }
 
   return (
+
     <div className="relative h-screen overflow-hidden bg-[#1d1c1c] text-white">
+
       <AppSidebar />
 
       <main
@@ -120,17 +132,35 @@ function DesktopShell({ children }: Props) {
           transition: contentTransition,
         }}
       >
+
         <DesktopTopBar />
 
         <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+
           {children}
+
         </div>
+
       </main>
+
     </div>
+
   )
+
 }
 
 const DRAWER_REVEAL_OFFSET = 248
+
+// Umbral de arrastre para decidir qué hacer al soltar: si quedó
+// por debajo de este % del ancho revelado, se termina de cerrar;
+// si no, vuelve a abrirse del todo. 0.6 = hay que arrastrar más de
+// la mitad del camino para que "gane" el cierre.
+const CLOSE_THRESHOLD_RATIO = 0.6
+
+// Cuánto movimiento (px) hace falta antes de decidir si el gesto
+// es horizontal (cerrar el drawer) o vertical (dejar que la lista
+// de abajo scrollee normal, sin interferir).
+const DIRECTION_LOCK_THRESHOLD = 6
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -139,91 +169,156 @@ function CompactShell({ children }: Props) {
   const notifyContentTransitionEnd = useMobileNavStore(s => s.notifyContentTransitionEnd)
   const notifyClipTransitionEnd = useMobileNavStore(s => s.notifyClipTransitionEnd)
 
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
+  const targetOffset = DRAWER_REVEAL_OFFSET
+  const stateOffset = visualState === "visible" || visualState === "moving-in" ? targetOffset : 0
 
-  const targetOffset = visualState === "visible" || visualState === "moving-in" ? DRAWER_REVEAL_OFFSET : 0
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // Mientras el dedo está arrastrando, este valor pisa al offset
+  // que vendría del estado (stateOffset) para que el panel siga el
+  // dedo 1:1, sin la transición de 300ms de por medio (eso se
+  // aplica recién al soltar, animando desde donde quedó). El ref
+  // guarda el mismo valor para poder leerlo de forma síncrona en
+  // touchend sin depender de un closure potencialmente desactualizado
+  // (el efecto de abajo no se re-crea en cada frame de arrastre).
+  const [dragOffset, setDragOffset] = useState<number | null>(null)
+  const dragOffsetRef = useRef<number | null>(null)
+
+  // Evita que el "click" sintético que el navegador dispara justo
+  // después de un touchend de arrastre también dispare el
+  // onClickCapture de "tocar afuera para cerrar" de más abajo,
+  // pisando el snap-back a abierto que acabamos de decidir.
+  const suppressClickRef = useRef(false)
 
   useEffect(() => {
+
     const el = contentRef.current
-    if (!el) return
 
-    let startX = 0
-    let startY = 0
-    let currentOffset = targetOffset
-    let startTime = 0
-    let isHorizontalDrag = false
-    let isTracking = false
-
-    const handleTouchStart = (e: TouchEvent) => {
-      // Solo permitimos arrastre para CERRAR cuando el drawer está completamente abierto
-      if (visualState !== "visible") return
-
-      const touch = e.touches[0]
-      startX = touch.clientX
-      startY = touch.clientY
-      startTime = performance.now()
-      currentOffset = DRAWER_REVEAL_OFFSET
-      isHorizontalDrag = false
-      isTracking = true
+    if (!el) {
+      return
     }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isTracking) return
+    // Estado del gesto en curso. Vive en un ref (no en React state)
+    // porque touchmove dispara muy seguido y no necesitamos
+    // re-renderizar por esto, solo por dragOffset.
+    let drag: {
+      startX: number
+      startY: number
+      direction: "horizontal" | "vertical" | null
+      dragged: boolean
+    } | null = null
 
-      const touch = e.touches[0]
-      const deltaX = touch.clientX - startX
-      const deltaY = touch.clientY - startY
+    const handleTouchStart = (event: TouchEvent) => {
 
-      // Lock de dirección inicial para no romper el scroll vertical de la lista
-      if (!isHorizontalDrag) {
-        if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-          isTracking = false // Es un scroll vertical normal
-          return
-        }
-        isHorizontalDrag = true
-        setIsDragging(true)
-        el.style.transition = "none" // Remueve la animación CSS mientras el dedo está arrastrando
-      }
-
-      // Solo permitimos arrastrar hacia la izquierda (cerrar)
-      currentOffset = Math.min(DRAWER_REVEAL_OFFSET, Math.max(0, DRAWER_REVEAL_OFFSET + deltaX))
-      
-      // Mutación DIRECTA al DOM para 120 FPS sin re-renders ni jank de React
-      requestAnimationFrame(() => {
-        if (el) {
-          el.style.transform = `translateX(${currentOffset}px)`
-        }
-      })
-
-      if (e.cancelable) e.preventDefault()
-    }
-
-    const handleTouchEnd = () => {
-      if (!isTracking || !isHorizontalDrag) {
-        isTracking = false
+      // Solo tiene sentido arrastrar para CERRAR cuando el drawer
+      // ya está completamente abierto. Mientras se abre/cierra
+      // (moving-in, moving-out, curve-closing) dejamos que termine
+      // su propia animación tranquila.
+      if (visualState !== "visible") {
         return
       }
 
-      isTracking = false
-      setIsDragging(false)
+      const touch = event.touches[0]
 
-      const elapsedTime = performance.now() - startTime
-      const deltaX = currentOffset - DRAWER_REVEAL_OFFSET
-      const velocityX = deltaX / elapsedTime // px/ms
+      drag = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        direction: null,
+        dragged: false,
+      }
 
-      // Limpiamos estilos inline para devolver el control al estado de React y CSS
-      el.style.transition = ""
-      el.style.transform = ""
+    }
 
-      // FÍSICAS SENIOR: Se cierra si supera el 50% O si el usuario lanzó un "flick" rápido hacia la izquierda
-      const isFlick = velocityX < -0.35
-      const isPassedDistance = currentOffset < DRAWER_REVEAL_OFFSET * 0.5
+    const handleTouchMove = (event: TouchEvent) => {
 
-      if (isFlick || isPassedDistance) {
+      if (!drag) {
+        return
+      }
+
+      const touch = event.touches[0]
+
+      const deltaX = touch.clientX - drag.startX
+      const deltaY = touch.clientY - drag.startY
+
+      if (drag.direction === null) {
+
+        if (
+          Math.abs(deltaX) < DIRECTION_LOCK_THRESHOLD &&
+          Math.abs(deltaY) < DIRECTION_LOCK_THRESHOLD
+        ) {
+          return
+        }
+
+        drag.direction =
+          Math.abs(deltaX) > Math.abs(deltaY)
+            ? "horizontal"
+            : "vertical"
+
+        if (drag.direction === "vertical") {
+          // Es un scroll vertical de la página, no un gesto para
+          // cerrar el drawer — soltamos el seguimiento y dejamos
+          // que el navegador scrollee como siempre.
+          drag = null
+          return
+        }
+
+      }
+
+      // Solo nos importa arrastrar hacia la IZQUIERDA (cerrar). Un
+      // arrastre hacia la derecha no hace nada (ya está abierto del
+      // todo, no hay más para revelar).
+      const nextOffset = Math.min(
+        DRAWER_REVEAL_OFFSET,
+        Math.max(0, DRAWER_REVEAL_OFFSET + deltaX),
+      )
+
+      drag.dragged = true
+
+      dragOffsetRef.current = nextOffset
+      setDragOffset(nextOffset)
+
+      // Necesitamos preventDefault para que el navegador no intente
+      // además scrollear/hacer bounce mientras arrastramos — por
+      // eso este listener se agrega manual con passive:false más
+      // abajo, en vez de depender del onTouchMove sintético de
+      // React (que en touchmove viene passive por defecto y no
+      // puede prevenir nada).
+      event.preventDefault()
+
+    }
+
+    const handleTouchEnd = () => {
+
+      if (!drag || !drag.dragged) {
+        drag = null
+        return
+      }
+
+      const finalOffset =
+        dragOffsetRef.current ?? DRAWER_REVEAL_OFFSET
+
+      const closeThreshold =
+        DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+
+      suppressClickRef.current = true
+
+      window.setTimeout(() => {
+        suppressClickRef.current = false
+      }, 300)
+
+      dragOffsetRef.current = null
+      setDragOffset(null)
+
+      // Con el pisado manual ya suelto, si se cerró el estado pasa
+      // a "moving-out" (offset objetivo 0); si no, sigue "visible"
+      // (offset objetivo DRAWER_REVEAL_OFFSET) — ambos casos animan
+      // con la transición normal desde donde quedó el dedo.
+      if (finalOffset < closeThreshold) {
         closeDrawer()
       }
+
+      drag = null
+
     }
 
     el.addEventListener("touchstart", handleTouchStart, { passive: true })
@@ -232,16 +327,24 @@ function CompactShell({ children }: Props) {
     el.addEventListener("touchcancel", handleTouchEnd, { passive: true })
 
     return () => {
+
       el.removeEventListener("touchstart", handleTouchStart)
       el.removeEventListener("touchmove", handleTouchMove)
       el.removeEventListener("touchend", handleTouchEnd)
       el.removeEventListener("touchcancel", handleTouchEnd)
-    }
-  }, [visualState, closeDrawer, targetOffset])
 
+    }
+
+  }, [visualState, closeDrawer])
+
+  const isDragging = dragOffset !== null
+  const offset = isDragging ? dragOffset : stateOffset
+
+  // Mantenemos la lógica de transición, pero forzamos un orden de ejecución CSS
   const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) return
     
+    // IMPORTANTE: Solo escuchamos la propiedad específica para no disparar dos veces
     if (event.propertyName === "transform") {
       notifyContentTransitionEnd()
     } else if (event.propertyName === "border-radius") {
@@ -252,33 +355,66 @@ function CompactShell({ children }: Props) {
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
-
-      {/* OVERLAY TRANSPARENTE DEDICADO:
-          Elimina la intercepción agresiva de onClickCapture en todo el árbol de componentes.
-          Cubre únicamente el área cuando el drawer está asentado y visible. */}
-      {visualState === "visible" && (
-        <div
-          aria-hidden="true"
-          onClick={closeDrawer}
-          className="fixed inset-0 z-20 cursor-pointer bg-transparent"
-        />
-      )}
-
       <div
         ref={contentRef}
         onTransitionEnd={handleTransitionEnd}
         className="relative z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
         style={{
-          transform: `translateX(${targetOffset}px)`,
+          transform: `translateX(${offset}px)`,
           borderRadius: visualState === "hidden" || visualState === "curve-closing" ? CURVE_SQUARE : CURVE_ROUNDED,
+          // Mientras se arrastra con el dedo, sin transición — tiene
+          // que seguir al dedo en tiempo real. Al soltar (isDragging
+          // pasa a false), vuelve la transición normal para animar
+          // suave desde donde quedó hasta el destino final.
           transition: isDragging
             ? "none"
             : "transform 300ms cubic-bezier(.22,1,.36,1), border-radius 300ms cubic-bezier(.22,1,.36,1)",
         }}
+        onClickCapture={
+          // OJO: este div envuelve también el TopBar (con el botón
+          // hamburguesa). Por eso este handler de "tocar afuera para
+          // cerrar" solo debe activarse cuando el drawer está
+          // realmente asentado y abierto ("visible"). Si se activara
+          // también durante "moving-out"/"curve-closing" (mientras
+          // anima su cierre), un segundo toque rápido sobre la
+          // hamburguesa quedaría atrapado acá (preventDefault +
+          // stopPropagation) y nunca llegaría al onClick real del
+          // botón — el usuario sentiría que "el primer toque no
+          // abre" hasta que termine la animación de cierre.
+          visualState === "visible"
+            ? (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+
+                if (suppressClickRef.current) {
+                  suppressClickRef.current = false
+                  return
+                }
+
+                closeDrawer()
+              }
+            : undefined
+        }
       >
+        {/* TopBar/BottomNav flotan ENCIMA con position:absolute — no
+            adentro del área que scrollea (ahí adentro, la máscara de
+            fade de VerticalScroll las desvanecería según el scroll,
+            que está mal, tienen que quedar siempre visibles), y no
+            como hermanos flex empujando contenido (eso hacía que el
+            bottom nav se "moviera" con poco contenido en vez de
+            quedar siempre pegado abajo). VerticalScroll ocupa TODO
+            el alto — su padding interno (abajo, en className) deja
+            lugar para que el último contenido no quede tapado. */}
         <TopBar />
 
         <VerticalScroll
+          // key={pathname}: fuerza un remount completo (DOM nuevo,
+          // scrollTop nuevo en 0) al navegar entre páginas. Sin esto,
+          // el <div> con overflow-y-auto conserva el scrollTop de la
+          // página anterior; si el contenido nuevo es más corto, el
+          // navegador lo "clampea" de golpe al máximo válido apenas
+          // termina de montar — eso es el salto/franja que se ve al
+          // cerrar el drawer y entrar a otra página con scroll medio.
           key={pathname}
           containerClassName="h-full"
           className="overflow-x-hidden pt-14 pb-20"
@@ -294,7 +430,9 @@ function CompactShell({ children }: Props) {
   )
 }
 
+
 export function AppShell({ children }: Props) {
+
   const { isMobile, ready } = useResponsive()
 
   // Antes de la primera medición real (matchMedia), `isMobile`
@@ -318,9 +456,11 @@ export function AppShell({ children }: Props) {
     )
   }
 
+
   return (
     <DesktopShell>
       {children}
     </DesktopShell>
   )
+
 }
