@@ -1,4 +1,4 @@
-// "use client"
+"use client"
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
@@ -43,19 +43,49 @@ type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
 export function Popover({
   forceFloating = false,
   children,
+  onOpenChange,
+  open,
   ...props
 }: PopoverProps) {
   const { isMobile } = useResponsive()
   const useSheet = isMobile && !forceFloating
 
-  if (useSheet) {
-    const close = () => props.onOpenChange?.(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : internalOpen
 
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setInternalOpen(nextOpen)
+      }
+      onOpenChange?.(nextOpen)
+    },
+    [isControlled, onOpenChange]
+  )
+
+  // Escuchar el evento global para cerrar este popover si se abre un diálogo
+  React.useEffect(() => {
+    const handleClosePopovers = () => {
+      if (isOpen) {
+        handleOpenChange(false)
+      }
+    }
+
+    window.addEventListener("close-all-popovers", handleClosePopovers)
+    return () => {
+      window.removeEventListener("close-all-popovers", handleClosePopovers)
+    }
+  }, [isOpen, handleOpenChange])
+
+  const close = () => handleOpenChange(false)
+
+  if (useSheet) {
     return (
       <PopoverModeContext.Provider value={true}>
-        <PopoverOpenContext.Provider value={props.open ?? false}>
+        <PopoverOpenContext.Provider value={isOpen}>
           <PopoverCloseContext.Provider value={close}>
-            <DialogPrimitive.Root {...props}>
+            <DialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange} {...props}>
               {children}
             </DialogPrimitive.Root>
           </PopoverCloseContext.Provider>
@@ -66,7 +96,7 @@ export function Popover({
 
   return (
     <PopoverModeContext.Provider value={false}>
-      <PopoverPrimitive.Root data-slot="popover" {...props}>
+      <PopoverPrimitive.Root data-slot="popover" open={isOpen} onOpenChange={handleOpenChange} {...props}>
         {children}
       </PopoverPrimitive.Root>
     </PopoverModeContext.Provider>
@@ -162,7 +192,7 @@ function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
   function onPointerMove(event: React.PointerEvent) {
     if (!draggingRef.current) return
-    
+   
     const delta = Math.max(0, event.clientY - startYRef.current)
     const DRAG_THRESHOLD = 3;
 
@@ -298,7 +328,7 @@ export function PopoverContent({
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            !dismissing && "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0", // Añade desvanecimiento sutil al salir hacia abajo
+            !dismissing && "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
             !dismissing && "data-[state=closed]:duration-250 data-[state=open]:duration-300"
           )}
           style={{
@@ -376,7 +406,6 @@ export function PopoverContent({
         "data-[side=left]:slide-in-from-right-2",
         "data-[side=right]:slide-in-from-left-2",
         "data-[side=top]:slide-in-from-bottom-2",
-        // Animaciones de entrada y salida fluidas estilo iOS
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-200",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:duration-150",
         floatingClassName,

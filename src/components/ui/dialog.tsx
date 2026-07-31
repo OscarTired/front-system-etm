@@ -48,16 +48,36 @@ type DialogContentProps =
     size?: "default" | "large"
   }
 
-export function Dialog(
-  props: DialogProps
-) {
+export function Dialog({
+  onOpenChange,
+  open,
+  ...props
+}: DialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : internalOpen
+
+  // Disparar evento global para cerrar popovers cuando se abre un diálogo
+  React.useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent("close-all-popovers"))
+    }
+  }, [isOpen])
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(nextOpen)
+    }
+    onOpenChange?.(nextOpen)
+  }
 
   return (
     <DialogPrimitive.Root
+      open={isOpen}
+      onOpenChange={handleOpenChange}
       {...props}
     />
   )
-
 }
 
 export function DialogTrigger(
