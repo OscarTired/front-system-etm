@@ -104,7 +104,9 @@ export default function BitacoraPage() {
 
       {/* Vista para dispositivos móviles / tabletas (Header alternativo) */}
       <div className="desktop:hidden flex flex-col gap-3 mb-4 pt-4">
-        <div className="flex items-center gap-2">
+        
+        {/* Título oculto en móvil/tablet pero conservado con 'hidden' */}
+        <div className="hidden items-center gap-2">
           <h1 className="text-xl font-bold tracking-widest">
             BITÁCORA
           </h1>
