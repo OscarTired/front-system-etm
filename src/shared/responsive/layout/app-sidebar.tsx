@@ -104,18 +104,21 @@ export function AppSidebar({
           "h-full",
           "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
           "overflow-hidden",
-          "will-change-[width,transform]",
-          // Curva de Bezier estilo iOS (suave al detenerse)
-          "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
-          isDrawer && (isVisible ? "translate-x-0" : "-translate-x-full"),
+          "will-change-[width,transform,opacity]",
+          // Transición fluida estilo nativo tanto para desktop como para drawer móvil
+          isDrawer
+            ? "transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            : "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+          isDrawer && (isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"),
           isFullyHidden && "pointer-events-none",
         )}
       >
-        {/* Contenedor interno con ancho estricto sincronizado para evitar saltos de contenido */}
+        {/* Contenedor interno con desvanecimiento suave de textos sincronizado */}
         <div 
           className={cn(
             "pt-6 pb-6 flex h-full flex-col overflow-hidden",
-            "transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
+            "transition-all duration-200 ease-out",
+            collapsed ? "opacity-95" : "opacity-100"
           )} 
           style={{ 
             width: isDrawer ? undefined : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH),

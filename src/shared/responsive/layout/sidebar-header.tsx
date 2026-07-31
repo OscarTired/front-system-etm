@@ -77,8 +77,8 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
         style={{ height: HEADER_BOX_HEIGHT }}
       >
         {collapsed ? (
-          <div className="flex flex-col items-center w-full rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 px-2 py-4">
-            <div className="relative h-9 w-9">
+          <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-2">
+            <div className="relative h-10 w-10">
               <Image
                 src="/icon.svg"
                 alt="ETM SAC"
@@ -89,7 +89,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
               />
             </div>
 
-            <div className="mt-4 flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <button
                 onClick={toggleCollapsed}
                 title="Expandir"
@@ -103,14 +103,13 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
                 title="Ocultar barra lateral"
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200 hover:bg-white/5 hover:text-white"
               >
-                {/* Mostrar Chevron si es drawer, de lo contrario mostrar EyeOff */}
                 {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>
         ) : (
-          <div className="relative flex h-full w-full flex-col items-center justify-center rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 px-4">
-            <div className="relative flex h-18 w-18 items-center justify-center">
+          <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-4">
+            <div className="relative flex h-10 w-10 items-center justify-center">
               <Image
                 src="/icon.svg"
                 alt="ETM SAC"
@@ -121,16 +120,16 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
               />
             </div>
 
-            <div className="mt-2 flex flex-col items-center">
-              <h1 className="whitespace-nowrap text-[12px] font-semibold tracking-[0.16em] text-white/90">
+            <div className="flex flex-col items-center">
+              <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-white/90">
                 COMPANY S.A.C.
               </h1>
-              <p className="mt-0.5 whitespace-nowrap text-[10px] tracking-[0.12em] text-neutral-500">
+              <p className="mt-0.5 whitespace-nowrap text-[9px] tracking-[0.12em] text-neutral-500">
                 ERP INDUSTRIAL
               </p>
             </div>
 
-            <div className="absolute right-3 top-3 flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <button
                 onClick={toggleCollapsed}
                 title="Comprimir"
