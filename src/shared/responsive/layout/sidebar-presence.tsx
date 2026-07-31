@@ -1,12 +1,12 @@
 "use client"
 
 import { useMemo, useState, useRef } from "react"
-import { Users, Search } from "lucide-react"
+import { Users, Search, ChevronDown } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
-import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
+import { formatNotificationDate } from "@/features/notifications/utils/format-notification-date"
 
 import {
   Popover,
@@ -31,15 +31,25 @@ type Props = {
   presenceRef?: (node: HTMLDivElement | null) => void
 }
 
+const DEFAULT_VISIBLE_COUNT = 4
+
+type PresenceUser = {
+  id: string
+  name: string
+  avatarUrl?: string | null
+  online: boolean
+  lastSeenAt?: string | null
+}
+
 function UserRow({
   user,
 }: {
-  user: { id: string; name: string; avatarUrl?: string | null }
+  user: PresenceUser
 }) {
   return (
     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 w-full min-w-0">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <div className="relative h-5 w-5 shrink-0">
+        <div className="relative h-6 w-6 shrink-0">
           <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
             {user.avatarUrl ? (
               <img
@@ -53,17 +63,29 @@ function UserRow({
           </div>
           <span
             aria-hidden="true"
-            className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-neutral-900"
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-[#171717]",
+              user.online ? "bg-emerald-500" : "bg-neutral-600",
+            )}
           />
         </div>
 
-        <span className="truncate text-xs font-medium text-neutral-300 transition-colors">
-          {user.name}
-        </span>
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-medium text-neutral-300">
+            {user.name}
+          </span>
+          {!user.online && user.lastSeenAt && (
+            <span className="block truncate text-[10px] text-neutral-500">
+              Últ. vez hace {formatNotificationDate(user.lastSeenAt)}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0 pl-2">
-        <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+        {user.online ? (
+          <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+        ) : null}
       </div>
     </div>
   )
@@ -75,8 +97,9 @@ export function SidebarPresence({
   variant = "sidebar",
   presenceRef,
 }: Props) {
-  const { open, setOpen } = useManagedOverlay("presence")
+  const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [expanded, setExpanded] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const currentUser = useAuthStore(s => s.user)
@@ -90,11 +113,47 @@ export function SidebarPresence({
     [users, currentUser?.id],
   )
 
+  const offlineUsers = useMemo(
+    () =>
+      users
+        .filter(user => !user.online && user.id !== currentUser?.id)
+        .sort((a, b) => {
+          if (!a.lastSeenAt && !b.lastSeenAt) {
+            return a.name.localeCompare(b.name)
+          }
+
+          if (!a.lastSeenAt) return 1
+          if (!b.lastSeenAt) return -1
+
+          return (
+            new Date(b.lastSeenAt).getTime() -
+            new Date(a.lastSeenAt).getTime()
+          )
+        }),
+    [users, currentUser?.id],
+  )
+
+  const allUsers = useMemo(
+    () => [...onlineUsers, ...offlineUsers],
+    [onlineUsers, offlineUsers],
+  )
+
   const filteredUsers = useMemo(() => {
     const search = query.trim().toLowerCase()
-    if (!search) return onlineUsers
-    return onlineUsers.filter(user => user.name.toLowerCase().includes(search))
-  }, [onlineUsers, query])
+
+    const base = search
+      ? allUsers.filter(user => user.name.toLowerCase().includes(search))
+      : allUsers
+
+    if (search || expanded) {
+      return base
+    }
+
+    return base.slice(0, DEFAULT_VISIBLE_COUNT)
+  }, [allUsers, query, expanded])
+
+  const hasMore =
+    !query.trim() && !expanded && allUsers.length > DEFAULT_VISIBLE_COUNT
 
   const isTopbar = variant === "topbar"
 
@@ -126,10 +185,10 @@ export function SidebarPresence({
     setOpen(nextOpen)
     if (!nextOpen) {
       setQuery("")
+      setExpanded(false)
     }
   }
 
-  // --- Renderizado separado por variantes para mantener limpieza senior ---
   const renderTriggerContent = () => {
     if (isTopbar) {
       return (
@@ -195,7 +254,6 @@ export function SidebarPresence({
       )
     }
 
-    // Sidebar Desktop Expandido
     return (
       <button
         type="button"
@@ -216,7 +274,7 @@ export function SidebarPresence({
       </button>
     )
   }
-  
+
   return (
     <div ref={presenceRef} className={cn(!isTopbar && "select-none my-1")}>
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -227,6 +285,7 @@ export function SidebarPresence({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
+          floatingClassName="w-72"
           className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
@@ -241,9 +300,12 @@ export function SidebarPresence({
               />
             </div>
 
-            <CommandList className="max-h-64 select-none overflow-y-auto">
+            <CommandList className={cn(
+              "select-none overflow-y-auto",
+              expanded || query.trim() ? "max-h-64" : "",
+            )}>
               <CommandEmpty>
-                {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
+                {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
               </CommandEmpty>
 
               <CommandGroup>
@@ -260,6 +322,20 @@ export function SidebarPresence({
                   </CommandItem>
                 ))}
               </CommandGroup>
+
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  Ver todos
+                  <span className="text-neutral-600">
+                    ({allUsers.length})
+                  </span>
+                  <ChevronDown size={13} />
+                </button>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
