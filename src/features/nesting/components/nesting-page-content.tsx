@@ -6,7 +6,7 @@ import { Plus, Trash2, Loader2, X, Upload, FileWarning } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useNesting } from "../hooks/use-nesting"
-import type { NestingPiece, PieceOutline, SubEntity, PlacedPiece, NestedSheet } from "../engine/types"
+import type { NestingPiece, PieceOutline, SubEntity } from "../engine/types"
 import { readCadFile, isSupportedCadFile } from "../cad/cad-reader"
 
 interface ManualRow {
@@ -70,68 +70,6 @@ function rectOutline(w: number, h: number): PieceOutline {
   }
 }
 
-/**
- * Agrupa y optimiza las sub-entidades por color utilizando un único elemento `<path>` 
- * con comandos de múltiples subtrazos, reduciendo drásticamente los nodos del DOM en el SVG.
- */
-export function buildPathsByColor(subEntities: SubEntity[]): Map<string, string> {
-  const segmentsByColor = new Map<string, string[]>()
-
-  for (const sub of subEntities) {
-    const color = sub.color ?? "#22c55e"
-    const points = sub.outline.points
-    if (points.length === 0) continue
-
-    const d = `M ${points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" L ")}`
-
-    if (!segmentsByColor.has(color)) segmentsByColor.set(color, [])
-    segmentsByColor.get(color)!.push(d)
-  }
-
-  const result = new Map<string, string>()
-  for (const [color, segments] of segmentsByColor) {
-    result.set(color, segments.join(" "))
-  }
-  return result
-}
-
-export interface SheetGroup {
-  sheet: NestedSheet
-  startIndex: number
-  count: number
-}
-
-function sheetSignature(sheet: NestedSheet): string {
-  return sheet.pieces
-    .map((p) => `${p.pieceId}|${Math.round(p.x)}|${Math.round(p.y)}|${p.angle}`)
-    .sort()
-    .join(";")
-}
-
-export function groupIdenticalSheets(sheets: NestedSheet[]): SheetGroup[] {
-  const groups: SheetGroup[] = []
-
-  for (let i = 0; i < sheets.length; i++) {
-    const signature = sheetSignature(sheets[i])
-    const last = groups[groups.length - 1]
-
-    if (last && sheetSignature(last.sheet) === signature) {
-      last.count++
-    } else {
-      groups.push({ sheet: sheets[i], startIndex: i, count: 1 })
-    }
-  }
-
-  return groups
-}
-
-export function formatSheetRangeLabel(group: SheetGroup): string {
-  const first = group.startIndex + 1
-  if (group.count === 1) return `Plancha #${first}`
-  const last = group.startIndex + group.count
-  return `Planchas #${first}-${last}`
-}
-
 export function NestingPageContent() {
   const [rows, setRows] = useState<PieceRow[]>([makeEmptyManualRow()])
   const [sheetWidth, setSheetWidth] = useState("1000")
@@ -192,6 +130,9 @@ export function NestingPageContent() {
         source: "cad",
         fileName: file.name,
         outline: cadData.outline,
+        // Preservamos el color REAL clasificado por entidad (verde=corte,
+        // naranja=doblez/marca) — nada de aplastarlo a un solo color de
+        // paleta genérico.
         subEntities: cadData.entities.map((e) => ({ outline: e.outline, color: e.color })),
         width: cadData.width,
         height: cadData.height,
@@ -206,6 +147,7 @@ export function NestingPageContent() {
 
     if (newRows.length > 0) {
       setRows((prev) => {
+        // Si solo hay una fila manual vacía sin usar, la reemplazamos en vez de acumular.
         const onlyEmptyManual =
           prev.length === 1 && prev[0].source === "manual" && !prev[0].width && !prev[0].height
         return onlyEmptyManual ? newRows : [...prev, ...newRows]
@@ -251,11 +193,6 @@ export function NestingPageContent() {
       },
     })
   }
-
-  const sheetGroups = useMemo(() => {
-    if (!sheets) return []
-    return groupIdenticalSheets(sheets)
-  }, [sheets])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 tablet:flex-row">
@@ -436,12 +373,13 @@ export function NestingPageContent() {
 
         {sheets && sheets.length > 0 && (
           <div className="flex flex-wrap gap-6">
-            {sheetGroups.map((group, i) => (
+            {sheets.map((sheet, i) => (
               <NestingSheetSvg
                 key={i}
-                group={group}
+                index={i}
                 sheetWidth={Number(sheetWidth) || 1000}
                 sheetHeight={Number(sheetHeight) || 600}
+                pieces={sheet.pieces}
               />
             ))}
           </div>
@@ -451,8 +389,8 @@ export function NestingPageContent() {
   )
 }
 
+/** Miniatura de la pieza importada tal cual, con el color real de cada entidad (verde=corte, naranja=doblez/marca) — antes esto no existía, la fila solo mostraba texto. */
 function PieceThumbnail({ subEntities }: { subEntities: SubEntity[] }) {
-  const pathsMap = useMemo(() => buildPathsByColor(subEntities), [subEntities])
   const allPoints = subEntities.flatMap((e) => e.outline.points)
   if (allPoints.length === 0) return <div className="h-8 w-8 shrink-0" />
 
@@ -475,12 +413,12 @@ function PieceThumbnail({ subEntities }: { subEntities: SubEntity[] }) {
       viewBox={`${minX - pad} ${minY - pad} ${w + pad * 2} ${h + pad * 2}`}
       className="h-8 w-8 shrink-0 rounded-md bg-black/40"
     >
-      {Array.from(pathsMap.entries()).map(([color, d]) => (
-        <path
-          key={color}
-          d={d}
+      {subEntities.map((e, i) => (
+        <polyline
+          key={i}
+          points={e.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
           fill="none"
-          stroke={color}
+          stroke={e.color ?? "#22c55e"}
           strokeWidth={Math.max(w, h) / 60}
         />
       ))}
@@ -489,22 +427,23 @@ function PieceThumbnail({ subEntities }: { subEntities: SubEntity[] }) {
 }
 
 function NestingSheetSvg({
-  group,
+  index,
   sheetWidth,
   sheetHeight,
+  pieces,
 }: {
-  group: SheetGroup
+  index: number
   sheetWidth: number
   sheetHeight: number
+  pieces: import("../engine/types").PlacedPiece[]
 }) {
   const maxDisplayWidth = 480
   const scale = maxDisplayWidth / sheetWidth
-  const pieces = group.sheet.pieces
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs font-medium text-neutral-400">
-        {formatSheetRangeLabel(group)} · {pieces.length} pieza{pieces.length === 1 ? "" : "s"}
+        Plancha #{index + 1} · {pieces.length} pieza{pieces.length === 1 ? "" : "s"}
       </p>
       <svg
         width={sheetWidth * scale}
@@ -512,53 +451,31 @@ function NestingSheetSvg({
         viewBox={`0 0 ${sheetWidth} ${sheetHeight}`}
         className="rounded-lg border border-white/10 bg-black/40"
       >
-        {pieces.map((piece, i) => {
-          const x = piece.x ?? 0
-          const y = piece.y ?? 0
-          const rotation = piece.angle ?? 0
-
-          const pathsMap = useMemo(() => {
-            return piece.subEntities && piece.subEntities.length > 0 
-              ? buildPathsByColor(piece.subEntities) 
-              : null
-          }, [piece.subEntities])
-
-          return (
-            <g key={i} transform={`translate(${x}, ${y}) rotate(${rotation})`}>
-              {piece.subEntities && piece.subEntities.length > 0 ? (
-                <g>
-                  {Array.from(buildPathsMapSafe(piece.subEntities).entries()).map(([color, d]) => (
-                    <path
-                      key={color}
-                      d={d}
-                      fill="none"
-                      stroke={color}
-                      strokeWidth={0.6}
-                    />
-                  ))}
-                </g>
-              ) : (
-                <polygon
-                  points={piece.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
-                  fill={piece.color ?? "#22c55e"}
-                  fillOpacity={0.35}
-                  stroke={piece.color ?? "#22c55e"}
-                  strokeWidth={1.5}
+        {pieces.map((piece, i) =>
+          piece.subEntities && piece.subEntities.length > 0 ? (
+            <g key={i}>
+              {piece.subEntities.map((sub, j) => (
+                <polyline
+                  key={j}
+                  points={sub.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                  fill="none"
+                  stroke={sub.color ?? piece.color ?? "#22c55e"}
+                  strokeWidth={0.6}
                 />
-              )}
+              ))}
             </g>
+          ) : (
+            <polygon
+              key={i}
+              points={piece.outline.points.map((p) => `${p.x},${p.y}`).join(" ")}
+              fill={piece.color ?? "#22c55e"}
+              fillOpacity={0.35}
+              stroke={piece.color ?? "#22c55e"}
+              strokeWidth={1.5}
+            />
           )
-        })}
+        )}
       </svg>
     </div>
   )
-}
-
-// Función auxiliar segura para renderizado dentro de la iteración de piezas
-function buildPathsMapSafe(subEntities: SubEntity[]) {
-  return buildPathsByColor(subEntities)
-}
-
-export default function NestingPage() {
-  return <NestingPageContent />
 }
