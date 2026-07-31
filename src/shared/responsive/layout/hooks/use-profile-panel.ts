@@ -8,13 +8,27 @@ import {
   useState,
 } from "react"
 
+import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
+
 const SAFE_MARGIN = 16
 
 export function useProfilePanel() {
 
-  const [profileOpen, setProfileOpen] = useState(false)
+  const [profileOpen, setProfileOpenState] = useState(false)
   const [canOpenProfile, setCanOpenProfile] = useState(true)
   const [presenceCollapsed, setPresenceCollapsed] = useState(false)
+
+  const { open: overlayOpenForProfile, setOpen: setOverlaySlot } = useManagedOverlay("profile")
+
+  // Wrapper: cualquier lugar que abra el panel de perfil (directo o
+  // vía toggleProfile) también reclama el overlay compartido, así
+  // Notificaciones/Presencia se cierran solos si estaban abiertos.
+  const setProfileOpen = useCallback((next: boolean) => {
+
+    setProfileOpenState(next)
+    setOverlaySlot(next)
+
+  }, [setOverlaySlot])
 
   const [panelHeight, setPanelHeight] = useState(0)
 
@@ -91,7 +105,7 @@ export function useProfilePanel() {
 
     setPresenceCollapsed(false)
 
-  }, [])
+  }, [setProfileOpen])
 
   const update = useCallback(() => {
 
@@ -146,6 +160,15 @@ export function useProfilePanel() {
     presenceCollapsed,
     closeProfile,
   ])
+
+  useEffect(() => {
+
+    if (profileOpen && !overlayOpenForProfile) {
+      setProfileOpenState(false)
+      setPresenceCollapsed(false)
+    }
+
+  }, [overlayOpenForProfile, profileOpen])
 
   function toggleProfile() {
 

@@ -9,6 +9,7 @@ import { toast } from "sonner"
 
 import { cn } from "@/shared/utils/utils"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
+import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
 
 import {
   Popover,
@@ -38,7 +39,8 @@ export function NotificationBell({
   isDrawer = false,
   variant = "sidebar",
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const { open, setOpen } = useManagedOverlay("notifications")
+
   const [historyOpen, setHistoryOpen] = useState(false)
   const [selectingId, setSelectingId] = useState<string | null>(null)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
@@ -46,6 +48,8 @@ export function NotificationBell({
   const router = useRouter()
   const sidebarMode = useSidebarStore(s => s.mode)
 
+  // Nota: Pasamos `open` para mantener la carga condicional si tu hook lo requiere,
+  // pero ya no afectará el estado de lectura automáticamente.
   const {
     notifications,
     loading,
@@ -58,6 +62,7 @@ export function NotificationBell({
   const { markAsRead } = useMarkNotificationRead()
   const { markAllAsRead } = useMarkAllNotificationsRead()
 
+  // Muestra todas las notificaciones no leídas sin alterar su estado al abrir el popover
   const visibleNotifications = notifications.filter(n => !n.read)
   const isTopbar = variant === "topbar"
 
@@ -197,8 +202,7 @@ export function NotificationBell({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          floatingClassName="w-80"
-          className="z-90 w-full min-w-90 p-0 border-none bg-[#171717] text-white shadow-xl"
+          className="z-90 w-80 p-0 border-none bg-[#171717] text-white shadow-xl"
         >
           <div className="flex items-center justify-between px-3.5 py-3">
             <span className="text-sm font-semibold text-neutral-200">

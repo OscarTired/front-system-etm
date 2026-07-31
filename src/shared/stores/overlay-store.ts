@@ -1,10 +1,11 @@
 import { create } from "zustand"
 
-type OverlayId =
+export type OverlayId =
   | "filters"
   | "export"
   | "profile"
   | "notifications"
+  | "presence"
   | null
 
 type OverlayStore = {

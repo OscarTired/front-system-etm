@@ -12,6 +12,8 @@ import { LogOut } from "lucide-react"
 
 import { useAuthStore } from "@/features/auth/store/auth-store"
 
+import { useOverlayStore } from "@/shared/stores/overlay-store"
+
 import { ProfilePreviewPanel } from "@/features/profile"
 
 import { ProfileMentionBadge } from "@/features/notifications/components/profile-mention-badge"
@@ -274,7 +276,13 @@ export function SidebarProfile({
 
           <button
 
-            onClick={() => setLogoutOpen(true)}
+            onClick={() => {
+
+              setProfileOpen(false)
+              useOverlayStore.getState().close()
+              setLogoutOpen(true)
+
+            }}
 
             className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition hover:bg-white/5 hover:text-white"
 
@@ -452,7 +460,13 @@ export function SidebarProfile({
 
             <button
 
-              onClick={() => setLogoutOpen(true)}
+              onClick={() => {
+
+                setProfileOpen(false)
+                useOverlayStore.getState().close()
+                setLogoutOpen(true)
+
+              }}
 
               className="shrink-0 rounded-md px-2 py-1 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-white"
 
@@ -477,4 +491,3 @@ export function SidebarProfile({
   )
 
 }
-

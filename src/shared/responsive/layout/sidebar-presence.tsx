@@ -1,12 +1,12 @@
 "use client"
 
 import { useMemo, useState, useRef } from "react"
-import { Users, Search, ChevronDown } from "lucide-react"
+import { Users, Search } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
-import { formatNotificationDate } from "@/features/notifications/utils/format-notification-date"
+import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
 
 import {
   Popover,
@@ -31,65 +31,40 @@ type Props = {
   presenceRef?: (node: HTMLDivElement | null) => void
 }
 
-// Cuántos se muestran de entrada, antes de tener que tocar
-// "Ver todos" — como en cualquier lista de presencia de una red
-// social (WhatsApp Web, Discord), no todo el equipo de una.
-const DEFAULT_VISIBLE_COUNT = 4
-
-type PresenceUser = {
-  id: string
-  name: string
-  avatarUrl?: string | null
-  online: boolean
-  lastSeenAt?: string | null
-}
-
 function UserRow({
   user,
 }: {
-  user: PresenceUser
+  user: { id: string; name: string; avatarUrl?: string | null }
 }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 min-w-0">
-      <div className="relative h-6 w-6 shrink-0">
-        <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            user.name[0]?.toUpperCase() ?? "?"
-          )}
+    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="relative h-5 w-5 shrink-0">
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              user.name[0]?.toUpperCase() ?? "?"
+            )}
+          </div>
+          <span
+            aria-hidden="true"
+            className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-neutral-900"
+          />
         </div>
-        <span
-          aria-hidden="true"
-          className={cn(
-            "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-[#171717]",
-            user.online ? "bg-emerald-500" : "bg-neutral-600",
-          )}
-        />
-      </div>
 
-      <div className="min-w-0 flex-1">
-
-        <span className="block truncate text-xs font-medium text-neutral-300">
+        <span className="truncate text-xs font-medium text-neutral-300 transition-colors">
           {user.name}
         </span>
-
-        {/* Mismo criterio de cualquier red social: online no
-            necesita explicación (el punto verde ya lo dice), offline
-            sí se aclara cuándo fue la última vez — si nunca se
-            conectó, no hay nada que mostrar. */}
-        {!user.online && user.lastSeenAt && (
-          <span className="block truncate text-[10px] text-neutral-500">
-            Últ. vez hace {formatNotificationDate(user.lastSeenAt)}
-          </span>
-        )}
-
       </div>
 
+      <div className="flex items-center gap-1.5 opacity-0 transition-opacity">
+        <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+      </div>
     </div>
   )
 }
@@ -100,9 +75,8 @@ export function SidebarPresence({
   variant = "sidebar",
   presenceRef,
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const { open, setOpen } = useManagedOverlay("presence")
   const [query, setQuery] = useState("")
-  const [expanded, setExpanded] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const currentUser = useAuthStore(s => s.user)
@@ -116,61 +90,11 @@ export function SidebarPresence({
     [users, currentUser?.id],
   )
 
-  // Disponibles pero desconectados — antes ni se mostraban. Se
-  // ordenan por "visto por última vez" más reciente primero (los
-  // que probablemente vuelvan pronto quedan arriba de los que
-  // capaz ni se acuerdan que existe la app), y los que nunca se
-  // conectaron (lastSeenAt null) van al final, por nombre.
-  const offlineUsers = useMemo(
-    () =>
-      users
-        .filter(user => !user.online && user.id !== currentUser?.id)
-        .sort((a, b) => {
-
-          if (!a.lastSeenAt && !b.lastSeenAt) {
-            return a.name.localeCompare(b.name)
-          }
-
-          if (!a.lastSeenAt) return 1
-          if (!b.lastSeenAt) return -1
-
-          return (
-            new Date(b.lastSeenAt).getTime() -
-            new Date(a.lastSeenAt).getTime()
-          )
-
-        }),
-    [users, currentUser?.id],
-  )
-
-  // Online siempre arriba — mismo orden que cualquier lista de
-  // presencia (WhatsApp, Discord, Slack).
-  const allUsers = useMemo(
-    () => [...onlineUsers, ...offlineUsers],
-    [onlineUsers, offlineUsers],
-  )
-
   const filteredUsers = useMemo(() => {
-
     const search = query.trim().toLowerCase()
-
-    const base = search
-      ? allUsers.filter(user => user.name.toLowerCase().includes(search))
-      : allUsers
-
-    // Buscando (o ya expandido a propósito) se ve la lista completa
-    // — el límite de 4 es solo para el primer vistazo, sin filtro
-    // ni intención explícita de ver a todos.
-    if (search || expanded) {
-      return base
-    }
-
-    return base.slice(0, DEFAULT_VISIBLE_COUNT)
-
-  }, [allUsers, query, expanded])
-
-  const hasMore =
-    !query.trim() && !expanded && allUsers.length > DEFAULT_VISIBLE_COUNT
+    if (!search) return onlineUsers
+    return onlineUsers.filter(user => user.name.toLowerCase().includes(search))
+  }, [onlineUsers, query])
 
   const isTopbar = variant === "topbar"
 
@@ -202,7 +126,6 @@ export function SidebarPresence({
     setOpen(nextOpen)
     if (!nextOpen) {
       setQuery("")
-      setExpanded(false)
     }
   }
 
@@ -211,6 +134,9 @@ export function SidebarPresence({
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           {isTopbar ? (
+            // ==========================================
+            // VARIANTE TOPBAR (Estilo idéntico a NotificationBell)
+            // ==========================================
             <button
               type="button"
               aria-label="Usuarios en línea"
@@ -227,6 +153,9 @@ export function SidebarPresence({
               )}
             </button>
           ) : isDrawer ? (
+            // ==========================================
+            // VARIANTE DRAWER MOBILE
+            // ==========================================
             <button
               type="button"
               className={cn(
@@ -256,6 +185,9 @@ export function SidebarPresence({
               )}
             </button>
           ) : collapsed ? (
+            // ==========================================
+            // VARIANTE SIDEBAR DESKTOP (COLAPSADO)
+            // ==========================================
             <button
               type="button"
               title={`${onlineUsers.length} en línea`}
@@ -274,6 +206,9 @@ export function SidebarPresence({
               </span>
             </button>
           ) : (
+            // ==========================================
+            // VARIANTE SIDEBAR DESKTOP (EXPANDIDO)
+            // ==========================================
             <button
               type="button"
               className={cn(
@@ -303,8 +238,7 @@ export function SidebarPresence({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          floatingClassName="w-72"
-          className="z-50 w-full min-w-90 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
+          className="z-50 w-72 p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none"
         >
           <Command className="bg-transparent" shouldFilter={false}>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
@@ -321,12 +255,9 @@ export function SidebarPresence({
               />
             </div>
 
-            <CommandList className={cn(
-              "select-none overflow-y-auto",
-              expanded || query.trim() ? "max-h-64" : "",
-            )}>
+            <CommandList className="max-h-64 select-none overflow-y-auto">
               <CommandEmpty>
-                {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
+                {onlineUsers.length === 0 ? "Sin conectados" : "Sin resultados"}
               </CommandEmpty>
 
               <CommandGroup>
@@ -343,21 +274,6 @@ export function SidebarPresence({
                   </CommandItem>
                 ))}
               </CommandGroup>
-
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  Ver todos
-                  <span className="text-neutral-600">
-                    ({allUsers.length})
-                  </span>
-                  <ChevronDown size={13} />
-                </button>
-              )}
-
             </CommandList>
           </Command>
         </PopoverContent>
