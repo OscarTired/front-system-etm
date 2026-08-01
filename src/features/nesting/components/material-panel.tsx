@@ -61,7 +61,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         </Field>
       </div>
 
-      <div className="border-t border-white/5 pt-3">
+      <div className="pt-3">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">Corte</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Muesca (mm)">
@@ -76,7 +76,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
             <select
               value={settings.rotacionPermitida}
               onChange={(e) => onChange({ rotacionPermitida: e.target.value as ProjectSettings["rotacionPermitida"] })}
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 px-2 text-sm text-neutral-200 outline-none"
+              className="h-9 w-full rounded-lg bg-white/5 px-2 text-sm text-neutral-200 outline-none"
             >
               <option value="0-90-180-270" className="bg-[#101012]">0° / 90° / 180° / 270°</option>
               <option value="libre" className="bg-[#101012]">Libre</option>
@@ -87,7 +87,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
             <select
               value={settings.prioridad}
               onChange={(e) => onChange({ prioridad: e.target.value as ProjectSettings["prioridad"] })}
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 px-2 text-sm text-neutral-200 outline-none"
+              className="h-9 w-full rounded-lg bg-white/5 px-2 text-sm text-neutral-200 outline-none"
             >
               <option value="normal" className="bg-[#101012]">Normal</option>
               <option value="alta" className="bg-[#101012]">Alta</option>

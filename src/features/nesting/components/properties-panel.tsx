@@ -22,7 +22,7 @@ export interface PropertiesPanelProps {
 
 function StatRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/5 py-2 text-xs last:border-0">
+    <div className="flex items-center justify-between py-2 text-xs last:border-0">
       <span className="text-neutral-500">{label}</span>
       <span className="font-medium text-neutral-200">{value}</span>
     </div>

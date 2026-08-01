@@ -273,7 +273,7 @@ export function NestingPage() {
   }, [])
 
   return (
-    <div className="flex h-full min-h-[720px] flex-col overflow-hidden">
+    <div className="flex h-full min-h-180 flex-col overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -295,7 +295,7 @@ export function NestingPage() {
         onSettings={() => {}}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 bg-neutral-950 p-4">
+      <div className="flex min-h-0 flex-1 gap-4 p-4">
         {/* PANEL LATERAL ESTRECHO Y COMPACTO (w-72 exacto controlado por el contenedor) */}
         <div className="flex w-72 shrink-0 flex-col gap-3">
           <EntityExpandedToggle
@@ -334,7 +334,7 @@ export function NestingPage() {
                 />
               </ScrollArea>
             ) : (
-              <ScrollArea className="h-full w-full rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <ScrollArea className="h-full w-full rounded-xl bg-white/2 p-3">
                 <PropertiesPanel 
                   sheetStats={sheetStats} 
                   selectedPiece={selectedPiece} 
@@ -364,7 +364,7 @@ export function NestingPage() {
             />
           )}
 
-          <div className="min-h-[500px] flex-1 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50">
+          <div className="min-h-125 flex-1 overflow-hidden rounded-2xl bg-neutral-900">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
