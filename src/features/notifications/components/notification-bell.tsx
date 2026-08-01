@@ -109,7 +109,6 @@ export function NotificationBell({
     setHistoryOpen(true)
   }
 
-  // --- Renderizado modular por variante de diseño (Mobile/Drawer vs Desktop) ---
   const renderTriggerContent = () => {
     if (isTopbar) {
       return (
@@ -123,7 +122,7 @@ export function NotificationBell({
         >
           <Bell size={17} strokeWidth={2.2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500/15 font-semibold text-white">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -136,21 +135,18 @@ export function NotificationBell({
         <button
           type="button"
           className={cn(
-            "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
             open
-              ? "bg-white/10 text-white"
+              ? "bg-white/15 text-white"
               : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
           )}
         >
-          <span className="relative flex shrink-0 items-center justify-center">
-            <Bell size={19} />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-left">Notificaciones</span>
-          {count > 0 && (
-            <span className={cn("shrink-0 text-sm font-semibold tabular-nums", open ? "text-white" : "text-neutral-500")}>
-              {count}
-            </span>
-          )}
+          <SidebarRow
+            icon={Bell}
+            label="Notificaciones"
+            active={open}
+            count={count > 0 ? count : undefined}
+            isDrawer
+          />
         </button>
       )
     }
@@ -160,7 +156,10 @@ export function NotificationBell({
         <button
           type="button"
           title="Notificaciones"
-          className={sidebarRowClassName({ collapsed: true, active: open })}
+          className={cn(
+            sidebarRowClassName({ collapsed: true, active: open }),
+            "size-8 shrink-0 p-0 mx-auto",
+          )}
         >
           <SidebarRow
             icon={Bell}
@@ -174,7 +173,6 @@ export function NotificationBell({
       )
     }
 
-    // Sidebar Desktop Expandido por defecto
     return (
       <button
         type="button"
@@ -204,7 +202,6 @@ export function NotificationBell({
           sideOffset={8}
           className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
         >
-          {/* Header fijo */}
           <div className="flex shrink-0 items-center justify-between px-3.5 py-3">
             <span className="text-sm font-semibold text-neutral-200">
               Notificaciones
@@ -221,7 +218,6 @@ export function NotificationBell({
             </button>
           </div>
 
-          {/* Contenido scrolleable con flex-1 */}
           <div className="flex-1 min-h-0">
             <VerticalScroll className="px-2 pb-2 h-full" style={{ minHeight: 180, maxHeight: 384 }}>
               {loading ? (
@@ -267,7 +263,6 @@ export function NotificationBell({
             </VerticalScroll>
           </div>
 
-          {/* Footer fijo al fondo */}
           <div className="shrink-0 p-2 select-none">
             {visibleNotifications.length === 0 ? (
               <div className="flex w-full items-center justify-center gap-1.5 py-1.5 text-center text-xs text-neutral-500">

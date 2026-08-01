@@ -71,21 +71,22 @@ function UserRow({
           />
         </div>
 
+        {/* Nombre del usuario alineado a la izquierda */}
         <div className="min-w-0 flex-1">
           <span className="block truncate text-xs font-medium text-neutral-300">
             {user.name}
           </span>
-          {!user.online && user.lastSeenAt && (
-            <span className="block truncate text-[10px] text-neutral-500">
-              Últ. vez hace {formatNotificationDate(user.lastSeenAt)}
-            </span>
-          )}
         </div>
       </div>
 
+      {/* Estado (Activo o última vez) movido por completo hacia el lado derecho */}
       <div className="flex items-center gap-1.5 shrink-0 pl-2">
         {user.online ? (
           <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+        ) : user.lastSeenAt ? (
+          <span className="text-[10px] text-neutral-500 truncate max-w-27.5">
+            Hace {formatNotificationDate(user.lastSeenAt)}
+          </span>
         ) : null}
       </div>
     </div>
@@ -153,8 +154,7 @@ export function SidebarPresence({
     return base.slice(0, DEFAULT_VISIBLE_COUNT)
   }, [allUsers, query, expanded])
 
-  const hasMore =
-    !query.trim() && !expanded && allUsers.length > DEFAULT_VISIBLE_COUNT
+  const showToggle = !query.trim() && allUsers.length > DEFAULT_VISIBLE_COUNT
 
   const isTopbar = variant === "topbar"
 
@@ -205,7 +205,7 @@ export function SidebarPresence({
         >
           <Users size={17} strokeWidth={2.2} />
           {onlineUsers.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
+            <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[9px]">
               {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
             </span>
           )}
@@ -218,21 +218,18 @@ export function SidebarPresence({
         <button
           type="button"
           className={cn(
-            "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
             open
-              ? "bg-white/10 text-white"
+              ? "bg-white/15 text-white"
               : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
           )}
         >
-          <span className="relative flex shrink-0 items-center justify-center">
-            <Users size={19} />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-left">Activos</span>
-          {onlineUsers.length > 0 && (
-            <span className={cn("shrink-0 text-sm font-semibold tabular-nums", open ? "text-white" : "text-neutral-500")}>
-              {onlineUsers.length}
-            </span>
-          )}
+          <SidebarRow
+            icon={Users}
+            label="Activos"
+            active={open}
+            count={onlineUsers.length > 0 ? onlineUsers.length : undefined}
+            isDrawer
+          />
         </button>
       )
     }
@@ -242,15 +239,19 @@ export function SidebarPresence({
         <button
           type="button"
           title={`${onlineUsers.length} en línea`}
-          className={sidebarRowClassName({ collapsed: true, active: open })}
+          className={cn(
+            sidebarRowClassName({ collapsed: true, active: open }),
+            "size-8 mx-auto"
+          )}
         >
           <SidebarRow
             icon={Users}
             label="Activos"
             collapsed
             active={open}
-            count={onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)}
-            collapsedBadgeColor="bg-cyan-500 text-white"
+            count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
+            collapsedBadgeColor="bg-emerald-500/20 text-emerald-400"
+            size="sm"
           />
         </button>
       )
@@ -267,6 +268,7 @@ export function SidebarPresence({
           active={open}
           count={String(onlineUsers.length)}
           badgeColor="bg-emerald-500/20 text-emerald-400"
+          size="sm"
         />
       </button>
     )
@@ -283,10 +285,10 @@ export function SidebarPresence({
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
           floatingClassName="w-72"
-          className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none"
+          className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none flex flex-col"
         >
-          <Command className="bg-transparent" shouldFilter={false}>
-            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717]">
+          <Command className="bg-transparent flex flex-col h-full" shouldFilter={false}>
+            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717] shrink-0">
               <Search size={14} className="text-neutral-500 shrink-0" />
               <Input
                 ref={inputRef}
@@ -298,8 +300,8 @@ export function SidebarPresence({
             </div>
 
             <CommandList className={cn(
-              "select-none overflow-y-auto transition-all duration-200 ease-in-out",
-              expanded || query.trim() ? "min-h-80 max-h-96" : "min-h-50 max-h-64",
+              "select-none overflow-y-auto transition-all duration-200 ease-in-out flex-1",
+              expanded || query.trim() ? "max-h-96" : "max-h-60",
             )}>
               <CommandEmpty>
                 {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
@@ -311,7 +313,8 @@ export function SidebarPresence({
                     key={user.id}
                     value={user.name}
                     onSelect={() => {}}
-                    className="p-0 rounded-lg bg-transparent hover:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none"
+                    /* Evitamos que el CommandItem muestre estados de hover/focus residuales al contraer */
+                    className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none data-[selected=true]:bg-transparent"
                   >
                     <div className="w-full pointer-events-auto">
                       <UserRow user={user} />
@@ -319,38 +322,40 @@ export function SidebarPresence({
                   </CommandItem>
                 ))}
               </CommandGroup>
-
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.currentTarget.blur()
-                    setExpanded(true)
-                  }}
-                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent hover:bg-white/5 hover:text-white"
-                >
-                  Ver todos
-                  <span className="text-neutral-600">
-                    ({allUsers.length})
-                  </span>
-                  <ChevronDown size={13} />
-                </button>
-              )}
-
-              {expanded && !query.trim() && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.currentTarget.blur()
-                    setExpanded(false)
-                  }}
-                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent hover:bg-white/5 hover:text-white"
-                >
-                  Mostrar menos
-                  <ChevronUp size={13} />
-                </button>
-              )}
             </CommandList>
+
+            {showToggle && (
+              <div className="pt-2 mt-1 shrink-0">
+                {!expanded ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.currentTarget.blur()
+                      setExpanded(true)
+                    }}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent"
+                  >
+                    Ver todos
+                    <span className="text-neutral-600">
+                      ({allUsers.length})
+                    </span>
+                    <ChevronDown size={13} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.currentTarget.blur()
+                      setExpanded(false)
+                    }}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white bg-white/5"
+                  >
+                    Mostrar menos
+                    <ChevronUp size={13} />
+                  </button>
+                )}
+              </div>
+            )}
           </Command>
         </PopoverContent>
       </Popover>

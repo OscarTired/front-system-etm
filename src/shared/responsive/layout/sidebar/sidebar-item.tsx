@@ -33,25 +33,15 @@ export function SidebarItem({
         href={href}
         onMouseEnter={onMouseEnter}
         onTouchStart={onTouchStart}
-        className={cn(
-          "flex h-12 min-w-0 items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors",
-          active
-            ? "bg-white/10 text-white pointer-events-none"
-            : "text-neutral-300 hover:bg-white/5 hover:text-white", // 👈 Quitamos active:
-        )}
+        className={cn(active && "pointer-events-none")}
       >
-        <Icon size={19} className="shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        {count !== undefined && count > 0 && (
-          <span
-            className={cn(
-              "shrink-0 text-sm font-semibold tabular-nums",
-              active ? "text-white" : "text-neutral-500",
-            )}
-          >
-            {count}
-          </span>
-        )}
+        <SidebarRow
+          icon={Icon}
+          label={label}
+          active={active}
+          count={count}
+          isDrawer
+        />
       </Link>
     )
   }
