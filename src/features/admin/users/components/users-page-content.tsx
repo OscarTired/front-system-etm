@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
@@ -36,6 +36,7 @@ import {
   RoleMobileSkeleton,
 } from "@/features/roles/table"
 import type { Role } from "@/features/roles/types/role.types"
+import type { User } from "@/features/users/types/user.types"
 
 type UserFormData = {
   name: string
@@ -52,6 +53,30 @@ type UserFormData = {
   active: boolean
 }
 
+const DEFAULT_COLOR = "#7C3AED"
+const DEFAULT_ICON: EntityIcon = "user"
+
+const createInitialFormData = (user?: User | null, defaultRoleId?: string | null): UserFormData => ({
+  name: user?.name ?? "",
+  username: user?.username ?? "",
+  email: user?.email ?? "",
+  password: "",
+  confirmPassword: "",
+  isChangingPassword: !user,
+  roleIds: user ? user.roles?.map(r => r.id) ?? [] : defaultRoleId ? [defaultRoleId] : [],
+  level: user?.level ?? null,
+  areaIds: user?.areas?.map(a => a.id) ?? [],
+  icon: (user?.icon as EntityIcon) ?? DEFAULT_ICON,
+  color: user?.color ?? DEFAULT_COLOR,
+  active: user?.active ?? true,
+})
+
+const areSetsEqual = (a: string[], b: string[]) => {
+  if (a.length !== b.length) return false
+  const setB = new Set(b)
+  return a.every(item => setB.has(item))
+}
+
 export function UsersPageContent() {
   const { isMobile } = useResponsive()
   const { users, loading } = useUsers()
@@ -64,33 +89,23 @@ export function UsersPageContent() {
   const canDelete = has(PermissionCode.USER_DELETE)
 
   const [search, setSearch] = useState("")
-
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [mobileCreateOpen, setMobileCreateOpen] = useState(false)
-
-  const [formData, setFormData] = useState<UserFormData>({
-    name: "",
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    isChangingPassword: false,
-    roleIds: [],
-    level: null,
-    areaIds: [],
-    icon: "user",
-    color: "#7C3AED",
-    active: true,
-  })
-
   const [attempted, setAttempted] = useState(false)
+
+  const [formData, setFormData] = useState<UserFormData>(() => createInitialFormData())
 
   const selectedRole = useMemo(
     () => roles.find(r => r.id === selectedRoleId) ?? null,
     [roles, selectedRoleId],
+  )
+
+  const selectedUser = useMemo(
+    () => users.find(u => u.id === selectedUserId) ?? null,
+    [users, selectedUserId],
   )
 
   const filteredRoles = useMemo(() => {
@@ -114,36 +129,7 @@ export function UsersPageContent() {
     )
   }, [usersInSelectedRole, search])
 
-  const selectedUser = useMemo(
-    () => users.find(u => u.id === selectedUserId),
-    [users, selectedUserId],
-  )
-
-  // Gateado: /areas exige MASTER_DATA_READ, que no todos los roles
-  // tienen (ej. Administración) — sin este enabled, cualquiera que
-  // entre a Usuarios dispara esta query enseguida y le sale
-  // "Insufficient permissions" sin haber tocado nada todavía.
   const { areas } = useAreas(isCreating || !!selectedUser)
-
-  useEffect(() => {
-    if (isCreating || !selectedUser) return
-
-    setFormData({
-      name: selectedUser.name,
-      username: selectedUser.username ?? "",
-      email: selectedUser.email,
-      password: "",
-      confirmPassword: "",
-      isChangingPassword: false,
-      roleIds: selectedUser.roles?.map(r => r.id) ?? [],
-      level: selectedUser.level ?? null,
-      areaIds: selectedUser.areas?.map(a => a.id) ?? [],
-      icon: (selectedUser.icon as EntityIcon) ?? "user",
-      color: selectedUser.color ?? "#7C3AED",
-      active: selectedUser.active,
-    })
-    setAttempted(false)
-  }, [selectedUser, isCreating])
 
   const errors = validateUser({
     name: formData.name,
@@ -158,6 +144,27 @@ export function UsersPageContent() {
 
   const isValid = Object.keys(errors).length === 0
   const isSaving = createUser.isPending || updateUser.isPending
+
+  const hasChanges = useMemo(() => {
+    if (isCreating) return true
+    if (!selectedUser) return false
+
+    const originalRoleIds = selectedUser.roles?.map(r => r.id) ?? []
+    const originalAreaIds = selectedUser.areas?.map(a => a.id) ?? []
+
+    return (
+      formData.name !== selectedUser.name ||
+      formData.username !== (selectedUser.username ?? "") ||
+      formData.email !== selectedUser.email ||
+      formData.level !== (selectedUser.level ?? null) ||
+      formData.icon !== ((selectedUser.icon as EntityIcon) ?? DEFAULT_ICON) ||
+      formData.color !== (selectedUser.color ?? DEFAULT_COLOR) ||
+      formData.active !== selectedUser.active ||
+      formData.isChangingPassword ||
+      !areSetsEqual(formData.roleIds, originalRoleIds) ||
+      !areSetsEqual(formData.areaIds, originalAreaIds)
+    )
+  }, [formData, selectedUser, isCreating])
 
   const handleSelectRole = (role: Role) => {
     setSelectedRoleId(role.id)
@@ -176,6 +183,11 @@ export function UsersPageContent() {
   const handleSelectUser = (userId: string) => {
     setIsCreating(false)
     setSelectedUserId(userId)
+    const user = users.find(u => u.id === userId)
+    if (user) {
+      setFormData(createInitialFormData(user))
+      setAttempted(false)
+    }
   }
 
   const handleStartCreate = () => {
@@ -188,20 +200,7 @@ export function UsersPageContent() {
 
     setIsCreating(true)
     setSelectedUserId(null)
-    setFormData({
-      name: "",
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      isChangingPassword: true,
-      roleIds: selectedRoleId ? [selectedRoleId] : [],
-      level: null,
-      areaIds: [],
-      icon: "user",
-      color: "#7C3AED",
-      active: true,
-    })
+    setFormData(createInitialFormData(null, selectedRoleId))
     setAttempted(false)
   }
 
@@ -269,9 +268,6 @@ export function UsersPageContent() {
         {isMobile && (
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             {!selectedRole && (
-              // pb-28: mismo motivo que el resto — reserva espacio
-              // para que el último rol no quede tapado por el
-              // bottom nav.
               <div className="space-y-3 pb-28">
                 {loadingRoles ? (
                   <RoleMobileSkeleton />
@@ -327,15 +323,7 @@ export function UsersPageContent() {
                   )}
                 </header>
 
-                {/* Plano, sin ScrollArea acá: mismo bug que tenía
-                    role-permissions-page-content.tsx — en mobile el
-                    root de la página no define un alto fijo, así
-                    que ScrollArea calculaba un alto ambiguo y
-                    recortaba su propio viewport contra el bottom
-                    nav, sin importar el padding de adentro. */}
                 <div className="min-h-0 flex-1 p-1.5">
-                  {/* pb-28: reserva espacio para que el último
-                      usuario no quede tapado por el bottom nav. */}
                   <div className="space-y-3 pb-28">
                     {loading ? (
                       <UserMobileSkeleton />
@@ -376,10 +364,7 @@ export function UsersPageContent() {
                     </p>
                   </div>
 
-                  <ScrollArea
-                    data-entity-table-scroll
-                    className="min-h-0 flex-1 p-1.5"
-                  >
+                  <ScrollArea data-entity-table-scroll className="min-h-0 flex-1 p-1.5">
                     <div className="flex flex-col gap-2.5">
                       {loadingRoles ? (
                         <RoleDesktopRowSkeleton />
@@ -436,10 +421,7 @@ export function UsersPageContent() {
                     )}
                   </div>
 
-                  <ScrollArea
-                    data-entity-table-scroll
-                    className="min-h-0 flex-1 p-1.5"
-                  >
+                  <ScrollArea data-entity-table-scroll className="min-h-0 flex-1 p-1.5">
                     <div className="flex flex-col gap-2.5">
                       {loading ? (
                         <UserDesktopRowSkeleton />
@@ -516,22 +498,15 @@ export function UsersPageContent() {
                       )}
 
                       <PrimaryAction
-                        label={
-                          isCreating
-                            ? "Crear usuario"
-                            : "Guardar"
-                        }
+                        label={isCreating ? "Crear usuario" : "Guardar"}
                         isLoading={isSaving}
-                        disabled={!canUpdate || isSaving}
+                        disabled={!canUpdate || isSaving || (!isCreating && !hasChanges)}
                         onClick={handleSave}
                       />
                     </div>
                   </header>
 
-                  <ScrollArea
-                    data-entity-table-scroll
-                    className="min-h-0 flex-1 p-5"
-                  >
+                  <ScrollArea data-entity-table-scroll className="min-h-0 flex-1 p-5">
                     <UserForm
                       name={formData.name}
                       username={formData.username}
@@ -548,42 +523,35 @@ export function UsersPageContent() {
                       areas={areas.filter(a => formData.areaIds.includes(a.id))}
                       errors={attempted ? errors : undefined}
                       onRolesChange={nextRoles => {
-                        const levelStillValid =
-                          isLevelAllowedForRoles(formData.level, nextRoles)
-
-                        const stillProduccion =
-                          nextRoles.some(r => r.code === "PRODUCCION")
+                        const levelStillValid = isLevelAllowedForRoles(formData.level, nextRoles)
+                        const stillProduccion = nextRoles.some(r => r.code === "PRODUCCION")
 
                         setFormData(c => ({
                           ...c,
                           roleIds: nextRoles.map(r => r.id),
                           ...(!levelStillValid && { level: null, areaIds: [] }),
-                          ...(levelStillValid
-                            && (c.level !== "OPERARIO" || !stillProduccion)
-                            && { areaIds: [] }),
+                          ...(levelStillValid &&
+                            (c.level !== "OPERARIO" || !stillProduccion) && { areaIds: [] }),
                         }))
                       }}
-                      onLevelChange={level => setFormData(c => ({
-                        ...c,
-                        level,
-                        // Mismo criterio que en UserDialog/backend: el
-                        // área solo aplica a OPERARIO.
-                        ...(level !== "OPERARIO" && { areaIds: [] }),
-                      }))}
-                      onAreasChange={nextAreas => setFormData(c => ({ ...c, areaIds: nextAreas.map(a => a.id) }))}
+                      onLevelChange={level =>
+                        setFormData(c => ({
+                          ...c,
+                          level,
+                          ...(level !== "OPERARIO" && { areaIds: [] }),
+                        }))
+                      }
+                      onAreasChange={nextAreas =>
+                        setFormData(c => ({ ...c, areaIds: nextAreas.map(a => a.id) }))
+                      }
                       onChangingPasswordChange={val =>
                         setFormData(c => ({ ...c, isChangingPassword: val }))
                       }
                       onNameChange={val => setFormData(c => ({ ...c, name: val }))}
-                      onUsernameChange={val =>
-                        setFormData(c => ({ ...c, username: val }))
-                      }
+                      onUsernameChange={val => setFormData(c => ({ ...c, username: val }))}
                       onEmailChange={val => {
-
                         if (isCreating) {
-
                           const defaults = generateUserDefaultsFromEmail(val)
-
                           setFormData(c => ({
                             ...c,
                             email: val,
@@ -592,17 +560,11 @@ export function UsersPageContent() {
                             password: defaults.password,
                             confirmPassword: defaults.confirmPassword,
                           }))
-
                         } else {
-
                           setFormData(c => ({ ...c, email: val }))
-
                         }
-
                       }}
-                      onPasswordChange={val =>
-                        setFormData(c => ({ ...c, password: val }))
-                      }
+                      onPasswordChange={val => setFormData(c => ({ ...c, password: val }))}
                       onConfirmPasswordChange={val =>
                         setFormData(c => ({ ...c, confirmPassword: val }))
                       }
@@ -617,12 +579,7 @@ export function UsersPageContent() {
         )}
       </div>
 
-      {isMobile && (
-        <UserDialog
-          open={mobileCreateOpen}
-          onClose={() => setMobileCreateOpen(false)}
-        />
-      )}
+      {isMobile && <UserDialog open={mobileCreateOpen} onClose={() => setMobileCreateOpen(false)} />}
 
       <ActionDialog
         open={deleteOpen}

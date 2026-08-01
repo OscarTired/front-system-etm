@@ -23,10 +23,12 @@ export interface PieceOutline {
   points: Point2D[];
 }
 
-/** Un trazo individual con su color real clasificado (ej. corte vs doblez/marca). */
+/** Un trazo individual con su color real clasificado (ej. corte vs doblez/marca) y su capa original del CAD de origen (para exportar respetando el nombre real, ej. "SPI_UNF-BL"). */
 export interface SubEntity {
   outline: PieceOutline;
   color?: string;
+  /** Nombre de capa original del DXF/GEO (grupo 8 en DXF). Ausente para piezas sin origen CAD real (ej. rectángulos manuales). */
+  layer?: string;
 }
 
 /** Pieza de entrada para el nesting. */

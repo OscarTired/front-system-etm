@@ -48,6 +48,7 @@ function placePiece(
     subEntities: piece.subEntities?.map((sub) => ({
       outline: applyToOutline(finalTransform, sub.outline),
       color: sub.color,
+      layer: sub.layer,
     })),
     color: piece.color,
   };

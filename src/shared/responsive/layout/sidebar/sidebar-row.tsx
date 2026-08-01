@@ -64,7 +64,7 @@ export function SidebarRow({
     : undefined
 
   return (
-    <div className={cn("flex w-full min-w-0 items-center", containerClassName)}>
+    <div className={cn("flex w-full min-w-0 items-center gap-2.5", containerClassName)}>
       <span className={cn(
         "relative flex shrink-0 items-center justify-center",
         collapsed && "size-8"
