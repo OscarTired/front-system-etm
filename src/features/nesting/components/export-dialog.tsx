@@ -33,7 +33,7 @@ export function ExportDialog({ open, onClose, sheetGroups, onExportSheet, onSave
         <div className="flex flex-col gap-2 overflow-y-auto p-4">
           <button
             onClick={onSaveProject}
-            className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 text-left hover:bg-white/5"
+            className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-3 text-left hover:bg-white/5"
           >
             <Save className="h-4 w-4 text-neutral-400" />
             <div>
@@ -47,7 +47,7 @@ export function ExportDialog({ open, onClose, sheetGroups, onExportSheet, onSave
           )}
 
           {sheetGroups.map((group) => (
-            <div key={group.startIndex} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.03] p-3">
+            <div key={group.startIndex} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/3 p-3">
               <div>
                 <p className="text-sm text-neutral-200">
                   {formatSheetRangeLabel(group)} {group.count > 1 && <span className="text-neutral-500">× {group.count}</span>}
