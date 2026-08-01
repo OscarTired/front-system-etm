@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { Settings2, Info } from "lucide-react"
 
 import { useNesting } from "../hooks/use-nesting"
 import { boundingRect } from "../engine/geometry"
@@ -22,11 +22,11 @@ import { SheetNavigator } from "./sheet-navigator"
 import { PropertiesPanel, type SheetStats } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
+import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import type { PieceRow, ManualRow, CadRow, PieceListHandle } from "./piece-list"
 import type { NestingPieceInput } from "../../engineering/components/dxf-canvas"
 
-// El canvas es compartido con /engineering (misma implementación,
-// v2 con soporte de piezas/selección) — no hay dos canvases distintos.
 const DxfCanvas = dynamic(
   () => import("@/features/engineering/components/dxf-canvas").then((m) => m.DxfCanvas),
   { ssr: false }
@@ -55,6 +55,12 @@ function downloadTextFile(fileName: string, content: string, mimeType: string) {
   URL.revokeObjectURL(url)
 }
 
+type PanelView = "config" | "inspector"
+const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
+  { value: "config", label: "Configuración", icon: Settings2 },
+  { value: "inspector", label: "Propiedades", icon: Info },
+]
+
 export function NestingPage() {
   const colorCursorRef = useRef(0)
   const nextColor = useCallback(() => {
@@ -63,26 +69,23 @@ export function NestingPage() {
     return c
   }, [])
 
-  const makeEmptyManualRow = useCallback((): ManualRow => {
-    return {
-      id: `pieza-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      source: "manual",
-      width: "",
-      height: "",
-      quantity: "1",
-      color: nextColor(),
-    }
-  }, [nextColor])
+  const makeEmptyManualRow = useCallback((): ManualRow => ({
+    id: `pieza-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    source: "manual",
+    width: "",
+    height: "",
+    quantity: "1",
+    color: nextColor(),
+  }), [nextColor])
 
-  const [rows, setRows] = useState<PieceRow[]>(() => [])
+  const [rows, setRows] = useState<PieceRow[]>([])
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
   const [machine, setMachine] = useState<MachineSettings>(defaultMachineSettings)
   const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState(0)
   const [selectedPieceIndex, setSelectedPieceIndex] = useState<number | null>(null)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
+  const [activePanel, setActivePanel] = useState<PanelView>("config")
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -90,22 +93,26 @@ export function NestingPage() {
   const { status, progress, sheets, error, run, cancel } = useNesting()
   const isRunning = status === "running"
 
-  const sheetConfig: SheetConfig = {
+  const sheetConfig: SheetConfig = useMemo(() => ({
     width: Number(settings.sheetWidth) || 1000,
     height: Number(settings.sheetHeight) || 600,
     margin: Number(settings.margin) || 0,
-  }
+  }), [settings.sheetWidth, settings.sheetHeight, settings.margin])
 
   const sheetGroups = useMemo(() => (sheets ? groupIdenticalSheets(sheets) : []), [sheets])
 
-  // Apenas hay resultado, mostramos la primera plancha — nunca hace
-  // falta un click extra para ver lo que importa.
   useEffect(() => {
     if (sheetGroups.length > 0) {
       setActiveGroupIndex(0)
       setSelectedPieceIndex(null)
     }
   }, [sheetGroups.length])
+
+  useEffect(() => {
+    if (selectedPieceIndex !== null) {
+      setActivePanel("inspector")
+    }
+  }, [selectedPieceIndex])
 
   const validPieces = useMemo<NestingPiece[]>(() => {
     const pieces: NestingPiece[] = []
@@ -136,11 +143,8 @@ export function NestingPage() {
 
   const canRun = validPieces.length > 0 && !isRunning
 
-  // --- Datos que le llegan al canvas: o la plancha activa nesteada, o el preview de una pieza suelta ---
   const activeGroup = sheetGroups[activeGroupIndex] ?? null
   const canvasPieces: PlacedPiece[] = activeGroup ? activeGroup.sheet.pieces : []
-  const canvasWidth = sheetConfig.width
-  const canvasHeight = sheetConfig.height
 
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
@@ -154,45 +158,44 @@ export function NestingPage() {
     [canvasPieces]
   )
 
-  const sheetStats: SheetStats | null = activeGroup
-    ? {
-        pieceCount: activeGroup.sheet.pieces.length,
-        usagePercent: calculateSheetUsagePercent(activeGroup.sheet, sheetConfig),
-        sheetArea: sheetConfig.width * sheetConfig.height,
-        usedArea: activeGroup.sheet.pieces.reduce((sum, p) => {
-          const b = boundingRect(p.outline)
-          return sum + b.width * b.height
-        }, 0),
-        totalCutLength: activeGroup.sheet.pieces.reduce((sum, p) => {
-          if (!p.subEntities?.length) return sum
-          return sum + p.subEntities.reduce((s2, sub) => {
-            const pts = sub.outline.points
-            let len = 0
-            for (let i = 0; i < pts.length - 1; i++) len += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
-            return s2 + len
-          }, 0)
-        }, 0),
-      }
-    : null
+  const sheetStats: SheetStats | null = useMemo(() => {
+    if (!activeGroup) return null
+    return {
+      pieceCount: activeGroup.sheet.pieces.length,
+      usagePercent: calculateSheetUsagePercent(activeGroup.sheet, sheetConfig),
+      sheetArea: sheetConfig.width * sheetConfig.height,
+      usedArea: activeGroup.sheet.pieces.reduce((sum, p) => {
+        const b = boundingRect(p.outline)
+        return sum + b.width * b.height
+      }, 0),
+      totalCutLength: activeGroup.sheet.pieces.reduce((sum, p) => {
+        if (!p.subEntities?.length) return sum
+        return sum + p.subEntities.reduce((s2, sub) => {
+          const pts = sub.outline.points
+          let len = 0
+          for (let i = 0; i < pts.length - 1; i++) len += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+          return s2 + len
+        }, 0)
+      }, 0),
+    }
+  }, [activeGroup, sheetConfig])
 
   const selectedPiece = selectedPieceIndex !== null ? canvasPieces[selectedPieceIndex] ?? null : null
 
-  // --- Handlers de piezas ---
-  const handleAddManual = () => setRows((prev) => [...prev, makeEmptyManualRow()])
-  const handleRemove = (id: string) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev))
-  const handleUpdateManual = (id: string, patch: Partial<ManualRow>) =>
-    setRows((prev) => prev.map((r) => (r.id === id && r.source === "manual" ? { ...r, ...patch } : r)))
-  const handleUpdateQuantity = (id: string, quantity: string) => setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r)))
-  const handleAddCad = (newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows])
+  const handleAddManual = useCallback(() => setRows((prev) => [...prev, makeEmptyManualRow()]), [makeEmptyManualRow])
+  const handleRemove = useCallback((id: string) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev)), [])
+  const handleUpdateManual = useCallback((id: string, patch: Partial<ManualRow>) =>
+    setRows((prev) => prev.map((r) => (r.id === id && r.source === "manual" ? { ...r, ...patch } : r))), [])
+  const handleUpdateQuantity = useCallback((id: string, quantity: string) => 
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
+  const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
 
-  // --- Nestear ---
-  const handleRun = () => {
+  const handleRun = useCallback(() => {
     if (!canRun) return
     run(validPieces, { sheet: sheetConfig })
-  }
+  }, [canRun, run, validPieces, sheetConfig])
 
-  // --- Exportar ---
-  const handleExportSheet = (format: "dxf" | "nsp", sheetIndex: number) => {
+  const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number) => {
     if (!sheets) return
     const sheet = sheets[sheetIndex]
     const fileName = buildSheetFileName(
@@ -202,10 +205,9 @@ export function NestingPage() {
     )
     if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
-  }
+  }, [sheets, settings, sheetConfig])
 
-  // --- Proyecto (guardar/abrir) ---
-  const handleSaveProject = () => {
+  const handleSaveProject = useCallback(() => {
     const pieces: ProjectPieceEntry[] = rows.map((row) =>
       row.source === "manual"
         ? {
@@ -232,9 +234,9 @@ export function NestingPage() {
     )
     const json = serializeProject({ sheet: sheetConfig, pieces })
     downloadTextFile(`nesting-proyecto-${Date.now()}.json`, json, "application/json")
-  }
+  }, [rows, sheetConfig])
 
-  const handleOpenProjectFile = async (file: File | undefined) => {
+  const handleOpenProjectFile = useCallback(async (file: File | undefined) => {
     if (!file) return
     try {
       const text = await file.text()
@@ -258,18 +260,17 @@ export function NestingPage() {
       )
       setRows(loadedRows)
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err instanceof ProjectFileParseError ? err.message : "Proyecto inválido")
     }
-  }
+  }, [])
 
-  const handleNewProject = () => {
+  const handleNewProject = useCallback(() => {
     setRows([])
     setSettings(defaultProjectSettings())
     setMachine(defaultMachineSettings())
     setSelectedPieceIndex(null)
     setPreviewRow(null)
-  }
+  }, [])
 
   return (
     <div className="flex h-full min-h-[720px] flex-col overflow-hidden">
@@ -290,56 +291,62 @@ export function NestingPage() {
         onSave={handleSaveProject}
         onImport={() => pieceListRef.current?.triggerImport()}
         onExport={() => setExportDialogOpen(true)}
-        onAutoNest={handleRun}
-        onCancel={cancel}
-        onRecalculate={handleRun}
         onToggleLayers={() => {}}
         onSettings={() => {}}
-        isRunning={isRunning}
-        canRun={canRun}
       />
 
-      <div className="flex min-h-0 flex-1 gap-2 bg-[#050505] p-4">
-        <div className={`relative shrink-0 overflow-hidden transition-all ${sidebarCollapsed ? "w-0" : "w-[300px]"}`}>
-          <div className="w-[300px]">
-            <Sidebar
-              ref={pieceListRef}
-              settings={settings}
-              onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
-              machine={machine}
-              onMachineChange={(patch) => setMachine((m) => ({ ...m, ...patch }))}
-              pieceListProps={{
-                rows,
-                conflictIds,
-                disabled: isRunning,
-                onAddManual: handleAddManual,
-                onAddCad: handleAddCad,
-                onRemove: handleRemove,
-                onUpdateManual: handleUpdateManual,
-                onUpdateQuantity: handleUpdateQuantity,
-                onPreviewRow: setPreviewRow,
-                nextColor,
-              }}
-              canRun={canRun}
-              isRunning={isRunning}
-              progress={progress}
-              error={error}
-              onRun={handleRun}
-              onCancel={cancel}
-            />
+      <div className="flex min-h-0 flex-1 gap-4 bg-neutral-950 p-4">
+        {/* PANEL LATERAL ESTRECHO Y COMPACTO (w-72 exacto controlado por el contenedor) */}
+        <div className="flex w-72 shrink-0 flex-col gap-3">
+          <EntityExpandedToggle
+            value={activePanel}
+            onChange={setActivePanel}
+            options={PANEL_OPTIONS}
+          />
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {activePanel === "config" ? (
+              <ScrollArea className="h-full w-full pr-1">
+                <Sidebar
+                  ref={pieceListRef}
+                  settings={settings}
+                  onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
+                  machine={machine}
+                  onMachineChange={(patch) => setMachine((m) => ({ ...m, ...patch }))}
+                  pieceListProps={{
+                    rows,
+                    conflictIds,
+                    disabled: isRunning,
+                    onAddManual: handleAddManual,
+                    onAddCad: handleAddCad,
+                    onRemove: handleRemove,
+                    onUpdateManual: handleUpdateManual,
+                    onUpdateQuantity: handleUpdateQuantity,
+                    onPreviewRow: setPreviewRow,
+                    nextColor,
+                  }}
+                  canRun={canRun}
+                  isRunning={isRunning}
+                  progress={progress}
+                  error={error}
+                  onRun={handleRun}
+                  onCancel={cancel}
+                />
+              </ScrollArea>
+            ) : (
+              <ScrollArea className="h-full w-full rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                <PropertiesPanel 
+                  sheetStats={sheetStats} 
+                  selectedPiece={selectedPiece} 
+                  espesor={settings.espesor} 
+                  material={settings.material} 
+                />
+              </ScrollArea>
+            )}
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setSidebarCollapsed((v) => !v)}
-          title={sidebarCollapsed ? "Mostrar panel" : "Ocultar panel"}
-          className="flex h-8 w-6 shrink-0 items-center justify-center self-start rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white"
-        >
-          {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
-
-        {/* CANVAS — único, siempre centrado, protagonista */}
+        {/* CANVAS — flexible y fluido */}
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           {sheetGroups.length > 0 && (
             <SheetNavigator
@@ -357,35 +364,19 @@ export function NestingPage() {
             />
           )}
 
-          <div className="min-h-[500px] flex-1 overflow-hidden rounded-2xl border border-white/8">
+          <div className="min-h-[500px] flex-1 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
-                sheetSize={{ width: canvasWidth, height: canvasHeight }}
+                sheetSize={{ width: sheetConfig.width, height: sheetConfig.height }}
                 selectedPieceIndex={selectedPieceIndex}
                 onSelectPiece={setSelectedPieceIndex}
               />
             ) : (
-              <div className="flex h-full items-center justify-center bg-[#0a0a0c] px-8 text-center text-sm text-neutral-600">
+              <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">
                 Importa una pieza o presiona Nestear para verla acá.
               </div>
             )}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setInspectorCollapsed((v) => !v)}
-          title={inspectorCollapsed ? "Mostrar inspector" : "Ocultar inspector"}
-          className="flex h-8 w-6 shrink-0 items-center justify-center self-start rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white"
-        >
-          {inspectorCollapsed ? <PanelLeftClose className="h-4 w-4 rotate-180" /> : <PanelLeftOpen className="h-4 w-4 rotate-180" />}
-        </button>
-
-        {/* Inspector */}
-        <div className={`shrink-0 overflow-hidden transition-all ${inspectorCollapsed ? "w-0" : "w-[280px]"}`}>
-          <div className="w-[280px] overflow-y-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-            <PropertiesPanel sheetStats={sheetStats} selectedPiece={selectedPiece} espesor={settings.espesor} material={settings.material} />
           </div>
         </div>
       </div>

@@ -26,12 +26,12 @@ export interface SidebarProps {
 function CollapsibleSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <section className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">{title}</h2>
-        {open ? <ChevronUp className="h-4 w-4 text-neutral-500" /> : <ChevronDown className="h-4 w-4 text-neutral-500" />}
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">{title}</h2>
+        {open ? <ChevronUp className="h-3.5 w-3.5 text-neutral-500" /> : <ChevronDown className="h-3.5 w-3.5 text-neutral-500" />}
       </button>
-      <CollapsibleHeightSection open={open} className="pt-3">
+      <CollapsibleHeightSection open={open} className="pt-2.5">
         {children}
       </CollapsibleHeightSection>
     </section>
@@ -55,9 +55,9 @@ export const Sidebar = forwardRef<PieceListHandle, SidebarProps>(function Sideba
   ref
 ) {
   return (
-    <div className="flex w-[300px] shrink-0 flex-col gap-3 overflow-y-auto">
-      <section className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
+    <div className="flex h-full w-full flex-col gap-2.5">
+      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
+        <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
         <SheetDimensionsFields settings={settings} onChange={onSettingsChange} />
       </section>
 
@@ -69,17 +69,17 @@ export const Sidebar = forwardRef<PieceListHandle, SidebarProps>(function Sideba
         <MachinePanel settings={machine} onChange={onMachineChange} />
       </CollapsibleSection>
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+      <div className="flex min-h-[180px] flex-1 flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-2.5">
         <PieceList ref={ref} {...pieceListProps} />
       </div>
 
       {!isRunning ? (
-        <Button size="lg" disabled={!canRun} onClick={onRun}>
+        <Button size="default" className="w-full" disabled={!canRun} onClick={onRun}>
           Nestear
         </Button>
       ) : (
         <div className="flex flex-col gap-2">
-          <Button size="lg" variant="outline" onClick={onCancel}>
+          <Button size="default" variant="outline" className="w-full" onClick={onCancel}>
             <X className="h-4 w-4" />
             Cancelar
           </Button>
