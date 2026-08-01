@@ -4,10 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import DxfParser from 'dxf-parser';
 import { ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
 
-interface DxfCanvasProps {
-  url: string;
-}
-
 interface Point { x: number; y: number }
 interface ViewState { scale: number; offsetX: number; offsetY: number }
 
@@ -27,31 +23,29 @@ const ACI_COLORS: Record<number, string> = {
 };
 
 function resolveColor(entity: any, layers: Record<string, any>): string {
-  // 1. Color directo en la entidad (código de grupo 62)
   if (typeof entity.colorIndex === 'number' && entity.colorIndex > 0 && entity.colorIndex !== 256) {
     return ACI_COLORS[entity.colorIndex] || '#4ade80';
   }
-  // 2. Heredado de la capa ("ByLayer")
   const layer = layers?.[entity.layer];
   if (layer && typeof layer.colorIndex === 'number' && layer.colorIndex > 0) {
     return ACI_COLORS[layer.colorIndex] || '#4ade80';
   }
-  // 3. Fallback si no se encontró color en ningún lado
   return '#4ade80';
 }
 
-// Extrae solo las entidades que soportamos dibujar en 2D.
-// Suficiente para piezas planas tipo panel (líneas, polilíneas,
-// círculos, arcos, texto simple). No maneja hatches, splines,
-// ni bloques con inserts complejos.
+// Entidad de dibujo interna del canvas. `pieceIndex` es NUEVO (v2):
+// agrupa entidades por pieza para poder hacer hit-test/selección —
+// ausente (undefined) cuando el canvas se usa en modo "archivo DXF
+// suelto" (el uso original de /engineering), presente cuando se usa
+// en modo "piezas nesteadas" (el uso nuevo de /nesting).
 type Entity =
-  | { kind: 'line'; a: Point; b: Point; color: string }
-  | { kind: 'polyline'; points: Point[]; closed: boolean; color: string }
-  | { kind: 'circle'; center: Point; radius: number; color: string }
-  | { kind: 'arc'; center: Point; radius: number; startAngle: number; endAngle: number; color: string }
-  | { kind: 'text'; position: Point; text: string; height: number; color: string };
+  | { kind: 'line'; a: Point; b: Point; color: string; pieceIndex?: number }
+  | { kind: 'polyline'; points: Point[]; closed: boolean; color: string; pieceIndex?: number }
+  | { kind: 'circle'; center: Point; radius: number; color: string; pieceIndex?: number }
+  | { kind: 'arc'; center: Point; radius: number; startAngle: number; endAngle: number; color: string; pieceIndex?: number }
+  | { kind: 'text'; position: Point; text: string; height: number; color: string; pieceIndex?: number };
 
-function extractEntities(dxf: any): Entity[] {
+function extractEntitiesFromDxf(dxf: any): Entity[] {
   const out: Entity[] = [];
   const rawEntities = dxf?.entities ?? [];
   const layers = dxf?.tables?.layer?.layers ?? {};
@@ -80,31 +74,13 @@ function extractEntities(dxf: any): Entity[] {
         out.push({ kind: 'circle', center: e.center, radius: e.radius, color });
         break;
       case 'ARC':
-        // FIX: dxf-parser ya entrega startAngle/endAngle en RADIANES
-        // (ver node_modules/dxf-parser/src/entities/arc.ts, code 50/51:
-        // entity.startAngle = Math.PI / 180 * curr.value).
-        // Antes este código volvía a multiplicar por Math.PI/180,
-        // lo que colapsaba el barrido del arco a un ángulo casi nulo
-        // (ej. un arco de 180° quedaba en ~3° -> se veía como un punto).
-        out.push({
-          kind: 'arc',
-          center: e.center,
-          radius: e.radius,
-          startAngle: e.startAngle,
-          endAngle: e.endAngle,
-          color,
-        });
+        // dxf-parser ya entrega startAngle/endAngle en RADIANES.
+        out.push({ kind: 'arc', center: e.center, radius: e.radius, startAngle: e.startAngle, endAngle: e.endAngle, color });
         break;
       case 'TEXT':
       case 'MTEXT':
         if (e.text && e.startPoint) {
-          out.push({
-            kind: 'text',
-            position: e.startPoint,
-            text: e.text,
-            height: e.textHeight || e.height || 2.5,
-            color,
-          });
+          out.push({ kind: 'text', position: e.startPoint, text: e.text, height: e.textHeight || e.height || 2.5, color });
         }
         break;
     }
@@ -139,18 +115,55 @@ function computeBounds(entities: Entity[]) {
   return { minX, minY, maxX, maxY };
 }
 
-export const DxfCanvas = ({ url }: DxfCanvasProps) => {
+/** Ray casting estándar para hit-test de selección de pieza. */
+function pointInPolygon(point: Point, polygon: Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y;
+    const xj = polygon[j].x, yj = polygon[j].y;
+    const intersects = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+export interface NestingPieceInput {
+  /** Puntos del contorno de cada sub-trazo de la pieza, con su color real. */
+  subOutlines: { points: Point[]; color?: string }[];
+  /** Contorno fusionado, usado solo como respaldo para hit-test si no hay subOutlines. */
+  outline?: Point[];
+  angle?: number;
+}
+
+interface DxfCanvasProps {
+  /** Modo "archivo DXF suelto" (uso original de /engineering): fetchea y parsea la URL. */
+  url?: string;
+  /** Modo "piezas nesteadas" (uso nuevo de /nesting): datos ya calculados, sin fetch ni parseo. */
+  pieces?: NestingPieceInput[];
+  /** Tamaño de la plancha — dibuja un rectángulo gris claro de fondo. Solo aplica en modo `pieces`. */
+  sheetSize?: { width: number; height: number };
+  /** Índice de la pieza seleccionada (modo `pieces`), para resaltarla. */
+  selectedPieceIndex?: number | null;
+  /** Se dispara al hacer click sobre una pieza (modo `pieces`) o en vacío (null). */
+  onSelectPiece?: (index: number | null) => void;
+}
+
+const SHEET_STROKE = '#71717a';
+const SELECTED_STROKE = '#ffffff';
+const SELECTED_HALO = '#facc15';
+
+export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, onSelectPiece }: DxfCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
   const viewRef = useRef<ViewState>({ scale: 1, offsetX: 0, offsetY: 0 });
-  const draggingRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null);
+  const draggingRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number; moved: boolean } | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!url);
   const [error, setError] = useState<string | null>(null);
 
-  // Dibuja el estado actual — se llama SOLO cuando algo cambió
-  // (carga, zoom, pan, resize). Sin loop continuo: costo ~0 en reposo.
+  const isPieceMode = !!pieces;
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -161,9 +174,8 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
     const { scale, offsetX, offsetY } = viewRef.current;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    if (w === 0 || h === 0) return;
 
-    // Buffer interno = tamaño en pantalla * dpr, así el canvas
-    // nunca se estira: el navegador no tiene que reescalar nada.
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
@@ -173,16 +185,26 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
     ctx.clearRect(0, 0, w, h);
 
     ctx.save();
-    // Origen al centro del canvas, luego pan, luego escala.
-    // Y invertido porque DXF usa Y hacia arriba, canvas hacia abajo.
     ctx.translate(w / 2 + offsetX, h / 2 + offsetY);
-    ctx.scale(scale, -scale);
+    // Y invertido solo en modo archivo DXF suelto (convención AutoCAD,
+    // Y hacia arriba). En modo pieza usamos el mismo sistema de
+    // coordenadas interno del motor de nesting (Y hacia abajo), sin
+    // invertir, para que coincida exactamente con lo exportado.
+    ctx.scale(scale, isPieceMode ? scale : -scale);
+
+    if (isPieceMode && sheetSize) {
+      ctx.strokeStyle = SHEET_STROKE;
+      ctx.lineWidth = 1 / scale;
+      ctx.strokeRect(0, 0, sheetSize.width, sheetSize.height);
+    }
 
     ctx.lineWidth = 1 / scale;
 
     for (const e of entitiesRef.current) {
-      ctx.strokeStyle = e.color;
+      const isSelected = isPieceMode && e.pieceIndex === selectedPieceIndex;
+      ctx.strokeStyle = isSelected ? SELECTED_STROKE : e.color;
       ctx.fillStyle = e.color;
+      ctx.lineWidth = (isSelected ? 1.8 : 1) / scale;
       ctx.beginPath();
       if (e.kind === 'line') {
         ctx.moveTo(e.a.x, e.a.y);
@@ -196,48 +218,73 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
         ctx.arc(e.center.x, e.center.y, e.radius, 0, Math.PI * 2);
         ctx.stroke();
       } else if (e.kind === 'arc') {
-        // NOTA: ctx.scale(scale, -scale) invierte el eje Y, lo que
-        // también invierte el sentido de barrido visual del arco.
-        // Para arcos de exactamente 180° (como los ojales de este
-        // archivo) no cambia el resultado, pero si en otros DXF ves
-        // arcos "al revés" (el complementario del que esperabas),
-        // agregá `true` como quinto argumento (anticlockwise):
-        // ctx.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle, true);
         ctx.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle);
         ctx.stroke();
       } else if (e.kind === 'text') {
         ctx.save();
-        ctx.scale(1, -1); // el texto no debe quedar espejado por el flip de Y
+        ctx.scale(1, isPieceMode ? 1 : -1);
         ctx.font = `${e.height}px sans-serif`;
-        ctx.fillText(e.text, e.position.x, -e.position.y);
+        ctx.fillText(e.text, e.position.x, isPieceMode ? e.position.y : -e.position.y);
         ctx.restore();
       }
     }
+
+    // Halo punteado de la pieza seleccionada.
+    if (isPieceMode && selectedPieceIndex !== null) {
+      const selectedEntities = entitiesRef.current.filter((e) => e.pieceIndex === selectedPieceIndex);
+      const bounds = computeBounds(selectedEntities);
+      if (bounds) {
+        const pad = 3 / scale;
+        ctx.strokeStyle = SELECTED_HALO;
+        ctx.lineWidth = 1 / scale;
+        ctx.setLineDash([4 / scale, 4 / scale]);
+        ctx.strokeRect(
+          bounds.minX - pad,
+          bounds.minY - pad,
+          bounds.maxX - bounds.minX + pad * 2,
+          bounds.maxY - bounds.minY + pad * 2
+        );
+        ctx.setLineDash([]);
+      }
+    }
+
     ctx.restore();
-  }, []);
+  }, [isPieceMode, sheetSize, selectedPieceIndex]);
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const bounds = computeBounds(entitiesRef.current);
-    if (!bounds) return;
-
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    if (w === 0 || h === 0) return;
+
+    // En modo pieza, encajamos a la PLANCHA completa (no solo a las
+    // piezas) — así siempre se ve el marco de referencia entero.
+    const bounds =
+      isPieceMode && sheetSize
+        ? { minX: 0, minY: 0, maxX: sheetSize.width, maxY: sheetSize.height }
+        : computeBounds(entitiesRef.current);
+    if (!bounds) return;
+
     const drawW = bounds.maxX - bounds.minX || 1;
     const drawH = bounds.maxY - bounds.minY || 1;
-    const padding = 0.85; // deja ~15% de margen
+    const padding = 0.9;
 
     const scale = Math.min((w / drawW) * padding, (h / drawH) * padding);
     const centerX = (bounds.minX + bounds.maxX) / 2;
     const centerY = (bounds.minY + bounds.maxY) / 2;
 
-    viewRef.current = { scale, offsetX: -centerX * scale, offsetY: centerY * scale };
+    viewRef.current = {
+      scale,
+      offsetX: -centerX * scale,
+      offsetY: isPieceMode ? -centerY * scale : centerY * scale,
+    };
     draw();
-  }, [draw]);
+  }, [draw, isPieceMode, sheetSize]);
 
-  // Carga y parseo del DXF
+  // --- Modo "archivo DXF suelto": fetch + parse (comportamiento original, intacto) ---
   useEffect(() => {
+    if (!url) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -251,9 +298,8 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
         if (cancelled) return;
         const parser = new DxfParser();
         const dxf = parser.parseSync(text);
-        entitiesRef.current = extractEntities(dxf);
+        entitiesRef.current = extractEntitiesFromDxf(dxf);
         setLoading(false);
-        // Esperamos un frame para que el canvas ya tenga su tamaño real
         requestAnimationFrame(fitToView);
       })
       .catch((err: Error) => {
@@ -265,7 +311,28 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
     return () => { cancelled = true; };
   }, [url, fitToView]);
 
-  // Redibuja si el contenedor cambia de tamaño (el modal, por ejemplo)
+  // --- Modo "piezas nesteadas": datos directos, sin fetch ni parseo ---
+  useEffect(() => {
+    if (!pieces) return;
+    const out: Entity[] = [];
+    pieces.forEach((piece, pieceIndex) => {
+      if (piece.subOutlines.length > 0) {
+        for (const sub of piece.subOutlines) {
+          if (sub.points.length >= 2) {
+            out.push({ kind: 'polyline', points: sub.points, closed: false, color: sub.color ?? '#22c55e', pieceIndex });
+          }
+        }
+      } else if (piece.outline && piece.outline.length >= 2) {
+        out.push({ kind: 'polyline', points: piece.outline, closed: true, color: '#22c55e', pieceIndex });
+      }
+    });
+    entitiesRef.current = out;
+    requestAnimationFrame(fitToView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pieces, sheetSize?.width, sheetSize?.height]);
+
+  useEffect(() => { draw(); }, [draw]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -274,7 +341,16 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
     return () => observer.disconnect();
   }, [draw]);
 
-  // Pan con arrastre del mouse
+  const screenToLocal = useCallback((clientX: number, clientY: number): Point | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const { scale, offsetX, offsetY } = viewRef.current;
+    const cx = clientX - rect.left - rect.width / 2 - offsetX;
+    const cy = clientY - rect.top - rect.height / 2 - offsetY;
+    return { x: cx / scale, y: isPieceMode ? cy / scale : -cy / scale };
+  }, [isPieceMode]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -285,33 +361,51 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
         startY: e.clientY,
         startOffsetX: viewRef.current.offsetX,
         startOffsetY: viewRef.current.offsetY,
+        moved: false,
       };
       canvas.setPointerCapture(e.pointerId);
     };
     const onPointerMove = (e: PointerEvent) => {
       const drag = draggingRef.current;
       if (!drag) return;
-      viewRef.current = {
-        ...viewRef.current,
-        offsetX: drag.startOffsetX + (e.clientX - drag.startX),
-        offsetY: drag.startOffsetY + (e.clientY - drag.startY),
-      };
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
+      viewRef.current = { ...viewRef.current, offsetX: drag.startOffsetX + dx, offsetY: drag.startOffsetY + dy };
       draw();
     };
-    const onPointerUp = () => { draggingRef.current = null; };
+    const onPointerUp = (e: PointerEvent) => {
+      const drag = draggingRef.current;
+      draggingRef.current = null;
+      if (!drag) return;
 
-    // Zoom con scroll, centrado en el cursor
+      if (!drag.moved && isPieceMode && onSelectPiece) {
+        const point = screenToLocal(e.clientX, e.clientY);
+        if (point) {
+          const byPiece = new Map<number, Point[]>();
+          for (const ent of entitiesRef.current) {
+            if (ent.kind !== 'polyline' || ent.pieceIndex === undefined) continue;
+            if (!byPiece.has(ent.pieceIndex)) byPiece.set(ent.pieceIndex, []);
+          }
+          let hit: number | null = null;
+          for (const ent of entitiesRef.current) {
+            if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && ent.points.length >= 3) {
+              if (pointInPolygon(point, ent.points)) hit = ent.pieceIndex;
+            }
+          }
+          onSelectPiece(hit);
+        }
+      }
+    };
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const cx = e.clientX - rect.left - rect.width / 2;
       const cy = e.clientY - rect.top - rect.height / 2;
-
       const { scale, offsetX, offsetY } = viewRef.current;
       const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
       const newScale = scale * factor;
-
-      // Mantiene fijo el punto bajo el cursor mientras hace zoom
       viewRef.current = {
         scale: newScale,
         offsetX: cx - (cx - offsetX) * factor,
@@ -331,7 +425,7 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
       window.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('wheel', onWheel);
     };
-  }, [draw]);
+  }, [draw, isPieceMode, onSelectPiece, screenToLocal]);
 
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const factor = direction === 'in' ? 1.25 : 0.8;
@@ -349,7 +443,7 @@ export const DxfCanvas = ({ url }: DxfCanvasProps) => {
         backgroundSize: '24px 24px',
       }}
     >
-      <canvas ref={canvasRef} className="h-full w-full cursor-grab active:cursor-grabbing" />
+      <canvas ref={canvasRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
 
       <div className="absolute right-6 top-6 flex flex-col gap-1 rounded-xl bg-[#101012]/90 p-1.5 ring-1 ring-white/10 backdrop-blur-sm">
         <button onClick={() => handleZoom('in')} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Acercar">

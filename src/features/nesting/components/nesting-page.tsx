@@ -1,6 +1,8 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 
 import { useNesting } from "../hooks/use-nesting"
 import { boundingRect } from "../engine/geometry"
@@ -16,11 +18,19 @@ import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, t
 
 import { Toolbar } from "./toolbar"
 import { Sidebar } from "./sidebar"
-import { NestingCanvas, type NestingCanvasHandle } from "./nesting-canvas"
 import { SheetNavigator } from "./sheet-navigator"
 import { PropertiesPanel, type SheetStats } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
+import { PiecePreviewDialog } from "./piece-preview-dialog"
 import type { PieceRow, ManualRow, CadRow, PieceListHandle } from "./piece-list"
+import type { NestingPieceInput } from "../../engineering/components/dxf-canvas"
+
+// El canvas es compartido con /engineering (misma implementación,
+// v2 con soporte de piezas/selección) — no hay dos canvases distintos.
+const DxfCanvas = dynamic(
+  () => import("@/features/engineering/components/dxf-canvas").then((m) => m.DxfCanvas),
+  { ssr: false }
+)
 
 const PIECE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#eab308", "#ec4899", "#a855f7"]
 
@@ -45,16 +55,6 @@ function downloadTextFile(fileName: string, content: string, mimeType: string) {
   URL.revokeObjectURL(url)
 }
 
-/** Envuelve una pieza SIN nestear como si fuera una PlacedPiece en (0,0,0°), para poder mostrarla en el mismo NestingCanvas antes de correr el nesting — sin generar ningún DXF de por medio. */
-function pieceAsPreview(piece: NestingPiece): { placed: PlacedPiece; width: number; height: number } {
-  const bounds = boundingRect(piece.outline)
-  return {
-    placed: { pieceId: piece.id, x: 0, y: 0, angle: 0, outline: piece.outline, subEntities: piece.subEntities, color: piece.color },
-    width: bounds.width,
-    height: bounds.height,
-  }
-}
-
 export function NestingPage() {
   const colorCursorRef = useRef(0)
   const nextColor = useCallback(() => {
@@ -77,14 +77,14 @@ export function NestingPage() {
   const [rows, setRows] = useState<PieceRow[]>(() => [])
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
   const [machine, setMachine] = useState<MachineSettings>(defaultMachineSettings)
-  const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-  const [previewPiece, setPreviewPiece] = useState<NestingPiece | null>(null)
+  const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState(0)
   const [selectedPieceIndex, setSelectedPieceIndex] = useState<number | null>(null)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
 
   const projectInputRef = useRef<HTMLInputElement>(null)
-  const canvasRef = useRef<NestingCanvasHandle>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
 
   const { status, progress, sheets, error, run, cancel } = useNesting()
@@ -103,7 +103,6 @@ export function NestingPage() {
   useEffect(() => {
     if (sheetGroups.length > 0) {
       setActiveGroupIndex(0)
-      setPreviewPiece(null)
       setSelectedPieceIndex(null)
     }
   }, [sheetGroups.length])
@@ -139,9 +138,21 @@ export function NestingPage() {
 
   // --- Datos que le llegan al canvas: o la plancha activa nesteada, o el preview de una pieza suelta ---
   const activeGroup = sheetGroups[activeGroupIndex] ?? null
-  const canvasPieces: PlacedPiece[] = activeGroup ? activeGroup.sheet.pieces : previewPiece ? [pieceAsPreview(previewPiece).placed] : []
-  const canvasWidth = activeGroup ? sheetConfig.width : previewPiece ? pieceAsPreview(previewPiece).width : sheetConfig.width
-  const canvasHeight = activeGroup ? sheetConfig.height : previewPiece ? pieceAsPreview(previewPiece).height : sheetConfig.height
+  const canvasPieces: PlacedPiece[] = activeGroup ? activeGroup.sheet.pieces : []
+  const canvasWidth = sheetConfig.width
+  const canvasHeight = sheetConfig.height
+
+  const dxfCanvasPieces: NestingPieceInput[] = useMemo(
+    () =>
+      canvasPieces.map((p) => ({
+        subOutlines: p.subEntities?.length
+          ? p.subEntities.map((s) => ({ points: s.outline.points, color: s.color }))
+          : [],
+        outline: p.outline.points,
+        angle: p.angle,
+      })),
+    [canvasPieces]
+  )
 
   const sheetStats: SheetStats | null = activeGroup
     ? {
@@ -172,20 +183,11 @@ export function NestingPage() {
   const handleUpdateManual = (id: string, patch: Partial<ManualRow>) =>
     setRows((prev) => prev.map((r) => (r.id === id && r.source === "manual" ? { ...r, ...patch } : r)))
   const handleUpdateQuantity = (id: string, quantity: string) => setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r)))
-  const handleAddCad = (newRows: CadRow[]) => {
-    setRows((prev) => [...prev, ...newRows])
-    setSelectedRowId(newRows[0].id)
-    setPreviewPiece({ id: newRows[0].fileName, outline: newRows[0].outline, subEntities: newRows[0].subEntities, color: newRows[0].color })
-  }
-  const handleSelectRow = (row: CadRow) => {
-    setSelectedRowId(row.id)
-    setPreviewPiece({ id: row.fileName, outline: row.outline, subEntities: row.subEntities, color: row.color })
-  }
+  const handleAddCad = (newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows])
 
   // --- Nestear ---
   const handleRun = () => {
     if (!canRun) return
-    setPreviewPiece(null)
     run(validPieces, { sheet: sheetConfig })
   }
 
@@ -265,8 +267,8 @@ export function NestingPage() {
     setRows([])
     setSettings(defaultProjectSettings())
     setMachine(defaultMachineSettings())
-    setPreviewPiece(null)
     setSelectedPieceIndex(null)
+    setPreviewRow(null)
   }
 
   return (
@@ -291,42 +293,51 @@ export function NestingPage() {
         onAutoNest={handleRun}
         onCancel={cancel}
         onRecalculate={handleRun}
-        onZoomIn={() => canvasRef.current?.zoomIn()}
-        onZoomOut={() => canvasRef.current?.zoomOut()}
-        onFit={() => canvasRef.current?.fitToView()}
         onToggleLayers={() => {}}
         onSettings={() => {}}
         isRunning={isRunning}
         canRun={canRun}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 bg-[#050505] p-4">
-        <Sidebar
-          ref={pieceListRef}
-          settings={settings}
-          onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
-          machine={machine}
-          onMachineChange={(patch) => setMachine((m) => ({ ...m, ...patch }))}
-          pieceListProps={{
-            rows,
-            selectedRowId,
-            conflictIds,
-            disabled: isRunning,
-            onAddManual: handleAddManual,
-            onAddCad: handleAddCad,
-            onRemove: handleRemove,
-            onUpdateManual: handleUpdateManual,
-            onUpdateQuantity: handleUpdateQuantity,
-            onSelectRow: handleSelectRow,
-            nextColor,
-          }}
-          canRun={canRun}
-          isRunning={isRunning}
-          progress={progress}
-          error={error}
-          onRun={handleRun}
-          onCancel={cancel}
-        />
+      <div className="flex min-h-0 flex-1 gap-2 bg-[#050505] p-4">
+        <div className={`relative shrink-0 overflow-hidden transition-all ${sidebarCollapsed ? "w-0" : "w-[300px]"}`}>
+          <div className="w-[300px]">
+            <Sidebar
+              ref={pieceListRef}
+              settings={settings}
+              onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
+              machine={machine}
+              onMachineChange={(patch) => setMachine((m) => ({ ...m, ...patch }))}
+              pieceListProps={{
+                rows,
+                conflictIds,
+                disabled: isRunning,
+                onAddManual: handleAddManual,
+                onAddCad: handleAddCad,
+                onRemove: handleRemove,
+                onUpdateManual: handleUpdateManual,
+                onUpdateQuantity: handleUpdateQuantity,
+                onPreviewRow: setPreviewRow,
+                nextColor,
+              }}
+              canRun={canRun}
+              isRunning={isRunning}
+              progress={progress}
+              error={error}
+              onRun={handleRun}
+              onCancel={cancel}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          title={sidebarCollapsed ? "Mostrar panel" : "Ocultar panel"}
+          className="flex h-8 w-6 shrink-0 items-center justify-center self-start rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white"
+        >
+          {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
 
         {/* CANVAS — único, siempre centrado, protagonista */}
         <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -348,11 +359,9 @@ export function NestingPage() {
 
           <div className="min-h-[500px] flex-1 overflow-hidden rounded-2xl border border-white/8">
             {canvasPieces.length > 0 ? (
-              <NestingCanvas
-                ref={canvasRef}
-                sheetWidth={canvasWidth}
-                sheetHeight={canvasHeight}
-                pieces={canvasPieces}
+              <DxfCanvas
+                pieces={dxfCanvasPieces}
+                sheetSize={{ width: canvasWidth, height: canvasHeight }}
                 selectedPieceIndex={selectedPieceIndex}
                 onSelectPiece={setSelectedPieceIndex}
               />
@@ -364,9 +373,20 @@ export function NestingPage() {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setInspectorCollapsed((v) => !v)}
+          title={inspectorCollapsed ? "Mostrar inspector" : "Ocultar inspector"}
+          className="flex h-8 w-6 shrink-0 items-center justify-center self-start rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white"
+        >
+          {inspectorCollapsed ? <PanelLeftClose className="h-4 w-4 rotate-180" /> : <PanelLeftOpen className="h-4 w-4 rotate-180" />}
+        </button>
+
         {/* Inspector */}
-        <div className="w-[280px] shrink-0 overflow-y-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-          <PropertiesPanel sheetStats={sheetStats} selectedPiece={selectedPiece} espesor={settings.espesor} material={settings.material} />
+        <div className={`shrink-0 overflow-hidden transition-all ${inspectorCollapsed ? "w-0" : "w-[280px]"}`}>
+          <div className="w-[280px] overflow-y-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+            <PropertiesPanel sheetStats={sheetStats} selectedPiece={selectedPiece} espesor={settings.espesor} material={settings.material} />
+          </div>
         </div>
       </div>
 
@@ -377,6 +397,8 @@ export function NestingPage() {
         onExportSheet={handleExportSheet}
         onSaveProject={handleSaveProject}
       />
+
+      <PiecePreviewDialog row={previewRow} onClose={() => setPreviewRow(null)} />
     </div>
   )
 }

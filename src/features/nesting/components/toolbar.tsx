@@ -6,16 +6,9 @@ import {
   Save,
   FileInput,
   FileOutput,
-  Play,
-  X,
-  RotateCw,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
   Layers,
   Settings,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 export interface ToolbarProps {
   onNew: () => void
@@ -23,19 +16,11 @@ export interface ToolbarProps {
   onSave: () => void
   onImport: () => void
   onExport: () => void
-  onAutoNest: () => void
-  onCancel: () => void
-  onRecalculate: () => void
-  onZoomIn: () => void
-  onZoomOut: () => void
-  onFit: () => void
   onToggleLayers: () => void
   onSettings: () => void
-  isRunning: boolean
-  canRun: boolean
 }
 
-function ToolbarButton({
+function IconButton({
   onClick,
   disabled,
   title,
@@ -52,7 +37,8 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+      aria-label={title}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors duration-200 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
     >
       {children}
     </button>
@@ -60,7 +46,8 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <div className="mx-1 h-5 w-px bg-white/8" aria-hidden />
+  // Se reemplaza w-[1px] por la clase canónica w-px
+  return <div className="mx-2 h-4 w-px bg-white/10" aria-hidden="true" />
 }
 
 export function Toolbar({
@@ -69,79 +56,48 @@ export function Toolbar({
   onSave,
   onImport,
   onExport,
-  onAutoNest,
-  onCancel,
-  onRecalculate,
-  onZoomIn,
-  onZoomOut,
-  onFit,
   onToggleLayers,
   onSettings,
-  isRunning,
-  canRun,
 }: ToolbarProps) {
   return (
-    <div className="flex h-12 shrink-0 items-center gap-0.5 border-b border-white/8 bg-[#0a0a0c] px-3">
-      <span className="mr-3 text-xs font-bold uppercase tracking-widest text-neutral-500">Nesting</span>
+    <div 
+      role="toolbar" 
+      aria-label="Controles del proyecto"
+      // Se reemplaza bg-[#09090b] por bg-neutral-950 (el equivalente canónico más oscuro)
+      className="flex h-14 w-full shrink-0 items-center justify-between border-b border-white/5 bg-neutral-950 px-4"
+    >
+      {/* Grupo Izquierdo: Acciones de Archivo */}
+      <div className="flex items-center gap-1">
+        {/* Se reemplaza h-[18px] w-[18px] por h-5 w-5 (20px), la medida estándar de Tailwind más cercana */}
+        <IconButton onClick={onNew} title="Nuevo proyecto">
+          <FilePlus2 className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+        <IconButton onClick={onOpen} title="Abrir proyecto">
+          <FolderOpen className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+        <IconButton onClick={onSave} title="Guardar proyecto">
+          <Save className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
 
-      <ToolbarButton onClick={onNew} title="Nuevo proyecto">
-        <FilePlus2 className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onOpen} title="Abrir proyecto">
-        <FolderOpen className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onSave} title="Guardar proyecto">
-        <Save className="h-4 w-4" />
-      </ToolbarButton>
+        <Divider />
 
-      <Divider />
+        <IconButton onClick={onImport} title="Importar DXF/GEO">
+          <FileInput className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+        <IconButton onClick={onExport} title="Exportar">
+          <FileOutput className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+      </div>
 
-      <ToolbarButton onClick={onImport} title="Importar DXF/GEO">
-        <FileInput className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onExport} title="Exportar">
-        <FileOutput className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Divider />
-
-      {!isRunning ? (
-        <Button size="sm" onClick={onAutoNest} disabled={!canRun}>
-          <Play className="h-3.5 w-3.5" />
-          Nido automático
-        </Button>
-      ) : (
-        <>
-          <Button size="sm" variant="outline" onClick={onCancel}>
-            <X className="h-3.5 w-3.5" />
-            Cancelar
-          </Button>
-          <ToolbarButton onClick={onRecalculate} title="Recalcular" disabled>
-            <RotateCw className="h-4 w-4" />
-          </ToolbarButton>
-        </>
-      )}
-
-      <div className="flex-1" />
-
-      <ToolbarButton onClick={onZoomOut} title="Alejar">
-        <ZoomOut className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onZoomIn} title="Acercar">
-        <ZoomIn className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onFit} title="Adaptar a la vista">
-        <Maximize className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Divider />
-
-      <ToolbarButton onClick={onToggleLayers} title="Capas">
-        <Layers className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={onSettings} title="Configuración">
-        <Settings className="h-4 w-4" />
-      </ToolbarButton>
+      {/* Grupo Derecho: Configuraciones y Vistas */}
+      <div className="flex items-center gap-1">
+        <IconButton onClick={onToggleLayers} title="Capas">
+          <Layers className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+        <IconButton onClick={onSettings} title="Configuración">
+          <Settings className="h-5 w-5" strokeWidth={1.5} />
+        </IconButton>
+      </div>
     </div>
   )
 }

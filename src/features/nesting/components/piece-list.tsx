@@ -1,9 +1,10 @@
 "use client"
 
-import { forwardRef, useImperativeHandle, useRef } from "react"
-import { Plus, Trash2, FileInput, FileWarning, AlertTriangle } from "lucide-react"
+import { forwardRef, useImperativeHandle, useRef, useState } from "react"
+import { Plus, Trash2, FileInput, FileWarning, AlertTriangle, Eye, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { isSupportedCadFile, readCadFile } from "../cad/cad-reader"
 import { scanMaterialData, isValidMaterialData, type MaterialData } from "../cad/thickness-scanner"
 import type { PieceOutline, SubEntity } from "../engine/types"
@@ -38,7 +39,6 @@ export type PieceRow = ManualRow | CadRow
 
 export interface PieceListProps {
   rows: PieceRow[]
-  selectedRowId: string | null
   conflictIds: Set<string>
   disabled: boolean
   onAddManual: () => void
@@ -46,14 +46,13 @@ export interface PieceListProps {
   onRemove: (id: string) => void
   onUpdateManual: (id: string, patch: Partial<ManualRow>) => void
   onUpdateQuantity: (id: string, quantity: string) => void
-  onSelectRow: (row: CadRow) => void
+  onPreviewRow: (row: CadRow) => void
   nextColor: () => string
 }
 
 export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function PieceList(
   {
     rows,
-    selectedRowId,
     conflictIds,
     disabled,
     onAddManual,
@@ -61,13 +60,13 @@ export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function Pi
     onRemove,
     onUpdateManual,
     onUpdateQuantity,
-    onSelectRow,
+    onPreviewRow,
     nextColor,
   },
   ref
 ) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const errorRef = useRef<HTMLParagraphElement>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useImperativeHandle(ref, () => ({
     triggerImport: () => fileInputRef.current?.click(),
@@ -104,9 +103,12 @@ export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function Pi
       })
     }
 
-    if (rejected.length > 0 && errorRef.current) {
-      errorRef.current.textContent = `No se pudieron importar: ${rejected.join(", ")}`
+    if (rejected.length > 0) {
+      setErrorMsg(`No se pudieron importar: ${rejected.join(", ")}`)
+    } else {
+      setErrorMsg(null)
     }
+
     if (newRows.length > 0) onAddCad(newRows)
   }
 
@@ -136,65 +138,80 @@ export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function Pi
         }}
       />
 
-      <p ref={errorRef} className="mb-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 p-2 text-xs text-destructive empty:hidden">
-        <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-      </p>
+      {errorMsg && (
+        <p className="mb-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
+          <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{errorMsg}</span>
+        </p>
+      )}
 
-      <div className="flex min-h-[140px] flex-1 flex-col gap-1 overflow-y-auto">
-        {rows.map((row) => (
-          <div
-            key={row.id}
-            onClick={() => row.source === "cad" && onSelectRow(row)}
-            role={row.source === "cad" ? "button" : undefined}
-            tabIndex={row.source === "cad" ? 0 : undefined}
-            onKeyDown={(e) => {
-              if (row.source === "cad" && (e.key === "Enter" || e.key === " ")) {
-                e.preventDefault()
-                onSelectRow(row)
-              }
-            }}
-            className={`flex items-center gap-2 rounded-lg p-1.5 transition-colors ${row.source === "cad" ? "cursor-pointer" : ""} ${
-              conflictIds.has(row.id) ? "bg-amber-500/10 ring-1 ring-amber-500/30" : "hover:bg-white/5"
-            } ${selectedRowId === row.id ? "bg-white/5 ring-1 ring-primary/50" : ""}`}
-          >
-            {row.source === "manual" && (
-              <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} aria-hidden />
-            )}
-
-            {row.source === "manual" ? (
-              <div className="flex flex-1 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                <Input placeholder="Ancho" inputMode="decimal" value={row.width} disabled={disabled} onChange={(e) => onUpdateManual(row.id, { width: e.target.value })} className="w-0 flex-1" />
-                <span className="text-neutral-600">×</span>
-                <Input placeholder="Alto" inputMode="decimal" value={row.height} disabled={disabled} onChange={(e) => onUpdateManual(row.id, { height: e.target.value })} className="w-0 flex-1" />
-              </div>
-            ) : (
-              <div className="w-0 flex-1 truncate" title={row.fileName}>
-                <div className="truncate text-sm text-neutral-300">{row.fileName}</div>
-                <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
-                  <span>{row.width.toFixed(0)}×{row.height.toFixed(0)}</span>
-                  {isValidMaterialData(row.material) && (
-                    <span className="text-neutral-600">
-                      · {row.material.thickness}mm{row.material.dinNorm !== "N/D" && ` · ${row.material.dinNorm}`}
-                    </span>
-                  )}
-                  {conflictIds.has(row.id) && (
-                    <span className="flex items-center gap-0.5 text-amber-400">
-                      <AlertTriangle className="h-2.5 w-2.5" /> conflicto
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div onClick={(e) => e.stopPropagation()} className="flex shrink-0 items-center gap-1">
-              <Input placeholder="Cant." inputMode="numeric" value={row.quantity} disabled={disabled} onChange={(e) => onUpdateQuantity(row.id, e.target.value)} className="w-12 shrink-0" />
-              <Button size="icon-sm" variant="ghost" disabled={disabled || rows.length <= 1} onClick={() => onRemove(row.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+      <ScrollArea className="min-h-[140px] flex-1">
+        {/* Lógica condicional: Si no hay piezas, muestra el placeholder. Si hay, muestra la lista. */}
+        {rows.length === 0 ? (
+          <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 p-4 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
+              <Layers className="h-5 w-5 text-neutral-500" />
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-neutral-400">No hay piezas</p>
+              <p className="text-xs text-neutral-500">Importa archivos o agrega piezas manualmente para comenzar a nestear.</p>
             </div>
           </div>
-        ))}
-      </div>
+        ) : (
+          <div className="flex flex-col gap-1 pr-2">
+            {rows.map((row) => (
+              <div
+                key={row.id}
+                className={`flex items-center gap-2 rounded-lg p-1.5 transition-colors ${
+                  conflictIds.has(row.id) ? "bg-amber-500/10 ring-1 ring-amber-500/30" : "hover:bg-white/5"
+                }`}
+              >
+                {row.source === "manual" && (
+                  <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} aria-hidden />
+                )}
+
+                {row.source === "manual" ? (
+                  <div className="flex flex-1 items-center gap-1.5">
+                    <Input placeholder="Ancho" inputMode="decimal" value={row.width} disabled={disabled} onChange={(e) => onUpdateManual(row.id, { width: e.target.value })} className="w-0 flex-1" />
+                    <span className="text-neutral-600">×</span>
+                    <Input placeholder="Alto" inputMode="decimal" value={row.height} disabled={disabled} onChange={(e) => onUpdateManual(row.id, { height: e.target.value })} className="w-0 flex-1" />
+                  </div>
+                ) : (
+                  <div className="w-0 flex-1 truncate" title={row.fileName}>
+                    <div className="truncate text-sm text-neutral-300">{row.fileName}</div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                      <span>{row.width.toFixed(0)}×{row.height.toFixed(0)}</span>
+                      {isValidMaterialData(row.material) && (
+                        <span className="text-neutral-600">
+                          · {row.material.thickness}mm{row.material.dinNorm !== "N/D" && ` · ${row.material.dinNorm}`}
+                        </span>
+                      )}
+                      {conflictIds.has(row.id) && (
+                        <span className="flex items-center gap-0.5 text-amber-400">
+                          <AlertTriangle className="h-2.5 w-2.5" /> conflicto
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {row.source === "cad" && (
+                  <Button size="icon-sm" variant="ghost" onClick={() => onPreviewRow(row)} title="Ver pieza">
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+
+                <Input placeholder="Cant." inputMode="numeric" value={row.quantity} disabled={disabled} onChange={(e) => onUpdateQuantity(row.id, e.target.value)} className="w-12 shrink-0" />
+                
+                {/* Se eliminó la restricción rows.length <= 1 de este botón */}
+                <Button size="icon-sm" variant="ghost" disabled={disabled} onClick={() => onRemove(row.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
     </div>
   )
 })
