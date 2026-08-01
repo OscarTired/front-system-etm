@@ -17,6 +17,32 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
+/**
+ * Solo las dimensiones de la plancha (Ancho/Alto/Margen) — lo ÚNICO
+ * que hace falta de verdad para poder nestear. Se muestra siempre,
+ * sin colapsar, separado del resto de metadata del proyecto.
+ */
+export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <Field label="Ancho">
+        <Input inputMode="decimal" value={settings.sheetWidth} onChange={(e) => onChange({ sheetWidth: e.target.value })} />
+      </Field>
+      <Field label="Alto">
+        <Input inputMode="decimal" value={settings.sheetHeight} onChange={(e) => onChange({ sheetHeight: e.target.value })} />
+      </Field>
+      <Field label="Margen">
+        <Input inputMode="decimal" value={settings.margin} onChange={(e) => onChange({ margin: e.target.value })} />
+      </Field>
+    </div>
+  )
+}
+
+/**
+ * Todo lo demás (Proyecto/Cliente/Material/Espesor/parámetros de
+ * corte) — metadata útil pero NO requerida para nestear. Vive
+ * colapsado por default en el sidebar.
+ */
 export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -33,21 +59,6 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         <Field label="Espesor (mm)">
           <Input inputMode="decimal" value={settings.espesor} onChange={(e) => onChange({ espesor: e.target.value })} />
         </Field>
-      </div>
-
-      <div className="border-t border-white/5 pt-3">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">Plancha</p>
-        <div className="grid grid-cols-3 gap-2">
-          <Field label="Ancho">
-            <Input inputMode="decimal" value={settings.sheetWidth} onChange={(e) => onChange({ sheetWidth: e.target.value })} />
-          </Field>
-          <Field label="Alto">
-            <Input inputMode="decimal" value={settings.sheetHeight} onChange={(e) => onChange({ sheetHeight: e.target.value })} />
-          </Field>
-          <Field label="Margen">
-            <Input inputMode="decimal" value={settings.margin} onChange={(e) => onChange({ margin: e.target.value })} />
-          </Field>
-        </div>
       </div>
 
       <div className="border-t border-white/5 pt-3">

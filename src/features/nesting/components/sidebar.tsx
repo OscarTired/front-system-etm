@@ -3,7 +3,8 @@
 import { forwardRef, useState } from "react"
 import { ChevronDown, ChevronUp, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { MaterialPanel } from "./material-panel"
+import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section/collapsible-height-section"
+import { MaterialPanel, SheetDimensionsFields } from "./material-panel"
 import { MachinePanel } from "./machine-panel"
 import { PieceList, type PieceListProps, type PieceListHandle } from "./piece-list"
 import type { ProjectSettings, MachineSettings } from "../types/project-settings"
@@ -25,12 +26,14 @@ export interface SidebarProps {
 function CollapsibleSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <section className="rounded-2xl border border-white/8 bg-white/3 p-3">
+    <section className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">{title}</h2>
         {open ? <ChevronUp className="h-4 w-4 text-neutral-500" /> : <ChevronDown className="h-4 w-4 text-neutral-500" />}
       </button>
-      {open && <div className="mt-3">{children}</div>}
+      <CollapsibleHeightSection open={open} className="pt-3">
+        {children}
+      </CollapsibleHeightSection>
     </section>
   )
 }
@@ -52,8 +55,13 @@ export const Sidebar = forwardRef<PieceListHandle, SidebarProps>(function Sideba
   ref
 ) {
   return (
-    <div className="flex w-full shrink-0 flex-col gap-3 overflow-y-auto desktop:w-75">
-      <CollapsibleSection title="Material y plancha">
+    <div className="flex w-[300px] shrink-0 flex-col gap-3 overflow-y-auto">
+      <section className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
+        <SheetDimensionsFields settings={settings} onChange={onSettingsChange} />
+      </section>
+
+      <CollapsibleSection title="Proyecto y material" defaultOpen={false}>
         <MaterialPanel settings={settings} onChange={onSettingsChange} />
       </CollapsibleSection>
 
@@ -61,7 +69,7 @@ export const Sidebar = forwardRef<PieceListHandle, SidebarProps>(function Sideba
         <MachinePanel settings={machine} onChange={onMachineChange} />
       </CollapsibleSection>
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/8 bg-white/3 p-3">
+      <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/8 bg-white/[0.03] p-3">
         <PieceList ref={ref} {...pieceListProps} />
       </div>
 

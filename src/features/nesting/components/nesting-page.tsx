@@ -365,7 +365,7 @@ export function NestingPage() {
         </div>
 
         {/* Inspector */}
-        <div className="hidden w-[280px] shrink-0 overflow-y-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3 desktop:block">
+        <div className="w-[280px] shrink-0 overflow-y-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3">
           <PropertiesPanel sheetStats={sheetStats} selectedPiece={selectedPiece} espesor={settings.espesor} material={settings.material} />
         </div>
       </div>
