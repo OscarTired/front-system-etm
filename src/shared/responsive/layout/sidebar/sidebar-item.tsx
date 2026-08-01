@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { cn } from "@/shared/utils/utils"
+import { SidebarRow, sidebarRowClassName } from "../sidebar/sidebar-row"
 
 type Props = {
   href: string
@@ -62,39 +63,17 @@ export function SidebarItem({
       onMouseEnter={onMouseEnter}
       onTouchStart={onTouchStart}
       className={cn(
-        "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors",
-        collapsed ? "justify-center px-0" : "gap-2 px-3",
-        active
-          ? "bg-white/6 text-white pointer-events-none"
-          : "text-neutral-400 hover:bg-white/4 hover:text-white",
+        sidebarRowClassName({ collapsed, active }),
+        active && "pointer-events-none",
       )}
     >
-      <span className="relative flex shrink-0 items-center justify-center">
-        <Icon size={14} />
-
-        {collapsed && count !== undefined && count > 0 && (
-          <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
-            {count}
-          </span>
-        )}
-      </span>
-
-      {!collapsed && (
-        <span className="min-w-0 flex-1 truncate">
-          {label}
-        </span>
-      )}
-
-      {!collapsed && count !== undefined && (
-        <span
-          className={cn(
-            "ml-auto flex h-6 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs font-semibold",
-            active ? "text-white" : "text-neutral-400",
-          )}
-        >
-          {count}
-        </span>
-      )}
+      <SidebarRow
+        icon={Icon}
+        label={label}
+        collapsed={collapsed}
+        active={active}
+        count={count}
+      />
     </Link>
   )
 }

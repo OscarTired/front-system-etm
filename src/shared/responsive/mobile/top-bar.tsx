@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ProfileDialog } from "@/features/profile"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
-import { SidebarPresence } from "../../responsive/layout/sidebar-presence"
+import { SidebarPresence } from "../../responsive/layout/sidebar/sidebar-presence"
 import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 

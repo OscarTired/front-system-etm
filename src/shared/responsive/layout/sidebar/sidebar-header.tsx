@@ -34,22 +34,27 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
     isMounting && "animate-gemini-in opacity-0"
   )
 
+  // Componente reutilizable para el logo para evitar duplicación de código
+  const renderLogo = () => (
+    <div className="relative flex h-9 w-9 items-center justify-center">
+      <Image
+        src="/icon.svg"
+        alt="ETM SAC"
+        fill
+        priority
+        draggable={false}
+        className="select-none object-contain"
+      />
+    </div>
+  )
+
   if (isDrawer) {
     return (
       <div className={cn("px-4 pb-4 pt-5 w-full", isMounting && "animate-gemini-in opacity-0")}>
         <div className="grid grid-cols-[32px_1fr_32px] items-center">
           <div />
           <div className="flex flex-col items-center">
-            <div className="relative h-9 w-9">
-              <Image
-                src="/icon.svg"
-                alt="ETM SAC"
-                fill
-                priority
-                draggable={false}
-                className="select-none object-contain"
-              />
-            </div>
+            {renderLogo()}
             <h1 className="mt-2 text-sm font-semibold text-white">
               COMPANY S.A.C.
             </h1>
@@ -78,16 +83,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
       >
         {collapsed ? (
           <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-2">
-            <div className="relative h-9 w-9">
-              <Image
-                src="/icon.svg"
-                alt="ETM SAC"
-                fill
-                priority
-                draggable={false}
-                className="select-none object-contain"
-              />
-            </div>
+            {renderLogo()}
 
             <div className="flex flex-col items-center gap-1">
               <button
@@ -109,16 +105,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           </div>
         ) : (
           <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-4">
-            <div className="relative flex h-9 w-9 items-center justify-center">
-              <Image
-                src="/icon.svg"
-                alt="ETM SAC"
-                fill
-                priority
-                draggable={false}
-                className="select-none object-contain"
-              />
-            </div>
+            {renderLogo()}
 
             <div className="flex flex-col items-center">
               <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-white/90">

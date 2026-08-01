@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { cn } from "@/shared/utils/utils"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
+import { SidebarRow, sidebarRowClassName } from "@/shared/responsive/layout/sidebar/sidebar-row"
 
 import {
   Popover,
@@ -159,19 +160,16 @@ export function NotificationBell({
         <button
           type="button"
           title="Notificaciones"
-          className={cn(
-            "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-            open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
-          )}
+          className={sidebarRowClassName({ collapsed: true, active: open })}
         >
-          <span className="relative flex items-center justify-center">
-            <Bell size={14} />
-            {count > 0 && (
-              <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
-                {count > 9 ? "9+" : count}
-              </span>
-            )}
-          </span>
+          <SidebarRow
+            icon={Bell}
+            label="Notificaciones"
+            collapsed
+            active={open}
+            count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
+            collapsedBadgeColor="bg-cyan-500 text-white"
+          />
         </button>
       )
     }
@@ -180,22 +178,16 @@ export function NotificationBell({
     return (
       <button
         type="button"
-        className={cn(
-          "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
-          open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
-        )}
+        className={cn(sidebarRowClassName({ active: open }), "w-[calc(100%-8px)]")}
       >
-        <span className="relative flex shrink-0 items-center justify-center">
-          <Bell size={14} />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-          Notificaciones
-        </span>
-        {count > 0 && (
-          <span className="ml-auto flex h-6 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500 text-xs font-semibold text-white animate-pulse">
-            {count > 9 ? "9+" : count}
-          </span>
-        )}
+        <SidebarRow
+          icon={Bell}
+          label="Notificaciones"
+          active={open}
+          count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
+          badgeColor="bg-cyan-500 text-white"
+          badgeAnimated={count > 0}
+        />
       </button>
     )
   }
@@ -210,7 +202,7 @@ export function NotificationBell({
           side={isTopbar ? "bottom" : "right"}
           align={isTopbar ? "end" : "start"}
           sideOffset={8}
-          className="z-40 flex flex-col w-full min-h-80 min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
+          className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
         >
           {/* Header fijo */}
           <div className="flex shrink-0 items-center justify-between px-3.5 py-3">

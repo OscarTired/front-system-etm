@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
-import { SidebarShowButton } from "./sidebar-show-button"
+import { SidebarShowButton } from "./sidebar/sidebar-show-button"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"

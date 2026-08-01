@@ -1,7 +1,7 @@
 import type{ReadonlyURLSearchParams}from "next/navigation"
 
 import type{NAVIGATION}from "./navigation"
-import type{ProcessCounts}from "./hooks/use-sidebar-counts"
+import type{ProcessCounts}from "../hooks/use-sidebar-counts"
 
 type NavigationItem=(typeof NAVIGATION)[number]["items"][number]
 

@@ -15,7 +15,7 @@ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
-import type { ProcessCounts } from "./hooks/use-sidebar-counts"
+import type { ProcessCounts } from "../hooks/use-sidebar-counts"
 
 type SidebarNavigationProps = {
   collapsed?: boolean

@@ -7,6 +7,7 @@ import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import { formatNotificationDate } from "@/features/notifications/utils/format-notification-date"
+import { SidebarRow, sidebarRowClassName } from "./sidebar-row"
 
 import {
   Popover,
@@ -241,17 +242,16 @@ export function SidebarPresence({
         <button
           type="button"
           title={`${onlineUsers.length} en línea`}
-          className={cn(
-            "mx-1 flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-            open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
-          )}
+          className={sidebarRowClassName({ collapsed: true, active: open })}
         >
-          <span className="relative flex items-center justify-center">
-            <Users size={14} />
-            <span className="absolute -right-3 -top-3 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-semibold text-white">
-              {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
-            </span>
-          </span>
+          <SidebarRow
+            icon={Users}
+            label="Activos"
+            collapsed
+            active={open}
+            count={onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)}
+            collapsedBadgeColor="bg-cyan-500 text-white"
+          />
         </button>
       )
     }
@@ -259,20 +259,15 @@ export function SidebarPresence({
     return (
       <button
         type="button"
-        className={cn(
-          "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors w-[calc(100%-8px)] gap-2 px-3",
-          open ? "bg-white/6 text-white" : "text-neutral-400 hover:bg-white/4 hover:text-white",
-        )}
+        className={cn(sidebarRowClassName({ active: open }), "w-[calc(100%-8px)]")}
       >
-        <span className="relative flex shrink-0 items-center justify-center">
-          <Users size={14} />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-          Activos
-        </span>
-        <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-md bg-emerald-500/20 text-[11px] font-semibold text-emerald-400">
-          {onlineUsers.length}
-        </span>
+        <SidebarRow
+          icon={Users}
+          label="Activos"
+          active={open}
+          count={String(onlineUsers.length)}
+          badgeColor="bg-emerald-500/20 text-emerald-400"
+        />
       </button>
     )
   }

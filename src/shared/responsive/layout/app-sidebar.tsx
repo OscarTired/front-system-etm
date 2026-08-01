@@ -9,9 +9,9 @@ import { cn } from "@/shared/utils/utils"
 import { useSidebarCounts } from "./hooks/use-sidebar-counts"
 import { useSidebarPrefetch } from "./hooks/use-sidebar-prefetch"
 import { useProfilePanel } from "./hooks/use-profile-panel"
-import { SidebarHeader } from "./sidebar-header"
-import { SidebarNavigation } from "./sidebar-navigation"
-import { SidebarProfile } from "./sidebar-profile"
+import { SidebarHeader } from "./sidebar/sidebar-header"
+import { SidebarNavigation } from "./sidebar/sidebar-navigation"
+import { SidebarProfile } from "./sidebar/sidebar-profile"
 
 type Props = {
   variant?: "desktop" | "drawer"
@@ -97,7 +97,11 @@ export function AppSidebar({
       <aside
         aria-hidden={isFullyHidden}
         onTransitionEnd={handleTransitionEnd}
-        style={!isDrawer ? { width, contain: "layout style" } : undefined}
+        style={
+          isDrawer
+            ? { contain: "layout style" }
+            : { width, contain: "layout style" }
+        }
         className={cn(
           !isDrawer && "shrink-0",
           isDrawer && "absolute left-0 top-0 h-full w-62",
@@ -107,7 +111,7 @@ export function AppSidebar({
           "will-change-[width,transform,opacity]",
           // Transición fluida estilo nativo tanto para desktop como para drawer móvil
           isDrawer
-            ? "transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            ? "transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)]"
             : "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
           isDrawer && (isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"),
           isFullyHidden && "pointer-events-none",

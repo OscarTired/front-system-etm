@@ -378,6 +378,17 @@ export function PopoverContent({
             style={{
               paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
               height: size.height ? `${size.height}px` : "auto",
+              // El preflight de Tailwind fuerza box-sizing:border-box
+              // globalmente — con eso, "height" incluye el padding
+              // DENTRO de la medida. Pero ResizeObserver (contentRect)
+              // siempre mide en content-box, por spec, sin importar el
+              // box-sizing del elemento. Sin este override, el height
+              // que se setea (medido en content-box) se interpretaba
+              // como border-box, así que el padding-bottom (14px +
+              // safe-area) se comía espacio que el contenido real
+              // necesitaba — dejando un hueco al fondo del sheet
+              // donde se veía el overlay oscuro de atrás.
+              boxSizing: "content-box",
             }}
             className={cn(
               "flex w-full flex-col gap-2.5 overflow-hidden transition-[height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",

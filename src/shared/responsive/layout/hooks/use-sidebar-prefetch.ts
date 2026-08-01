@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-import { NAVIGATION } from "../navigation"
+import { NAVIGATION } from "../sidebar/navigation"
 
 const prefetchedHrefs=
   new Set<string>()
