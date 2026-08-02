@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
@@ -94,6 +94,12 @@ export function MobilePipelineCarousel({
 
     }
 
+    // Antes: dos ResizeObserver + dos listeners de "scroll" separados
+    // sobre el MISMO contenedor (uno para el fade-mask, otro para las
+    // flechas) — cada uno leyendo scrollLeft/clientWidth/scrollWidth
+    // por su cuenta y disparando su propio callback. Un solo update()
+    // hace ambas cosas, con un solo rAF compartido: la mitad del
+    // trabajo de layout en cada resize/scroll de este carrusel.
     const update = () => {
 
       const { scrollLeft, clientWidth, scrollWidth } = container
@@ -102,18 +108,20 @@ export function MobilePipelineCarousel({
 
       if (maxScroll <= 0) {
         applyMask(0, 0)
-        return
+      } else {
+        const fadeSize = Math.min(
+          Math.max(Math.round(clientWidth * 0.04), FADE_MIN),
+          FADE_MAX,
+        )
+
+        applyMask(
+          Math.min(scrollLeft, fadeSize),
+          Math.min(maxScroll - scrollLeft, fadeSize),
+        )
       }
 
-      const fadeSize = Math.min(
-        Math.max(Math.round(clientWidth * 0.04), FADE_MIN),
-        FADE_MAX,
-      )
-
-      applyMask(
-        Math.min(scrollLeft, fadeSize),
-        Math.min(maxScroll - scrollLeft, fadeSize),
-      )
+      setCanScrollLeft(scrollLeft > 4)
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4)
 
     }
 
@@ -152,45 +160,6 @@ export function MobilePipelineCarousel({
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current)
       }
-
-    }
-
-  }, [containerRef])
-
-  useEffect(() => {
-
-    const el = containerRef.current
-
-    if (!el) {
-      return
-    }
-
-    function updateArrows() {
-
-      if (!el) {
-        return
-      }
-
-      setCanScrollLeft(el.scrollLeft > 4)
-
-      setCanScrollRight(
-        el.scrollLeft + el.clientWidth < el.scrollWidth - 4
-      )
-
-    }
-
-    updateArrows()
-
-    el.addEventListener("scroll", updateArrows, { passive: true })
-
-    const observer = new ResizeObserver(updateArrows)
-
-    observer.observe(el)
-
-    return () => {
-
-      el.removeEventListener("scroll", updateArrows)
-      observer.disconnect()
 
     }
 
