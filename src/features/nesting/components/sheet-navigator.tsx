@@ -24,7 +24,7 @@ export function SheetNavigator({ currentIndex, totalSheets, label, onChange }: S
   if (totalSheets === 0) return null
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] p-2">
+    <div className="flex items-center gap-2 rounded-xl bg-white/3 p-2">
       <Button
         variant="ghost"
         size="icon-sm"

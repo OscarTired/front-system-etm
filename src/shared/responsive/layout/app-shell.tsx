@@ -224,11 +224,25 @@ function CompactShell({ children }: Props) {
     el.addEventListener("touchend", handleTouchEnd, { passive: true })
     el.addEventListener("touchcancel", handleTouchEnd, { passive: true })
 
+    // Red de seguridad: si la pestaña se oculta a mitad de un gesto
+    // (cambio de app, alerta del sistema) sin que touchend/touchcancel
+    // lleguen a disparar, isDragging quedaría trabado en true para
+    // siempre — y con eso, TODA apertura/cierre futura perdería su
+    // transición (se vería "como si siempre se estuviera arrastrando").
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && drag) {
+        drag = null
+        endDrag(false)
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
     return () => {
       el.removeEventListener("touchstart", handleTouchStart)
       el.removeEventListener("touchmove", handleTouchMove)
       el.removeEventListener("touchend", handleTouchEnd)
       el.removeEventListener("touchcancel", handleTouchEnd)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
 
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current)
@@ -259,7 +273,7 @@ function CompactShell({ children }: Props) {
         style={{
           ...(offset !== undefined ? { transform: `translate3d(${offset}px, 0, 0)` } : {}),
           borderRadius: visualState === "hidden" || visualState === "curve-closing" ? CURVE_SQUARE : CURVE_ROUNDED,
-          willChange: visualState === "visible" || visualState === "hidden" ? "auto" : "transform, border-radius",
+          willChange: isDragging || visualState === "moving-out" || visualState === "moving-in" || visualState === "curve-closing" ? "transform, border-radius" : "auto",
           transition: isDragging
             ? "none"
             : "transform 300ms cubic-bezier(.22,1,.36,1), border-radius 300ms cubic-bezier(.22,1,.36,1)",

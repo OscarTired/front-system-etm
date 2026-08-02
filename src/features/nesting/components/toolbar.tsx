@@ -74,7 +74,7 @@ export function Toolbar({
   onSettings,
   onTogglePanel,
 }: ToolbarProps) {
-  const { isMobile } = useResponsive()
+  const { isCompact } = useResponsive()
 
   const fileActions = (
     <div className="flex shrink-0 items-center gap-1">
@@ -124,9 +124,9 @@ export function Toolbar({
       role="toolbar"
       aria-label="Controles del proyecto"
       // Se reemplaza bg-[#09090b] por bg-neutral-950 (el equivalente canónico más oscuro)
-      className="flex h-14 w-full shrink-0 items-center border-b border-white/5 bg-neutral-950 px-4"
+      className="flex h-14 w-full shrink-0 items-center bg-neutral-950 px-4"
     >
-      {isMobile ? (
+      {isCompact ? (
         // Ambos grupos no entran en una fila angosta: en vez de
         // apretarlos con justify-between (se solaparían), pasan a
         // una única fila con scroll horizontal — mismo primitivo

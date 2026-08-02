@@ -34,7 +34,7 @@ export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet
         <VerticalScroll containerClassName="min-h-0 flex-1" className="flex flex-col gap-2 p-4">
           <button
             onClick={onSaveProject}
-            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10"
+            className="flex items-center gap-3 rounded-xl bg-white/5 p-3 text-left hover:bg-white/10"
           >
             <Save className="h-4 w-4 shrink-0 text-neutral-400" />
             <div className="min-w-0">
@@ -50,7 +50,7 @@ export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet
           {sheetGroups.map((group) => (
             <div
               key={group.startIndex}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/5 p-3"
             >
               <div className="min-w-0">
                 <p className="text-sm text-neutral-200">
@@ -70,7 +70,7 @@ export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet
           ))}
 
           {catalog.length > 0 && (
-            <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-3">
+            <div className="mt-2 rounded-xl bg-white/5 p-3">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                 <Layers className="h-3.5 w-3.5" /> Catálogo (BOM)
               </p>
@@ -85,7 +85,7 @@ export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet
                 </thead>
                 <tbody className="text-neutral-300">
                   {catalog.map((c) => (
-                    <tr key={c.uid} className="border-t border-white/5">
+                    <tr key={c.uid}>
                       <td className="max-w-35 truncate py-1.5" title={c.pieceId}>{c.pieceId}</td>
                       <td className="py-1.5">{c.width.toFixed(0)}×{c.height.toFixed(0)}mm</td>
                       <td className="py-1.5">{c.perimeter.toFixed(0)}mm</td>

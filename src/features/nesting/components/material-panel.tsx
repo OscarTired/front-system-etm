@@ -112,7 +112,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         </Field>
       </div>
 
-      <div className="border-t border-white/5 pt-3">
+      <div className="pt-3">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">Corte</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Muesca (mm)">

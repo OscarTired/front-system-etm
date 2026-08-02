@@ -35,7 +35,7 @@ export function PiecePreviewDialog({ row, onClose }: PiecePreviewDialogProps) {
         size="large"
         className="flex h-[75vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0"
       >
-        <DialogHeader className="shrink-0 border-b border-white/5 px-5 py-4">
+        <DialogHeader className="shrink-0 px-5 py-4">
           <DialogTitle className="text-sm font-semibold text-white">{row?.fileName ?? ""}</DialogTitle>
         </DialogHeader>
 

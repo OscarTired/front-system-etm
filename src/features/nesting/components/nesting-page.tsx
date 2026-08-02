@@ -328,7 +328,7 @@ export function NestingPage() {
             />
           </ScrollArea>
         ) : (
-          <ScrollArea className="h-full w-full rounded-xl border border-white/10 bg-white/5 p-3">
+          <ScrollArea className="h-full w-full rounded-xl bg-white/5 p-3">
             <PropertiesPanel
               sheetStats={sheetStats}
               selectedPiece={selectedPiece}
@@ -342,7 +342,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="flex flex-col tablet:h-full tablet:overflow-hidden">
+    <div className="flex min-h-150 flex-col tablet:h-full tablet:overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -389,7 +389,7 @@ export function NestingPage() {
             />
           )}
 
-          <div className="min-h-96 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50 tablet:min-h-0">
+          <div className="min-h-96 flex-1 overflow-hidden rounded-2xl bg-neutral-900 tablet:min-h-0">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
