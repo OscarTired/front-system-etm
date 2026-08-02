@@ -1,5 +1,5 @@
 import { mapColorToCypCutLayer, resolveLayerName } from "./color-layer-map"
-import type { NestedSheet, NestingPiece, Point2D, SheetConfig } from "../engine/types"
+import type { NestedSheet, Point2D, SheetConfig } from "../engine/types"
 
 const CLOSE_TOLERANCE = 1e-4
 
@@ -93,47 +93,4 @@ export function generateSheetDxf(sheet: NestedSheet, sheetConfig: SheetConfig): 
 
   out += "  0\nENDSEC\n  0\nEOF\n"
   return out
-}
-
-/**
- * Genera el DXF de una sola pieza SIN nestear (posición 0,0, sin
- * rotar), para poder previsualizarla en el canvas antes de correr el
- * nesting. Reusa generateSheetDxf envolviéndola como una "plancha" de
- * una sola pieza, dimensionada exactamente al tamaño de la pieza (sin
- * margen) — así el marco de referencia queda pegado a la pieza en vez
- * de mostrar una plancha completa vacía alrededor de una pieza chica.
- */
-export function generatePieceDxf(piece: NestingPiece): string {
-  const bounds = piece.subEntities?.length
-    ? piece.subEntities.flatMap((s) => s.outline.points)
-    : piece.outline.points
-
-  let minX = 0, minY = 0, maxX = 0, maxY = 0
-  if (bounds.length > 0) {
-    minX = maxX = bounds[0].x
-    minY = maxY = bounds[0].y
-    for (const p of bounds) {
-      if (p.x < minX) minX = p.x
-      if (p.x > maxX) maxX = p.x
-      if (p.y < minY) minY = p.y
-      if (p.y > maxY) maxY = p.y
-    }
-  }
-
-  const sheetConfig: SheetConfig = { width: maxX - minX, height: maxY - minY, margin: 0 }
-  const sheet: NestedSheet = {
-    pieces: [
-      {
-        pieceId: piece.id,
-        x: 0,
-        y: 0,
-        angle: 0,
-        outline: piece.outline,
-        subEntities: piece.subEntities,
-        color: piece.color,
-      },
-    ],
-  }
-
-  return generateSheetDxf(sheet, sheetConfig)
 }

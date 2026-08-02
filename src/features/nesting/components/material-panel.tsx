@@ -1,5 +1,15 @@
 "use client"
 
+import { ChevronDown } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import type { ProjectSettings } from "../types/project-settings"
 
@@ -14,6 +24,47 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <label className="mb-1 block text-xs text-neutral-500">{label}</label>
       {children}
     </div>
+  )
+}
+
+/**
+ * Reemplaza al <select> nativo. Reusa exactamente las clases del
+ * Input compartido (h-10, rounded-xl, bg-white/6) en vez de definir
+ * una escala de alto/color propia, para que ambos campos convivan
+ * en la misma grilla sin desalinearse.
+ */
+function FieldSelect<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+}) {
+  const current = options.find((option) => option.value === value)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-10 w-full min-w-0 justify-between rounded-xl bg-white/6 px-4 text-sm font-medium text-neutral-200 hover:bg-white/10"
+        >
+          <span className="truncate">{current?.label ?? value}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-neutral-500" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuRadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
+          {options.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -61,7 +112,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         </Field>
       </div>
 
-      <div className="pt-3">
+      <div className="border-t border-white/5 pt-3">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">Corte</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Muesca (mm)">
@@ -73,26 +124,26 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Field label="Rotación permitida">
-            <select
+            <FieldSelect
               value={settings.rotacionPermitida}
-              onChange={(e) => onChange({ rotacionPermitida: e.target.value as ProjectSettings["rotacionPermitida"] })}
-              className="h-9 w-full rounded-lg bg-white/5 px-2 text-sm text-neutral-200 outline-none"
-            >
-              <option value="0-90-180-270" className="bg-[#101012]">0° / 90° / 180° / 270°</option>
-              <option value="libre" className="bg-[#101012]">Libre</option>
-              <option value="ninguna" className="bg-[#101012]">Ninguna (0°)</option>
-            </select>
+              onChange={(value) => onChange({ rotacionPermitida: value })}
+              options={[
+                { value: "0-90-180-270", label: "0° / 90° / 180° / 270°" },
+                { value: "libre", label: "Libre" },
+                { value: "ninguna", label: "Ninguna (0°)" },
+              ]}
+            />
           </Field>
           <Field label="Prioridad">
-            <select
+            <FieldSelect
               value={settings.prioridad}
-              onChange={(e) => onChange({ prioridad: e.target.value as ProjectSettings["prioridad"] })}
-              className="h-9 w-full rounded-lg bg-white/5 px-2 text-sm text-neutral-200 outline-none"
-            >
-              <option value="normal" className="bg-[#101012]">Normal</option>
-              <option value="alta" className="bg-[#101012]">Alta</option>
-              <option value="baja" className="bg-[#101012]">Baja</option>
-            </select>
+              onChange={(value) => onChange({ prioridad: value })}
+              options={[
+                { value: "normal", label: "Normal" },
+                { value: "alta", label: "Alta" },
+                { value: "baja", label: "Baja" },
+              ]}
+            />
           </Field>
         </div>
         <p className="mt-2 text-[10px] leading-relaxed text-neutral-600">

@@ -1,7 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { Settings2, Info } from "lucide-react"
 
 import { useNesting } from "../hooks/use-nesting"
@@ -24,7 +24,9 @@ import { ExportDialog } from "./export-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { PieceRow, ManualRow, CadRow, PieceListHandle } from "./piece-list"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import type { PieceRow, ManualRow, CadRow, PieceListHandle, PieceListProps } from "./piece-list"
 import type { NestingPieceInput } from "../../engineering/components/dxf-canvas"
 
 const DxfCanvas = dynamic(
@@ -62,6 +64,8 @@ const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
 ]
 
 export function NestingPage() {
+  const { isCompact } = useResponsive()
+
   const colorCursorRef = useRef(0)
   const nextColor = useCallback(() => {
     const c = PIECE_COLORS[colorCursorRef.current % PIECE_COLORS.length]
@@ -81,11 +85,21 @@ export function NestingPage() {
   const [rows, setRows] = useState<PieceRow[]>([])
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
   const [machine, setMachine] = useState<MachineSettings>(defaultMachineSettings)
+
+  const handleSettingsChange = useCallback(
+    (patch: Partial<ProjectSettings>) => setSettings((s) => ({ ...s, ...patch })),
+    []
+  )
+  const handleMachineChange = useCallback(
+    (patch: Partial<MachineSettings>) => setMachine((m) => ({ ...m, ...patch })),
+    []
+  )
   const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState(0)
   const [selectedPieceIndex, setSelectedPieceIndex] = useState<number | null>(null)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [activePanel, setActivePanel] = useState<PanelView>("config")
+  const [panelSheetOpen, setPanelSheetOpen] = useState(false)
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -100,19 +114,6 @@ export function NestingPage() {
   }), [settings.sheetWidth, settings.sheetHeight, settings.margin])
 
   const sheetGroups = useMemo(() => (sheets ? groupIdenticalSheets(sheets) : []), [sheets])
-
-  useEffect(() => {
-    if (sheetGroups.length > 0) {
-      setActiveGroupIndex(0)
-      setSelectedPieceIndex(null)
-    }
-  }, [sheetGroups.length])
-
-  useEffect(() => {
-    if (selectedPieceIndex !== null) {
-      setActivePanel("inspector")
-    }
-  }, [selectedPieceIndex])
 
   const validPieces = useMemo<NestingPiece[]>(() => {
     const pieces: NestingPiece[] = []
@@ -144,7 +145,10 @@ export function NestingPage() {
   const canRun = validPieces.length > 0 && !isRunning
 
   const activeGroup = sheetGroups[activeGroupIndex] ?? null
-  const canvasPieces: PlacedPiece[] = activeGroup ? activeGroup.sheet.pieces : []
+  const canvasPieces: PlacedPiece[] = useMemo(
+    () => (activeGroup ? activeGroup.sheet.pieces : []),
+    [activeGroup]
+  )
 
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
@@ -190,8 +194,36 @@ export function NestingPage() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
 
+  const pieceListProps: PieceListProps = useMemo(
+    () => ({
+      rows,
+      conflictIds,
+      disabled: isRunning,
+      onAddManual: handleAddManual,
+      onAddCad: handleAddCad,
+      onRemove: handleRemove,
+      onUpdateManual: handleUpdateManual,
+      onUpdateQuantity: handleUpdateQuantity,
+      onPreviewRow: setPreviewRow,
+      nextColor,
+    }),
+    [rows, conflictIds, isRunning, handleAddManual, handleAddCad, handleRemove, handleUpdateManual, handleUpdateQuantity, nextColor]
+  )
+
+  const handleSelectPiece = useCallback((index: number | null) => {
+    setSelectedPieceIndex(index)
+    if (index !== null) {
+      setActivePanel("inspector")
+    }
+  }, [])
+
   const handleRun = useCallback(() => {
     if (!canRun) return
+    // sheetGroups solo cambia como consecuencia de este run (sheets
+    // vive en useNesting y nada más lo toca), así que el reset va acá
+    // en vez de en un efecto que observa sheetGroups.length.
+    setActiveGroupIndex(0)
+    setSelectedPieceIndex(null)
     run(validPieces, { sheet: sheetConfig })
   }, [canRun, run, validPieces, sheetConfig])
 
@@ -272,8 +304,48 @@ export function NestingPage() {
     setPreviewRow(null)
   }, [])
 
+  const sidePanelContent = (
+    <>
+      <EntityExpandedToggle
+        value={activePanel}
+        onChange={setActivePanel}
+        options={PANEL_OPTIONS}
+      />
+
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {activePanel === "config" ? (
+          <ScrollArea className="h-full w-full pr-1">
+            <Sidebar
+              ref={pieceListRef}
+              settings={settings}
+              onSettingsChange={handleSettingsChange}
+              machine={machine}
+              onMachineChange={handleMachineChange}
+              pieceListProps={pieceListProps}
+              canRun={canRun}
+              isRunning={isRunning}
+              progress={progress}
+              error={error}
+              onRun={handleRun}
+              onCancel={cancel}
+            />
+          </ScrollArea>
+        ) : (
+          <ScrollArea className="h-full w-full rounded-xl border border-white/10 bg-white/5 p-3">
+            <PropertiesPanel
+              sheetStats={sheetStats}
+              selectedPiece={selectedPiece}
+              espesor={settings.espesor}
+              material={settings.material}
+            />
+          </ScrollArea>
+        )}
+      </div>
+    </>
+  )
+
   return (
-    <div className="flex h-full min-h-180 flex-col overflow-hidden">
+    <div className="flex flex-col tablet:h-full tablet:overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -293,58 +365,17 @@ export function NestingPage() {
         onExport={() => setExportDialogOpen(true)}
         onToggleLayers={() => {}}
         onSettings={() => {}}
+        onTogglePanel={isCompact ? () => setPanelSheetOpen(true) : undefined}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 p-4">
-        {/* PANEL LATERAL ESTRECHO Y COMPACTO (w-72 exacto controlado por el contenedor) */}
-        <div className="flex w-72 shrink-0 flex-col gap-3">
-          <EntityExpandedToggle
-            value={activePanel}
-            onChange={setActivePanel}
-            options={PANEL_OPTIONS}
-          />
-
-          <div className="min-h-0 flex-1 overflow-hidden">
-            {activePanel === "config" ? (
-              <ScrollArea className="h-full w-full pr-1">
-                <Sidebar
-                  ref={pieceListRef}
-                  settings={settings}
-                  onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
-                  machine={machine}
-                  onMachineChange={(patch) => setMachine((m) => ({ ...m, ...patch }))}
-                  pieceListProps={{
-                    rows,
-                    conflictIds,
-                    disabled: isRunning,
-                    onAddManual: handleAddManual,
-                    onAddCad: handleAddCad,
-                    onRemove: handleRemove,
-                    onUpdateManual: handleUpdateManual,
-                    onUpdateQuantity: handleUpdateQuantity,
-                    onPreviewRow: setPreviewRow,
-                    nextColor,
-                  }}
-                  canRun={canRun}
-                  isRunning={isRunning}
-                  progress={progress}
-                  error={error}
-                  onRun={handleRun}
-                  onCancel={cancel}
-                />
-              </ScrollArea>
-            ) : (
-              <ScrollArea className="h-full w-full rounded-xl bg-white/2 p-3">
-                <PropertiesPanel 
-                  sheetStats={sheetStats} 
-                  selectedPiece={selectedPiece} 
-                  espesor={settings.espesor} 
-                  material={settings.material} 
-                />
-              </ScrollArea>
-            )}
+      <div className="flex min-h-0 flex-1 gap-4 bg-neutral-950 p-4">
+        {/* PANEL LATERAL: columna fija solo desde laptop en adelante.
+            En mobile/tablet vive en el Sheet de más abajo. */}
+        {!isCompact && (
+          <div className="flex w-72 shrink-0 flex-col gap-3">
+            {sidePanelContent}
           </div>
-        </div>
+        )}
 
         {/* CANVAS — flexible y fluido */}
         <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -364,13 +395,18 @@ export function NestingPage() {
             />
           )}
 
-          <div className="min-h-125 flex-1 overflow-hidden rounded-2xl bg-neutral-900">
+          {/* min-h-96 (token real de Tailwind) actúa de piso solo en
+              mobile, donde el <main> de la ruta no fija una altura de
+              viewport (la página scrollea entera). Desde tablet ya
+              hay altura real heredada (tablet:h-full en la ruta), así
+              que ahí no hace falta piso: min-h-0 + flex-1 alcanzan. */}
+          <div className="min-h-96 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50 tablet:min-h-0">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
                 sheetSize={{ width: sheetConfig.width, height: sheetConfig.height }}
                 selectedPieceIndex={selectedPieceIndex}
-                onSelectPiece={setSelectedPieceIndex}
+                onSelectPiece={handleSelectPiece}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">
@@ -380,6 +416,18 @@ export function NestingPage() {
           </div>
         </div>
       </div>
+
+      {isCompact && (
+        <Sheet open={panelSheetOpen} onOpenChange={setPanelSheetOpen}>
+          <SheetContent className="gap-3 p-4">
+            <SheetHeader className="p-0">
+              <SheetTitle>Piezas y configuración</SheetTitle>
+            </SheetHeader>
+
+            {sidePanelContent}
+          </SheetContent>
+        </Sheet>
+      )}
 
       <ExportDialog
         open={exportDialogOpen}

@@ -2,6 +2,17 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
+import {
+  Button,
+} from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 export interface SheetNavigatorProps {
   currentIndex: number
   totalSheets: number
@@ -13,36 +24,52 @@ export function SheetNavigator({ currentIndex, totalSheets, label, onChange }: S
   if (totalSheets === 0) return null
 
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-white/3 p-2">
-      <button
-        type="button"
+    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] p-2">
+      <Button
+        variant="ghost"
+        size="icon-sm"
         disabled={currentIndex <= 0}
         onClick={() => onChange(currentIndex - 1)}
-        className="rounded-lg p-1.5 text-neutral-400 hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+        className="text-neutral-400 hover:bg-white/5 hover:text-white disabled:opacity-30"
+        aria-label="Plancha anterior"
       >
         <ChevronLeft className="h-4 w-4" />
-      </button>
+      </Button>
 
-      <select
-        value={currentIndex}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 truncate rounded-lg border-none bg-transparent px-1 py-1 text-center text-sm font-medium text-neutral-200 outline-none"
-      >
-        {Array.from({ length: totalSheets }, (_, i) => (
-          <option key={i} value={i} className="bg-[#101012] text-neutral-200">
-            Plancha {i + 1}
-          </option>
-        ))}
-      </select>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-w-0 flex-1 justify-center truncate text-neutral-200 hover:bg-white/5 hover:text-white"
+          >
+            <span className="truncate">Plancha {currentIndex + 1}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center">
+          <DropdownMenuRadioGroup
+            value={String(currentIndex)}
+            onValueChange={(value) => onChange(Number(value))}
+          >
+            {Array.from({ length: totalSheets }, (_, i) => (
+              <DropdownMenuRadioItem key={i} value={String(i)}>
+                Plancha {i + 1}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-sm"
         disabled={currentIndex >= totalSheets - 1}
         onClick={() => onChange(currentIndex + 1)}
-        className="rounded-lg p-1.5 text-neutral-400 hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+        className="text-neutral-400 hover:bg-white/5 hover:text-white disabled:opacity-30"
+        aria-label="Plancha siguiente"
       >
         <ChevronRight className="h-4 w-4" />
-      </button>
+      </Button>
 
       <span className="shrink-0 text-xs text-neutral-500">{label}</span>
     </div>

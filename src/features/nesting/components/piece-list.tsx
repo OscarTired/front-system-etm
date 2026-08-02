@@ -1,6 +1,6 @@
 "use client"
 
-import { forwardRef, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, memo, useImperativeHandle, useRef, useState } from "react"
 import { Plus, Trash2, FileInput, FileWarning, AlertTriangle, Eye, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,7 +50,7 @@ export interface PieceListProps {
   nextColor: () => string
 }
 
-export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function PieceList(
+export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(function PieceList(
   {
     rows,
     conflictIds,
@@ -145,10 +145,10 @@ export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function Pi
         </p>
       )}
 
-      <ScrollArea className="min-h-35 flex-1">
+      <ScrollArea className="min-h-[140px] flex-1">
         {/* Lógica condicional: Si no hay piezas, muestra el placeholder. Si hay, muestra la lista. */}
         {rows.length === 0 ? (
-          <div className="flex min-h-30 flex-col items-center justify-center gap-2 p-4 text-center">
+          <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 p-4 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
               <Layers className="h-5 w-5 text-neutral-500" />
             </div>
@@ -214,4 +214,4 @@ export const PieceList = forwardRef<PieceListHandle, PieceListProps>(function Pi
       </ScrollArea>
     </div>
   )
-})
+}))

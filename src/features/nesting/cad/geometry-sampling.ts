@@ -15,7 +15,7 @@ export function sampleArc(
   startDeg: number,
   endDeg: number
 ): Point2D[] {
-  let start = startDeg
+  const start = startDeg
   let end = endDeg
   if (end <= start) end += 360
 

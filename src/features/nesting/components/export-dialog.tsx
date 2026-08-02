@@ -1,8 +1,12 @@
 "use client"
 
-import { createPortal } from "react-dom"
-import { X, Download, Save } from "lucide-react"
+import { Download, Save } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
+import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+
 import type { SheetGroup } from "../utils/svg-render"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 
@@ -15,28 +19,18 @@ export interface ExportDialogProps {
 }
 
 export function ExportDialog({ open, onClose, sheetGroups, onExportSheet, onSaveProject }: ExportDialogProps) {
-  if (!open || typeof document === "undefined") return null
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="flex max-h-[80vh] w-full max-w-lg flex-col gap-0 overflow-hidden p-0">
+        <FormDialogHeader title="Exportar" icon={Download} />
 
-  const modal = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#101012] shadow-2xl ring-1 ring-white/10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex shrink-0 items-center justify-between border-b border-white/5 px-5 py-4">
-          <h3 className="text-sm font-semibold text-white">Exportar</h3>
-          <button onClick={onClose} className="rounded-lg p-2 text-neutral-400 hover:bg-white/5 hover:text-white">
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-2 overflow-y-auto p-4">
+        <VerticalScroll containerClassName="min-h-0 flex-1" className="flex flex-col gap-2 p-4">
           <button
             onClick={onSaveProject}
-            className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-3 text-left hover:bg-white/5"
+            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left hover:bg-white/10"
           >
-            <Save className="h-4 w-4 text-neutral-400" />
-            <div>
+            <Save className="h-4 w-4 shrink-0 text-neutral-400" />
+            <div className="min-w-0">
               <p className="text-sm text-neutral-200">Guardar sesión de trabajo</p>
               <p className="text-xs text-neutral-500">.json — para retomar el proyecto, no es para la máquina</p>
             </div>
@@ -47,14 +41,17 @@ export function ExportDialog({ open, onClose, sheetGroups, onExportSheet, onSave
           )}
 
           {sheetGroups.map((group) => (
-            <div key={group.startIndex} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/3 p-3">
-              <div>
+            <div
+              key={group.startIndex}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3"
+            >
+              <div className="min-w-0">
                 <p className="text-sm text-neutral-200">
                   {formatSheetRangeLabel(group)} {group.count > 1 && <span className="text-neutral-500">× {group.count}</span>}
                 </p>
                 <p className="text-xs text-neutral-500">{group.sheet.pieces.length} piezas</p>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex shrink-0 gap-1.5">
                 <Button size="sm" variant="secondary" onClick={() => onExportSheet("dxf", group.startIndex)}>
                   <Download className="h-3.5 w-3.5" /> DXF
                 </Button>
@@ -64,10 +61,8 @@ export function ExportDialog({ open, onClose, sheetGroups, onExportSheet, onSave
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    </div>
+        </VerticalScroll>
+      </DialogContent>
+    </Dialog>
   )
-
-  return createPortal(modal, document.body)
 }

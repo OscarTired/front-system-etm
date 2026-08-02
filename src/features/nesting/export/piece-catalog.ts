@@ -1,5 +1,5 @@
-import { boundingRect, perimeterOf } from "../engine/geometry"
-import type { NestedSheet } from "../engine/types"
+import { boundingRect } from "../engine/geometry"
+import type { NestedSheet, PieceOutline, Point2D } from "../engine/types"
 
 export interface CatalogEntry {
   uid: string
@@ -9,6 +9,15 @@ export interface CatalogEntry {
   /** Perímetro aproximado (suma de segmentos del contorno tesselado). */
   perimeter: number
   quantity: number
+}
+
+function perimeterOf(outline: PieceOutline): number {
+  const pts = outline.points
+  let total = 0
+  for (let i = 0; i < pts.length - 1; i++) {
+    total += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+  }
+  return total
 }
 
 /**
