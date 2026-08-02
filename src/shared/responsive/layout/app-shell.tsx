@@ -44,19 +44,6 @@ function DesktopShell({ children }: Props) {
       ? CURVE_SQUARE
       : CURVE_ROUNDED
 
-  // Así es como lo resuelven las apps grandes (VS Code, Slack,
-  // Notion...): sidebar y contenido son HERMANOS REALES de flexbox,
-  // no un div posicionado con "left"/transform simulando el empuje
-  // a mano. AppSidebar ya anima su propio `width` con una
-  // transición de CSS normal (ver app-sidebar.tsx) — main acá
-  // abajo es simplemente flex-1, así que el navegador recalcula su
-  // ancho SOLO, en cada frame de ESA MISMA animación, sin que este
-  // componente necesite rastrear ningún offset ni estado propio.
-  // El contenido de adentro (lo que antes se veía "empujado sin
-  // acomodarse" o "deformándose") ahora se reacomoda de la forma
-  // más simple y correcta que existe: dejando que sea flexbox el
-  // que decide el ancho, no un cálculo manual en JS tratando de
-  // imitarlo.
   const handleTransitionEnd = (
     event: React.TransitionEvent<HTMLElement>,
   ) => {
@@ -267,7 +254,7 @@ function CompactShell({ children }: Props) {
         style={{
           ...(offset !== undefined ? { transform: `translate3d(${offset}px, 0, 0)` } : {}),
           borderRadius: visualState === "hidden" || visualState === "curve-closing" ? CURVE_SQUARE : CURVE_ROUNDED,
-          willChange: isDragging ? "transform" : "auto",
+          willChange: visualState === "visible" || visualState === "hidden" ? "auto" : "transform, border-radius",
           transition: isDragging
             ? "none"
             : "transform 300ms cubic-bezier(.22,1,.36,1), border-radius 300ms cubic-bezier(.22,1,.36,1)",

@@ -14,7 +14,7 @@ export function sidebarRowClassName({
     collapsed ? "justify-center px-0" : "gap-2 px-3",
     active
       ? "bg-white/6 text-white"
-      : "text-neutral-400 hover:bg-white/4 hover:text-white",
+      : "text-neutral-400",
   )
 }
 
@@ -59,7 +59,7 @@ export function SidebarRow({
         "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 font-medium transition-colors",
         active
           ? "bg-white/10 text-white"
-          : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white"
+          : "text-neutral-300"
       )
     : undefined
 

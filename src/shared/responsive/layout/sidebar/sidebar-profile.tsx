@@ -210,11 +210,7 @@ export function SidebarProfile({
 
                   "relative h-9 w-9 shrink-0 rounded-full transition",
 
-                  canOpenProfile
-
-                    ? "hover:ring-2 hover:ring-white/10"
-
-                    : "cursor-not-allowed opacity-60",
+                  !canOpenProfile && "cursor-not-allowed opacity-60",
 
                 )}
 
@@ -386,7 +382,7 @@ export function SidebarProfile({
 
           ref={cardRef}
 
-          className="relative z-10 rounded-xl bg-[#090909] px-3 py-3 transition-colors duration-300 hover:bg-[#101010]"
+          className="relative z-10 rounded-xl bg-[#090909] px-3 py-3 transition-colors duration-300"
 
         >
 
