@@ -121,3 +121,13 @@ export function rectsOverlap(a: Rect, b: Rect): boolean {
     a.y >= bBottom - 0.001
   );
 }
+
+/** Suma la longitud de los segmentos consecutivos de un contorno (aproximación del perímetro real, ya que el contorno está tesselado a puntos). */
+export function perimeterOf(outline: PieceOutline): number {
+  const pts = outline.points;
+  let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    total += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+  }
+  return total;
+}

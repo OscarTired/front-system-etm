@@ -84,6 +84,9 @@ function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const visualState = useMobileNavStore(s => s.visualState)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
+  const isDragging = useMobileNavStore(s => s.isDragging)
+  const startDrag = useMobileNavStore(s => s.startDrag)
+  const endDrag = useMobileNavStore(s => s.endDrag)
   const notifyContentTransitionEnd = useMobileNavStore(s => s.notifyContentTransitionEnd)
   const notifyClipTransitionEnd = useMobileNavStore(s => s.notifyClipTransitionEnd)
 
@@ -91,7 +94,6 @@ function CompactShell({ children }: Props) {
   const stateOffset = visualState === "visible" || visualState === "moving-in" ? targetOffset : 0
 
   const contentRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
   const pendingOffsetRef = useRef<number | null>(null)
   const rafIdRef = useRef<number | null>(null)
   const suppressClickRef = useRef(false)
@@ -163,7 +165,7 @@ function CompactShell({ children }: Props) {
           return
         }
 
-        setIsDragging(true)
+        startDrag()
       }
 
       const dt = now - drag.lastTime
@@ -205,11 +207,14 @@ function CompactShell({ children }: Props) {
       }
 
       pendingOffsetRef.current = null
-      setIsDragging(false)
 
-      if (finalOffset < closeThreshold || isFastFlickLeft) {
-        closeDrawer()
-      }
+      // isDragging y visualState viven en el MISMO store — endDrag los
+      // cambia juntos en un solo set() atómico. No hay dos fuentes de
+      // estado que puedan desincronizarse entre sí, así que no hace
+      // falta forzar el orden con flushSync: la carrera que causaba el
+      // salto brusco al cerrar es imposible por construcción.
+      const shouldClose = finalOffset < closeThreshold || isFastFlickLeft
+      endDrag(shouldClose)
 
       drag = null
     }
@@ -230,7 +235,7 @@ function CompactShell({ children }: Props) {
         rafIdRef.current = null
       }
     }
-  }, [visualState, closeDrawer])
+  }, [visualState, startDrag, endDrag])
 
   const offset = isDragging ? undefined : stateOffset
 
