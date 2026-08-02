@@ -219,9 +219,6 @@ export function NestingPage() {
 
   const handleRun = useCallback(() => {
     if (!canRun) return
-    // sheetGroups solo cambia como consecuencia de este run (sheets
-    // vive en useNesting y nada más lo toca), así que el reset va acá
-    // en vez de en un efecto que observa sheetGroups.length.
     setActiveGroupIndex(0)
     setSelectedPieceIndex(null)
     run(validPieces, { sheet: sheetConfig })
@@ -369,15 +366,12 @@ export function NestingPage() {
       />
 
       <div className="flex min-h-0 flex-1 gap-4 bg-neutral-950 p-4">
-        {/* PANEL LATERAL: columna fija solo desde laptop en adelante.
-            En mobile/tablet vive en el Sheet de más abajo. */}
         {!isCompact && (
           <div className="flex w-72 shrink-0 flex-col gap-3">
             {sidePanelContent}
           </div>
         )}
 
-        {/* CANVAS — flexible y fluido */}
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           {sheetGroups.length > 0 && (
             <SheetNavigator
@@ -395,11 +389,6 @@ export function NestingPage() {
             />
           )}
 
-          {/* min-h-96 (token real de Tailwind) actúa de piso solo en
-              mobile, donde el <main> de la ruta no fija una altura de
-              viewport (la página scrollea entera). Desde tablet ya
-              hay altura real heredada (tablet:h-full en la ruta), así
-              que ahí no hace falta piso: min-h-0 + flex-1 alcanzan. */}
           <div className="min-h-96 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/50 tablet:min-h-0">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
@@ -433,6 +422,7 @@ export function NestingPage() {
         open={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
         sheetGroups={sheetGroups}
+        sheets={sheets}
         onExportSheet={handleExportSheet}
         onSaveProject={handleSaveProject}
       />

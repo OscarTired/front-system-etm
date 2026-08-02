@@ -1,53 +1,80 @@
-import { boundingRect, perimeterOf } from "../engine/geometry"
-import type { NestedSheet } from "../engine/types"
+"use client"
 
-export interface CatalogEntry {
-  uid: string
-  pieceId: string
-  width: number
-  height: number
-  /** Perímetro aproximado (suma de segmentos del contorno tesselado). */
-  perimeter: number
-  quantity: number
+import { boundingRect, perimeterOf } from "../engine/geometry"
+import type { PlacedPiece } from "../engine/types"
+
+export interface SheetStats {
+  pieceCount: number
+  usagePercent: number
+  sheetArea: number
+  usedArea: number
+  totalCutLength: number
 }
 
-/**
- * Puerto de la Fase 1 de PdfGenerator::generarReporte ("Agrupación
- * inteligente, invariante a rotación"). Agrupa todas las piezas
- * colocadas (en todas las planchas) en un catálogo de piezas únicas:
- * dos piezas son "la misma" si tienen el mismo `pieceId` y las mismas
- * dimensiones de bounding box, sin importar si una está rotada 90° y
- * la otra no (por eso se usa min/max en vez de width/height directo).
- * Útil como resumen/BOM independiente de cómo se termine mostrando
- * (HTML, PDF, tabla, etc.) — la parte de layout/dibujo del PDF
- * original queda fuera de esto a propósito.
- */
-export function buildPieceCatalog(sheets: NestedSheet[]): CatalogEntry[] {
-  const catalog = new Map<string, CatalogEntry>()
+export interface PropertiesPanelProps {
+  sheetStats: SheetStats | null
+  selectedPiece: PlacedPiece | null
+  espesor?: string
+  material?: string
+}
 
-  for (const sheet of sheets) {
-    for (const piece of sheet.pieces) {
-      const bounds = boundingRect(piece.outline)
-      const dim1 = Math.min(bounds.width, bounds.height)
-      const dim2 = Math.max(bounds.width, bounds.height)
-      const uid = `${piece.pieceId}_${dim1.toFixed(1)}_${dim2.toFixed(1)}`
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2 text-xs last:border-0">
+      <span className="text-neutral-500">{label}</span>
+      <span className="font-medium text-neutral-200">{value}</span>
+    </div>
+  )
+}
 
-      const existing = catalog.get(uid)
-      if (existing) {
-        existing.quantity++
-        continue
-      }
+export function PropertiesPanel({ sheetStats, selectedPiece, espesor, material }: PropertiesPanelProps) {
+  if (selectedPiece) {
+    const bounds = boundingRect(selectedPiece.outline)
+    const perimeter = selectedPiece.subEntities?.length
+      ? selectedPiece.subEntities.reduce((sum, s) => sum + perimeterOf(s.outline), 0)
+      : perimeterOf(selectedPiece.outline)
 
-      catalog.set(uid, {
-        uid,
-        pieceId: piece.pieceId,
-        width: bounds.width,
-        height: bounds.height,
-        perimeter: perimeterOf(piece.outline),
-        quantity: 1,
-      })
-    }
+    return (
+      <div className="flex flex-col">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Pieza seleccionada</h3>
+        <StatRow label="Nombre" value={selectedPiece.pieceId} />
+        <StatRow label="Ancho × Alto" value={`${bounds.width.toFixed(1)} × ${bounds.height.toFixed(1)} mm`} />
+        <StatRow label="Área" value={`${((bounds.width * bounds.height) / 1_000_000).toFixed(3)} m²`} />
+        <StatRow label="Perímetro" value={`${perimeter.toFixed(0)} mm`} />
+        <StatRow label="Rotación" value={`${selectedPiece.angle}°`} />
+        <StatRow label="Color" value={selectedPiece.color ?? "—"} />
+        {material && <StatRow label="Material" value={material} />}
+        {espesor && <StatRow label="Espesor" value={`${espesor} mm`} />}
+      </div>
+    )
   }
 
-  return Array.from(catalog.values())
+  if (sheetStats) {
+    return (
+      <div className="flex flex-col">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Plancha activa</h3>
+        <StatRow label="Piezas" value={String(sheetStats.pieceCount)} />
+        <StatRow
+          label="% Aprovechamiento"
+          value={`${sheetStats.usagePercent.toFixed(1)}%`}
+        />
+        <StatRow label="Área plancha" value={`${(sheetStats.sheetArea / 1_000_000).toFixed(3)} m²`} />
+        <StatRow label="Área utilizada" value={`${(sheetStats.usedArea / 1_000_000).toFixed(3)} m²`} />
+        <StatRow label="Long. total de corte" value={`${(sheetStats.totalCutLength / 1000).toFixed(2)} m`} />
+        {material && <StatRow label="Material" value={material} />}
+        {espesor && <StatRow label="Espesor" value={`${espesor} mm`} />}
+        <p className="mt-3 text-[11px] leading-relaxed text-neutral-600">
+          Tiempo estimado, perforaciones y costo requieren parámetros de máquina (velocidad de corte,
+          costo/hora) que todavía no están cableados al motor — el campo queda listo en el panel de Máquina
+          para cuando se agreguen.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full items-center justify-center text-center text-xs text-neutral-600">
+      Selecciona una pieza en el canvas, o nestea para ver estadísticas de la plancha.
+    </div>
+  )
 }
