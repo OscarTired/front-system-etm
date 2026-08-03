@@ -39,6 +39,7 @@ import {
   Pickaxe,
   Play,
   Ruler,
+  Save,
   Scissors,
   Search,
   Settings,
@@ -144,6 +145,7 @@ export const ENTITY_ICONS = {
   energy: Zap,
   cog: Cog,
   pickaxe: Pickaxe,
+  save: Save,
 
 } satisfies Record<string, LucideIcon>
 

@@ -7,6 +7,7 @@ export interface DateInputProps {
   disabled?: boolean;
   readOnly?: boolean;
   className?: string;
+  hideCalendarIcon?: boolean;
   onChange: (raw: string) => void;
   onBlur: () => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -23,6 +24,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       disabled,
       readOnly,
       className,
+      hideCalendarIcon,
       onChange,
       onBlur,
       onKeyDown,
@@ -50,8 +52,8 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           onFocus={onFocus}
           onClick={onClick}
           className={[
-
-            'w-full h-9 pl-3 pr-9 rounded-xl text-sm font-medium text-center uppercase outline-none transition-colors',
+            'w-full h-9 pl-3 rounded-xl text-sm font-medium text-center uppercase outline-none transition-colors',
+            hideCalendarIcon ? 'pr-3' : 'pr-9',
             'bg-white/6 text-neutral-200 placeholder:text-neutral-600',
             'border border-transparent',
             'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
@@ -60,20 +62,22 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           ].join(' ')}
         />
 
-        <button
-          type="button"
-          tabIndex={-1}
-          disabled={disabled}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onCalendarClick}
-          className="absolute right-2 flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
-          aria-label="Abrir calendario"
-        >
-          <CalendarIcon size={16} />
-        </button>
+        {!hideCalendarIcon && (
+          <button
+            type="button"
+            tabIndex={-1}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onCalendarClick}
+            className="absolute right-2 flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+            aria-label="Abrir calendario"
+          >
+            <CalendarIcon size={16} />
+          </button>
+        )}
       </div>
     );
   },
 );
 
-DateInput.displayName = 'DateInput'; 
+DateInput.displayName = 'DateInput';

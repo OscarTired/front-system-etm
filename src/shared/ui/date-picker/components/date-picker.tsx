@@ -125,20 +125,22 @@ export function DatePicker({
           e.preventDefault();
         }}
         floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
-        className="flex flex-col w-full gap-3 p-4"
+        className="flex flex-col items-center w-full gap-3 p-4"
       >
         {isMobile && (
-          <div className="w-full">
-            <DateInput
-              ref={sheetInputRef}
-              value={inputValue}
-              placeholder={placeholder ?? "DD/MM/YYYY"}
-              disabled={disabled}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={handleKeyDownWithEscape}
-              onCalendarClick={() => setOpen(false)}
-            />
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-70">
+              <DateInput
+                ref={sheetInputRef}
+                value={inputValue}
+                placeholder={placeholder ?? "DD/MM/YYYY"}
+                disabled={disabled}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onKeyDown={handleKeyDownWithEscape}
+                hideCalendarIcon
+              />
+            </div>
           </div>
         )}
 

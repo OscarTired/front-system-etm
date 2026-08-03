@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Save } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -13,7 +13,7 @@ import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
 import { cn } from "@/shared/utils/utils"
-import type { EntityIcon } from "@/shared/constants/entity-icons"
+import { ENTITY_ICONS, type EntityIcon } from "@/shared/constants/entity-icons"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 import { useUserMutations } from "@/features/users/hooks/use-user-mutations"
@@ -499,6 +499,7 @@ export function UsersPageContent() {
 
                       <PrimaryAction
                         label={isCreating ? "Crear usuario" : "Guardar"}
+                        icon={ENTITY_ICONS[formData.icon] || Save}
                         isLoading={isSaving}
                         disabled={!canUpdate || isSaving || (!isCreating && !hasChanges)}
                         onClick={handleSave}

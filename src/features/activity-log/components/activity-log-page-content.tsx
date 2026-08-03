@@ -102,12 +102,13 @@ export function ActivityLogPageContent({
 
       {/* Navegador de fecha y acciones */}
       <div className="rounded-2xl bg-white/2 p-4">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-          {/* Columna izquierda vacía para mantener el DateNavigator centrado */}
-          <div />
+        <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
+          
+          {/* Columna izquierda vacía para mantener el DateNavigator centrado en desktop */}
+          <div className="hidden tablet:block" />
 
-          {/* Siempre permanece exactamente en el centro */}
-          <div className="justify-self-center">
+          {/* Siempre permanece exactamente en el centro en desktop, y arriba en móvil */}
+          <div className="flex justify-center w-full tablet:justify-self-center">
             <DateNavigator
               value={date}
               onChange={next => setDate(next ?? new Date())}
@@ -116,8 +117,8 @@ export function ActivityLogPageContent({
             />
           </div>
 
-          {/* Acciones a la derecha */}
-          <div className="justify-self-end">
+          {/* Acciones a la derecha en desktop, abajo en móvil */}
+          <div className="flex justify-center tablet:justify-self-end w-full tablet:w-auto">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
                 {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
