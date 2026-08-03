@@ -1,4 +1,3 @@
-// app-shell.tsx
 "use client"
 
 import { useEffect, type ReactNode } from "react"
@@ -14,6 +13,7 @@ import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { PullToRefresh } from "../mobile/pull-to-refresh"
 
 type Props = {
   children: ReactNode
@@ -80,19 +80,18 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.6
 const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
 
-// duration + bounce, NO stiffness/damping/mass a mano (ver historial:
-// ahí es donde adiviné mal la vez pasada). bounce:0 (commit anterior)
-// Dos resortes, no uno solo — el criterio real (el que usa Vaul, la
-// librería de drawers de shadcn/ui) es: el bounce solo tiene sentido
-// cuando hay un gesto físico real con velocidad detrás. Al soltar un
-// drag, sí — el resorte "hereda" tu velocidad y un poco de rebote se
-// siente natural. Al cerrar con un botón (hamburguesa/chevron/bottom-
-// nav) no hay ningún gesto, ninguna velocidad que continuar — el
-// propio autor de Vaul lo dice explícito: "if I simply press to
-// close, there's no bounce at all". Usar el mismo resorte para los
-// dos casos fue la confusión de fondo la vez pasada.
-const DRAG_RELEASE_SPRING = { type: "spring", duration: 0.3, bounce: 0.15 } as const
-const PROGRAMMATIC_SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const
+// Sin duration/bounce/stiffness/damping propios — motion ya trae sus
+// propios valores por defecto documentados en su paquete (no
+// inventados por mí, y no hace falta ajustarlos después):
+//   - DRAG_RELEASE_SPRING: resorte puro sin config, para cuando SÍ hay
+//     un gesto físico real con velocidad detrás (soltar un drag).
+//   - PROGRAMMATIC_TRANSITION: tween simple, sin resorte — la misma
+//     decisión que toma Vaul (la librería de drawers de shadcn/ui)
+//     para el caso sin gesto (botón: hamburguesa/chevron/bottom-nav):
+//     ahí no hay velocidad que "heredar", así que ni siquiera hace
+//     falta un spring.
+const DRAG_RELEASE_SPRING = { type: "spring" } as const
+const PROGRAMMATIC_TRANSITION = { type: "tween" } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -111,7 +110,7 @@ function CompactShell({ children }: Props) {
   // en curso, motion ya está escribiendo `x` directo por su cuenta —
   // este efecto no compite porque `mode` no cambia hasta soltar.
   useEffect(() => {
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, PROGRAMMATIC_SPRING)
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, PROGRAMMATIC_TRANSITION)
     return () => controls.stop()
   }, [isOpen, x])
 
@@ -147,15 +146,17 @@ function CompactShell({ children }: Props) {
         }}
       >
         <TopBar />
-        <VerticalScroll
-          key={pathname}
-          containerClassName="h-full"
-          className="overflow-x-hidden pt-14 pb-20"
-          arrowTopOffset={64}
-          arrowBottomOffset={88}
-        >
-          {children}
-        </VerticalScroll>
+        <PullToRefresh>
+          <VerticalScroll
+            key={pathname}
+            containerClassName="h-full"
+            className="overflow-x-hidden pt-14 pb-20"
+            arrowTopOffset={64}
+            arrowBottomOffset={88}
+          >
+            {children}
+          </VerticalScroll>
+        </PullToRefresh>
         <BottomNavigation />
       </motion.div>
     </div>
