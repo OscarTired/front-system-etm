@@ -75,10 +75,9 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-// --- Configuración Mobile Drawer ---
+// --- Configuración Mobile Drawer estilo iOS ---
 const DRAWER_REVEAL_OFFSET = 248
 const SWIPE_THRESHOLD = 80
-const VELOCITY_THRESHOLD = 400
 
 const drawerVariants = {
   closed: { 
@@ -100,28 +99,25 @@ function CompactShell({ children }: Props) {
 
   const isOpen = mode === "open"
 
-  // Sincronizar el estado global del drawer con los controles de animación
   useEffect(() => {
     controls.start(isOpen ? "open" : "closed")
   }, [isOpen, controls])
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     const offset = info.offset.x
     const velocity = info.velocity.x
 
     if (isOpen) {
-      // Si está abierto y el usuario desliza hacia la izquierda o hace flick
-      if (offset < -SWIPE_THRESHOLD || velocity < -VELOCITY_THRESHOLD) {
+      if (offset < -SWIPE_THRESHOLD || velocity < -300) {
         closeDrawer()
       } else {
-        controls.start("open")
+        controls.start("open", { velocity })
       }
     } else {
-      // Si está cerrado y el usuario desliza hacia la derecha o hace flick
-      if (offset > SWIPE_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
+      if (offset > SWIPE_THRESHOLD || velocity > 300) {
         openDrawer()
       } else {
-        controls.start("closed")
+        controls.start("closed", { velocity })
       }
     }
   }
