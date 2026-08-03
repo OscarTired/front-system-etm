@@ -80,11 +80,19 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.25
 const FLICK_VELOCITY_THRESHOLD = 500
 
-// Transición suave unificada mediante easing cúbico
+// Resorte, no tween — con duration+bounce documentados (no
+// stiffness/damping/mass adivinados). bounce:0 sigue siendo la
+// garantía de la librería (cero overshoot posible), y una duration
+// más alta (0.45 en vez de 0.3) es lo que le devuelve la sensación
+// "lenta y elegante": un tween con duración fija siempre tarda
+// EXACTAMENTE lo mismo sin importar la distancia — se siente más
+// mecánico. Un resorte tiene una curva de desaceleración natural
+// (arranca rápido, se va frenando gradual) que es lo que de verdad
+// se percibe como "vivo"/premium, no solo la duración en sí.
 const SMOOTH_TRANSITION = {
-  type: "tween",
-  duration: 0.3,
-  ease: [0.22, 1, 0.36, 1],
+  type: "spring",
+  duration: 0.45,
+  bounce: 0,
 } as const
 
 function CompactShell({ children }: Props) {
