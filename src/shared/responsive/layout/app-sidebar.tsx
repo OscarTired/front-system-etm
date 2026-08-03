@@ -111,7 +111,7 @@ export function AppSidebar({
           "will-change-[width,transform,opacity]",
           // Transición fluida estilo nativo tanto para desktop como para drawer móvil
           isDrawer
-            ? "transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)]"
+            ? "transition-none"
             : "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
           isDrawer && (isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"),
           isFullyHidden && "pointer-events-none",
