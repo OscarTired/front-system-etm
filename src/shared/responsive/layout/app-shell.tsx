@@ -14,6 +14,7 @@ import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 import { PullToRefresh } from "../mobile/pull-to-refresh"
+import { cn } from "@/shared/utils/utils"
 
 type Props = {
   children: ReactNode
@@ -180,26 +181,42 @@ function CompactShell({ children }: Props) {
         }}
         style={{ x, borderRadius }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
-        onClickCapture={(event) => {
-          if (!isOpen) return
-          event.preventDefault()
-          event.stopPropagation()
-          closeDrawer()
-        }}
       >
-        <TopBar />
-        <PullToRefresh>
-          <VerticalScroll
-            key={pathname}
-            containerClassName="h-full"
-            className="overflow-x-hidden pt-14 pb-20"
-            arrowTopOffset={64}
-            arrowBottomOffset={88}
-          >
-            {children}
-          </VerticalScroll>
-        </PullToRefresh>
-        <BottomNavigation />
+        {/*
+          pointer-events-none + inert acá adentro, NO en el motion.div
+          de afuera: ese necesita seguir recibiendo el gesto de drag
+          normalmente. pointer-events-none en un descendiente no
+          bloquea el bubbling hacia el ancestro (el hit-test salta a
+          lo que esté detrás, pero el evento sigue subiendo por la
+          cadena real del DOM), así que el drag sigue andando.
+
+          Esto reemplaza el onClickCapture de antes: ese solo
+          interceptaba clicks — con el drawer abierto, el contenido
+          desplazado seguía siendo hoverable, tabbable por teclado, y
+          reaccionaba a cualquier otra interacción que no fuera
+          literalmente un click. pointer-events-none bloquea TODA
+          interacción de puntero, inert además lo saca del foco por
+          teclado y del árbol de accesibilidad — el estándar real que
+          usan los drawers premium, no un parche por tipo de evento.
+        */}
+        <div
+          inert={isOpen}
+          className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col", isOpen && "pointer-events-none")}
+        >
+          <TopBar />
+          <PullToRefresh>
+            <VerticalScroll
+              key={pathname}
+              containerClassName="h-full"
+              className="overflow-x-hidden pt-14 pb-20"
+              arrowTopOffset={64}
+              arrowBottomOffset={88}
+            >
+              {children}
+            </VerticalScroll>
+          </PullToRefresh>
+          <BottomNavigation />
+        </div>
       </motion.div>
     </div>
   )
