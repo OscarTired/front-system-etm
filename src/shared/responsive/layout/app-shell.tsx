@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence, type Transition } from "motion/react"
 
@@ -21,7 +21,7 @@ type Props = {
 }
 
 /* ==========================================================================
-   DESKTOP SHELL (100% CSS Acceleration)
+   DESKTOP SHELL
    ========================================================================== */
 
 function DesktopTopBar() {
@@ -69,16 +69,15 @@ function DesktopShell({ children }: Props) {
 }
 
 /* ==========================================================================
-   COMPACT SHELL (MOBILE WEB - OPTIMIZED FOR GESTURES)
+   COMPACT SHELL (MOBILE)
    ========================================================================== */
 
 const DRAWER_REVEAL_OFFSET = 248
 
-// Física tipo Spring (sensación nativa de iOS/Android)
-const IOS_SPRING: Transition = {
+const SPRING_TRANSITION: Transition = {
   type: "spring",
-  damping: 26,
-  stiffness: 220,
+  damping: 25,
+  stiffness: 200,
   mass: 0.8,
 }
 
@@ -89,66 +88,57 @@ function CompactShell({ children }: Props) {
 
   const isOpen = mode === "open"
 
-  // Cierre automático al cambiar de página en la Web
-  useEffect(() => {
-    if (isOpen) {
-      closeDrawer()
-    }
-  }, [pathname])
-
   return (
     <div className="relative h-dvh w-full overflow-hidden select-none bg-[#1d1c1c] text-white">
-      {/* Menú/Drawer Trasero */}
+      {/* Drawer Inferior */}
       <SidebarDrawer />
 
-      {/* Overlay de Fondo */}
+      {/* Overlay Oscuro Dinámico */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.45 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             onClick={closeDrawer}
             className="fixed inset-0 z-10 bg-black pointer-events-auto"
           />
         )}
       </AnimatePresence>
 
-      {/* Tarjeta Principal Interactiva (Arrastre Horizontal) */}
+      {/* Tarjeta Principal Interactiva */}
       <motion.div
         drag={isOpen ? "x" : false}
+        dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.08}
+        dragElastic={0.1}
         onDragEnd={(_, info) => {
-          // Si arrastra > 60px a la izquierda o hace un "flick" veloz, cerramos
-          const isFlickLeft = info.velocity.x < -280
+          const isFlickLeft = info.velocity.x < -300
           const isDraggedFarEnough = info.offset.x < -60
-
+          
           if (isFlickLeft || isDraggedFarEnough) {
             closeDrawer()
           }
         }}
         initial={false}
         animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
-        transition={IOS_SPRING}
-        style={{ touchAction: "pan-y" }} // Crucial para Web: no bloquea el scroll vertical
-        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl will-change-transform"
+        transition={SPRING_TRANSITION}
+        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl touch-pan-y"
       >
-        {/* Sombra de separación */}
+        {/* Sombra Lateral Dinámica */}
         <motion.div
-          animate={{ opacity: isOpen ? 0.3 : 0 }}
+          animate={{ opacity: isOpen ? 0.25 : 0 }}
           className="pointer-events-none absolute -left-8 top-0 bottom-0 w-8 bg-linear-to-r from-transparent to-black"
         />
 
         <TopBar />
 
-        {/* Vista/Contenido Principal */}
+        {/* Contenido Principal */}
         <div
           inert={isOpen}
           className={cn(
             "flex min-h-0 flex-1 flex-col transition-opacity duration-200",
-            isOpen && "opacity-90 pointer-events-none select-none"
+            isOpen && "opacity-90 pointer-events-none"
           )}
         >
           <PullToRefresh>
