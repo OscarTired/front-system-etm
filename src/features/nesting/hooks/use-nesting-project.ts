@@ -11,8 +11,8 @@ import { generateSheetDxf } from "../export/dxf-export"
 import { generateSheetNsp } from "../export/nsp-export"
 import { serializeProject, parseProjectFile, ProjectFileParseError, type ProjectPieceEntry } from "../export/project-file"
 import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, type MachineSettings } from "../types/project-settings"
-import { rectOutline, downloadTextFile } from "../utils/file-helpers"
-import type { PieceRow, ManualRow, CadRow } from "../components/piece-list"
+import { downloadTextFile } from "../utils/file-helpers"
+import type { PieceRow, CadRow } from "../components/piece-list"
 import type { SheetStats } from "../components/properties-panel"
 
 const PIECE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#eab308", "#ec4899", "#a855f7"]
@@ -37,15 +37,6 @@ export function useNestingProject() {
     colorCursorRef.current++
     return c
   }, [])
-
-  const makeEmptyManualRow = useCallback((): ManualRow => ({
-    id: `pieza-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    source: "manual",
-    width: "",
-    height: "",
-    quantity: "1",
-    color: nextColor(),
-  }), [nextColor])
 
   const [rows, setRows] = useState<PieceRow[]>([])
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
@@ -75,13 +66,7 @@ export function useNestingProject() {
     const pieces: NestingPiece[] = []
     for (const row of rows) {
       const quantity = Number(row.quantity) || 1
-      if (row.source === "manual") {
-        const w = Number(row.width)
-        const h = Number(row.height)
-        if (w > 0 && h > 0) pieces.push({ id: row.id, outline: rectOutline(w, h), quantity, color: row.color })
-      } else {
-        pieces.push({ id: row.id, outline: row.outline, subEntities: row.subEntities, quantity, color: row.color })
-      }
+      pieces.push({ id: row.id, outline: row.outline, subEntities: row.subEntities, quantity, color: row.color })
     }
     return pieces
   }, [rows])
@@ -120,10 +105,7 @@ export function useNestingProject() {
     }
   }, [sheetGroups, sheetConfig])
 
-  const handleAddManual = useCallback(() => setRows((prev) => [...prev, makeEmptyManualRow()]), [makeEmptyManualRow])
   const handleRemove = useCallback((id: string) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev)), [])
-  const handleUpdateManual = useCallback((id: string, patch: Partial<ManualRow>) =>
-    setRows((prev) => prev.map((r) => (r.id === id && r.source === "manual" ? { ...r, ...patch } : r))), [])
   const handleUpdateQuantity = useCallback((id: string, quantity: string) =>
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
@@ -142,30 +124,18 @@ export function useNestingProject() {
   }, [sheets, nomenclatura, sheetConfig])
 
   const handleSaveProject = useCallback(() => {
-    const pieces: ProjectPieceEntry[] = rows.map((row) =>
-      row.source === "manual"
-        ? {
-            id: row.id,
-            source: "manual",
-            width: Number(row.width) || 0,
-            height: Number(row.height) || 0,
-            quantity: Number(row.quantity) || 1,
-            color: row.color,
-            outline: rectOutline(Number(row.width) || 0, Number(row.height) || 0),
-          }
-        : {
-            id: row.id,
-            source: "cad",
-            fileName: row.fileName,
-            width: row.width,
-            height: row.height,
-            quantity: Number(row.quantity) || 1,
-            color: row.color,
-            outline: row.outline,
-            subEntities: row.subEntities,
-            material: row.material,
-          }
-    )
+    const pieces: ProjectPieceEntry[] = rows.map((row) => ({
+      id: row.id,
+      source: "cad",
+      fileName: row.fileName,
+      width: row.width,
+      height: row.height,
+      quantity: Number(row.quantity) || 1,
+      color: row.color,
+      outline: row.outline,
+      subEntities: row.subEntities,
+      material: row.material,
+    }))
     const json = serializeProject({ sheet: sheetConfig, pieces })
     downloadTextFile(`nesting-proyecto-${Date.now()}.json`, json, "application/json")
   }, [rows, sheetConfig])
@@ -176,22 +146,18 @@ export function useNestingProject() {
       const text = await file.text()
       const project = parseProjectFile(text)
       setSettings((s) => ({ ...s, sheetWidth: String(project.sheet.width), sheetHeight: String(project.sheet.height), margin: String(project.sheet.margin) }))
-      const loadedRows: PieceRow[] = project.pieces.map((p) =>
-        p.source === "manual"
-          ? { id: p.id, source: "manual", width: String(p.width), height: String(p.height), quantity: String(p.quantity), color: p.color }
-          : {
-              id: p.id,
-              source: "cad",
-              fileName: p.fileName ?? "pieza.dxf",
-              outline: p.outline,
-              subEntities: p.subEntities ?? [],
-              width: p.width,
-              height: p.height,
-              quantity: String(p.quantity),
-              color: p.color,
-              material: p.material ?? { thickness: -1, dinNorm: "N/D", alloy: "N/D" },
-            }
-      )
+      const loadedRows: PieceRow[] = project.pieces.map((p) => ({
+        id: p.id,
+        source: "cad",
+        fileName: p.fileName ?? "pieza.dxf",
+        outline: p.outline,
+        subEntities: p.subEntities ?? [],
+        width: p.width,
+        height: p.height,
+        quantity: String(p.quantity),
+        color: p.color,
+        material: p.material ?? { thickness: -1, dinNorm: "N/D", alloy: "N/D" },
+      }))
       setRows(loadedRows)
       return null
     } catch (err) {
@@ -224,9 +190,7 @@ export function useNestingProject() {
     onSettingsChange: handleSettingsChange,
     onMachineChange: handleMachineChange,
 
-    onAddManual: handleAddManual,
     onRemove: handleRemove,
-    onUpdateManual: handleUpdateManual,
     onUpdateQuantity: handleUpdateQuantity,
     onAddCad: handleAddCad,
 
