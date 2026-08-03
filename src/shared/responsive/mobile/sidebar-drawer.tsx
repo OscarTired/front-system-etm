@@ -2,12 +2,19 @@
 "use client"
 
 import { useEffect } from "react"
+import type { MotionValue } from "motion/react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { cn } from "@/shared/utils/utils"
 import { AppSidebar } from "../layout/app-sidebar"
 
-export function SidebarDrawer() {
+type Props = {
+  /** Mismo motion value que mueve el contenido en CompactShell — ver el comentario en app-sidebar.tsx sobre por qué esto ya no es una transición CSS aparte. */
+  x: MotionValue<number>
+  xRange: [number, number]
+}
+
+export function SidebarDrawer({ x, xRange }: Props) {
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
@@ -56,6 +63,8 @@ export function SidebarDrawer() {
         <AppSidebar
           variant="drawer"
           open={isVisible}
+          motionX={x}
+          motionXRange={xRange}
         />
       </div>
     </div>
