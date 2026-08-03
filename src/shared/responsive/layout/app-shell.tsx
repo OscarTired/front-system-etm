@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, useTransform, animate } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -90,10 +90,6 @@ function CompactShell({ children }: Props) {
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const x = useMotionValue(0)
-  
-  // Mapeamos el valor x a un MotionValue de píxeles puro
-  const radiusValue = useTransform(x, [0, DRAWER_REVEAL_OFFSET], [0, CURVE_RADIUS])
-
   const isOpen = mode === "open"
   const selfAnimatedCloseRef = useRef(false)
 
@@ -115,7 +111,7 @@ function CompactShell({ children }: Props) {
         drag={isOpen ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0}
+        dragElastic={0.05} // Un toque diminuto de amortiguación táctil para evitar frenazos secos
         dragMomentum={false}
         dragTransition={{ power: 0 }}
         onDragEnd={(_event, info) => {
@@ -126,7 +122,7 @@ function CompactShell({ children }: Props) {
 
           x.stop()
 
-          // Tu animación spring lenta/suave exacta e intacta
+          // Mantiene tu resorte original lento e intacto al soltar
           animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAG_RELEASE_SPRING)
 
           if (shouldClose) {
@@ -136,13 +132,10 @@ function CompactShell({ children }: Props) {
         }}
         style={{
           x,
-          // Evita que el navegador dude entre scroll y drag
           touchAction: "pan-y",
-          // Pasamos el valor numérico transformado para evitar concatenar strings a 60fps
-          borderTopLeftRadius: radiusValue,
-          borderBottomLeftRadius: radiusValue,
         }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform"
+        // rounded-l-[28px] nativo por CSS: cero interpolación de JS en el borde durante el drag
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
