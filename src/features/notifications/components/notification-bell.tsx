@@ -18,6 +18,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
 import { useNotifications } from "../hooks/use-notifications"
 import { useUnreadCount } from "../hooks/use-unread-count"
 import { useMarkNotificationRead } from "../hooks/use-mark-notification-read"
@@ -115,6 +117,7 @@ export function NotificationBell({
         <button
           type="button"
           aria-label="Notificaciones"
+          onClick={() => handleOpenChange(!open)}
           className={cn(
             "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
             open && "bg-white/20 text-white",
@@ -190,98 +193,119 @@ export function NotificationBell({
     )
   }
 
+  const panelBody = (
+    <>
+      <div className="flex shrink-0 items-center justify-between px-3.5 py-3">
+        <span className="text-sm font-semibold text-neutral-200">
+          Notificaciones
+        </span>
+
+        <button
+          type="button"
+          onClick={() => markAllAsRead()}
+          disabled={visibleNotifications.length === 0}
+          title="Limpiar notificaciones"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
+        >
+          <Eraser size={14} />
+        </button>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <VerticalScroll className="px-2 pb-2 h-full" style={{ minHeight: 180, maxHeight: isTopbar ? undefined : 384 }}>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+              <Spinner size={20} className="text-neutral-400" />
+              <p className="text-xs text-neutral-500">Cargando notificaciones...</p>
+            </div>
+          ) : visibleNotifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+              <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
+                <Bell size={18} />
+              </div>
+              <p className="text-xs text-neutral-400 font-medium">No tienes notificaciones pendientes</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {visibleNotifications.map(notification => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  isHistorical={notification.route.history}
+                  onClick={handleSelect}
+                  onMarkRead={markAsRead}
+                  isSelecting={selectingId === notification.id}
+                  isConfirming={confirmingId === notification.id}
+                  onConfirm={n => proceedToNotification(n, true)}
+                  onCancelConfirm={() => setConfirmingId(null)}
+                />
+              ))}
+
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => loadMore()}
+                  disabled={loadingMore}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
+                >
+                  {loadingMore ? <Spinner size={12} /> : "Cargar más"}
+                </button>
+              )}
+            </div>
+          )}
+        </VerticalScroll>
+      </div>
+
+      <div className="shrink-0 p-2 select-none">
+        {visibleNotifications.length === 0 ? (
+          <div className="flex w-full items-center justify-center gap-1.5 py-1.5 text-center text-xs text-neutral-500">
+            <CheckCircle2 size={13} className="text-neutral-600 shrink-0" />
+            Estás al día
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleOpenHistory}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200"
+          >
+            <History size={13} />
+            Ver más
+          </button>
+        )}
+      </div>
+    </>
+  )
+
   return (
     <>
-      <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>{renderTriggerContent()}</PopoverTrigger>
+      {isTopbar ? (
+        <>
+          {renderTriggerContent()}
 
-        <PopoverContent
-          data-sidebar-popover
-          side={isTopbar ? "bottom" : "right"}
-          align={isTopbar ? "end" : "start"}
-          sideOffset={8}
-          className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
-        >
-          <div className="flex shrink-0 items-center justify-between px-3.5 py-3">
-            <span className="text-sm font-semibold text-neutral-200">
-              Notificaciones
-            </span>
-
-            <button
-              type="button"
-              onClick={() => markAllAsRead()}
-              disabled={visibleNotifications.length === 0}
-              title="Limpiar notificaciones"
-              className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
+          <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent
+              size="large"
+              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
             >
-              <Eraser size={14} />
-            </button>
-          </div>
+              {panelBody}
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : (
+        <Popover open={open} onOpenChange={handleOpenChange}>
+          <PopoverTrigger asChild>{renderTriggerContent()}</PopoverTrigger>
 
-          <div className="flex-1 min-h-0">
-            <VerticalScroll className="px-2 pb-2 h-full" style={{ minHeight: 180, maxHeight: 384 }}>
-              {loading ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-                  <Spinner size={20} className="text-neutral-400" />
-                  <p className="text-xs text-neutral-500">Cargando notificaciones...</p>
-                </div>
-              ) : visibleNotifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
-                    <Bell size={18} />
-                  </div>
-                  <p className="text-xs text-neutral-400 font-medium">No tienes notificaciones pendientes</p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {visibleNotifications.map(notification => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      isHistorical={notification.route.history}
-                      onClick={handleSelect}
-                      onMarkRead={markAsRead}
-                      isSelecting={selectingId === notification.id}
-                      isConfirming={confirmingId === notification.id}
-                      onConfirm={n => proceedToNotification(n, true)}
-                      onCancelConfirm={() => setConfirmingId(null)}
-                    />
-                  ))}
-
-                  {hasMore && (
-                    <button
-                      type="button"
-                      onClick={() => loadMore()}
-                      disabled={loadingMore}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
-                    >
-                      {loadingMore ? <Spinner size={12} /> : "Cargar más"}
-                    </button>
-                  )}
-                </div>
-              )}
-            </VerticalScroll>
-          </div>
-
-          <div className="shrink-0 p-2 select-none">
-            {visibleNotifications.length === 0 ? (
-              <div className="flex w-full items-center justify-center gap-1.5 py-1.5 text-center text-xs text-neutral-500">
-                <CheckCircle2 size={13} className="text-neutral-600 shrink-0" />
-                Estás al día
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleOpenHistory}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200"
-              >
-                <History size={13} />
-                Ver más
-              </button>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+          <PopoverContent
+            data-sidebar-popover
+            side="right"
+            align="start"
+            sideOffset={8}
+            className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
+          >
+            {panelBody}
+          </PopoverContent>
+        </Popover>
+      )}
 
       <NotificationHistoryDialog
         open={historyOpen}
