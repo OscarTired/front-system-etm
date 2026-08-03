@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover"
 
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
 
 import { useNotifications } from "../hooks/use-notifications"
 import { useUnreadCount } from "../hooks/use-unread-count"
@@ -195,19 +196,15 @@ export function NotificationBell({
 
   const panelBody = (
     <>
-      <div className="flex shrink-0 items-center justify-between px-3.5 py-3">
-        <span className="text-sm font-semibold text-neutral-200">
-          Notificaciones
-        </span>
-
+      <div className="flex shrink-0 items-center justify-end px-5 pb-2">
         <button
           type="button"
           onClick={() => markAllAsRead()}
           disabled={visibleNotifications.length === 0}
-          title="Limpiar notificaciones"
-          className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
         >
-          <Eraser size={14} />
+          <Eraser size={13} />
+          Limpiar
         </button>
       </div>
 
@@ -287,6 +284,7 @@ export function NotificationBell({
               size="large"
               className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
             >
+              <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
             </DialogContent>
           </Dialog>
@@ -302,6 +300,11 @@ export function NotificationBell({
             sideOffset={8}
             className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
           >
+            <div className="flex shrink-0 items-center px-3.5 pt-3">
+              <span className="text-sm font-semibold text-neutral-200">
+                Notificaciones
+              </span>
+            </div>
             {panelBody}
           </PopoverContent>
         </Popover>
