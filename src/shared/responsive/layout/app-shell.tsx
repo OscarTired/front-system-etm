@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate, type PanInfo } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -90,6 +90,10 @@ const BUTTON_SPRING = {
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
+  const visualState = useSidebarStore(state => state.visualState)
+  const notifyClipTransitionEnd = useSidebarStore(
+    state => state.notifyClipTransitionEnd,
+  )
 
   const isOpen = mode === "open"
   const x = useMotionValue(0)
@@ -101,13 +105,28 @@ function CompactShell({ children }: Props) {
     return () => controls.stop()
   }, [isOpen, x])
 
+  // Definimos el border-radius según el estado visual (idéntico al comportamiento de Desktop)
+  const borderRadius =
+    visualState === "hidden" || visualState === "curve-closing"
+      ? CURVE_SQUARE
+      : CURVE_ROUNDED
+
+  const handleAnimationComplete = (definition: any) => {
+    if (definition.borderRadius === CURVE_SQUARE) {
+      notifyClipTransitionEnd()
+    }
+  }
+
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
       <motion.div
         style={{ x, touchAction: "pan-y" }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
+        animate={{ borderRadius }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        onAnimationComplete={handleAnimationComplete}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
       >
         <TopBar />
         <div
