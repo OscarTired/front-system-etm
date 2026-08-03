@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
+import { motion, useMotionValue, useTransform, animate } from "motion/react"
 
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
@@ -17,16 +17,14 @@ type Props = {
 }
 
 const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.4 // Umbral más natural tipo iOS (40%)
-const FLICK_VELOCITY_THRESHOLD = 400
+const CLOSE_THRESHOLD_RATIO = 0.35
+const FLICK_VELOCITY_THRESHOLD = 350
 
-// Curva de desaceleración estándar de iOS (cubic-bezier suave sin rebotes)
-const IOS_EASING = [0.32, 0.72, 0, 1] as const
-
-const IOS_SPRING_TRANSITION = {
+// Curva de aceleración exacta de iOS (Apple System Curve)
+const IOS_TRANSITION = {
   type: "tween",
   duration: 0.28,
-  ease: IOS_EASING,
+  ease: [0.32, 0.72, 0, 1],
 } as const
 
 export function CompactShell({ children }: Props) {
@@ -34,31 +32,55 @@ export function CompactShell({ children }: Props) {
   const mode = useMobileNavStore((s) => s.mode)
   const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
 
+  // 1. Motion Value primario en GPU
   const x = useMotionValue(0)
   const isOpen = mode === "open"
   const isDraggingRef = useRef(false)
 
-  // Control programático (Botones: Hamburguesa / Chevron / Click fuera)
+  // 2. Transformaciones reactivas sincronizadas fuera de React (sin re-renders)
+  const backdropOpacity = useTransform(
+    x,
+    [0, DRAWER_REVEAL_OFFSET],
+    [0, 0.45]
+  )
+  const shadowOpacity = useTransform(
+    x,
+    [0, DRAWER_REVEAL_OFFSET],
+    [0, 0.25]
+  )
+
+  // Sincronización programática cuando el estado cambia desde botones externos
   useEffect(() => {
-    // Si el cambio viene de un gesto activo de arrastre, ignoramos la sincronización programática
     if (isDraggingRef.current) return
 
     const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
-    const controls = animate(x, targetX, IOS_SPRING_TRANSITION)
+    const controls = animate(x, targetX, IOS_TRANSITION)
 
     return () => controls.stop()
   }, [isOpen, x])
 
   return (
-    <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
+    <div className="relative h-dvh w-full overflow-hidden select-none bg-[#1d1c1c] text-white">
+      {/* Drawer inferior */}
       <SidebarDrawer />
 
+      {/* Backdrop oscuro dinámico controlado por GPU */}
+      <motion.div
+        style={{ opacity: backdropOpacity }}
+        onClick={closeDrawer}
+        className={cn(
+          "fixed inset-0 z-10 bg-black pointer-events-none transition-pointer-events",
+          isOpen && "pointer-events-auto"
+        )}
+      />
+
+      {/* Tarjeta Principal Desplazable */}
       <motion.div
         drag={isOpen ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0} // Sin resistencia o resorte artificial durante el arrastre
-        dragMomentum={false} // Desactivar el momentum por defecto para controlarlo de forma fluida
+        dragElastic={0}
+        dragMomentum={false}
         onDragStart={() => {
           isDraggingRef.current = true
         }}
@@ -66,12 +88,11 @@ export function CompactShell({ children }: Props) {
           const currentX = x.get()
           const velocityX = info.velocity.x
 
-          // Proyección estilo iOS: estimamos dónde terminaría la tarjeta según la velocidad de la mano
-          const projectedX = currentX + velocityX * 0.12
-
+          // Proyección de inercia para detectar la intención real del gesto
+          const projectedX = currentX + velocityX * 0.1
           const isFlickLeft = velocityX < -FLICK_VELOCITY_THRESHOLD
           const isFlickRight = velocityX > FLICK_VELOCITY_THRESHOLD
-          
+
           let shouldClose = false
 
           if (isFlickLeft) {
@@ -79,32 +100,45 @@ export function CompactShell({ children }: Props) {
           } else if (isFlickRight) {
             shouldClose = false
           } else {
-            // Evaluamos por proyección física + umbral relativo
             shouldClose = projectedX < DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
           }
 
           x.stop()
 
           if (shouldClose) {
-            // Transición fluida a 0 y posterior actualización del store
-            await animate(x, 0, IOS_SPRING_TRANSITION)
+            await animate(x, 0, IOS_TRANSITION)
             closeDrawer()
           } else {
-            // Mantener abierto suavemente
-            animate(x, DRAWER_REVEAL_OFFSET, IOS_SPRING_TRANSITION)
+            animate(x, DRAWER_REVEAL_OFFSET, IOS_TRANSITION)
           }
 
           isDraggingRef.current = false
         }}
-        style={{ x, touchAction: "pan-y" }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
+        style={{
+          x,
+          touchAction: "pan-y",
+          // 3. Forzar composición GPU y aislar layout rendering
+          willChange: "transform",
+          transformTemplate: ({ x }: { x: string | number }) =>
+            `translate3d(${typeof x === "number" ? `${x}px` : x}, 0, 0)`,
+        }}
+        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl"
       >
+        {/* Sombra proyectada dinámicamente según apertura */}
+        <motion.div
+          style={{ opacity: shadowOpacity }}
+          className="pointer-events-none absolute -left-8 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-black/80"
+        />
+
         <TopBar />
+
+        {/* Contenedor optimizado mediante CSS isolation */}
         <div
           inert={isOpen}
+          style={{ contain: "strict" }} // Evita reflows pesados del DOM interior mientras se arrastra
           className={cn(
-            "flex min-h-0 flex-1 flex-col",
-            isOpen && "pointer-events-none select-none"
+            "flex min-h-0 flex-1 flex-col transition-opacity duration-200",
+            isOpen && "pointer-events-none select-none opacity-90"
           )}
         >
           <PullToRefresh>
@@ -118,10 +152,10 @@ export function CompactShell({ children }: Props) {
               {children}
             </VerticalScroll>
           </PullToRefresh>
+
           <BottomNavigation />
         </div>
       </motion.div>
     </div>
   )
 }
-
