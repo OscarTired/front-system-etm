@@ -6,7 +6,6 @@ import { motion, useMotionValue } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
-import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
@@ -28,45 +27,14 @@ function DesktopTopBar() {
   )
 }
 
-const CURVE_RADIUS = 28
-const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
-const CURVE_SQUARE = "0px 0px 0px 0px"
-const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
-
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
-  const visualState = useSidebarStore(state => state.visualState)
-  const notifyClipTransitionEnd = useSidebarStore(
-    state => state.notifyClipTransitionEnd,
-  )
-
-  const borderRadius =
-    visualState === "hidden" || visualState === "curve-closing"
-      ? CURVE_SQUARE
-      : CURVE_ROUNDED
-
-  const handleTransitionEnd = (
-    event: React.TransitionEvent<HTMLElement>,
-  ) => {
-    if (event.target !== event.currentTarget) return
-
-    if (event.propertyName === "border-radius") {
-      notifyClipTransitionEnd()
-    }
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
       <AppSidebar />
 
-      <main
-        onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
-        style={{
-          borderRadius,
-          transition: `border-radius ${TRANSITION_TIMING}`,
-        }}
-      >
+      <main className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505]">
         <DesktopTopBar />
         <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           {children}
@@ -120,7 +88,6 @@ function CompactShell({ children }: Props) {
             openDrawer()
           }
         }}
-        {/* Se restaura la clase original estática rounded-l-[28px] sin interpolaciones */}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
