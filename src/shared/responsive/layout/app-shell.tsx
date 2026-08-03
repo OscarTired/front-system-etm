@@ -1,15 +1,8 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import {
-  motion,
-  useMotionValue,
-  useTransform,
-  animate,
-  type Variants,
-  type Transition,
-} from "motion/react"
+import { motion, AnimatePresence, type Transition } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -28,7 +21,7 @@ type Props = {
 }
 
 /* ==========================================================================
-   DESKTOP SHELL
+   DESKTOP SHELL (100% CSS Acceleration)
    ========================================================================== */
 
 function DesktopTopBar() {
@@ -39,29 +32,18 @@ function DesktopTopBar() {
   )
 }
 
-const CURVE_RADIUS = 28
-const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
-const CURVE_SQUARE = "0px 0px 0px 0px"
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
   const visualState = useSidebarStore((state) => state.visualState)
-  const notifyClipTransitionEnd = useSidebarStore(
-    (state) => state.notifyClipTransitionEnd
-  )
+  const notifyClipTransitionEnd = useSidebarStore((state) => state.notifyClipTransitionEnd)
 
-  const borderRadius =
-    visualState === "hidden" || visualState === "curve-closing"
-      ? CURVE_SQUARE
-      : CURVE_ROUNDED
+  const isCurve = visualState !== "hidden" && visualState !== "curve-closing"
+  const borderRadius = isCurve ? "28px 0px 0px 28px" : "0px"
 
-  const handleTransitionEnd = (
-    event: React.TransitionEvent<HTMLElement>
-  ) => {
-    if (event.target !== event.currentTarget) return
-
-    if (event.propertyName === "border-radius") {
+  const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
+    if (event.target === event.currentTarget && event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
     }
   }
@@ -69,7 +51,6 @@ function DesktopShell({ children }: Props) {
   return (
     <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
       <AppSidebar />
-
       <main
         onTransitionEnd={handleTransitionEnd}
         className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
@@ -79,10 +60,7 @@ function DesktopShell({ children }: Props) {
         }}
       >
         <DesktopTopBar />
-        <div
-          key={pathname}
-          className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
-        >
+        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           {children}
         </div>
       </main>
@@ -91,144 +69,86 @@ function DesktopShell({ children }: Props) {
 }
 
 /* ==========================================================================
-   COMPACT SHELL (MOBILE - ULTRA FLUID 60 FPS / iOS PHYSICS)
+   COMPACT SHELL (MOBILE WEB - OPTIMIZED FOR GESTURES)
    ========================================================================== */
 
 const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.35
-const FLICK_VELOCITY_THRESHOLD = 350
 
-// Curva de transición estilo Apple UIKit (System Curve)
-const IOS_TRANSITION = {
-  type: "tween",
-  duration: 0.28,
-  ease: [0.32, 0.72, 0, 1],
-} as const satisfies Transition
-
-// Contrato de Variantes fuertemente tipado para evitar 'Type widening' en Vercel Build
-export const drawerVariants = {
-  closed: {
-    x: 0,
-    transition: IOS_TRANSITION,
-  },
-  open: {
-    x: DRAWER_REVEAL_OFFSET,
-    transition: IOS_TRANSITION,
-  },
-} satisfies Variants
+// Física tipo Spring (sensación nativa de iOS/Android)
+const IOS_SPRING: Transition = {
+  type: "spring",
+  damping: 26,
+  stiffness: 220,
+  mass: 0.8,
+}
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore((s) => s.mode)
   const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
 
-  // Motion Value primario directamente en GPU
-  const x = useMotionValue(0)
   const isOpen = mode === "open"
-  const isDraggingRef = useRef(false)
 
-  // Transformaciones reactivas fuera del loop de renders de React
-  const backdropOpacity = useTransform(
-    x,
-    [0, DRAWER_REVEAL_OFFSET],
-    [0, 0.45]
-  )
-  const shadowOpacity = useTransform(
-    x,
-    [0, DRAWER_REVEAL_OFFSET],
-    [0, 0.25]
-  )
-
-  // Control programático (Sincronización cuando cambia el store por clics)
+  // Cierre automático al cambiar de página en la Web
   useEffect(() => {
-    if (isDraggingRef.current) return
-
-    const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
-    const controls = animate(x, targetX, IOS_TRANSITION)
-
-    return () => controls.stop()
-  }, [isOpen, x])
+    if (isOpen) {
+      closeDrawer()
+    }
+  }, [pathname])
 
   return (
     <div className="relative h-dvh w-full overflow-hidden select-none bg-[#1d1c1c] text-white">
-      {/* Drawer Inferior */}
+      {/* Menú/Drawer Trasero */}
       <SidebarDrawer />
 
-      {/* Overlay Oscuro Dinámico */}
-      <motion.div
-        style={{ opacity: backdropOpacity }}
-        onClick={closeDrawer}
-        className={cn(
-          "fixed inset-0 z-10 bg-black pointer-events-none transition-pointer-events",
-          isOpen && "pointer-events-auto"
+      {/* Overlay de Fondo */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.45 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeDrawer}
+            className="fixed inset-0 z-10 bg-black pointer-events-auto"
+          />
         )}
-      />
+      </AnimatePresence>
 
-      {/* Tarjeta Principal Interactiva */}
+      {/* Tarjeta Principal Interactiva (Arrastre Horizontal) */}
       <motion.div
         drag={isOpen ? "x" : false}
-        dragDirectionLock
-        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0}
-        dragMomentum={false}
-        onDragStart={() => {
-          isDraggingRef.current = true
-        }}
-        onDragEnd={async (_event, info) => {
-          const currentX = x.get()
-          const velocityX = info.velocity.x
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.08}
+        onDragEnd={(_, info) => {
+          // Si arrastra > 60px a la izquierda o hace un "flick" veloz, cerramos
+          const isFlickLeft = info.velocity.x < -280
+          const isDraggedFarEnough = info.offset.x < -60
 
-          // Proyección de inercia para predecir la intención del usuario
-          const projectedX = currentX + velocityX * 0.1
-          const isFlickLeft = velocityX < -FLICK_VELOCITY_THRESHOLD
-          const isFlickRight = velocityX > FLICK_VELOCITY_THRESHOLD
-
-          let shouldClose = false
-
-          if (isFlickLeft) {
-            shouldClose = true
-          } else if (isFlickRight) {
-            shouldClose = false
-          } else {
-            shouldClose = projectedX < DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
-          }
-
-          x.stop()
-
-          if (shouldClose) {
-            await animate(x, 0, IOS_TRANSITION)
+          if (isFlickLeft || isDraggedFarEnough) {
             closeDrawer()
-          } else {
-            animate(x, DRAWER_REVEAL_OFFSET, IOS_TRANSITION)
           }
-
-          isDraggingRef.current = false
         }}
-        style={{
-          x,
-          touchAction: "pan-y",
-          willChange: "transform",
-        }}
-        transformTemplate={({ x }: { x: string | number }) =>
-          `translate3d(${typeof x === "number" ? `${x}px` : x}, 0, 0)`
-        }
-        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl"
+        initial={false}
+        animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
+        transition={IOS_SPRING}
+        style={{ touchAction: "pan-y" }} // Crucial para Web: no bloquea el scroll vertical
+        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl will-change-transform"
       >
-        {/* Sombra Lateral Dinámica */}
+        {/* Sombra de separación */}
         <motion.div
-          style={{ opacity: shadowOpacity }}
-          className="pointer-events-none absolute -left-8 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-black/80"
+          animate={{ opacity: isOpen ? 0.3 : 0 }}
+          className="pointer-events-none absolute -left-8 top-0 bottom-0 w-8 bg-linear-to-r from-transparent to-black"
         />
 
         <TopBar />
 
-        {/* Isolation Boundary (Aísla reflows internos durante el gesto) */}
+        {/* Vista/Contenido Principal */}
         <div
           inert={isOpen}
-          style={{ contain: "strict" }}
           className={cn(
             "flex min-h-0 flex-1 flex-col transition-opacity duration-200",
-            isOpen && "pointer-events-none select-none opacity-90"
+            isOpen && "opacity-90 pointer-events-none select-none"
           )}
         >
           <PullToRefresh>
@@ -267,4 +187,3 @@ export function AppShell({ children }: Props) {
 
   return <DesktopShell>{children}</DesktopShell>
 }
-
