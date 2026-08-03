@@ -158,6 +158,7 @@ export function VerticalScroll({
 
       <div
         ref={containerRef}
+        data-vertical-scroll-container
         style={{
           ...style,
           WebkitMaskImage: maskImage,
