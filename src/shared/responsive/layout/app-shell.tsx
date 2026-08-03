@@ -142,6 +142,7 @@ function CompactShell({ children }: Props) {
 
       <motion.div
         drag={isOpen ? "x" : false}
+        dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
