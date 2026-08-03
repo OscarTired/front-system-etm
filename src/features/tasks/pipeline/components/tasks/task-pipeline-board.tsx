@@ -32,29 +32,15 @@ export function TaskPipelineBoard({
   kpiTasks,
   loading = false,
 }: Props) {
-
   const { isMobile } = useResponsive()
 
-  const [expandedKey, setExpandedKey] =
-    useState<string | null>(null)
-
-  const [activeOverlayKey, setActiveOverlayKey] =
-    useState<string | null>(null)
-
-  const [pendingAutoExpandKey, setPendingAutoExpandKey] =
-    useState<string | null>(null)
-
-  const [openTaskDialog, setOpenTaskDialog] =
-    useState(false)
-
-  const [hoveringHeader, setHoveringHeader] =
-    useState(false)
-
-  const [canScrollLeft, setCanScrollLeft] =
-    useState(false)
-
-  const [canScrollRight, setCanScrollRight] =
-    useState(false)
+  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [activeOverlayKey, setActiveOverlayKey] = useState<string | null>(null)
+  const [pendingAutoExpandKey, setPendingAutoExpandKey] = useState<string | null>(null)
+  const [openTaskDialog, setOpenTaskDialog] = useState(false)
+  const [hoveringHeader, setHoveringHeader] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
 
   const {
     containerRef,
@@ -64,86 +50,53 @@ export function TaskPipelineBoard({
     stopDragging,
   } = useDragScroll()
 
-  const { leftFade, rightFade } =
-    useHorizontalFade({ containerRef })
+  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
 
   const prevTasksRef = useRef<Task[]>([])
 
   useEffect(() => {
-
     const prev = prevTasksRef.current
 
     if (prev.length === 0) {
-
       prevTasksRef.current = tasks
-
       return
-
     }
 
     let detectedKey: string | null = null
 
     for (const task of tasks) {
-
       const prevTask = prev.find(t => t.id === task.id)
-
-      if (!prevTask) {
-        continue
-      }
+      if (!prevTask) continue
 
       for (const step of task.workflowSteps) {
+        if (step.status !== "PENDING") continue
 
-        if (step.status !== "PENDING") {
-          continue
-        }
-
-        const prevStep = prevTask.workflowSteps.find(
-          s => s.id === step.id,
-        )
-
+        const prevStep = prevTask.workflowSteps.find(s => s.id === step.id)
         if (prevStep && prevStep.status !== "PENDING") {
-
           detectedKey = `${task.id}:${step.processCode}`
-
           break
-
         }
-
       }
 
-      if (detectedKey) {
-        break
-      }
-
+      if (detectedKey) break
     }
 
     if (detectedKey) {
-
       if (activeOverlayKey !== null) {
-
         setPendingAutoExpandKey(detectedKey)
-
       } else {
-
         setExpandedKey(detectedKey)
-
       }
-
     }
 
     prevTasksRef.current = tasks
-
   }, [tasks, activeOverlayKey])
 
   useEffect(() => {
-
     if (activeOverlayKey === null && pendingAutoExpandKey !== null) {
-
       setExpandedKey(pendingAutoExpandKey)
       setPendingAutoExpandKey(null)
-
     }
-
   }, [activeOverlayKey, pendingAutoExpandKey])
 
   const handleOverlayOpenChange = useCallback(
@@ -154,123 +107,81 @@ export function TaskPipelineBoard({
   )
 
   const updateArrows = useCallback(() => {
-
     const el = containerRef.current
-
-    if (!el) {
-      return
-    }
+    if (!el) return
 
     setCanScrollLeft(el.scrollLeft > 0)
-
     setCanScrollRight(
       el.scrollLeft + el.clientWidth < el.scrollWidth - 1
     )
-
   }, [containerRef])
 
   useEffect(() => {
-
-    // En mobile no existe el contenedor de drag-scroll horizontal,
-    // así que este listener no tiene nada que observar.
-    if (isMobile) {
-      return
-    }
+    if (isMobile) return
 
     const el = containerRef.current
-
-    if (!el) {
-      return
-    }
+    if (!el) return
 
     updateArrows()
 
     el.addEventListener("scroll", updateArrows, { passive: true })
-
     const observer = new ResizeObserver(updateArrows)
-
     observer.observe(el)
 
     return () => {
-
       el.removeEventListener("scroll", updateArrows)
       observer.disconnect()
-
     }
-
   }, [updateArrows, containerRef, isMobile])
 
   function scrollLeft() {
-
     containerRef.current?.scrollBy({
       left: -SCROLL_STEP,
       behavior: "smooth",
     })
-
   }
 
   function scrollRight() {
-
     containerRef.current?.scrollBy({
       left: SCROLL_STEP,
       behavior: "smooth",
     })
-
   }
 
   function toggleCard(key: string) {
-
-    if (activeOverlayKey !== null) {
-      return
-    }
+    if (activeOverlayKey !== null) return
 
     setExpandedKey(current =>
       current === key ? null : key,
     )
-
   }
 
   const columns = useMemo(() => {
-
     const grouped = new Map(
       PIPELINE_PROCESS_ORDER.map(code => [code, [] as Task[]]),
     )
 
     for (const task of tasks) {
-
       const processes = getTaskProcesses(task)
-
       for (const process of processes) {
         grouped.get(process)?.push(task)
       }
-
     }
 
     return grouped
-
   }, [tasks])
 
   if (loading) {
     return <TaskPipelineSkeleton />
   }
 
-  // ---------- Rama mobile: selector + carrusel de columnas ----------
+  // ---------- Rama mobile ----------
   if (isMobile) {
-
     return (
-
-      // Sin h-full/overflow-hidden: el contenido (KPI + selector +
-      // lista completa de cards) fluye con su alto real, y el
-      // <main> del AppShell lo scrollea como página normal.
-      // pb-28: reserva espacio abajo para que la última tarjeta no
-      // quede tapada por el FAB de "Nueva tarea" (fixed, bottom-20 +
-      // tamaño del botón) cuando se scrollea hasta el final.
       <div className="flex flex-col pb-28">
-
         <TaskPipelineHeader tasks={kpiTasks} />
 
         <div className="mt-3">
-
           <MobilePipelineCarousel
             tasks={tasks}
             columns={columns}
@@ -279,33 +190,25 @@ export function TaskPipelineBoard({
             activeOverlayKey={activeOverlayKey}
             onOverlayOpenChange={handleOverlayOpenChange}
           />
-
         </div>
 
         {openTaskDialog && (
-
           <TaskDialog
             open
             promptOpenAfterCreate
             onClose={() => setOpenTaskDialog(false)}
           />
-
         )}
-
       </div>
-
     )
-
   }
 
-  // ---------- Rama desktop: sin cambios ----------
+  // ---------- Rama desktop ----------
   const showLeft = hoveringHeader && canScrollLeft
   const showRight = hoveringHeader && canScrollRight
 
   return (
-
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-
       <TaskPipelineHeader tasks={kpiTasks} />
 
       <div
@@ -313,7 +216,6 @@ export function TaskPipelineBoard({
         onMouseEnter={() => setHoveringHeader(true)}
         onMouseLeave={() => setHoveringHeader(false)}
       >
-
         <button
           type="button"
           onClick={scrollLeft}
@@ -321,7 +223,7 @@ export function TaskPipelineBoard({
           tabIndex={-1}
           style={{ userSelect: "none", WebkitUserSelect: "none" }}
           className={`
-            absolute left-2 top-5.5 z-20 -translate-y-1/2
+            absolute left-2 top-5.5 z-30 -translate-y-1/2
             flex h-7 w-8 items-center justify-center
             rounded-lg bg-[#18181b]/60 backdrop-blur-xl
             text-neutral-200 transition-opacity duration-200
@@ -339,7 +241,7 @@ export function TaskPipelineBoard({
           tabIndex={-1}
           style={{ userSelect: "none", WebkitUserSelect: "none" }}
           className={`
-            absolute right-2 top-5.5 z-20 -translate-y-1/2
+            absolute right-2 top-5.5 z-30 -translate-y-1/2
             flex h-7 w-8 items-center justify-center
             rounded-lg bg-[#18181b]/60 backdrop-blur-xl
             text-neutral-200 transition-opacity duration-200
@@ -361,7 +263,6 @@ export function TaskPipelineBoard({
           }}
           className="h-full overflow-hidden"
         >
-
           <div
             ref={containerRef}
             onMouseDown={handleMouseDown}
@@ -369,15 +270,14 @@ export function TaskPipelineBoard({
             onMouseUp={stopDragging}
             onMouseLeave={stopDragging}
             onClickCapture={handleClickCapture}
-            className="hide-scrollbar h-full overflow-x-auto overflow-y-hidden cursor-grab active:cursor-grabbing select-none"
+            className="hide-scrollbar h-full min-h-0 w-full overflow-x-auto cursor-grab active:cursor-grabbing select-none"
           >
-
-            <div className="flex h-full w-max flex-col">
-
-              <div className="flex w-max shrink-0 gap-4">
-
+            {/* Contenedor principal con Scroll Vertical Único para TODAS las columnas agrupadas */}
+            <div className="hide-scrollbar flex h-full min-h-0 w-max flex-col overflow-y-auto">
+              
+              {/* Headers Fijos (Sticky) arriba mientras scroleas abajo */}
+              <div className="sticky top-0 z-20 flex w-max shrink-0 gap-4 bg-[#09090b]">
                 {PIPELINE_PROCESS_ORDER.map(code => (
-
                   <TaskProcessColumn
                     key={code}
                     processCode={code}
@@ -388,19 +288,16 @@ export function TaskPipelineBoard({
                     onOverlayOpenChange={handleOverlayOpenChange}
                     headerOnly
                   />
-
                 ))}
-
               </div>
 
+              {/* Bloque de tarjetas que se despliega libremente en vertical */}
               <div
                 data-drag-scroll-ignore
-                className="flex min-h-0 flex-1 w-max gap-4"
+                className="flex w-max gap-4"
                 style={{ cursor: "default" }}
               >
-
                 {PIPELINE_PROCESS_ORDER.map(code => (
-
                   <TaskProcessColumn
                     key={code}
                     processCode={code}
@@ -412,31 +309,21 @@ export function TaskPipelineBoard({
                     onOverlayOpenChange={handleOverlayOpenChange}
                     contentOnly
                   />
-
                 ))}
-
               </div>
 
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       {openTaskDialog && (
-
         <TaskDialog
           open
           promptOpenAfterCreate
           onClose={() => setOpenTaskDialog(false)}
         />
-
       )}
-
     </div>
-
   )
-
 }

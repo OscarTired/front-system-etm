@@ -10,7 +10,6 @@ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { TaskPipelineCard } from "../components/cards/task-pipeline-card"
 import { TaskColumnOperator } from "../components/tasks/task-column-operator"
-import { useColumnScroll } from "../hooks/use-column-scroll"
 import { getTaskProcesses } from "../utils/get-task-process"
 import { getNextIncludedProcess } from "../utils/get-next-process"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
@@ -23,17 +22,9 @@ type SharedProps = {
 }
 
 type SelectionProps = {
-  // Modo selección para "Convocar" (TaskAreaPanel) — con esto
-  // activo, tocar una card la marca/desmarca en vez de expandirla.
-  // Prop opcional que nadie más pasa: el Kanban normal sigue
-  // exactamente igual, sin ningún cambio de comportamiento.
   selectionMode?: boolean
   selectedStepIds?: Set<string>
   onToggleStepSelection?: (stepId: string) => void
-  // "Desconvocar" — solo se muestra el badge (y el botón para
-  // deshacer) cuando el caller pasa esto, y nunca durante
-  // selectionMode (ver ColumnContent). TaskAreaPanel es el único
-  // que lo pasa hoy.
   onUnsummon?: (stepId: string) => void
   unsummoning?: boolean
 }
@@ -106,7 +97,6 @@ function ColumnContent({
   unsummoning,
 }: ContentProps & { fullWidth?: boolean }) {
   const { isMobile } = useResponsive()
-  const columnScrollRef = useColumnScroll()
 
   const rows = allTasks
     ? allTasks.map(task => ({
@@ -116,42 +106,22 @@ function ColumnContent({
     : tasks.map(task => ({ task, included: true }))
 
   return (
-    <div className={cn(
-      "flex shrink-0 flex-col",
-      isMobile || fullWidth ? "w-full" : "h-full w-72 overflow-hidden",
-    )}>
-      <div
-        ref={isMobile || fullWidth ? undefined : columnScrollRef}
-        style={isMobile ? undefined : { touchAction: "pan-y" }}
-        className={cn(
-          "hide-scrollbar overflow-x-hidden px-2 py-2",
-          isMobile || fullWidth
-            ? ""
-            : "min-h-0 flex-1 overflow-y-auto overscroll-contain cursor-grab active:cursor-grabbing",
-        )}
-      >
+    <div
+      className={cn(
+        "flex shrink-0 flex-col",
+        isMobile || fullWidth ? "w-full" : "w-72",
+      )}
+    >
+      <div className="px-2 py-2">
         <div className="flex flex-col gap-2 pb-2">
           {rows.map(({ task, included }) => {
             const key = `${task.id}:${processCode}`
 
             if (!included) {
-              const nextProcess =
-                getNextIncludedProcess(task, processCode)
-
-              const nextDefinition =
-                nextProcess
-                  ? PROCESS_DEFINITIONS[nextProcess]
-                  : null
-
-              const NextIcon =
-                nextDefinition
-                  ? ENTITY_ICONS[nextDefinition.icon]
-                  : null
-
-              const nextBadge =
-                nextDefinition
-                  ? getBadgeColors(nextDefinition.color, "subtle")
-                  : null
+              const nextProcess = getNextIncludedProcess(task, processCode)
+              const nextDefinition = nextProcess ? PROCESS_DEFINITIONS[nextProcess] : null
+              const NextIcon = nextDefinition ? ENTITY_ICONS[nextDefinition.icon] : null
+              const nextBadge = nextDefinition ? getBadgeColors(nextDefinition.color, "subtle") : null
 
               return (
                 <div
@@ -197,41 +167,17 @@ function ColumnContent({
               />
             )
 
-            // No debería pasar acá (included=true implica que el
-            // step existe), pero TypeScript no lo sabe — corta
-            // temprano, no es parte del flujo normal de selección
-            // así que no afecta la animación.
             if (!step) {
               return <div key={key}>{card}</div>
             }
 
             const isSelected = selectedStepIds?.has(step.id) ?? false
-
-            // No seleccionable: ya la está trabajando alguien ahora
-            // mismo (PROGRESS), o el paso ya se terminó del todo
-            // (COMPLETED/REVIEWED) — convocar a cualquiera de estos
-            // tres no tiene sentido, el trabajo ahí ya está en curso
-            // o cerrado.
             const isLocked =
               step.status === "PROGRESS" ||
               step.status === "COMPLETED" ||
               step.status === "REVIEWED"
 
-            // Una sola estructura de DOM para los dos modos (a
-            // propósito): antes selectionMode=true/false renderizaba
-            // dos árboles DISTINTOS (otro wrapper, otra jerarquía), y
-            // React no podía reconciliar eso como "el mismo nodo" —
-            // desmontaba y volvía a montar TaskPipelineCard entera
-            // cada vez que se entraba/salía del modo selección, y la
-            // card repetía su propia animación de entrada (el
-            // "salto"). Con un solo árbol que solo cambia clases/
-            // atributos según selectionMode, la card nunca se
-            // desmonta — lo único que aparece/desaparece de verdad
-            // es el checkbox (su propio animate-checkbox-reveal), y
-            // la card simplemente se reacomoda con el reflow natural
-            // del flex, sin animación propia de "aparición".
             return (
-
               <div
                 key={key}
                 role={selectionMode ? "button" : undefined}
@@ -261,7 +207,6 @@ function ColumnContent({
                   selectionMode && (isLocked ? "cursor-not-allowed" : "cursor-pointer"),
                 )}
               >
-
                 <div
                   className={cn(
                     "flex min-w-0 flex-1 items-center gap-2 transition-opacity duration-200",
@@ -269,7 +214,6 @@ function ColumnContent({
                     selectionMode && isLocked && "opacity-45",
                   )}
                 >
-
                   <div className="min-w-0 flex-1">
                     {card}
                   </div>
@@ -281,36 +225,15 @@ function ColumnContent({
                       unsummoning={unsummoning}
                     />
                   )}
-
                 </div>
 
                 {selectionMode && (
-
                   isLocked ? (
-
-                    // Nada de checkbox acá — en su lugar, un
-                    // indicador chico de por qué no se puede tocar.
-                    // Mismo ancho reservado que el checkbox real,
-                    // para que todas las filas de la columna sigan
-                    // alineadas entre sí.
                     <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-neutral-600">
                       <Lock size={13} />
                     </div>
-
                   ) : (
-
-                    // animate-checkbox-reveal corre UNA vez al
-                    // montar ESTE slot puntual (que ahora sí
-                    // coincide de verdad con "recién entré en modo
-                    // selección", ya que la card de al lado no se
-                    // remonta más) — por eso la card "se encoge":
-                    // este slot arranca en 0 de ancho y crece,
-                    // empujando al vecino flex-1. El fill/borde del
-                    // check sí anima con transition normal (no es
-                    // un mount, es un toggle) cada vez que cambia
-                    // isSelected.
                     <div className="animate-checkbox-reveal flex w-9 shrink-0 items-center justify-center overflow-hidden">
-
                       <div
                         className={cn(
                           "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
@@ -321,13 +244,9 @@ function ColumnContent({
                       >
                         <Check size={14} strokeWidth={3} />
                       </div>
-
                     </div>
-
                   )
-
                 )}
-
               </div>
             )
           })}
@@ -398,7 +317,7 @@ export function TaskProcessColumn({
   return (
     <section
       className={cn(
-        "flex h-full min-h-0 shrink-0 flex-col overflow-hidden",
+        "flex h-full min-h-0 shrink-0 flex-col",
         fullWidth ? "w-full" : "w-72",
       )}
     >
