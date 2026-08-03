@@ -1,8 +1,8 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence, type Transition } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -20,10 +20,6 @@ type Props = {
   children: ReactNode
 }
 
-/* ==========================================================================
-   DESKTOP SHELL
-   ========================================================================== */
-
 function DesktopTopBar() {
   return (
     <div className="flex h-12 shrink-0 items-center px-3">
@@ -32,18 +28,29 @@ function DesktopTopBar() {
   )
 }
 
+const CURVE_RADIUS = 28
+const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
+const CURVE_SQUARE = "0px 0px 0px 0px"
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
-  const visualState = useSidebarStore((state) => state.visualState)
-  const notifyClipTransitionEnd = useSidebarStore((state) => state.notifyClipTransitionEnd)
+  const visualState = useSidebarStore(state => state.visualState)
+  const notifyClipTransitionEnd = useSidebarStore(
+    state => state.notifyClipTransitionEnd,
+  )
 
-  const isCurve = visualState !== "hidden" && visualState !== "curve-closing"
-  const borderRadius = isCurve ? "28px 0px 0px 28px" : "0px"
+  const borderRadius =
+    visualState === "hidden" || visualState === "curve-closing"
+      ? CURVE_SQUARE
+      : CURVE_ROUNDED
 
-  const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
-    if (event.target === event.currentTarget && event.propertyName === "border-radius") {
+  const handleTransitionEnd = (
+    event: React.TransitionEvent<HTMLElement>,
+  ) => {
+    if (event.target !== event.currentTarget) return
+
+    if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
     }
   }
@@ -51,6 +58,7 @@ function DesktopShell({ children }: Props) {
   return (
     <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
       <AppSidebar />
+
       <main
         onTransitionEnd={handleTransitionEnd}
         className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
@@ -68,77 +76,73 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-/* ==========================================================================
-   COMPACT SHELL (MOBILE)
-   ========================================================================== */
-
 const DRAWER_REVEAL_OFFSET = 248
+const CLOSE_THRESHOLD_RATIO = 0.25
+const FLICK_VELOCITY_THRESHOLD = 500
 
-const SPRING_TRANSITION: Transition = {
-  type: "spring",
-  damping: 25,
-  stiffness: 200,
-  mass: 0.8,
-}
+// Transición suave unificada mediante easing cúbico
+const SMOOTH_TRANSITION = {
+  type: "tween",
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
+} as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
-  const mode = useMobileNavStore((s) => s.mode)
-  const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
+  const mode = useMobileNavStore(s => s.mode)
+  const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
+  const x = useMotionValue(0)
   const isOpen = mode === "open"
+  const selfAnimatedCloseRef = useRef(false)
+
+  // Control de animación programática (Botones: hamburguesa / chevron)
+  useEffect(() => {
+    if (selfAnimatedCloseRef.current) {
+      selfAnimatedCloseRef.current = false
+      return
+    }
+
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
+    return () => controls.stop()
+  }, [isOpen, x])
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden select-none bg-[#1d1c1c] text-white">
-      {/* Drawer Inferior */}
+    <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
-      {/* Overlay Oscuro Dinámico */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.45 }}
-            exit={{ opacity: 0 }}
-            onClick={closeDrawer}
-            className="fixed inset-0 z-10 bg-black pointer-events-auto"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Tarjeta Principal Interactiva */}
       <motion.div
         drag={isOpen ? "x" : false}
         dragDirectionLock
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
-        onDragEnd={(_, info) => {
-          const isFlickLeft = info.velocity.x < -300
-          const isDraggedFarEnough = info.offset.x < -60
-          
-          if (isFlickLeft || isDraggedFarEnough) {
+        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
+        dragElastic={0}
+        dragMomentum={false}
+        onDragEnd={async (_event, info) => {
+          const currentX = x.get()
+          const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+          const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
+          const shouldClose = currentX < closeThreshold || isFastFlickLeft
+
+          x.stop()
+
+          if (shouldClose) {
+            selfAnimatedCloseRef.current = true
+            // Espera a completar la animación antes de cambiar el estado global
+            await animate(x, 0, SMOOTH_TRANSITION)
             closeDrawer()
+          } else {
+            animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
           }
         }}
-        initial={false}
-        animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
-        transition={SPRING_TRANSITION}
-        className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl touch-pan-y"
+        style={{ x, touchAction: "pan-y" }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
-        {/* Sombra Lateral Dinámica */}
-        <motion.div
-          animate={{ opacity: isOpen ? 0.25 : 0 }}
-          className="pointer-events-none absolute -left-8 top-0 bottom-0 w-8 bg-linear-to-r from-transparent to-black"
-        />
-
         <TopBar />
-
-        {/* Contenido Principal */}
         <div
           inert={isOpen}
           className={cn(
-            "flex min-h-0 flex-1 flex-col transition-opacity duration-200",
-            isOpen && "opacity-90 pointer-events-none"
+            "flex min-h-0 flex-1 flex-col",
+            isOpen && "pointer-events-none select-none"
           )}
         >
           <PullToRefresh>
@@ -152,17 +156,12 @@ function CompactShell({ children }: Props) {
               {children}
             </VerticalScroll>
           </PullToRefresh>
-
           <BottomNavigation />
         </div>
       </motion.div>
     </div>
   )
 }
-
-/* ==========================================================================
-   MAIN APP SHELL ROUTER
-   ========================================================================== */
 
 export function AppShell({ children }: Props) {
   const { isMobile, ready } = useResponsive()
@@ -172,8 +171,16 @@ export function AppShell({ children }: Props) {
   }
 
   if (isMobile) {
-    return <CompactShell>{children}</CompactShell>
+    return (
+      <CompactShell>
+        {children}
+      </CompactShell>
+    )
   }
 
-  return <DesktopShell>{children}</DesktopShell>
+  return (
+    <DesktopShell>
+      {children}
+    </DesktopShell>
+  )
 }
