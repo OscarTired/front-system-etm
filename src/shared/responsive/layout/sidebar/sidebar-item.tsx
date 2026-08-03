@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import type { LucideIcon } from "lucide-react"
 import { cn } from "@/shared/utils/utils"
 import { SidebarRow } from "../sidebar/sidebar-row"
 
@@ -8,7 +9,7 @@ type Props = {
   href: string
   label: string
   active: boolean
-  icon: React.ElementType
+  icon: LucideIcon // <-- Se actualiza aquí para coincidir con SidebarRow
   count?: number
   collapsed?: boolean
   isDrawer?: boolean

@@ -124,26 +124,12 @@ export function NotificationBell({
             open && "bg-white/20 text-white",
           )}
         >
-          <Bell size={17} strokeWidth={2.2} />
+          <Bell size={16} strokeWidth={2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500/15 font-semibold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 font-semibold text-white text-[10px]">
               {count > 9 ? "9+" : count}
             </span>
           )}
-        </button>
-      )
-    }
-
-    if (isDrawer) {
-      return (
-        <button type="button" className="w-full text-left">
-          <SidebarRow
-            icon={Bell}
-            label="Notificaciones"
-            active={open}
-            count={count > 0 ? count : undefined}
-            isDrawer
-          />
         </button>
       )
     }

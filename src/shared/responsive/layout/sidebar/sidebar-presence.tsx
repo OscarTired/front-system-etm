@@ -45,11 +45,7 @@ type PresenceUser = {
   lastSeenAt?: string | null
 }
 
-function UserRow({
-  user,
-}: {
-  user: PresenceUser
-}) {
+function UserRow({ user }: { user: PresenceUser }) {
   return (
     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 w-full min-w-0 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -156,29 +152,15 @@ export function SidebarPresence({
   }, [allUsers, query, expanded])
 
   const showToggle = !query.trim() && allUsers.length > DEFAULT_VISIBLE_COUNT
-
   const isTopbar = variant === "topbar"
 
   if (!currentUser) {
     if (isTopbar) {
       return <div className="size-10 shrink-0 rounded-full bg-white/10 animate-pulse" />
     }
-    if (collapsed) {
-      return (
-        <div ref={presenceRef} className="mx-1 my-1 px-0 flex justify-center">
-          <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
-        </div>
-      )
-    }
-
     return (
-      <div ref={presenceRef} className="mx-1 my-1 px-3 py-1">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5">
-            <div className="h-5 w-5 shrink-0 rounded-full bg-muted animate-pulse" />
-            <div className="h-2.5 w-20 rounded bg-muted animate-pulse" />
-          </div>
-        </div>
+      <div ref={presenceRef} className="mx-1 my-1 px-1">
+        <div className="h-9 w-full rounded-xl bg-neutral-800/50 animate-pulse" />
       </div>
     )
   }
@@ -205,26 +187,12 @@ export function SidebarPresence({
             open && "bg-white/20 text-white",
           )}
         >
-          <Users size={17} strokeWidth={2.2} />
+          <Users size={16} strokeWidth={2} />
           {onlineUsers.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[9px]">
+            <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-black font-bold text-[9px]">
               {onlineUsers.length > 9 ? "9+" : onlineUsers.length}
             </span>
           )}
-        </button>
-      )
-    }
-
-    if (isDrawer) {
-      return (
-        <button type="button" className="w-full text-left">
-          <SidebarRow
-            icon={Users}
-            label="Activos"
-            active={open}
-            count={onlineUsers.length > 0 ? onlineUsers.length : undefined}
-            isDrawer
-          />
         </button>
       )
     }

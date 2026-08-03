@@ -1,25 +1,12 @@
 "use client"
 
+import React from "react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/shared/utils/utils"
 
-export const sidebarRowClassName = ({
-  collapsed = false,
-  active = false,
-}: {
-  collapsed?: boolean
-  active?: boolean
-}) =>
-  cn(
-    "relative flex w-full items-center gap-3 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out select-none",
-    collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
-    active
-      ? "bg-white/15 text-white shadow-sm"
-      : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white"
-  )
-
-export type SidebarRowProps = {
-  icon: LucideIcon | React.ElementType
+// Cambiamos ButtonHTMLAttributes<HTMLButtonElement> por HTMLAttributes<HTMLDivElement>
+export type SidebarRowProps = React.HTMLAttributes<HTMLDivElement> & {
+  icon: LucideIcon
   label: string
   collapsed?: boolean
   active?: boolean
@@ -37,30 +24,45 @@ export function SidebarRow({
   collapsed = false,
   active = false,
   count,
-  badgeColor = "bg-white/10 text-white",
-  collapsedBadgeColor = "bg-cyan-500 text-white",
+  badgeColor = "bg-neutral-800 text-neutral-300",
+  collapsedBadgeColor,
   badgeAnimated = false,
+  isDrawer = false,
   size = "md",
+  className,
+  ...props
 }: SidebarRowProps) {
+  const hasCount = count !== undefined && count !== null && count !== ""
+
   return (
-    <div className={sidebarRowClassName({ collapsed, active })}>
-      {/* El ícono maneja su escala y desplazamiento interno al colapsar */}
-      <div className="relative flex shrink-0 items-center justify-center transition-transform duration-300 ease-in-out">
+    <div
+      className={cn(
+        "group relative flex w-full items-center rounded-xl font-medium transition-colors duration-200 select-none overflow-visible",
+        size === "sm" ? "h-9 text-xs" : "h-10 text-xs font-semibold",
+        active
+          ? "bg-white/10 text-white shadow-sm"
+          : "text-neutral-400 hover:bg-white/5 hover:text-neutral-200",
+        collapsed ? "justify-center px-0" : "px-2.5",
+        className
+      )}
+      {...props}
+    >
+      {/* Contenedor fijo de 32x32px (size-8) */}
+      <div className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-lg">
         <Icon
-          size={size === "sm" ? 16 : 18}
           className={cn(
-            "shrink-0 transition-all duration-300 ease-in-out",
-            active ? "text-white scale-105" : "text-neutral-400 group-hover:text-white",
-            collapsed && "scale-110"
+            "size-4 shrink-0 transition-colors",
+            active ? "text-white" : "text-neutral-400 group-hover:text-neutral-200"
           )}
+          strokeWidth={2}
         />
 
-        {/* Badge colapsado */}
-        {collapsed && count !== undefined && (
+        {/* Burbuja en modo COLAPSADO */}
+        {collapsed && hasCount && (
           <span
             className={cn(
-              "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-md transition-all duration-300",
-              collapsedBadgeColor,
+              "absolute -top-1 -right-2 z-10 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none shadow-md ring-2 ring-[#171717] transition-all pointer-events-none",
+              collapsedBadgeColor || badgeColor,
               badgeAnimated && "animate-pulse"
             )}
           >
@@ -69,29 +71,24 @@ export function SidebarRow({
         )}
       </div>
 
-      {/* Texto desplegado */}
+      {/* Contenido en modo EXPANDIDO */}
       {!collapsed && (
-        <span
-          className={cn(
-            "flex-1 truncate transition-opacity duration-300 ease-in-out",
-            active ? "font-semibold text-white" : "text-neutral-300"
-          )}
-        >
-          {label}
-        </span>
-      )}
+        <div className="ml-2 flex flex-1 items-center justify-between min-w-0 pr-1">
+          <span className="truncate">{label}</span>
 
-      {/* Badge expandido */}
-      {!collapsed && count !== undefined && (
-        <span
-          className={cn(
-            "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold transition-all duration-300",
-            badgeColor,
-            badgeAnimated && "animate-pulse"
+          {/* Burbuja en modo EXPANDIDO */}
+          {hasCount && (
+            <span
+              className={cn(
+                "ml-2 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none transition-all",
+                badgeColor,
+                badgeAnimated && "animate-pulse"
+              )}
+            >
+              {count}
+            </span>
           )}
-        >
-          {count}
-        </span>
+        </div>
       )}
     </div>
   )
