@@ -90,8 +90,6 @@ const BUTTON_SPRING = {
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
-  const closeDrawer = useMobileNavStore(s => s.closeDrawer)
-  const openDrawer = useMobileNavStore(s => s.openDrawer)
 
   const isOpen = mode === "open"
   const x = useMotionValue(0)
@@ -103,44 +101,11 @@ function CompactShell({ children }: Props) {
     return () => controls.stop()
   }, [isOpen, x])
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const currentX = x.get()
-    const velocityX = info.velocity.x
-
-    // 1. Proyectamos dónde terminaría el panel según la velocidad real del usuario
-    const projectedX = currentX + velocityX * 0.15
-
-    // 2. Decisión lógica basada en proyección e inercia
-    const shouldBeOpen = projectedX > DRAWER_REVEAL_OFFSET / 2
-    const targetX = shouldBeOpen ? DRAWER_REVEAL_OFFSET : 0
-
-    // 3. Sincronizamos el store de Zustand de inmediato
-    if (shouldBeOpen && !isOpen) {
-      openDrawer()
-    } else if (!shouldBeOpen && isOpen) {
-      closeDrawer()
-    }
-
-    // 4. Continuación fluida: animate conserva la velocidad inicial del gesto (velocityX)
-    animate(x, targetX, {
-      type: "spring",
-      velocity: velocityX,
-      stiffness: 300,
-      damping: 32,
-      mass: 0.2,
-    })
-  }
-
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
       <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0.05}
-        dragMomentum={false}
-        onDragEnd={handleDragEnd}
         style={{ x, touchAction: "pan-y" }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
