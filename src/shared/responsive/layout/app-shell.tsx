@@ -4,10 +4,6 @@ import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, useMotionValue, animate } from "motion/react"
 
-import { AppSidebar } from "./app-sidebar"
-import { SidebarShowButton } from "./sidebar/sidebar-show-button"
-import { useSidebarStore } from "@/shared/stores/sidebar-store"
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
@@ -20,90 +16,36 @@ type Props = {
   children: ReactNode
 }
 
-function DesktopTopBar() {
-  return (
-    <div className="flex h-12 shrink-0 items-center px-3">
-      <SidebarShowButton />
-    </div>
-  )
-}
-
-const CURVE_RADIUS = 28
-const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
-const CURVE_SQUARE = "0px 0px 0px 0px"
-const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
-
-function DesktopShell({ children }: Props) {
-  const pathname = usePathname()
-  const visualState = useSidebarStore(state => state.visualState)
-  const notifyClipTransitionEnd = useSidebarStore(
-    state => state.notifyClipTransitionEnd,
-  )
-
-  const borderRadius =
-    visualState === "hidden" || visualState === "curve-closing"
-      ? CURVE_SQUARE
-      : CURVE_ROUNDED
-
-  const handleTransitionEnd = (
-    event: React.TransitionEvent<HTMLElement>,
-  ) => {
-    if (event.target !== event.currentTarget) return
-
-    if (event.propertyName === "border-radius") {
-      notifyClipTransitionEnd()
-    }
-  }
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
-      <AppSidebar />
-
-      <main
-        onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
-        style={{
-          borderRadius,
-          transition: `border-radius ${TRANSITION_TIMING}`,
-        }}
-      >
-        <DesktopTopBar />
-        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          {children}
-        </div>
-      </main>
-    </div>
-  )
-}
-
 const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.25
-const FLICK_VELOCITY_THRESHOLD = 500
+const CLOSE_THRESHOLD_RATIO = 0.4 // Umbral más natural tipo iOS (40%)
+const FLICK_VELOCITY_THRESHOLD = 400
 
-// Transición suave unificada mediante easing cúbico
-const SMOOTH_TRANSITION = {
+// Curva de desaceleración estándar de iOS (cubic-bezier suave sin rebotes)
+const IOS_EASING = [0.32, 0.72, 0, 1] as const
+
+const IOS_SPRING_TRANSITION = {
   type: "tween",
-  duration: 0.3,
-  ease: [0.22, 1, 0.36, 1],
+  duration: 0.28,
+  ease: IOS_EASING,
 } as const
 
-function CompactShell({ children }: Props) {
+export function CompactShell({ children }: Props) {
   const pathname = usePathname()
-  const mode = useMobileNavStore(s => s.mode)
-  const closeDrawer = useMobileNavStore(s => s.closeDrawer)
+  const mode = useMobileNavStore((s) => s.mode)
+  const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
 
   const x = useMotionValue(0)
   const isOpen = mode === "open"
-  const selfAnimatedCloseRef = useRef(false)
+  const isDraggingRef = useRef(false)
 
-  // Control de animación programática (Botones: hamburguesa / chevron)
+  // Control programático (Botones: Hamburguesa / Chevron / Click fuera)
   useEffect(() => {
-    if (selfAnimatedCloseRef.current) {
-      selfAnimatedCloseRef.current = false
-      return
-    }
+    // Si el cambio viene de un gesto activo de arrastre, ignoramos la sincronización programática
+    if (isDraggingRef.current) return
 
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
+    const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
+    const controls = animate(x, targetX, IOS_SPRING_TRANSITION)
+
     return () => controls.stop()
   }, [isOpen, x])
 
@@ -115,24 +57,44 @@ function CompactShell({ children }: Props) {
         drag={isOpen ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0}
-        dragMomentum={false}
+        dragElastic={0} // Sin resistencia o resorte artificial durante el arrastre
+        dragMomentum={false} // Desactivar el momentum por defecto para controlarlo de forma fluida
+        onDragStart={() => {
+          isDraggingRef.current = true
+        }}
         onDragEnd={async (_event, info) => {
           const currentX = x.get()
-          const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
-          const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
-          const shouldClose = currentX < closeThreshold || isFastFlickLeft
+          const velocityX = info.velocity.x
+
+          // Proyección estilo iOS: estimamos dónde terminaría la tarjeta según la velocidad de la mano
+          const projectedX = currentX + velocityX * 0.12
+
+          const isFlickLeft = velocityX < -FLICK_VELOCITY_THRESHOLD
+          const isFlickRight = velocityX > FLICK_VELOCITY_THRESHOLD
+          
+          let shouldClose = false
+
+          if (isFlickLeft) {
+            shouldClose = true
+          } else if (isFlickRight) {
+            shouldClose = false
+          } else {
+            // Evaluamos por proyección física + umbral relativo
+            shouldClose = projectedX < DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+          }
 
           x.stop()
 
           if (shouldClose) {
-            selfAnimatedCloseRef.current = true
-            // Espera a completar la animación antes de cambiar el estado global
-            await animate(x, 0, SMOOTH_TRANSITION)
+            // Transición fluida a 0 y posterior actualización del store
+            await animate(x, 0, IOS_SPRING_TRANSITION)
             closeDrawer()
           } else {
-            animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
+            // Mantener abierto suavemente
+            animate(x, DRAWER_REVEAL_OFFSET, IOS_SPRING_TRANSITION)
           }
+
+          isDraggingRef.current = false
         }}
         style={{ x, touchAction: "pan-y" }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
@@ -163,24 +125,3 @@ function CompactShell({ children }: Props) {
   )
 }
 
-export function AppShell({ children }: Props) {
-  const { isMobile, ready } = useResponsive()
-
-  if (!ready) {
-    return <div className="h-full bg-[#050505]" />
-  }
-
-  if (isMobile) {
-    return (
-      <CompactShell>
-        {children}
-      </CompactShell>
-    )
-  }
-
-  return (
-    <DesktopShell>
-      {children}
-    </DesktopShell>
-  )
-}
