@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
+import { motion, useMotionValue, useTransform, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -80,6 +80,7 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.25
 const FLICK_VELOCITY_THRESHOLD = 500
 
+// Transición suave unificada mediante easing cúbico
 const SMOOTH_TRANSITION = {
   type: "tween",
   duration: 0.3,
@@ -92,33 +93,33 @@ function CompactShell({ children }: Props) {
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const x = useMotionValue(0)
+  const borderRadiusValue = useMotionValue(0)
+  const borderRadius = useTransform(borderRadiusValue, (r) => `${r}px 0px 0px ${r}px`)
   const isOpen = mode === "open"
   const selfAnimatedCloseRef = useRef(false)
 
-  // Controla la activación del clipPath/bordes SOLO al terminar el cierre
-  const [applyClipPath, setApplyClipPath] = useState(false)
-
+  // El borde curvo NO seguía la posición de x en cada frame — eso lo
+  // corregí, se calculaba "en pleno movimiento" del drag. Ahora es un
+  // motion value PROPIO que solo se anima en los dos mismos puntos
+  // donde `x` también se anima (acá abajo y en onDragEnd) — nunca
+  // durante el arrastre en sí. Como ambos arrancan en el MISMO
+  // momento con la MISMA transición, se mantienen sincronizados por
+  // construcción (disparados juntos), no por seguir a `x` en vivo.
   useEffect(() => {
     if (selfAnimatedCloseRef.current) {
       selfAnimatedCloseRef.current = false
       return
     }
 
-    if (isOpen) {
-      setApplyClipPath(false)
+    const target = isOpen ? DRAWER_REVEAL_OFFSET : 0
+    const radiusTarget = isOpen ? CURVE_RADIUS : 0
+    const xControls = animate(x, target, SMOOTH_TRANSITION)
+    const radiusControls = animate(borderRadiusValue, radiusTarget, SMOOTH_TRANSITION)
+    return () => {
+      xControls.stop()
+      radiusControls.stop()
     }
-
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, {
-      ...SMOOTH_TRANSITION,
-      onComplete: () => {
-        // Al terminar de cerrar programáticamente (botón), aplicamos el clipPath
-        if (!isOpen) {
-          setApplyClipPath(true)
-        }
-      },
-    })
-    return () => controls.stop()
-  }, [isOpen, x])
+  }, [isOpen, x, borderRadiusValue])
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
@@ -130,9 +131,6 @@ function CompactShell({ children }: Props) {
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
-        onDragStart={() => {
-          setApplyClipPath(false)
-        }}
         onDragEnd={async (_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
@@ -140,25 +138,23 @@ function CompactShell({ children }: Props) {
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
           x.stop()
+          borderRadiusValue.stop()
 
           if (shouldClose) {
             selfAnimatedCloseRef.current = true
-            // 1. Espera a que el deslizamiento físico termine en x = 0
-            await animate(x, 0, SMOOTH_TRANSITION)
-            // 2. Solo al final de todo el movimiento aplicamos el recorte/curva
-            setApplyClipPath(true)
+            // Espera a completar la animación antes de cambiar el estado global
+            await Promise.all([
+              animate(x, 0, SMOOTH_TRANSITION),
+              animate(borderRadiusValue, 0, SMOOTH_TRANSITION),
+            ])
             closeDrawer()
           } else {
             animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
+            animate(borderRadiusValue, CURVE_RADIUS, SMOOTH_TRANSITION)
           }
         }}
-        style={{
-          x,
-          touchAction: "pan-y",
-          borderTopLeftRadius: applyClipPath ? CURVE_RADIUS : 0,
-          borderBottomLeftRadius: applyClipPath ? CURVE_RADIUS : 0,
-        }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform"
+        style={{ x, borderRadius, touchAction: "pan-y" }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
       >
         <TopBar />
         <div
