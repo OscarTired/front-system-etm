@@ -1,5 +1,5 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react"
-import { Trash2, FileInput, FileWarning, AlertTriangle, Eye, Layers, Trash } from "lucide-react"
+import { Trash, Import, FileWarning, AlertTriangle, Eye, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -58,7 +58,10 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [groupBy, setGroupBy] = useState<GroupByType>("none")
+  
+  // Usamos un contador para evitar el parpadeo al pasar por encima de elementos hijos
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const dragCounterRef = useRef(0)
 
   useImperativeHandle(ref, () => ({
     triggerImport: () => fileInputRef.current?.click(),
@@ -150,22 +153,34 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     if (newRows.length > 0) onAddCad(newRows)
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDraggingOver(true)
+    dragCounterRef.current += 1
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDraggingOver(true)
+    }
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDraggingOver(false)
+    dragCounterRef.current -= 1
+    if (dragCounterRef.current === 0) {
+      setIsDraggingOver(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDraggingOver(false)
+    dragCounterRef.current = 0
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       void handleFilesSelected(e.dataTransfer.files)
     }
@@ -198,14 +213,15 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   return (
     <div 
       className="flex h-full max-h-full min-h-0 w-full flex-col overflow-hidden relative"
-      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {/* Indicador visual de Drag & Drop flotante */}
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150">
-          <FileInput className="h-8 w-8 text-primary animate-bounce" />
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150 pointer-events-none">
+          <Import className="h-8 w-8 text-primary animate-bounce" />
           <p className="text-xs font-semibold text-white">Suelta tus archivos CAD aquí</p>
         </div>
       )}
@@ -219,7 +235,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             </Button>
           )}
           <Button size="icon-sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={disabled} title="Importar archivos">
-            <FileInput className="h-4 w-4" />
+            <Import className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -334,7 +350,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                             className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-white/10" 
                           />
                           <Button size="icon-sm" variant="ghost" className="h-7 w-7 text-neutral-400 hover:text-destructive" disabled={disabled} onClick={() => onRemove(row.id)} title="Eliminar">
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>

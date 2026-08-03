@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Box, Layers, Info, Loader2, X } from "lucide-react"
+import { Box, Layers, Info, Loader2 } from "lucide-react"
 
 import { MARK_COLOR } from "../cad/classify-dxf-color"
 import type { PlacedPiece } from "../engine/types"
@@ -119,6 +119,7 @@ export function NestingPage() {
       disabled: project.isRunning,
       onAddCad: project.onAddCad,
       onRemove: project.onRemove,
+      onClearAll: project.onClearAll,
       onUpdateQuantity: project.onUpdateQuantity,
       onPreviewRow: setPreviewRow,
       nextColor: project.nextColor,
@@ -137,13 +138,11 @@ export function NestingPage() {
       <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
         {activePanel === "sheet-pieces" ? (
           <div className="flex h-full flex-col gap-3 overflow-hidden">
-            {/* Plancha fija (no participa del scroll) */}
             <div className="shrink-0 flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3 border border-white/5">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
               <SheetDimensionsFields settings={project.settings} onChange={project.onSettingsChange} />
             </div>
             
-            {/* Piezas con scroll interno exclusivo */}
             <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white/3 p-3 border border-white/5 overflow-hidden">
               <PieceList ref={pieceListRef} {...pieceListProps} />
             </div>
@@ -180,22 +179,22 @@ export function NestingPage() {
             Nestear
           </Button>
         ) : (
-          <div className="flex flex-col gap-2">
-            <Button size="default" variant="outline" className="w-full" onClick={project.onCancel}>
-              <X className="h-4 w-4" />
-              Cancelar
-            </Button>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.round(project.progress * 100)}%` }}
-              />
-            </div>
-            <p className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Calculando… {Math.round(project.progress * 100)}%
-            </p>
-          </div>
+          <Button
+            size="default"
+            variant="outline"
+            className="w-full relative overflow-hidden bg-neutral-900 border-white/10 text-white hover:bg-neutral-900 cursor-pointer"
+            onClick={project.onCancel}
+            title="Haz clic para cancelar"
+          >
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-white transition-all duration-150 pointer-events-none opacity-20"
+              style={{ width: `${Math.round(project.progress * 100)}%` }}
+            />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Calculando... {Math.round(project.progress * 100)}%
+            </span>
+          </Button>
         )}
 
         {project.error && (
@@ -206,7 +205,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="mx-auto flex w-full max-w-400 flex-col h-full min-h-0 overflow-hidden">
+    <div className="mx-auto flex w-full max-w-400 flex-col h-full min-h-0 overflow-hidden relative">
       <input
         ref={projectInputRef}
         type="file"
@@ -251,7 +250,7 @@ export function NestingPage() {
             </div>
           )}
 
-          <div className="min-h-[400px] flex-1 overflow-hidden rounded-xl bg-neutral-900 tablet:min-h-0 border border-white/5">
+          <div className="min-h-100 flex-1 overflow-hidden rounded-xl bg-neutral-900 tablet:min-h-0 border border-white/5 relative">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
