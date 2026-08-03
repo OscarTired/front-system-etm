@@ -80,13 +80,17 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.6
 const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
 
-// Resorte, no duración fija: "elegante" acá significa que la llegada
-// al destino depende de la física (masa/rigidez/amortiguación), no de
-// un número de ms fijo que se ve igual sin importar qué tan lejos o
-// rápido arrastraste. stiffness/damping altos = asentado firme, casi
-// sin rebote — el estándar de drawers nativos tipo iOS, no un resorte
-// juguetón.
-const DRAWER_SPRING = { type: "spring", stiffness: 380, damping: 32, mass: 0.9 } as const
+// duration + bounce, NO stiffness/damping/mass a mano: con esos tres
+// hay que calcular el ratio de amortiguación (damping / 2√(stiffness·mass))
+// para saber si rebota o no — eso fue lo que salió mal la vez pasada:
+// eran números elegidos "a sentimiento", con un comentario afirmando
+// "casi sin rebote" que nunca se verificó con la fórmula.
+//
+// bounce está documentado así en motion: 0 = sin rebote (garantizado
+// por la librería, no aproximado por mí), 1 = muy rebotón. duration
+// es el tiempo total en segundos. Esto es intención explícita, no
+// constantes de física reverse-engineered.
+const DRAWER_SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
