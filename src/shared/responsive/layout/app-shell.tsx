@@ -1,8 +1,9 @@
 // app-shell.tsx
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
+import { motion, useMotionValue, useTransform, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -77,222 +78,64 @@ function DesktopShell({ children }: Props) {
 
 const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.6
-const DIRECTION_LOCK_THRESHOLD = 6
-const FLICK_VELOCITY_THRESHOLD = 0.5
+const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
+
+// Resorte, no duración fija: "elegante" acá significa que la llegada
+// al destino depende de la física (masa/rigidez/amortiguación), no de
+// un número de ms fijo que se ve igual sin importar qué tan lejos o
+// rápido arrastraste. stiffness/damping altos = asentado firme, casi
+// sin rebote — el estándar de drawers nativos tipo iOS, no un resorte
+// juguetón.
+const DRAWER_SPRING = { type: "spring", stiffness: 380, damping: 32, mass: 0.9 } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
-  const visualState = useMobileNavStore(s => s.visualState)
+  const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
-  const isDragging = useMobileNavStore(s => s.isDragging)
-  const startDrag = useMobileNavStore(s => s.startDrag)
-  const endDrag = useMobileNavStore(s => s.endDrag)
-  const notifyContentTransitionEnd = useMobileNavStore(s => s.notifyContentTransitionEnd)
-  const notifyClipTransitionEnd = useMobileNavStore(s => s.notifyClipTransitionEnd)
 
-  const targetOffset = DRAWER_REVEAL_OFFSET
-  const stateOffset = visualState === "visible" || visualState === "moving-in" ? targetOffset : 0
+  const x = useMotionValue(0)
+  const borderRadius = useTransform(x, [0, DRAWER_REVEAL_OFFSET], [0, CURVE_RADIUS])
 
-  const contentRef = useRef<HTMLDivElement>(null)
-  const pendingOffsetRef = useRef<number | null>(null)
-  const rafIdRef = useRef<number | null>(null)
-  const suppressClickRef = useRef(false)
+  const isOpen = mode === "open"
 
+  // Único lugar que anima `x` cuando el cambio de `mode` viene de
+  // AFUERA de un drag (un botón: abrir desde bottom-nav/top-bar,
+  // cerrar desde el chevron del header). Durante un drag en curso,
+  // motion ya está escribiendo `x` directo por su cuenta — este
+  // efecto no compite porque `mode` no cambia hasta soltar.
   useEffect(() => {
-    const el = contentRef.current
-    if (!el) return
-
-    let drag: {
-      startX: number
-      startY: number
-      direction: "horizontal" | "vertical" | null
-      dragged: boolean
-      lastX: number
-      lastTime: number
-      velocityX: number
-    } | null = null
-
-    const writeTransform = (offset: number) => {
-      pendingOffsetRef.current = offset
-      if (rafIdRef.current !== null) return
-
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null
-        if (pendingOffsetRef.current !== null && contentRef.current) {
-          contentRef.current.style.transform = `translate3d(${pendingOffsetRef.current}px, 0, 0)`
-        }
-      })
-    }
-
-    const handleTouchStart = (event: TouchEvent) => {
-      if (visualState !== "visible") return
-
-      const touch = event.touches[0]
-      const now = performance.now()
-
-      drag = {
-        startX: touch.clientX,
-        startY: touch.clientY,
-        direction: null,
-        dragged: false,
-        lastX: touch.clientX,
-        lastTime: now,
-        velocityX: 0,
-      }
-    }
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (!drag) return
-
-      const touch = event.touches[0]
-      const now = performance.now()
-      const deltaX = touch.clientX - drag.startX
-      const deltaY = touch.clientY - drag.startY
-
-      if (drag.direction === null) {
-        if (
-          Math.abs(deltaX) < DIRECTION_LOCK_THRESHOLD &&
-          Math.abs(deltaY) < DIRECTION_LOCK_THRESHOLD
-        ) {
-          return
-        }
-
-        drag.direction =
-          Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical"
-
-        if (drag.direction === "vertical") {
-          drag = null
-          return
-        }
-
-        startDrag()
-      }
-
-      const dt = now - drag.lastTime
-      if (dt > 0) {
-        drag.velocityX = (touch.clientX - drag.lastX) / dt
-      }
-
-      drag.lastX = touch.clientX
-      drag.lastTime = now
-
-      const nextOffset = Math.min(
-        DRAWER_REVEAL_OFFSET,
-        Math.max(0, DRAWER_REVEAL_OFFSET + deltaX),
-      )
-
-      drag.dragged = true
-      writeTransform(nextOffset)
-      event.preventDefault()
-    }
-
-    const handleTouchEnd = () => {
-      if (!drag || !drag.dragged) {
-        drag = null
-        return
-      }
-
-      const finalOffset = pendingOffsetRef.current ?? DRAWER_REVEAL_OFFSET
-      const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
-      const isFastFlickLeft = drag.velocityX < -FLICK_VELOCITY_THRESHOLD
-
-      suppressClickRef.current = true
-      window.setTimeout(() => {
-        suppressClickRef.current = false
-      }, 300)
-
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-
-      pendingOffsetRef.current = null
-
-      // isDragging y visualState viven en el MISMO store — endDrag los
-      // cambia juntos en un solo set() atómico. No hay dos fuentes de
-      // estado que puedan desincronizarse entre sí, así que no hace
-      // falta forzar el orden con flushSync: la carrera que causaba el
-      // salto brusco al cerrar es imposible por construcción.
-      const shouldClose = finalOffset < closeThreshold || isFastFlickLeft
-      endDrag(shouldClose)
-
-      drag = null
-    }
-
-    el.addEventListener("touchstart", handleTouchStart, { passive: true })
-    el.addEventListener("touchmove", handleTouchMove, { passive: false })
-    el.addEventListener("touchend", handleTouchEnd, { passive: true })
-    el.addEventListener("touchcancel", handleTouchEnd, { passive: true })
-
-    // Red de seguridad: si la pestaña se oculta a mitad de un gesto
-    // (cambio de app, alerta del sistema) sin que touchend/touchcancel
-    // lleguen a disparar, isDragging quedaría trabado en true para
-    // siempre — y con eso, TODA apertura/cierre futura perdería su
-    // transición (se vería "como si siempre se estuviera arrastrando").
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden" && drag) {
-        drag = null
-        endDrag(false)
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-
-    return () => {
-      el.removeEventListener("touchstart", handleTouchStart)
-      el.removeEventListener("touchmove", handleTouchMove)
-      el.removeEventListener("touchend", handleTouchEnd)
-      el.removeEventListener("touchcancel", handleTouchEnd)
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-    }
-  }, [visualState, startDrag, endDrag])
-
-  const offset = isDragging ? undefined : stateOffset
-
-  const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
-    if (event.target !== event.currentTarget) return
-    
-    if (event.propertyName === "transform") {
-      notifyContentTransitionEnd()
-    } else if (event.propertyName === "border-radius") {
-      notifyClipTransitionEnd()
-    }
-  }
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, DRAWER_SPRING)
+    return () => controls.stop()
+  }, [isOpen, x])
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
-      <div
-        ref={contentRef}
-        onTransitionEnd={handleTransitionEnd}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
-        style={{
-          ...(offset !== undefined ? { transform: `translate3d(${offset}px, 0, 0)` } : {}),
-          borderRadius: visualState === "hidden" || visualState === "curve-closing" ? CURVE_SQUARE : CURVE_ROUNDED,
-          willChange: isDragging || visualState === "moving-out" || visualState === "moving-in" || visualState === "curve-closing" ? "transform, border-radius" : "auto",
-          transition: isDragging
-            ? "none"
-            : "transform 300ms cubic-bezier(.22,1,.36,1), border-radius 300ms cubic-bezier(.22,1,.36,1)",
+
+      <motion.div
+        drag={isOpen ? "x" : false}
+        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
+        dragElastic={0}
+        dragMomentum={false}
+        onDragEnd={(_event, info) => {
+          const currentX = x.get()
+          const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+          const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
+          const shouldClose = currentX < closeThreshold || isFastFlickLeft
+
+          // Anima explícito acá (no solo vía el efecto de arriba):
+          // si NO cierra, `mode` sigue en "open" y el efecto nunca se
+          // re-dispara — sin esto, soltar a mitad de camino sin pasar
+          // el umbral dejaría el drawer trabado ahí, sin volver a
+          // asentarse en el 100% abierto.
+          animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAWER_SPRING)
+          if (shouldClose) closeDrawer()
         }}
-        onClickCapture={
-          visualState === "visible"
-            ? (event) => {
-                event.preventDefault()
-                event.stopPropagation()
-
-                if (suppressClickRef.current) {
-                  suppressClickRef.current = false
-                  return
-                }
-
-                closeDrawer()
-              }
-            : undefined
-        }
+        style={{ x, borderRadius }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
+        onClick={() => {
+          if (isOpen) closeDrawer()
+        }}
       >
         <TopBar />
         <VerticalScroll
@@ -305,7 +148,7 @@ function CompactShell({ children }: Props) {
           {children}
         </VerticalScroll>
         <BottomNavigation />
-      </div>
+      </motion.div>
     </div>
   )
 }
