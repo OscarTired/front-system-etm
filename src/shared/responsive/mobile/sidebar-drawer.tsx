@@ -9,7 +9,6 @@ import { AppSidebar } from "../layout/app-sidebar"
 
 export function SidebarDrawer() {
   const mode = useMobileNavStore(s => s.mode)
-  const visualState = useMobileNavStore(s => s.visualState)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const pathname = usePathname()
@@ -37,7 +36,7 @@ export function SidebarDrawer() {
       window.removeEventListener("keydown", handleKeyDown)
   }, [mode, closeDrawer])
 
-  const isVisible = visualState !== "hidden"
+  const isVisible = mode === "open"
 
   return (
     <div
