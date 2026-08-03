@@ -1,17 +1,19 @@
 "use client"
 
 import { useMemo } from "react"
-import { Download, Save, Layers } from "lucide-react"
+import { Download, Save, Layers, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
-import type { NestedSheet } from "../engine/types"
+import type { NestedSheet, SheetConfig } from "../engine/types"
 import type { SheetGroup } from "../utils/svg-render"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 import { buildPieceCatalog } from "../export/piece-catalog"
+import { exportNestingReportPdf } from "../export/nesting-report-pdf"
+import type { Nomenclatura } from "../export/nomenclatura"
 
 export interface ExportDialogProps {
   open: boolean
@@ -19,12 +21,19 @@ export interface ExportDialogProps {
   sheetGroups: SheetGroup[]
   /** Todas las planchas (no solo los grupos deduplicados) — para armar el catálogo/BOM con la cantidad real total. */
   sheets: NestedSheet[] | null
+  sheetConfig: SheetConfig
+  nomenclatura: Nomenclatura
   onExportSheet: (format: "dxf" | "nsp", sheetIndex: number) => void
   onSaveProject: () => void
 }
 
-export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet, onSaveProject }: ExportDialogProps) {
+export function ExportDialog({ open, onClose, sheetGroups, sheets, sheetConfig, nomenclatura, onExportSheet, onSaveProject }: ExportDialogProps) {
   const catalog = useMemo(() => (sheets ? buildPieceCatalog(sheets) : []), [sheets])
+
+  const handleExportReport = () => {
+    if (!sheets) return
+    void exportNestingReportPdf({ nomenclatura, sheets, sheetConfig })
+  }
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
@@ -42,6 +51,19 @@ export function ExportDialog({ open, onClose, sheetGroups, sheets, onExportSheet
               <p className="text-xs text-neutral-500">.json — para retomar el proyecto, no es para la máquina</p>
             </div>
           </button>
+
+          {sheets && sheets.length > 0 && (
+            <button
+              onClick={handleExportReport}
+              className="flex items-center gap-3 rounded-xl bg-white/5 p-3 text-left hover:bg-white/10"
+            >
+              <FileText className="h-4 w-4 shrink-0 text-neutral-400" />
+              <div className="min-w-0">
+                <p className="text-sm text-neutral-200">Reporte PDF</p>
+                <p className="text-xs text-neutral-500">Resumen por plancha, vista de cada plancha y catálogo (BOM)</p>
+              </div>
+            </button>
+          )}
 
           {sheetGroups.length === 0 && (
             <p className="p-3 text-center text-xs text-neutral-600">Nestea primero para exportar planchas.</p>

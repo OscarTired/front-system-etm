@@ -146,13 +146,15 @@ interface DxfCanvasProps {
   selectedPieceIndex?: number | null;
   /** Se dispara al hacer click sobre una pieza (modo `pieces`) o en vacío (null). */
   onSelectPiece?: (index: number | null) => void;
+  /** Colores (hex, mayúsculas) a ocultar — ej. para esconder marcas/doblez y ver solo el corte. */
+  hiddenColors?: string[];
 }
 
 const SHEET_STROKE = '#71717a';
 const SELECTED_STROKE = '#ffffff';
 const SELECTED_HALO = '#facc15';
 
-export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, onSelectPiece }: DxfCanvasProps) => {
+export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, onSelectPiece, hiddenColors }: DxfCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
@@ -314,12 +316,15 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
   // --- Modo "piezas nesteadas": datos directos, sin fetch ni parseo ---
   useEffect(() => {
     if (!pieces) return;
+    const hidden = new Set((hiddenColors ?? []).map((c) => c.toUpperCase()));
     const out: Entity[] = [];
     pieces.forEach((piece, pieceIndex) => {
       if (piece.subOutlines.length > 0) {
         for (const sub of piece.subOutlines) {
+          const color = sub.color ?? '#22c55e';
+          if (hidden.has(color.toUpperCase())) continue;
           if (sub.points.length >= 2) {
-            out.push({ kind: 'polyline', points: sub.points, closed: false, color: sub.color ?? '#22c55e', pieceIndex });
+            out.push({ kind: 'polyline', points: sub.points, closed: false, color, pieceIndex });
           }
         }
       } else if (piece.outline && piece.outline.length >= 2) {
@@ -329,7 +334,7 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
     entitiesRef.current = out;
     requestAnimationFrame(fitToView);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pieces, sheetSize?.width, sheetSize?.height]);
+  }, [pieces, sheetSize?.width, sheetSize?.height, hiddenColors]);
 
   useEffect(() => { draw(); }, [draw]);
 

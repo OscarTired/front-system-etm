@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { isSupportedCadFile, readCadFile } from "../cad/cad-reader"
+import { isPdfFile, parsePdf } from "../cad/pdf-parser"
 import { scanMaterialData, isValidMaterialData, type MaterialData } from "../cad/thickness-scanner"
 import type { PieceOutline, SubEntity } from "../engine/types"
 
@@ -79,6 +80,32 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     const rejected: string[] = []
 
     for (const file of Array.from(files)) {
+      if (isPdfFile(file.name)) {
+        try {
+          const buffer = await file.arrayBuffer()
+          const cadData = await parsePdf(file.name, buffer)
+          if (!cadData.valid || cadData.outline.points.length === 0) {
+            rejected.push(`${file.name} (sin geometría vectorial legible — ¿es un escaneo/imagen?)`)
+            continue
+          }
+          newRows.push({
+            id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            source: "cad",
+            fileName: file.name,
+            outline: cadData.outline,
+            subEntities: cadData.entities.map((e) => ({ outline: e.outline, color: e.color, layer: e.layer })),
+            width: cadData.width,
+            height: cadData.height,
+            quantity: "1",
+            color: nextColor(),
+            material: scanMaterialData(file.name, ""),
+          })
+        } catch {
+          rejected.push(`${file.name} (no se pudo leer el PDF)`)
+        }
+        continue
+      }
+
       if (!isSupportedCadFile(file.name)) {
         rejected.push(`${file.name} (formato no soportado)`)
         continue
@@ -129,7 +156,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       <input
         ref={fileInputRef}
         type="file"
-        accept=".dxf,.geo"
+        accept=".dxf,.geo,.pdf"
         multiple
         className="hidden"
         onChange={(e) => {

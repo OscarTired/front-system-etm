@@ -224,17 +224,22 @@ export function NestingPage() {
     run(validPieces, { sheet: sheetConfig })
   }, [canRun, run, validPieces, sheetConfig])
 
+  const nomenclatura = useMemo(
+    () => ({ anio: "00", proyecto: settings.proyecto || "S", lote: "1", material: settings.material || "MAT", espesor: settings.espesor || "0" }),
+    [settings.proyecto, settings.material, settings.espesor]
+  )
+
   const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number) => {
     if (!sheets) return
     const sheet = sheets[sheetIndex]
     const fileName = buildSheetFileName(
-      { anio: "00", proyecto: settings.proyecto || "S", lote: "1", material: settings.material || "MAT", espesor: settings.espesor || "0" },
+      nomenclatura,
       sheet.pieces.length,
       sheetIndex
     )
     if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
-  }, [sheets, settings, sheetConfig])
+  }, [sheets, nomenclatura, sheetConfig])
 
   const handleSaveProject = useCallback(() => {
     const pieces: ProjectPieceEntry[] = rows.map((row) =>
@@ -423,6 +428,8 @@ export function NestingPage() {
         onClose={() => setExportDialogOpen(false)}
         sheetGroups={sheetGroups}
         sheets={sheets}
+        sheetConfig={sheetConfig}
+        nomenclatura={nomenclatura}
         onExportSheet={handleExportSheet}
         onSaveProject={handleSaveProject}
       />

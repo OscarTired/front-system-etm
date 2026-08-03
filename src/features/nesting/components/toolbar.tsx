@@ -24,6 +24,7 @@ export interface ToolbarProps {
   onImport: () => void
   onExport: () => void
   onToggleLayers: () => void
+  layersHidden?: boolean
   onSettings: () => void
   // Solo se pasa en layouts compactos (mobile/tablet), donde el
   // panel de piezas/configuración vive en un Sheet en vez de la
@@ -36,11 +37,13 @@ function IconButton({
   onClick,
   disabled,
   title,
+  active,
   children,
 }: {
   onClick: () => void
   disabled?: boolean
   title: string
+  active?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -52,7 +55,8 @@ function IconButton({
       disabled={disabled}
       title={title}
       aria-label={title}
-      className="text-neutral-400 hover:bg-white/10 hover:text-white disabled:opacity-30"
+      aria-pressed={active}
+      className={`text-neutral-400 hover:bg-white/10 hover:text-white disabled:opacity-30 ${active ? "bg-white/10 text-white" : ""}`}
     >
       {children}
     </Button>
@@ -71,6 +75,7 @@ export function Toolbar({
   onImport,
   onExport,
   onToggleLayers,
+  layersHidden,
   onSettings,
   onTogglePanel,
 }: ToolbarProps) {
@@ -110,7 +115,7 @@ export function Toolbar({
 
   const viewActions = (
     <div className="flex shrink-0 items-center gap-1">
-      <IconButton onClick={onToggleLayers} title="Capas">
+      <IconButton onClick={onToggleLayers} title="Ocultar marcas/doblez" active={layersHidden}>
         <Layers className="h-5 w-5" strokeWidth={1.5} />
       </IconButton>
       <IconButton onClick={onSettings} title="Configuración">
