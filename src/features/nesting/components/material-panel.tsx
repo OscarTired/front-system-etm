@@ -77,13 +77,13 @@ export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps
   return (
     <div className="grid grid-cols-3 gap-2">
       <Field label="Ancho">
-        <Input inputMode="decimal" value={settings.sheetWidth} onChange={(e) => onChange({ sheetWidth: e.target.value })} />
+        <Input className="text-center" inputMode="decimal" value={settings.sheetWidth} onChange={(e) => onChange({ sheetWidth: e.target.value })} />
       </Field>
       <Field label="Alto">
-        <Input inputMode="decimal" value={settings.sheetHeight} onChange={(e) => onChange({ sheetHeight: e.target.value })} />
+        <Input className="text-center" inputMode="decimal" value={settings.sheetHeight} onChange={(e) => onChange({ sheetHeight: e.target.value })} />
       </Field>
       <Field label="Margen">
-        <Input inputMode="decimal" value={settings.margin} onChange={(e) => onChange({ margin: e.target.value })} />
+        <Input className="text-center" inputMode="decimal" value={settings.margin} onChange={(e) => onChange({ margin: e.target.value })} />
       </Field>
     </div>
   )

@@ -2,24 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DxfParser from 'dxf-parser';
-import { ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Target, Grid } from 'lucide-react';
 
 interface Point { x: number; y: number }
 interface ViewState { scale: number; offsetX: number; offsetY: number }
 
-// Tabla de colores estándar AutoCAD Color Index (ACI), los más usados
-// en DXFs reales. No es la tabla completa de 256 colores, pero cubre
-// los índices que casi siempre se usan en dibujos técnicos.
 const ACI_COLORS: Record<number, string> = {
-  1: '#ff0000', // rojo
-  2: '#ffff00', // amarillo
-  3: '#00ff00', // verde
-  4: '#00ffff', // cian
-  5: '#0000ff', // azul
-  6: '#ff00ff', // magenta
-  7: '#ffffff', // blanco/negro (aquí se trata como blanco por el fondo oscuro)
-  8: '#808080', // gris
-  9: '#c0c0c0', // gris claro
+  1: '#ff0000',
+  2: '#ffff00',
+  3: '#00ff00',
+  4: '#00ffff',
+  5: '#0000ff',
+  6: '#ff00ff',
+  7: '#ffffff',
+  8: '#808080',
+  9: '#c0c0c0',
 };
 
 function resolveColor(entity: any, layers: Record<string, any>): string {
@@ -33,11 +30,6 @@ function resolveColor(entity: any, layers: Record<string, any>): string {
   return '#4ade80';
 }
 
-// Entidad de dibujo interna del canvas. `pieceIndex` es NUEVO (v2):
-// agrupa entidades por pieza para poder hacer hit-test/selección —
-// ausente (undefined) cuando el canvas se usa en modo "archivo DXF
-// suelto" (el uso original de /engineering), presente cuando se usa
-// en modo "piezas nesteadas" (el uso nuevo de /nesting).
 type Entity =
   | { kind: 'line'; a: Point; b: Point; color: string; pieceIndex?: number }
   | { kind: 'polyline'; points: Point[]; closed: boolean; color: string; pieceIndex?: number }
@@ -74,7 +66,6 @@ function extractEntitiesFromDxf(dxf: any): Entity[] {
         out.push({ kind: 'circle', center: e.center, radius: e.radius, color });
         break;
       case 'ARC':
-        // dxf-parser ya entrega startAngle/endAngle en RADIANES.
         out.push({ kind: 'arc', center: e.center, radius: e.radius, startAngle: e.startAngle, endAngle: e.endAngle, color });
         break;
       case 'TEXT':
@@ -115,7 +106,6 @@ function computeBounds(entities: Entity[]) {
   return { minX, minY, maxX, maxY };
 }
 
-/** Ray casting estándar para hit-test de selección de pieza. */
 function pointInPolygon(point: Point, polygon: Point[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -128,25 +118,17 @@ function pointInPolygon(point: Point, polygon: Point[]): boolean {
 }
 
 export interface NestingPieceInput {
-  /** Puntos del contorno de cada sub-trazo de la pieza, con su color real. */
   subOutlines: { points: Point[]; color?: string }[];
-  /** Contorno fusionado, usado solo como respaldo para hit-test si no hay subOutlines. */
   outline?: Point[];
   angle?: number;
 }
 
 interface DxfCanvasProps {
-  /** Modo "archivo DXF suelto" (uso original de /engineering): fetchea y parsea la URL. */
   url?: string;
-  /** Modo "piezas nesteadas" (uso nuevo de /nesting): datos ya calculados, sin fetch ni parseo. */
   pieces?: NestingPieceInput[];
-  /** Tamaño de la plancha — dibuja un rectángulo gris claro de fondo. Solo aplica en modo `pieces`. */
   sheetSize?: { width: number; height: number };
-  /** Índice de la pieza seleccionada (modo `pieces`), para resaltarla. */
   selectedPieceIndex?: number | null;
-  /** Se dispara al hacer click sobre una pieza (modo `pieces`) o en vacío (null). */
   onSelectPiece?: (index: number | null) => void;
-  /** Colores (hex, mayúsculas) a ocultar — ej. para esconder marcas/doblez y ver solo el corte. */
   hiddenColors?: string[];
 }
 
@@ -163,6 +145,7 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
 
   const [loading, setLoading] = useState(!!url);
   const [error, setError] = useState<string | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
 
   const isPieceMode = !!pieces;
 
@@ -188,10 +171,6 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
 
     ctx.save();
     ctx.translate(w / 2 + offsetX, h / 2 + offsetY);
-    // Y invertido solo en modo archivo DXF suelto (convención AutoCAD,
-    // Y hacia arriba). En modo pieza usamos el mismo sistema de
-    // coordenadas interno del motor de nesting (Y hacia abajo), sin
-    // invertir, para que coincida exactamente con lo exportado.
     ctx.scale(scale, isPieceMode ? scale : -scale);
 
     if (isPieceMode && sheetSize) {
@@ -231,7 +210,6 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
       }
     }
 
-    // Halo punteado de la pieza seleccionada.
     if (isPieceMode && selectedPieceIndex !== null) {
       const selectedEntities = entitiesRef.current.filter((e) => e.pieceIndex === selectedPieceIndex);
       const bounds = computeBounds(selectedEntities);
@@ -260,8 +238,6 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
     const h = canvas.clientHeight;
     if (w === 0 || h === 0) return;
 
-    // En modo pieza, encajamos a la PLANCHA completa (no solo a las
-    // piezas) — así siempre se ve el marco de referencia entero.
     const bounds =
       isPieceMode && sheetSize
         ? { minX: 0, minY: 0, maxX: sheetSize.width, maxY: sheetSize.height }
@@ -284,7 +260,35 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
     draw();
   }, [draw, isPieceMode, sheetSize]);
 
-  // --- Modo "archivo DXF suelto": fetch + parse (comportamiento original, intacto) ---
+  // Centrar cámara en la pieza seleccionada actualmente
+  const focusOnSelectedPiece = useCallback(() => {
+    if (!isPieceMode || selectedPieceIndex === null || selectedPieceIndex === undefined) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (w === 0 || h === 0) return;
+
+    const selectedEntities = entitiesRef.current.filter((e) => e.pieceIndex === selectedPieceIndex);
+    const bounds = computeBounds(selectedEntities);
+    if (!bounds) return;
+
+    const drawW = bounds.maxX - bounds.minX || 1;
+    const drawH = bounds.maxY - bounds.minY || 1;
+    const padding = 0.6; // Mayor zoom para enfocar la pieza
+
+    const scale = Math.min((w / drawW) * padding, (h / drawH) * padding);
+    const centerX = (bounds.minX + bounds.maxX) / 2;
+    const centerY = (bounds.minY + bounds.maxY) / 2;
+
+    viewRef.current = {
+      scale,
+      offsetX: -centerX * scale,
+      offsetY: isPieceMode ? -centerY * scale : centerY * scale,
+    };
+    draw();
+  }, [draw, isPieceMode, selectedPieceIndex]);
+
   useEffect(() => {
     if (!url) return;
     let cancelled = false;
@@ -313,7 +317,6 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
     return () => { cancelled = true; };
   }, [url, fitToView]);
 
-  // --- Modo "piezas nesteadas": datos directos, sin fetch ni parseo ---
   useEffect(() => {
     if (!pieces) return;
     const hidden = new Set((hiddenColors ?? []).map((c) => c.toUpperCase()));
@@ -387,11 +390,6 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
       if (!drag.moved && isPieceMode && onSelectPiece) {
         const point = screenToLocal(e.clientX, e.clientY);
         if (point) {
-          const byPiece = new Map<number, Point[]>();
-          for (const ent of entitiesRef.current) {
-            if (ent.kind !== 'polyline' || ent.pieceIndex === undefined) continue;
-            if (!byPiece.has(ent.pieceIndex)) byPiece.set(ent.pieceIndex, []);
-          }
           let hit: number | null = null;
           for (const ent of entitiesRef.current) {
             if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && ent.points.length >= 3) {
@@ -444,7 +442,7 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
       className="relative h-full w-full"
       style={{
         backgroundColor: '#0a0a0c',
-        backgroundImage: 'radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)',
+        backgroundImage: showGrid ? 'radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)' : 'none',
         backgroundSize: '24px 24px',
       }}
     >
@@ -457,12 +455,32 @@ export const DxfCanvas = ({ url, pieces, sheetSize, selectedPieceIndex = null, o
         <button onClick={() => handleZoom('out')} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Alejar">
           <ZoomOut size={16} />
         </button>
+        
         <div className="my-0.5 h-px bg-white/10" />
+
         <button onClick={fitToView} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Ajustar a la vista">
           <Maximize size={16} />
         </button>
-        <button onClick={fitToView} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Centrar vista">
-          <RotateCcw size={16} />
+
+        {isPieceMode && (
+          <button 
+            onClick={focusOnSelectedPiece} 
+            disabled={selectedPieceIndex === null || selectedPieceIndex === undefined}
+            className={`rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent`} 
+            title="Centrar en pieza seleccionada"
+          >
+            <Target size={16} />
+          </button>
+        )}
+
+        <div className="my-0.5 h-px bg-white/10" />
+
+        <button 
+          onClick={() => setShowGrid(!showGrid)} 
+          className={`rounded-lg p-2 hover:bg-white/10 hover:text-white ${showGrid ? 'text-white bg-white/5' : 'text-neutral-500'}`} 
+          title="Alternar cuadrícula"
+        >
+          <Grid size={16} />
         </button>
       </div>
 

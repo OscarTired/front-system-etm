@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { X, FileText } from 'lucide-react';
 import { engineeringApi } from '../api/engineering.api';
 
-const DxfCanvas = dynamic(() => import('./dxf-canvas').then((m) => m.DxfCanvas), { ssr: false });
+const DxfCanvas = dynamic(() => import('../../nesting/components/dxf-canvas').then((m) => m.DxfCanvas), { ssr: false });
 
 interface EngineeringFileViewerProps {
   fileId: string;
