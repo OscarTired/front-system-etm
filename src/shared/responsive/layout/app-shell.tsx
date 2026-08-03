@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, useMotionValue, useTransform, animate } from "motion/react"
 
@@ -90,7 +90,15 @@ const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, 
 //     para el caso sin gesto (botón: hamburguesa/chevron/bottom-nav):
 //     ahí no hay velocidad que "heredar", así que ni siquiera hace
 //     falta un spring.
-const DRAG_RELEASE_SPRING = { type: "spring" } as const
+// Sin duration/bounce/stiffness/damping propios salvo bounce:0 — que
+// no es "un número mío a ajustar", es la garantía documentada de
+// motion (cero overshoot posible, ver docs de SpringOptions). El
+// resorte "bare" (sin nada) trae stiffness:100/damping:10 por
+// default, que da un ratio de amortiguación de 0.5 — bastante
+// subamortiguado, rebota de verdad. Ese rebote (pasarse del borde 0 o
+// DRAWER_REVEAL_OFFSET) es la causa más probable de que soltar el
+// drag a medio camino se viera roto.
+const DRAG_RELEASE_SPRING = { type: "spring", bounce: 0 } as const
 const PROGRAMMATIC_TRANSITION = { type: "tween" } as const
 
 function CompactShell({ children }: Props) {
@@ -103,13 +111,27 @@ function CompactShell({ children }: Props) {
 
   const isOpen = mode === "open"
 
+  // Se pone en true justo antes de un closeDrawer() que YA animó `x`
+  // a mano (onDragEnd) — así el efecto de abajo, que reacciona a
+  // isOpen, sabe que esta vuelta no le toca animar nada: si lo
+  // hiciera igual, terminaríamos con DOS animate() sobre el mismo `x`
+  // casi al mismo tiempo (una con resorte, otra con tween), cada una
+  // tirando para su lado — eso es lo que se veía "roto" al soltar.
+  const selfAnimatedCloseRef = useRef(false)
+
   // Único lugar que anima `x` cuando el cambio de `mode` viene de
   // AFUERA de un drag (un botón: abrir desde bottom-nav/top-bar,
   // cerrar desde el chevron del header). Sin gesto físico de por
-  // medio, así que sin bounce (PROGRAMMATIC_SPRING). Durante un drag
-  // en curso, motion ya está escribiendo `x` directo por su cuenta —
-  // este efecto no compite porque `mode` no cambia hasta soltar.
+  // medio, así que sin bounce (PROGRAMMATIC_TRANSITION). Durante un
+  // drag en curso, motion ya está escribiendo `x` directo por su
+  // cuenta — este efecto no compite porque `mode` no cambia hasta
+  // soltar.
   useEffect(() => {
+    if (selfAnimatedCloseRef.current) {
+      selfAnimatedCloseRef.current = false
+      return
+    }
+
     const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, PROGRAMMATIC_TRANSITION)
     return () => controls.stop()
   }, [isOpen, x])
@@ -130,14 +152,19 @@ function CompactShell({ children }: Props) {
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
           // Acá SÍ hay velocidad real del gesto que motion hereda
-          // automáticamente — DRAG_RELEASE_SPRING, con su toque de
-          // bounce. Anima explícito acá (no solo vía el efecto de
-          // arriba): si NO cierra, `mode` sigue en "open" y el efecto
-          // nunca se re-dispara — sin esto, soltar a mitad de camino
-          // sin pasar el umbral dejaría el drawer trabado ahí, sin
-          // volver a asentarse en el 100% abierto.
+          // automáticamente — DRAG_RELEASE_SPRING. Anima explícito acá
+          // (no solo vía el efecto de arriba): si NO cierra, `mode`
+          // sigue en "open" y el efecto nunca se re-dispara — sin
+          // esto, soltar a mitad de camino sin pasar el umbral
+          // dejaría el drawer trabado ahí, sin volver a asentarse en
+          // el 100% abierto. Si SÍ cierra, marcamos la bandera antes
+          // de closeDrawer() para que el efecto no vuelva a animar lo
+          // que esta llamada ya está animando.
           animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAG_RELEASE_SPRING)
-          if (shouldClose) closeDrawer()
+          if (shouldClose) {
+            selfAnimatedCloseRef.current = true
+            closeDrawer()
+          }
         }}
         style={{ x, borderRadius }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
