@@ -18,7 +18,7 @@ function ScrollArea({
       data-slot="scroll-area"
       type="scroll"
       scrollHideDelay={scrollHideDelay}
-      className={cn("relative overflow-hidden", className)}
+      className={cn("relative overflow-hidden h-full w-full", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
@@ -44,25 +44,23 @@ function ScrollBar({
       data-orientation={orientation}
       orientation={orientation}
       className={cn(
-        // Duración reducida a 200ms para que reaccione al instante sin sentirse lento
-        "absolute flex touch-none select-none transition-opacity duration-200 ease-out p-0.5",
-        // Desaparición limpia y rápida sin escalas pesadas
+        "absolute flex touch-none select-none transition-opacity duration-200 ease-out p-1",
         "data-[state=hidden]:opacity-0 data-[state=hidden]:pointer-events-none",
         "data-[state=visible]:opacity-100",
-        // Dimensiones exactas según orientación (ancho controlado a 2 (8px))
+
         orientation === "vertical" &&
-          "h-full w-2 right-0 top-0 bottom-0",
+          "h-[calc(100%-8px)] w-3 right-1 top-1 bottom-1",
         orientation === "horizontal" &&
-          "w-full h-2 bottom-0 left-0 right-0",
+          "w-[calc(100%-8px)] h-3 bottom-1 left-1 right-1",
         className
       )}
       {...props}
     >
       <ScrollAreaPrimitive.ScrollAreaThumb
         data-slot="scroll-area-thumb"
-        // Eliminado el transition-all pesado. Solo animamos colores para máxima agilidad visual.
+        // Cambiado a w-full para ocupar el ancho del contenedor y aumentado el grosor visual
         className={cn(
-          "relative flex-1 rounded-full bg-neutral-600/60 transition-colors duration-200 hover:bg-neutral-500/90 active:bg-neutral-400",
+          "relative flex-1 rounded-full bg-neutral-600/70 transition-colors duration-200 hover:bg-neutral-500/90 active:bg-neutral-400",
           orientation === "vertical" && "w-full min-h-10",
           orientation === "horizontal" && "h-full min-w-10"
         )}
@@ -70,5 +68,5 @@ function ScrollBar({
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   )
 }
- 
+
 export { ScrollArea, ScrollBar }
