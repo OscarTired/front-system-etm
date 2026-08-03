@@ -116,7 +116,7 @@ function CompactShell({ children }: Props) {
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
-      <SidebarDrawer x={x} xRange={[0, DRAWER_REVEAL_OFFSET]} />
+      <SidebarDrawer />
 
       <motion.div
         drag={isOpen ? "x" : false}
@@ -186,4 +186,4 @@ export function AppShell({ children }: Props) {
       {children}
     </DesktopShell>
   )
-} 
+}
