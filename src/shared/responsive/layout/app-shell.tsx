@@ -77,7 +77,11 @@ function DesktopShell({ children }: Props) {
 }
 
 const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.6
+// 0.25 es el default real de Vaul (closeThreshold, documentado en su
+// fuente como @default 0.25) — no un número mío. Tenía 0.6 antes, más
+// del doble de exigente que la referencia: por eso un arrastre chico
+// no cerraba aunque fuera una intención clara de cerrar.
+const CLOSE_THRESHOLD_RATIO = 0.25
 const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
 
 // Sin duration/bounce/stiffness/damping propios — motion ya trae sus
@@ -146,11 +150,18 @@ function CompactShell({ children }: Props) {
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
+        dragTransition={{ power: 0 }}
         onDragEnd={(_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
           const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
+
+          // x.stop() antes de animar: por más que dragMomentum esté en
+          // false, esto garantiza que no quede ningún control del
+          // gesto de drag todavía "vivo" sobre el valor peleando un
+          // frame con la animación nueva — nada de handoff implícito.
+          x.stop()
 
           // Acá SÍ hay velocidad real del gesto que motion hereda
           // automáticamente — DRAG_RELEASE_SPRING. Anima explícito acá
