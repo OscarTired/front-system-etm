@@ -1,7 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Settings2, Info } from "lucide-react"
 
 import { MARK_COLOR } from "../cad/classify-dxf-color"
@@ -28,6 +28,7 @@ const DxfCanvas = dynamic(
 )
 
 type PanelView = "config" | "inspector"
+
 const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
   { value: "config", label: "Configuración", icon: Settings2 },
   { value: "inspector", label: "Propiedades", icon: Info },
@@ -37,18 +38,28 @@ export function NestingPage() {
   const { isCompact } = useResponsive()
   const project = useNestingProject()
 
+  // Estados de UI
   const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
-  const [activeGroupIndex, setActiveGroupIndex] = useState(0)
+  const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
   const [selectedPieceIndex, setSelectedPieceIndex] = useState<number | null>(null)
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
   const [activePanel, setActivePanel] = useState<PanelView>("config")
-  const [panelSheetOpen, setPanelSheetOpen] = useState(false)
-  const [marksHidden, setMarksHidden] = useState(false)
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
+  const [marksHidden, setMarksHidden] = useState<boolean>(false)
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
 
+  // Sincronización robusta de layout: Si la pantalla deja de ser compacta, cerramos el drawer móvil
+  useEffect(() => {
+    if (!isCompact) {
+      setIsMobilePanelOpen(false)
+    }
+  }, [isCompact])
+
+  // Datos derivados del proyecto
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
+  
   const canvasPieces: PlacedPiece[] = useMemo(
     () => (activeGroup ? activeGroup.sheet.pieces : []),
     [activeGroup]
@@ -79,6 +90,7 @@ export function NestingPage() {
   const sheetStats = project.getSheetStats(activeGroupIndex)
   const selectedPiece = selectedPieceIndex !== null ? canvasPieces[selectedPieceIndex] ?? null : null
 
+  // Callbacks optimizados
   const handleSelectPiece = useCallback((index: number | null) => {
     setSelectedPieceIndex(index)
     if (index !== null) setActivePanel("inspector")
@@ -91,6 +103,7 @@ export function NestingPage() {
   }, [project])
 
   const handleOpenProjectFile = useCallback(async (file: File | undefined) => {
+    if (!file) return
     const errorMessage = await project.onOpenProjectFile(file)
     if (errorMessage) console.error(errorMessage)
   }, [project])
@@ -117,8 +130,9 @@ export function NestingPage() {
     [project]
   )
 
-  const sidePanelContent = (
-    <>
+  // Renderizado centralizado del contenido del panel para evitar duplicación y pérdida de contexto
+  const renderSidePanelContent = () => (
+    <div className="flex h-full flex-col gap-3">
       <EntityExpandedToggle
         value={activePanel}
         onChange={setActivePanel}
@@ -154,11 +168,11 @@ export function NestingPage() {
           </ScrollArea>
         )}
       </div>
-    </>
+    </div>
   )
 
   return (
-    <div className="flex min-h-150 flex-col tablet:h-full tablet:overflow-hidden">
+    <div className="flex min-h-[600px] flex-col tablet:h-full tablet:overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -179,17 +193,19 @@ export function NestingPage() {
         onToggleLayers={() => setMarksHidden((v) => !v)}
         layersHidden={marksHidden}
         onSettings={() => {}}
-        onTogglePanel={isCompact ? () => setPanelSheetOpen(true) : undefined}
+        onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 bg-neutral-950 p-4">
+      <div className="flex min-h-0 flex-1 gap-4 p-4">
+        {/* Panel lateral estático para pantallas de escritorio */}
         {!isCompact && (
-          <div className="flex w-72 shrink-0 flex-col gap-3">
-            {sidePanelContent}
-          </div>
+          <aside className="flex w-72 shrink-0 flex-col gap-3">
+            {renderSidePanelContent()}
+          </aside>
         )}
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
+        {/* Área principal del Canvas y Pestañas */}
+        <main className="flex min-h-0 flex-1 flex-col gap-2">
           {project.sheetGroups.length > 0 && (
             <SheetTabs
               items={sheetTabItems}
@@ -201,7 +217,7 @@ export function NestingPage() {
             />
           )}
 
-          <div className="min-h-96 flex-1 overflow-hidden rounded-2xl bg-neutral-900 tablet:min-h-0">
+          <div className="min-h-[400px] flex-1 overflow-hidden rounded-2xl bg-neutral-900 tablet:min-h-0">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
@@ -216,20 +232,20 @@ export function NestingPage() {
               </div>
             )}
           </div>
-        </div>
+        </main>
       </div>
 
-      {isCompact && (
-        <Sheet open={panelSheetOpen} onOpenChange={setPanelSheetOpen}>
-          <SheetContent className="gap-3 p-4">
-            <SheetHeader className="p-0">
-              <SheetTitle>Piezas y configuración</SheetTitle>
-            </SheetHeader>
-
-            {sidePanelContent}
-          </SheetContent>
-        </Sheet>
-      )}
+      {/* Sheet deslizante para dispositivos móviles o zoom comprimido */}
+      <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
+        <SheetContent className="flex flex-col gap-3 p-4">
+          <SheetHeader className="p-0">
+            <SheetTitle>Piezas y configuración</SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {renderSidePanelContent()}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <ExportDialog
         open={exportDialogOpen}

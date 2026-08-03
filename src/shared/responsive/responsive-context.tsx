@@ -1,4 +1,3 @@
-// shared/responsive/responsive-context.tsx
 "use client"
 
 import { createContext, useEffect, useState } from "react"
@@ -16,19 +15,7 @@ export type ResponsiveState = {
   isLaptop: boolean
   isDesktop: boolean
   isWide: boolean
-  // Atajo de uso muy frecuente: "estamos en un layout compacto"
-  // (mobile o tablet), útil para decisiones binarias rápidas.
   isCompact: boolean
-  // false hasta que el cliente corrió su primera medición real con
-  // matchMedia. Antes de eso, `breakpoint` arranca fijo en "desktop"
-  // (antes venía de un guess server-side por User-Agent vía headers(),
-  // pero eso forzaba TODA la app a renderizado dinámico y mataba el
-  // Router Cache en cada navegación). Puede estar mal para ventanas
-  // de desktop angostas, tablets en landscape, mobile, etc. hasta que
-  // este efecto corre. Componentes que renderizan árboles MUY
-  // distintos según el breakpoint (como AppShell: sidebar vs. bottom
-  // nav) deberían esperar a `ready` antes de decidir, para no mostrar
-  // el layout adivinado y después saltar al real.
   ready: boolean
 }
 
@@ -36,7 +23,6 @@ export const ResponsiveContext =
   createContext<ResponsiveState | null>(null)
 
 function buildState(breakpoint: BreakpointName, ready: boolean): ResponsiveState {
-
   return {
     breakpoint,
     isMobile: breakpoint === "mobile",
@@ -47,7 +33,6 @@ function buildState(breakpoint: BreakpointName, ready: boolean): ResponsiveState
     isCompact: breakpoint === "mobile" || breakpoint === "tablet",
     ready,
   }
-
 }
 
 type Props = {
@@ -59,17 +44,12 @@ export function ResponsiveProvider({
   initialBreakpoint,
   children,
 }: Props) {
-
-  // Arranca con el valor que vino del server (sin flash).
   const [breakpoint, setBreakpoint] =
     useState<BreakpointName>(initialBreakpoint)
 
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-
-    // matchMedia por breakpoint: más barato que un resize listener
-    // recalculando todo, y no dispara renders de más entre breakpoints.
     const queries = (Object.keys(BREAKPOINTS) as BreakpointName[]).map(
       name => ({
         name,
@@ -78,15 +58,11 @@ export function ResponsiveProvider({
     )
 
     const recompute = () => {
-
-      const shortSide = Math.min(
-        window.innerWidth,
-        window.innerHeight,
-      )
-
-      setBreakpoint(resolveBreakpoint(shortSide))
+      // Ajuste Senior: Usar únicamente el ancho de la ventana (innerWidth)
+      // en lugar del lado más corto con innerHeight. Esto previene
+      // falsos positivos de modo compacto al hacer zoom o redimensionar verticalmente.
+      setBreakpoint(resolveBreakpoint(window.innerWidth))
       setReady(true)
-
     }
 
     recompute()
@@ -100,7 +76,6 @@ export function ResponsiveProvider({
         mql.removeEventListener("change", recompute)
       })
     }
-
   }, [])
 
   const state = buildState(breakpoint, ready)
@@ -110,5 +85,4 @@ export function ResponsiveProvider({
       {children}
     </ResponsiveContext.Provider>
   )
-
 }

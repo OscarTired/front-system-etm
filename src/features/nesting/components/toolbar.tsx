@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import {
   FilePlus2,
   FolderOpen,
@@ -11,9 +12,7 @@ import {
   PanelLeftClose,
 } from "lucide-react"
 
-import {
-  Button,
-} from "@/components/ui/button"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { PipelineScroll } from "@/shared/ui/pipeline-scroll/pipeline-scroll"
 
@@ -26,49 +25,46 @@ export interface ToolbarProps {
   onToggleLayers: () => void
   layersHidden?: boolean
   onSettings: () => void
-  // Solo se pasa en layouts compactos (mobile/tablet), donde el
-  // panel de piezas/configuración vive en un Sheet en vez de la
-  // columna fija — ver NestingPage. Ausente en desktop, así que el
-  // Toolbar no necesita saber nada de breakpoints por su cuenta.
   onTogglePanel?: () => void
 }
 
-function IconButton({
-  onClick,
-  disabled,
-  title,
-  active,
-  children,
-}: {
-  onClick: () => void
-  disabled?: boolean
+interface ToolbarButtonProps extends ButtonProps {
   title: string
   active?: boolean
-  children: React.ReactNode
-}) {
+}
+
+/**
+ * Componente atómico interno para los botones de la barra de herramientas.
+ * Mantiene la consistencia visual y de accesibilidad (ARIA).
+ */
+const ToolbarButton = memo(function ToolbarButton({
+  title,
+  active,
+  className = "",
+  ...props
+}: ToolbarButtonProps) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon-lg"
-      onClick={onClick}
-      disabled={disabled}
       title={title}
       aria-label={title}
       aria-pressed={active}
-      className={`text-neutral-400 hover:bg-white/10 hover:text-white disabled:opacity-30 ${active ? "bg-white/10 text-white" : ""}`}
-    >
-      {children}
-    </Button>
+      className={`text-neutral-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-30 ${
+        active ? "bg-white/10 text-white" : ""
+      } ${className}`}
+      {...props}
+    />
   )
-}
+})
 
-function Divider() {
-  // Se reemplaza w-[1px] por la clase canónica w-px
-  return <div className="mx-2 h-4 w-px bg-white/10" aria-hidden="true" />
-}
+/** Separador visual vertical optimizado con token canónico w-px */
+const ToolbarDivider = memo(function ToolbarDivider() {
+  return <div className="mx-2 h-4 w-px bg-white/10 shrink-0" aria-hidden="true" />
+})
 
-export function Toolbar({
+export const Toolbar = memo(function Toolbar({
   onNew,
   onOpen,
   onSave,
@@ -81,71 +77,69 @@ export function Toolbar({
 }: ToolbarProps) {
   const { isCompact } = useResponsive()
 
-  const fileActions = (
+  const renderFileActions = () => (
     <div className="flex shrink-0 items-center gap-1">
-      {/* Se reemplaza h-[18px] w-[18px] por h-5 w-5 (20px), la medida estándar de Tailwind más cercana */}
       {onTogglePanel && (
         <>
-          <IconButton onClick={onTogglePanel} title="Piezas y configuración">
+          <ToolbarButton onClick={onTogglePanel} title="Piezas y configuración">
             <PanelLeftClose className="h-5 w-5 rotate-180" strokeWidth={1.5} />
-          </IconButton>
-          <Divider />
+          </ToolbarButton>
+          <ToolbarDivider />
         </>
       )}
-      <IconButton onClick={onNew} title="Nuevo proyecto">
+      <ToolbarButton onClick={onNew} title="Nuevo proyecto">
         <FilePlus2 className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
-      <IconButton onClick={onOpen} title="Abrir proyecto">
+      </ToolbarButton>
+      <ToolbarButton onClick={onOpen} title="Abrir proyecto">
         <FolderOpen className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
-      <IconButton onClick={onSave} title="Guardar proyecto">
+      </ToolbarButton>
+      <ToolbarButton onClick={onSave} title="Guardar proyecto">
         <Save className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
+      </ToolbarButton>
 
-      <Divider />
+      <ToolbarDivider />
 
-      <IconButton onClick={onImport} title="Importar DXF/GEO">
+      <ToolbarButton onClick={onImport} title="Importar DXF/GEO">
         <FileInput className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
-      <IconButton onClick={onExport} title="Exportar">
+      </ToolbarButton>
+      <ToolbarButton onClick={onExport} title="Exportar">
         <FileOutput className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
+      </ToolbarButton>
     </div>
   )
 
-  const viewActions = (
+  const renderViewActions = () => (
     <div className="flex shrink-0 items-center gap-1">
-      <IconButton onClick={onToggleLayers} title="Ocultar marcas/doblez" active={layersHidden}>
+      <ToolbarButton
+        onClick={onToggleLayers}
+        title="Ocultar marcas/doblez"
+        active={layersHidden}
+      >
         <Layers className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
-      <IconButton onClick={onSettings} title="Configuración">
+      </ToolbarButton>
+      <ToolbarButton onClick={onSettings} title="Configuración">
         <Settings className="h-5 w-5" strokeWidth={1.5} />
-      </IconButton>
+      </ToolbarButton>
     </div>
   )
 
   return (
-    <div
+    <nav
       role="toolbar"
       aria-label="Controles del proyecto"
-      // Se reemplaza bg-[#09090b] por bg-neutral-950 (el equivalente canónico más oscuro)
-      className="flex h-14 w-full shrink-0 items-center bg-neutral-950 px-4"
+      className="flex h-14 w-full shrink-0 items-center px-4"
     >
       {isCompact ? (
-        // Ambos grupos no entran en una fila angosta: en vez de
-        // apretarlos con justify-between (se solaparían), pasan a
-        // una única fila con scroll horizontal — mismo primitivo
-        // que ya usa AdaptiveActionBar para este caso.
         <PipelineScroll className="items-center gap-1" fade drag>
-          {fileActions}
-          {viewActions}
+          {renderFileActions()}
+          {renderViewActions()}
         </PipelineScroll>
       ) : (
         <div className="flex w-full items-center justify-between">
-          {fileActions}
-          {viewActions}
+          {renderFileActions()}
+          {renderViewActions()}
         </div>
       )}
-    </div>
+    </nav>
   )
-}
+})
