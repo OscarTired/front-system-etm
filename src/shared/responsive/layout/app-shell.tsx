@@ -1,91 +1,3 @@
-"use client"
-
-import { useEffect, useRef, type ReactNode } from "react"
-import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
-
-import { AppSidebar } from "./app-sidebar"
-import { SidebarShowButton } from "./sidebar/sidebar-show-button"
-import { useSidebarStore } from "@/shared/stores/sidebar-store"
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
-import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
-import { TopBar } from "@/shared/responsive/mobile/top-bar"
-import { BottomNavigation } from "../mobile/bottom-navigation"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
-import { PullToRefresh } from "../mobile/pull-to-refresh"
-import { cn } from "@/shared/utils/utils"
-
-type Props = {
-  children: ReactNode
-}
-
-function DesktopTopBar() {
-  return (
-    <div className="flex h-12 shrink-0 items-center px-3">
-      <SidebarShowButton />
-    </div>
-  )
-}
-
-const CURVE_RADIUS = 28
-const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
-const CURVE_SQUARE = "0px 0px 0px 0px"
-const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
-
-function DesktopShell({ children }: Props) {
-  const pathname = usePathname()
-  const visualState = useSidebarStore(state => state.visualState)
-  const notifyClipTransitionEnd = useSidebarStore(
-    state => state.notifyClipTransitionEnd,
-  )
-
-  const borderRadius =
-    visualState === "hidden" || visualState === "curve-closing"
-      ? CURVE_SQUARE
-      : CURVE_ROUNDED
-
-  const handleTransitionEnd = (
-    event: React.TransitionEvent<HTMLElement>,
-  ) => {
-    if (event.target !== event.currentTarget) return
-
-    if (event.propertyName === "border-radius") {
-      notifyClipTransitionEnd()
-    }
-  }
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
-      <AppSidebar />
-
-      <main
-        onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
-        style={{
-          borderRadius,
-          transition: `border-radius ${TRANSITION_TIMING}`,
-        }}
-      >
-        <DesktopTopBar />
-        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          {children}
-        </div>
-      </main>
-    </div>
-  )
-}
-
-const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.25
-const FLICK_VELOCITY_THRESHOLD = 500
-
-const SMOOTH_TRANSITION = {
-  type: "tween",
-  duration: 0.3,
-  ease: [0.22, 1, 0.36, 1],
-} as const
-
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
@@ -95,6 +7,7 @@ function CompactShell({ children }: Props) {
   const isOpen = mode === "open"
   const selfAnimatedCloseRef = useRef(false)
 
+  // Animación programática impecable (Botones)
   useEffect(() => {
     if (selfAnimatedCloseRef.current) {
       selfAnimatedCloseRef.current = false
@@ -111,7 +24,7 @@ function CompactShell({ children }: Props) {
 
       <motion.div
         drag={isOpen ? "x" : false}
-        dragDirectionLock
+        dragDirectionLock // Bloquea el eje para que no compita con el scroll vertical
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
@@ -131,7 +44,9 @@ function CompactShell({ children }: Props) {
             animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
           }
         }}
-        style={{ x, touchAction: "pan-y" }}
+        // touch-none evita que el navegador dude entre scroll y drag
+        style={{ x, touchAction: "pan-y" }} 
+        // rounded-l-[28px] directo en CSS para no recalcular strings frame a frame
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
@@ -139,7 +54,7 @@ function CompactShell({ children }: Props) {
           inert={isOpen}
           className={cn(
             "flex min-h-0 flex-1 flex-col",
-            isOpen && "pointer-events-none select-none"
+            isOpen && "pointer-events-none select-none" // Desactiva interacciones internas en el drag
           )}
         >
           <PullToRefresh>
@@ -157,27 +72,5 @@ function CompactShell({ children }: Props) {
         </div>
       </motion.div>
     </div>
-  )
-}
-
-export function AppShell({ children }: Props) {
-  const { isMobile, ready } = useResponsive()
-
-  if (!ready) {
-    return <div className="h-full bg-[#050505]" />
-  }
-
-  if (isMobile) {
-    return (
-      <CompactShell>
-        {children}
-      </CompactShell>
-    )
-  }
-
-  return (
-    <DesktopShell>
-      {children}
-    </DesktopShell>
   )
 }
