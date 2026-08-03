@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, useMotionValue } from "motion/react"
 
@@ -94,9 +94,6 @@ function CompactShell({ children }: Props) {
 
   const x = useMotionValue(0)
   const isOpen = mode === "open"
-  
-  // Estado local para saber cuándo terminó la animación de asentamiento
-  const [isSettledClosed, setIsSettledClosed] = useState(!isOpen)
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
@@ -108,16 +105,9 @@ function CompactShell({ children }: Props) {
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
-        // 1. Durante el drag SOLO animamos 'x' (aceleración por GPU pura)
-        animate={{
-          x: isOpen ? DRAWER_REVEAL_OFFSET : 0,
-        }}
+        animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
         transition={TWEEN_TRANSITION}
         style={{ x, touchAction: "pan-y" }}
-        onDragStart={() => {
-          // En cuanto la mano toca la pantalla, aseguramos los bordes redondeados para que la tarjeta se vea suave al arrastrar
-          setIsSettledClosed(false)
-        }}
         onDragEnd={(_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
@@ -130,17 +120,8 @@ function CompactShell({ children }: Props) {
             openDrawer()
           }
         }}
-        onAnimationComplete={() => {
-          // 2. SOLO cuando termina de moverse completamente, si está cerrado, volvemos las esquinas cuadradas (0px)
-          if (!isOpen) {
-            setIsSettledClosed(true)
-          }
-        }}
-        // Aplicamos la clase cuadrada o redondeada únicamente fuera del loop de renderizado del drag
-        className={cn(
-          "absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform transition-[border-radius] duration-200 ease-out",
-          isSettledClosed ? "rounded-l-none" : "rounded-l-[28px]"
-        )}
+        {/* Se restaura la clase original estática rounded-l-[28px] sin interpolaciones */}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
