@@ -58,9 +58,6 @@ export function ResponsiveProvider({
     )
 
     const recompute = () => {
-      // Ajuste Senior: Usar únicamente el ancho de la ventana (innerWidth)
-      // en lugar del lado más corto con innerHeight. Esto previene
-      // falsos positivos de modo compacto al hacer zoom o redimensionar verticalmente.
       setBreakpoint(resolveBreakpoint(window.innerWidth))
       setReady(true)
     }
