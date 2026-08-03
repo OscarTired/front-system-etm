@@ -1,8 +1,8 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, type PanInfo } from "motion/react"
+import { motion, useMotionValue, animate, type PanInfo } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -79,18 +79,13 @@ function DesktopShell({ children }: Props) {
 // Configuración del drawer nativo
 const DRAWER_REVEAL_OFFSET = 248
 
-// Resorte liviano (mass: 0.2) para respuesta fluida sin impactos ni frenos bruscos
-const NATURAL_SPRING = {
+// Resorte para la interacción por botones (hamburguesa / click)
+const BUTTON_SPRING = {
   type: "spring",
-  stiffness: 320,
-  damping: 32,
-  mass: 0.2,
+  stiffness: 350,
+  damping: 35,
+  mass: 0.3,
 } as const
-
-const SHELL_VARIANTS = {
-  closed: { x: 0 },
-  open: { x: DRAWER_REVEAL_OFFSET },
-}
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -99,19 +94,41 @@ function CompactShell({ children }: Props) {
   const openDrawer = useMobileNavStore(s => s.openDrawer)
 
   const isOpen = mode === "open"
+  const x = useMotionValue(0)
+
+  // Sincronización cuando se activa vía Botón (Hamburguesa/Chevron)
+  useEffect(() => {
+    const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
+    const controls = animate(x, targetX, BUTTON_SPRING)
+    return () => controls.stop()
+  }, [isOpen, x])
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const { offset, velocity } = info
+    const currentX = x.get()
+    const velocityX = info.velocity.x
 
-    // Intención basada en desplazamiento de arrastre o velocidad de impulso (flick)
-    const isClosingIntent = offset.x < -50 || velocity.x < -250
-    const isOpeningIntent = offset.x > 50 || velocity.x > 250
+    // 1. Proyectamos dónde terminaría el panel según la velocidad real del usuario
+    const projectedX = currentX + velocityX * 0.15
 
-    if (isOpen && isClosingIntent) {
-      closeDrawer()
-    } else if (!isOpen && isOpeningIntent) {
+    // 2. Decisión lógica basada en proyección e inercia
+    const shouldBeOpen = projectedX > DRAWER_REVEAL_OFFSET / 2
+    const targetX = shouldBeOpen ? DRAWER_REVEAL_OFFSET : 0
+
+    // 3. Sincronizamos el store de Zustand de inmediato
+    if (shouldBeOpen && !isOpen) {
       openDrawer()
+    } else if (!shouldBeOpen && isOpen) {
+      closeDrawer()
     }
+
+    // 4. Continuación fluida: animate conserva la velocidad inicial del gesto (velocityX)
+    animate(x, targetX, {
+      type: "spring",
+      velocity: velocityX,
+      stiffness: 300,
+      damping: 32,
+      mass: 0.2,
+    })
   }
 
   return (
@@ -120,14 +137,11 @@ function CompactShell({ children }: Props) {
 
       <motion.div
         drag="x"
-        dragConstraints={{ left: 0 }}
+        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0.05}
-        dragSnapToOrigin={false}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
-        animate={isOpen ? "open" : "closed"}
-        variants={SHELL_VARIANTS}
-        transition={NATURAL_SPRING}
-        style={{ touchAction: "pan-y" }}
+        style={{ x, touchAction: "pan-y" }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
