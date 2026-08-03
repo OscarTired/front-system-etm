@@ -80,17 +80,19 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.6
 const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
 
-// duration + bounce, NO stiffness/damping/mass a mano: con esos tres
-// hay que calcular el ratio de amortiguación (damping / 2√(stiffness·mass))
-// para saber si rebota o no — eso fue lo que salió mal la vez pasada:
-// eran números elegidos "a sentimiento", con un comentario afirmando
-// "casi sin rebote" que nunca se verificó con la fórmula.
-//
-// bounce está documentado así en motion: 0 = sin rebote (garantizado
-// por la librería, no aproximado por mí), 1 = muy rebotón. duration
-// es el tiempo total en segundos. Esto es intención explícita, no
-// constantes de física reverse-engineered.
-const DRAWER_SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const
+// duration + bounce, NO stiffness/damping/mass a mano (ver historial:
+// ahí es donde adiviné mal la vez pasada). bounce:0 (commit anterior)
+// Dos resortes, no uno solo — el criterio real (el que usa Vaul, la
+// librería de drawers de shadcn/ui) es: el bounce solo tiene sentido
+// cuando hay un gesto físico real con velocidad detrás. Al soltar un
+// drag, sí — el resorte "hereda" tu velocidad y un poco de rebote se
+// siente natural. Al cerrar con un botón (hamburguesa/chevron/bottom-
+// nav) no hay ningún gesto, ninguna velocidad que continuar — el
+// propio autor de Vaul lo dice explícito: "if I simply press to
+// close, there's no bounce at all". Usar el mismo resorte para los
+// dos casos fue la confusión de fondo la vez pasada.
+const DRAG_RELEASE_SPRING = { type: "spring", duration: 0.3, bounce: 0.15 } as const
+const PROGRAMMATIC_SPRING = { type: "spring", duration: 0.3, bounce: 0 } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -104,11 +106,12 @@ function CompactShell({ children }: Props) {
 
   // Único lugar que anima `x` cuando el cambio de `mode` viene de
   // AFUERA de un drag (un botón: abrir desde bottom-nav/top-bar,
-  // cerrar desde el chevron del header). Durante un drag en curso,
-  // motion ya está escribiendo `x` directo por su cuenta — este
-  // efecto no compite porque `mode` no cambia hasta soltar.
+  // cerrar desde el chevron del header). Sin gesto físico de por
+  // medio, así que sin bounce (PROGRAMMATIC_SPRING). Durante un drag
+  // en curso, motion ya está escribiendo `x` directo por su cuenta —
+  // este efecto no compite porque `mode` no cambia hasta soltar.
   useEffect(() => {
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, DRAWER_SPRING)
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, PROGRAMMATIC_SPRING)
     return () => controls.stop()
   }, [isOpen, x])
 
@@ -127,12 +130,14 @@ function CompactShell({ children }: Props) {
           const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
-          // Anima explícito acá (no solo vía el efecto de arriba):
-          // si NO cierra, `mode` sigue en "open" y el efecto nunca se
-          // re-dispara — sin esto, soltar a mitad de camino sin pasar
-          // el umbral dejaría el drawer trabado ahí, sin volver a
-          // asentarse en el 100% abierto.
-          animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAWER_SPRING)
+          // Acá SÍ hay velocidad real del gesto que motion hereda
+          // automáticamente — DRAG_RELEASE_SPRING, con su toque de
+          // bounce. Anima explícito acá (no solo vía el efecto de
+          // arriba): si NO cierra, `mode` sigue en "open" y el efecto
+          // nunca se re-dispara — sin esto, soltar a mitad de camino
+          // sin pasar el umbral dejaría el drawer trabado ahí, sin
+          // volver a asentarse en el 100% abierto.
+          animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAG_RELEASE_SPRING)
           if (shouldClose) closeDrawer()
         }}
         style={{ x, borderRadius }}
