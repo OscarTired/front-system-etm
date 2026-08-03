@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
+import { motion, useMotionValue } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -14,11 +14,14 @@ import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 import { PullToRefresh } from "../mobile/pull-to-refresh"
-import { cn } from "@/shared/utils/utils"
 
 type Props = {
   children: ReactNode
 }
+
+/* ==========================================================================
+   DESKTOP SHELL
+   ========================================================================== */
 
 function DesktopTopBar() {
   return (
@@ -76,44 +79,30 @@ function DesktopShell({ children }: Props) {
   )
 }
 
+/* ==========================================================================
+   COMPACT (MOBILE) SHELL - SENIOR REFACTOR
+   ========================================================================== */
+
 const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.25
-const FLICK_VELOCITY_THRESHOLD = 500
+const FLICK_VELOCITY_THRESHOLD = 400
 
-// Resorte, no tween — con duration+bounce documentados (no
-// stiffness/damping/mass adivinados). bounce:0 sigue siendo la
-// garantía de la librería (cero overshoot posible), y una duration
-// más alta (0.45 en vez de 0.3) es lo que le devuelve la sensación
-// "lenta y elegante": un tween con duración fija siempre tarda
-// EXACTAMENTE lo mismo sin importar la distancia — se siente más
-// mecánico. Un resorte tiene una curva de desaceleración natural
-// (arranca rápido, se va frenando gradual) que es lo que de verdad
-// se percibe como "vivo"/premium, no solo la duración en sí.
-const SMOOTH_TRANSITION = {
+// Configuración de Spring idéntica a los sistemas operativos móviles nativos (iOS/Android)
+const MOBILE_SPRING = {
   type: "spring",
-  duration: 0.45,
-  bounce: 0,
+  stiffness: 380,
+  damping: 36,
+  mass: 0.8,
 } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
+  const openDrawer = useMobileNavStore(s => s.openDrawer)
 
   const x = useMotionValue(0)
   const isOpen = mode === "open"
-  const selfAnimatedCloseRef = useRef(false)
-
-  // Control de animación programática (Botones: hamburguesa / chevron)
-  useEffect(() => {
-    if (selfAnimatedCloseRef.current) {
-      selfAnimatedCloseRef.current = false
-      return
-    }
-
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
-    return () => controls.stop()
-  }, [isOpen, x])
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
@@ -123,35 +112,35 @@ function CompactShell({ children }: Props) {
         drag={isOpen ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0}
+        dragElastic={0.05}
         dragMomentum={false}
-        onDragEnd={async (_event, info) => {
+        // Estado declarativo: Framer Motion sincroniza 'x' automáticamente según el estado global
+        animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
+        transition={MOBILE_SPRING}
+        style={{ x, touchAction: "pan-y" }}
+        onDragEnd={(_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+          
+          // Evaluación de velocidad y distancia del gesto del usuario
           const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
+          const isFastFlickRight = info.velocity.x > FLICK_VELOCITY_THRESHOLD
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
-          x.stop()
-
-          if (shouldClose) {
-            selfAnimatedCloseRef.current = true
-            // Espera a completar la animación antes de cambiar el estado global
-            await animate(x, 0, SMOOTH_TRANSITION)
+          if (shouldClose && !isFastFlickRight) {
             closeDrawer()
           } else {
-            animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
+            openDrawer()
           }
         }}
-        style={{ x, touchAction: "pan-y" }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
+        
+        {/* Usamos el atributo nativo inert cuando el drawer está abierto */}
         <div
-          inert={isOpen}
-          className={cn(
-            "flex min-h-0 flex-1 flex-col",
-            isOpen && "pointer-events-none select-none"
-          )}
+          {...(isOpen ? { inert: "" } : {})}
+          className="flex min-h-0 flex-1 flex-col"
         >
           <PullToRefresh>
             <VerticalScroll
@@ -171,6 +160,10 @@ function CompactShell({ children }: Props) {
   )
 }
 
+/* ==========================================================================
+   MAIN ROOT SHELL
+   ========================================================================== */
+
 export function AppShell({ children }: Props) {
   const { isMobile, ready } = useResponsive()
 
@@ -179,16 +172,8 @@ export function AppShell({ children }: Props) {
   }
 
   if (isMobile) {
-    return (
-      <CompactShell>
-        {children}
-      </CompactShell>
-    )
+    return <CompactShell>{children}</CompactShell>
   }
 
-  return (
-    <DesktopShell>
-      {children}
-    </DesktopShell>
-  )
+  return <DesktopShell>{children}</DesktopShell>
 }
