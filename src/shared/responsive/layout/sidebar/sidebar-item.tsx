@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { cn } from "@/shared/utils/utils"
-import { SidebarRow, sidebarRowClassName } from "../sidebar/sidebar-row"
+import { SidebarRow } from "../sidebar/sidebar-row"
 
 type Props = {
   href: string
@@ -33,7 +33,7 @@ export function SidebarItem({
         href={href}
         onMouseEnter={onMouseEnter}
         onTouchStart={onTouchStart}
-        className={cn(active && "pointer-events-none")}
+        className={cn("w-full block", active && "pointer-events-none")}
       >
         <SidebarRow
           icon={Icon}
@@ -52,10 +52,7 @@ export function SidebarItem({
       title={collapsed ? label : undefined}
       onMouseEnter={onMouseEnter}
       onTouchStart={onTouchStart}
-      className={cn(
-        sidebarRowClassName({ collapsed, active }),
-        active && "pointer-events-none",
-      )}
+      className={cn("w-full block", active && "pointer-events-none")}
     >
       <SidebarRow
         icon={Icon}

@@ -7,7 +7,7 @@ import { cn } from "@/shared/utils/utils"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import { formatNotificationDate } from "@/features/notifications/utils/format-notification-date"
-import { SidebarRow, sidebarRowClassName } from "./sidebar-row"
+import { SidebarRow } from "./sidebar-row"
 
 import {
   Popover,
@@ -74,7 +74,6 @@ function UserRow({
           />
         </div>
 
-        {/* Nombre del usuario alineado a la izquierda */}
         <div className="min-w-0 flex-1">
           <span className="block truncate text-xs font-medium text-neutral-300">
             {user.name}
@@ -82,7 +81,6 @@ function UserRow({
         </div>
       </div>
 
-      {/* Estado (Activo o última vez) movido por completo hacia el lado derecho */}
       <div className="flex items-center gap-1.5 shrink-0 pl-2">
         {user.online ? (
           <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
@@ -219,14 +217,7 @@ export function SidebarPresence({
 
     if (isDrawer) {
       return (
-        <button
-          type="button"
-          className={cn(
-            open
-              ? "bg-white/15 text-white"
-              : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
-          )}
-        >
+        <button type="button" className="w-full text-left">
           <SidebarRow
             icon={Users}
             label="Activos"
@@ -238,39 +229,19 @@ export function SidebarPresence({
       )
     }
 
-    if (collapsed) {
-      return (
-        <button
-          type="button"
-          title={`${onlineUsers.length} en línea`}
-          className={cn(
-            sidebarRowClassName({ collapsed: true, active: open }),
-            "size-8 mx-auto"
-          )}
-        >
-          <SidebarRow
-            icon={Users}
-            label="Activos"
-            collapsed
-            active={open}
-            count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
-            collapsedBadgeColor="bg-emerald-500/20 text-emerald-400"
-            size="sm"
-          />
-        </button>
-      )
-    }
-
     return (
       <button
         type="button"
-        className={cn(sidebarRowClassName({ active: open }), "w-[calc(100%-8px)]")}
+        title={collapsed ? `${onlineUsers.length} en línea` : undefined}
+        className="w-full text-left"
       >
         <SidebarRow
           icon={Users}
           label="Activos"
+          collapsed={collapsed}
           active={open}
-          count={String(onlineUsers.length)}
+          count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
+          collapsedBadgeColor="bg-emerald-500/20 text-emerald-400"
           badgeColor="bg-emerald-500/20 text-emerald-400"
           size="sm"
         />
@@ -305,7 +276,6 @@ export function SidebarPresence({
               key={user.id}
               value={user.name}
               onSelect={() => {}}
-              /* Evitamos que el CommandItem muestre estados de hover/focus residuales al contraer */
               className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none data-[selected=true]:bg-transparent"
             >
               <div className="w-full pointer-events-auto">

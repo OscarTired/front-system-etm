@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { cn } from "@/shared/utils/utils"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useManagedOverlay } from "@/shared/stores/hooks/use-managed-overlay"
-import { SidebarRow, sidebarRowClassName } from "@/shared/responsive/layout/sidebar/sidebar-row"
+import { SidebarRow } from "@/shared/responsive/layout/sidebar/sidebar-row"
 
 import {
   Popover,
@@ -136,14 +136,7 @@ export function NotificationBell({
 
     if (isDrawer) {
       return (
-        <button
-          type="button"
-          className={cn(
-            open
-              ? "bg-white/15 text-white"
-              : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white",
-          )}
-        >
+        <button type="button" className="w-full text-left">
           <SidebarRow
             icon={Bell}
             label="Notificaciones"
@@ -155,38 +148,19 @@ export function NotificationBell({
       )
     }
 
-    if (collapsed) {
-      return (
-        <button
-          type="button"
-          title="Notificaciones"
-          className={cn(
-            sidebarRowClassName({ collapsed: true, active: open }),
-            "size-8 shrink-0 p-0 mx-auto",
-          )}
-        >
-          <SidebarRow
-            icon={Bell}
-            label="Notificaciones"
-            collapsed
-            active={open}
-            count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-            collapsedBadgeColor="bg-cyan-500 text-white"
-          />
-        </button>
-      )
-    }
-
     return (
       <button
         type="button"
-        className={cn(sidebarRowClassName({ active: open }), "w-[calc(100%-8px)]")}
+        title={collapsed ? "Notificaciones" : undefined}
+        className="w-full text-left"
       >
         <SidebarRow
           icon={Bell}
           label="Notificaciones"
+          collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
+          collapsedBadgeColor="bg-cyan-500 text-white"
           badgeColor="bg-cyan-500 text-white"
           badgeAnimated={count > 0}
         />

@@ -1,108 +1,93 @@
 "use client"
 
+import type { LucideIcon } from "lucide-react"
 import { cn } from "@/shared/utils/utils"
 
-export function sidebarRowClassName({
-  collapsed,
-  active,
+export const sidebarRowClassName = ({
+  collapsed = false,
+  active = false,
 }: {
   collapsed?: boolean
   active?: boolean
-}) {
-  return cn(
-    "mx-1 flex h-8 min-w-0 items-center rounded-md text-sm font-medium transition-colors",
-    collapsed ? "justify-center px-0" : "gap-2 px-3",
+}) =>
+  cn(
+    "relative flex w-full items-center gap-3 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out select-none",
+    collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
     active
-      ? "bg-white/6 text-white"
-      : "text-neutral-400",
+      ? "bg-white/15 text-white shadow-sm"
+      : "text-neutral-300 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white"
   )
-}
 
-type Props = {
-  icon: React.ElementType
+export type SidebarRowProps = {
+  icon: LucideIcon | React.ElementType
   label: string
   collapsed?: boolean
   active?: boolean
   count?: number | string
-  collapsedBadgeColor?: string
   badgeColor?: string
+  collapsedBadgeColor?: string
   badgeAnimated?: boolean
   isDrawer?: boolean
-  size?: "default" | "sm"
+  size?: "sm" | "md"
 }
 
 export function SidebarRow({
   icon: Icon,
   label,
-  collapsed,
-  active,
+  collapsed = false,
+  active = false,
   count,
-  collapsedBadgeColor = "bg-blue-500 text-white",
-  badgeColor = active ? "bg-white/5 text-white" : "bg-white/5 text-neutral-400",
+  badgeColor = "bg-white/10 text-white",
+  collapsedBadgeColor = "bg-cyan-500 text-white",
   badgeAnimated = false,
-  isDrawer = false,
-  size = "default",
-}: Props) {
-  const hasVisibleCount =
-    count !== undefined &&
-    (typeof count === "string" || count > 0)
-
-  const iconSize = isDrawer ? 19 : 14
-
-  const badgeStyles = {
-    default: "h-5 px-1.5 min-w-5 text-[9px]",
-    sm: "h-4 px-1 min-w-4 text-[9px]",
-  }
-
-  const containerClassName = isDrawer
-    ? cn(
-        "flex h-12 w-full min-w-0 items-center gap-3 rounded-xl px-4 font-medium transition-colors",
-        active
-          ? "bg-white/10 text-white"
-          : "text-neutral-300"
-      )
-    : undefined
-
+  size = "md",
+}: SidebarRowProps) {
   return (
-    <div className={cn("flex w-full min-w-0 items-center gap-2.5", containerClassName)}>
-      <span className={cn(
-        "relative flex shrink-0 items-center justify-center",
-        collapsed && "size-8"
-      )}>
-        <Icon size={iconSize} className="shrink-0" />
+    <div className={sidebarRowClassName({ collapsed, active })}>
+      {/* El ícono maneja su escala y desplazamiento interno al colapsar */}
+      <div className="relative flex shrink-0 items-center justify-center transition-transform duration-300 ease-in-out">
+        <Icon
+          size={size === "sm" ? 16 : 18}
+          className={cn(
+            "shrink-0 transition-all duration-300 ease-in-out",
+            active ? "text-white scale-105" : "text-neutral-400 group-hover:text-white",
+            collapsed && "scale-110"
+          )}
+        />
 
-        {collapsed && hasVisibleCount && (
-          <span className={cn(
-            "absolute -right-1 -top-1 flex items-center justify-center rounded-full font-bold shadow-sm pointer-events-none",
-            badgeStyles.sm,
-            collapsedBadgeColor,
-          )}>
+        {/* Badge colapsado */}
+        {collapsed && count !== undefined && (
+          <span
+            className={cn(
+              "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-md transition-all duration-300",
+              collapsedBadgeColor,
+              badgeAnimated && "animate-pulse"
+            )}
+          >
             {count}
           </span>
         )}
-      </span>
+      </div>
 
-      <span className={cn(
-        "min-w-0 flex-1 truncate text-left font-medium transition-[opacity,max-width] duration-200 ease-out",
-        isDrawer ? "text-base" : "text-sm",
-        collapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100"
-      )}>
-        {label}
-      </span>
-
-      {isDrawer && count !== undefined && (
-        <span className={cn("shrink-0 text-xs font-semibold tabular-nums", active ? "text-white" : "text-neutral-500")}>
-          {count}
+      {/* Texto desplegado */}
+      {!collapsed && (
+        <span
+          className={cn(
+            "flex-1 truncate transition-opacity duration-300 ease-in-out",
+            active ? "font-semibold text-white" : "text-neutral-300"
+          )}
+        >
+          {label}
         </span>
       )}
 
-      {!isDrawer && !collapsed && count !== undefined && (
+      {/* Badge expandido */}
+      {!collapsed && count !== undefined && (
         <span
           className={cn(
-            "ml-auto flex shrink-0 items-center justify-center rounded-md font-bold",
-            badgeStyles[size],
+            "ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold transition-all duration-300",
             badgeColor,
-            badgeAnimated && "animate-pulse",
+            badgeAnimated && "animate-pulse"
           )}
         >
           {count}
