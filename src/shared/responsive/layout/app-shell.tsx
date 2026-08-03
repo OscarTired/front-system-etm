@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
+import { motion, useMotionValue, useTransform } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -31,7 +31,6 @@ function DesktopTopBar() {
 const CURVE_RADIUS = 28
 const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
 const CURVE_SQUARE = "0px 0px 0px 0px"
-
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
 function DesktopShell({ children }: Props) {
@@ -81,66 +80,70 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.25
 const FLICK_VELOCITY_THRESHOLD = 500
 
-const DRAG_RELEASE_SPRING = { type: "spring", bounce: 0 } as const
-const PROGRAMMATIC_TRANSITION = { type: "tween" } as const
+// Transición fluida compartida (Spring suave con física real)
+const SHELL_SPRING_TRANSITION = {
+  type: "spring",
+  stiffness: 300,
+  damping: 30,
+  mass: 0.8,
+} as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
+  const openDrawer = useMobileNavStore(s => s.openDrawer)
 
-  const x = useMotionValue(0)
   const isOpen = mode === "open"
-  const selfAnimatedCloseRef = useRef(false)
 
-  useEffect(() => {
-    if (selfAnimatedCloseRef.current) {
-      selfAnimatedCloseRef.current = false
-      return
-    }
+  // MotionValue para controlar la posición X
+  const x = useMotionValue(0)
 
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, PROGRAMMATIC_TRANSITION)
-    return () => controls.stop()
-  }, [isOpen, x])
+  // Mapeo continuo e idéntico de bordes redondeados según el desplazamiento
+  const borderRadius = useTransform(
+    x,
+    [0, DRAWER_REVEAL_OFFSET],
+    [0, CURVE_RADIUS]
+  )
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
       <motion.div
-        drag={isOpen ? "x" : false}
+        drag="x"
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0.05} // Un toque diminuto de amortiguación táctil para evitar frenazos secos
-        dragMomentum={false}
-        dragTransition={{ power: 0 }}
+        dragElastic={{ left: 0, right: 0.1 }}
+        // La animación responde de forma declarativa al estado 'mode'
+        animate={{ x: isOpen ? DRAWER_REVEAL_OFFSET : 0 }}
+        transition={SHELL_SPRING_TRANSITION}
         onDragEnd={(_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
           const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
-          const shouldClose = currentX < closeThreshold || isFastFlickLeft
+          const isFastFlickRight = info.velocity.x > FLICK_VELOCITY_THRESHOLD
 
-          x.stop()
-
-          // Mantiene tu resorte original lento e intacto al soltar
-          animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAG_RELEASE_SPRING)
-
-          if (shouldClose) {
-            selfAnimatedCloseRef.current = true
+          if (isFastFlickLeft || currentX < closeThreshold) {
             closeDrawer()
+          } else if (isFastFlickRight || currentX >= closeThreshold) {
+            openDrawer()
           }
         }}
         style={{
           x,
+          borderRadius,
           touchAction: "pan-y",
         }}
-        // rounded-l-[28px] nativo por CSS: cero interpolación de JS en el borde durante el drag
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
           inert={isOpen}
-          className={cn("flex min-h-0 flex-1 flex-col", isOpen && "pointer-events-none")}
+          className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            isOpen && "pointer-events-none"
+          )}
         >
           <PullToRefresh>
             <VerticalScroll
