@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover"
 
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
 
 import {
   Command,
@@ -359,9 +360,12 @@ export function SidebarPresence({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-2 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
             >
-              {panelBody}
+              <FormDialogHeader title="Usuarios en línea" icon={Users} />
+              <div className="flex min-h-0 flex-1 flex-col p-2">
+                {panelBody}
+              </div>
             </DialogContent>
           </Dialog>
         </>
