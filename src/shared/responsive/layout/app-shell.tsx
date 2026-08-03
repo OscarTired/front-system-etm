@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, animate } from "motion/react"
+import { motion, type PanInfo } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -76,65 +76,59 @@ function DesktopShell({ children }: Props) {
   )
 }
 
+// Configuración del drawer nativo
 const DRAWER_REVEAL_OFFSET = 248
-const CLOSE_THRESHOLD_RATIO = 0.25
-const FLICK_VELOCITY_THRESHOLD = 500
 
-// Transición suave unificada mediante easing cúbico
-const SMOOTH_TRANSITION = {
-  type: "tween",
-  duration: 0.3,
-  ease: [0.22, 1, 0.36, 1],
+// Física de resorte tipo iOS/Android nativo
+const NATURAL_SPRING = {
+  type: "spring",
+  stiffness: 350,
+  damping: 35,
+  mass: 1,
 } as const
+
+// Variantes directas para evitar cálculos manuales
+const SHELL_VARIANTS = {
+  closed: { x: 0 },
+  open: { x: DRAWER_REVEAL_OFFSET },
+}
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
+  const openDrawer = useMobileNavStore(s => s.openDrawer)
 
-  const x = useMotionValue(0)
   const isOpen = mode === "open"
-  const selfAnimatedCloseRef = useRef(false)
 
-  // Control de animación programática (Botones: hamburguesa / chevron)
-  useEffect(() => {
-    if (selfAnimatedCloseRef.current) {
-      selfAnimatedCloseRef.current = false
-      return
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    const { offset, velocity } = info
+
+    // Intención basada en arrastre real o impulso (flick)
+    const isClosingIntent = offset.x < -60 || velocity.x < -300
+    const isOpeningIntent = offset.x > 60 || velocity.x > 300
+
+    if (isOpen && isClosingIntent) {
+      closeDrawer()
+    } else if (!isOpen && isOpeningIntent) {
+      openDrawer()
     }
-
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
-    return () => controls.stop()
-  }, [isOpen, x])
+  }
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
       <motion.div
-        drag={isOpen ? "x" : false}
-        dragDirectionLock
+        drag="x"
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0}
-        dragMomentum={false}
-        onDragEnd={async (_event, info) => {
-          const currentX = x.get()
-          const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
-          const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
-          const shouldClose = currentX < closeThreshold || isFastFlickLeft
-
-          x.stop()
-
-          if (shouldClose) {
-            selfAnimatedCloseRef.current = true
-            // Espera a completar la animación antes de cambiar el estado global
-            await animate(x, 0, SMOOTH_TRANSITION)
-            closeDrawer()
-          } else {
-            animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
-          }
-        }}
-        style={{ x, touchAction: "pan-y" }}
+        dragElastic={0.1}
+        dragSnapToOrigin={false}
+        onDragEnd={handleDragEnd}
+        animate={isOpen ? "open" : "closed"}
+        variants={SHELL_VARIANTS}
+        transition={NATURAL_SPRING}
+        style={{ touchAction: "pan-y" }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
