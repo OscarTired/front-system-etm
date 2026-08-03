@@ -17,7 +17,6 @@ import type { SheetStats } from "../components/properties-panel"
 
 const PIECE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#eab308", "#ec4899", "#a855f7"]
 
-/** Suma la longitud de todos los segmentos de todas las sub-entidades de una pieza — proxy de tiempo/costo de corte. */
 function cutLengthOf(pieces: { subEntities?: { outline: { points: { x: number; y: number }[] } }[] }[]): number {
   return pieces.reduce((sum, p) => {
     if (!p.subEntities?.length) return sum
@@ -105,7 +104,8 @@ export function useNestingProject() {
     }
   }, [sheetGroups, sheetConfig])
 
-  const handleRemove = useCallback((id: string) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev)), [])
+  const handleRemove = useCallback((id: string) => setRows((prev) => prev.filter((r) => r.id !== id)), [])
+  const handleClearAll = useCallback(() => setRows([]), [])
   const handleUpdateQuantity = useCallback((id: string, quantity: string) =>
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
@@ -191,6 +191,7 @@ export function useNestingProject() {
     onMachineChange: handleMachineChange,
 
     onRemove: handleRemove,
+    onClearAll: handleClearAll,
     onUpdateQuantity: handleUpdateQuantity,
     onAddCad: handleAddCad,
 
