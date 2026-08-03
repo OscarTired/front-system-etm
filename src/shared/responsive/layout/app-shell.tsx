@@ -208,9 +208,10 @@ function CompactShell({ children }: Props) {
           x,
           touchAction: "pan-y",
           willChange: "transform",
-          transformTemplate: ({ x }: { x: string | number }) =>
-            `translate3d(${typeof x === "number" ? `${x}px` : x}, 0, 0)`,
         }}
+        transformTemplate={({ x }: { x: string | number }) =>
+          `translate3d(${typeof x === "number" ? `${x}px` : x}, 0, 0)`
+        }
         className="absolute inset-0 z-20 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] shadow-2xl"
       >
         {/* Sombra Lateral Dinámica */}
@@ -266,3 +267,4 @@ export function AppShell({ children }: Props) {
 
   return <DesktopShell>{children}</DesktopShell>
 }
+
