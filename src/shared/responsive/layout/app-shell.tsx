@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useAnimationControls, type PanInfo } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -28,7 +28,8 @@ function DesktopTopBar() {
   )
 }
 
-const CURVE_ROUNDED = "28px 0px 0px 28px"
+const CURVE_RADIUS = 28
+const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
 const CURVE_SQUARE = "0px 0px 0px 0px"
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
@@ -75,74 +76,70 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-// --- Configuración Mobile Drawer estilo iOS ---
 const DRAWER_REVEAL_OFFSET = 248
-const SWIPE_THRESHOLD = 80
+const CLOSE_THRESHOLD_RATIO = 0.25
+const FLICK_VELOCITY_THRESHOLD = 500
 
-const drawerVariants = {
-  closed: { 
-    x: 0, 
-    transition: { type: "spring", stiffness: 400, damping: 40 } 
-  },
-  open: { 
-    x: DRAWER_REVEAL_OFFSET, 
-    transition: { type: "spring", stiffness: 400, damping: 40 } 
-  },
+const SMOOTH_TRANSITION = {
+  type: "tween",
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
 } as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
-  const openDrawer = useMobileNavStore(s => s.openDrawer)
-  const controls = useAnimationControls()
 
+  const x = useMotionValue(0)
   const isOpen = mode === "open"
+  const selfAnimatedCloseRef = useRef(false)
 
   useEffect(() => {
-    controls.start(isOpen ? "open" : "closed")
-  }, [isOpen, controls])
-
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const offset = info.offset.x
-    const velocity = info.velocity.x
-
-    if (isOpen) {
-      if (offset < -SWIPE_THRESHOLD || velocity < -300) {
-        closeDrawer()
-      } else {
-        controls.start("open", { velocity })
-      }
-    } else {
-      if (offset > SWIPE_THRESHOLD || velocity > 300) {
-        openDrawer()
-      } else {
-        controls.start("closed", { velocity })
-      }
+    if (selfAnimatedCloseRef.current) {
+      selfAnimatedCloseRef.current = false
+      return
     }
-  }
+
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
+    return () => controls.stop()
+  }, [isOpen, x])
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
       <SidebarDrawer />
 
       <motion.div
-        drag="x"
+        drag={isOpen ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0.05}
-        dragSnapToOrigin={false}
-        animate={controls}
-        initial={isOpen ? "open" : "closed"}
-        variants={drawerVariants}
-        onDragEnd={handleDragEnd}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] touch-pan-y will-change-transform"
+        dragElastic={0}
+        dragMomentum={false}
+        onDragEnd={async (_event, info) => {
+          const currentX = x.get()
+          const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
+          const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
+          const shouldClose = currentX < closeThreshold || isFastFlickLeft
+
+          x.stop()
+
+          if (shouldClose) {
+            selfAnimatedCloseRef.current = true
+            await animate(x, 0, SMOOTH_TRANSITION)
+            closeDrawer()
+          } else {
+            animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
+          }
+        }}
+        style={{ x, touchAction: "pan-y" }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
+          inert={isOpen}
           className={cn(
-            "flex min-h-0 flex-1 flex-col transition-opacity duration-200",
-            isOpen && "pointer-events-none opacity-90"
+            "flex min-h-0 flex-1 flex-col",
+            isOpen && "pointer-events-none select-none"
           )}
         >
           <PullToRefresh>
@@ -171,8 +168,16 @@ export function AppShell({ children }: Props) {
   }
 
   if (isMobile) {
-    return <CompactShell>{children}</CompactShell>
+    return (
+      <CompactShell>
+        {children}
+      </CompactShell>
+    )
   }
 
-  return <DesktopShell>{children}</DesktopShell>
+  return (
+    <DesktopShell>
+      {children}
+    </DesktopShell>
+  )
 }
