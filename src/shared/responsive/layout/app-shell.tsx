@@ -78,31 +78,9 @@ function DesktopShell({ children }: Props) {
 }
 
 const DRAWER_REVEAL_OFFSET = 248
-// 0.25 es el default real de Vaul (closeThreshold, documentado en su
-// fuente como @default 0.25) — no un número mío. Tenía 0.6 antes, más
-// del doble de exigente que la referencia: por eso un arrastre chico
-// no cerraba aunque fuera una intención clara de cerrar.
 const CLOSE_THRESHOLD_RATIO = 0.25
-const FLICK_VELOCITY_THRESHOLD = 500 // px/s (motion reporta velocidad en px/s, no px/ms)
+const FLICK_VELOCITY_THRESHOLD = 500
 
-// Sin duration/bounce/stiffness/damping propios — motion ya trae sus
-// propios valores por defecto documentados en su paquete (no
-// inventados por mí, y no hace falta ajustarlos después):
-//   - DRAG_RELEASE_SPRING: resorte puro sin config, para cuando SÍ hay
-//     un gesto físico real con velocidad detrás (soltar un drag).
-//   - PROGRAMMATIC_TRANSITION: tween simple, sin resorte — la misma
-//     decisión que toma Vaul (la librería de drawers de shadcn/ui)
-//     para el caso sin gesto (botón: hamburguesa/chevron/bottom-nav):
-//     ahí no hay velocidad que "heredar", así que ni siquiera hace
-//     falta un spring.
-// Sin duration/bounce/stiffness/damping propios salvo bounce:0 — que
-// no es "un número mío a ajustar", es la garantía documentada de
-// motion (cero overshoot posible, ver docs de SpringOptions). El
-// resorte "bare" (sin nada) trae stiffness:100/damping:10 por
-// default, que da un ratio de amortiguación de 0.5 — bastante
-// subamortiguado, rebota de verdad. Ese rebote (pasarse del borde 0 o
-// DRAWER_REVEAL_OFFSET) es la causa más probable de que soltar el
-// drag a medio camino se viera roto.
 const DRAG_RELEASE_SPRING = { type: "spring", bounce: 0 } as const
 const PROGRAMMATIC_TRANSITION = { type: "tween" } as const
 
@@ -112,25 +90,13 @@ function CompactShell({ children }: Props) {
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const x = useMotionValue(0)
-  const borderRadius = useTransform(x, [0, DRAWER_REVEAL_OFFSET], [0, CURVE_RADIUS])
+  
+  // Mapeamos el valor x a un MotionValue de píxeles puro
+  const radiusValue = useTransform(x, [0, DRAWER_REVEAL_OFFSET], [0, CURVE_RADIUS])
 
   const isOpen = mode === "open"
-
-  // Se pone en true justo antes de un closeDrawer() que YA animó `x`
-  // a mano (onDragEnd) — así el efecto de abajo, que reacciona a
-  // isOpen, sabe que esta vuelta no le toca animar nada: si lo
-  // hiciera igual, terminaríamos con DOS animate() sobre el mismo `x`
-  // casi al mismo tiempo (una con resorte, otra con tween), cada una
-  // tirando para su lado — eso es lo que se veía "roto" al soltar.
   const selfAnimatedCloseRef = useRef(false)
 
-  // Único lugar que anima `x` cuando el cambio de `mode` viene de
-  // AFUERA de un drag (un botón: abrir desde bottom-nav/top-bar,
-  // cerrar desde el chevron del header). Sin gesto físico de por
-  // medio, así que sin bounce (PROGRAMMATIC_TRANSITION). Durante un
-  // drag en curso, motion ya está escribiendo `x` directo por su
-  // cuenta — este efecto no compite porque `mode` no cambia hasta
-  // soltar.
   useEffect(() => {
     if (selfAnimatedCloseRef.current) {
       selfAnimatedCloseRef.current = false
@@ -158,52 +124,26 @@ function CompactShell({ children }: Props) {
           const isFastFlickLeft = info.velocity.x < -FLICK_VELOCITY_THRESHOLD
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
-          // x.stop() antes de animar: por más que dragMomentum esté en
-          // false, esto garantiza que no quede ningún control del
-          // gesto de drag todavía "vivo" sobre el valor peleando un
-          // frame con la animación nueva — nada de handoff implícito.
           x.stop()
 
-          // Acá SÍ hay velocidad real del gesto que motion hereda
-          // automáticamente — DRAG_RELEASE_SPRING. Anima explícito acá
-          // (no solo vía el efecto de arriba): si NO cierra, `mode`
-          // sigue en "open" y el efecto nunca se re-dispara — sin
-          // esto, soltar a mitad de camino sin pasar el umbral
-          // dejaría el drawer trabado ahí, sin volver a asentarse en
-          // el 100% abierto. Si SÍ cierra, marcamos la bandera antes
-          // de closeDrawer() para que el efecto no vuelva a animar lo
-          // que esta llamada ya está animando.
+          // Tu animación spring lenta/suave exacta e intacta
           animate(x, shouldClose ? 0 : DRAWER_REVEAL_OFFSET, DRAG_RELEASE_SPRING)
+
           if (shouldClose) {
             selfAnimatedCloseRef.current = true
             closeDrawer()
           }
         }}
-        style={{ x, borderRadius }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
+        style={{
+          x,
+          // Evita que el navegador dude entre scroll y drag
+          touchAction: "pan-y",
+          // Pasamos el valor numérico transformado para evitar concatenar strings a 60fps
+          borderTopLeftRadius: radiusValue,
+          borderBottomLeftRadius: radiusValue,
+        }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform"
       >
-        {/*
-          pointer-events-none + inert acá adentro, NO en el motion.div
-          de afuera: ese necesita seguir recibiendo el gesto de drag
-          normalmente. pointer-events-none en un descendiente no
-          bloquea el bubbling hacia el ancestro (el hit-test salta a
-          lo que esté detrás, pero el evento sigue subiendo por la
-          cadena real del DOM), así que el drag sigue andando.
-
-          Esto reemplaza el onClickCapture de antes: ese solo
-          interceptaba clicks — con el drawer abierto, el contenido
-          desplazado seguía siendo hoverable, tabbable por teclado, y
-          reaccionaba a cualquier otra interacción que no fuera
-          literalmente un click. pointer-events-none bloquea TODA
-          interacción de puntero, inert además lo saca del foco por
-          teclado y del árbol de accesibilidad — el estándar real que
-          usan los drawers premium, no un parche por tipo de evento.
-
-          TopBar queda AFUERA de este wrapper a propósito: ahí vive el
-          botón de hamburguesa, que tiene que seguir funcionando para
-          cerrar el drawer incluso con el contenido bloqueado — es
-          chrome/navegación, no contenido de página.
-        */}
         <TopBar />
         <div
           inert={isOpen}
