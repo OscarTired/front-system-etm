@@ -82,14 +82,13 @@ export function SidebarRow({
         )}
       </span>
 
-      {!collapsed && (
-        <span className={cn(
-          "min-w-0 flex-1 truncate text-left font-medium",
-          isDrawer ? "text-base" : "text-sm"
-        )}>
-          {label}
-        </span>
-      )}
+      <span className={cn(
+        "min-w-0 flex-1 truncate text-left font-medium transition-[opacity,max-width] duration-200 ease-out",
+        isDrawer ? "text-base" : "text-sm",
+        collapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100"
+      )}>
+        {label}
+      </span>
 
       {isDrawer && count !== undefined && (
         <span className={cn("shrink-0 text-xs font-semibold tabular-nums", active ? "text-white" : "text-neutral-500")}>
