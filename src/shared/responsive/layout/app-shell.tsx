@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, useTransform, animate } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -93,33 +93,19 @@ function CompactShell({ children }: Props) {
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const x = useMotionValue(0)
-  const borderRadiusValue = useMotionValue(0)
-  const borderRadius = useTransform(borderRadiusValue, (r) => `${r}px 0px 0px ${r}px`)
   const isOpen = mode === "open"
   const selfAnimatedCloseRef = useRef(false)
 
-  // El borde curvo NO seguía la posición de x en cada frame — eso lo
-  // corregí, se calculaba "en pleno movimiento" del drag. Ahora es un
-  // motion value PROPIO que solo se anima en los dos mismos puntos
-  // donde `x` también se anima (acá abajo y en onDragEnd) — nunca
-  // durante el arrastre en sí. Como ambos arrancan en el MISMO
-  // momento con la MISMA transición, se mantienen sincronizados por
-  // construcción (disparados juntos), no por seguir a `x` en vivo.
+  // Control de animación programática (Botones: hamburguesa / chevron)
   useEffect(() => {
     if (selfAnimatedCloseRef.current) {
       selfAnimatedCloseRef.current = false
       return
     }
 
-    const target = isOpen ? DRAWER_REVEAL_OFFSET : 0
-    const radiusTarget = isOpen ? CURVE_RADIUS : 0
-    const xControls = animate(x, target, SMOOTH_TRANSITION)
-    const radiusControls = animate(borderRadiusValue, radiusTarget, SMOOTH_TRANSITION)
-    return () => {
-      xControls.stop()
-      radiusControls.stop()
-    }
-  }, [isOpen, x, borderRadiusValue])
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
+    return () => controls.stop()
+  }, [isOpen, x])
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
@@ -138,23 +124,18 @@ function CompactShell({ children }: Props) {
           const shouldClose = currentX < closeThreshold || isFastFlickLeft
 
           x.stop()
-          borderRadiusValue.stop()
 
           if (shouldClose) {
             selfAnimatedCloseRef.current = true
             // Espera a completar la animación antes de cambiar el estado global
-            await Promise.all([
-              animate(x, 0, SMOOTH_TRANSITION),
-              animate(borderRadiusValue, 0, SMOOTH_TRANSITION),
-            ])
+            await animate(x, 0, SMOOTH_TRANSITION)
             closeDrawer()
           } else {
             animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
-            animate(borderRadiusValue, CURVE_RADIUS, SMOOTH_TRANSITION)
           }
         }}
-        style={{ x, borderRadius, touchAction: "pan-y" }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
+        style={{ x, touchAction: "pan-y" }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
