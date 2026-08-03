@@ -116,7 +116,7 @@ function CompactShell({ children }: Props) {
 
   return (
     <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
-      <SidebarDrawer />
+      <SidebarDrawer x={x} xRange={[0, DRAWER_REVEAL_OFFSET]} />
 
       <motion.div
         drag={isOpen ? "x" : false}
@@ -141,8 +141,11 @@ function CompactShell({ children }: Props) {
         }}
         style={{ x, borderRadius }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505]"
-        onClick={() => {
-          if (isOpen) closeDrawer()
+        onClickCapture={(event) => {
+          if (!isOpen) return
+          event.preventDefault()
+          event.stopPropagation()
+          closeDrawer()
         }}
       >
         <TopBar />
