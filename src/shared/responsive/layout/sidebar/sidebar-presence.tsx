@@ -15,6 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
 import {
   Command,
   CommandEmpty,
@@ -198,6 +200,7 @@ export function SidebarPresence({
         <button
           type="button"
           aria-label="Usuarios en línea"
+          onClick={() => handleOpenChange(!open)}
           className={cn(
             "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
             open && "bg-white/20 text-white",
@@ -274,91 +277,110 @@ export function SidebarPresence({
     )
   }
 
+  const panelBody = (
+    <Command className="bg-transparent flex flex-col h-full" shouldFilter={false}>
+      <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717] shrink-0">
+        <Search size={14} className="text-neutral-500 shrink-0" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={event => setQuery(event.target.value)}
+          placeholder="Buscar miembro..."
+          className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
+        />
+      </div>
+
+      <CommandList className={cn(
+        "select-none overflow-y-auto transition-all duration-200 ease-in-out flex-1",
+        !isTopbar && (expanded || query.trim() ? "max-h-96" : "max-h-60"),
+      )}>
+        <CommandEmpty>
+          {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
+        </CommandEmpty>
+
+        <CommandGroup>
+          {filteredUsers.map(user => (
+            <CommandItem
+              key={user.id}
+              value={user.name}
+              onSelect={() => {}}
+              /* Evitamos que el CommandItem muestre estados de hover/focus residuales al contraer */
+              className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none data-[selected=true]:bg-transparent"
+            >
+              <div className="w-full pointer-events-auto">
+                <UserRow user={user} />
+              </div>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+
+      {showToggle && (
+        <div className="pt-2 mt-1 shrink-0">
+          {!expanded ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.currentTarget.blur()
+                setExpanded(true)
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent"
+            >
+              Ver todos
+              <span className="text-neutral-600">
+                ({allUsers.length})
+              </span>
+              <ChevronDown size={13} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.currentTarget.blur()
+                setExpanded(false)
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white bg-white/5"
+            >
+              Mostrar menos
+              <ChevronUp size={13} />
+            </button>
+          )}
+        </div>
+      )}
+    </Command>
+  )
+
   return (
     <div ref={presenceRef} className={cn(!isTopbar && "select-none my-1")}>
-      <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>{renderTriggerContent()}</PopoverTrigger>
+      {isTopbar ? (
+        <>
+          {renderTriggerContent()}
 
-        <PopoverContent
-          data-sidebar-popover
-          side={isTopbar ? "bottom" : "right"}
-          align={isTopbar ? "end" : "start"}
-          sideOffset={8}
-          floatingClassName="w-72"
-          className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none flex flex-col"
-        >
-          <Command className="bg-transparent flex flex-col h-full" shouldFilter={false}>
-            <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717] shrink-0">
-              <Search size={14} className="text-neutral-500 shrink-0" />
-              <Input
-                ref={inputRef}
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-                placeholder="Buscar miembro..."
-                className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
-              />
-            </div>
+          <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent
+              size="large"
+              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-2 text-white shadow-2xl"
+            >
+              {panelBody}
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : (
+        <Popover open={open} onOpenChange={handleOpenChange}>
+          <PopoverTrigger asChild>{renderTriggerContent()}</PopoverTrigger>
 
-            <CommandList className={cn(
-              "select-none overflow-y-auto transition-all duration-200 ease-in-out flex-1",
-              expanded || query.trim() ? "max-h-96" : "max-h-60",
-            )}>
-              <CommandEmpty>
-                {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
-              </CommandEmpty>
-
-              <CommandGroup>
-                {filteredUsers.map(user => (
-                  <CommandItem
-                    key={user.id}
-                    value={user.name}
-                    onSelect={() => {}}
-                    /* Evitamos que el CommandItem muestre estados de hover/focus residuales al contraer */
-                    className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none data-[selected=true]:bg-transparent"
-                  >
-                    <div className="w-full pointer-events-auto">
-                      <UserRow user={user} />
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-
-            {showToggle && (
-              <div className="pt-2 mt-1 shrink-0">
-                {!expanded ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.currentTarget.blur()
-                      setExpanded(true)
-                    }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent"
-                  >
-                    Ver todos
-                    <span className="text-neutral-600">
-                      ({allUsers.length})
-                    </span>
-                    <ChevronDown size={13} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.currentTarget.blur()
-                      setExpanded(false)
-                    }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white bg-white/5"
-                  >
-                    Mostrar menos
-                    <ChevronUp size={13} />
-                  </button>
-                )}
-              </div>
-            )}
-          </Command>
-        </PopoverContent>
-      </Popover>
+          <PopoverContent
+            data-sidebar-popover
+            side="right"
+            align="start"
+            sideOffset={8}
+            floatingClassName="w-72"
+            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none flex flex-col"
+          >
+            {panelBody}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   )
 }
