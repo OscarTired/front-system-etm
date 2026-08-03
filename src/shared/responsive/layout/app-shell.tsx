@@ -79,15 +79,14 @@ function DesktopShell({ children }: Props) {
 // Configuración del drawer nativo
 const DRAWER_REVEAL_OFFSET = 248
 
-// Física de resorte tipo iOS/Android nativo
+// Resorte liviano (mass: 0.2) para respuesta fluida sin impactos ni frenos bruscos
 const NATURAL_SPRING = {
   type: "spring",
-  stiffness: 350,
-  damping: 35,
-  mass: 1,
+  stiffness: 320,
+  damping: 32,
+  mass: 0.2,
 } as const
 
-// Variantes directas para evitar cálculos manuales
 const SHELL_VARIANTS = {
   closed: { x: 0 },
   open: { x: DRAWER_REVEAL_OFFSET },
@@ -104,9 +103,9 @@ function CompactShell({ children }: Props) {
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const { offset, velocity } = info
 
-    // Intención basada en arrastre real o impulso (flick)
-    const isClosingIntent = offset.x < -60 || velocity.x < -300
-    const isOpeningIntent = offset.x > 60 || velocity.x > 300
+    // Intención basada en desplazamiento de arrastre o velocidad de impulso (flick)
+    const isClosingIntent = offset.x < -50 || velocity.x < -250
+    const isOpeningIntent = offset.x > 50 || velocity.x > 250
 
     if (isOpen && isClosingIntent) {
       closeDrawer()
@@ -121,8 +120,8 @@ function CompactShell({ children }: Props) {
 
       <motion.div
         drag="x"
-        dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
-        dragElastic={0.1}
+        dragConstraints={{ left: 0 }}
+        dragElastic={0.05}
         dragSnapToOrigin={false}
         onDragEnd={handleDragEnd}
         animate={isOpen ? "open" : "closed"}
