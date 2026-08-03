@@ -88,7 +88,7 @@ const drawerVariants = {
     x: DRAWER_REVEAL_OFFSET, 
     transition: { type: "spring", stiffness: 400, damping: 40 } 
   },
-}
+} as const
 
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
