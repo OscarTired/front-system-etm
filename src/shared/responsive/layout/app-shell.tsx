@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, useMotionValue, animate } from "motion/react"
 
@@ -80,7 +80,6 @@ const DRAWER_REVEAL_OFFSET = 248
 const CLOSE_THRESHOLD_RATIO = 0.25
 const FLICK_VELOCITY_THRESHOLD = 500
 
-// Transición suave unificada mediante easing cúbico
 const SMOOTH_TRANSITION = {
   type: "tween",
   duration: 0.3,
@@ -96,14 +95,28 @@ function CompactShell({ children }: Props) {
   const isOpen = mode === "open"
   const selfAnimatedCloseRef = useRef(false)
 
-  // Control de animación programática (Botones: hamburguesa / chevron)
+  // Controla la activación del clipPath/bordes SOLO al terminar el cierre
+  const [applyClipPath, setApplyClipPath] = useState(false)
+
   useEffect(() => {
     if (selfAnimatedCloseRef.current) {
       selfAnimatedCloseRef.current = false
       return
     }
 
-    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, SMOOTH_TRANSITION)
+    if (isOpen) {
+      setApplyClipPath(false)
+    }
+
+    const controls = animate(x, isOpen ? DRAWER_REVEAL_OFFSET : 0, {
+      ...SMOOTH_TRANSITION,
+      onComplete: () => {
+        // Al terminar de cerrar programáticamente (botón), aplicamos el clipPath
+        if (!isOpen) {
+          setApplyClipPath(true)
+        }
+      },
+    })
     return () => controls.stop()
   }, [isOpen, x])
 
@@ -117,6 +130,9 @@ function CompactShell({ children }: Props) {
         dragConstraints={{ left: 0, right: DRAWER_REVEAL_OFFSET }}
         dragElastic={0}
         dragMomentum={false}
+        onDragStart={() => {
+          setApplyClipPath(false)
+        }}
         onDragEnd={async (_event, info) => {
           const currentX = x.get()
           const closeThreshold = DRAWER_REVEAL_OFFSET * CLOSE_THRESHOLD_RATIO
@@ -127,15 +143,22 @@ function CompactShell({ children }: Props) {
 
           if (shouldClose) {
             selfAnimatedCloseRef.current = true
-            // Espera a completar la animación antes de cambiar el estado global
+            // 1. Espera a que el deslizamiento físico termine en x = 0
             await animate(x, 0, SMOOTH_TRANSITION)
+            // 2. Solo al final de todo el movimiento aplicamos el recorte/curva
+            setApplyClipPath(true)
             closeDrawer()
           } else {
             animate(x, DRAWER_REVEAL_OFFSET, SMOOTH_TRANSITION)
           }
         }}
-        style={{ x, touchAction: "pan-y" }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-l-[28px] bg-[#050505] will-change-transform"
+        style={{
+          x,
+          touchAction: "pan-y",
+          borderTopLeftRadius: applyClipPath ? CURVE_RADIUS : 0,
+          borderBottomLeftRadius: applyClipPath ? CURVE_RADIUS : 0,
+        }}
+        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-transform"
       >
         <TopBar />
         <div
