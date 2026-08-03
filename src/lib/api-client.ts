@@ -8,7 +8,6 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 export function initApiClient() {
 
   api.interceptors.request.use((config) => {
-
     const token = authSession.get()
 
     if (token) {
@@ -22,16 +21,15 @@ export function initApiClient() {
     (res) => res,
     (err) => {
 
-      // Petición cancelada a propósito (ej. React Query aborta un
-      // fetch que ya no importa porque el componente se desmontó o
-      // cambió el query key). No es un error real — no hay nada que
-      // mostrarle al usuario, y menos "Ocurrió un error inesperado".
       if (axios.isCancel(err)) {
         return Promise.reject(err)
       }
 
-      if (err?.response?.status === 401) {
+      // Verificamos si la petición fue realizada al endpoint de login
+      const isLoginEndpoint = err?.config?.url?.includes("/auth/login")
 
+      // Solo redirigimos e ignoramos la sesión si el 401 NO viene del endpoint de login
+      if (err?.response?.status === 401 && !isLoginEndpoint) {
         authSession.set(null)
         useAuthStore.getState().logout()
 
@@ -42,7 +40,8 @@ export function initApiClient() {
         return Promise.reject(err)
       }
 
-      if (!err?.config?.skipGlobalErrorToast) {
+      // Evitamos mostrar la toast global si la petición fue el login (el formulario ya maneja su propio mensaje)
+      if (!err?.config?.skipGlobalErrorToast && !isLoginEndpoint) {
 
         const status = err?.response?.status
         const backendMessage = err?.response?.data?.message
