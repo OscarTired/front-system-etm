@@ -133,11 +133,6 @@ export function useNestingProject() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
 
-  /**
-   * Aplica la misma transformación geométrica a outline + subEntities
-   * respecto a un único pivote (centro del bbox de toda la pieza).
-   * Así rotar/espejar mueve la pieza como un cuerpo rígido.
-   */
   const transformRow = useCallback(
     (id: string, transform: (o: PieceOutline, pivot: Point2D) => PieceOutline) => {
       setRows((prev) =>
@@ -191,8 +186,13 @@ export function useNestingProject() {
 
   const handleRun = useCallback(() => {
     if (validPieces.length === 0 || isRunning) return
-    run(validPieces, { sheet: sheetConfig })
-  }, [validPieces, isRunning, run, sheetConfig])
+    run(validPieces, {
+      sheet: sheetConfig,
+      mode: "precise",
+      separation: Number(settings.separacion) || 0,
+      rotationMode: settings.rotacionPermitida,
+    })
+  }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida])
 
   const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number, bridges?: BridgeSettings) => {
     if (!sheets) return

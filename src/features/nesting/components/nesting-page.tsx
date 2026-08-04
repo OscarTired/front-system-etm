@@ -9,6 +9,7 @@ import type { PlacedPiece, NestedSheet } from "../engine/types"
 import type { BridgeSettings } from "../export/dxf-export"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 import { useNestingProject } from "../hooks/use-nesting-project"
+import { constrainToMode } from "../utils/transform-mode"
 
 import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
@@ -51,6 +52,7 @@ export function NestingPage() {
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
   const [positionOverrides, setPositionOverrides] = useState<Record<number, { dx: number; dy: number }>>({})
+  const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -126,9 +128,9 @@ export function NestingPage() {
     })
   }, [])
 
-  const handleShowAllLayers = useCallback(() => setHiddenLayerKeys(new Set()), []),
+  const handleShowAllLayers = useCallback(() => setHiddenLayerKeys(new Set()), [])
 
-  sheetTabItems: SheetTabItem[] = useMemo(
+  const sheetTabItems: SheetTabItem[] = useMemo(
     () =>
       project.sheetGroups.map((group, i) => ({
         key: String(group.startIndex),
@@ -155,18 +157,23 @@ export function NestingPage() {
     setActivePanel("inspector")
   }, [])
 
-  /** Persiste el arrastre manual de piezas en la plancha (P0). */
   const handleMovePieces = useCallback((pieceIndices: number[], dx: number, dy: number) => {
     if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return
+
+    // Aplicamos constrainToMode antes de registrar el desplazamiento
+    let wantDx = dx
+    let wantDy = dy
+    ;({ dx: wantDx, dy: wantDy } = constrainToMode(transformMode ?? "free", wantDx, wantDy))
+
     setPositionOverrides((prev) => {
       const next = { ...prev }
       for (const idx of pieceIndices) {
         const cur = next[idx] ?? { dx: 0, dy: 0 }
-        next[idx] = { dx: cur.dx + dx, dy: cur.dy + dy }
+        next[idx] = { dx: cur.dx + wantDx, dy: cur.dy + wantDy }
       }
       return next
     })
-  }, [])
+  }, [transformMode])
 
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return

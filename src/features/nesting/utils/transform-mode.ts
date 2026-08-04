@@ -1,4 +1,4 @@
-import type { TransformMode } from "../types/types"
+import type { TransformMode } from "../components/dxf-canvas/types/types"
 
 /**
  * En modo geométrico solo se permite mover en un eje dominante
