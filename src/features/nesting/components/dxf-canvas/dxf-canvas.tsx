@@ -8,7 +8,12 @@ import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
 import { hitTestPieceAt } from "./utils/hit-test"
-import { clampOffsetToFreeSpace, isPlacementValid } from "./utils/collision"
+import {
+  buildCollisionIndex,
+  resolveDragOffset,
+  type CollisionIndex,
+  type SnapGuide,
+} from "./utils/collision"
 import { findNearestSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { useCanvasView } from "./hooks/use-canvas-view"
@@ -49,6 +54,10 @@ export function DxfCanvas({
 
   /** Un solo objeto mutable: el draw lee pieceDragRef.current sin realloc. */
   const pieceDragRef = useRef<PieceDragState | null>(null)
+  /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
+  const collisionIndexRef = useRef<CollisionIndex | null>(null)
+  /** Guías de snap magnético del frame actual (draw las lee sin setState). */
+  const snapGuidesRef = useRef<SnapGuide[]>([])
 
   const [showGrid, setShowGrid] = useState(true)
   const [snapEnabled, setSnapEnabled] = useState(true)
@@ -106,6 +115,7 @@ export function DxfCanvas({
         activeTool: measure.activeTool,
         localToScreen: (p) => view.localToScreen(canvas, p),
         dragPreview,
+        snapGuides: snapGuidesRef.current,
       })
     })
   }, [
@@ -123,6 +133,7 @@ export function DxfCanvas({
   ])
 
   useEffect(() => {
+    collisionIndexRef.current = buildCollisionIndex(pieces)
     const entities = piecesToEntities(pieces, hiddenKeys)
     entitiesRef.current = entities
     const { segments, totalLength, fullPath } = buildToolpath(entities)
@@ -221,19 +232,26 @@ export function DxfCanvas({
         if (rawPoint) {
           const wantDx = rawPoint.x - pieceDrag.startLocal.x
           const wantDy = rawPoint.y - pieceDrag.startLocal.y
-          // Paredes: otras piezas bloquean; se puede pegar, no atravesar
-          const { dx, dy, blocked } = clampOffsetToFreeSpace(
+          const resolved = resolveDragOffset(
             pieces,
             pieceDrag.pieceIndices,
             wantDx,
             wantDy,
+            view.viewRef.current.scale,
             sheetSize,
-            0
+            {
+              clearance: 0,
+              snapPx: 10,
+              snapEnabled: snapEnabled,
+              index: collisionIndexRef.current ?? undefined,
+            }
           )
-          pieceDrag.offset.x = dx
-          pieceDrag.offset.y = dy
+          pieceDrag.offset.x = resolved.dx
+          pieceDrag.offset.y = resolved.dy
+          snapGuidesRef.current = resolved.guides
           const pushed =
-            blocked && (Math.abs(wantDx - dx) > 0.5 || Math.abs(wantDy - dy) > 0.5)
+            resolved.blocked &&
+            (Math.abs(wantDx - resolved.dx) > 0.5 || Math.abs(wantDy - resolved.dy) > 0.5)
           setCursor(pushed ? "not-allowed" : "move")
           scheduleDraw()
         }
@@ -270,12 +288,13 @@ export function DxfCanvas({
       pieceDragRef.current = null
       if (pieceDrag) {
         const { offset, pieceIndices } = pieceDrag
-        const canCommit =
-          (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) &&
-          isPlacementValid(pieces, pieceIndices, offset.x, offset.y, sheetSize, 0)
-        if (canCommit) {
+        // SIEMPRE confirmar el offset ya clampeado en el drag.
+        // No revalidar aquí: el contacto borde-borde es válido y
+        // un segundo test con floats distintos provocaba el "snap back".
+        if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
           onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
+        snapGuidesRef.current = []
         setCursor("default")
         scheduleDraw()
         return

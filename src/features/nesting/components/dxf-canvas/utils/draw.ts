@@ -44,6 +44,7 @@ export interface DrawContext {
   localToScreen: (p: Point) => Point
   /** Preview de arrastre: se aplica con ctx.translate, sin clonar entidades. */
   dragPreview?: PieceDragPreview | null
+  snapGuides?: { axis: "x" | "y"; value: number }[]
 }
 
 export function strokeToolpathUntil(
@@ -145,6 +146,7 @@ export function drawScene(d: DrawContext) {
     activeTool,
     localToScreen,
     dragPreview,
+    snapGuides,
   } = d
 
   const { scale, offsetX, offsetY } = view
@@ -345,6 +347,27 @@ export function drawScene(d: DrawContext) {
       }
       ctx.setLineDash([])
     }
+  }
+
+
+  if (snapGuides && snapGuides.length > 0) {
+    ctx.save()
+    ctx.strokeStyle = "#f472b6"
+    ctx.lineWidth = 1 / scale
+    ctx.setLineDash([6 / scale, 4 / scale])
+    for (const g of snapGuides) {
+      ctx.beginPath()
+      if (g.axis === "x") {
+        ctx.moveTo(g.value, -50)
+        ctx.lineTo(g.value, (sheetSize?.height ?? 10000) + 50)
+      } else {
+        ctx.moveTo(-50, g.value)
+        ctx.lineTo((sheetSize?.width ?? 10000) + 50, g.value)
+      }
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
+    ctx.restore()
   }
 
   if (snapCandidate) {

@@ -1,33 +1,38 @@
-import type { Point } from "../types/types"
-import type { NestingPieceInput } from "../types/types"
+import type { Point, NestingPieceInput } from "../types/types"
 
-/**
- * ¿Se solapan dos polígonos? (mismo criterio que el motor de nesting)
- * 1) bbox rechazo rápido
- * 2) cruce de aristas o uno dentro del otro
- */
-function segmentsIntersect(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
-  const orient = (p: Point, q: Point, r: Point) => {
-    const v = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y)
-    if (Math.abs(v) < 1e-9) return 0
-    return v > 0 ? 1 : 2
+/* ─── basics ─────────────────────────────────────────────────────────── */
+
+function bboxOf(pts: Point[]) {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]
+    if (p.x < minX) minX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.x > maxX) maxX = p.x
+    if (p.y > maxY) maxY = p.y
   }
-  const onSeg = (p: Point, q: Point, r: Point) =>
-    q.x <= Math.max(p.x, r.x) + 1e-9 &&
-    q.x >= Math.min(p.x, r.x) - 1e-9 &&
-    q.y <= Math.max(p.y, r.y) + 1e-9 &&
-    q.y >= Math.min(p.y, r.y) - 1e-9
+  return { minX, minY, maxX, maxY }
+}
 
-  const o1 = orient(a1, a2, b1)
-  const o2 = orient(a1, a2, b2)
-  const o3 = orient(b1, b2, a1)
-  const o4 = orient(b1, b2, a2)
-  if (o1 !== o2 && o3 !== o4) return true
-  if (o1 === 0 && onSeg(a1, b1, a2)) return true
-  if (o2 === 0 && onSeg(a1, b2, a2)) return true
-  if (o3 === 0 && onSeg(b1, a1, b2)) return true
-  if (o4 === 0 && onSeg(b1, a2, b2)) return true
-  return false
+type BBox = ReturnType<typeof bboxOf>
+
+function translatePoly(pts: Point[], dx: number, dy: number): Point[] {
+  const out = new Array<Point>(pts.length)
+  for (let i = 0; i < pts.length; i++) {
+    out[i] = { x: pts[i].x + dx, y: pts[i].y + dy }
+  }
+  return out
+}
+
+function areaAbs(pts: Point[]): number {
+  let a = 0
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    a += pts[j].x * pts[i].y - pts[i].x * pts[j].y
+  }
+  return Math.abs(a) * 0.5
 }
 
 function pointInPolygon(point: Point, polygon: Point[]): boolean {
@@ -37,38 +42,42 @@ function pointInPolygon(point: Point, polygon: Point[]): boolean {
       yi = polygon[i].y
     const xj = polygon[j].x,
       yj = polygon[j].y
-    const inter =
-      yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi + 1e-15) + xi
-    if (inter) inside = !inside
+    if (
+      yi > point.y !== yj > point.y &&
+      point.x < ((xj - xi) * (point.y - yi)) / (yj - yi + 1e-15) + xi
+    ) {
+      inside = !inside
+    }
   }
   return inside
 }
 
-function bbox(pts: Point[]) {
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity
-  for (const p of pts) {
-    if (p.x < minX) minX = p.x
-    if (p.y < minY) minY = p.y
-    if (p.x > maxX) maxX = p.x
-    if (p.y > maxY) maxY = p.y
-  }
-  return { minX, minY, maxX, maxY }
+function orient(a: Point, b: Point, c: Point): number {
+  const v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y)
+  if (Math.abs(v) < 1e-10) return 0
+  return v > 0 ? 1 : 2
 }
 
-/** Solape real (no solo tocar bordes). Tolerancia pequeña permite “pegarse”. */
-export function polygonsOverlap(a: Point[], b: Point[], gap = 0.01): boolean {
+/** Cruce propio (no colineal / no solo tocar extremo). */
+function segmentsProperIntersect(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
+  const o1 = orient(a1, a2, b1)
+  const o2 = orient(a1, a2, b2)
+  const o3 = orient(b1, b2, a1)
+  const o4 = orient(b1, b2, a2)
+  if (o1 === 0 || o2 === 0 || o3 === 0 || o4 === 0) return false
+  return o1 !== o2 && o3 !== o4
+}
+
+/**
+ * Solape de sólidos: aristas se cruzan O un vértice queda en el interior.
+ * Contacto borde-borde (colineal / extremo) NO cuenta → se puede pegar.
+ */
+function solidsOverlap(a: Point[], b: Point[]): boolean {
   if (a.length < 3 || b.length < 3) return false
-  const A = bbox(a)
-  const B = bbox(b)
-  if (
-    A.maxX < B.minX - gap ||
-    B.maxX < A.minX - gap ||
-    A.maxY < B.minY - gap ||
-    B.maxY < A.minY - gap
-  ) {
+  const A = bboxOf(a)
+  const B = bboxOf(b)
+  // Separados (incluye solo-tocar por bbox exacto con epsilon negativo nulo)
+  if (A.maxX <= B.minX || B.maxX <= A.minX || A.maxY <= B.minY || B.maxY <= A.minY) {
     return false
   }
 
@@ -76,83 +85,267 @@ export function polygonsOverlap(a: Point[], b: Point[], gap = 0.01): boolean {
     const a1 = a[i]
     const a2 = a[(i + 1) % a.length]
     for (let j = 0; j < b.length; j++) {
-      const b1 = b[j]
-      const b2 = b[(j + 1) % b.length]
-      if (segmentsIntersect(a1, a2, b1, b2)) return true
+      if (segmentsProperIntersect(a1, a2, b[j], b[(j + 1) % b.length])) return true
     }
   }
-  return pointInPolygon(a[0], b) || pointInPolygon(b[0], a)
+
+  // Interior: probar varios vértices (más robusto que solo [0])
+  const samplesA = [0, (a.length / 3) | 0, (a.length / 2) | 0, ((2 * a.length) / 3) | 0]
+  for (const si of samplesA) {
+    if (pointInPolygon(a[si % a.length], b)) return true
+  }
+  const samplesB = [0, (b.length / 3) | 0, (b.length / 2) | 0, ((2 * b.length) / 3) | 0]
+  for (const si of samplesB) {
+    if (pointInPolygon(b[si % b.length], a)) return true
+  }
+  return false
 }
 
-function translatePoly(pts: Point[], dx: number, dy: number): Point[] {
-  return pts.map((p) => ({ x: p.x + dx, y: p.y + dy }))
-}
+/* ─── piece geometry: outer solid + holes (calados) ──────────────────── */
 
-/** Contorno de colisión de una pieza: outline fusionado, o bbox de subOutlines. */
-export function pieceCollisionPolygon(piece: NestingPieceInput): Point[] | null {
-  if (piece.outline && piece.outline.length >= 3) return piece.outline
-  // Fallback: envolver todos los puntos de subOutlines en un rect (conservador)
-  const pts: Point[] = []
-  for (const s of piece.subOutlines) pts.push(...s.points)
-  if (pts.length < 3) return null
-  const b = bbox(pts)
-  return [
-    { x: b.minX, y: b.minY },
-    { x: b.maxX, y: b.minY },
-    { x: b.maxX, y: b.maxY },
-    { x: b.minX, y: b.maxY },
-  ]
+export type PieceGeom = {
+  /** Contorno exterior (sólido). */
+  outer: Point[]
+  outerBox: BBox
+  /** Huecos internos (calados). Piezas pequeñas pueden entrar aquí. */
+  holes: Point[][]
 }
 
 /**
- * ¿El offset (dx,dy) deja a las piezas movidas sin solaparse con el resto
- * y dentro de la plancha (si se indica sheetSize)?
- * gap > 0 = separación mínima (kerf suave); 0 = se pueden tocar.
+ * Heurística de outer vs holes:
+ * - Si hay `outline` fusionado → outer.
+ * - subOutlines cerrados (o casi): el de mayor área = outer; el resto
+ *   totalmente contenidos en outer = holes.
  */
+export function pieceCollisionGeom(piece: NestingPieceInput): PieceGeom | null {
+  const rings: Point[][] = []
+
+  if (piece.outline && piece.outline.length >= 3) {
+    rings.push(piece.outline)
+  }
+
+  for (const sub of piece.subOutlines) {
+    if (sub.points.length >= 3) rings.push(sub.points)
+  }
+
+  if (rings.length === 0) return null
+
+  // Mayor área = exterior
+  let outerIdx = 0
+  let bestArea = -1
+  for (let i = 0; i < rings.length; i++) {
+    const ar = areaAbs(rings[i])
+    if (ar > bestArea) {
+      bestArea = ar
+      outerIdx = i
+    }
+  }
+  const outer = rings[outerIdx]
+  const outerBox = bboxOf(outer)
+
+  const holes: Point[][] = []
+  for (let i = 0; i < rings.length; i++) {
+    if (i === outerIdx) continue
+    const r = rings[i]
+    // Hueco: centroide del anillo dentro del outer y área menor
+    const cx =
+      r.reduce((s, p) => s + p.x, 0) / r.length
+    const cy =
+      r.reduce((s, p) => s + p.y, 0) / r.length
+    if (pointInPolygon({ x: cx, y: cy }, outer) && areaAbs(r) < bestArea * 0.98) {
+      holes.push(r)
+    }
+  }
+
+  return { outer, outerBox, holes }
+}
+
+/** @deprecated usar pieceCollisionGeom */
+export function pieceCollisionPolygon(piece: NestingPieceInput): Point[] | null {
+  return pieceCollisionGeom(piece)?.outer ?? null
+}
+
+/* ─── spatial index ──────────────────────────────────────────────────── */
+
+export type CollisionIndex = {
+  geoms: (PieceGeom | null)[]
+  grid: Map<string, number[]>
+  cellSize: number
+}
+
+function cellKey(cx: number, cy: number) {
+  return cx + "," + cy
+}
+
+export function buildCollisionIndex(pieces: NestingPieceInput[]): CollisionIndex {
+  const geoms: (PieceGeom | null)[] = new Array(pieces.length)
+  let maxSpan = 50
+
+  for (let i = 0; i < pieces.length; i++) {
+    const g = pieceCollisionGeom(pieces[i])
+    geoms[i] = g
+    if (g) {
+      maxSpan = Math.max(
+        maxSpan,
+        g.outerBox.maxX - g.outerBox.minX,
+        g.outerBox.maxY - g.outerBox.minY
+      )
+    }
+  }
+
+  const cellSize = Math.max(40, maxSpan * 0.75)
+  const grid = new Map<string, number[]>()
+
+  for (let i = 0; i < geoms.length; i++) {
+    const g = geoms[i]
+    if (!g) continue
+    const x0 = Math.floor(g.outerBox.minX / cellSize)
+    const x1 = Math.floor(g.outerBox.maxX / cellSize)
+    const y0 = Math.floor(g.outerBox.minY / cellSize)
+    const y1 = Math.floor(g.outerBox.maxY / cellSize)
+    for (let cx = x0; cx <= x1; cx++) {
+      for (let cy = y0; cy <= y1; cy++) {
+        const k = cellKey(cx, cy)
+        const list = grid.get(k)
+        if (list) list.push(i)
+        else grid.set(k, [i])
+      }
+    }
+  }
+
+  return { geoms, grid, cellSize }
+}
+
+function queryCandidates(index: CollisionIndex, box: BBox, pad: number): number[] {
+  const { grid, cellSize } = index
+  const x0 = Math.floor((box.minX - pad) / cellSize)
+  const x1 = Math.floor((box.maxX + pad) / cellSize)
+  const y0 = Math.floor((box.minY - pad) / cellSize)
+  const y1 = Math.floor((box.maxY + pad) / cellSize)
+  const seen = new Set<number>()
+  const out: number[] = []
+  for (let cx = x0; cx <= x1; cx++) {
+    for (let cy = y0; cy <= y1; cy++) {
+      const list = grid.get(cellKey(cx, cy))
+      if (!list) continue
+      for (const i of list) {
+        if (!seen.has(i)) {
+          seen.add(i)
+          out.push(i)
+        }
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * ¿El sólido `moving` (outer) choca con el sólido de `other`?
+ * Excepción: si `moving` está COMPLETAMENTE dentro de un hueco de `other`
+ * y no solapa el material (solo el vacío del calado) → permitido.
+ */
+function pairCollides(movingOuter: Point[], other: PieceGeom): boolean {
+  // ¿Está el móvil enteramente dentro de algún hueco del otro?
+  if (other.holes.length > 0) {
+    for (const hole of other.holes) {
+      // Todos los vértices del móvil dentro del hueco y sin solapar el anillo del hueco como sólido inverso
+      let allIn = true
+      for (let i = 0; i < movingOuter.length; i++) {
+        if (!pointInPolygon(movingOuter[i], hole)) {
+          allIn = false
+          break
+        }
+      }
+      if (allIn) {
+        // Dentro del calado: solo ilegal si penetra el borde del hueco hacia el material
+        // (solape con outer del other menos el hueco ≈ solape con outer Y no solo en hueco)
+        // Si está 100% en el hueco, no colisiona con material.
+        return false
+      }
+    }
+  }
+
+  return solidsOverlap(movingOuter, other.outer)
+}
+
 export function isPlacementValid(
   pieces: NestingPieceInput[],
   movingIndices: number[],
   dx: number,
   dy: number,
   sheetSize?: { width: number; height: number },
-  gap = 0
+  clearance = 0,
+  index?: CollisionIndex
 ): boolean {
+  const idx = index ?? buildCollisionIndex(pieces)
   const moving = new Set(movingIndices)
-  const movedPolys: Point[][] = []
 
-  for (const idx of movingIndices) {
-    const piece = pieces[idx]
-    if (!piece) continue
-    const poly = pieceCollisionPolygon(piece)
-    if (!poly) continue
-    const t = translatePoly(poly, dx, dy)
+  let uMinX = Infinity,
+    uMinY = Infinity,
+    uMaxX = -Infinity,
+    uMaxY = -Infinity
+  const movedOuters: Point[][] = []
+  const movedBoxes: BBox[] = []
 
+  for (const mi of movingIndices) {
+    const g = idx.geoms[mi]
+    if (!g) continue
+    const outer = translatePoly(g.outer, dx, dy)
+    const box: BBox = {
+      minX: g.outerBox.minX + dx,
+      minY: g.outerBox.minY + dy,
+      maxX: g.outerBox.maxX + dx,
+      maxY: g.outerBox.maxY + dy,
+    }
     if (sheetSize) {
-      const b = bbox(t)
-      if (b.minX < -gap || b.minY < -gap || b.maxX > sheetSize.width + gap || b.maxY > sheetSize.height + gap) {
+      if (
+        box.minX < -clearance ||
+        box.minY < -clearance ||
+        box.maxX > sheetSize.width + clearance ||
+        box.maxY > sheetSize.height + clearance
+      ) {
         return false
       }
     }
-    movedPolys.push(t)
+    movedOuters.push(outer)
+    movedBoxes.push(box)
+    if (box.minX < uMinX) uMinX = box.minX
+    if (box.minY < uMinY) uMinY = box.minY
+    if (box.maxX > uMaxX) uMaxX = box.maxX
+    if (box.maxY > uMaxY) uMaxY = box.maxY
   }
 
-  // Entre sí el grupo móvil no debería auto-solaparse de forma nueva;
-  // normalmente ya venían sin solaparse y se trasladan rígido.
-  for (let i = 0; i < pieces.length; i++) {
-    if (moving.has(i)) continue
-    const other = pieceCollisionPolygon(pieces[i])
+  if (movedOuters.length === 0) return true
+
+  const candidates = queryCandidates(
+    idx,
+    { minX: uMinX, minY: uMinY, maxX: uMaxX, maxY: uMaxY },
+    2 + clearance
+  )
+
+  for (const ci of candidates) {
+    if (moving.has(ci)) continue
+    const other = idx.geoms[ci]
     if (!other) continue
-    for (const mp of movedPolys) {
-      if (polygonsOverlap(mp, other, gap)) return false
+    for (let m = 0; m < movedOuters.length; m++) {
+      const mb = movedBoxes[m]
+      if (
+        mb.maxX < other.outerBox.minX ||
+        other.outerBox.maxX < mb.minX ||
+        mb.maxY < other.outerBox.minY ||
+        other.outerBox.maxY < mb.minY
+      ) {
+        continue
+      }
+      if (pairCollides(movedOuters[m], other)) return false
     }
   }
   return true
 }
 
 /**
- * Dado un offset candidato, devuelve el mayor offset libre a lo largo del
- * mismo vector (búsqueda binaria). Así las otras piezas actúan como paredes:
- * te detienes al contacto, no atraviesas.
+ * Nunca permite penetrar. Binary search + verificación del punto final.
+ * Si el resultado intermedio aún penetra por float, retrocede un escalón.
  */
 export function clampOffsetToFreeSpace(
   pieces: NestingPieceInput[],
@@ -160,23 +353,224 @@ export function clampOffsetToFreeSpace(
   dx: number,
   dy: number,
   sheetSize?: { width: number; height: number },
-  gap = 0
+  clearance = 0,
+  index?: CollisionIndex
 ): { dx: number; dy: number; blocked: boolean } {
-  if (isPlacementValid(pieces, movingIndices, dx, dy, sheetSize, gap)) {
+  const idx = index ?? buildCollisionIndex(pieces)
+
+  if (isPlacementValid(pieces, movingIndices, dx, dy, sheetSize, clearance, idx)) {
     return { dx, dy, blocked: false }
   }
-  // Si ni un paso mínimo es válido, bloqueo total
-  if (!isPlacementValid(pieces, movingIndices, 0, 0, sheetSize, gap)) {
-    // Estado inicial ya inválido (nest con solape): permitir el intento sin clamp raro
-    return { dx, dy, blocked: true }
-  }
+
+  // Origen inválido (nest ya solapado): permitir solo el movimiento que MEJORA
+  // (no abrir carta blanca a atravesar)
+  const originOk = isPlacementValid(pieces, movingIndices, 0, 0, sheetSize, clearance, idx)
 
   let lo = 0
   let hi = 1
-  for (let iter = 0; iter < 18; iter++) {
+  for (let iter = 0; iter < 24; iter++) {
     const mid = (lo + hi) / 2
-    if (isPlacementValid(pieces, movingIndices, dx * mid, dy * mid, sheetSize, gap)) lo = mid
-    else hi = mid
+    if (isPlacementValid(pieces, movingIndices, dx * mid, dy * mid, sheetSize, clearance, idx)) {
+      lo = mid
+    } else {
+      hi = mid
+    }
   }
-  return { dx: dx * lo, dy: dy * lo, blocked: lo < 0.999 }
+
+  // Seguridad: si lo aún reporta inválido (no debería), bajar
+  let t = lo
+  for (let s = 0; s < 8 && t > 0; s++) {
+    if (isPlacementValid(pieces, movingIndices, dx * t, dy * t, sheetSize, clearance, idx)) break
+    t *= 0.5
+  }
+
+  if (!originOk && t < 1e-8) {
+    // No podemos ni quedarnos: no mover
+    return { dx: 0, dy: 0, blocked: true }
+  }
+
+  return {
+    dx: dx * t,
+    dy: dy * t,
+    blocked: t < 0.999,
+  }
+}
+
+/* ─── magnetic snap ──────────────────────────────────────────────────── */
+
+export type SnapGuide = {
+  axis: "x" | "y"
+  value: number
+}
+
+export function applyMagneticSnap(
+  pieces: NestingPieceInput[],
+  movingIndices: number[],
+  dx: number,
+  dy: number,
+  scale: number,
+  sheetSize?: { width: number; height: number },
+  snapPx = 10,
+  index?: CollisionIndex
+): { dx: number; dy: number; guides: SnapGuide[] } {
+  const idx = index ?? buildCollisionIndex(pieces)
+  const threshold = snapPx / Math.max(scale, 1e-6)
+  const moving = new Set(movingIndices)
+
+  let mMinX = Infinity,
+    mMinY = Infinity,
+    mMaxX = -Infinity,
+    mMaxY = -Infinity
+  let has = false
+  for (const mi of movingIndices) {
+    const g = idx.geoms[mi]
+    if (!g) continue
+    has = true
+    const minX = g.outerBox.minX + dx
+    const minY = g.outerBox.minY + dy
+    const maxX = g.outerBox.maxX + dx
+    const maxY = g.outerBox.maxY + dy
+    if (minX < mMinX) mMinX = minX
+    if (minY < mMinY) mMinY = minY
+    if (maxX > mMaxX) mMaxX = maxX
+    if (maxY > mMaxY) mMaxY = maxY
+  }
+  if (!has) return { dx, dy, guides: [] }
+
+  const targetsX: number[] = []
+  const targetsY: number[] = []
+  if (sheetSize) {
+    targetsX.push(0, sheetSize.width)
+    targetsY.push(0, sheetSize.height)
+  }
+  for (let i = 0; i < idx.geoms.length; i++) {
+    if (moving.has(i)) continue
+    const g = idx.geoms[i]
+    if (!g) continue
+    targetsX.push(g.outerBox.minX, g.outerBox.maxX)
+    targetsY.push(g.outerBox.minY, g.outerBox.maxY)
+  }
+
+  let bestAdjX = 0,
+    bestDistX = threshold + 1,
+    guideX: number | null = null
+  for (const edge of [mMinX, mMaxX]) {
+    for (const t of targetsX) {
+      const d = t - edge
+      const ad = Math.abs(d)
+      if (ad < bestDistX) {
+        bestDistX = ad
+        bestAdjX = d
+        guideX = t
+      }
+    }
+  }
+
+  let bestAdjY = 0,
+    bestDistY = threshold + 1,
+    guideY: number | null = null
+  for (const edge of [mMinY, mMaxY]) {
+    for (const t of targetsY) {
+      const d = t - edge
+      const ad = Math.abs(d)
+      if (ad < bestDistY) {
+        bestDistY = ad
+        bestAdjY = d
+        guideY = t
+      }
+    }
+  }
+
+  let outDx = dx
+  let outDy = dy
+  const guides: SnapGuide[] = []
+  if (bestDistX <= threshold) {
+    outDx += bestAdjX
+    if (guideX !== null) guides.push({ axis: "x", value: guideX })
+  }
+  if (bestDistY <= threshold) {
+    outDy += bestAdjY
+    if (guideY !== null) guides.push({ axis: "y", value: guideY })
+  }
+  return { dx: outDx, dy: outDy, guides }
+}
+
+/**
+ * 1) snap  2) clamp estricto (no penetrar sólidos)
+ * Snap NUNCA se aplica si deja la pieza en colisión.
+ */
+export function resolveDragOffset(
+  pieces: NestingPieceInput[],
+  movingIndices: number[],
+  wantDx: number,
+  wantDy: number,
+  scale: number,
+  sheetSize?: { width: number; height: number },
+  options?: {
+    clearance?: number
+    snapPx?: number
+    snapEnabled?: boolean
+    index?: CollisionIndex
+  }
+): { dx: number; dy: number; blocked: boolean; guides: SnapGuide[] } {
+  const clearance = options?.clearance ?? 0
+  const snapEnabled = options?.snapEnabled !== false
+  const snapPx = options?.snapPx ?? 10
+  const index = options?.index ?? buildCollisionIndex(pieces)
+
+  let dx = wantDx
+  let dy = wantDy
+  let guides: SnapGuide[] = []
+
+  if (snapEnabled) {
+    const snapped = applyMagneticSnap(
+      pieces,
+      movingIndices,
+      dx,
+      dy,
+      scale,
+      sheetSize,
+      snapPx,
+      index
+    )
+    // Solo aceptar snap si la posición snappeada es válida
+    if (
+      isPlacementValid(
+        pieces,
+        movingIndices,
+        snapped.dx,
+        snapped.dy,
+        sheetSize,
+        clearance,
+        index
+      )
+    ) {
+      dx = snapped.dx
+      dy = snapped.dy
+      guides = snapped.guides
+    }
+    // si el snap penetraría, se ignora y se sigue con want*
+  }
+
+  const clamped = clampOffsetToFreeSpace(
+    pieces,
+    movingIndices,
+    dx,
+    dy,
+    sheetSize,
+    clearance,
+    index
+  )
+
+  // Guías solo si el resultado final sigue alineado
+  if (guides.length && (clamped.dx !== dx || clamped.dy !== dy)) {
+    guides = []
+  }
+
+  return {
+    dx: clamped.dx,
+    dy: clamped.dy,
+    blocked: clamped.blocked,
+    guides,
+  }
 }
