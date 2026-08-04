@@ -122,6 +122,10 @@ interface DxfCanvasProps {
   hiddenKeys?: string[];
   /** Índices de piezas que solapan con alguna otra (detección de colisiones) — se resaltan en rojo, tienen prioridad visual sobre la selección normal. */
   collidingPieceIndices?: number[];
+  /** Se dispara al soltar un arrastre directo sobre una pieza seleccionada — dx/dy en unidades del mundo (mm), no píxeles de pantalla. */
+  onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void;
+  /** Se dispara al presionar R (90° horario) o Shift+R (antihorario) con piezas seleccionadas — mismo atajo que "Rotar" en FreeCAD. */
+  onRotateSelected?: (pieceIndices: number[], degrees: number) => void;
 }
 
 const SHEET_STROKE = '#71717a';
@@ -167,7 +171,7 @@ function fmtMm(v: number): string {
   return `${v.toFixed(1)}mm`;
 }
 
-export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSelectPiece, hiddenKeys, collidingPieceIndices = [] }: DxfCanvasProps) => {
+export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSelectPiece, hiddenKeys, collidingPieceIndices = [], onMovePieces, onRotateSelected }: DxfCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
@@ -175,6 +179,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   const totalPathLengthRef = useRef(0);
   const viewRef = useRef<ViewState>({ scale: 1, offsetX: 0, offsetY: 0 });
   const draggingRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number; moved: boolean } | null>(null);
+  const pieceDragRef = useRef<{ pieceIndices: number[]; startLocal: Point; offset: Point } | null>(null);
 
   const [showGrid, setShowGrid] = useState(true);
 
@@ -814,6 +819,24 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     if (!canvas) return;
 
     const onPointerDown = (e: PointerEvent) => {
+      const rawPoint = screenToLocal(e.clientX, e.clientY);
+
+      if (activeTool === 'none' && rawPoint && selectedPieceIndices.length > 0) {
+        const selectedSet = new Set(selectedPieceIndices);
+        let hitSelected = false;
+        for (const ent of entitiesRef.current) {
+          if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && selectedSet.has(ent.pieceIndex) && ent.points.length >= 3) {
+            if (pointInPolygon(rawPoint, ent.points)) hitSelected = true;
+          }
+        }
+        if (hitSelected) {
+          pieceDragRef.current = { pieceIndices: [...selectedPieceIndices], startLocal: rawPoint, offset: { x: 0, y: 0 } };
+          canvas.setPointerCapture(e.pointerId);
+          canvas.style.cursor = 'grabbing';
+          return;
+        }
+      }
+
       draggingRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -836,6 +859,30 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top });
       }
 
+      const pieceDrag = pieceDragRef.current;
+      if (pieceDrag) {
+        const rawPoint = screenToLocal(e.clientX, e.clientY);
+        if (rawPoint) {
+          pieceDrag.offset = { x: rawPoint.x - pieceDrag.startLocal.x, y: rawPoint.y - pieceDrag.startLocal.y };
+          draw();
+        }
+        return;
+      }
+
+      if (activeTool === 'none' && !draggingRef.current) {
+        const rawPoint = screenToLocal(e.clientX, e.clientY);
+        let overSelected = false;
+        if (rawPoint && selectedPieceIndices.length > 0) {
+          const selectedSet = new Set(selectedPieceIndices);
+          for (const ent of entitiesRef.current) {
+            if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && selectedSet.has(ent.pieceIndex) && ent.points.length >= 3) {
+              if (pointInPolygon(rawPoint, ent.points)) overSelected = true;
+            }
+          }
+        }
+        canvas.style.cursor = overSelected ? 'move' : 'grab';
+      }
+
       const drag = draggingRef.current;
       if (!drag) return;
       const dx = e.clientX - drag.startX;
@@ -845,6 +892,17 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       draw();
     };
     const onPointerUp = (e: PointerEvent) => {
+      const pieceDrag = pieceDragRef.current;
+      pieceDragRef.current = null;
+      if (pieceDrag) {
+        canvas.style.cursor = 'move';
+        if (Math.abs(pieceDrag.offset.x) > 0.01 || Math.abs(pieceDrag.offset.y) > 0.01) {
+          onMovePieces?.(pieceDrag.pieceIndices, pieceDrag.offset.x, pieceDrag.offset.y);
+        }
+        draw();
+        return;
+      }
+
       const drag = draggingRef.current;
       draggingRef.current = null;
       if (!drag) return;
