@@ -8,6 +8,7 @@ import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
 import { hitTestPieceAt } from "./utils/hit-test"
+import { clampOffsetToFreeSpace, isPlacementValid } from "./utils/collision"
 import { findNearestSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { useCanvasView } from "./hooks/use-canvas-view"
@@ -218,10 +219,22 @@ export function DxfCanvas({
       if (pieceDrag) {
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         if (rawPoint) {
-          // Mutación in-place: un solo objeto, sin setState por frame
-          pieceDrag.offset.x = rawPoint.x - pieceDrag.startLocal.x
-          pieceDrag.offset.y = rawPoint.y - pieceDrag.startLocal.y
-          setCursor("move")
+          const wantDx = rawPoint.x - pieceDrag.startLocal.x
+          const wantDy = rawPoint.y - pieceDrag.startLocal.y
+          // Paredes: otras piezas bloquean; se puede pegar, no atravesar
+          const { dx, dy, blocked } = clampOffsetToFreeSpace(
+            pieces,
+            pieceDrag.pieceIndices,
+            wantDx,
+            wantDy,
+            sheetSize,
+            0
+          )
+          pieceDrag.offset.x = dx
+          pieceDrag.offset.y = dy
+          const pushed =
+            blocked && (Math.abs(wantDx - dx) > 0.5 || Math.abs(wantDy - dy) > 0.5)
+          setCursor(pushed ? "not-allowed" : "move")
           scheduleDraw()
         }
         return
@@ -257,7 +270,10 @@ export function DxfCanvas({
       pieceDragRef.current = null
       if (pieceDrag) {
         const { offset, pieceIndices } = pieceDrag
-        if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
+        const canCommit =
+          (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) &&
+          isPlacementValid(pieces, pieceIndices, offset.x, offset.y, sheetSize, 0)
+        if (canCommit) {
           onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
         setCursor("default")
@@ -324,6 +340,8 @@ export function DxfCanvas({
     onSelectPiece,
     onMovePieces,
     scheduleDraw,
+    pieces,
+    sheetSize,
   ])
 
   const handleZoom = useCallback(
