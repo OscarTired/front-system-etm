@@ -4,7 +4,6 @@ import type { ReactNode } from "react"
 
 import {
   ScrollArea,
-  ScrollBar,
 } from "@/components/ui/scroll-area"
 
 import {
@@ -115,8 +114,6 @@ export function EntityTable<T>({
           )
 
         })}
-
-        <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
 
       </ScrollArea>
 

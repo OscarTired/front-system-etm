@@ -20,7 +20,7 @@ import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
 import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
@@ -339,7 +339,6 @@ export function NestingPage() {
                 </div>
               )}
             </div>
-            <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
           </ScrollArea>
         )}
       </div>

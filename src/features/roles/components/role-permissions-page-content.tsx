@@ -38,7 +38,7 @@ import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import type { Role } from "../types/role.types"
 
@@ -337,7 +337,6 @@ export function RolePermissionsPageContent() {
                 )}
               </div>
 
-              <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
             </ScrollArea>
           </aside>
         )}
@@ -506,7 +505,6 @@ export function RolePermissionsPageContent() {
                     </div>
                   )}
 
-                  <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
                 </ScrollArea>
               </>
             )}

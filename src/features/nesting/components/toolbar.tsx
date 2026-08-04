@@ -2,14 +2,13 @@
 
 import { memo } from "react"
 import {
-  FilePlus2,
+  FilePlus,
   FolderOpen,
   Save,
-  FileInput,
-  FileOutput,
-  Layers,
+  FileDown,
+  FileUp,
   Settings,
-  PanelLeftClose,
+  SidebarClose,
 } from "lucide-react"
 
 import { Button, type ButtonProps } from "@/components/ui/button"
@@ -22,7 +21,7 @@ export interface ToolbarProps {
   onSave: () => void
   onImport: () => void
   onExport: () => void
-  onToggleLayers: () => void
+  onToggleLayers?: () => void
   layersHidden?: boolean
   onSettings: () => void
   onTogglePanel?: () => void
@@ -70,8 +69,6 @@ export const Toolbar = memo(function Toolbar({
   onSave,
   onImport,
   onExport,
-  onToggleLayers,
-  layersHidden,
   onSettings,
   onTogglePanel,
 }: ToolbarProps) {
@@ -82,13 +79,13 @@ export const Toolbar = memo(function Toolbar({
       {onTogglePanel && (
         <>
           <ToolbarButton onClick={onTogglePanel} title="Piezas y configuración">
-            <PanelLeftClose className="h-5 w-5 rotate-180" strokeWidth={1.5} />
+            <SidebarClose className="h-5 w-5 rotate-180" strokeWidth={1.5} />
           </ToolbarButton>
           <ToolbarDivider />
         </>
       )}
       <ToolbarButton onClick={onNew} title="Nuevo proyecto">
-        <FilePlus2 className="h-5 w-5" strokeWidth={1.5} />
+        <FilePlus className="h-5 w-5" strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={onOpen} title="Abrir proyecto">
         <FolderOpen className="h-5 w-5" strokeWidth={1.5} />
@@ -100,23 +97,16 @@ export const Toolbar = memo(function Toolbar({
       <ToolbarDivider />
 
       <ToolbarButton onClick={onImport} title="Importar DXF/GEO">
-        <FileInput className="h-5 w-5" strokeWidth={1.5} />
+        <FileDown className="h-5 w-5" strokeWidth={1.5} />
       </ToolbarButton>
       <ToolbarButton onClick={onExport} title="Exportar">
-        <FileOutput className="h-5 w-5" strokeWidth={1.5} />
+        <FileUp className="h-5 w-5" strokeWidth={1.5} />
       </ToolbarButton>
     </div>
   )
 
   const renderViewActions = () => (
     <div className="flex shrink-0 items-center gap-1">
-      <ToolbarButton
-        onClick={onToggleLayers}
-        title="Ocultar marcas/doblez"
-        active={layersHidden}
-      >
-        <Layers className="h-5 w-5" strokeWidth={1.5} />
-      </ToolbarButton>
       <ToolbarButton onClick={onSettings} title="Configuración">
         <Settings className="h-5 w-5" strokeWidth={1.5} />
       </ToolbarButton>

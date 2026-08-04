@@ -14,7 +14,7 @@ import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
 import { cn } from "@/shared/utils/utils"
 import { ENTITY_ICONS, type EntityIcon } from "@/shared/constants/entity-icons"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { useUserMutations } from "@/features/users/hooks/use-user-mutations"
 import { useUsers } from "@/features/users/hooks/use-users"
@@ -383,7 +383,6 @@ export function UsersPageContent() {
                         ))
                       )}
                     </div>
-                    <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
                   </ScrollArea>
                 </>
               ) : (
@@ -442,7 +441,6 @@ export function UsersPageContent() {
                         ))
                       )}
                     </div>
-                    <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
                   </ScrollArea>
                 </>
               )}
@@ -571,7 +569,6 @@ export function UsersPageContent() {
                       }
                       onColorChange={val => setFormData(c => ({ ...c, color: val }))}
                     />
-                    <ScrollBar className="w-1.5 bg-transparent hover:bg-white/5" />
                   </ScrollArea>
                 </>
               )}

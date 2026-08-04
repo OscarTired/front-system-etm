@@ -1,7 +1,8 @@
 "use client"
 
 import { cn } from "@/shared/utils/utils"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 
 export interface SheetTabItem {
   key: string
@@ -22,13 +23,42 @@ function usageBadgeClass(percent: number): string {
 }
 
 export function SheetTabs({ items, activeIndex, onChange }: SheetTabsProps) {
+  // Nota: antes esto usaba el <ScrollArea> de Radix con type="scroll",
+  // cuyo scrollbar solo aparece DESPUÉS de que el viewport dispare un
+  // evento `scroll` real en X. Como nada convertía la rueda del mouse
+  // (vertical) en scroll horizontal, ese evento nunca ocurría y la
+  // barra se quedaba en estado "hidden" para siempre — por eso nunca
+  // se veía. useDragScroll ya resuelve esto (drag + rueda -> scrollLeft)
+  // y es el mismo patrón que usa el pipeline de tareas.
+  const {
+    containerRef,
+    handleMouseDown,
+    handleMouseMove,
+    handleClickCapture,
+    stopDragging,
+  } = useDragScroll()
+
+  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
+
   if (items.length === 0) return null
 
   return (
-    // Agregamos pb-3 para que el scrollbar flote en ese espacio inferior y no muerda el botón
-    <ScrollArea className="w-full rounded-lg bg-white/5 p-1 pb-3 select-none">
-      {/* Div escudo para absorber el !block y !w-fit del Viewport */}
-      <div>
+    <div
+      style={{
+        WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+        maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+      }}
+      className="w-full overflow-hidden rounded-lg bg-white/5"
+    >
+      <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
+        onClickCapture={handleClickCapture}
+        className="themed-scrollbar-x cursor-grab select-none overflow-x-auto overflow-y-hidden p-1 pb-2 active:cursor-grabbing"
+      >
         <div className="flex w-max items-center gap-1">
           {items.map((item, i) => {
             const isActive = i === activeIndex
@@ -59,6 +89,6 @@ export function SheetTabs({ items, activeIndex, onChange }: SheetTabsProps) {
           })}
         </div>
       </div>
-    </ScrollArea>
+    </div>
   )
 }
