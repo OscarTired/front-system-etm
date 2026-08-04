@@ -1,0 +1,89 @@
+export interface Point {
+  x: number
+  y: number
+}
+
+export interface ViewState {
+  scale: number
+  offsetX: number
+  offsetY: number
+}
+
+export type Entity =
+  | { kind: "line"; a: Point; b: Point; color: string; pieceIndex?: number; layer?: string }
+  | { kind: "polyline"; points: Point[]; closed: boolean; color: string; pieceIndex?: number; layer?: string }
+  | { kind: "circle"; center: Point; radius: number; color: string; pieceIndex?: number; layer?: string }
+  | {
+      kind: "arc"
+      center: Point
+      radius: number
+      startAngle: number
+      endAngle: number
+      color: string
+      pieceIndex?: number
+      layer?: string
+    }
+  | { kind: "text"; position: Point; text: string; height: number; color: string; pieceIndex?: number; layer?: string }
+
+export interface NestingPieceInput {
+  /** Puntos del contorno de cada sub-trazo, con color y capa originales. */
+  subOutlines: { points: Point[]; color?: string; layer?: string }[]
+  /** Contorno fusionado — respaldo de hit-test si no hay subOutlines. */
+  outline?: Point[]
+  angle?: number
+}
+
+export interface LayerInfo {
+  key: string
+  label: string
+  color: string
+  count: number
+}
+
+export interface ToolpathSeg {
+  points: Point[]
+  startLen: number
+  endLen: number
+}
+
+export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "coords"
+
+export type Measurement =
+  | { id: string; kind: "distance"; a: Point; b: Point; value: number }
+  | { id: string; kind: "radius"; center: Point; radius: number; anglePoint: Point }
+  | { id: string; kind: "angle"; vertex: Point; p1: Point; p2: Point; degrees: number }
+  | { id: string; kind: "area"; points: Point[]; area: number; perimeter: number; centroid: Point }
+
+export interface SnapCandidate {
+  point: Point
+  type: "endpoint" | "midpoint" | "center"
+}
+
+export interface DxfCanvasProps {
+  pieces: NestingPieceInput[]
+  sheetSize?: { width: number; height: number }
+  selectedPieceIndices?: number[]
+  onSelectPiece?: (index: number | null, additive: boolean) => void
+  hiddenKeys?: string[]
+  collidingPieceIndices?: number[]
+  onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void
+  onRotateSelected?: (pieceIndices: number[], degrees: number) => void
+}
+
+export const SHEET_STROKE = "#71717a"
+export const SELECTED_STROKE = "#ffffff"
+export const SELECTED_HALO = "#facc15"
+export const COLLISION_COLOR = "#ef4444"
+export const MEASURE_COLOR = "#22d3ee"
+export const MEASURE_PENDING_COLOR = "#67e8f9"
+
+export const HIT_TOLERANCE_PX = 10
+export const SNAP_TOLERANCE_PX = 12
+
+export const TOOL_LABELS: Record<Exclude<MeasureTool, "none">, string> = {
+  distance: "Distancia",
+  radius: "Radio / diámetro",
+  angle: "Ángulo",
+  area: "Área / perímetro",
+  coords: "Coordenadas",
+}

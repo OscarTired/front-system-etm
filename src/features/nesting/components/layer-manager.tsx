@@ -1,7 +1,7 @@
 "use client"
 
 import { Eye, EyeOff, Layers } from "lucide-react"
-import type { LayerInfo } from "./dxf-canvas"
+import type { LayerInfo } from "./dxf-canvas/dxf-canvas"
 
 export interface LayerManagerProps {
   layers: LayerInfo[]

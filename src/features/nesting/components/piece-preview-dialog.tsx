@@ -7,10 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 
 import type { CadRow } from "./piece-list"
-import type { NestingPieceInput } from "./dxf-canvas"
+import type { NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 
 const DxfCanvas = dynamic(
-  () => import("@/features/nesting/components/dxf-canvas").then((m) => m.DxfCanvas),
+  () => import("@/features/nesting/components/dxf-canvas/dxf-canvas").then((m) => m.DxfCanvas),
   { ssr: false }
 )
 

@@ -22,11 +22,11 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { computeLayerList, type NestingPieceInput } from "./dxf-canvas"
+import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 
 const DxfCanvas = dynamic(
-  () => import("@/features/nesting/components/dxf-canvas").then((m) => m.DxfCanvas),
+  () => import("@/features/nesting/components/dxf-canvas/dxf-canvas").then((m) => m.DxfCanvas),
   { ssr: false }
 )
 
