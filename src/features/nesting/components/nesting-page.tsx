@@ -155,6 +155,19 @@ export function NestingPage() {
     setActivePanel("inspector")
   }, [])
 
+  /** Persiste el arrastre manual de piezas en la plancha (P0). */
+  const handleMovePieces = useCallback((pieceIndices: number[], dx: number, dy: number) => {
+    if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return
+    setPositionOverrides((prev) => {
+      const next = { ...prev }
+      for (const idx of pieceIndices) {
+        const cur = next[idx] ?? { dx: 0, dy: 0 }
+        next[idx] = { dx: cur.dx + dx, dy: cur.dy + dy }
+      }
+      return next
+    })
+  }, [])
+
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return
     const refIndex = selectedPieceIndices[selectedPieceIndices.length - 1]
@@ -384,6 +397,7 @@ export function NestingPage() {
                 onSelectPiece={handleSelectPiece}
                 hiddenKeys={hiddenLayerKeys.size > 0 ? Array.from(hiddenLayerKeys) : undefined}
                 collidingPieceIndices={collidingPieceIndices}
+                onMovePieces={handleMovePieces}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">
