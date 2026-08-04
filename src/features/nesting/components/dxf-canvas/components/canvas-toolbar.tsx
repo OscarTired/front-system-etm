@@ -81,7 +81,7 @@ export function CanvasToolbar({
 }: CanvasToolbarProps) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center px-3 pt-3">
-      <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-[#1c1c1e]/92 px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-[#1c1c1e]/92 px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md scrollbar-none [&::-webkit-scrollbar]:hidden">
         {/* Vista */}
         <button type="button" onClick={onZoomIn} className={mdBtn} title="Acercar">
           <ZoomIn size={16} strokeWidth={1.75} />
