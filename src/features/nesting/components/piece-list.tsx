@@ -238,7 +238,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     >
       {/* Indicador visual de Drag & Drop flotante */}
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150 pointer-events-none">
+        <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150 pointer-events-none">
           <Import className="h-8 w-8 text-primary animate-bounce" />
           <p className="text-xs font-semibold text-white">Suelta tus archivos CAD aquí</p>
         </div>
@@ -262,10 +262,10 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         <div className="relative mb-2 shrink-0 px-3">
           <Search className="pointer-events-none absolute left-5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" />
           <Input
-            placeholder="Buscar por archivo, DIN o aleación..."
+            placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 bg-white/5 border-white/10 pl-7 pr-7 text-xs"
+            className="h-8 bg-white/5 pl-7 pr-7 text-xs border-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white">
@@ -323,7 +323,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         {rows.length === 0 ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border border-dashed border-white/10 rounded-xl m-3 hover:border-white/20 transition-colors bg-white/1"
+            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border-2 border-dashed border-white/10 rounded-xl m-3 hover:border-white/25 transition-colors bg-white/2"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
               <Layers className="h-5 w-5 text-neutral-500" />
@@ -339,7 +339,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
               {groupedEntries.map(({ groupKey, items }) => (
                 <div key={groupKey ?? "default"} className="flex flex-col gap-2">
                   {groupKey && (
-                    <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider px-1 pt-1 flex items-center justify-between border-b border-white/5 pb-1">
+                    <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider px-1 pt-1 flex items-center justify-between pb-1">
                       <span>{groupKey}</span>
                       <span className="text-[10px] text-neutral-500 font-normal">({items.length})</span>
                     </div>
@@ -348,7 +348,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                     <div  
                       key={row.id}
                       className={`flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border ${
-                        conflictIds.has(row.id) ? "bg-amber-500/15 ring-1 ring-amber-500/30" : "bg-white/3 hover:bg-white/5 border border-white/5"
+                        conflictIds.has(row.id) ? "bg-amber-500/15" : "bg-white/3 hover:bg-white/5"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2 w-full">
@@ -397,7 +397,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                             value={row.quantity} 
                             disabled={disabled} 
                             onChange={(e) => handleQuantityChange(row.id, e.target.value)} 
-                            className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-white/10" 
+                            className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-ring" 
                           />
                           <Button size="icon-sm" variant="ghost" className="h-7 w-7 text-neutral-400 hover:text-destructive" disabled={disabled} onClick={() => onRemove(row.id)} title="Eliminar">
                             <Trash className="h-3.5 w-3.5" />

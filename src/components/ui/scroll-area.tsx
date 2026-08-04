@@ -21,7 +21,6 @@ function ScrollArea({
       className={cn("relative overflow-hidden h-full w-full", className)}
       {...props}
     >
-      {/* Añadido min-w-full y w-full para forzar al viewport a ocupar todo el ancho disponible */}
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
         className="size-full min-w-full w-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:!w-full"
@@ -50,9 +49,9 @@ function ScrollBar({
         "data-[state=visible]:opacity-100",
 
         orientation === "vertical" &&
-          "h-[calc(100%-8px)] w-3 right-1 top-1 bottom-1",
+          "h-[calc(100%-25px)] w-3 right-1 mt-1 mb-4",
         orientation === "horizontal" &&
-          "w-[calc(100%-8px)] h-3 bottom-1 left-1 right-1",
+          "w-[calc(100%-32px)] h-3 bottom-1 left-4 right-4",
         className
       )}
       {...props}
@@ -61,8 +60,8 @@ function ScrollBar({
         data-slot="scroll-area-thumb"
         className={cn(
           "relative flex-1 rounded-full bg-neutral-600/70 transition-colors duration-200 hover:bg-neutral-500/90 active:bg-neutral-400",
-          orientation === "vertical" && "w-full min-h-10",
-          orientation === "horizontal" && "h-full min-w-10"
+          orientation === "vertical" && "w-full min-h-8",
+          orientation === "horizontal" && "h-full min-w-8"
         )}
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
