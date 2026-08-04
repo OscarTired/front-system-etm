@@ -131,3 +131,34 @@ export function perimeterOf(outline: PieceOutline): number {
   }
   return total;
 }
+
+/** Rota un contorno `degrees` grados sobre el centro de su propio bounding box (no sobre el origen) — así "rotar 90°" gira la pieza en su lugar, no la manda lejos del resto. */
+export function rotateOutline(outline: PieceOutline, degrees: number): PieceOutline {
+  const b = boundingRect(outline);
+  const cx = b.x + b.width / 2;
+  const cy = b.y + b.height / 2;
+  const rad = (degrees * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    points: outline.points.map((p) => {
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
+    }),
+  };
+}
+
+/** Espeja un contorno horizontalmente (invierte X) sobre el centro de su bounding box. */
+export function mirrorOutlineX(outline: PieceOutline): PieceOutline {
+  const b = boundingRect(outline);
+  const cx = b.x + b.width / 2;
+  return { points: outline.points.map((p) => ({ x: 2 * cx - p.x, y: p.y })) };
+}
+
+/** Espeja un contorno verticalmente (invierte Y) sobre el centro de su bounding box. */
+export function mirrorOutlineY(outline: PieceOutline): PieceOutline {
+  const b = boundingRect(outline);
+  const cy = b.y + b.height / 2;
+  return { points: outline.points.map((p) => ({ x: p.x, y: 2 * cy - p.y })) };
+}

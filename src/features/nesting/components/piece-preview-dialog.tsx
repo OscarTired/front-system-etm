@@ -41,7 +41,7 @@ export function PiecePreviewDialog({ row, onClose }: PiecePreviewDialogProps) {
 
         <div className="relative min-h-0 flex-1">
           {/* Sin sheetSize: la pieza se ve sola, sin la plancha de fondo. */}
-          <DxfCanvas pieces={pieces} selectedPieceIndex={null} />
+          <DxfCanvas pieces={pieces} />
         </div>
       </DialogContent>
     </Dialog>

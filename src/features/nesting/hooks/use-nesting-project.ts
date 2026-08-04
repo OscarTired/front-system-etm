@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useNesting } from "./use-nesting"
-import { boundingRect } from "../engine/geometry"
-import type { NestingPiece, SheetConfig } from "../engine/types"
+import { boundingRect, rotateOutline, mirrorOutlineX, mirrorOutlineY } from "../engine/geometry"
+import type { NestingPiece, NestedSheet, SheetConfig } from "../engine/types"
 import { auditMaterials, type AuditablePiece } from "../cad/material-audit"
 import { calculateSheetUsagePercent } from "../engine/sheet-usage"
 import { groupIdenticalSheets } from "../utils/svg-render"
@@ -110,6 +110,39 @@ export function useNestingProject() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
 
+  /** Aplica una transformación geométrica (rotar/espejar) a una fila: contorno + cada sub-entidad, y recalcula width/height del nuevo bounding box (rotar 90° un rectángulo no-cuadrado cambia cuál lado es cuál). */
+  const transformRow = useCallback((id: string, transform: (o: CadRow["outline"]) => CadRow["outline"]) => {
+    setRows((prev) => prev.map((r) => {
+      if (r.id !== id) return r
+      const outline = transform(r.outline)
+      const subEntities = r.subEntities.map((sub) => ({ ...sub, outline: transform(sub.outline) }))
+      const bounds = boundingRect(outline)
+      return { ...r, outline, subEntities, width: bounds.width, height: bounds.height }
+    }))
+  }, [])
+
+  const handleRotate = useCallback((id: string, degrees: number) => {
+    transformRow(id, (o) => rotateOutline(o, degrees))
+  }, [transformRow])
+
+  const handleMirrorX = useCallback((id: string) => {
+    transformRow(id, mirrorOutlineX)
+  }, [transformRow])
+
+  const handleMirrorY = useCallback((id: string) => {
+    transformRow(id, mirrorOutlineY)
+  }, [transformRow])
+
+  const handleDuplicate = useCallback((id: string) => {
+    setRows((prev) => {
+      const source = prev.find((r) => r.id === id)
+      if (!source) return prev
+      const copy: CadRow = { ...source, id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
+      const idx = prev.findIndex((r) => r.id === id)
+      return [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)]
+    })
+  }, [])
+
   const handleRun = useCallback(() => {
     if (validPieces.length === 0 || isRunning) return
     run(validPieces, { sheet: sheetConfig })
@@ -122,6 +155,13 @@ export function useNestingProject() {
     if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
   }, [sheets, nomenclatura, sheetConfig])
+
+  /** Igual que handleExportSheet, pero toma la plancha directo (ya con overrides de alineación manual aplicados) en vez de buscarla en el estado crudo del algoritmo — para exportar lo que se ve en pantalla, no lo que calculó el nesting antes de que el usuario alineara piezas a mano. */
+  const exportMaterializedSheet = useCallback((format: "dxf" | "nsp", sheet: NestedSheet, sheetIndex: number) => {
+    const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
+    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
+    else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
+  }, [nomenclatura, sheetConfig])
 
   const handleSaveProject = useCallback(() => {
     const pieces: ProjectPieceEntry[] = rows.map((row) => ({
@@ -194,10 +234,15 @@ export function useNestingProject() {
     onClearAll: handleClearAll,
     onUpdateQuantity: handleUpdateQuantity,
     onAddCad: handleAddCad,
+    onRotate: handleRotate,
+    onMirrorX: handleMirrorX,
+    onMirrorY: handleMirrorY,
+    onDuplicate: handleDuplicate,
 
     onRun: handleRun,
     onCancel: cancel,
     onExportSheet: handleExportSheet,
+    onExportMaterializedSheet: exportMaterializedSheet,
     onSaveProject: handleSaveProject,
     onOpenProjectFile: handleOpenProjectFile,
     onNewProject: handleNewProject,

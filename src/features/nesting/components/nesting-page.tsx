@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Box, Layers, Info, Loader2 } from "lucide-react"
+import { Box, Layers, Layers3, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical } from "lucide-react"
 
-import { MARK_COLOR } from "../cad/classify-dxf-color"
-import type { PlacedPiece } from "../engine/types"
+import { boundingRect } from "../engine/geometry"
+import type { PlacedPiece, NestedSheet } from "../engine/types"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 import { useNestingProject } from "../hooks/use-nesting-project"
 
@@ -21,18 +21,20 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import type { NestingPieceInput } from "./dxf-canvas"
+import { computeLayerList, type NestingPieceInput } from "./dxf-canvas"
+import { LayerManager } from "./layer-manager"
 
 const DxfCanvas = dynamic(
   () => import("@/features/nesting/components/dxf-canvas").then((m) => m.DxfCanvas),
   { ssr: false }
 )
 
-type PanelView = "sheet-pieces" | "project-material" | "inspector"
+type PanelView = "sheet-pieces" | "project-material" | "layers" | "inspector"
 
 const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
   { value: "sheet-pieces", label: "Plancha y Piezas", icon: Box },
   { value: "project-material", label: "Proyecto y Material", icon: Layers },
+  { value: "layers", label: "Capas", icon: Layers3 },
   { value: "inspector", label: "Inspector", icon: Info },
 ]
 
@@ -42,11 +44,13 @@ export function NestingPage() {
 
   const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
-  const [selectedPieceIndex, setSelectedPieceIndex] = useState<number | null>(null)
+  const [selectedPieceIndices, setSelectedPieceIndices] = useState<number[]>([])
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
-  const [marksHidden, setMarksHidden] = useState<boolean>(false)
+  const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
+  /** Ajustes manuales de posición (alineación), por índice de pieza dentro de la plancha ACTIVA. Se resetea al cambiar de plancha o volver a nestear — no tiene sentido arrastrar ediciones de un layout que ya no existe. */
+  const [positionOverrides, setPositionOverrides] = useState<Record<number, { dx: number; dy: number }>>({})
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -58,23 +62,59 @@ export function NestingPage() {
   }, [isCompact])
 
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
-  
-  const canvasPieces: PlacedPiece[] = useMemo(
-    () => (activeGroup ? activeGroup.sheet.pieces : []),
-    [activeGroup]
-  )
+
+  const canvasPieces: PlacedPiece[] = useMemo(() => {
+    const raw = activeGroup ? activeGroup.sheet.pieces : []
+    return raw.map((p, i) => {
+      const override = positionOverrides[i]
+      if (!override) return p
+      const { dx, dy } = override
+      return {
+        ...p,
+        x: p.x + dx,
+        y: p.y + dy,
+        outline: { points: p.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
+        subEntities: p.subEntities?.map((s) => ({ ...s, outline: { points: s.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) } })),
+      }
+    })
+  }, [activeGroup, positionOverrides])
+
+  // Alinear piezas de una plancha vieja no tiene sentido — se resetea
+  // apenas cambiás de plancha (o corrés un nesteo nuevo, que también
+  // cambia activeGroupIndex a 0).
+  useEffect(() => {
+    setPositionOverrides({})
+    setSelectedPieceIndices([])
+  }, [activeGroupIndex, project.sheetGroups.length])
 
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
       canvasPieces.map((p) => ({
         subOutlines: p.subEntities?.length
-          ? p.subEntities.map((s) => ({ points: s.outline.points, color: s.color }))
+          ? p.subEntities.map((s) => ({ points: s.outline.points, color: s.color, layer: s.layer }))
           : [],
         outline: p.outline.points,
         angle: p.angle,
       })),
     [canvasPieces]
   )
+
+  const layerList = useMemo(() => computeLayerList(dxfCanvasPieces), [dxfCanvasPieces])
+
+  // Si cambiás de plancha y la capa oculta ya no existe ahí, no
+  // rompe nada — el filtro simplemente no matchea contra nada. No
+  // hace falta resetear hiddenLayerKeys al cambiar de grupo.
+  const handleToggleLayer = useCallback((key: string) => {
+    setHiddenLayerKeys((prev) => {
+      const next = new Set(prev)
+      const upper = key.toUpperCase()
+      if (next.has(upper)) next.delete(upper)
+      else next.add(upper)
+      return next
+    })
+  }, [])
+
+  const handleShowAllLayers = useCallback(() => setHiddenLayerKeys(new Set()), [])
 
   const sheetTabItems: SheetTabItem[] = useMemo(
     () =>
@@ -87,16 +127,55 @@ export function NestingPage() {
   )
 
   const sheetStats = project.getSheetStats(activeGroupIndex)
-  const selectedPiece = selectedPieceIndex !== null ? canvasPieces[selectedPieceIndex] ?? null : null
+  const selectedPiece = selectedPieceIndices.length > 0
+    ? canvasPieces[selectedPieceIndices[selectedPieceIndices.length - 1]] ?? null
+    : null
 
-  const handleSelectPiece = useCallback((index: number | null) => {
-    setSelectedPieceIndex(index)
-    if (index !== null) setActivePanel("inspector")
+  const handleSelectPiece = useCallback((index: number | null, additive: boolean) => {
+    if (index === null) {
+      setSelectedPieceIndices([])
+      return
+    }
+    setSelectedPieceIndices((prev) => {
+      if (!additive) return [index]
+      return prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    })
+    setActivePanel("inspector")
   }, [])
+
+  /** Alinea las piezas seleccionadas entre sí, tomando como referencia la ÚLTIMA pieza clickeada (la más reciente de la selección) — igual que Figma/Illustrator con múltiples objetos. */
+  const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
+    if (selectedPieceIndices.length < 2) return
+    const refIndex = selectedPieceIndices[selectedPieceIndices.length - 1]
+    const refPiece = canvasPieces[refIndex]
+    if (!refPiece) return
+    const refBounds = boundingRect(refPiece.outline)
+
+    setPositionOverrides((prev) => {
+      const next = { ...prev }
+      for (const idx of selectedPieceIndices) {
+        if (idx === refIndex) continue
+        const piece = canvasPieces[idx]
+        if (!piece) continue
+        const b = boundingRect(piece.outline)
+        const current = prev[idx] ?? { dx: 0, dy: 0 }
+        let dx = current.dx
+        let dy = current.dy
+        if (mode === "left") dx = current.dx + (refBounds.x - b.x)
+        else if (mode === "right") dx = current.dx + (refBounds.x + refBounds.width - (b.x + b.width))
+        else if (mode === "center-h") dx = current.dx + (refBounds.x + refBounds.width / 2 - (b.x + b.width / 2))
+        else if (mode === "top") dy = current.dy + (refBounds.y - b.y)
+        else if (mode === "bottom") dy = current.dy + (refBounds.y + refBounds.height - (b.y + b.height))
+        else if (mode === "center-v") dy = current.dy + (refBounds.y + refBounds.height / 2 - (b.y + b.height / 2))
+        next[idx] = { dx, dy }
+      }
+      return next
+    })
+  }, [selectedPieceIndices, canvasPieces])
 
   const handleRun = useCallback(() => {
     setActiveGroupIndex(0)
-    setSelectedPieceIndex(null)
+    setSelectedPieceIndices([])
     project.onRun()
   }, [project])
 
@@ -108,7 +187,7 @@ export function NestingPage() {
 
   const handleNewProject = useCallback(() => {
     project.onNewProject()
-    setSelectedPieceIndex(null)
+    setSelectedPieceIndices([])
     setPreviewRow(null)
   }, [project])
 
@@ -122,10 +201,25 @@ export function NestingPage() {
       onClearAll: project.onClearAll,
       onUpdateQuantity: project.onUpdateQuantity,
       onPreviewRow: setPreviewRow,
+      onRotate: project.onRotate,
+      onMirrorX: project.onMirrorX,
+      onMirrorY: project.onMirrorY,
+      onDuplicate: project.onDuplicate,
       nextColor: project.nextColor,
     }),
     [project]
   )
+
+  const hasOverrides = Object.keys(positionOverrides).length > 0
+
+  const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number) => {
+    if (hasOverrides && activeGroup && sheetIndex === activeGroup.startIndex) {
+      const materialized: NestedSheet = { pieces: canvasPieces }
+      project.onExportMaterializedSheet(format, materialized, sheetIndex)
+      return
+    }
+    project.onExportSheet(format, sheetIndex)
+  }, [hasOverrides, activeGroup, canvasPieces, project])
 
   const renderSidePanelContent = () => (
     <div className="flex h-full flex-col gap-3 overflow-hidden">
@@ -154,6 +248,17 @@ export function NestingPage() {
                 <div className="flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3 border border-white/5">
                   <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Proyecto y material</h2>
                   <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} />
+                </div>
+              )}
+
+              {activePanel === "layers" && (
+                <div className="rounded-2xl bg-white/3 p-3 border border-white/5">
+                  <LayerManager
+                    layers={layerList}
+                    hiddenKeys={hiddenLayerKeys}
+                    onToggle={handleToggleLayer}
+                    onShowAll={handleShowAllLayers}
+                  />
                 </div>
               )}
 
@@ -223,8 +328,11 @@ export function NestingPage() {
         onSave={project.onSaveProject}
         onImport={() => pieceListRef.current?.triggerImport()}
         onExport={() => setExportDialogOpen(true)}
-        onToggleLayers={() => setMarksHidden((v) => !v)}
-        layersHidden={marksHidden}
+        onToggleLayers={() => {
+          setActivePanel("layers")
+          if (isCompact) setIsMobilePanelOpen(true)
+        }}
+        layersHidden={hiddenLayerKeys.size > 0}
         onSettings={() => {}}
         onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
       />
@@ -244,7 +352,7 @@ export function NestingPage() {
                 activeIndex={activeGroupIndex}
                 onChange={(i) => {
                   setActiveGroupIndex(i)
-                  setSelectedPieceIndex(null)
+                  setSelectedPieceIndices([])
                 }}
               />
             </div>
@@ -255,13 +363,41 @@ export function NestingPage() {
               <DxfCanvas
                 pieces={dxfCanvasPieces}
                 sheetSize={{ width: project.sheetConfig.width, height: project.sheetConfig.height }}
-                selectedPieceIndex={selectedPieceIndex}
+                selectedPieceIndices={selectedPieceIndices}
                 onSelectPiece={handleSelectPiece}
-                hiddenColors={marksHidden ? [MARK_COLOR] : undefined}
+                hiddenKeys={hiddenLayerKeys.size > 0 ? Array.from(hiddenLayerKeys) : undefined}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">
                 Importa una pieza o presiona Nestear para verla acá.
+              </div>
+            )}
+
+            {selectedPieceIndices.length >= 2 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 ring-1 ring-white/10 backdrop-blur-sm shadow-lg">
+                <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                  Alinear ({selectedPieceIndices.length})
+                </span>
+                <div className="h-4 w-px bg-white/10" />
+                {(
+                  [
+                    ["left", AlignLeft, "Alinear izquierda"],
+                    ["center-h", AlignCenterHorizontal, "Centrar horizontal"],
+                    ["right", AlignRight, "Alinear derecha"],
+                    ["top", AlignStartVertical, "Alinear arriba"],
+                    ["center-v", AlignCenterVertical, "Centrar vertical"],
+                    ["bottom", AlignEndVertical, "Alinear abajo"],
+                  ] as const
+                ).map(([mode, Icon, label]) => (
+                  <button
+                    key={mode}
+                    onClick={() => handleAlign(mode)}
+                    className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    title={label}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -286,7 +422,7 @@ export function NestingPage() {
         sheets={project.sheets}
         sheetConfig={project.sheetConfig}
         nomenclatura={project.nomenclatura}
-        onExportSheet={project.onExportSheet}
+        onExportSheet={handleExportSheet}
         onSaveProject={project.onSaveProject}
       />
 

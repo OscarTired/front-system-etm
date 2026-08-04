@@ -1,5 +1,5 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react"
-import { Trash, Import, FileWarning, AlertTriangle, Eye, Layers } from "lucide-react"
+import { Trash, Import, FileWarning, AlertTriangle, Eye, Layers, RotateCw, FlipHorizontal, FlipVertical, Copy, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -36,6 +36,10 @@ export interface PieceListProps {
   onClearAll: () => void
   onUpdateQuantity: (id: string, quantity: string) => void
   onPreviewRow: (row: CadRow) => void
+  onRotate: (id: string, degrees: number) => void
+  onMirrorX: (id: string) => void
+  onMirrorY: (id: string) => void
+  onDuplicate: (id: string) => void
   nextColor: () => string
 }
 
@@ -51,6 +55,10 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     onClearAll,
     onUpdateQuantity,
     onPreviewRow,
+    onRotate,
+    onMirrorX,
+    onMirrorY,
+    onDuplicate,
     nextColor,
   },
   ref
@@ -58,6 +66,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [groupBy, setGroupBy] = useState<GroupByType>("none")
+  const [searchQuery, setSearchQuery] = useState("")
   
   // Usamos un contador para evitar el parpadeo al pasar por encima de elementos hijos
   const [isDraggingOver, setIsDraggingOver] = useState(false)
@@ -194,10 +203,19 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
 
   // Lógica de Agrupación
   const groupedEntries = useMemo(() => {
-    if (groupBy === "none") return [{ groupKey: null, items: rows }]
-    
+    const query = searchQuery.trim().toLowerCase()
+    const filtered = query
+      ? rows.filter((r) =>
+          r.fileName.toLowerCase().includes(query) ||
+          r.material.dinNorm.toLowerCase().includes(query) ||
+          r.material.alloy.toLowerCase().includes(query)
+        )
+      : rows
+
+    if (groupBy === "none") return [{ groupKey: null, items: filtered }]
+
     const map = new Map<string, CadRow[]>()
-    for (const row of rows) {
+    for (const row of filtered) {
       let key = "Sin clasificar"
       if (groupBy === "thickness") {
         key = row.material.thickness > 0 ? `${row.material.thickness} mm` : "Sin espesor"
@@ -208,7 +226,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       map.get(key)!.push(row)
     }
     return Array.from(map.entries()).map(([groupKey, items]) => ({ groupKey, items }))
-  }, [rows, groupBy])
+  }, [rows, groupBy, searchQuery])
 
   return (
     <div 
@@ -239,6 +257,23 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
           </Button>
         </div>
       </div>
+
+      {rows.length > 0 && (
+        <div className="relative mb-2 shrink-0 px-3">
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" />
+          <Input
+            placeholder="Buscar por archivo, DIN o aleación..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 bg-white/5 border-white/10 pl-7 pr-7 text-xs"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Controles de Agrupación */}
       {rows.length > 0 && (
@@ -322,6 +357,21 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                         </div>
                         <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-300 hover:text-white" onClick={() => onPreviewRow(row)} title="Ver pieza">
                           <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 w-full">
+                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onRotate(row.id, 90)} title="Rotar 90°">
+                          <RotateCw className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onMirrorX(row.id)} title="Espejo horizontal">
+                          <FlipHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onMirrorY(row.id)} title="Espejo vertical">
+                          <FlipVertical className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onDuplicate(row.id)} title="Duplicar pieza">
+                          <Copy className="h-3.5 w-3.5" />
                         </Button>
                       </div>
 
