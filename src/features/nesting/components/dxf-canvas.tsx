@@ -972,173 +972,224 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
   }, []);
 
+// Clases reutilizables estilo Material Design 3
+  const mdBtn =
+    "relative flex h-9 w-9 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-white/10 hover:text-white active:bg-white/15 disabled:pointer-events-none disabled:opacity-30"
+  const mdBtnActive = "bg-primary/20 text-primary hover:bg-primary/25 hover:text-primary"
+  const mdDivider = "mx-0.5 h-5 w-px shrink-0 bg-white/10"
+
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full"
+      className="relative h-full w-full overflow-hidden"
       style={{
-        backgroundColor: '#0a0a0c',
-        backgroundImage: showGrid ? 'radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)' : 'none',
-        backgroundSize: '24px 24px',
+        backgroundColor: "#0a0a0c",
+        backgroundImage: showGrid
+          ? "radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)"
+          : "none",
+        backgroundSize: "24px 24px",
       }}
     >
-      <canvas ref={canvasRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
+      <canvas
+        ref={canvasRef}
+        className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
+      />
 
-      <div className="absolute right-6 top-6 flex flex-col gap-1 rounded-xl bg-[#101012]/90 p-1.5 ring-1 ring-white/10 backdrop-blur-sm">
-        <button onClick={() => handleZoom('in')} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Acercar">
-          <ZoomIn size={16} />
-        </button>
-        <button onClick={() => handleZoom('out')} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Alejar">
-          <ZoomOut size={16} />
-        </button>
+      {/* ── Toolbar unificada superior (Material Design) ── */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center pt-3 px-3">
+        <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-[#1c1c1e]/92 px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md hide-scrollbar">
 
-        <div className="my-0.5 h-px bg-white/10" />
-
-        <button onClick={fitToView} className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white" title="Ajustar a la vista">
-          <Maximize size={16} />
-        </button>
-
-        <button
-          onClick={focusOnSelectedPiece}
-          disabled={selectedPieceIndices.length === 0}
-          className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
-          title="Centrar en pieza seleccionada"
-        >
-          <Target size={16} />
-        </button>
-
-        <div className="my-0.5 h-px bg-white/10" />
-
-        <button
-          onClick={() => setShowGrid(!showGrid)}
-          className={`rounded-lg p-2 hover:bg-white/10 hover:text-white ${showGrid ? 'text-white bg-white/5' : 'text-neutral-500'}`}
-          title="Alternar cuadrícula"
-        >
-          <Grid size={16} />
-        </button>
-      </div>
-
-      {/* Metrología */}
-      <div className="absolute left-6 top-6 flex flex-col gap-1 rounded-xl bg-[#101012]/90 p-1.5 ring-1 ring-white/10 backdrop-blur-sm">
-        {(
-          [
-            ['distance', Ruler],
-            ['radius', CircleDot],
-            ['angle', Triangle],
-            ['area', Square],
-            ['coords', Crosshair],
-          ] as const
-        ).map(([tool, Icon]) => (
-          <button
-            key={tool}
-            onClick={() => {
-              if (activeTool === tool) {
-                resetTool();
-              } else {
-                setActiveTool(tool);
-                setPendingPoints([]);
-              }
-            }}
-            className={`rounded-lg p-2 transition-colors ${activeTool === tool ? 'bg-cyan-500/20 text-cyan-300' : 'text-neutral-300 hover:bg-white/10 hover:text-white'}`}
-            title={TOOL_LABELS[tool]}
-          >
-            <Icon size={16} />
+          {/* Vista */}
+          <button type="button" onClick={() => handleZoom("in")} className={mdBtn} title="Acercar">
+            <ZoomIn size={16} strokeWidth={1.75} />
           </button>
-        ))}
-        <div className="my-0.5 h-px bg-white/10" />
-        <button
-          onClick={() => setSnapEnabled((v) => !v)}
-          className={`rounded-lg p-2 transition-colors ${snapEnabled ? 'bg-amber-500/20 text-amber-300' : 'text-neutral-400 hover:bg-white/10 hover:text-white'}`}
-          title={snapEnabled ? 'Snap activado (extremo/medio/centro)' : 'Snap desactivado'}
-        >
-          <Magnet size={16} />
-        </button>
-        {activeTool !== 'none' && (
-          <>
-            <div className="my-0.5 h-px bg-white/10" />
-            <button onClick={resetTool} className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white" title="Salir de la herramienta">
-              <X size={16} />
+          <button type="button" onClick={() => handleZoom("out")} className={mdBtn} title="Alejar">
+            <ZoomOut size={16} strokeWidth={1.75} />
+          </button>
+          <button type="button" onClick={fitToView} className={mdBtn} title="Ajustar a la vista">
+            <Maximize size={16} strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            onClick={focusOnSelectedPiece}
+            disabled={selectedPieceIndices.length === 0}
+            className={mdBtn}
+            title="Centrar en selección"
+          >
+            <Target size={16} strokeWidth={1.75} />
+          </button>
+
+          <div className={mdDivider} />
+
+          {/* Visualización */}
+          <button
+            type="button"
+            onClick={() => setShowGrid(!showGrid)}
+            className={`${mdBtn} ${showGrid ? mdBtnActive : ""}`}
+            title="Cuadrícula"
+          >
+            <Grid size={16} strokeWidth={1.75} />
+          </button>
+
+          <div className={mdDivider} />
+
+          {/* Metrología */}
+          {(
+            [
+              ["distance", Ruler, TOOL_LABELS.distance],
+              ["radius", CircleDot, TOOL_LABELS.radius],
+              ["angle", Triangle, TOOL_LABELS.angle],
+              ["area", Square, TOOL_LABELS.area],
+              ["coords", Crosshair, TOOL_LABELS.coords],
+            ] as const
+          ).map(([tool, Icon, label]) => (
+            <button
+              key={tool}
+              type="button"
+              onClick={() => {
+                if (activeTool === tool) {
+                  resetTool()
+                } else {
+                  setActiveTool(tool)
+                  setPendingPoints([])
+                }
+              }}
+              className={`${mdBtn} ${activeTool === tool ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300" : ""}`}
+              title={label}
+            >
+              <Icon size={16} strokeWidth={1.75} />
             </button>
-          </>
-        )}
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setSnapEnabled((v) => !v)}
+            className={`${mdBtn} ${snapEnabled ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 hover:text-amber-300" : ""}`}
+            title={snapEnabled ? "Snap activado" : "Snap desactivado"}
+          >
+            <Magnet size={16} strokeWidth={1.75} />
+          </button>
+
+          {activeTool !== "none" && (
+            <button type="button" onClick={resetTool} className={mdBtn} title="Salir de herramienta">
+              <X size={16} strokeWidth={1.75} />
+            </button>
+          )}
+
+          {/* Simulación de corte */}
+          {toolpathRef.current.length > 0 && (
+            <>
+              <div className={mdDivider} />
+              <button
+                type="button"
+                onClick={() => {
+                  if (simProgress >= 1) setSimProgress(0)
+                  setSimRunning((v) => !v)
+                }}
+                className={mdBtn}
+                title={simRunning ? "Pausar" : "Simular corte"}
+              >
+                {simRunning ? <Pause size={15} strokeWidth={1.75} /> : <Play size={15} strokeWidth={1.75} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSimRunning(false)
+                  setSimProgress(0)
+                }}
+                disabled={simProgress === 0 && !simRunning}
+                className={mdBtn}
+                title="Reiniciar simulación"
+              >
+                <SkipBack size={14} strokeWidth={1.75} />
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.001}
+                value={simProgress}
+                onChange={(e) => {
+                  setSimRunning(false)
+                  setSimProgress(Number(e.target.value))
+                }}
+                className="mx-1 h-1 w-20 accent-cyan-400"
+                title="Progreso de corte"
+              />
+              <select
+                value={simSpeed}
+                onChange={(e) => setSimSpeed(Number(e.target.value))}
+                className="mr-1 h-7 rounded-full border-0 bg-white/5 px-2 text-[11px] text-neutral-300 outline-none focus:ring-1 focus:ring-white/20"
+              >
+                <option value={0.5}>0.5×</option>
+                <option value={1}>1×</option>
+                <option value={2}>2×</option>
+                <option value={4}>4×</option>
+              </select>
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Hint de herramienta activa */}
+      {activeTool !== "none" && (
+        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md">
+          {activeTool === "distance" &&
+            (pendingPoints.length === 0 ? "Clic en el primer punto" : "Clic en el segundo punto")}
+          {activeTool === "radius" && "Clic sobre un círculo o arco"}
+          {activeTool === "angle" &&
+            (pendingPoints.length === 0
+              ? "Clic en el vértice"
+              : pendingPoints.length === 1
+                ? "Clic en el primer punto"
+                : "Clic en el segundo punto")}
+          {activeTool === "area" && "Clic dentro de un contorno cerrado"}
+          {activeTool === "coords" && "Mueve el mouse para ver X / Y"}
+        </div>
+      )}
+
+      {/* Aviso de colisión */}
       {collidingPieceIndices.length > 0 && (
-        <div className="absolute left-1/2 top-6 -translate-x-1/2 flex items-center gap-1.5 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 ring-1 ring-red-500/30 backdrop-blur-sm">
+        <div className="absolute left-1/2 top-16 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 shadow-md backdrop-blur-md ring-1 ring-red-500/25">
           <AlertTriangle className="h-3.5 w-3.5" />
-          {collidingPieceIndices.length} {collidingPieceIndices.length === 1 ? "pieza se solapa" : "piezas se solapan"} con otra
+          {collidingPieceIndices.length === 1
+            ? "1 pieza se solapa con otra"
+            : `${collidingPieceIndices.length} piezas se solapan`}
         </div>
       )}
 
-      {toolpathRef.current.length > 0 && (
-        <div className="absolute bottom-4 right-6 flex items-center gap-2 rounded-xl bg-[#101012]/90 p-2 ring-1 ring-white/10 backdrop-blur-sm">
-          <button
-            onClick={() => {
-              if (simProgress >= 1) setSimProgress(0);
-              setSimRunning((v) => !v);
-            }}
-            className="rounded-lg p-1.5 text-neutral-200 hover:bg-white/10"
-            title={simRunning ? 'Pausar simulación' : 'Reproducir simulación de corte'}
-          >
-            {simRunning ? <Pause size={15} /> : <Play size={15} />}
-          </button>
-          <button
-            onClick={() => { setSimRunning(false); setSimProgress(0); }}
-            disabled={simProgress === 0 && !simRunning}
-            className="rounded-lg p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white disabled:opacity-30"
-            title="Reiniciar"
-          >
-            <SkipBack size={14} />
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.001}
-            value={simProgress}
-            onChange={(e) => { setSimRunning(false); setSimProgress(Number(e.target.value)); }}
-            className="h-1 w-28 accent-cyan-400"
-          />
-          <select
-            value={simSpeed}
-            onChange={(e) => setSimSpeed(Number(e.target.value))}
-            className="rounded-md bg-white/5 px-1.5 py-1 text-[11px] text-neutral-300 outline-none"
-          >
-            <option value={0.5}>0.5x</option>
-            <option value={1}>1x</option>
-            <option value={2}>2x</option>
-            <option value={4}>4x</option>
-          </select>
-        </div>
-      )}
-
-      {activeTool !== 'none' && (
-        <div className="absolute left-6 top-24 max-w-50 rounded-lg bg-[#101012]/90 px-2.5 py-1.5 text-[11px] text-neutral-400 ring-1 ring-white/10 backdrop-blur-sm">
-          {activeTool === 'distance' && (pendingPoints.length === 0 ? 'Clic en el primer punto' : 'Clic en el segundo punto')}
-          {activeTool === 'radius' && 'Clic sobre un círculo o arco'}
-          {activeTool === 'angle' && (pendingPoints.length === 0 ? 'Clic en el vértice' : pendingPoints.length === 1 ? 'Clic en el primer punto' : 'Clic en el segundo punto')}
-          {activeTool === 'area' && 'Clic dentro de un contorno cerrado'}
-          {activeTool === 'coords' && 'Moviendo el mouse se ve la posición X/Y'}
-        </div>
-      )}
-
+      {/* Lista de mediciones (abajo izquierda) */}
       {measurements.length > 0 && (
-        <div className="absolute bottom-6 left-6 flex max-h-[40%] max-w-55 flex-col gap-1 overflow-y-auto rounded-xl bg-[#101012]/90 p-2 ring-1 ring-white/10 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-1 pb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Mediciones</span>
-            <button onClick={() => setMeasurements([])} className="text-neutral-500 hover:text-white" title="Borrar todas">
+        <div className="absolute bottom-4 left-4 z-10 flex max-h-[40%] max-w-55 flex-col gap-1 overflow-y-auto rounded-2xl bg-[#1c1c1e]/92 p-2 shadow-[0_4px_16px_rgba(0,0,0,0.4)] backdrop-blur-md">
+          <div className="flex items-center justify-between px-1.5 pb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+              Mediciones
+            </span>
+            <button
+              type="button"
+              onClick={() => setMeasurements([])}
+              className="rounded-full p-1 text-neutral-500 hover:bg-white/10 hover:text-white"
+              title="Borrar todas"
+            >
               <Trash2 size={12} />
             </button>
           </div>
           {measurements.map((m) => (
-            <div key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2 py-1 text-[11px] text-neutral-200">
+            <div
+              key={m.id}
+              className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 text-[11px] text-neutral-200"
+            >
               <span className="truncate">
-                {m.kind === 'distance' && fmtMm(m.value)}
-                {m.kind === 'radius' && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
-                {m.kind === 'angle' && `${m.degrees.toFixed(1)}°`}
-                {m.kind === 'area' && `${(m.area / 1_000_000).toFixed(4)}m²`}
+                {m.kind === "distance" && fmtMm(m.value)}
+                {m.kind === "radius" && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
+                {m.kind === "angle" && `${m.degrees.toFixed(1)}°`}
+                {m.kind === "area" && `${(m.area / 1_000_000).toFixed(4)}m²`}
               </span>
-              <button onClick={() => removeMeasurement(m.id)} className="shrink-0 text-neutral-500 hover:text-white">
+              <button
+                type="button"
+                onClick={() => removeMeasurement(m.id)}
+                className="shrink-0 rounded-full p-0.5 text-neutral-500 hover:bg-white/10 hover:text-white"
+              >
                 <X size={12} />
               </button>
             </div>

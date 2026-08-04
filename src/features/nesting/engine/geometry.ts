@@ -1,13 +1,5 @@
 import type { PieceOutline, Point2D, Rect } from "./types";
 
-/**
- * Matriz de transformación afín 2D — equivalente a QTransform de Qt
- * para los casos que usa el motor original (traslación, rotación
- * alrededor de un punto, escala uniforme). Representada como matriz
- * homogénea 3x3 aplanada:
- *   x' = a*x + c*y + e
- *   y' = b*x + d*y + f
- */
 export interface Transform2D {
   a: number;
   b: number;
@@ -122,7 +114,7 @@ export function rectsOverlap(a: Rect, b: Rect): boolean {
   );
 }
 
-/** Suma la longitud de los segmentos consecutivos de un contorno (aproximación del perímetro real, ya que el contorno está tesselado a puntos). */
+/** Suma la longitud de los segmentos consecutivos de un contorno (aproximación del perímetro real). */
 export function perimeterOf(outline: PieceOutline): number {
   const pts = outline.points;
   let total = 0;
@@ -132,8 +124,7 @@ export function perimeterOf(outline: PieceOutline): number {
   return total;
 }
 
-/** Rota un contorno `degrees` grados sobre el centro de su propio bounding box (no sobre el origen) — así "rotar 90°" gira la pieza en su lugar, no la manda lejos del resto. */
-/** Rota un contorno `degrees` grados alrededor de un punto arbitrario — no necesariamente el centro de la propia pieza. Para rotar VARIAS piezas juntas alrededor del centro combinado de la selección (mismo comportamiento que "Rotar" en FreeCAD con selección múltiple). */
+/** Rota un contorno `degrees` grados alrededor de un punto arbitrario (pivote compartido). */
 export function rotateOutlineAroundPoint(outline: PieceOutline, degrees: number, pivot: Point2D): PieceOutline {
   const rad = (degrees * Math.PI) / 180;
   const cos = Math.cos(rad);
@@ -143,31 +134,41 @@ export function rotateOutlineAroundPoint(outline: PieceOutline, degrees: number,
       const dx = p.x - pivot.x;
       const dy = p.y - pivot.y;
       return { x: pivot.x + dx * cos - dy * sin, y: pivot.y + dx * sin + dy * cos };
-    }),
-  };
+    },
+  )};
 }
 
-/** Rota un contorno `degrees` grados sobre el centro de su propio bounding box (no sobre el origen) — así "rotar 90°" gira la pieza en su lugar, no la manda lejos del resto. */
+/** Rota un contorno `degrees` grados sobre el centro de su propio bounding box. */
 export function rotateOutline(outline: PieceOutline, degrees: number): PieceOutline {
   const b = boundingRect(outline);
   return rotateOutlineAroundPoint(outline, degrees, { x: b.x + b.width / 2, y: b.y + b.height / 2 });
 }
 
-/** Espeja un contorno horizontalmente (invierte X) sobre el centro de su bounding box. */
+/** Espeja un contorno horizontalmente sobre el centro de su bounding box. */
 export function mirrorOutlineX(outline: PieceOutline): PieceOutline {
   const b = boundingRect(outline);
   const cx = b.x + b.width / 2;
-  return { points: outline.points.map((p) => ({ x: 2 * cx - p.x, y: p.y })) };
+  return mirrorOutlineXAroundPoint(outline, cx);
 }
 
-/** Espeja un contorno verticalmente (invierte Y) sobre el centro de su bounding box. */
+/** Espeja un contorno verticalmente sobre el centro de su bounding box. */
 export function mirrorOutlineY(outline: PieceOutline): PieceOutline {
   const b = boundingRect(outline);
   const cy = b.y + b.height / 2;
+  return mirrorOutlineYAroundPoint(outline, cy);
+}
+
+/** Espejo horizontal sobre un eje vertical en x = cx (mismo pivote para varias polilíneas). */
+export function mirrorOutlineXAroundPoint(outline: PieceOutline, cx: number): PieceOutline {
+  return { points: outline.points.map((p) => ({ x: 2 * cx - p.x, y: p.y })) };
+}
+
+/** Espejo vertical sobre un eje horizontal en y = cy (mismo pivote para varias polilíneas). */
+export function mirrorOutlineYAroundPoint(outline: PieceOutline, cy: number): PieceOutline {
   return { points: outline.points.map((p) => ({ x: p.x, y: 2 * cy - p.y })) };
 }
 
-/** Ray casting estándar: ¿el punto está dentro del polígono? Compartida — antes vivía duplicada adentro de dxf-canvas.tsx. */
+/** Ray casting estándar: ¿el punto está dentro del polígono? */
 export function pointInPolygon(point: Point2D, polygon: Point2D[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -179,7 +180,6 @@ export function pointInPolygon(point: Point2D, polygon: Point2D[]): boolean {
   return inside;
 }
 
-/** ¿Se cruzan los segmentos a1-a2 y b1-b2? Test estándar por orientación de triples de puntos. */
 function segmentsIntersect(a1: Point2D, a2: Point2D, b1: Point2D, b2: Point2D): boolean {
   const orientation = (p: Point2D, q: Point2D, r: Point2D) => {
     const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
@@ -202,11 +202,6 @@ function segmentsIntersect(a1: Point2D, a2: Point2D, b1: Point2D, b2: Point2D): 
   return false;
 }
 
-/**
- * ¿Se solapan dos polígonos de verdad (no solo sus bounding boxes)?
- * Revisa: (1) algún par de aristas se cruza, (2) un polígono está
- * completamente adentro del otro (caso sin cruce de aristas).
- */
 export function polygonsOverlap(a: Point2D[], b: Point2D[]): boolean {
   if (a.length < 3 || b.length < 3) return false;
 
@@ -227,19 +222,6 @@ export function polygonsOverlap(a: Point2D[], b: Point2D[]): boolean {
   return pointInPolygon(a[0], b) || pointInPolygon(b[0], a);
 }
 
-/**
- * Puentes/micro-uniones de corte: parte un contorno CERRADO en N
- * segmentos abiertos, dejando huecos chicos evenly-spaced por
- * LONGITUD DE PERÍMETRO real (no por cantidad de puntos, que daría
- * huecos de tamaño desparejo en tramos rectos vs curvos). El
- * resultado son N contornos abiertos — la máquina corta cada uno y
- * salta el huequito entre ellos, así la pieza no se suelta sola y
- * cae dentro de la máquina durante el corte.
- *
- * Recorre el contorno una sola vez acumulando longitud, partiendo
- * exactamente en los bordes de cada hueco (con el punto interpolado,
- * no el vértice más cercano).
- */
 export function applyCutBridges(outline: PieceOutline, bridgeCount: number, bridgeWidthMm: number): PieceOutline[] {
   const pts = outline.points;
   if (bridgeCount <= 0 || pts.length < 3) return [outline];
@@ -295,9 +277,9 @@ export function applyCutBridges(outline: PieceOutline, bridgeCount: number, brid
       const point = interpolateAt(b);
       const inGapJustBefore = isInGap(b - 1e-6);
       if (inGapJustBefore) {
-        current = [point]; // salimos de un hueco -> arranca segmento nuevo
+        current = [point];
       } else {
-        current.push(point); // entramos a un hueco -> cerramos el segmento actual
+        current.push(point);
         if (current.length >= 2) segments.push(current);
         current = [];
       }
@@ -309,13 +291,6 @@ export function applyCutBridges(outline: PieceOutline, bridgeCount: number, brid
 
   if (current.length >= 2) segments.push(current);
 
-  // Si el contorno arrancó FUERA de un hueco (en material), el primer
-  // y el último segmento pusheados son en realidad las dos mitades de
-  // un mismo tramo de material — la lista de puntos original es
-  // circular, pero acá se recorrió como una lista lineal con una
-  // costura artificial en el punto 0. Hay que unirlos, sacando el
-  // punto duplicado de la costura (el último punto del último
-  // segmento y el primer punto del primero son el mismo punto físico).
   if (!startedInGap && segments.length > 1) {
     const firstSeg = segments.shift()!;
     const lastSeg = segments.pop()!;

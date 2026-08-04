@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useNesting } from "./use-nesting"
-import { boundingRect, rotateOutline, mirrorOutlineX, mirrorOutlineY } from "../engine/geometry"
-import type { NestingPiece, NestedSheet, SheetConfig } from "../engine/types"
+import {
+  boundingRect,
+  rotateOutlineAroundPoint,
+  mirrorOutlineXAroundPoint,
+  mirrorOutlineYAroundPoint,
+} from "../engine/geometry"
+import type { NestingPiece, NestedSheet, SheetConfig, PieceOutline, Point2D } from "../engine/types"
 import { auditMaterials, type AuditablePiece } from "../cad/material-audit"
 import { calculateSheetUsagePercent } from "../engine/sheet-usage"
 import { groupIdenticalSheets } from "../utils/svg-render"
@@ -27,6 +32,18 @@ function cutLengthOf(pieces: { subEntities?: { outline: { points: { x: number; y
       return s2 + len
     }, 0)
   }, 0)
+}
+
+/** Bbox de outline principal + todas las sub-entidades (pivote compartido). */
+function boundsOfPiece(
+  outline: PieceOutline,
+  subEntities: { outline: PieceOutline }[]
+) {
+  const points: Point2D[] = [
+    ...outline.points,
+    ...subEntities.flatMap((s) => s.outline.points),
+  ]
+  return boundingRect({ points })
 }
 
 export function useNestingProject() {
@@ -59,7 +76,6 @@ export function useNestingProject() {
     margin: Number(settings.margin) || 0,
   }), [settings.sheetWidth, settings.sheetHeight, settings.margin])
 
-  /** Default derivado de los settings del proyecto (panel de material) — se usa salvo que quien llama pase un override explícito (ej. a futuro, un control puntual en el diálogo de exportación). */
   const defaultBridgeSettings: BridgeSettings = useMemo(() => ({
     enabled: settings.puentesHabilitado,
     count: Number(settings.puentesCantidad) || 0,
@@ -117,27 +133,50 @@ export function useNestingProject() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
 
-  /** Aplica una transformación geométrica (rotar/espejar) a una fila: contorno + cada sub-entidad, y recalcula width/height del nuevo bounding box (rotar 90° un rectángulo no-cuadrado cambia cuál lado es cuál). */
-  const transformRow = useCallback((id: string, transform: (o: CadRow["outline"]) => CadRow["outline"]) => {
-    setRows((prev) => prev.map((r) => {
-      if (r.id !== id) return r
-      const outline = transform(r.outline)
-      const subEntities = r.subEntities.map((sub) => ({ ...sub, outline: transform(sub.outline) }))
-      const bounds = boundingRect(outline)
-      return { ...r, outline, subEntities, width: bounds.width, height: bounds.height }
-    }))
-  }, [])
+  /**
+   * Aplica la misma transformación geométrica a outline + subEntities
+   * respecto a un único pivote (centro del bbox de toda la pieza).
+   * Así rotar/espejar mueve la pieza como un cuerpo rígido.
+   */
+  const transformRow = useCallback(
+    (id: string, transform: (o: PieceOutline, pivot: Point2D) => PieceOutline) => {
+      setRows((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r
+          const b = boundsOfPiece(r.outline, r.subEntities)
+          const pivot: Point2D = {
+            x: b.x + b.width / 2,
+            y: b.y + b.height / 2,
+          }
+          const outline = transform(r.outline, pivot)
+          const subEntities = r.subEntities.map((sub) => ({
+            ...sub,
+            outline: transform(sub.outline, pivot),
+          }))
+          const bounds = boundsOfPiece(outline, subEntities)
+          return {
+            ...r,
+            outline,
+            subEntities,
+            width: bounds.width,
+            height: bounds.height,
+          }
+        })
+      )
+    },
+    []
+  )
 
   const handleRotate = useCallback((id: string, degrees: number) => {
-    transformRow(id, (o) => rotateOutline(o, degrees))
+    transformRow(id, (o, pivot) => rotateOutlineAroundPoint(o, degrees, pivot))
   }, [transformRow])
 
   const handleMirrorX = useCallback((id: string) => {
-    transformRow(id, mirrorOutlineX)
+    transformRow(id, (o, pivot) => mirrorOutlineXAroundPoint(o, pivot.x))
   }, [transformRow])
 
   const handleMirrorY = useCallback((id: string) => {
-    transformRow(id, mirrorOutlineY)
+    transformRow(id, (o, pivot) => mirrorOutlineYAroundPoint(o, pivot.y))
   }, [transformRow])
 
   const handleDuplicate = useCallback((id: string) => {
@@ -163,7 +202,6 @@ export function useNestingProject() {
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
   }, [sheets, nomenclatura, sheetConfig, defaultBridgeSettings])
 
-  /** Igual que handleExportSheet, pero toma la plancha directo (ya con overrides de alineación manual aplicados) en vez de buscarla en el estado crudo del algoritmo — para exportar lo que se ve en pantalla, no lo que calculó el nesting antes de que el usuario alineara piezas a mano. */
   const exportMaterializedSheet = useCallback((format: "dxf" | "nsp", sheet: NestedSheet, sheetIndex: number, bridges?: BridgeSettings) => {
     const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
     if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf")
