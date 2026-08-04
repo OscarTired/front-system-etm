@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet } from 'lucide-react';
 
 interface Point { x: number; y: number }
 interface ViewState { scale: number; offsetX: number; offsetY: number }
@@ -148,6 +148,13 @@ const TOOL_LABELS: Record<Exclude<MeasureTool, 'none'>, string> = {
 
 /** Tolerancia de hit-test en px de pantalla, convertida a espacio local según el zoom actual. */
 const HIT_TOLERANCE_PX = 10;
+/** Tolerancia de snap (extremo/medio/centro), en px de pantalla. */
+const SNAP_TOLERANCE_PX = 12;
+
+interface SnapCandidate {
+  point: Point;
+  type: 'endpoint' | 'midpoint' | 'center';
+}
 
 function angleOfVector(from: Point, to: Point): number {
   return Math.atan2(to.y - from.y, to.x - from.x);
@@ -171,6 +178,8 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [hoverLocal, setHoverLocal] = useState<Point | null>(null);
   const [hoverScreen, setHoverScreen] = useState<Point | null>(null);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+  const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null);
 
   const localToScreen = useCallback((p: Point): Point => {
     const canvas = canvasRef.current;
@@ -333,6 +342,53 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Guías de alineación: si el punto que estás por colocar
+      // coincide en X o Y con el último punto ya puesto, se traza una
+      // línea de referencia larga en esa dirección — el mismo "smart
+      // guide" de cualquier CAD real.
+      const last = pendingPoints[pendingPoints.length - 1];
+      if (hoverLocal) {
+        const guideTol = 2 / scale;
+        ctx.strokeStyle = MEASURE_COLOR;
+        ctx.lineWidth = 0.75 / scale;
+        ctx.setLineDash([2 / scale, 3 / scale]);
+        if (Math.abs(hoverLocal.x - last.x) < guideTol) {
+          ctx.beginPath();
+          ctx.moveTo(last.x, last.y - 5000);
+          ctx.lineTo(last.x, last.y + 5000);
+          ctx.stroke();
+        }
+        if (Math.abs(hoverLocal.y - last.y) < guideTol) {
+          ctx.beginPath();
+          ctx.moveTo(last.x - 5000, last.y);
+          ctx.lineTo(last.x + 5000, last.y);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Marcador del punto de snap activo — forma según el tipo.
+    if (snapCandidate) {
+      const s = 5 / scale;
+      const p = snapCandidate.point;
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.5 / scale;
+      ctx.beginPath();
+      if (snapCandidate.type === 'endpoint') {
+        ctx.strokeRect(p.x - s, p.y - s, s * 2, s * 2);
+      } else if (snapCandidate.type === 'midpoint') {
+        ctx.moveTo(p.x, p.y - s);
+        ctx.lineTo(p.x + s, p.y);
+        ctx.lineTo(p.x, p.y + s);
+        ctx.lineTo(p.x - s, p.y);
+        ctx.closePath();
+        ctx.stroke();
+      } else {
+        ctx.arc(p.x, p.y, s, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -387,7 +443,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       ctx.fillStyle = MEASURE_COLOR;
       ctx.fillText(text, px, py);
     }
-  }, [sheetSize, selectedPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen]);
+  }, [sheetSize, selectedPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate]);
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
@@ -489,6 +545,44 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     return { x: cx / scale, y: cy / scale };
   }, []);
 
+  /** Extremos, puntos medios y centros de TODAS las entidades visibles — candidatos de snap. */
+  const computeSnapCandidates = useCallback((): SnapCandidate[] => {
+    const out: SnapCandidate[] = [];
+    for (const e of entitiesRef.current) {
+      if (e.kind === 'line') {
+        out.push({ point: e.a, type: 'endpoint' });
+        out.push({ point: e.b, type: 'endpoint' });
+        out.push({ point: { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2 }, type: 'midpoint' });
+      } else if (e.kind === 'polyline') {
+        for (let i = 0; i < e.points.length; i++) {
+          out.push({ point: e.points[i], type: 'endpoint' });
+          const next = e.points[i + 1] ?? (e.closed ? e.points[0] : null);
+          if (next) {
+            out.push({ point: { x: (e.points[i].x + next.x) / 2, y: (e.points[i].y + next.y) / 2 }, type: 'midpoint' });
+          }
+        }
+      } else if (e.kind === 'circle' || e.kind === 'arc') {
+        out.push({ point: e.center, type: 'center' });
+      }
+    }
+    return out;
+  }, []);
+
+  /** Busca el candidato de snap más cercano al punto, dentro de la tolerancia (en px de pantalla, convertida a espacio local según el zoom). */
+  const findNearestSnap = useCallback((point: Point): SnapCandidate | null => {
+    const tol = SNAP_TOLERANCE_PX / viewRef.current.scale;
+    let best: SnapCandidate | null = null;
+    let bestDist = tol;
+    for (const c of computeSnapCandidates()) {
+      const d = Math.hypot(point.x - c.point.x, point.y - c.point.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = c;
+      }
+    }
+    return best;
+  }, [computeSnapCandidates]);
+
   /** Busca un círculo/arco cerca del punto (tolerancia en px de pantalla). */
   const hitTestCircleOrArc = useCallback((point: Point): { center: Point; radius: number } | null => {
     const tol = HIT_TOLERANCE_PX / viewRef.current.scale;
@@ -575,9 +669,14 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     };
     const onPointerMove = (e: PointerEvent) => {
       if (activeTool !== 'none') {
-        const point = screenToLocal(e.clientX, e.clientY);
+        const rawPoint = screenToLocal(e.clientX, e.clientY);
         const rect = canvas.getBoundingClientRect();
-        setHoverLocal(point);
+
+        const usesPointSnap = activeTool === 'distance' || activeTool === 'angle' || activeTool === 'coords';
+        const snap = snapEnabled && usesPointSnap && rawPoint ? findNearestSnap(rawPoint) : null;
+        setSnapCandidate(snap);
+
+        setHoverLocal(snap ? snap.point : rawPoint);
         setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top });
       }
 
@@ -595,11 +694,16 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       if (!drag) return;
 
       if (!drag.moved) {
-        const point = screenToLocal(e.clientX, e.clientY);
-        if (!point) return;
+        const rawPoint = screenToLocal(e.clientX, e.clientY);
+        if (!rawPoint) return;
 
         if (activeTool !== 'none' && activeTool !== 'coords') {
-          handleToolClick(point);
+          // Radio/área hacen su propio hit-test contra la entidad
+          // completa (círculo/contorno) — el snap de punto solo
+          // aplica a distancia/ángulo, que sí colocan puntos sueltos.
+          const usesPointSnap = activeTool === 'distance' || activeTool === 'angle';
+          const snap = snapEnabled && usesPointSnap ? findNearestSnap(rawPoint) : null;
+          handleToolClick(snap ? snap.point : rawPoint);
           return;
         }
 
@@ -607,7 +711,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           let hit: number | null = null;
           for (const ent of entitiesRef.current) {
             if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && ent.points.length >= 3) {
-              if (pointInPolygon(point, ent.points)) hit = ent.pieceIndex;
+              if (pointInPolygon(rawPoint, ent.points)) hit = ent.pieceIndex;
             }
           }
           onSelectPiece(hit, e.shiftKey || e.ctrlKey || e.metaKey);
@@ -642,7 +746,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       window.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('wheel', onWheel);
     };
-  }, [draw, onSelectPiece, screenToLocal, activeTool, handleToolClick]);
+  }, [draw, onSelectPiece, screenToLocal, activeTool, handleToolClick, snapEnabled, findNearestSnap]);
 
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const factor = direction === 'in' ? 1.25 : 0.8;
@@ -727,6 +831,14 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
             <Icon size={16} />
           </button>
         ))}
+        <div className="my-0.5 h-px bg-white/10" />
+        <button
+          onClick={() => setSnapEnabled((v) => !v)}
+          className={`rounded-lg p-2 transition-colors ${snapEnabled ? 'bg-amber-500/20 text-amber-300' : 'text-neutral-400 hover:bg-white/10 hover:text-white'}`}
+          title={snapEnabled ? 'Snap activado (extremo/medio/centro)' : 'Snap desactivado'}
+        >
+          <Magnet size={16} />
+        </button>
         {activeTool !== 'none' && (
           <>
             <div className="my-0.5 h-px bg-white/10" />
