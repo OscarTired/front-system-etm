@@ -7,7 +7,7 @@ import { auditMaterials, type AuditablePiece } from "../cad/material-audit"
 import { calculateSheetUsagePercent } from "../engine/sheet-usage"
 import { groupIdenticalSheets } from "../utils/svg-render"
 import { buildSheetFileName, type Nomenclatura } from "../export/nomenclatura"
-import { generateSheetDxf } from "../export/dxf-export"
+import { generateSheetDxf, type BridgeSettings } from "../export/dxf-export"
 import { generateSheetNsp } from "../export/nsp-export"
 import { serializeProject, parseProjectFile, ProjectFileParseError, type ProjectPieceEntry } from "../export/project-file"
 import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, type MachineSettings } from "../types/project-settings"
@@ -58,6 +58,13 @@ export function useNestingProject() {
     height: Number(settings.sheetHeight) || 600,
     margin: Number(settings.margin) || 0,
   }), [settings.sheetWidth, settings.sheetHeight, settings.margin])
+
+  /** Default derivado de los settings del proyecto (panel de material) — se usa salvo que quien llama pase un override explícito (ej. a futuro, un control puntual en el diálogo de exportación). */
+  const defaultBridgeSettings: BridgeSettings = useMemo(() => ({
+    enabled: settings.puentesHabilitado,
+    count: Number(settings.puentesCantidad) || 0,
+    widthMm: Number(settings.puentesAncho) || 0,
+  }), [settings.puentesHabilitado, settings.puentesCantidad, settings.puentesAncho])
 
   const sheetGroups = useMemo(() => (sheets ? groupIdenticalSheets(sheets) : []), [sheets])
 
@@ -148,20 +155,20 @@ export function useNestingProject() {
     run(validPieces, { sheet: sheetConfig })
   }, [validPieces, isRunning, run, sheetConfig])
 
-  const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number) => {
+  const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number, bridges?: BridgeSettings) => {
     if (!sheets) return
     const sheet = sheets[sheetIndex]
     const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
-    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
+    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf")
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
-  }, [sheets, nomenclatura, sheetConfig])
+  }, [sheets, nomenclatura, sheetConfig, defaultBridgeSettings])
 
   /** Igual que handleExportSheet, pero toma la plancha directo (ya con overrides de alineación manual aplicados) en vez de buscarla en el estado crudo del algoritmo — para exportar lo que se ve en pantalla, no lo que calculó el nesting antes de que el usuario alineara piezas a mano. */
-  const exportMaterializedSheet = useCallback((format: "dxf" | "nsp", sheet: NestedSheet, sheetIndex: number) => {
+  const exportMaterializedSheet = useCallback((format: "dxf" | "nsp", sheet: NestedSheet, sheetIndex: number, bridges?: BridgeSettings) => {
     const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
-    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig), "application/dxf")
+    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf")
     else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
-  }, [nomenclatura, sheetConfig])
+  }, [nomenclatura, sheetConfig, defaultBridgeSettings])
 
   const handleSaveProject = useCallback(() => {
     const pieces: ProjectPieceEntry[] = rows.map((row) => ({

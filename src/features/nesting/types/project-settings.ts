@@ -12,6 +12,12 @@ export interface ProjectSettings {
   separacion: string
   rotacionPermitida: "0-90-180-270" | "libre" | "ninguna"
   prioridad: "normal" | "alta" | "baja"
+  /** Si está activo, el DXF exportado corta cada contorno de pieza con micro-uniones (huecos chicos) en vez de un contorno cerrado continuo, para que la pieza no se suelte sola durante el corte. Cableado al pipeline real de exportación. */
+  puentesHabilitado: boolean
+  /** Cantidad de puentes por contorno, distribuidos parejo por longitud de perímetro. */
+  puentesCantidad: string
+  /** mm — ancho de cada hueco de puente. */
+  puentesAncho: string
 }
 
 export function defaultProjectSettings(): ProjectSettings {
@@ -27,6 +33,9 @@ export function defaultProjectSettings(): ProjectSettings {
     separacion: "0",
     rotacionPermitida: "0-90-180-270",
     prioridad: "normal",
+    puentesHabilitado: false,
+    puentesCantidad: "4",
+    puentesAncho: "1",
   }
 }
 

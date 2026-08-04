@@ -151,6 +151,45 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
           todavía no los usa (solo respeta el margen de plancha).
         </p>
       </div>
+
+      <div className="pt-3">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+          Puentes / micro-uniones
+        </p>
+        <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-white/20 bg-white/6 accent-emerald-500"
+            checked={settings.puentesHabilitado}
+            onChange={(e) => onChange({ puentesHabilitado: e.target.checked })}
+          />
+          Dejar micro-uniones al exportar (la pieza no se suelta sola del corte)
+        </label>
+        {settings.puentesHabilitado && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Field label="Cantidad de puentes">
+              <Input
+                inputMode="numeric"
+                className="text-center"
+                value={settings.puentesCantidad}
+                onChange={(e) => onChange({ puentesCantidad: e.target.value })}
+              />
+            </Field>
+            <Field label="Ancho de puente (mm)">
+              <Input
+                inputMode="decimal"
+                className="text-center"
+                value={settings.puentesAncho}
+                onChange={(e) => onChange({ puentesAncho: e.target.value })}
+              />
+            </Field>
+          </div>
+        )}
+        <p className="mt-2 text-[10px] leading-relaxed text-neutral-600">
+          Distribuidos parejo por longitud de perímetro. Se aplican al exportar DXF; el contorno en
+          pantalla sigue mostrándose cerrado.
+        </p>
+      </div>
     </div>
   )
 }

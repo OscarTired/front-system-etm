@@ -1,7 +1,28 @@
 import { mapColorToCypCutLayer, resolveLayerName } from "./color-layer-map"
-import type { NestedSheet, Point2D, SheetConfig } from "../engine/types"
+import { applyCutBridges } from "../engine/geometry"
+import type { NestedSheet, Point2D, PieceOutline, SheetConfig } from "../engine/types"
 
 const CLOSE_TOLERANCE = 1e-4
+
+/** Parámetros de micro-uniones (puentes) para el corte. Si `enabled` es false o `count` es 0, cada contorno se exporta cerrado y continuo, igual que antes. */
+export interface BridgeSettings {
+  enabled: boolean
+  count: number
+  widthMm: number
+}
+
+const NO_BRIDGES: BridgeSettings = { enabled: false, count: 0, widthMm: 0 }
+
+/**
+ * Si los puentes están activos, parte el contorno cerrado en N tramos
+ * abiertos con huecos chicos entre ellos (ver applyCutBridges). Si no,
+ * devuelve el contorno tal cual, como único elemento — mismo camino
+ * que el comportamiento anterior a esta función.
+ */
+function splitForBridges(outline: PieceOutline, bridges: BridgeSettings): PieceOutline[] {
+  if (!bridges.enabled || bridges.count <= 0) return [outline]
+  return applyCutBridges(outline, bridges.count, bridges.widthMm)
+}
 
 /**
  * Escribe una POLYLINE R12 (grupo 0 POLYLINE + VERTEX... + SEQEND),
@@ -59,7 +80,11 @@ function writePolylineR12(points: Point2D[], layer: string, color: number): stri
  * el marco de la plancha (capa MARCO_CHAPA) y cada pieza colocada, con
  * sus entidades agrupadas por capa/color según la convención CypCut.
  */
-export function generateSheetDxf(sheet: NestedSheet, sheetConfig: SheetConfig): string {
+export function generateSheetDxf(
+  sheet: NestedSheet,
+  sheetConfig: SheetConfig,
+  bridges: BridgeSettings = NO_BRIDGES
+): string {
   const { width, height } = sheetConfig
 
   // Invierte el eje Y para que el origen quede abajo-izquierda, como
@@ -83,11 +108,15 @@ export function generateSheetDxf(sheet: NestedSheet, sheetConfig: SheetConfig): 
       for (const sub of piece.subEntities) {
         const layerInfo = mapColorToCypCutLayer(sub.color ?? "#00FF00")
         const layerName = resolveLayerName(sub.layer, layerInfo)
-        out += writePolylineR12(sub.outline.points.map(flipY), layerName, layerInfo.dxfColor)
+        for (const tramo of splitForBridges(sub.outline, bridges)) {
+          out += writePolylineR12(tramo.points.map(flipY), layerName, layerInfo.dxfColor)
+        }
       }
     } else {
       // Respaldo: piezas sin sub-entidades (ej. rectángulos manuales) — un solo contorno de corte.
-      out += writePolylineR12(piece.outline.points.map(flipY), "CORTE_PRINCIPAL", 3)
+      for (const tramo of splitForBridges(piece.outline, bridges)) {
+        out += writePolylineR12(tramo.points.map(flipY), "CORTE_PRINCIPAL", 3)
+      }
     }
   }
 
