@@ -1,23 +1,58 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet, AlertTriangle, Play, Pause, SkipBack } from 'lucide-react';
+import {
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Target,
+  Grid,
+  Ruler,
+  CircleDot,
+  Triangle,
+  Square,
+  Crosshair,
+  X,
+  Trash2,
+  Magnet,
+  AlertTriangle,
+  Play,
+  Pause,
+  SkipBack,
+  ChevronsRight,
+} from 'lucide-react';
 
-interface Point { x: number; y: number }
-interface ViewState { scale: number; offsetX: number; offsetY: number }
+interface Point {
+  x: number;
+  y: number;
+}
+interface ViewState {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+}
 
-// Entidad de dibujo interna del canvas. `pieceIndex` agrupa entidades
-// por pieza para poder hacer hit-test/selección. `layer` es el nombre
-// de capa original del DXF/GEO, para el gestor de capas.
 type Entity =
   | { kind: 'line'; a: Point; b: Point; color: string; pieceIndex?: number; layer?: string }
   | { kind: 'polyline'; points: Point[]; closed: boolean; color: string; pieceIndex?: number; layer?: string }
   | { kind: 'circle'; center: Point; radius: number; color: string; pieceIndex?: number; layer?: string }
-  | { kind: 'arc'; center: Point; radius: number; startAngle: number; endAngle: number; color: string; pieceIndex?: number; layer?: string }
+  | {
+      kind: 'arc';
+      center: Point;
+      radius: number;
+      startAngle: number;
+      endAngle: number;
+      color: string;
+      pieceIndex?: number;
+      layer?: string;
+    }
   | { kind: 'text'; position: Point; text: string; height: number; color: string; pieceIndex?: number; layer?: string };
 
 function computeBounds(entities: Entity[]) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
 
   const expand = (p: Point) => {
     if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
@@ -28,8 +63,10 @@ function computeBounds(entities: Entity[]) {
   };
 
   for (const e of entities) {
-    if (e.kind === 'line') { expand(e.a); expand(e.b); }
-    else if (e.kind === 'polyline') e.points.forEach(expand);
+    if (e.kind === 'line') {
+      expand(e.a);
+      expand(e.b);
+    } else if (e.kind === 'polyline') e.points.forEach(expand);
     else if (e.kind === 'circle') {
       expand({ x: e.center.x - e.radius, y: e.center.y - e.radius });
       expand({ x: e.center.x + e.radius, y: e.center.y + e.radius });
@@ -43,19 +80,20 @@ function computeBounds(entities: Entity[]) {
   return { minX, minY, maxX, maxY };
 }
 
-/** Ray casting estándar para hit-test de selección de pieza. */
 function pointInPolygon(point: Point, polygon: Point[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x, yi = polygon[i].y;
-    const xj = polygon[j].x, yj = polygon[j].y;
-    const intersects = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+    const xi = polygon[i].x,
+      yi = polygon[i].y;
+    const xj = polygon[j].x,
+      yj = polygon[j].y;
+    const intersects =
+      yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
     if (intersects) inside = !inside;
   }
   return inside;
 }
 
-/** Área por la fórmula del shoelace (con signo; se devuelve el valor absoluto). */
 function polygonArea(points: Point[]): number {
   let sum = 0;
   for (let i = 0; i < points.length; i++) {
@@ -78,53 +116,43 @@ function polygonPerimeter(points: Point[]): number {
 }
 
 export interface NestingPieceInput {
-  /** Puntos del contorno de cada sub-trazo de la pieza, con su color real y su capa original (para el gestor de capas). */
   subOutlines: { points: Point[]; color?: string; layer?: string }[];
-  /** Contorno fusionado, usado solo como respaldo para hit-test si no hay subOutlines. */
   outline?: Point[];
   angle?: number;
 }
 
 export interface LayerInfo {
-  key: string
-  label: string
-  color: string
-  count: number
+  key: string;
+  label: string;
+  color: string;
+  count: number;
 }
 
-/** Recorre las piezas y arma la lista de capas distintas (agrupadas por nombre de capa real del DXF, o por color si la entidad no tiene capa) — para el gestor de capas. */
 export function computeLayerList(pieces: NestingPieceInput[]): LayerInfo[] {
-  const map = new Map<string, LayerInfo>()
+  const map = new Map<string, LayerInfo>();
   for (const piece of pieces) {
     for (const sub of piece.subOutlines) {
-      const color = sub.color ?? '#22c55e'
-      const key = sub.layer ?? color
-      const existing = map.get(key)
+      const color = sub.color ?? '#22c55e';
+      const key = sub.layer ?? color;
+      const existing = map.get(key);
       if (existing) {
-        existing.count++
+        existing.count++;
       } else {
-        map.set(key, { key, label: sub.layer ?? color, color, count: 1 })
+        map.set(key, { key, label: sub.layer ?? color, color, count: 1 });
       }
     }
   }
-  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
 }
 
 interface DxfCanvasProps {
   pieces: NestingPieceInput[];
-  /** Tamaño de la plancha — dibuja un rectángulo gris claro de fondo. */
   sheetSize?: { width: number; height: number };
-  /** Índices de las piezas seleccionadas (soporta selección múltiple, para alinear varias entre sí). */
   selectedPieceIndices?: number[];
-  /** Se dispara al hacer click sobre una pieza (o vacío = null). `additive` es true con shift/ctrl — suma a la selección en vez de reemplazarla. */
   onSelectPiece?: (index: number | null, additive: boolean) => void;
-  /** Claves (nombre de capa, o color en hex mayúsculas si la entidad no tiene capa) a ocultar — para el gestor de capas/filtros de color. */
   hiddenKeys?: string[];
-  /** Índices de piezas que solapan con alguna otra (detección de colisiones) — se resaltan en rojo, tienen prioridad visual sobre la selección normal. */
   collidingPieceIndices?: number[];
-  /** Se dispara al soltar un arrastre directo sobre una pieza seleccionada — dx/dy en unidades del mundo (mm), no píxeles de pantalla. */
   onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void;
-  /** Se dispara al presionar R (90° horario) o Shift+R (antihorario) con piezas seleccionadas — mismo atajo que "Rotar" en FreeCAD. */
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void;
 }
 
@@ -134,8 +162,6 @@ const SELECTED_HALO = '#facc15';
 const COLLISION_COLOR = '#ef4444';
 const MEASURE_COLOR = '#22d3ee';
 const MEASURE_PENDING_COLOR = '#67e8f9';
-
-// --- Metrología ---
 
 type MeasureTool = 'none' | 'distance' | 'radius' | 'angle' | 'area' | 'coords';
 
@@ -153,14 +179,18 @@ const TOOL_LABELS: Record<Exclude<MeasureTool, 'none'>, string> = {
   coords: 'Coordenadas',
 };
 
-/** Tolerancia de hit-test en px de pantalla, convertida a espacio local según el zoom actual. */
 const HIT_TOLERANCE_PX = 10;
-/** Tolerancia de snap (extremo/medio/centro), en px de pantalla. */
 const SNAP_TOLERANCE_PX = 12;
 
 interface SnapCandidate {
   point: Point;
   type: 'endpoint' | 'midpoint' | 'center';
+}
+
+interface ToolpathSeg {
+  points: Point[];
+  startLen: number;
+  endLen: number;
 }
 
 function angleOfVector(from: Point, to: Point): number {
@@ -171,18 +201,37 @@ function fmtMm(v: number): string {
   return `${v.toFixed(1)}mm`;
 }
 
-export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSelectPiece, hiddenKeys, collidingPieceIndices = [], onMovePieces, onRotateSelected }: DxfCanvasProps) => {
+export const DxfCanvas = ({
+  pieces,
+  sheetSize,
+  selectedPieceIndices = [],
+  onSelectPiece,
+  hiddenKeys,
+  collidingPieceIndices = [],
+  onMovePieces,
+}: DxfCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
-  const toolpathRef = useRef<{ points: Point[]; startLen: number; endLen: number }[]>([]);
+  const toolpathRef = useRef<ToolpathSeg[]>([]);
   const totalPathLengthRef = useRef(0);
+  /** Path2D cacheado del recorrido completo — evita re-emitir miles de lineTo en cada frame cuando la sim ya terminó o está al 100%. */
+  const fullPath2DRef = useRef<Path2D | null>(null);
   const viewRef = useRef<ViewState>({ scale: 1, offsetX: 0, offsetY: 0 });
-  const draggingRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number; moved: boolean } | null>(null);
+  const draggingRef = useRef<{
+    startX: number;
+    startY: number;
+    startOffsetX: number;
+    startOffsetY: number;
+    moved: boolean;
+  } | null>(null);
   const pieceDragRef = useRef<{ pieceIndices: number[]; startLocal: Point; offset: Point } | null>(null);
 
-  const [showGrid, setShowGrid] = useState(true);
+  const drawRafRef = useRef<number | null>(null);
+  const simRafRef = useRef<number | null>(null);
+  const simLastTsRef = useRef<number | null>(null);
 
+  const [showGrid, setShowGrid] = useState(true);
   const [activeTool, setActiveTool] = useState<MeasureTool>('none');
   const [pendingPoints, setPendingPoints] = useState<Point[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -191,11 +240,20 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null);
 
+  const [hasToolpath, setHasToolpath] = useState(false);
+  const [simPanelOpen, setSimPanelOpen] = useState(false);
   const [simRunning, setSimRunning] = useState(false);
-  const [simProgress, setSimProgress] = useState(0); // 0..1
-  const [simSpeed, setSimSpeed] = useState(1); // multiplicador
-  const simRafRef = useRef<number | null>(null);
-  const simLastTsRef = useRef<number | null>(null);
+  const [simProgress, setSimProgress] = useState(0);
+  const [simSpeed, setSimSpeed] = useState(1);
+
+  const simProgressRef = useRef(0);
+  const simRunningRef = useRef(false);
+  useEffect(() => {
+    simProgressRef.current = simProgress;
+  }, [simProgress]);
+  useEffect(() => {
+    simRunningRef.current = simRunning;
+  }, [simRunning]);
 
   const localToScreen = useCallback((p: Point): Point => {
     const canvas = canvasRef.current;
@@ -209,6 +267,61 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     };
   }, []);
 
+  /**
+   * Dibuja solo el tramo de toolpath hasta `targetLen`.
+   * Si el recorrido está completo, usa Path2D cacheado (1 stroke).
+   */
+  const strokeToolpathUntil = useCallback(
+    (ctx: CanvasRenderingContext2D, targetLen: number, scale: number) => {
+      const total = totalPathLengthRef.current;
+      if (total <= 0 || targetLen <= 0) return null as Point | null;
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.2 / scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Recorrido completo → un solo Path2D (mucho más barato con miles de segmentos)
+      if (targetLen >= total - 1e-6 && fullPath2DRef.current) {
+        ctx.stroke(fullPath2DRef.current);
+        const lastSeg = toolpathRef.current[toolpathRef.current.length - 1];
+        return lastSeg?.points[lastSeg.points.length - 1] ?? null;
+      }
+
+      let headPoint: Point | null = null;
+      for (const seg of toolpathRef.current) {
+        if (seg.startLen >= targetLen) break;
+
+        if (seg.endLen <= targetLen) {
+          ctx.beginPath();
+          seg.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+          ctx.stroke();
+          headPoint = seg.points[seg.points.length - 1];
+        } else {
+          let acc = seg.startLen;
+          ctx.beginPath();
+          ctx.moveTo(seg.points[0].x, seg.points[0].y);
+          for (let i = 0; i < seg.points.length - 1; i++) {
+            const p1 = seg.points[i];
+            const p2 = seg.points[i + 1];
+            const partLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            if (acc + partLen >= targetLen) {
+              const t = partLen > 0 ? (targetLen - acc) / partLen : 0;
+              headPoint = { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t };
+              ctx.lineTo(headPoint.x, headPoint.y);
+              break;
+            }
+            ctx.lineTo(p2.x, p2.y);
+            acc += partLen;
+          }
+          ctx.stroke();
+        }
+      }
+      return headPoint;
+    },
+    []
+  );
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -221,9 +334,11 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     const h = canvas.clientHeight;
     if (w === 0 || h === 0) return;
 
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
+    const targetW = Math.round(w * dpr);
+    const targetH = Math.round(h * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
     }
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -239,13 +354,17 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       ctx.strokeRect(0, 0, sheetSize.width, sheetSize.height);
     }
 
-    ctx.lineWidth = 1 / scale;
-
+    const progress = simProgressRef.current;
+    const simActive = progress > 0.001;
     const selectedSet = new Set(selectedPieceIndices);
     const collidingSet = new Set(collidingPieceIndices);
-    const simActive = simProgress > 0;
 
-    ctx.globalAlpha = simActive ? 0.25 : 1;
+    // Geometría base (atenuada solo mientras la simulación está en curso, no al 100% idle)
+    const attenuate = simActive && progress < 0.999;
+    ctx.globalAlpha = attenuate ? 0.28 : 1;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
     for (const e of entitiesRef.current) {
       const isSelected = e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex);
       const isColliding = e.pieceIndex !== undefined && collidingSet.has(e.pieceIndex);
@@ -276,46 +395,12 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     }
     ctx.globalAlpha = 1;
 
-    // Camino ya "cortado" hasta simProgress, resaltado por encima de
-    // la geometría atenuada, más el marcador del cabezal en la punta.
+    // Overlay de corte solo si hay progreso (y no es un 100% “fantasma” sin panel activo)
     if (simActive) {
-      const targetLen = simProgress * totalPathLengthRef.current;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.2 / scale;
-      let headPoint: Point | null = null;
+      const targetLen = progress * totalPathLengthRef.current;
+      const headPoint = strokeToolpathUntil(ctx, targetLen, scale);
 
-      for (const seg of toolpathRef.current) {
-        if (seg.startLen >= targetLen) break;
-
-        if (seg.endLen <= targetLen) {
-          ctx.beginPath();
-          seg.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-          ctx.stroke();
-          headPoint = seg.points[seg.points.length - 1];
-        } else {
-          // Este segmento está parcialmente recorrido — dibujar solo
-          // hasta el punto exacto que corresponde a targetLen.
-          let acc = seg.startLen;
-          ctx.beginPath();
-          ctx.moveTo(seg.points[0].x, seg.points[0].y);
-          for (let i = 0; i < seg.points.length - 1; i++) {
-            const p1 = seg.points[i];
-            const p2 = seg.points[i + 1];
-            const partLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-            if (acc + partLen >= targetLen) {
-              const t = partLen > 0 ? (targetLen - acc) / partLen : 0;
-              headPoint = { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t };
-              ctx.lineTo(headPoint.x, headPoint.y);
-              break;
-            }
-            ctx.lineTo(p2.x, p2.y);
-            acc += partLen;
-          }
-          ctx.stroke();
-        }
-      }
-
-      if (headPoint) {
+      if (headPoint && progress < 0.999) {
         ctx.fillStyle = '#facc15';
         ctx.beginPath();
         ctx.arc(headPoint.x, headPoint.y, 4 / scale, 0, Math.PI * 2);
@@ -362,7 +447,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     }
 
-    // --- Geometría de mediciones (en espacio local, escala con el zoom) ---
     ctx.lineWidth = 1.5 / scale;
     ctx.strokeStyle = MEASURE_COLOR;
     ctx.fillStyle = MEASURE_COLOR;
@@ -416,7 +500,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     }
 
-    // Puntos ya colocados de la medición en curso
     if (pendingPoints.length > 0) {
       ctx.fillStyle = MEASURE_PENDING_COLOR;
       ctx.strokeStyle = MEASURE_PENDING_COLOR;
@@ -432,10 +515,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         ctx.fill();
       }
 
-      // Guías de alineación: si el punto que estás por colocar
-      // coincide en X o Y con el último punto ya puesto, se traza una
-      // línea de referencia larga en esa dirección — el mismo "smart
-      // guide" de cualquier CAD real.
       const last = pendingPoints[pendingPoints.length - 1];
       if (hoverLocal) {
         const guideTol = 2 / scale;
@@ -458,7 +537,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     }
 
-    // Marcador del punto de snap activo — forma según el tipo.
     if (snapCandidate) {
       const s = 5 / scale;
       const p = snapCandidate.point;
@@ -482,8 +560,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
     ctx.restore();
 
-    // --- Etiquetas de texto de las mediciones, en espacio de PANTALLA
-    // (tamaño constante sin importar el zoom, como en cualquier CAD real) ---
     if (measurements.length > 0) {
       ctx.font = '11px ui-sans-serif, system-ui';
       ctx.textAlign = 'center';
@@ -501,7 +577,10 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           text = `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`;
         } else if (m.kind === 'angle') {
           const midAngle = (angleOfVector(m.vertex, m.p1) + angleOfVector(m.vertex, m.p2)) / 2;
-          labelLocal = { x: m.vertex.x + Math.cos(midAngle) * 24, y: m.vertex.y + Math.sin(midAngle) * 24 };
+          labelLocal = {
+            x: m.vertex.x + Math.cos(midAngle) * 24,
+            y: m.vertex.y + Math.sin(midAngle) * 24,
+          };
           text = `${m.degrees.toFixed(1)}°`;
         } else {
           labelLocal = m.centroid;
@@ -518,7 +597,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     }
 
-    // HUD de coordenadas en vivo (solo mientras la herramienta "coords" está activa)
     if (activeTool === 'coords' && hoverLocal && hoverScreen) {
       const text = `X ${hoverLocal.x.toFixed(1)}  Y ${hoverLocal.y.toFixed(1)}`;
       ctx.font = '11px ui-sans-serif, system-ui';
@@ -532,7 +610,28 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       ctx.fillStyle = MEASURE_COLOR;
       ctx.fillText(text, px, py);
     }
-  }, [sheetSize, selectedPieceIndices, collidingPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate, simProgress]);
+  }, [
+    sheetSize,
+    selectedPieceIndices,
+    collidingPieceIndices,
+    measurements,
+    pendingPoints,
+    hoverLocal,
+    hoverScreen,
+    activeTool,
+    localToScreen,
+    snapCandidate,
+    strokeToolpathUntil,
+  ]);
+
+  /** Agrupa varios draw() del mismo frame (pan a 60–120 Hz) en un solo rAF. */
+  const scheduleDraw = useCallback(() => {
+    if (drawRafRef.current !== null) return;
+    drawRafRef.current = requestAnimationFrame(() => {
+      drawRafRef.current = null;
+      draw();
+    });
+  }, [draw]);
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
@@ -559,10 +658,9 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       offsetX: -centerX * scale,
       offsetY: -centerY * scale,
     };
-    draw();
-  }, [draw, sheetSize]);
+    scheduleDraw();
+  }, [scheduleDraw, sheetSize]);
 
-  // Centrar cámara en las piezas seleccionadas actualmente (bounding box combinado si hay varias)
   const focusOnSelectedPiece = useCallback(() => {
     if (selectedPieceIndices.length === 0) return;
     const canvas = canvasRef.current;
@@ -572,13 +670,15 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     if (w === 0 || h === 0) return;
 
     const selectedSet = new Set(selectedPieceIndices);
-    const selectedEntities = entitiesRef.current.filter((e) => e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex));
+    const selectedEntities = entitiesRef.current.filter(
+      (e) => e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex)
+    );
     const bounds = computeBounds(selectedEntities);
     if (!bounds) return;
 
     const drawW = bounds.maxX - bounds.minX || 1;
     const drawH = bounds.maxY - bounds.minY || 1;
-    const padding = 0.6; // Mayor zoom para enfocar la pieza
+    const padding = 0.6;
 
     const scale = Math.min((w / drawW) * padding, (h / drawH) * padding);
     const centerX = (bounds.minX + bounds.maxX) / 2;
@@ -589,8 +689,16 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       offsetX: -centerX * scale,
       offsetY: -centerY * scale,
     };
-    draw();
-  }, [draw, selectedPieceIndices]);
+    scheduleDraw();
+  }, [scheduleDraw, selectedPieceIndices]);
+
+  /** Al interactuar con la vista, limpia el overlay de sim terminada para no pintar el path completo en cada frame de pan. */
+  const clearSimOverlayIfIdle = useCallback(() => {
+    if (!simRunningRef.current && simProgressRef.current > 0) {
+      setSimProgress(0);
+      simProgressRef.current = 0;
+    }
+  }, []);
 
   useEffect(() => {
     const hidden = new Set((hiddenKeys ?? []).map((k) => k.toUpperCase()));
@@ -602,21 +710,33 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           const layerKey = (sub.layer ?? color).toUpperCase();
           if (hidden.has(layerKey) || hidden.has(color.toUpperCase())) continue;
           if (sub.points.length >= 2) {
-            out.push({ kind: 'polyline', points: sub.points, closed: false, color, pieceIndex, layer: sub.layer });
+            out.push({
+              kind: 'polyline',
+              points: sub.points,
+              closed: false,
+              color,
+              pieceIndex,
+              layer: sub.layer,
+            });
           }
         }
       } else if (piece.outline && piece.outline.length >= 2) {
-        out.push({ kind: 'polyline', points: piece.outline, closed: true, color: '#22c55e', pieceIndex });
+        out.push({
+          kind: 'polyline',
+          points: piece.outline,
+          closed: true,
+          color: '#22c55e',
+          pieceIndex,
+        });
       }
     });
     entitiesRef.current = out;
 
-    // Toolpath: cada entidad tesselada a puntos + su longitud
-    // acumulada dentro del camino completo — la simulación de corte
-    // recorre esto en orden.
-    const ARC_SEGMENTS = 32;
-    const path: { points: Point[]; startLen: number; endLen: number }[] = [];
+    const ARC_SEGMENTS = 24;
+    const path: ToolpathSeg[] = [];
+    const path2d = new Path2D();
     let cumLen = 0;
+
     for (const e of out) {
       let pts: Point[] | null = null;
       if (e.kind === 'line') pts = [e.a, e.b];
@@ -624,33 +744,48 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       else if (e.kind === 'circle') {
         pts = Array.from({ length: ARC_SEGMENTS + 1 }, (_, i) => {
           const a = (i / ARC_SEGMENTS) * Math.PI * 2;
-          return { x: e.center.x + Math.cos(a) * e.radius, y: e.center.y + Math.sin(a) * e.radius };
+          return {
+            x: e.center.x + Math.cos(a) * e.radius,
+            y: e.center.y + Math.sin(a) * e.radius,
+          };
         });
       } else if (e.kind === 'arc') {
         pts = Array.from({ length: ARC_SEGMENTS + 1 }, (_, i) => {
           const a = e.startAngle + (i / ARC_SEGMENTS) * (e.endAngle - e.startAngle);
-          return { x: e.center.x + Math.cos(a) * e.radius, y: e.center.y + Math.sin(a) * e.radius };
+          return {
+            x: e.center.x + Math.cos(a) * e.radius,
+            y: e.center.y + Math.sin(a) * e.radius,
+          };
         });
       }
       if (!pts || pts.length < 2) continue;
+
       let segLen = 0;
-      for (let i = 0; i < pts.length - 1; i++) segLen += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      path2d.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < pts.length - 1; i++) {
+        path2d.lineTo(pts[i + 1].x, pts[i + 1].y);
+        segLen += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      }
       path.push({ points: pts, startLen: cumLen, endLen: cumLen + segLen });
       cumLen += segLen;
     }
+
     toolpathRef.current = path;
     totalPathLengthRef.current = cumLen;
+    fullPath2DRef.current = cumLen > 0 ? path2d : null;
+    setHasToolpath(cumLen > 0);
     setSimProgress(0);
+    simProgressRef.current = 0;
     setSimRunning(false);
+    simRunningRef.current = false;
     requestAnimationFrame(fitToView);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pieces, sheetSize?.width, sheetSize?.height, hiddenKeys]);
 
-  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => {
+    scheduleDraw();
+  }, [scheduleDraw, simProgress]);
 
-  // Loop de la simulación de corte: avanza con tiempo real
-  // transcurrido (delta en ms), no un incremento fijo por frame — así
-  // la velocidad no depende de la tasa de refresco de la pantalla.
   useEffect(() => {
     if (!simRunning) {
       simLastTsRef.current = null;
@@ -658,13 +793,11 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       return;
     }
 
-    // 40mm/s de "velocidad de corte" base a 1x — no representa una
-    // máquina real específica, es solo una referencia visual razonable.
-    const BASE_MM_PER_SEC = 40;
+    const BASE_MM_PER_SEC = 80;
 
     const tick = (ts: number) => {
       if (simLastTsRef.current === null) simLastTsRef.current = ts;
-      const deltaSec = (ts - simLastTsRef.current) / 1000;
+      const deltaSec = Math.min(0.05, (ts - simLastTsRef.current) / 1000);
       simLastTsRef.current = ts;
 
       const totalLen = totalPathLengthRef.current || 1;
@@ -674,6 +807,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         const next = prev + deltaProgress;
         if (next >= 1) {
           setSimRunning(false);
+          simRunningRef.current = false;
           return 1;
         }
         return next;
@@ -691,10 +825,10 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const observer = new ResizeObserver(() => draw());
+    const observer = new ResizeObserver(() => scheduleDraw());
     observer.observe(container);
     return () => observer.disconnect();
-  }, [draw]);
+  }, [scheduleDraw]);
 
   const screenToLocal = useCallback((clientX: number, clientY: number): Point | null => {
     const canvas = canvasRef.current;
@@ -706,20 +840,25 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     return { x: cx / scale, y: cy / scale };
   }, []);
 
-  /** Extremos, puntos medios y centros de TODAS las entidades visibles — candidatos de snap. */
   const computeSnapCandidates = useCallback((): SnapCandidate[] => {
     const out: SnapCandidate[] = [];
     for (const e of entitiesRef.current) {
       if (e.kind === 'line') {
         out.push({ point: e.a, type: 'endpoint' });
         out.push({ point: e.b, type: 'endpoint' });
-        out.push({ point: { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2 }, type: 'midpoint' });
+        out.push({
+          point: { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2 },
+          type: 'midpoint',
+        });
       } else if (e.kind === 'polyline') {
         for (let i = 0; i < e.points.length; i++) {
           out.push({ point: e.points[i], type: 'endpoint' });
           const next = e.points[i + 1] ?? (e.closed ? e.points[0] : null);
           if (next) {
-            out.push({ point: { x: (e.points[i].x + next.x) / 2, y: (e.points[i].y + next.y) / 2 }, type: 'midpoint' });
+            out.push({
+              point: { x: (e.points[i].x + next.x) / 2, y: (e.points[i].y + next.y) / 2 },
+              type: 'midpoint',
+            });
           }
         }
       } else if (e.kind === 'circle' || e.kind === 'arc') {
@@ -729,22 +868,23 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     return out;
   }, []);
 
-  /** Busca el candidato de snap más cercano al punto, dentro de la tolerancia (en px de pantalla, convertida a espacio local según el zoom). */
-  const findNearestSnap = useCallback((point: Point): SnapCandidate | null => {
-    const tol = SNAP_TOLERANCE_PX / viewRef.current.scale;
-    let best: SnapCandidate | null = null;
-    let bestDist = tol;
-    for (const c of computeSnapCandidates()) {
-      const d = Math.hypot(point.x - c.point.x, point.y - c.point.y);
-      if (d < bestDist) {
-        bestDist = d;
-        best = c;
+  const findNearestSnap = useCallback(
+    (point: Point): SnapCandidate | null => {
+      const tol = SNAP_TOLERANCE_PX / viewRef.current.scale;
+      let best: SnapCandidate | null = null;
+      let bestDist = tol;
+      for (const c of computeSnapCandidates()) {
+        const d = Math.hypot(point.x - c.point.x, point.y - c.point.y);
+        if (d < bestDist) {
+          bestDist = d;
+          best = c;
+        }
       }
-    }
-    return best;
-  }, [computeSnapCandidates]);
+      return best;
+    },
+    [computeSnapCandidates]
+  );
 
-  /** Busca un círculo/arco cerca del punto (tolerancia en px de pantalla). */
   const hitTestCircleOrArc = useCallback((point: Point): { center: Point; radius: number } | null => {
     const tol = HIT_TOLERANCE_PX / viewRef.current.scale;
     for (const e of entitiesRef.current) {
@@ -755,7 +895,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     return null;
   }, []);
 
-  /** Busca un contorno cerrado que contenga el punto. */
   const hitTestClosedContour = useCallback((point: Point): Point[] | null => {
     for (const e of entitiesRef.current) {
       if (e.kind !== 'polyline' || !e.closed || e.points.length < 3) continue;
@@ -769,50 +908,86 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     setPendingPoints([]);
   }, []);
 
-  const handleToolClick = useCallback((point: Point) => {
-    if (activeTool === 'distance') {
-      const next = [...pendingPoints, point];
-      if (next.length < 2) {
-        setPendingPoints(next);
-        return;
+  const handleToolClick = useCallback(
+    (point: Point) => {
+      if (activeTool === 'distance') {
+        const next = [...pendingPoints, point];
+        if (next.length < 2) {
+          setPendingPoints(next);
+          return;
+        }
+        const [a, b] = next;
+        setMeasurements((prev) => [
+          ...prev,
+          {
+            id: `d-${Date.now()}`,
+            kind: 'distance',
+            a,
+            b,
+            value: Math.hypot(b.x - a.x, b.y - a.y),
+          },
+        ]);
+        setPendingPoints([]);
+      } else if (activeTool === 'radius') {
+        const hit = hitTestCircleOrArc(point);
+        if (!hit) return;
+        setMeasurements((prev) => [
+          ...prev,
+          {
+            id: `r-${Date.now()}`,
+            kind: 'radius',
+            center: hit.center,
+            radius: hit.radius,
+            anglePoint: point,
+          },
+        ]);
+      } else if (activeTool === 'angle') {
+        const next = [...pendingPoints, point];
+        if (next.length < 3) {
+          setPendingPoints(next);
+          return;
+        }
+        const [vertex, p1, p2] = next;
+        const a1 = angleOfVector(vertex, p1);
+        const a2 = angleOfVector(vertex, p2);
+        let degrees = Math.abs((a2 - a1) * (180 / Math.PI));
+        if (degrees > 180) degrees = 360 - degrees;
+        setMeasurements((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            kind: 'angle',
+            vertex,
+            p1,
+            p2,
+            degrees,
+          },
+        ]);
+        setPendingPoints([]);
+      } else if (activeTool === 'area') {
+        const contour = hitTestClosedContour(point);
+        if (!contour) return;
+        const area = polygonArea(contour);
+        const perimeter = polygonPerimeter(contour);
+        const centroid = contour.reduce(
+          (acc, p) => ({ x: acc.x + p.x / contour.length, y: acc.y + p.y / contour.length }),
+          { x: 0, y: 0 }
+        );
+        setMeasurements((prev) => [
+          ...prev,
+          {
+            id: `ar-${Date.now()}`,
+            kind: 'area',
+            points: contour,
+            area,
+            perimeter,
+            centroid,
+          },
+        ]);
       }
-      const [a, b] = next;
-      setMeasurements((prev) => [...prev, {
-        id: `d-${Date.now()}`, kind: 'distance', a, b, value: Math.hypot(b.x - a.x, b.y - a.y),
-      }]);
-      setPendingPoints([]);
-    } else if (activeTool === 'radius') {
-      const hit = hitTestCircleOrArc(point);
-      if (!hit) return;
-      setMeasurements((prev) => [...prev, {
-        id: `r-${Date.now()}`, kind: 'radius', center: hit.center, radius: hit.radius, anglePoint: point,
-      }]);
-    } else if (activeTool === 'angle') {
-      const next = [...pendingPoints, point];
-      if (next.length < 3) {
-        setPendingPoints(next);
-        return;
-      }
-      const [vertex, p1, p2] = next;
-      const a1 = angleOfVector(vertex, p1);
-      const a2 = angleOfVector(vertex, p2);
-      let degrees = Math.abs((a2 - a1) * (180 / Math.PI));
-      if (degrees > 180) degrees = 360 - degrees;
-      setMeasurements((prev) => [...prev, {
-        id: `a-${Date.now()}`, kind: 'angle', vertex, p1, p2, degrees,
-      }]);
-      setPendingPoints([]);
-    } else if (activeTool === 'area') {
-      const contour = hitTestClosedContour(point);
-      if (!contour) return;
-      const area = polygonArea(contour);
-      const perimeter = polygonPerimeter(contour);
-      const centroid = contour.reduce((acc, p) => ({ x: acc.x + p.x / contour.length, y: acc.y + p.y / contour.length }), { x: 0, y: 0 });
-      setMeasurements((prev) => [...prev, {
-        id: `ar-${Date.now()}`, kind: 'area', points: contour, area, perimeter, centroid,
-      }]);
-    }
-  }, [activeTool, pendingPoints, hitTestCircleOrArc, hitTestClosedContour]);
+    },
+    [activeTool, pendingPoints, hitTestCircleOrArc, hitTestClosedContour]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -825,12 +1000,21 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         const selectedSet = new Set(selectedPieceIndices);
         let hitSelected = false;
         for (const ent of entitiesRef.current) {
-          if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && selectedSet.has(ent.pieceIndex) && ent.points.length >= 3) {
+          if (
+            ent.kind === 'polyline' &&
+            ent.pieceIndex !== undefined &&
+            selectedSet.has(ent.pieceIndex) &&
+            ent.points.length >= 3
+          ) {
             if (pointInPolygon(rawPoint, ent.points)) hitSelected = true;
           }
         }
         if (hitSelected) {
-          pieceDragRef.current = { pieceIndices: [...selectedPieceIndices], startLocal: rawPoint, offset: { x: 0, y: 0 } };
+          pieceDragRef.current = {
+            pieceIndices: [...selectedPieceIndices],
+            startLocal: rawPoint,
+            offset: { x: 0, y: 0 },
+          };
           canvas.setPointerCapture(e.pointerId);
           canvas.style.cursor = 'grabbing';
           return;
@@ -846,15 +1030,14 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       };
       canvas.setPointerCapture(e.pointerId);
     };
+
     const onPointerMove = (e: PointerEvent) => {
       if (activeTool !== 'none') {
         const rawPoint = screenToLocal(e.clientX, e.clientY);
         const rect = canvas.getBoundingClientRect();
-
         const usesPointSnap = activeTool === 'distance' || activeTool === 'angle' || activeTool === 'coords';
         const snap = snapEnabled && usesPointSnap && rawPoint ? findNearestSnap(rawPoint) : null;
         setSnapCandidate(snap);
-
         setHoverLocal(snap ? snap.point : rawPoint);
         setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top });
       }
@@ -863,8 +1046,11 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       if (pieceDrag) {
         const rawPoint = screenToLocal(e.clientX, e.clientY);
         if (rawPoint) {
-          pieceDrag.offset = { x: rawPoint.x - pieceDrag.startLocal.x, y: rawPoint.y - pieceDrag.startLocal.y };
-          draw();
+          pieceDrag.offset = {
+            x: rawPoint.x - pieceDrag.startLocal.x,
+            y: rawPoint.y - pieceDrag.startLocal.y,
+          };
+          scheduleDraw();
         }
         return;
       }
@@ -875,7 +1061,12 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         if (rawPoint && selectedPieceIndices.length > 0) {
           const selectedSet = new Set(selectedPieceIndices);
           for (const ent of entitiesRef.current) {
-            if (ent.kind === 'polyline' && ent.pieceIndex !== undefined && selectedSet.has(ent.pieceIndex) && ent.points.length >= 3) {
+            if (
+              ent.kind === 'polyline' &&
+              ent.pieceIndex !== undefined &&
+              selectedSet.has(ent.pieceIndex) &&
+              ent.points.length >= 3
+            ) {
               if (pointInPolygon(rawPoint, ent.points)) overSelected = true;
             }
           }
@@ -887,10 +1078,21 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       if (!drag) return;
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
-      viewRef.current = { ...viewRef.current, offsetX: drag.startOffsetX + dx, offsetY: drag.startOffsetY + dy };
-      draw();
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        if (!drag.moved) {
+          drag.moved = true;
+          // Al empezar a panear, quita overlay de sim terminada → pan fluido
+          clearSimOverlayIfIdle();
+        }
+      }
+      viewRef.current = {
+        ...viewRef.current,
+        offsetX: drag.startOffsetX + dx,
+        offsetY: drag.startOffsetY + dy,
+      };
+      scheduleDraw();
     };
+
     const onPointerUp = (e: PointerEvent) => {
       const pieceDrag = pieceDragRef.current;
       pieceDragRef.current = null;
@@ -899,7 +1101,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         if (Math.abs(pieceDrag.offset.x) > 0.01 || Math.abs(pieceDrag.offset.y) > 0.01) {
           onMovePieces?.(pieceDrag.pieceIndices, pieceDrag.offset.x, pieceDrag.offset.y);
         }
-        draw();
+        scheduleDraw();
         return;
       }
 
@@ -912,9 +1114,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         if (!rawPoint) return;
 
         if (activeTool !== 'none' && activeTool !== 'coords') {
-          // Radio/área hacen su propio hit-test contra la entidad
-          // completa (círculo/contorno) — el snap de punto solo
-          // aplica a distancia/ángulo, que sí colocan puntos sueltos.
           const usesPointSnap = activeTool === 'distance' || activeTool === 'angle';
           const snap = snapEnabled && usesPointSnap ? findNearestSnap(rawPoint) : null;
           handleToolClick(snap ? snap.point : rawPoint);
@@ -935,6 +1134,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      clearSimOverlayIfIdle();
       const rect = canvas.getBoundingClientRect();
       const cx = e.clientX - rect.left - rect.width / 2;
       const cy = e.clientY - rect.top - rect.height / 2;
@@ -946,7 +1146,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         offsetX: cx - (cx - offsetX) * factor,
         offsetY: cy - (cy - offsetY) * factor,
       };
-      draw();
+      scheduleDraw();
     };
 
     canvas.addEventListener('pointerdown', onPointerDown);
@@ -960,50 +1160,72 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       window.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('wheel', onWheel);
     };
-  }, [draw, onSelectPiece, screenToLocal, activeTool, handleToolClick, snapEnabled, findNearestSnap]);
+  }, [
+    scheduleDraw,
+    onSelectPiece,
+    screenToLocal,
+    activeTool,
+    handleToolClick,
+    snapEnabled,
+    findNearestSnap,
+    selectedPieceIndices,
+    onMovePieces,
+    clearSimOverlayIfIdle,
+  ]);
 
-  const handleZoom = useCallback((direction: 'in' | 'out') => {
-    const factor = direction === 'in' ? 1.25 : 0.8;
-    viewRef.current = { ...viewRef.current, scale: viewRef.current.scale * factor };
-    draw();
-  }, [draw]);
+  const handleZoom = useCallback(
+    (direction: 'in' | 'out') => {
+      clearSimOverlayIfIdle();
+      const factor = direction === 'in' ? 1.25 : 0.8;
+      viewRef.current = { ...viewRef.current, scale: viewRef.current.scale * factor };
+      scheduleDraw();
+    },
+    [scheduleDraw, clearSimOverlayIfIdle]
+  );
 
   const removeMeasurement = useCallback((id: string) => {
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
   }, []);
 
-// Clases reutilizables estilo Material Design 3
+  const closeSimPanel = useCallback(() => {
+    setSimRunning(false);
+    simRunningRef.current = false;
+    setSimProgress(0);
+    simProgressRef.current = 0;
+    setSimPanelOpen(false);
+  }, []);
+
+  const openSimPanel = useCallback(() => {
+    setSimPanelOpen(true);
+  }, []);
+
   const mdBtn =
-    "relative flex h-9 w-9 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-white/10 hover:text-white active:bg-white/15 disabled:pointer-events-none disabled:opacity-30"
-  const mdBtnActive = "bg-primary/20 text-primary hover:bg-primary/25 hover:text-primary"
-  const mdDivider = "mx-0.5 h-5 w-px shrink-0 bg-white/10"
+    'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors duration-150 hover:bg-white/10 hover:text-white active:bg-white/15 disabled:pointer-events-none disabled:opacity-30';
+  const mdBtnActive = 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/25 hover:text-blue-300';
+  const mdDivider = 'mx-0.5 h-5 w-px shrink-0 bg-white/10';
 
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-hidden"
       style={{
-        backgroundColor: "#0a0a0c",
+        backgroundColor: '#0a0a0c',
         backgroundImage: showGrid
-          ? "radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)"
-          : "none",
-        backgroundSize: "24px 24px",
+          ? 'radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)'
+          : 'none',
+        backgroundSize: '24px 24px',
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
-      />
+      <canvas ref={canvasRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
 
-      {/* ── Toolbar unificada superior (Material Design) ── */}
+      {/* Toolbar unificada superior — Material Design, sin borde */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center pt-3 px-3">
-        <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-[#1c1c1e]/92 px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md hide-scrollbar">
-
+        <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full bg-[#1c1c1e]/92 px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Vista */}
-          <button type="button" onClick={() => handleZoom("in")} className={mdBtn} title="Acercar">
+          <button type="button" onClick={() => handleZoom('in')} className={mdBtn} title="Acercar">
             <ZoomIn size={16} strokeWidth={1.75} />
           </button>
-          <button type="button" onClick={() => handleZoom("out")} className={mdBtn} title="Alejar">
+          <button type="button" onClick={() => handleZoom('out')} className={mdBtn} title="Alejar">
             <ZoomOut size={16} strokeWidth={1.75} />
           </button>
           <button type="button" onClick={fitToView} className={mdBtn} title="Ajustar a la vista">
@@ -1021,11 +1243,10 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
           <div className={mdDivider} />
 
-          {/* Visualización */}
           <button
             type="button"
             onClick={() => setShowGrid(!showGrid)}
-            className={`${mdBtn} ${showGrid ? mdBtnActive : ""}`}
+            className={`${mdBtn} ${showGrid ? mdBtnActive : ''}`}
             title="Cuadrícula"
           >
             <Grid size={16} strokeWidth={1.75} />
@@ -1036,11 +1257,11 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           {/* Metrología */}
           {(
             [
-              ["distance", Ruler, TOOL_LABELS.distance],
-              ["radius", CircleDot, TOOL_LABELS.radius],
-              ["angle", Triangle, TOOL_LABELS.angle],
-              ["area", Square, TOOL_LABELS.area],
-              ["coords", Crosshair, TOOL_LABELS.coords],
+              ['distance', Ruler, TOOL_LABELS.distance],
+              ['radius', CircleDot, TOOL_LABELS.radius],
+              ['angle', Triangle, TOOL_LABELS.angle],
+              ['area', Square, TOOL_LABELS.area],
+              ['coords', Crosshair, TOOL_LABELS.coords],
             ] as const
           ).map(([tool, Icon, label]) => (
             <button
@@ -1048,13 +1269,17 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
               type="button"
               onClick={() => {
                 if (activeTool === tool) {
-                  resetTool()
+                  resetTool();
                 } else {
-                  setActiveTool(tool)
-                  setPendingPoints([])
+                  setActiveTool(tool);
+                  setPendingPoints([]);
                 }
               }}
-              className={`${mdBtn} ${activeTool === tool ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300" : ""}`}
+              className={`${mdBtn} ${
+                activeTool === tool
+                  ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300'
+                  : ''
+              }`}
               title={label}
             >
               <Icon size={16} strokeWidth={1.75} />
@@ -1064,101 +1289,143 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           <button
             type="button"
             onClick={() => setSnapEnabled((v) => !v)}
-            className={`${mdBtn} ${snapEnabled ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 hover:text-amber-300" : ""}`}
-            title={snapEnabled ? "Snap activado" : "Snap desactivado"}
+            className={`${mdBtn} ${
+              snapEnabled
+                ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 hover:text-amber-300'
+                : ''
+            }`}
+            title={snapEnabled ? 'Snap activado' : 'Snap desactivado'}
           >
             <Magnet size={16} strokeWidth={1.75} />
           </button>
 
-          {activeTool !== "none" && (
+          {activeTool !== 'none' && (
             <button type="button" onClick={resetTool} className={mdBtn} title="Salir de herramienta">
               <X size={16} strokeWidth={1.75} />
             </button>
           )}
 
-          {/* Simulación de corte */}
-          {toolpathRef.current.length > 0 && (
+          {/* Simulación: colapsada = icono; expandida = controles + X, con transición */}
+          {hasToolpath && (
             <>
               <div className={mdDivider} />
-              <button
-                type="button"
-                onClick={() => {
-                  if (simProgress >= 1) setSimProgress(0)
-                  setSimRunning((v) => !v)
-                }}
-                className={mdBtn}
-                title={simRunning ? "Pausar" : "Simular corte"}
-              >
-                {simRunning ? <Pause size={15} strokeWidth={1.75} /> : <Play size={15} strokeWidth={1.75} />}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSimRunning(false)
-                  setSimProgress(0)
-                }}
-                disabled={simProgress === 0 && !simRunning}
-                className={mdBtn}
-                title="Reiniciar simulación"
-              >
-                <SkipBack size={14} strokeWidth={1.75} />
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.001}
-                value={simProgress}
-                onChange={(e) => {
-                  setSimRunning(false)
-                  setSimProgress(Number(e.target.value))
-                }}
-                className="mx-1 h-1 w-20 accent-cyan-400"
-                title="Progreso de corte"
-              />
-              <select
-                value={simSpeed}
-                onChange={(e) => setSimSpeed(Number(e.target.value))}
-                className="mr-1 h-7 rounded-full border-0 bg-white/5 px-2 text-[11px] text-neutral-300 outline-none focus:ring-1 focus:ring-white/20"
-              >
-                <option value={0.5}>0.5×</option>
-                <option value={1}>1×</option>
-                <option value={2}>2×</option>
-                <option value={4}>4×</option>
-              </select>
+
+              {!simPanelOpen ? (
+                <button
+                  type="button"
+                  onClick={openSimPanel}
+                  className={mdBtn}
+                  title="Simulación de corte"
+                >
+                  <ChevronsRight size={16} strokeWidth={1.75} />
+                </button>
+              ) : (
+                <div
+                  className="flex items-center gap-0.5 overflow-hidden transition-[max-width,opacity] duration-300 ease-out"
+                  style={{ maxWidth: 280, opacity: 1 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (simProgress >= 1) {
+                        setSimProgress(0);
+                        simProgressRef.current = 0;
+                      }
+                      setSimRunning((v) => !v);
+                    }}
+                    className={mdBtn}
+                    title={simRunning ? 'Pausar' : 'Reproducir'}
+                  >
+                    {simRunning ? (
+                      <Pause size={15} strokeWidth={1.75} />
+                    ) : (
+                      <Play size={15} strokeWidth={1.75} />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSimRunning(false);
+                      simRunningRef.current = false;
+                      setSimProgress(0);
+                      simProgressRef.current = 0;
+                    }}
+                    disabled={simProgress === 0 && !simRunning}
+                    className={mdBtn}
+                    title="Reiniciar"
+                  >
+                    <SkipBack size={14} strokeWidth={1.75} />
+                  </button>
+
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.001}
+                    value={simProgress}
+                    onChange={(e) => {
+                      setSimRunning(false);
+                      simRunningRef.current = false;
+                      const v = Number(e.target.value);
+                      setSimProgress(v);
+                      simProgressRef.current = v;
+                    }}
+                    className="mx-1 h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/15 accent-cyan-400 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400"
+                    title="Progreso de corte"
+                  />
+
+                  <select
+                    value={simSpeed}
+                    onChange={(e) => setSimSpeed(Number(e.target.value))}
+                    className="h-7 rounded-full border-0 bg-transparent px-1.5 text-[11px] text-neutral-300 outline-none hover:bg-white/5 focus:bg-white/5"
+                  >
+                    <option value={0.5}>0.5×</option>
+                    <option value={1}>1×</option>
+                    <option value={2}>2×</option>
+                    <option value={4}>4×</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={closeSimPanel}
+                    className={mdBtn}
+                    title="Cerrar simulación"
+                  >
+                    <X size={16} strokeWidth={1.75} />
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Hint de herramienta activa */}
-      {activeTool !== "none" && (
-        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md">
-          {activeTool === "distance" &&
-            (pendingPoints.length === 0 ? "Clic en el primer punto" : "Clic en el segundo punto")}
-          {activeTool === "radius" && "Clic sobre un círculo o arco"}
-          {activeTool === "angle" &&
+      {/* Hint herramienta */}
+      {activeTool !== 'none' && (
+        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md transition-opacity duration-200">
+          {activeTool === 'distance' &&
+            (pendingPoints.length === 0 ? 'Clic en el primer punto' : 'Clic en el segundo punto')}
+          {activeTool === 'radius' && 'Clic sobre un círculo o arco'}
+          {activeTool === 'angle' &&
             (pendingPoints.length === 0
-              ? "Clic en el vértice"
+              ? 'Clic en el vértice'
               : pendingPoints.length === 1
-                ? "Clic en el primer punto"
-                : "Clic en el segundo punto")}
-          {activeTool === "area" && "Clic dentro de un contorno cerrado"}
-          {activeTool === "coords" && "Mueve el mouse para ver X / Y"}
+                ? 'Clic en el primer punto'
+                : 'Clic en el segundo punto')}
+          {activeTool === 'area' && 'Clic dentro de un contorno cerrado'}
+          {activeTool === 'coords' && 'Mueve el mouse para ver X / Y'}
         </div>
       )}
 
-      {/* Aviso de colisión */}
       {collidingPieceIndices.length > 0 && (
-        <div className="absolute left-1/2 top-16 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 shadow-md backdrop-blur-md ring-1 ring-red-500/25">
+        <div className="absolute left-1/2 top-16 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 shadow-md backdrop-blur-md">
           <AlertTriangle className="h-3.5 w-3.5" />
           {collidingPieceIndices.length === 1
-            ? "1 pieza se solapa con otra"
+            ? '1 pieza se solapa con otra'
             : `${collidingPieceIndices.length} piezas se solapan`}
         </div>
       )}
 
-      {/* Lista de mediciones (abajo izquierda) */}
       {measurements.length > 0 && (
         <div className="absolute bottom-4 left-4 z-10 flex max-h-[40%] max-w-55 flex-col gap-1 overflow-y-auto rounded-2xl bg-[#1c1c1e]/92 p-2 shadow-[0_4px_16px_rgba(0,0,0,0.4)] backdrop-blur-md">
           <div className="flex items-center justify-between px-1.5 pb-1">
@@ -1168,7 +1435,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
             <button
               type="button"
               onClick={() => setMeasurements([])}
-              className="rounded-full p-1 text-neutral-500 hover:bg-white/10 hover:text-white"
+              className="rounded-full p-1 text-neutral-500 transition-colors hover:bg-white/10 hover:text-white"
               title="Borrar todas"
             >
               <Trash2 size={12} />
@@ -1180,15 +1447,15 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
               className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 text-[11px] text-neutral-200"
             >
               <span className="truncate">
-                {m.kind === "distance" && fmtMm(m.value)}
-                {m.kind === "radius" && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
-                {m.kind === "angle" && `${m.degrees.toFixed(1)}°`}
-                {m.kind === "area" && `${(m.area / 1_000_000).toFixed(4)}m²`}
+                {m.kind === 'distance' && fmtMm(m.value)}
+                {m.kind === 'radius' && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
+                {m.kind === 'angle' && `${m.degrees.toFixed(1)}°`}
+                {m.kind === 'area' && `${(m.area / 1_000_000).toFixed(4)}m²`}
               </span>
               <button
                 type="button"
                 onClick={() => removeMeasurement(m.id)}
-                className="shrink-0 rounded-full p-0.5 text-neutral-500 hover:bg-white/10 hover:text-white"
+                className="shrink-0 rounded-full p-0.5 text-neutral-500 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <X size={12} />
               </button>
