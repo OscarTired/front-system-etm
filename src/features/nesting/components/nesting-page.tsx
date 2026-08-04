@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Box, Layers, Layers3, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical } from "lucide-react"
 
-import { boundingRect } from "../engine/geometry"
+import { boundingRect, polygonsOverlap } from "../engine/geometry"
 import type { PlacedPiece, NestedSheet } from "../engine/types"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 import { useNestingProject } from "../hooks/use-nesting-project"
@@ -100,6 +100,24 @@ export function NestingPage() {
   )
 
   const layerList = useMemo(() => computeLayerList(dxfCanvasPieces), [dxfCanvasPieces])
+
+  /** Detección de solapes real (no solo bounding box) — importa sobre
+      todo DESPUÉS de alinear a mano, ya que ahí es donde se puede
+      terminar encimando piezas sin querer. O(n²) sobre las piezas de
+      UNA plancha (decenas, no miles) — no es un problema real de
+      rendimiento a esa escala. */
+  const collidingPieceIndices = useMemo(() => {
+    const colliding = new Set<number>()
+    for (let i = 0; i < canvasPieces.length; i++) {
+      for (let j = i + 1; j < canvasPieces.length; j++) {
+        if (polygonsOverlap(canvasPieces[i].outline.points, canvasPieces[j].outline.points)) {
+          colliding.add(i)
+          colliding.add(j)
+        }
+      }
+    }
+    return Array.from(colliding)
+  }, [canvasPieces])
 
   // Si cambiás de plancha y la capa oculta ya no existe ahí, no
   // rompe nada — el filtro simplemente no matchea contra nada. No
@@ -366,6 +384,7 @@ export function NestingPage() {
                 selectedPieceIndices={selectedPieceIndices}
                 onSelectPiece={handleSelectPiece}
                 hiddenKeys={hiddenLayerKeys.size > 0 ? Array.from(hiddenLayerKeys) : undefined}
+                collidingPieceIndices={collidingPieceIndices}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">

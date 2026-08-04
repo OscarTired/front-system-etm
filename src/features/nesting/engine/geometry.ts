@@ -162,3 +162,66 @@ export function mirrorOutlineY(outline: PieceOutline): PieceOutline {
   const cy = b.y + b.height / 2;
   return { points: outline.points.map((p) => ({ x: p.x, y: 2 * cy - p.y })) };
 }
+
+/** Ray casting estándar: ¿el punto está dentro del polígono? Compartida — antes vivía duplicada adentro de dxf-canvas.tsx. */
+export function pointInPolygon(point: Point2D, polygon: Point2D[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y;
+    const xj = polygon[j].x, yj = polygon[j].y;
+    const intersects = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+/** ¿Se cruzan los segmentos a1-a2 y b1-b2? Test estándar por orientación de triples de puntos. */
+function segmentsIntersect(a1: Point2D, a2: Point2D, b1: Point2D, b2: Point2D): boolean {
+  const orientation = (p: Point2D, q: Point2D, r: Point2D) => {
+    const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (Math.abs(val) < 1e-9) return 0;
+    return val > 0 ? 1 : 2;
+  };
+  const onSegment = (p: Point2D, q: Point2D, r: Point2D) =>
+    q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+
+  const o1 = orientation(a1, a2, b1);
+  const o2 = orientation(a1, a2, b2);
+  const o3 = orientation(b1, b2, a1);
+  const o4 = orientation(b1, b2, a2);
+
+  if (o1 !== o2 && o3 !== o4) return true;
+  if (o1 === 0 && onSegment(a1, b1, a2)) return true;
+  if (o2 === 0 && onSegment(a1, b2, a2)) return true;
+  if (o3 === 0 && onSegment(b1, a1, b2)) return true;
+  if (o4 === 0 && onSegment(b1, a2, b2)) return true;
+  return false;
+}
+
+/**
+ * ¿Se solapan dos polígonos de verdad (no solo sus bounding boxes)?
+ * Para detección de colisiones tras alineación manual: dos piezas
+ * pueden tener el bounding box superpuesto sin tocarse en absoluto
+ * (formas en L, por ejemplo), así que rectsOverlap solo no alcanza.
+ * Revisa: (1) algún par de aristas se cruza, (2) un polígono está
+ * completamente adentro del otro (caso sin cruce de aristas).
+ */
+export function polygonsOverlap(a: Point2D[], b: Point2D[]): boolean {
+  if (a.length < 3 || b.length < 3) return false;
+
+  const boundsA = boundingRect({ points: a });
+  const boundsB = boundingRect({ points: b });
+  if (!rectsOverlap(boundsA, boundsB)) return false;
+
+  for (let i = 0; i < a.length; i++) {
+    const a1 = a[i];
+    const a2 = a[(i + 1) % a.length];
+    for (let j = 0; j < b.length; j++) {
+      const b1 = b[j];
+      const b2 = b[(j + 1) % b.length];
+      if (segmentsIntersect(a1, a2, b1, b2)) return true;
+    }
+  }
+
+  return pointInPolygon(a[0], b) || pointInPolygon(b[0], a);
+}

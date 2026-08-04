@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet, AlertTriangle } from 'lucide-react';
 
 interface Point { x: number; y: number }
 interface ViewState { scale: number; offsetX: number; offsetY: number }
@@ -120,11 +120,14 @@ interface DxfCanvasProps {
   onSelectPiece?: (index: number | null, additive: boolean) => void;
   /** Claves (nombre de capa, o color en hex mayúsculas si la entidad no tiene capa) a ocultar — para el gestor de capas/filtros de color. */
   hiddenKeys?: string[];
+  /** Índices de piezas que solapan con alguna otra (detección de colisiones) — se resaltan en rojo, tienen prioridad visual sobre la selección normal. */
+  collidingPieceIndices?: number[];
 }
 
 const SHEET_STROKE = '#71717a';
 const SELECTED_STROKE = '#ffffff';
 const SELECTED_HALO = '#facc15';
+const COLLISION_COLOR = '#ef4444';
 const MEASURE_COLOR = '#22d3ee';
 const MEASURE_PENDING_COLOR = '#67e8f9';
 
@@ -164,7 +167,7 @@ function fmtMm(v: number): string {
   return `${v.toFixed(1)}mm`;
 }
 
-export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSelectPiece, hiddenKeys }: DxfCanvasProps) => {
+export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSelectPiece, hiddenKeys, collidingPieceIndices = [] }: DxfCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
@@ -226,12 +229,14 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
     ctx.lineWidth = 1 / scale;
 
     const selectedSet = new Set(selectedPieceIndices);
+    const collidingSet = new Set(collidingPieceIndices);
 
     for (const e of entitiesRef.current) {
       const isSelected = e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex);
-      ctx.strokeStyle = isSelected ? SELECTED_STROKE : e.color;
+      const isColliding = e.pieceIndex !== undefined && collidingSet.has(e.pieceIndex);
+      ctx.strokeStyle = isColliding ? COLLISION_COLOR : isSelected ? SELECTED_STROKE : e.color;
       ctx.fillStyle = e.color;
-      ctx.lineWidth = (isSelected ? 1.8 : 1) / scale;
+      ctx.lineWidth = (isColliding || isSelected ? 1.8 : 1) / scale;
       ctx.beginPath();
       if (e.kind === 'line') {
         ctx.moveTo(e.a.x, e.a.y);
@@ -270,6 +275,24 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
           bounds.maxY - bounds.minY + pad * 2
         );
         ctx.setLineDash([]);
+      }
+    }
+
+    // Halo sólido (no punteado, a propósito) para piezas en colisión —
+    // tiene que destacar más que la selección normal, es un error.
+    for (const idx of collidingPieceIndices) {
+      const collidingEntities = entitiesRef.current.filter((e) => e.pieceIndex === idx);
+      const bounds = computeBounds(collidingEntities);
+      if (bounds) {
+        const pad = 4 / scale;
+        ctx.strokeStyle = COLLISION_COLOR;
+        ctx.lineWidth = 2 / scale;
+        ctx.strokeRect(
+          bounds.minX - pad,
+          bounds.minY - pad,
+          bounds.maxX - bounds.minX + pad * 2,
+          bounds.maxY - bounds.minY + pad * 2
+        );
       }
     }
 
@@ -345,8 +368,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
       // Guías de alineación: si el punto que estás por colocar
       // coincide en X o Y con el último punto ya puesto, se traza una
-      // línea de referencia larga en esa dirección — el mismo "smart
-      // guide" de cualquier CAD real.
+      // línea de referencia larga en esa dirección.
       const last = pendingPoints[pendingPoints.length - 1];
       if (hoverLocal) {
         const guideTol = 2 / scale;
@@ -443,7 +465,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       ctx.fillStyle = MEASURE_COLOR;
       ctx.fillText(text, px, py);
     }
-  }, [sheetSize, selectedPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate]);
+  }, [sheetSize, selectedPieceIndices, collidingPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate]);
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
@@ -698,9 +720,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         if (!rawPoint) return;
 
         if (activeTool !== 'none' && activeTool !== 'coords') {
-          // Radio/área hacen su propio hit-test contra la entidad
-          // completa (círculo/contorno) — el snap de punto solo
-          // aplica a distancia/ángulo, que sí colocan puntos sueltos.
           const usesPointSnap = activeTool === 'distance' || activeTool === 'angle';
           const snap = snapEnabled && usesPointSnap ? findNearestSnap(rawPoint) : null;
           handleToolClick(snap ? snap.point : rawPoint);
@@ -831,14 +850,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
             <Icon size={16} />
           </button>
         ))}
-        <div className="my-0.5 h-px bg-white/10" />
-        <button
-          onClick={() => setSnapEnabled((v) => !v)}
-          className={`rounded-lg p-2 transition-colors ${snapEnabled ? 'bg-amber-500/20 text-amber-300' : 'text-neutral-400 hover:bg-white/10 hover:text-white'}`}
-          title={snapEnabled ? 'Snap activado (extremo/medio/centro)' : 'Snap desactivado'}
-        >
-          <Magnet size={16} />
-        </button>
         {activeTool !== 'none' && (
           <>
             <div className="my-0.5 h-px bg-white/10" />
@@ -847,7 +858,22 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
             </button>
           </>
         )}
+        <div className="my-0.5 h-px bg-white/10" />
+        <button
+          onClick={() => setSnapEnabled((v) => !v)}
+          className={`rounded-lg p-2 transition-colors ${snapEnabled ? 'bg-amber-500/20 text-amber-300' : 'text-neutral-400 hover:bg-white/10 hover:text-white'}`}
+          title={snapEnabled ? 'Snap activado (extremo/medio/centro)' : 'Snap desactivado'}
+        >
+          <Magnet size={16} />
+        </button>
       </div>
+
+      {collidingPieceIndices.length > 0 && (
+        <div className="absolute left-1/2 top-6 -translate-x-1/2 flex items-center gap-1.5 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 ring-1 ring-red-500/30 backdrop-blur-sm">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          {collidingPieceIndices.length} {collidingPieceIndices.length === 1 ? "pieza se solapa" : "piezas se solapan"} con otra
+        </div>
+      )}
 
       {activeTool !== 'none' && (
         <div className="absolute left-6 top-24 max-w-50 rounded-lg bg-[#101012]/90 px-2.5 py-1.5 text-[11px] text-neutral-400 ring-1 ring-white/10 backdrop-blur-sm">
