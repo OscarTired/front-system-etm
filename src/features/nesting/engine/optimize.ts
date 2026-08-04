@@ -6,9 +6,8 @@ const rectangleStrategy = new RectangleHeuristicStrategy()
 const polygonStrategy = new PolygonPackingStrategy()
 
 /**
- * Punto de entrada del motor.
- * - mode "fast" → bounding-box (rápido, como el original C++)
- * - mode "precise" (default) → polígono real + calados
+ * - mode "fast" (default): AABB + candidatos de esquinas + nesting en calados (rápido)
+ * - mode "precise": polígono real + grilla (más denso, mucho más lento; no usar en UI)
  */
 export function optimize(
   pieces: NestingPiece[],
@@ -17,7 +16,7 @@ export function optimize(
 ): NestedSheet[] {
   const chosen =
     strategy ??
-    (options.mode === "fast" ? rectangleStrategy : polygonStrategy)
+    (options.mode === "precise" ? polygonStrategy : rectangleStrategy)
   return chosen.optimize(pieces, options)
 }
 

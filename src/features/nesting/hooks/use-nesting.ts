@@ -30,6 +30,7 @@ export function useNesting(): UseNestingResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // type module required by some Next/webpack setups for TS workers
     const worker = new Worker(new URL("../workers/nesting.worker.ts", import.meta.url));
 
     worker.onmessage = (event: MessageEvent<NestingWorkerResponse>) => {
@@ -40,10 +41,19 @@ export function useNesting(): UseNestingResult {
         setSheets(msg.sheets);
         setStatus("done");
         setProgress(1);
+      } else if (msg.type === "cancelled") {
+        // Resultado parcial opcional; dejamos sheets para no perder trabajo
+        setSheets(msg.sheets.length > 0 ? msg.sheets : null);
+        setStatus("cancelled");
       } else if (msg.type === "error") {
         setError(msg.message);
         setStatus("error");
       }
+    };
+
+    worker.onerror = (ev) => {
+      setError(ev.message || "Error en el worker de nesting");
+      setStatus("error");
     };
 
     workerRef.current = worker;

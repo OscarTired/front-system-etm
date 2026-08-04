@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal } from "lucide-react"
 
-import { boundingRect, polygonsOverlap } from "../engine/geometry"
+import { boundingRect, polygonsOverlap, rotateOutlineAroundPoint } from "../engine/geometry"
 import type { PlacedPiece, NestedSheet } from "../engine/types"
 import type { BridgeSettings } from "../export/dxf-export"
 import { formatSheetRangeLabel } from "../utils/svg-render"
@@ -52,7 +52,9 @@ export function NestingPage() {
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
   const [positionOverrides, setPositionOverrides] = useState<Record<number, { dx: number; dy: number }>>({})
+  const [angleOverrides, setAngleOverrides] = useState<Record<number, number>>({})
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
+  const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -73,21 +75,40 @@ export function NestingPage() {
   const canvasPieces: PlacedPiece[] = useMemo(() => {
     const raw = activeGroup ? activeGroup.sheet.pieces : []
     return raw.map((p, i) => {
+      const ang = angleOverrides[i] ?? 0
       const override = positionOverrides[i]
-      if (!override) return p
+      let piece = p
+      if (ang) {
+        const b = boundingRect(p.outline)
+        const pivot = { x: b.x + b.width / 2, y: b.y + b.height / 2 }
+        piece = {
+          ...p,
+          angle: ((p.angle + ang) % 360 + 360) % 360,
+          outline: rotateOutlineAroundPoint(p.outline, ang, pivot),
+          subEntities: p.subEntities?.map((s) => ({
+            ...s,
+            outline: rotateOutlineAroundPoint(s.outline, ang, pivot),
+          })),
+        }
+      }
+      if (!override) return piece
       const { dx, dy } = override
       return {
-        ...p,
-        x: p.x + dx,
-        y: p.y + dy,
-        outline: { points: p.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
-        subEntities: p.subEntities?.map((s) => ({ ...s, outline: { points: s.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) } })),
+        ...piece,
+        x: piece.x + dx,
+        y: piece.y + dy,
+        outline: { points: piece.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
+        subEntities: piece.subEntities?.map((s) => ({
+          ...s,
+          outline: { points: s.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
+        })),
       }
     })
-  }, [activeGroup, positionOverrides])
+  }, [activeGroup, positionOverrides, angleOverrides])
 
   useEffect(() => {
     setPositionOverrides({})
+    setAngleOverrides({})
     setSelectedPieceIndices([])
   }, [activeGroupIndex, project.sheetGroups.length])
 
@@ -175,6 +196,18 @@ export function NestingPage() {
     })
   }, [transformMode])
 
+  const handleRotateSelected = useCallback((pieceIndices: number[], degrees: number) => {
+    if (pieceIndices.length === 0 || Math.abs(degrees) < 1e-9) return
+    setAngleOverrides((prev) => {
+      const next = { ...prev }
+      for (const idx of pieceIndices) {
+        const cur = next[idx] ?? 0
+        next[idx] = ((cur + degrees) % 360 + 360) % 360
+      }
+      return next
+    })
+  }, [])
+
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return
     const refIndex = selectedPieceIndices[selectedPieceIndices.length - 1]
@@ -241,7 +274,7 @@ export function NestingPage() {
     [project]
   )
 
-  const hasOverrides = Object.keys(positionOverrides).length > 0
+  const hasOverrides = Object.keys(positionOverrides).length > 0 || Object.keys(angleOverrides).length > 0
 
   const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number, bridges?: BridgeSettings) => {
     if (hasOverrides && activeGroup && sheetIndex === activeGroup.startIndex) {
@@ -405,6 +438,11 @@ export function NestingPage() {
                 hiddenKeys={hiddenLayerKeys.size > 0 ? Array.from(hiddenLayerKeys) : undefined}
                 collidingPieceIndices={collidingPieceIndices}
                 onMovePieces={handleMovePieces}
+                onRotateSelected={handleRotateSelected}
+                transformMode={transformMode}
+                onTransformModeChange={setTransformMode}
+                rotationStep={rotationStep}
+                onRotationStepChange={setRotationStep}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-8 text-center text-sm text-neutral-500">
@@ -412,31 +450,89 @@ export function NestingPage() {
               </div>
             )}
 
-            {selectedPieceIndices.length >= 2 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 backdrop-blur-sm shadow-lg">
-                <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                  Alinear ({selectedPieceIndices.length})
-                </span>
-                <div className="h-4 w-px bg-white/10" />
-                {(
-                  [
-                    ["left", AlignLeft, "Alinear izquierda"],
-                    ["center-h", AlignCenterHorizontal, "Centrar horizontal"],
-                    ["right", AlignRight, "Alinear derecha"],
-                    ["top", AlignStartVertical, "Alinear arriba"],
-                    ["center-v", AlignCenterVertical, "Centrar vertical"],
-                    ["bottom", AlignEndVertical, "Alinear abajo"],
-                  ] as const
-                ).map(([mode, Icon, label]) => (
-                  <button
-                    key={mode}
-                    onClick={() => handleAlign(mode)}
-                    className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
-                    title={label}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                ))}
+            {canvasPieces.length > 0 && (
+              <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-1.5">
+                <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
+                  <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                    Modo
+                  </span>
+                  <div className="h-4 w-px bg-white/10" />
+                  {(
+                    [
+                      ["free", "Libre"],
+                      ["geometric", "Geométrico"],
+                    ] as const
+                  ).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setTransformMode(mode)}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        transformMode === mode
+                          ? "bg-white/15 text-white"
+                          : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  {transformMode === "geometric" && (
+                    <>
+                      <div className="h-4 w-px bg-white/10" />
+                      {([15, 45, 90, 180] as const).map((step) => (
+                        <button
+                          key={step}
+                          type="button"
+                          onClick={() => setRotationStep(step)}
+                          className={`rounded-lg px-2 py-1 text-[11px] font-medium tabular-nums transition-colors ${
+                            rotationStep === step
+                              ? "bg-cyan-500/25 text-cyan-200"
+                              : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                          }`}
+                        >
+                          {step}°
+                        </button>
+                      ))}
+                      <div className="h-4 w-px bg-white/10" />
+                      <button
+                        type="button"
+                        disabled={selectedPieceIndices.length === 0}
+                        onClick={() => handleRotateSelected(selectedPieceIndices, rotationStep)}
+                        className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:opacity-30"
+                      >
+                        Rotar +{rotationStep}°
+                      </button>
+                    </>
+                  )}
+                </div>
+                {selectedPieceIndices.length >= 2 && (
+                  <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
+                    <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                      Alinear ({selectedPieceIndices.length})
+                    </span>
+                    <div className="h-4 w-px bg-white/10" />
+                    {(
+                      [
+                        ["left", AlignLeft, "Alinear izquierda"],
+                        ["center-h", AlignCenterHorizontal, "Centrar horizontal"],
+                        ["right", AlignRight, "Alinear derecha"],
+                        ["top", AlignStartVertical, "Alinear arriba"],
+                        ["center-v", AlignCenterVertical, "Centrar vertical"],
+                        ["bottom", AlignEndVertical, "Alinear abajo"],
+                      ] as const
+                    ).map(([mode, Icon, label]) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => handleAlign(mode)}
+                        className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                        title={label}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

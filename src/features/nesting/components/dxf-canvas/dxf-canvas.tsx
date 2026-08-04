@@ -16,6 +16,7 @@ import {
 } from "./utils/collision"
 import { findNearestSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
+import { constrainToMode } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
 import { useMeasurements } from "./hooks/use-measurements"
 import { useSimulation } from "./hooks/use-simulation"
@@ -38,6 +39,9 @@ export function DxfCanvas({
   hiddenKeys,
   collidingPieceIndices = [],
   onMovePieces,
+  onRotateSelected,
+  transformMode = "free",
+  rotationStep = 90,
 }: DxfCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -230,8 +234,9 @@ export function DxfCanvas({
       if (pieceDrag) {
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         if (rawPoint) {
-          const wantDx = rawPoint.x - pieceDrag.startLocal.x
-          const wantDy = rawPoint.y - pieceDrag.startLocal.y
+          let wantDx = rawPoint.x - pieceDrag.startLocal.x
+          let wantDy = rawPoint.y - pieceDrag.startLocal.y
+          ;({ dx: wantDx, dy: wantDy } = constrainToMode(transformMode, wantDx, wantDy))
           const resolved = resolveDragOffset(
             pieces,
             pieceDrag.pieceIndices,
@@ -242,7 +247,7 @@ export function DxfCanvas({
             {
               clearance: 0,
               snapPx: 10,
-              snapEnabled: snapEnabled,
+              snapEnabled: snapEnabled && transformMode === "free",
               index: collisionIndexRef.current ?? undefined,
             }
           )
@@ -358,6 +363,7 @@ export function DxfCanvas({
     selectedPieceIndices,
     onSelectPiece,
     onMovePieces,
+    transformMode,
     scheduleDraw,
     pieces,
     sheetSize,
@@ -386,6 +392,19 @@ export function DxfCanvas({
     view.focusEntities(canvasRef.current, selected)
     scheduleDraw()
   }, [view, selectedPieceIndices, scheduleDraw])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key !== "r" && e.key !== "R") return
+      if (selectedPieceIndices.length === 0 || !onRotateSelected) return
+      e.preventDefault()
+      const deg = e.shiftKey ? -rotationStep : rotationStep
+      onRotateSelected(selectedPieceIndices, deg)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [selectedPieceIndices, onRotateSelected, rotationStep])
 
   return (
     <div

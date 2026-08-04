@@ -11,6 +11,11 @@ import {
   IDENTITY,
   type Transform2D,
 } from "../geometry";
+import {
+  extractSolidWithHoles,
+  pointInPolygon,
+  type SolidWithHoles,
+} from "../polygon-collision";
 import type {
   NestedSheet,
   NestingOptions,
@@ -25,12 +30,15 @@ interface RotationVariant {
   angle: number;
   outline: PieceOutline;
   bounds: Rect;
-  /** Transform acumulado (escala + rotación + alineado a 0,0) SIN la traslación final de posición. Se aplica igual a `outline` y a `subOutlines`, para que el render fiel quede consistente con el bounding box usado para colisión. */
   transform: Transform2D;
 }
 
-const ROTATION_ANGLES = [0, 90, 180, 270] as const;
-const SEARCH_STEP = 1.0; // mm — igual a pasoBusqueda en el original
+function rotationAnglesFor(options: NestingOptions): number[] {
+  const mode = options.rotationMode ?? "0-90-180-270";
+  if (mode === "ninguna") return [0];
+  // Rápido: siempre 90°. "libre" en settings no abre 15° aquí (CPU).
+  return [0, 90, 180, 270];
+}
 
 function placePiece(
   piece: NestingPiece,
@@ -54,27 +62,38 @@ function placePiece(
   };
 }
 
+function uniqSorted(arr: number[]): number[] {
+  return [...new Set(arr.map((v) => Math.round(v * 100) / 100))].sort((a, b) => a - b);
+}
+
+/** 4 esquinas del AABB de la variante en (x,y). */
+function aabbCorners(x: number, y: number, w: number, h: number) {
+  return [
+    { x, y },
+    { x: x + w, y },
+    { x: x + w, y: y + h },
+    { x, y: y + h },
+  ];
+}
+
 /**
- * Puerto del NestingEngine::optimizar original. Nesting por BOUNDING
- * BOX, no por polígono real: aproxima cada pieza a su rectángulo
- * envolvente para las pruebas de colisión. Rápido y suficiente para
- * piezas mayormente rectangulares; para piezas cóncavas con huecos no
- * aprovecha el material tan bien como un nesting de polígono real
- * (No-Fit-Polygon) — si eso se necesita en el futuro, se implementa
- * como otra clase que cumpla `NestingStrategy`, sin tocar el resto.
+ * Nesting rápido estilo producción:
+ * 1) Intento en calados (huecos) de piezas ya colocadas — candidatos en bbox del hueco.
+ * 2) Colocación outer bottom-left por esquinas de AABB (sin grilla mm).
  */
 export class RectangleHeuristicStrategy implements NestingStrategy {
   optimize(inputPieces: NestingPiece[], options: NestingOptions): NestedSheet[] {
     const { sheet, signal, onProgress } = options;
     const sheets: NestedSheet[] = [];
+    const sheetSolids: SolidWithHoles[][] = [];
+    const separation = options.separation ?? 0;
+    const pad = Math.max(sheet.margin / 2, separation / 2);
 
-    // Expandir por `quantity`, igual que si el usuario hubiera repetido
-    // la pieza N veces en la lista de entrada del C++ original.
-    const pieces = inputPieces.flatMap((p) => Array.from({ length: p.quantity ?? 1 }, () => p));
-
+    const pieces = inputPieces.flatMap((p) =>
+      Array.from({ length: p.quantity ?? 1 }, () => p)
+    );
     if (pieces.length === 0) return sheets;
 
-    // 1. REGLA DE ORO DEL NESTING: ordenar de mayor a menor área.
     const sorted = [...pieces].sort((a, b) => {
       const boxA = boundingRect(a.outline);
       const boxB = boundingRect(b.outline);
@@ -85,10 +104,11 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
     const usableHeight = sheet.height - 2 * sheet.margin;
     const limitX = sheet.width - sheet.margin;
     const limitY = sheet.height - sheet.margin;
+    const angles = rotationAnglesFor(options);
 
     for (let i = 0; i < sorted.length; i++) {
       if (signal?.cancelled) break;
-      onProgress?.(i / sorted.length);
+      onProgress?.(i / Math.max(1, sorted.length));
 
       const piece = sorted[i];
       let outline = piece.outline;
@@ -96,35 +116,45 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
       let center = rectCenter(bounds);
       let scaleTransform: Transform2D = IDENTITY;
 
-      // ¿Cabe normal o rotada 90°? Si no cabe ninguna, escalar hasta que quepa.
-      const fitsNormal = bounds.width <= usableWidth + 0.1 && bounds.height <= usableHeight + 0.1;
-      const fitsRotated = bounds.height <= usableWidth + 0.1 && bounds.width <= usableHeight + 0.1;
+      const fitsNormal =
+        bounds.width <= usableWidth + 0.1 && bounds.height <= usableHeight + 0.1;
+      const fitsRotated =
+        bounds.height <= usableWidth + 0.1 && bounds.width <= usableHeight + 0.1;
 
       if (!fitsNormal && !fitsRotated) {
-        const scaleNormal = Math.min(usableWidth / bounds.width, usableHeight / bounds.height);
-        const scaleRotated = Math.min(usableWidth / bounds.height, usableHeight / bounds.width);
+        const scaleNormal = Math.min(
+          usableWidth / bounds.width,
+          usableHeight / bounds.height
+        );
+        const scaleRotated = Math.min(
+          usableWidth / bounds.height,
+          usableHeight / bounds.width
+        );
         const scaleFactor = Math.max(scaleNormal, scaleRotated) * 0.99;
-
         scaleTransform = scaleUniform(scaleFactor);
         outline = applyToOutline(scaleTransform, outline);
         bounds = boundingRect(outline);
         center = rectCenter(bounds);
       }
 
-      // 2. Generar variantes de rotación (0°, 90°, 180°, 270°), alineadas a (0,0).
-      const variants: RotationVariant[] = ROTATION_ANGLES.map((angle) => {
+      const variants: RotationVariant[] = angles.map((angle) => {
         const rotTransform = rotateAround(center, angle);
         const rotated = applyToOutline(rotTransform, outline);
         const rBounds = boundingRect(rotated);
         const alignTransform = translate(-rBounds.x, -rBounds.y);
         const aligned = applyToOutline(alignTransform, rotated);
-
-        const fullTransform = compose(compose(scaleTransform, rotTransform), alignTransform);
-
-        return { angle, outline: aligned, bounds: boundingRect(aligned), transform: fullTransform };
+        const fullTransform = compose(
+          compose(scaleTransform, rotTransform),
+          alignTransform
+        );
+        return {
+          angle,
+          outline: aligned,
+          bounds: boundingRect(aligned),
+          transform: fullTransform,
+        };
       });
 
-      // 3. Priorizar variantes más angostas (fuerza la verticalidad).
       variants.sort((a, b) => {
         if (Math.abs(a.bounds.width - b.bounds.width) > 0.1) {
           return a.bounds.width - b.bounds.width;
@@ -134,65 +164,163 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
 
       let placed = false;
 
-      // 4. Intentar acomodar en planchas existentes (izquierda a derecha, abajo a arriba).
-      for (const existingSheet of sheets) {
-        const placedBounds = existingSheet.pieces.map((p) =>
-          inflateRect(boundingRect(p.outline), sheet.margin / 2)
-        );
-
-        for (let x = sheet.margin; x <= limitX + 0.001 && !placed; x += SEARCH_STEP) {
-          let y = sheet.margin;
-
-          while (y <= limitY + 0.001) {
-            let minSafeYJump = limitY;
-            let variantPlaced = false;
+      // A) Calados
+      for (let si = 0; si < sheets.length && !placed; si++) {
+        if (signal?.cancelled) break;
+        const solids = sheetSolids[si];
+        for (const host of solids) {
+          if (placed) break;
+          for (const hole of host.holes) {
+            if (hole.length < 3) continue;
+            const hb = boundingRect({ points: hole });
+            if (hb.width < 1 || hb.height < 1) continue;
 
             for (const variant of variants) {
-              if (x + variant.bounds.width > limitX + 0.001) continue;
-              if (y + variant.bounds.height > limitY + 0.001) continue;
+              if (placed) break;
+              if (
+                variant.bounds.width > hb.width + 0.1 ||
+                variant.bounds.height > hb.height + 0.1
+              ) {
+                continue;
+              }
 
-              const testRect: Rect = { x, y, width: variant.bounds.width, height: variant.bounds.height };
-              const testRectWithMargin = inflateRect(testRect, sheet.margin / 2);
+              const xs = uniqSorted([
+                hb.x,
+                hb.x + hb.width - variant.bounds.width,
+                hb.x + (hb.width - variant.bounds.width) / 2,
+              ]);
+              const ys = uniqSorted([
+                hb.y,
+                hb.y + hb.height - variant.bounds.height,
+                hb.y + (hb.height - variant.bounds.height) / 2,
+              ]);
 
-              let collision = false;
-              let collisionYJump = 0;
+              for (const x of xs) {
+                if (placed) break;
+                for (const y of ys) {
+                  if (x < sheet.margin - 0.001 || y < sheet.margin - 0.001) continue;
+                  if (x + variant.bounds.width > limitX + 0.001) continue;
+                  if (y + variant.bounds.height > limitY + 0.001) continue;
 
-              for (const placedRect of placedBounds) {
-                if (rectsOverlap(testRectWithMargin, placedRect)) {
-                  collision = true;
-                  const jump = placedRect.y + placedRect.height - testRectWithMargin.y;
-                  if (jump > collisionYJump) collisionYJump = jump;
+                  const corners = aabbCorners(
+                    x,
+                    y,
+                    variant.bounds.width,
+                    variant.bounds.height
+                  );
+                  if (!corners.every((c) => pointInPolygon(c, hole))) continue;
+
+                  const testRect = inflateRect(
+                    {
+                      x,
+                      y,
+                      width: variant.bounds.width,
+                      height: variant.bounds.height,
+                    },
+                    pad
+                  );
+                  let clash = false;
+                  for (let oi = 0; oi < sheets[si].pieces.length; oi++) {
+                    if (solids[oi] === host) continue;
+                    const ob = inflateRect(
+                      boundingRect(sheets[si].pieces[oi].outline),
+                      pad
+                    );
+                    if (rectsOverlap(testRect, ob)) {
+                      clash = true;
+                      break;
+                    }
+                  }
+                  if (clash) continue;
+
+                  const pp = placePiece(piece, variant, x, y);
+                  sheets[si].pieces.push(pp);
+                  sheetSolids[si].push(
+                    extractSolidWithHoles(pp.outline, pp.subEntities)
+                  );
+                  placed = true;
+                  break;
                 }
               }
-
-              if (!collision) {
-                existingSheet.pieces.push(placePiece(piece, variant, x, y));
-                placed = true;
-                variantPlaced = true;
-                break;
-              } else if (collisionYJump < minSafeYJump) {
-                minSafeYJump = collisionYJump;
-              }
             }
-
-            if (variantPlaced) break;
-            if (minSafeYJump === limitY) break; // Ninguna rotación entra en la altura restante
-            y += Math.max(SEARCH_STEP, minSafeYJump);
           }
         }
       }
 
-      // 5. Si no cupo en ninguna plancha, crear una nueva.
+      // B) Outer por esquinas
+      for (let si = 0; si < sheets.length && !placed; si++) {
+        if (signal?.cancelled) break;
+
+        const placedBounds = sheets[si].pieces.map((p) =>
+          inflateRect(boundingRect(p.outline), pad)
+        );
+
+        const xs: number[] = [sheet.margin];
+        const ys: number[] = [sheet.margin];
+        for (const r of placedBounds) {
+          xs.push(r.x + r.width);
+          ys.push(r.y + r.height);
+        }
+        const candX = uniqSorted(xs);
+        const candY = uniqSorted(ys);
+
+        for (const y of candY) {
+          if (placed) break;
+          for (const x of candX) {
+            if (placed) break;
+            for (const variant of variants) {
+              if (x + variant.bounds.width > limitX + 0.001) continue;
+              if (y + variant.bounds.height > limitY + 0.001) continue;
+              if (x < sheet.margin - 0.001 || y < sheet.margin - 0.001) continue;
+
+              const testRect = inflateRect(
+                {
+                  x,
+                  y,
+                  width: variant.bounds.width,
+                  height: variant.bounds.height,
+                },
+                pad
+              );
+
+              let collision = false;
+              for (const placedRect of placedBounds) {
+                if (rectsOverlap(testRect, placedRect)) {
+                  collision = true;
+                  break;
+                }
+              }
+              if (collision) continue;
+
+              const pp = placePiece(piece, variant, x, y);
+              sheets[si].pieces.push(pp);
+              sheetSolids[si].push(
+                extractSolidWithHoles(pp.outline, pp.subEntities)
+              );
+              placed = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // C) Nueva plancha
       if (!placed) {
         let bestVariant = variants[0];
         for (const variant of variants) {
-          if (variant.bounds.width <= usableWidth + 0.1 && variant.bounds.height <= usableHeight + 0.1) {
+          if (
+            variant.bounds.width <= usableWidth + 0.1 &&
+            variant.bounds.height <= usableHeight + 0.1
+          ) {
             bestVariant = variant;
             break;
           }
         }
-
-        sheets.push({ pieces: [placePiece(piece, bestVariant, sheet.margin, sheet.margin)] });
+        const first = placePiece(piece, bestVariant, sheet.margin, sheet.margin);
+        sheets.push({ pieces: [first] });
+        sheetSolids.push([
+          extractSolidWithHoles(first.outline, first.subEntities),
+        ]);
       }
     }
 

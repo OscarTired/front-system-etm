@@ -75,8 +75,16 @@ export class PolygonPackingStrategy implements NestingStrategy {
   optimize(inputPieces: NestingPiece[], options: NestingOptions): NestedSheet[] {
     const { sheet, signal, onProgress } = options
     const separation = options.separation ?? 0
-    const step =
-      options.mode === "precise" ? Math.max(0.5, options.searchStep ?? 0.5) : options.searchStep ?? 1.5
+    // Paso adaptativo: 0.5 mm en planchas industriales genera millones de
+    // pruebas y el progreso se “congela” entre piezas. Escalamos al tamaño
+    // útil y dejamos un mínimo razonable para densidad.
+    const usableW0 = Math.max(1, sheet.width - 2 * sheet.margin)
+    const usableH0 = Math.max(1, sheet.height - 2 * sheet.margin)
+    const autoStep = Math.min(8, Math.max(2, Math.min(usableW0, usableH0) / 80))
+    const fineStep =
+      options.searchStep ??
+      (options.mode === "precise" ? Math.max(1, autoStep * 0.5) : autoStep)
+    const coarseStep = Math.max(fineStep * 3, fineStep + 2)
     const angles = rotationAnglesFor(options)
 
     const sheets: NestedSheet[] = []
@@ -97,9 +105,15 @@ export class PolygonPackingStrategy implements NestingStrategy {
     // Por plancha: sólidos colocados para colisión rápida
     const sheetSolids: SolidWithHoles[][] = []
 
+    const reportProgress = (pieceIndex: number, local = 0) => {
+      const base = pieceIndex / sorted.length
+      const span = 1 / sorted.length
+      onProgress?.(Math.min(0.999, base + local * span))
+    }
+
     for (let i = 0; i < sorted.length; i++) {
       if (signal?.cancelled) break
-      onProgress?.(i / sorted.length)
+      reportProgress(i, 0)
 
       const piece = sorted[i]
       let outline = piece.outline
@@ -186,8 +200,8 @@ export class PolygonPackingStrategy implements NestingStrategy {
                 continue
               }
               // Barrido grueso dentro del bbox del hueco
-              for (let x = hb.x; x <= hb.x + hb.width - variant.bounds.width + 0.001 && !placed; x += step) {
-                for (let y = hb.y; y <= hb.y + hb.height - variant.bounds.height + 0.001; y += step) {
+              for (let x = hb.x; x <= hb.x + hb.width - variant.bounds.width + 0.001 && !placed; x += fineStep) {
+                for (let y = hb.y; y <= hb.y + hb.height - variant.bounds.height + 0.001; y += fineStep) {
                   const moved = translatePoints(variant.outerLocal, x, y)
                   // Debe caber entero en el hueco
                   let allIn = true
@@ -230,17 +244,100 @@ export class PolygonPackingStrategy implements NestingStrategy {
         }
       }
 
-      // B) Barrido bottom-left en planchas existentes
-      for (let si = 0; si < sheets.length && !placed; si++) {
-        for (let x = sheet.margin; x <= limitX + 0.001 && !placed; x += step) {
-          for (let y = sheet.margin; y <= limitY + 0.001 && !placed; y += step) {
+      // B) Búsqueda bottom-left en planchas existentes.
+      // Multi-resolución + candidatos por esquinas de piezas ya colocadas
+      // para evitar barridos de millones de celdas (progreso congelado).
+      const tryGrid = (
+        si: number,
+        stepX: number,
+        maxTrials: number
+      ): boolean => {
+        let trials = 0
+        for (let x = sheet.margin; x <= limitX + 0.001 && !placed; x += stepX) {
+          for (let y = sheet.margin; y <= limitY + 0.001 && !placed; y += stepX) {
+            if (signal?.cancelled) return false
+            trials++
+            if (trials % 64 === 0) {
+              reportProgress(i, Math.min(0.95, trials / maxTrials))
+            }
+            if (trials > maxTrials) return false
             for (const variant of variants) {
               if (tryPlaceAt(si, variant, x, y)) {
                 placed = true
-                break
+                return true
               }
             }
           }
+        }
+        return placed
+      }
+
+      const collectCornerCandidates = (si: number): { x: number; y: number }[] => {
+        const pts: { x: number; y: number }[] = [{ x: sheet.margin, y: sheet.margin }]
+        for (const pp of sheets[si].pieces) {
+          const b = boundingRect(pp.outline)
+          const gap = separation
+          pts.push(
+            { x: b.x + b.width + gap, y: b.y },
+            { x: b.x, y: b.y + b.height + gap },
+            { x: b.x + b.width + gap, y: b.y + b.height + gap },
+            { x: Math.max(sheet.margin, b.x - gap), y: b.y },
+            { x: b.x, y: Math.max(sheet.margin, b.y - gap) }
+          )
+        }
+        // Dedup redondeado
+        const seen = new Set<string>()
+        const out: { x: number; y: number }[] = []
+        for (const p of pts) {
+          const key = `${p.x.toFixed(2)},${p.y.toFixed(2)}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          out.push(p)
+        }
+        return out
+      }
+
+      for (let si = 0; si < sheets.length && !placed; si++) {
+        if (signal?.cancelled) break
+
+        // 1) Candidatos por esquinas (barato y suele encontrar hueco)
+        const corners = collectCornerCandidates(si)
+        for (const c of corners) {
+          if (placed || signal?.cancelled) break
+          for (const variant of variants) {
+            if (tryPlaceAt(si, variant, c.x, c.y)) {
+              placed = true
+              break
+            }
+            // micro-offsets alrededor de la esquina
+            for (const ox of [0, fineStep, -fineStep, fineStep * 2]) {
+              for (const oy of [0, fineStep, -fineStep, fineStep * 2]) {
+                if (ox === 0 && oy === 0) continue
+                if (tryPlaceAt(si, variant, c.x + ox, c.y + oy)) {
+                  placed = true
+                  break
+                }
+              }
+              if (placed) break
+            }
+            if (placed) break
+          }
+        }
+
+        // 2) Grilla gruesa
+        if (!placed) {
+          const maxTrialsCoarse = Math.ceil(
+            ((usableWidth / coarseStep) + 2) * ((usableHeight / coarseStep) + 2) * variants.length
+          )
+          tryGrid(si, coarseStep, Math.min(maxTrialsCoarse, 25000))
+        }
+
+        // 3) Grilla fina solo si gruesa falló (planches casi llenas)
+        if (!placed) {
+          const maxTrialsFine = Math.ceil(
+            ((usableWidth / fineStep) + 2) * ((usableHeight / fineStep) + 2)
+          )
+          tryGrid(si, fineStep, Math.min(maxTrialsFine, 80000))
         }
       }
 

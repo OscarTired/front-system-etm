@@ -61,7 +61,15 @@ export function usePipelineTasks({
 
     if (showHistory) {
 
-      return sorted
+      const completed = sorted.filter(
+        task => isWorkflowCompleted(task.workflowSteps),
+      )
+
+      const active = sorted.filter(
+        task => !isWorkflowCompleted(task.workflowSteps),
+      )
+
+      return [...completed, ...active]
 
     }
 

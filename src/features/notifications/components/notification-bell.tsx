@@ -214,12 +214,20 @@ export function NotificationBell({
       </div>
 
       <div className="shrink-0 p-2 select-none">
-        {visibleNotifications.length === 0 ? (
+        {notifications.length === 0 ? (
+          // Sin ninguna notificación (ni siquiera leídas) no hay
+          // historial que mostrar — acá sí tiene sentido no dar acceso.
           <div className="flex w-full items-center justify-center gap-1.5 py-1.5 text-center text-xs text-neutral-500">
             <CheckCircle2 size={13} className="text-neutral-600 shrink-0" />
             Estás al día
           </div>
         ) : (
+          // Antes esta rama dependía de `visibleNotifications.length`
+          // (solo no leídas): apenas se leían todas las notificaciones
+          // (ej. comentarios ya vistos), el botón desaparecía del
+          // todo y no había forma de volver a abrir el historial
+          // completo desde la campanita. El acceso a "Ver más" no
+          // debería depender de si hay pendientes sin leer.
           <button
             type="button"
             onClick={handleOpenHistory}

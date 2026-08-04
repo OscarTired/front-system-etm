@@ -185,14 +185,15 @@ export function useNestingProject() {
   }, [])
 
   const handleRun = useCallback(() => {
-    if (validPieces.length === 0 || isRunning) return
-    run(validPieces, {
-      sheet: sheetConfig,
-      mode: "precise",
-      separation: Number(settings.separacion) || 0,
-      rotationMode: settings.rotacionPermitida,
-    })
-  }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida])
+      if (validPieces.length === 0 || isRunning) return
+      // fast = AABB + esquinas + calados (rápido). precise = grilla polígono (lento, no usar en UI).
+      run(validPieces, {
+        sheet: sheetConfig,
+        mode: "fast",
+        separation: Number(settings.separacion) || 0,
+        rotationMode: settings.rotacionPermitida,
+      })
+    }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida])
 
   const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number, bridges?: BridgeSettings) => {
     if (!sheets) return

@@ -8,6 +8,7 @@ export type NestingWorkerRequest =
 export type NestingWorkerResponse =
   | { type: "progress"; progress: number }
   | { type: "done"; sheets: NestedSheet[] }
+  | { type: "cancelled"; sheets: NestedSheet[] }
   | { type: "error"; message: string };
 
 /**
@@ -47,7 +48,11 @@ ctx.onmessage = (event) => {
         },
       });
 
-      ctx.postMessage({ type: "done", sheets });
+      if (cancelSignal.cancelled) {
+        ctx.postMessage({ type: "cancelled", sheets });
+      } else {
+        ctx.postMessage({ type: "done", sheets });
+      }
     } catch (err) {
       ctx.postMessage({
         type: "error",
