@@ -15,12 +15,33 @@ export function isValidMaterialData(data: MaterialData): boolean {
   return data.thickness > 0
 }
 
-/**
- * Puerto de ThicknessScanner::scanDxf. Busca tags de texto embebidos
- * por el CAD de origen (convención SPI): `SPI-THICKNESS<numero>` para
- * el espesor y `SPI-BL-AT-MAT:<texto>` para el material/norma. Corta
- * la búsqueda apenas encuentra ambos datos, igual que el original.
- */
+/** Espesores de chapa habituales (mm) — priorizan el parser GEO. */
+const COMMON_THICKNESSES = [
+  0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.25, 1.5, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30,
+]
+
+function isPlausibleThickness(v: number): boolean {
+  if (!(v >= 0.2 && v <= 50)) return false
+  return true
+}
+
+function pickBestThickness(candidates: number[]): number {
+  const ok = candidates.filter(isPlausibleThickness)
+  if (ok.length === 0) return -1
+
+  for (const c of ok) {
+    for (const stock of COMMON_THICKNESSES) {
+      if (Math.abs(c - stock) < 0.051) return stock
+    }
+  }
+
+  const withDecimals = ok.filter((v) => Math.abs(v - Math.round(v)) > 1e-6)
+  if (withDecimals.length === 1) return withDecimals[0]
+  if (withDecimals.length > 1) return Math.min(...withDecimals)
+
+  return Math.min(...ok)
+}
+
 function scanDxfThickness(content: string): MaterialData {
   const data = emptyMaterialData()
   const lines = content.split(/\r\n|\r|\n/)
@@ -33,7 +54,10 @@ function scanDxfThickness(content: string): MaterialData {
 
     if (data.thickness < 0) {
       const m = thicknessRe.exec(line)
-      if (m) data.thickness = parseFloat(m[1])
+      if (m) {
+        const v = parseFloat(m[1])
+        if (isPlausibleThickness(v)) data.thickness = v
+      }
     }
 
     if (data.dinNorm === "N/D") {
@@ -47,59 +71,57 @@ function scanDxfThickness(content: string): MaterialData {
   return data
 }
 
-/**
- * Puerto de ThicknessScanner::scanGeo. El espesor vive en el bloque
- * `#~11` (primer número positivo encontrado ahí — se ignora cualquier
- * dato técnico adicional una vez capturado, igual que el original). El
- * material/aleación vive en el bloque `#~30`, en líneas `WERKSTOFF@` y
- * `MAT@`.
- */
 function scanGeoThickness(content: string): MaterialData {
   const data = emptyMaterialData()
   const lines = content.split(/\r\n|\r|\n/).map((l) => l.trim())
 
   let inBlock11 = false
   let inBlock30 = false
+  const thicknessCandidates: number[] = []
 
   for (const line of lines) {
     if (line === "#~11") {
       inBlock11 = true
       continue
     }
-    if (inBlock11 && line === "##~~") {
+    if (inBlock11 && (line === "##~~" || line.startsWith("#~"))) {
       inBlock11 = false
+      if (line.startsWith("#~") && line !== "#~11") {
+        if (line === "#~30") inBlock30 = true
+      }
       continue
     }
-    if (inBlock11 && data.thickness < 0) {
-      const val = parseFloat(line)
-      if (!Number.isNaN(val) && val > 0) data.thickness = val
+    if (inBlock11) {
+      if (/^[0-9]+([.,][0-9]+)?$/.test(line)) {
+        const val = parseFloat(line.replace(",", "."))
+        if (!Number.isNaN(val) && val > 0) thicknessCandidates.push(val)
+      }
+      continue
     }
 
     if (line === "#~30") {
       inBlock30 = true
       continue
     }
-    if (inBlock30 && line === "##~~") {
+    if (inBlock30 && (line === "##~~" || (line.startsWith("#~") && line !== "#~30"))) {
       inBlock30 = false
       continue
     }
     if (inBlock30) {
       if (line.startsWith("WERKSTOFF@")) {
-        data.dinNorm = line.slice("WERKSTOFF@".length).trim()
+        const v = line.slice("WERKSTOFF@".length).trim()
+        if (v) data.dinNorm = v
       } else if (line.startsWith("MAT@")) {
-        data.alloy = line.slice("MAT@".length).trim()
+        const v = line.slice("MAT@".length).trim()
+        if (v) data.alloy = v
       }
     }
   }
 
+  data.thickness = pickBestThickness(thicknessCandidates)
   return data
 }
 
-/**
- * Puerto de ThicknessScanner::scanData: enruta según la extensión del
- * archivo. Devuelve un MaterialData "inválido" (thickness=-1) si el
- * formato no está soportado o no se detectó nada.
- */
 export function scanMaterialData(fileName: string, content: string): MaterialData {
   const ext = fileName.toLowerCase().split(".").pop() ?? ""
 
@@ -107,4 +129,15 @@ export function scanMaterialData(fileName: string, content: string): MaterialDat
   if (ext === "dxf") return scanDxfThickness(content)
 
   return emptyMaterialData()
+}
+
+export function thicknessGroupKey(thickness: number): string {
+  if (!(thickness > 0)) return "sin-espesor"
+  return (Math.round(thickness * 100) / 100).toFixed(2)
+}
+
+export function formatThicknessLabel(thickness: number | undefined | null): string {
+  if (thickness == null || !(thickness > 0)) return "s/esp."
+  const t = Math.round(thickness * 100) / 100
+  return Number.isInteger(t) ? `${t} mm` : `${t} mm`
 }

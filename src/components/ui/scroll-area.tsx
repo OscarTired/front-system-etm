@@ -16,18 +16,24 @@ function ScrollArea({
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      type="scroll"
+      type="scroll" // Mantiene el scroll visible si hay desbordamiento
       scrollHideDelay={scrollHideDelay}
       className={cn("relative overflow-hidden h-full w-full", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full min-w-full w-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:!w-full"
+        /* 
+          EL CAMBIO CLAVE ESTÁ AQUÍ AL FINAL: 
+          Quitamos [&>div]:!w-full y ponemos [&>div]:!w-fit [&>div]:!min-w-full 
+        */
+        className="size-full min-w-full w-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:!w-fit [&>div]:!min-w-full"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      
+      <ScrollBar orientation="vertical" />
+      <ScrollBar orientation="horizontal" />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )

@@ -5,10 +5,12 @@ import type { NestedSheet, NestingOptions, NestingPiece, NestingStrategy } from 
 const rectangleStrategy = new RectangleHeuristicStrategy()
 const polygonStrategy = new PolygonPackingStrategy()
 
-/**
- * - mode "fast" (default): AABB + candidatos de esquinas + nesting en calados (rápido)
- * - mode "precise": polígono real + grilla (más denso, mucho más lento; no usar en UI)
- */
+function thicknessKey(p: NestingPiece): string {
+  const t = p.thicknessMm
+  if (t == null || !(t > 0)) return "sin-espesor"
+  return (Math.round(t * 100) / 100).toFixed(2)
+}
+
 export function optimize(
   pieces: NestingPiece[],
   options: NestingOptions,
@@ -17,7 +19,52 @@ export function optimize(
   const chosen =
     strategy ??
     (options.mode === "precise" ? polygonStrategy : rectangleStrategy)
-  return chosen.optimize(pieces, options)
+
+  if (pieces.length === 0) return []
+
+  const buckets = new Map<string, NestingPiece[]>()
+  for (const p of pieces) {
+    const k = thicknessKey(p)
+    if (!buckets.has(k)) buckets.set(k, [])
+    buckets.get(k)!.push(p)
+  }
+
+  const keys = [...buckets.keys()].sort((a, b) => {
+    if (a === "sin-espesor") return 1
+    if (b === "sin-espesor") return -1
+    return parseFloat(a) - parseFloat(b)
+  })
+
+  if (keys.length === 1) {
+    const k = keys[0]
+    const sheets = chosen.optimize(buckets.get(k)!, options)
+    const thicknessMm = k === "sin-espesor" ? undefined : parseFloat(k)
+    return sheets.map((s) => ({ ...s, thicknessMm }))
+  }
+
+  const all: NestedSheet[] = []
+  const nKeys = keys.length
+
+  for (let gi = 0; gi < nKeys; gi++) {
+    if (options.signal?.cancelled) break
+    const k = keys[gi]
+    const groupPieces = buckets.get(k)!
+    const thicknessMm = k === "sin-espesor" ? undefined : parseFloat(k)
+
+    const groupSheets = chosen.optimize(groupPieces, {
+      ...options,
+      onProgress: (local) => {
+        options.onProgress?.((gi + local) / nKeys)
+      },
+    })
+
+    for (const s of groupSheets) {
+      all.push({ ...s, thicknessMm })
+    }
+  }
+
+  options.onProgress?.(1)
+  return all
 }
 
 export * from "./types"

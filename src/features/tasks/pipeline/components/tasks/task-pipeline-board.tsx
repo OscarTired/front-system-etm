@@ -64,6 +64,17 @@ export function TaskPipelineBoard({
   const prevTasksRef = useRef<Task[]>([])
 
   // Sincronización del scroll horizontal (Header -> Content)
+  //
+  // IMPORTANTE: `headerScrollRef` es un ref estable (su identidad nunca
+  // cambia entre renders), por lo que este efecto solo se re-ejecuta
+  // cuando cambian sus dependencias reales. Si el primer render ocurre
+  // mientras `loading` es `true` (p. ej. justo después de un F5, antes de
+  // que llegue la data), los nodos DOM del header/content todavía no
+  // existen y el listener nunca se adjunta, quedando el scroll
+  // desincronizado para siempre. Por eso `loading` se agrega como
+  // dependencia: fuerza a que el efecto se vuelva a evaluar apenas el
+  // layout real (no el skeleton) esté montado y los refs apunten a nodos
+  // reales.
   useEffect(() => {
     const headerEl = headerScrollRef.current
     const contentEl = contentScrollRef.current
@@ -78,7 +89,7 @@ export function TaskPipelineBoard({
     return () => {
       headerEl.removeEventListener("scroll", handleHeaderScroll)
     }
-  }, [headerScrollRef])
+  }, [headerScrollRef, loading])
 
   useEffect(() => {
     const prev = prevTasksRef.current
@@ -135,6 +146,10 @@ export function TaskPipelineBoard({
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
   }, [headerScrollRef])
 
+  // Mismo problema que el efecto de sincronización de scroll: el ref es
+  // estable, así que también necesita `loading` en las dependencias para
+  // re-engancharse cuando el layout real (con los nodos DOM reales) se
+  // monta después del skeleton.
   useEffect(() => {
     if (isMobile) return
 
@@ -151,7 +166,7 @@ export function TaskPipelineBoard({
       el.removeEventListener("scroll", updateArrows)
       observer.disconnect()
     }
-  }, [updateArrows, headerScrollRef, isMobile])
+  }, [updateArrows, headerScrollRef, isMobile, loading])
 
   function scrollLeft() {
     headerScrollRef.current?.scrollBy({

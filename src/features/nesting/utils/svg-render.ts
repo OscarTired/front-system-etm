@@ -39,10 +39,15 @@ export interface SheetGroup {
 }
 
 function sheetSignature(sheet: NestedSheet): string {
-  return sheet.pieces
+  const thick =
+    sheet.thicknessMm != null && sheet.thicknessMm > 0
+      ? String(Math.round(sheet.thicknessMm * 100) / 100)
+      : "na"
+  const body = sheet.pieces
     .map((p) => `${p.pieceId}|${Math.round(p.x)}|${Math.round(p.y)}|${p.angle}`)
     .sort()
     .join(";")
+  return `${thick}::${body}`
 }
 
 /**
@@ -74,7 +79,16 @@ export function groupIdenticalSheets(sheets: NestedSheet[]): SheetGroup[] {
 
 export function formatSheetRangeLabel(group: SheetGroup): string {
   const first = group.startIndex + 1
-  if (group.count === 1) return `Plancha #${first}`
-  const last = group.startIndex + group.count
-  return `Planchas #${first}-${last}`
+  const base =
+    group.count === 1
+      ? `Plancha #${first}`
+      : `Planchas #${first}-${group.startIndex + group.count}`
+  const t = group.sheet.thicknessMm
+  if (t != null && t > 0) {
+    const label = Number.isInteger(Math.round(t * 100) / 100)
+      ? `${Math.round(t)} mm`
+      : `${Math.round(t * 100) / 100} mm`
+    return `${base} · ${label}`
+  }
+  return base
 }

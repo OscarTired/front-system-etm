@@ -88,7 +88,18 @@ export function useNestingProject() {
     const pieces: NestingPiece[] = []
     for (const row of rows) {
       const quantity = Number(row.quantity) || 1
-      pieces.push({ id: row.id, outline: row.outline, subEntities: row.subEntities, quantity, color: row.color })
+      const thicknessMm =
+        row.source === "cad" && row.material?.thickness > 0
+          ? row.material.thickness
+          : undefined
+      pieces.push({
+        id: row.id,
+        outline: row.outline,
+        subEntities: row.subEntities,
+        quantity,
+        color: row.color,
+        thicknessMm,
+      })
     }
     return pieces
   }, [rows])

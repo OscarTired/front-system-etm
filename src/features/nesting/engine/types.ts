@@ -41,6 +41,8 @@ export interface NestingPiece {
   color?: string;
   /** Cantidad de copias de esta pieza a acomodar. Default 1. */
   quantity?: number;
+  /** Espesor de chapa (mm) si se detectó en el CAD. Usado para no mezclar espesores en la misma plancha. */
+  thicknessMm?: number;
 }
 
 /** Pieza ya colocada en una plancha, con su posición y rotación final. */
@@ -60,6 +62,8 @@ export interface PlacedPiece {
 /** Una plancha con sus piezas ya acomodadas. */
 export interface NestedSheet {
   pieces: PlacedPiece[];
+  /** Espesor del grupo (mm) con el que se nestó esta plancha. undefined = sin dato. */
+  thicknessMm?: number;
 }
 
 export type NestingMode = "fast" | "precise";

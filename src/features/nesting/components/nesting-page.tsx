@@ -418,7 +418,7 @@ export function NestingPage() {
 
         <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 shadow-sm p-3">
           {project.sheetGroups.length > 0 && (
-            <div className="shrink-0">
+            <div className="shrink-0 w-full min-w-0">
               <SheetTabs
                 items={sheetTabItems}
                 activeIndex={activeGroupIndex}
