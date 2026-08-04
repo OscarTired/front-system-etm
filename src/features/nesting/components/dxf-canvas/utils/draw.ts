@@ -1,5 +1,4 @@
-import { angleOfVector, fmtMm } from "./geometry-utils"
-import { computeBounds } from "./geometry-utils"
+import { angleOfVector, fmtMm, computeBounds } from "./geometry-utils"
 import type {
   Entity,
   Measurement,
@@ -17,6 +16,12 @@ import {
   SHEET_STROKE,
 } from "../types/types"
 
+export interface PieceDragPreview {
+  indices: number[]
+  dx: number
+  dy: number
+}
+
 export interface DrawContext {
   ctx: CanvasRenderingContext2D
   view: ViewState
@@ -26,7 +31,6 @@ export interface DrawContext {
   sheetSize?: { width: number; height: number }
   selectedPieceIndices: number[]
   collidingPieceIndices: number[]
-  /** 0..1 — si > 0 se dibuja overlay de corte */
   simProgress: number
   toolpath: ToolpathSeg[]
   totalPathLength: number
@@ -38,12 +42,10 @@ export interface DrawContext {
   snapCandidate: SnapCandidate | null
   activeTool: string
   localToScreen: (p: Point) => Point
+  /** Preview de arrastre: se aplica con ctx.translate, sin clonar entidades. */
+  dragPreview?: PieceDragPreview | null
 }
 
-/**
- * Dibuja el tramo de toolpath hasta targetLen.
- * Al 100% usa Path2D cacheado (1 stroke) en vez de re-emitir miles de lineTo.
- */
 export function strokeToolpathUntil(
   ctx: CanvasRenderingContext2D,
   toolpath: ToolpathSeg[],
@@ -97,6 +99,30 @@ export function strokeToolpathUntil(
   return headPoint
 }
 
+function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, scale: number) {
+  ctx.beginPath()
+  if (e.kind === "line") {
+    ctx.moveTo(e.a.x, e.a.y)
+    ctx.lineTo(e.b.x, e.b.y)
+    ctx.stroke()
+  } else if (e.kind === "polyline") {
+    e.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+    if (e.closed) ctx.closePath()
+    ctx.stroke()
+  } else if (e.kind === "circle") {
+    ctx.arc(e.center.x, e.center.y, e.radius, 0, Math.PI * 2)
+    ctx.stroke()
+  } else if (e.kind === "arc") {
+    ctx.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle)
+    ctx.stroke()
+  } else if (e.kind === "text") {
+    ctx.save()
+    ctx.font = `${e.height}px sans-serif`
+    ctx.fillText(e.text, e.position.x, e.position.y)
+    ctx.restore()
+  }
+}
+
 export function drawScene(d: DrawContext) {
   const {
     ctx,
@@ -118,6 +144,7 @@ export function drawScene(d: DrawContext) {
     snapCandidate,
     activeTool,
     localToScreen,
+    dragPreview,
   } = d
 
   const { scale, offsetX, offsetY } = view
@@ -140,38 +167,34 @@ export function drawScene(d: DrawContext) {
   const attenuate = simActive && simProgress < 0.999
   const selectedSet = new Set(selectedPieceIndices)
   const collidingSet = new Set(collidingPieceIndices)
+  const dragSet =
+    dragPreview && (Math.abs(dragPreview.dx) > 1e-12 || Math.abs(dragPreview.dy) > 1e-12)
+      ? new Set(dragPreview.indices)
+      : null
+  const ddx = dragPreview?.dx ?? 0
+  const ddy = dragPreview?.dy ?? 0
 
   ctx.globalAlpha = attenuate ? 0.28 : 1
   ctx.lineCap = "round"
   ctx.lineJoin = "round"
 
+  // Un solo pase: translate por pieza en drag (O(entidades), sin clonar arrays)
   for (const e of entities) {
     const isSelected = e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex)
     const isColliding = e.pieceIndex !== undefined && collidingSet.has(e.pieceIndex)
+    const inDrag = dragSet !== null && e.pieceIndex !== undefined && dragSet.has(e.pieceIndex)
+
     ctx.strokeStyle = isColliding ? COLLISION_COLOR : isSelected ? SELECTED_STROKE : e.color
     ctx.fillStyle = e.color
     ctx.lineWidth = (isColliding || isSelected ? 1.8 : 1) / scale
-    ctx.beginPath()
 
-    if (e.kind === "line") {
-      ctx.moveTo(e.a.x, e.a.y)
-      ctx.lineTo(e.b.x, e.b.y)
-      ctx.stroke()
-    } else if (e.kind === "polyline") {
-      e.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
-      if (e.closed) ctx.closePath()
-      ctx.stroke()
-    } else if (e.kind === "circle") {
-      ctx.arc(e.center.x, e.center.y, e.radius, 0, Math.PI * 2)
-      ctx.stroke()
-    } else if (e.kind === "arc") {
-      ctx.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle)
-      ctx.stroke()
-    } else if (e.kind === "text") {
+    if (inDrag) {
       ctx.save()
-      ctx.font = `${e.height}px sans-serif`
-      ctx.fillText(e.text, e.position.x, e.position.y)
+      ctx.translate(ddx, ddy)
+      strokeEntity(ctx, e, scale)
       ctx.restore()
+    } else {
+      strokeEntity(ctx, e, scale)
     }
   }
   ctx.globalAlpha = 1
@@ -186,7 +209,6 @@ export function drawScene(d: DrawContext) {
       targetLen,
       scale
     )
-
     if (headPoint && simProgress < 0.999) {
       ctx.fillStyle = "#facc15"
       ctx.beginPath()
@@ -205,12 +227,13 @@ export function drawScene(d: DrawContext) {
     const bounds = computeBounds(selectedEntities)
     if (bounds) {
       const pad = 3 / scale
+      const shift = dragSet?.has(idx) ? { x: ddx, y: ddy } : { x: 0, y: 0 }
       ctx.strokeStyle = SELECTED_HALO
       ctx.lineWidth = 1 / scale
       ctx.setLineDash([4 / scale, 4 / scale])
       ctx.strokeRect(
-        bounds.minX - pad,
-        bounds.minY - pad,
+        bounds.minX - pad + shift.x,
+        bounds.minY - pad + shift.y,
         bounds.maxX - bounds.minX + pad * 2,
         bounds.maxY - bounds.minY + pad * 2
       )
@@ -223,11 +246,12 @@ export function drawScene(d: DrawContext) {
     const bounds = computeBounds(collidingEntities)
     if (bounds) {
       const pad = 4 / scale
+      const shift = dragSet?.has(idx) ? { x: ddx, y: ddy } : { x: 0, y: 0 }
       ctx.strokeStyle = COLLISION_COLOR
       ctx.lineWidth = 2 / scale
       ctx.strokeRect(
-        bounds.minX - pad,
-        bounds.minY - pad,
+        bounds.minX - pad + shift.x,
+        bounds.minY - pad + shift.y,
         bounds.maxX - bounds.minX + pad * 2,
         bounds.maxY - bounds.minY + pad * 2
       )
@@ -301,7 +325,6 @@ export function drawScene(d: DrawContext) {
       ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2)
       ctx.fill()
     }
-
     const last = pendingPoints[pendingPoints.length - 1]
     if (hoverLocal) {
       const guideTol = 2 / scale
@@ -347,16 +370,13 @@ export function drawScene(d: DrawContext) {
 
   ctx.restore()
 
-  // Etiquetas en espacio de pantalla (tamaño fijo respecto al zoom)
   if (measurements.length > 0) {
     ctx.font = "11px ui-sans-serif, system-ui"
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
-
     for (const m of measurements) {
       let labelLocal: Point
       let text: string
-
       if (m.kind === "distance") {
         labelLocal = { x: (m.a.x + m.b.x) / 2, y: (m.a.y + m.b.y) / 2 }
         text = fmtMm(m.value)
@@ -374,7 +394,6 @@ export function drawScene(d: DrawContext) {
         labelLocal = m.centroid
         text = `${(m.area / 1_000_000).toFixed(4)}m² · P ${fmtMm(m.perimeter)}`
       }
-
       const screenPos = localToScreen(labelLocal)
       const metrics = ctx.measureText(text)
       const pad = 4

@@ -6,7 +6,8 @@ import { AlertTriangle, Trash2, X } from "lucide-react"
 import { CanvasToolbar } from "./components/canvas-toolbar"
 import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
-import { fmtMm, pointInPolygon } from "./utils/geometry-utils"
+import { fmtMm } from "./utils/geometry-utils"
+import { hitTestPieceAt } from "./utils/hit-test"
 import { findNearestSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { useCanvasView } from "./hooks/use-canvas-view"
@@ -15,6 +16,13 @@ import { useSimulation } from "./hooks/use-simulation"
 
 export type { NestingPieceInput, LayerInfo, DxfCanvasProps } from "./types/types"
 export { computeLayerList } from "./utils/entities"
+
+type PieceDragState = {
+  pieceIndices: number[]
+  startLocal: Point
+  /** Offset actual en coords mundo — se lee en cada frame de draw sin clonar entidades. */
+  offset: Point
+}
 
 export function DxfCanvas({
   pieces,
@@ -37,9 +45,9 @@ export function DxfCanvas({
     startOffsetY: number
     moved: boolean
   } | null>(null)
-  const pieceDragRef = useRef<{ pieceIndices: number[]; startLocal: Point; offset: Point } | null>(
-    null
-  )
+
+  /** Un solo objeto mutable: el draw lee pieceDragRef.current sin realloc. */
+  const pieceDragRef = useRef<PieceDragState | null>(null)
 
   const [showGrid, setShowGrid] = useState(true)
   const [snapEnabled, setSnapEnabled] = useState(true)
@@ -70,6 +78,12 @@ export function DxfCanvas({
         canvas.height = th
       }
 
+      const drag = pieceDragRef.current
+      const dragPreview =
+        drag && (Math.abs(drag.offset.x) > 1e-12 || Math.abs(drag.offset.y) > 1e-12)
+          ? { indices: drag.pieceIndices, dx: drag.offset.x, dy: drag.offset.y }
+          : null
+
       drawScene({
         ctx,
         view: view.viewRef.current,
@@ -90,6 +104,7 @@ export function DxfCanvas({
         snapCandidate,
         activeTool: measure.activeTool,
         localToScreen: (p) => view.localToScreen(canvas, p),
+        dragPreview,
       })
     })
   }, [
@@ -106,7 +121,6 @@ export function DxfCanvas({
     snapCandidate,
   ])
 
-  // Rebuild entities + toolpath when pieces / layers change
   useEffect(() => {
     const entities = piecesToEntities(pieces, hiddenKeys)
     entitiesRef.current = entities
@@ -131,37 +145,45 @@ export function DxfCanvas({
     return () => observer.disconnect()
   }, [scheduleDraw])
 
-  // Pointer / wheel interaction
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    const setCursor = (c: string) => {
+      canvas.style.cursor = c
+    }
+
     const onPointerDown = (e: PointerEvent) => {
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
+      if (!rawPoint) return
 
-      if (measure.activeTool === "none" && rawPoint && selectedPieceIndices.length > 0) {
-        const selectedSet = new Set(selectedPieceIndices)
-        let hitSelected = false
-        for (const ent of entitiesRef.current) {
-          if (
-            ent.kind === "polyline" &&
-            ent.pieceIndex !== undefined &&
-            selectedSet.has(ent.pieceIndex) &&
-            ent.points.length >= 3
-          ) {
-            if (pointInPolygon(rawPoint, ent.points)) hitSelected = true
-          }
-        }
-        if (hitSelected) {
+      if (measure.activeTool === "none") {
+        const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+
+        // Arrastre de pieza(s) ya seleccionadas
+        if (hit !== null && selectedPieceIndices.includes(hit)) {
           pieceDragRef.current = {
             pieceIndices: [...selectedPieceIndices],
             startLocal: rawPoint,
             offset: { x: 0, y: 0 },
           }
           canvas.setPointerCapture(e.pointerId)
-          canvas.style.cursor = "grabbing"
+          setCursor("move")
           return
         }
+
+        // Clic en pieza no seleccionada: posible selección en pointerUp;
+        // registramos drag de vista pero si no se mueve, será click.
+        draggingRef.current = {
+          startX: e.clientX,
+          startY: e.clientY,
+          startOffsetX: view.viewRef.current.offsetX,
+          startOffsetY: view.viewRef.current.offsetY,
+          moved: false,
+        }
+        canvas.setPointerCapture(e.pointerId)
+        if (hit === null) setCursor("grabbing")
+        return
       }
 
       draggingRef.current = {
@@ -189,16 +211,17 @@ export function DxfCanvas({
         setSnapCandidate(snap)
         measure.setHoverLocal(snap ? snap.point : rawPoint)
         measure.setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+        scheduleDraw()
       }
 
       const pieceDrag = pieceDragRef.current
       if (pieceDrag) {
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         if (rawPoint) {
-          pieceDrag.offset = {
-            x: rawPoint.x - pieceDrag.startLocal.x,
-            y: rawPoint.y - pieceDrag.startLocal.y,
-          }
+          // Mutación in-place: un solo objeto, sin setState por frame
+          pieceDrag.offset.x = rawPoint.x - pieceDrag.startLocal.x
+          pieceDrag.offset.y = rawPoint.y - pieceDrag.startLocal.y
+          setCursor("move")
           scheduleDraw()
         }
         return
@@ -206,21 +229,12 @@ export function DxfCanvas({
 
       if (measure.activeTool === "none" && !draggingRef.current) {
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
-        let overSelected = false
-        if (rawPoint && selectedPieceIndices.length > 0) {
-          const selectedSet = new Set(selectedPieceIndices)
-          for (const ent of entitiesRef.current) {
-            if (
-              ent.kind === "polyline" &&
-              ent.pieceIndex !== undefined &&
-              selectedSet.has(ent.pieceIndex) &&
-              ent.points.length >= 3
-            ) {
-              if (pointInPolygon(rawPoint, ent.points)) overSelected = true
-            }
-          }
+        if (rawPoint) {
+          const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+          if (hit !== null && selectedPieceIndices.includes(hit)) setCursor("move")
+          else if (hit !== null) setCursor("pointer")
+          else setCursor("grab")
         }
-        canvas.style.cursor = overSelected ? "move" : "grab"
       }
 
       const drag = draggingRef.current
@@ -231,6 +245,7 @@ export function DxfCanvas({
         if (!drag.moved) {
           drag.moved = true
           sim.clearOverlayIfIdle()
+          setCursor("grabbing")
         }
       }
       view.panBy(dx, dy, drag.startOffsetX, drag.startOffsetY)
@@ -241,10 +256,11 @@ export function DxfCanvas({
       const pieceDrag = pieceDragRef.current
       pieceDragRef.current = null
       if (pieceDrag) {
-        canvas.style.cursor = "move"
-        if (Math.abs(pieceDrag.offset.x) > 0.01 || Math.abs(pieceDrag.offset.y) > 0.01) {
-          onMovePieces?.(pieceDrag.pieceIndices, pieceDrag.offset.x, pieceDrag.offset.y)
+        const { offset, pieceIndices } = pieceDrag
+        if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
+          onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
+        setCursor("default")
         scheduleDraw()
         return
       }
@@ -273,15 +289,11 @@ export function DxfCanvas({
         }
 
         if (measure.activeTool === "none" && onSelectPiece) {
-          let hit: number | null = null
-          for (const ent of entitiesRef.current) {
-            if (ent.kind === "polyline" && ent.pieceIndex !== undefined && ent.points.length >= 3) {
-              if (pointInPolygon(rawPoint, ent.points)) hit = ent.pieceIndex
-            }
-          }
+          const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
           onSelectPiece(hit, e.shiftKey || e.ctrlKey || e.metaKey)
         }
       }
+      setCursor("default")
     }
 
     const onWheel = (e: WheelEvent) => {
@@ -350,10 +362,7 @@ export function DxfCanvas({
         backgroundSize: "24px 24px",
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
-      />
+      <canvas ref={canvasRef} className="h-full w-full touch-none" style={{ cursor: "default" }} />
 
       <CanvasToolbar
         showGrid={showGrid}

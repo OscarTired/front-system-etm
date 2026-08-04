@@ -59,6 +59,11 @@ export interface SnapCandidate {
   type: "endpoint" | "midpoint" | "center"
 }
 
+/** Libre = arrastre continuo; Geométrico = ejes + rotación en pasos fijos. */
+export type TransformMode = "free" | "geometric"
+
+export type RotationStep = 15 | 45 | 90 | 180
+
 export interface DxfCanvasProps {
   pieces: NestingPieceInput[]
   sheetSize?: { width: number; height: number }
@@ -68,6 +73,19 @@ export interface DxfCanvasProps {
   collidingPieceIndices?: number[]
   onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void
+  /** Modo de transformación manual en plancha. Default: free. */
+  transformMode?: TransformMode
+  onTransformModeChange?: (mode: TransformMode) => void
+  /** Paso angular en modo geométrico (grados). Default: 90. */
+  rotationStep?: RotationStep
+  onRotationStepChange?: (step: RotationStep) => void
+}
+
+/** Offset temporal mientras se arrastran piezas (preview en vivo). */
+export interface PieceDragPreview {
+  indices: number[]
+  dx: number
+  dy: number
 }
 
 export const SHEET_STROKE = "#71717a"
