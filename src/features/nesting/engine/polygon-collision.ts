@@ -123,7 +123,7 @@ export function extractSolidWithHoles(
 export function solidCollidesWith(moving: Point2D[], placed: SolidWithHoles, separation = 0): boolean {
   if (moving.length < 3 || placed.outer.length < 3) return false
 
-  // Completamente dentro de un hueco → OK (nesting en calado)
+  // Completamente dentro de un hueco ? OK (nesting en calado)
   for (const hole of placed.holes) {
     let allIn = true
     for (const p of moving) {
@@ -154,4 +154,57 @@ export function solidCollidesWith(moving: Point2D[], placed: SolidWithHoles, sep
 
 export function translatePoints(pts: Point2D[], dx: number, dy: number): Point2D[] {
   return pts.map((p) => ({ x: p.x + dx, y: p.y + dy }))
+}
+
+/** ¿Todos los puntos de `pts` están dentro de `hole`? */
+function fullyInsideHole(pts: Point2D[], hole: Point2D[]): boolean {
+  if (pts.length < 1 || hole.length < 3) return false
+  for (const p of pts) {
+    if (!pointInPolygon(p, hole)) return false
+  }
+  return true
+}
+
+/**
+ * Colisión entre dos piezas colocadas respetando calados:
+ * si A está enteramente en un hueco de B (o al revés), NO es colisión.
+ * Usar en UI de solape; no confundir con nesting en ventana.
+ */
+export function piecesCollide(
+  a: { outline: { points: Point2D[] }; subEntities?: SubEntity[] },
+  b: { outline: { points: Point2D[] }; subEntities?: SubEntity[] },
+  separation = 0
+): boolean {
+  const sa = extractSolidWithHoles(a.outline, a.subEntities)
+  const sb = extractSolidWithHoles(b.outline, b.subEntities)
+  const outerA = sa.outer.length >= 3 ? sa.outer : a.outline.points
+  const outerB = sb.outer.length >= 3 ? sb.outer : b.outline.points
+  if (outerA.length < 3 || outerB.length < 3) return false
+
+  for (const hole of sb.holes) {
+    if (fullyInsideHole(outerA, hole)) return false
+  }
+  for (const hole of sa.holes) {
+    if (fullyInsideHole(outerB, hole)) return false
+  }
+
+  // Contacto de borde permitido: solidsOverlap ya es estricto en intersección
+  if (solidsOverlap(outerA, outerB)) return true
+  if (separation > 0) {
+    const ba = bbox(outerA)
+    const bb = bbox(outerB)
+    const gapX = Math.max(0, Math.max(ba.minX - bb.maxX, bb.minX - ba.maxX))
+    const gapY = Math.max(0, Math.max(ba.minY - bb.maxY, bb.minY - ba.maxY))
+    // Si se solapan en un eje y el gap en el otro es < separation
+    const overlapX = ba.maxX + separation > bb.minX && bb.maxX + separation > ba.minX
+    const overlapY = ba.maxY + separation > bb.minY && bb.maxY + separation > ba.minY
+    if (overlapX && overlapY && (gapX < separation || gapY < separation)) {
+      // Solo si realmente están cerca en 2D (bbox expandido)
+      if (!(ba.maxX + separation < bb.minX || bb.maxX + separation < ba.minX ||
+            ba.maxY + separation < bb.minY || bb.maxY + separation < ba.minY)) {
+        return true
+      }
+    }
+  }
+  return false
 }

@@ -58,6 +58,8 @@ export function DxfCanvas({
 
   /** Un solo objeto mutable: el draw lee pieceDragRef.current sin realloc. */
   const pieceDragRef = useRef<PieceDragState | null>(null)
+  /** Espacio mantenido → pan de vista (estilo CAD), no mueve piezas. */
+  const spaceHeldRef = useRef(false)
   /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
   const collisionIndexRef = useRef<CollisionIndex | null>(null)
   /** Guías de snap magnético del frame actual (draw las lee sin setState). */
@@ -172,6 +174,21 @@ export function DxfCanvas({
     const onPointerDown = (e: PointerEvent) => {
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
+
+      // Botón medio o Espacio+drag = pan de vista (no mueve piezas)
+      const forcePan = spaceHeldRef.current || e.button === 1
+      if (forcePan) {
+        draggingRef.current = {
+          startX: e.clientX,
+          startY: e.clientY,
+          startOffsetX: view.viewRef.current.offsetX,
+          startOffsetY: view.viewRef.current.offsetY,
+          moved: false,
+        }
+        canvas.setPointerCapture(e.pointerId)
+        setCursor("grabbing")
+        return
+      }
 
       if (measure.activeTool === "none") {
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
@@ -394,17 +411,33 @@ export function DxfCanvas({
   }, [view, selectedPieceIndices, scheduleDraw])
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.code === "Space") {
+        e.preventDefault()
+        spaceHeldRef.current = true
+        return
+      }
+      if (e.key === "Escape") {
+        onSelectPiece?.(null, false)
+        return
+      }
       if (e.key !== "r" && e.key !== "R") return
       if (selectedPieceIndices.length === 0 || !onRotateSelected) return
       e.preventDefault()
       const deg = e.shiftKey ? -rotationStep : rotationStep
       onRotateSelected(selectedPieceIndices, deg)
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [selectedPieceIndices, onRotateSelected, rotationStep])
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") spaceHeldRef.current = false
+    }
+    window.addEventListener("keydown", onKeyDown)
+    window.addEventListener("keyup", onKeyUp)
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("keyup", onKeyUp)
+    }
+  }, [selectedPieceIndices, onRotateSelected, rotationStep, onSelectPiece])
 
   return (
     <div

@@ -61,26 +61,12 @@ function placePiece(
   };
 }
 
-function uniqSorted(arr: number[]): number[] {
-  return [...new Set(arr.map((v) => Math.round(v * 100) / 100))].sort((a, b) => a - b);
-}
-
-function aabbCorners(x: number, y: number, w: number, h: number) {
-  return [
-    { x, y },
-    { x: x + w, y },
-    { x: x + w, y: y + h },
-    { x, y: y + h },
-  ];
-}
-
 /**
- * Nesting rápido:
- * - Outer: bottom-left por esquinas, con gap = 2*pad (evita falso positivo de colisión).
- * - Calados: candidatos en bbox del hueco.
+ * Heurística original (C++/AABB) restaurada:
+ * bottom-left con paso adaptativo + salto en Y al colisionar.
+ * Más densos que solo "esquinas", sigue siendo barato (AABB).
  *
- * BUG corregido: antes se inflaba el AABB de colocados Y el de prueba, y el
- * candidato se ponía en el borde inflado → solape permanente → 1 pieza/plancha.
+ * Además: intento de nesting en calados (huecos) antes del outer.
  */
 export class RectangleHeuristicStrategy implements NestingStrategy {
   optimize(inputPieces: NestingPiece[], options: NestingOptions): NestedSheet[] {
@@ -88,9 +74,8 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
     const sheets: NestedSheet[] = [];
     const sheetSolids: SolidWithHoles[][] = [];
     const separation = Math.max(0, options.separation ?? 0);
-    // pad por lado; entre dos piezas el gap mínimo efectivo es 2*pad + separation
-    const pad = Math.max(sheet.margin / 2, 0);
-    const gap = 2 * pad + separation;
+    // Igual que el original: inflar mitad del margen (no 2× gap letal)
+    const pad = Math.max(sheet.margin / 2, separation / 2);
 
     const pieces = inputPieces.flatMap((p) =>
       Array.from({ length: p.quantity ?? 1 }, () => p)
@@ -108,6 +93,13 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
     const limitX = sheet.width - sheet.margin;
     const limitY = sheet.height - sheet.margin;
     const angles = rotationAnglesFor(options);
+
+    // Paso de búsqueda: adaptativo a la pieza más chica / plancha (rápido y denso)
+    const autoStep = Math.min(
+      8,
+      Math.max(1.5, Math.min(usableWidth, usableHeight) / 120)
+    );
+    const searchStep = options.searchStep ?? autoStep;
 
     for (let i = 0; i < sorted.length; i++) {
       if (signal?.cancelled) break;
@@ -167,52 +159,57 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
 
       let placed = false;
 
-      // ── A) Calados ────────────────────────────────────────────────────
+      // ── A) Calados: grilla gruesa dentro del bbox del hueco ───────────
       for (let si = 0; si < sheets.length && !placed; si++) {
         if (signal?.cancelled) break;
         const solids = sheetSolids[si];
-        for (const host of solids) {
-          if (placed) break;
+        for (let hi = 0; hi < solids.length && !placed; hi++) {
+          const host = solids[hi];
           for (const hole of host.holes) {
-            if (hole.length < 3) continue;
+            if (placed || hole.length < 3) continue;
             const hb = boundingRect({ points: hole });
-            if (hb.width < 1 || hb.height < 1) continue;
+            if (hb.width < 2 || hb.height < 2) continue;
 
             for (const variant of variants) {
               if (placed) break;
               if (
-                variant.bounds.width > hb.width + 0.1 ||
-                variant.bounds.height > hb.height + 0.1
+                variant.bounds.width > hb.width - 0.5 ||
+                variant.bounds.height > hb.height - 0.5
               ) {
                 continue;
               }
 
-              const xs = uniqSorted([
-                hb.x,
-                hb.x + hb.width - variant.bounds.width,
-                hb.x + (hb.width - variant.bounds.width) / 2,
-              ]);
-              const ys = uniqSorted([
-                hb.y,
-                hb.y + hb.height - variant.bounds.height,
-                hb.y + (hb.height - variant.bounds.height) / 2,
-              ]);
+              // Paso dentro del hueco: no más fino de lo necesario
+              const holeStep = Math.max(
+                searchStep,
+                Math.min(variant.bounds.width, variant.bounds.height) * 0.25
+              );
 
-              for (const x of xs) {
-                if (placed) break;
-                for (const y of ys) {
+              for (
+                let x = hb.x;
+                x <= hb.x + hb.width - variant.bounds.width + 0.001 && !placed;
+                x += holeStep
+              ) {
+                for (
+                  let y = hb.y;
+                  y <= hb.y + hb.height - variant.bounds.height + 0.001 && !placed;
+                  y += holeStep
+                ) {
                   if (x < sheet.margin - 0.001 || y < sheet.margin - 0.001) continue;
                   if (x + variant.bounds.width > limitX + 0.001) continue;
                   if (y + variant.bounds.height > limitY + 0.001) continue;
 
-                  const corners = aabbCorners(
-                    x,
-                    y,
-                    variant.bounds.width,
-                    variant.bounds.height
-                  );
-                  if (!corners.every((c) => pointInPolygon(c, hole))) continue;
+                  // Centro + esquinas del AABB dentro del hueco
+                  const pts = [
+                    { x: x + variant.bounds.width / 2, y: y + variant.bounds.height / 2 },
+                    { x, y },
+                    { x: x + variant.bounds.width, y },
+                    { x: x + variant.bounds.width, y: y + variant.bounds.height },
+                    { x, y: y + variant.bounds.height },
+                  ];
+                  if (!pts.every((p) => pointInPolygon(p, hole))) continue;
 
+                  // No chocar con otras piezas (el host se ignora: estamos en su hueco)
                   const testRect = inflateRect(
                     {
                       x,
@@ -224,7 +221,7 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
                   );
                   let clash = false;
                   for (let oi = 0; oi < sheets[si].pieces.length; oi++) {
-                    if (solids[oi] === host) continue;
+                    if (oi === hi) continue;
                     const ob = inflateRect(
                       boundingRect(sheets[si].pieces[oi].outline),
                       pad
@@ -242,7 +239,6 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
                     extractSolidWithHoles(pp.outline, pp.subEntities)
                   );
                   placed = true;
-                  break;
                 }
               }
             }
@@ -250,65 +246,72 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         }
       }
 
-      // ── B) Outer bottom-left ──────────────────────────────────────────
-      // Bounds RAW (sin inflar) para calcular candidatos.
-      // Gap = 2*pad + separation para que, al inflar ambos en el test, no solapen.
+      // ── B) Outer: bottom-left original con salto en Y ────────────────
       for (let si = 0; si < sheets.length && !placed; si++) {
         if (signal?.cancelled) break;
 
-        const rawBounds = sheets[si].pieces.map((p) => boundingRect(p.outline));
-        const inflatedBounds = rawBounds.map((r) => inflateRect(r, pad));
+        const placedBounds = sheets[si].pieces.map((p) =>
+          inflateRect(boundingRect(p.outline), pad)
+        );
 
-        const xs: number[] = [sheet.margin];
-        const ys: number[] = [sheet.margin];
-        for (const r of rawBounds) {
-          xs.push(r.x + r.width + gap);
-          ys.push(r.y + r.height + gap);
-        }
-        const candX = uniqSorted(xs);
-        const candY = uniqSorted(ys);
+        for (
+          let x = sheet.margin;
+          x <= limitX + 0.001 && !placed;
+          x += searchStep
+        ) {
+          let y = sheet.margin;
+          while (y <= limitY + 0.001 && !placed) {
+            if (signal?.cancelled) break;
 
-        for (const y of candY) {
-          if (placed) break;
-          for (const x of candX) {
-            if (placed) break;
+            let minSafeYJump = limitY;
+            let variantPlaced = false;
+
             for (const variant of variants) {
               if (x + variant.bounds.width > limitX + 0.001) continue;
               if (y + variant.bounds.height > limitY + 0.001) continue;
-              if (x < sheet.margin - 0.001 || y < sheet.margin - 0.001) continue;
 
-              const testRect = inflateRect(
-                {
-                  x,
-                  y,
-                  width: variant.bounds.width,
-                  height: variant.bounds.height,
-                },
-                pad
-              );
+              const testRect: Rect = {
+                x,
+                y,
+                width: variant.bounds.width,
+                height: variant.bounds.height,
+              };
+              const testRectWithMargin = inflateRect(testRect, pad);
 
               let collision = false;
-              for (const placedRect of inflatedBounds) {
-                if (rectsOverlap(testRect, placedRect)) {
+              let collisionYJump = 0;
+
+              for (const placedRect of placedBounds) {
+                if (rectsOverlap(testRectWithMargin, placedRect)) {
                   collision = true;
-                  break;
+                  const jump =
+                    placedRect.y + placedRect.height - testRectWithMargin.y;
+                  if (jump > collisionYJump) collisionYJump = jump;
                 }
               }
-              if (collision) continue;
 
-              const pp = placePiece(piece, variant, x, y);
-              sheets[si].pieces.push(pp);
-              sheetSolids[si].push(
-                extractSolidWithHoles(pp.outline, pp.subEntities)
-              );
-              placed = true;
-              break;
+              if (!collision) {
+                const pp = placePiece(piece, variant, x, y);
+                sheets[si].pieces.push(pp);
+                sheetSolids[si].push(
+                  extractSolidWithHoles(pp.outline, pp.subEntities)
+                );
+                placed = true;
+                variantPlaced = true;
+                break;
+              } else if (collisionYJump > 0 && collisionYJump < minSafeYJump) {
+                minSafeYJump = collisionYJump;
+              }
             }
+
+            if (variantPlaced) break;
+            if (minSafeYJump >= limitY - y) break;
+            y += Math.max(searchStep, minSafeYJump);
           }
         }
       }
 
-      // ── C) Nueva plancha ──────────────────────────────────────────────
+      // ── C) Nueva plancha ─────────────────────────────────────────────
       if (!placed) {
         let bestVariant = variants[0];
         for (const variant of variants) {

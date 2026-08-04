@@ -4,7 +4,8 @@ import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal } from "lucide-react"
 
-import { boundingRect, polygonsOverlap, rotateOutlineAroundPoint } from "../engine/geometry"
+import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
+import { piecesCollide } from "../engine/polygon-collision"
 import type { PlacedPiece, NestedSheet } from "../engine/types"
 import type { BridgeSettings } from "../export/dxf-export"
 import { formatSheetRangeLabel } from "../utils/svg-render"
@@ -130,7 +131,8 @@ export function NestingPage() {
     const colliding = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (polygonsOverlap(canvasPieces[i].outline.points, canvasPieces[j].outline.points)) {
+        // Respetar calados: pieza dentro de hueco de otra ? colisión
+        if (piecesCollide(canvasPieces[i], canvasPieces[j])) {
           colliding.add(i)
           colliding.add(j)
         }
