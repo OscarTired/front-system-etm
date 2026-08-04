@@ -126,9 +126,9 @@ export function NestingPage() {
     })
   }, [])
 
-  const handleShowAllLayers = useCallback(() => setHiddenLayerKeys(new Set()), [])
+  const handleShowAllLayers = useCallback(() => setHiddenLayerKeys(new Set()), []),
 
-  const sheetTabItems: SheetTabItem[] = useMemo(
+  sheetTabItems: SheetTabItem[] = useMemo(
     () =>
       project.sheetGroups.map((group, i) => ({
         key: String(group.startIndex),
@@ -306,9 +306,15 @@ export function NestingPage() {
               className="absolute left-0 top-0 bottom-0 bg-white transition-all duration-150 pointer-events-none opacity-20"
               style={{ width: `${Math.round(project.progress * 100)}%` }}
             />
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Calculando... {Math.round(project.progress * 100)}%
+            <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>
+                Calculando...{" "}
+                <span className="inline-block min-w-[3ch] text-right">
+                  {Math.round(project.progress * 100)}
+                </span>
+                %
+              </span>
             </span>
           </Button>
         )}
