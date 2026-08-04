@@ -101,11 +101,7 @@ export function NestingPage() {
 
   const layerList = useMemo(() => computeLayerList(dxfCanvasPieces), [dxfCanvasPieces])
 
-  /** Detección de solapes real (no solo bounding box) — importa sobre
-      todo DESPUÉS de alinear a mano, ya que ahí es donde se puede
-      terminar encimando piezas sin querer. O(n²) sobre las piezas de
-      UNA plancha (decenas, no miles) — no es un problema real de
-      rendimiento a esa escala. */
+  /** Detección de solapes real (no solo bounding box). O(n²) sobre las piezas de UNA plancha — no es un problema real de rendimiento a esa escala. */
   const collidingPieceIndices = useMemo(() => {
     const colliding = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet, AlertTriangle } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Target, Grid, Ruler, CircleDot, Triangle, Square, Crosshair, X, Trash2, Magnet, AlertTriangle, Play, Pause, SkipBack } from 'lucide-react';
 
 interface Point { x: number; y: number }
 interface ViewState { scale: number; offsetX: number; offsetY: number }
@@ -171,6 +171,8 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const entitiesRef = useRef<Entity[]>([]);
+  const toolpathRef = useRef<{ points: Point[]; startLen: number; endLen: number }[]>([]);
+  const totalPathLengthRef = useRef(0);
   const viewRef = useRef<ViewState>({ scale: 1, offsetX: 0, offsetY: 0 });
   const draggingRef = useRef<{ startX: number; startY: number; startOffsetX: number; startOffsetY: number; moved: boolean } | null>(null);
 
@@ -183,6 +185,12 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
   const [hoverScreen, setHoverScreen] = useState<Point | null>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null);
+
+  const [simRunning, setSimRunning] = useState(false);
+  const [simProgress, setSimProgress] = useState(0); // 0..1
+  const [simSpeed, setSimSpeed] = useState(1); // multiplicador
+  const simRafRef = useRef<number | null>(null);
+  const simLastTsRef = useRef<number | null>(null);
 
   const localToScreen = useCallback((p: Point): Point => {
     const canvas = canvasRef.current;
@@ -230,7 +238,9 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
     const selectedSet = new Set(selectedPieceIndices);
     const collidingSet = new Set(collidingPieceIndices);
+    const simActive = simProgress > 0;
 
+    ctx.globalAlpha = simActive ? 0.25 : 1;
     for (const e of entitiesRef.current) {
       const isSelected = e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex);
       const isColliding = e.pieceIndex !== undefined && collidingSet.has(e.pieceIndex);
@@ -259,6 +269,59 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         ctx.restore();
       }
     }
+    ctx.globalAlpha = 1;
+
+    // Camino ya "cortado" hasta simProgress, resaltado por encima de
+    // la geometría atenuada, más el marcador del cabezal en la punta.
+    if (simActive) {
+      const targetLen = simProgress * totalPathLengthRef.current;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.2 / scale;
+      let headPoint: Point | null = null;
+
+      for (const seg of toolpathRef.current) {
+        if (seg.startLen >= targetLen) break;
+
+        if (seg.endLen <= targetLen) {
+          ctx.beginPath();
+          seg.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+          ctx.stroke();
+          headPoint = seg.points[seg.points.length - 1];
+        } else {
+          // Este segmento está parcialmente recorrido — dibujar solo
+          // hasta el punto exacto que corresponde a targetLen.
+          let acc = seg.startLen;
+          ctx.beginPath();
+          ctx.moveTo(seg.points[0].x, seg.points[0].y);
+          for (let i = 0; i < seg.points.length - 1; i++) {
+            const p1 = seg.points[i];
+            const p2 = seg.points[i + 1];
+            const partLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            if (acc + partLen >= targetLen) {
+              const t = partLen > 0 ? (targetLen - acc) / partLen : 0;
+              headPoint = { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t };
+              ctx.lineTo(headPoint.x, headPoint.y);
+              break;
+            }
+            ctx.lineTo(p2.x, p2.y);
+            acc += partLen;
+          }
+          ctx.stroke();
+        }
+      }
+
+      if (headPoint) {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(headPoint.x, headPoint.y, 4 / scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1 / scale;
+        ctx.beginPath();
+        ctx.arc(headPoint.x, headPoint.y, 9 / scale, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
 
     for (const idx of selectedPieceIndices) {
       const selectedEntities = entitiesRef.current.filter((e) => e.pieceIndex === idx);
@@ -278,8 +341,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     }
 
-    // Halo sólido (no punteado, a propósito) para piezas en colisión —
-    // tiene que destacar más que la selección normal, es un error.
     for (const idx of collidingPieceIndices) {
       const collidingEntities = entitiesRef.current.filter((e) => e.pieceIndex === idx);
       const bounds = computeBounds(collidingEntities);
@@ -368,7 +429,8 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
 
       // Guías de alineación: si el punto que estás por colocar
       // coincide en X o Y con el último punto ya puesto, se traza una
-      // línea de referencia larga en esa dirección.
+      // línea de referencia larga en esa dirección — el mismo "smart
+      // guide" de cualquier CAD real.
       const last = pendingPoints[pendingPoints.length - 1];
       if (hoverLocal) {
         const guideTol = 2 / scale;
@@ -465,7 +527,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       ctx.fillStyle = MEASURE_COLOR;
       ctx.fillText(text, px, py);
     }
-  }, [sheetSize, selectedPieceIndices, collidingPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate]);
+  }, [sheetSize, selectedPieceIndices, collidingPieceIndices, measurements, pendingPoints, hoverLocal, hoverScreen, activeTool, localToScreen, snapCandidate, simProgress]);
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
@@ -543,11 +605,83 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       }
     });
     entitiesRef.current = out;
+
+    // Toolpath: cada entidad tesselada a puntos + su longitud
+    // acumulada dentro del camino completo — la simulación de corte
+    // recorre esto en orden.
+    const ARC_SEGMENTS = 32;
+    const path: { points: Point[]; startLen: number; endLen: number }[] = [];
+    let cumLen = 0;
+    for (const e of out) {
+      let pts: Point[] | null = null;
+      if (e.kind === 'line') pts = [e.a, e.b];
+      else if (e.kind === 'polyline') pts = e.closed ? [...e.points, e.points[0]] : e.points;
+      else if (e.kind === 'circle') {
+        pts = Array.from({ length: ARC_SEGMENTS + 1 }, (_, i) => {
+          const a = (i / ARC_SEGMENTS) * Math.PI * 2;
+          return { x: e.center.x + Math.cos(a) * e.radius, y: e.center.y + Math.sin(a) * e.radius };
+        });
+      } else if (e.kind === 'arc') {
+        pts = Array.from({ length: ARC_SEGMENTS + 1 }, (_, i) => {
+          const a = e.startAngle + (i / ARC_SEGMENTS) * (e.endAngle - e.startAngle);
+          return { x: e.center.x + Math.cos(a) * e.radius, y: e.center.y + Math.sin(a) * e.radius };
+        });
+      }
+      if (!pts || pts.length < 2) continue;
+      let segLen = 0;
+      for (let i = 0; i < pts.length - 1; i++) segLen += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+      path.push({ points: pts, startLen: cumLen, endLen: cumLen + segLen });
+      cumLen += segLen;
+    }
+    toolpathRef.current = path;
+    totalPathLengthRef.current = cumLen;
+    setSimProgress(0);
+    setSimRunning(false);
     requestAnimationFrame(fitToView);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pieces, sheetSize?.width, sheetSize?.height, hiddenKeys]);
 
   useEffect(() => { draw(); }, [draw]);
+
+  // Loop de la simulación de corte: avanza con tiempo real
+  // transcurrido (delta en ms), no un incremento fijo por frame — así
+  // la velocidad no depende de la tasa de refresco de la pantalla.
+  useEffect(() => {
+    if (!simRunning) {
+      simLastTsRef.current = null;
+      if (simRafRef.current !== null) cancelAnimationFrame(simRafRef.current);
+      return;
+    }
+
+    // 40mm/s de "velocidad de corte" base a 1x — no representa una
+    // máquina real específica, es solo una referencia visual razonable.
+    const BASE_MM_PER_SEC = 40;
+
+    const tick = (ts: number) => {
+      if (simLastTsRef.current === null) simLastTsRef.current = ts;
+      const deltaSec = (ts - simLastTsRef.current) / 1000;
+      simLastTsRef.current = ts;
+
+      const totalLen = totalPathLengthRef.current || 1;
+      const deltaProgress = (BASE_MM_PER_SEC * simSpeed * deltaSec) / totalLen;
+
+      setSimProgress((prev) => {
+        const next = prev + deltaProgress;
+        if (next >= 1) {
+          setSimRunning(false);
+          return 1;
+        }
+        return next;
+      });
+
+      simRafRef.current = requestAnimationFrame(tick);
+    };
+
+    simRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (simRafRef.current !== null) cancelAnimationFrame(simRafRef.current);
+    };
+  }, [simRunning, simSpeed]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -720,6 +854,9 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         if (!rawPoint) return;
 
         if (activeTool !== 'none' && activeTool !== 'coords') {
+          // Radio/área hacen su propio hit-test contra la entidad
+          // completa (círculo/contorno) — el snap de punto solo
+          // aplica a distancia/ángulo, que sí colocan puntos sueltos.
           const usesPointSnap = activeTool === 'distance' || activeTool === 'angle';
           const snap = snapEnabled && usesPointSnap ? findNearestSnap(rawPoint) : null;
           handleToolClick(snap ? snap.point : rawPoint);
@@ -850,14 +987,6 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
             <Icon size={16} />
           </button>
         ))}
-        {activeTool !== 'none' && (
-          <>
-            <div className="my-0.5 h-px bg-white/10" />
-            <button onClick={resetTool} className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white" title="Salir de la herramienta">
-              <X size={16} />
-            </button>
-          </>
-        )}
         <div className="my-0.5 h-px bg-white/10" />
         <button
           onClick={() => setSnapEnabled((v) => !v)}
@@ -866,12 +995,62 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
         >
           <Magnet size={16} />
         </button>
+        {activeTool !== 'none' && (
+          <>
+            <div className="my-0.5 h-px bg-white/10" />
+            <button onClick={resetTool} className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white" title="Salir de la herramienta">
+              <X size={16} />
+            </button>
+          </>
+        )}
       </div>
 
       {collidingPieceIndices.length > 0 && (
         <div className="absolute left-1/2 top-6 -translate-x-1/2 flex items-center gap-1.5 rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 ring-1 ring-red-500/30 backdrop-blur-sm">
           <AlertTriangle className="h-3.5 w-3.5" />
           {collidingPieceIndices.length} {collidingPieceIndices.length === 1 ? "pieza se solapa" : "piezas se solapan"} con otra
+        </div>
+      )}
+
+      {toolpathRef.current.length > 0 && (
+        <div className="absolute bottom-4 right-6 flex items-center gap-2 rounded-xl bg-[#101012]/90 p-2 ring-1 ring-white/10 backdrop-blur-sm">
+          <button
+            onClick={() => {
+              if (simProgress >= 1) setSimProgress(0);
+              setSimRunning((v) => !v);
+            }}
+            className="rounded-lg p-1.5 text-neutral-200 hover:bg-white/10"
+            title={simRunning ? 'Pausar simulación' : 'Reproducir simulación de corte'}
+          >
+            {simRunning ? <Pause size={15} /> : <Play size={15} />}
+          </button>
+          <button
+            onClick={() => { setSimRunning(false); setSimProgress(0); }}
+            disabled={simProgress === 0 && !simRunning}
+            className="rounded-lg p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white disabled:opacity-30"
+            title="Reiniciar"
+          >
+            <SkipBack size={14} />
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.001}
+            value={simProgress}
+            onChange={(e) => { setSimRunning(false); setSimProgress(Number(e.target.value)); }}
+            className="h-1 w-28 accent-cyan-400"
+          />
+          <select
+            value={simSpeed}
+            onChange={(e) => setSimSpeed(Number(e.target.value))}
+            className="rounded-md bg-white/5 px-1.5 py-1 text-[11px] text-neutral-300 outline-none"
+          >
+            <option value={0.5}>0.5x</option>
+            <option value={1}>1x</option>
+            <option value={2}>2x</option>
+            <option value={4}>4x</option>
+          </select>
         </div>
       )}
 

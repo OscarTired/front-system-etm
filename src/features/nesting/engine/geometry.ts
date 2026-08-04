@@ -200,9 +200,6 @@ function segmentsIntersect(a1: Point2D, a2: Point2D, b1: Point2D, b2: Point2D): 
 
 /**
  * ¿Se solapan dos polígonos de verdad (no solo sus bounding boxes)?
- * Para detección de colisiones tras alineación manual: dos piezas
- * pueden tener el bounding box superpuesto sin tocarse en absoluto
- * (formas en L, por ejemplo), así que rectsOverlap solo no alcanza.
  * Revisa: (1) algún par de aristas se cruza, (2) un polígono está
  * completamente adentro del otro (caso sin cruce de aristas).
  */
