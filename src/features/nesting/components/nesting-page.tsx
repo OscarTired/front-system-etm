@@ -246,12 +246,12 @@ export function NestingPage() {
       <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
         {activePanel === "sheet-pieces" ? (
           <div className="flex h-full flex-col gap-3 overflow-hidden">
-            <div className="shrink-0 flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3 border border-white/5">
+            <div className="shrink-0 flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
               <SheetDimensionsFields settings={project.settings} onChange={project.onSettingsChange} />
             </div>
             
-            <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white/3 p-3 border border-white/5 overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white/3 p-3 overflow-hidden">
               <PieceList ref={pieceListRef} {...pieceListProps} />
             </div>
           </div>
@@ -259,14 +259,14 @@ export function NestingPage() {
           <ScrollArea className="h-full w-full pr-1">
             <div className="flex flex-col gap-3 pb-4">
               {activePanel === "project-material" && (
-                <div className="flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3 border border-white/5">
+                <div className="flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3">
                   <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Proyecto y material</h2>
                   <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} />
                 </div>
               )}
 
               {activePanel === "layers" && (
-                <div className="rounded-2xl bg-white/3 p-3 border border-white/5">
+                <div className="rounded-2xl bg-white/3 p-3">
                   <LayerManager
                     layers={layerList}
                     hiddenKeys={hiddenLayerKeys}
@@ -277,7 +277,7 @@ export function NestingPage() {
               )}
 
               {activePanel === "inspector" && (
-                <div className="rounded-2xl bg-white/3 p-3 border border-white/5">
+                <div className="rounded-2xl bg-white/3 p-3">
                   <PropertiesPanel
                     sheetStats={sheetStats}
                     selectedPiece={selectedPiece}
@@ -292,7 +292,7 @@ export function NestingPage() {
         )}
       </div>
 
-      <div className="pt-3 border-t border-white/5 mt-auto shrink-0">
+      <div className="pt-3 mt-auto shrink-0">
         {!project.isRunning ? (
           <Button size="default" className="w-full" disabled={!project.canRun} onClick={handleRun}>
             Nestear
@@ -301,7 +301,7 @@ export function NestingPage() {
           <Button
             size="default"
             variant="outline"
-            className="w-full relative overflow-hidden bg-neutral-900 border-white/10 text-white hover:bg-neutral-900 cursor-pointer"
+            className="w-full relative overflow-hidden bg-neutral-900 border-0 text-white hover:bg-neutral-900 cursor-pointer"
             onClick={project.onCancel}
             title="Haz clic para cancelar"
           >
@@ -353,12 +353,12 @@ export function NestingPage() {
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {!isCompact && (
-          <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 border border-white/5 shadow-sm p-3">
+          <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 shadow-sm p-3">
             {renderSidePanelContent()}
           </aside>
         )}
 
-        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 border border-white/5 shadow-sm p-3">
+        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 shadow-sm p-3">
           {project.sheetGroups.length > 0 && (
             <div className="shrink-0">
               <SheetTabs
@@ -372,7 +372,7 @@ export function NestingPage() {
             </div>
           )}
 
-          <div className="min-h-100 flex-1 overflow-hidden rounded-xl bg-neutral-900 tablet:min-h-0 border border-white/5 relative">
+          <div className="min-h-100 flex-1 overflow-hidden rounded-xl bg-neutral-900 tablet:min-h-0 relative">
             {canvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
@@ -389,7 +389,7 @@ export function NestingPage() {
             )}
 
             {selectedPieceIndices.length >= 2 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 ring-1 ring-white/10 backdrop-blur-sm shadow-lg">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 backdrop-blur-sm shadow-lg">
                 <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
                   Alinear ({selectedPieceIndices.length})
                 </span>
@@ -420,7 +420,7 @@ export function NestingPage() {
       </div>
 
       <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-        <SheetContent className="flex flex-col gap-3 p-4 bg-neutral-950 border-white/10">
+        <SheetContent className="flex flex-col gap-3 p-4 bg-neutral-950 border-0">
           <SheetHeader className="p-0">
             <SheetTitle>Panel de Control</SheetTitle>
           </SheetHeader>
