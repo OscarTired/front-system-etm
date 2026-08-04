@@ -36,7 +36,6 @@ interface RotationVariant {
 function rotationAnglesFor(options: NestingOptions): number[] {
   const mode = options.rotationMode ?? "0-90-180-270";
   if (mode === "ninguna") return [0];
-  // Rápido: siempre 90°. "libre" en settings no abre 15° aquí (CPU).
   return [0, 90, 180, 270];
 }
 
@@ -66,7 +65,6 @@ function uniqSorted(arr: number[]): number[] {
   return [...new Set(arr.map((v) => Math.round(v * 100) / 100))].sort((a, b) => a - b);
 }
 
-/** 4 esquinas del AABB de la variante en (x,y). */
 function aabbCorners(x: number, y: number, w: number, h: number) {
   return [
     { x, y },
@@ -77,17 +75,22 @@ function aabbCorners(x: number, y: number, w: number, h: number) {
 }
 
 /**
- * Nesting rápido estilo producción:
- * 1) Intento en calados (huecos) de piezas ya colocadas — candidatos en bbox del hueco.
- * 2) Colocación outer bottom-left por esquinas de AABB (sin grilla mm).
+ * Nesting rápido:
+ * - Outer: bottom-left por esquinas, con gap = 2*pad (evita falso positivo de colisión).
+ * - Calados: candidatos en bbox del hueco.
+ *
+ * BUG corregido: antes se inflaba el AABB de colocados Y el de prueba, y el
+ * candidato se ponía en el borde inflado → solape permanente → 1 pieza/plancha.
  */
 export class RectangleHeuristicStrategy implements NestingStrategy {
   optimize(inputPieces: NestingPiece[], options: NestingOptions): NestedSheet[] {
     const { sheet, signal, onProgress } = options;
     const sheets: NestedSheet[] = [];
     const sheetSolids: SolidWithHoles[][] = [];
-    const separation = options.separation ?? 0;
-    const pad = Math.max(sheet.margin / 2, separation / 2);
+    const separation = Math.max(0, options.separation ?? 0);
+    // pad por lado; entre dos piezas el gap mínimo efectivo es 2*pad + separation
+    const pad = Math.max(sheet.margin / 2, 0);
+    const gap = 2 * pad + separation;
 
     const pieces = inputPieces.flatMap((p) =>
       Array.from({ length: p.quantity ?? 1 }, () => p)
@@ -164,7 +167,7 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
 
       let placed = false;
 
-      // A) Calados
+      // ── A) Calados ────────────────────────────────────────────────────
       for (let si = 0; si < sheets.length && !placed; si++) {
         if (signal?.cancelled) break;
         const solids = sheetSolids[si];
@@ -247,19 +250,20 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         }
       }
 
-      // B) Outer por esquinas
+      // ── B) Outer bottom-left ──────────────────────────────────────────
+      // Bounds RAW (sin inflar) para calcular candidatos.
+      // Gap = 2*pad + separation para que, al inflar ambos en el test, no solapen.
       for (let si = 0; si < sheets.length && !placed; si++) {
         if (signal?.cancelled) break;
 
-        const placedBounds = sheets[si].pieces.map((p) =>
-          inflateRect(boundingRect(p.outline), pad)
-        );
+        const rawBounds = sheets[si].pieces.map((p) => boundingRect(p.outline));
+        const inflatedBounds = rawBounds.map((r) => inflateRect(r, pad));
 
         const xs: number[] = [sheet.margin];
         const ys: number[] = [sheet.margin];
-        for (const r of placedBounds) {
-          xs.push(r.x + r.width);
-          ys.push(r.y + r.height);
+        for (const r of rawBounds) {
+          xs.push(r.x + r.width + gap);
+          ys.push(r.y + r.height + gap);
         }
         const candX = uniqSorted(xs);
         const candY = uniqSorted(ys);
@@ -284,7 +288,7 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
               );
 
               let collision = false;
-              for (const placedRect of placedBounds) {
+              for (const placedRect of inflatedBounds) {
                 if (rectsOverlap(testRect, placedRect)) {
                   collision = true;
                   break;
@@ -304,7 +308,7 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         }
       }
 
-      // C) Nueva plancha
+      // ── C) Nueva plancha ──────────────────────────────────────────────
       if (!placed) {
         let bestVariant = variants[0];
         for (const variant of variants) {
