@@ -70,9 +70,18 @@ export interface SheetConfig {
   margin: number;
 }
 
+export type RotationMode = "0-90-180-270" | "libre" | "ninguna";
+
 export interface NestingOptions {
   sheet: SheetConfig;
+  /** "fast" = AABB; "precise" = polígono + calados. */
   mode?: NestingMode;
+  /** Separación mínima entre piezas (mm). */
+  separation?: number;
+  /** Ángulos permitidos (ProjectSettings.rotacionPermitida). */
+  rotationMode?: RotationMode;
+  /** Paso de búsqueda en mm. */
+  searchStep?: number;
   /** Progreso 0-1, útil para una barra de progreso desde un worker. */
   onProgress?: (progress: number) => void;
   /** Señal de cancelación mutable: el worker la marca en `cancelled = true`. */
