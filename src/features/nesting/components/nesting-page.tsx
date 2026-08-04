@@ -43,18 +43,22 @@ export function NestingPage() {
   const { isCompact } = useResponsive()
   const project = useNestingProject()
 
-  const [previewRow, setPreviewRow] = useState<CadRow | null>(null)
+  const [previewRowId, setPreviewRowId] = useState<string | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
   const [selectedPieceIndices, setSelectedPieceIndices] = useState<number[]>([])
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
-  /** Ajustes manuales de posición (alineación), por índice de pieza dentro de la plancha ACTIVA. Se resetea al cambiar de plancha o volver a nestear — no tiene sentido arrastrar ediciones de un layout que ya no existe. */
   const [positionOverrides, setPositionOverrides] = useState<Record<number, { dx: number; dy: number }>>({})
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
+
+  const previewRow = useMemo(
+    () => (previewRowId ? project.rows.find((r) => r.id === previewRowId) ?? null : null),
+    [previewRowId, project.rows]
+  )
 
   useEffect(() => {
     if (!isCompact) {
@@ -80,9 +84,6 @@ export function NestingPage() {
     })
   }, [activeGroup, positionOverrides])
 
-  // Alinear piezas de una plancha vieja no tiene sentido — se resetea
-  // apenas cambiás de plancha (o corrés un nesteo nuevo, que también
-  // cambia activeGroupIndex a 0).
   useEffect(() => {
     setPositionOverrides({})
     setSelectedPieceIndices([])
@@ -102,7 +103,6 @@ export function NestingPage() {
 
   const layerList = useMemo(() => computeLayerList(dxfCanvasPieces), [dxfCanvasPieces])
 
-  /** Detección de solapes real (no solo bounding box). O(n²) sobre las piezas de UNA plancha — no es un problema real de rendimiento a esa escala. */
   const collidingPieceIndices = useMemo(() => {
     const colliding = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {
@@ -116,9 +116,6 @@ export function NestingPage() {
     return Array.from(colliding)
   }, [canvasPieces])
 
-  // Si cambiás de plancha y la capa oculta ya no existe ahí, no
-  // rompe nada — el filtro simplemente no matchea contra nada. No
-  // hace falta resetear hiddenLayerKeys al cambiar de grupo.
   const handleToggleLayer = useCallback((key: string) => {
     setHiddenLayerKeys((prev) => {
       const next = new Set(prev)
@@ -158,7 +155,6 @@ export function NestingPage() {
     setActivePanel("inspector")
   }, [])
 
-  /** Alinea las piezas seleccionadas entre sí, tomando como referencia la ÚLTIMA pieza clickeada (la más reciente de la selección) — igual que Figma/Illustrator con múltiples objetos. */
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return
     const refIndex = selectedPieceIndices[selectedPieceIndices.length - 1]
@@ -203,7 +199,7 @@ export function NestingPage() {
   const handleNewProject = useCallback(() => {
     project.onNewProject()
     setSelectedPieceIndices([])
-    setPreviewRow(null)
+    setPreviewRowId(null)
   }, [project])
 
   const pieceListProps: PieceListProps = useMemo(
@@ -215,7 +211,7 @@ export function NestingPage() {
       onRemove: project.onRemove,
       onClearAll: project.onClearAll,
       onUpdateQuantity: project.onUpdateQuantity,
-      onPreviewRow: setPreviewRow,
+      onPreviewRow: (row) => setPreviewRowId(row.id),
       onRotate: project.onRotate,
       onMirrorX: project.onMirrorX,
       onMirrorY: project.onMirrorY,
@@ -442,7 +438,13 @@ export function NestingPage() {
         onSaveProject={project.onSaveProject}
       />
 
-      <PiecePreviewDialog row={previewRow} onClose={() => setPreviewRow(null)} />
+      <PiecePreviewDialog 
+        row={previewRow} 
+        onClose={() => setPreviewRowId(null)} 
+        onRotate={(id, deg) => project.onRotate(id, deg)}
+        onMirrorX={(id) => project.onMirrorX(id)}
+        onMirrorY={(id) => project.onMirrorY(id)}
+      />
     </div>
   )
 }

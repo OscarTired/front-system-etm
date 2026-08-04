@@ -1,5 +1,7 @@
+"use client"
+
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react"
-import { Trash, Import, FileWarning, AlertTriangle, Eye, Layers, RotateCw, FlipHorizontal, FlipVertical, Copy, Search, X } from "lucide-react"
+import { Import, FileWarning, AlertTriangle, Eye, Layers, Copy, Search, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -68,7 +70,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const [groupBy, setGroupBy] = useState<GroupByType>("none")
   const [searchQuery, setSearchQuery] = useState("")
   
-  // Usamos un contador para evitar el parpadeo al pasar por encima de elementos hijos
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
 
@@ -201,7 +202,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     }
   }
 
-  // Lógica de Agrupación
   const groupedEntries = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     const filtered = query
@@ -236,7 +236,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {/* Indicador visual de Drag & Drop flotante */}
       {isDraggingOver && (
         <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150 pointer-events-none">
           <Import className="h-8 w-8 text-primary animate-bounce" />
@@ -244,12 +243,18 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         </div>
       )}
 
+      {/* Cabecera con título, contador y acciones globales */}
       <div className="mb-2 flex shrink-0 items-center justify-between px-3">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Piezas</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Piezas</h2>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-neutral-400 font-medium">
+            {rows.length}
+          </span>
+        </div>
         <div className="flex items-center gap-1">
           {rows.length > 0 && (
             <Button size="icon-sm" variant="ghost" className="text-neutral-400 hover:text-destructive" onClick={onClearAll} disabled={disabled} title="Eliminar todos">
-              <Trash className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
           <Button size="icon-sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={disabled} title="Importar archivos">
@@ -275,7 +280,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         </div>
       )}
 
-      {/* Controles de Agrupación */}
       {rows.length > 0 && (
         <div className="flex items-center gap-1.5 px-3 mb-2 shrink-0 overflow-x-auto hide-scrollbar">
           <span className="text-[10px] text-neutral-500 uppercase tracking-wider">Agrupar:</span>
@@ -360,21 +364,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                         </Button>
                       </div>
 
-                      <div className="flex items-center gap-0.5 w-full">
-                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onRotate(row.id, 90)} title="Rotar 90°">
-                          <RotateCw className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onMirrorX(row.id)} title="Espejo horizontal">
-                          <FlipHorizontal className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onMirrorY(row.id)} title="Espejo vertical">
-                          <FlipVertical className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-400 hover:text-white" disabled={disabled} onClick={() => onDuplicate(row.id)} title="Duplicar pieza">
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 w-full">
                         <div className="min-w-0 flex-1 flex items-center gap-1 text-[10px] text-neutral-400 truncate">
                           <span className="shrink-0">{row.width.toFixed(0)}×{row.height.toFixed(0)}</span>
@@ -399,8 +388,18 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                             onChange={(e) => handleQuantityChange(row.id, e.target.value)} 
                             className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-ring" 
                           />
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="h-7 w-7 shrink-0 text-neutral-400 hover:text-white"
+                            disabled={disabled}
+                            onClick={() => onDuplicate(row.id)}
+                            title="Duplicar pieza"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
                           <Button size="icon-sm" variant="ghost" className="h-7 w-7 text-neutral-400 hover:text-destructive" disabled={disabled} onClick={() => onRemove(row.id)} title="Eliminar">
-                            <Trash className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
