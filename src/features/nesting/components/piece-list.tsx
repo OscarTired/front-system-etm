@@ -323,7 +323,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         {rows.length === 0 ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border border-dashed border-white/10 rounded-xl m-3 hover:border-white/20 transition-colors bg-white/[0.01]"
+            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border border-dashed border-white/10 rounded-xl m-3 hover:border-white/20 transition-colors bg-white/1"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
               <Layers className="h-5 w-5 text-neutral-500" />

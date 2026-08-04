@@ -738,7 +738,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       </div>
 
       {activeTool !== 'none' && (
-        <div className="absolute left-6 top-24 max-w-[200px] rounded-lg bg-[#101012]/90 px-2.5 py-1.5 text-[11px] text-neutral-400 ring-1 ring-white/10 backdrop-blur-sm">
+        <div className="absolute left-6 top-24 max-w-50 rounded-lg bg-[#101012]/90 px-2.5 py-1.5 text-[11px] text-neutral-400 ring-1 ring-white/10 backdrop-blur-sm">
           {activeTool === 'distance' && (pendingPoints.length === 0 ? 'Clic en el primer punto' : 'Clic en el segundo punto')}
           {activeTool === 'radius' && 'Clic sobre un círculo o arco'}
           {activeTool === 'angle' && (pendingPoints.length === 0 ? 'Clic en el vértice' : pendingPoints.length === 1 ? 'Clic en el primer punto' : 'Clic en el segundo punto')}
@@ -748,7 +748,7 @@ export const DxfCanvas = ({ pieces, sheetSize, selectedPieceIndices = [], onSele
       )}
 
       {measurements.length > 0 && (
-        <div className="absolute bottom-6 left-6 flex max-h-[40%] max-w-[220px] flex-col gap-1 overflow-y-auto rounded-xl bg-[#101012]/90 p-2 ring-1 ring-white/10 backdrop-blur-sm">
+        <div className="absolute bottom-6 left-6 flex max-h-[40%] max-w-55 flex-col gap-1 overflow-y-auto rounded-xl bg-[#101012]/90 p-2 ring-1 ring-white/10 backdrop-blur-sm">
           <div className="flex items-center justify-between px-1 pb-1">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Mediciones</span>
             <button onClick={() => setMeasurements([])} className="text-neutral-500 hover:text-white" title="Borrar todas">
