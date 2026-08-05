@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, RotateCcw, X, Trash2 } from "lucide-react"
+import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
 import { piecesCollide } from "../engine/polygon-collision"
@@ -20,7 +21,7 @@ import { ExportDialog } from "./export-dialog"
 import { ProjectDialog } from "./project-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
-import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
+import { PieceList, type PieceListHandle, type PieceListProps } from "./piece-list"
 import { PieceListRow } from "./piece-list-row"
 import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -85,7 +86,6 @@ export function NestingPage() {
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
-  const [dismissedRestoredBanner, setDismissedRestoredBanner] = useState<boolean>(false)
   const [pendingDelete, setPendingDelete] = useState(false)
 
   const positionOverrides = history.positionOverrides
@@ -104,6 +104,31 @@ export function NestingPage() {
       setIsMobilePanelOpen(false)
     }
   }, [isCompact])
+
+  // Mostrar notificación de trabajo restaurado vía sonner
+  const sessionToastShownRef = useRef(false)
+  useEffect(() => {
+    if (project.sessionRestored && !sessionToastShownRef.current) {
+      sessionToastShownRef.current = true
+      toast("Trabajo restaurado", {
+        description: `Recuperado del navegador${
+          project.sessionSavedAt
+            ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}`
+            : ""
+        }`,
+        duration: Infinity,
+        action: {
+          label: "Empezar nuevo proyecto",
+          onClick: () => {
+            project.onDiscardSession()
+            history.resetAll?.() ?? history.reset()
+            setSelectedPieceIndices([])
+            setActiveGroupIndex(0)
+          },
+        },
+      })
+    }
+  }, [project, history])
 
   // Atajos: Ctrl+Z / Ctrl+Shift+Z, Supr = eliminar de plancha
   useEffect(() => {
@@ -808,48 +833,6 @@ export function NestingPage() {
         onSettings={() => {}}
         onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
       />
-
-      {project.sessionRestored && !dismissedRestoredBanner && (
-        <div className="mx-4 mt-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white/3 p-3 shadow-sm">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-neutral-300">
-              <Info className="h-4 w-4" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-medium text-white truncate">Trabajo restaurado</span>
-              <span className="text-[11px] text-neutral-400 truncate">
-                Recuperado del navegador
-                {project.sessionSavedAt
-                  ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}`
-                  : ""}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
-              onClick={() => {
-                project.onDiscardSession()
-                history.resetAll?.() ?? history.reset()
-                setSelectedPieceIndices([])
-                setActiveGroupIndex(0)
-              }}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Descartar</span>
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
-              onClick={() => setDismissedRestoredBanner(true)}
-              title="Cerrar aviso"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {!isCompact && (
