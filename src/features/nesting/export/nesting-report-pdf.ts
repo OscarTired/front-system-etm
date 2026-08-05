@@ -83,55 +83,240 @@ function pieceWeightKg(areaMm2: number, thicknessMm: number): number {
   return areaMm2 * thicknessMm * STEEL_DENSITY_KG_MM3
 }
 
-/** Miniatura vectorial de contorno para el PDF. */
-function pieceSketch(piece: PlacedPiece, boxW: number, boxH: number): Content {
-  const pts = piece.outline?.points ?? []
-  if (pts.length < 2) {
-    return {
-      text: "—",
-      fontSize: 8,
-      color: "#9CA3AF",
-      alignment: "center",
-      margin: [0, 20, 0, 0],
+/**
+ * Dibuja la geometría de una pieza en un canvas del navegador y devuelve
+ * data URL PNG. Mucho más fiable que el canvas nativo de pdfmake (que
+ * a menudo no pinta nada dentro de celdas de tabla).
+ */
+function renderPieceToDataUrl(
+  piece: PlacedPiece,
+  boxW: number,
+  boxH: number,
+): string | null {
+  if (typeof document === "undefined") return null
+
+  type PathPts = { points: { x: number; y: number }[]; color?: string }
+  const paths: PathPts[] = []
+
+  if (piece.subEntities && piece.subEntities.length > 0) {
+    for (const se of piece.subEntities) {
+      const pts = se.outline?.points
+      if (pts && pts.length >= 2) {
+        paths.push({ points: pts, color: se.color ?? "#111827" })
+      }
     }
   }
-  const xs = pts.map((p) => p.x)
-  const ys = pts.map((p) => p.y)
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
+  if (paths.length === 0) {
+    const pts = piece.outline?.points ?? []
+    if (pts.length >= 2) {
+      paths.push({ points: pts, color: piece.color ?? "#111827" })
+    }
+  }
+  if (paths.length === 0) return null
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+  for (const path of paths) {
+    for (const p of path.points) {
+      if (p.x < minX) minX = p.x
+      if (p.x > maxX) maxX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.y > maxY) maxY = p.y
+    }
+  }
   const bw = Math.max(maxX - minX, 1e-6)
   const bh = Math.max(maxY - minY, 1e-6)
-  const pad = 4
+
+  const dpr = 2
+  const canvas = document.createElement("canvas")
+  canvas.width = Math.max(1, Math.round(boxW * dpr))
+  canvas.height = Math.max(1, Math.round(boxH * dpr))
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+
+  ctx.scale(dpr, dpr)
+  ctx.fillStyle = "#FFFFFF"
+  ctx.fillRect(0, 0, boxW, boxH)
+  ctx.strokeStyle = "#E5E7EB"
+  ctx.lineWidth = 0.8
+  ctx.strokeRect(0.5, 0.5, boxW - 1, boxH - 1)
+
+  const pad = 8
   const s = Math.min((boxW - pad * 2) / bw, (boxH - pad * 2) / bh)
   const ox = pad + (boxW - pad * 2 - bw * s) / 2
   const oy = pad + (boxH - pad * 2 - bh * s) / 2
 
-  const step = Math.max(1, Math.floor(pts.length / 80))
-  const ops: object[] = []
-  let first = true
-  for (let i = 0; i < pts.length; i += step) {
-    const p = pts[i]
-    const x = ox + (p.x - minX) * s
-    const y = oy + (maxY - p.y) * s
-    if (first) {
-      ops.push({ type: "moveTo", x, y })
-      first = false
-    } else {
-      ops.push({ type: "lineTo", x, y })
+  for (const path of paths) {
+    const pts = path.points
+    const step = Math.max(1, Math.floor(pts.length / 400))
+    ctx.beginPath()
+    for (let i = 0; i < pts.length; i += step) {
+      const p = pts[i]
+      const x = ox + (p.x - minX) * s
+      const y = oy + (maxY - p.y) * s // Y invertido
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    // cerrar
+    const p0 = pts[0]
+    ctx.lineTo(ox + (p0.x - minX) * s, oy + (maxY - p0.y) * s)
+    ctx.strokeStyle = path.color && path.color.startsWith("#") ? path.color : "#111827"
+    ctx.lineWidth = 1.2
+    ctx.lineJoin = "round"
+    ctx.lineCap = "round"
+    ctx.stroke()
+  }
+
+  try {
+    return canvas.toDataURL("image/png")
+  } catch {
+    return null
+  }
+}
+
+/** Miniatura de pieza: imagen PNG embebida (fiable) o placeholder. */
+function pieceSketch(piece: PlacedPiece, boxW: number, boxH: number): Content {
+  const dataUrl = renderPieceToDataUrl(piece, boxW, boxH)
+  if (dataUrl) {
+    return {
+      image: dataUrl,
+      width: boxW,
+      height: boxH,
     }
   }
-  const p0 = pts[0]
-  ops.push({
-    type: "lineTo",
-    x: ox + (p0.x - minX) * s,
-    y: oy + (maxY - p0.y) * s,
-  })
-  ops.push({ type: "stroke", lineWidth: 0.7, lineColor: "#111827" })
-
   return {
-    canvas: ops,
+    stack: [
+      {
+        canvas: [
+          {
+            type: "rect",
+            x: 1,
+            y: 1,
+            w: boxW - 2,
+            h: boxH - 2,
+            lineWidth: 0.7,
+            lineColor: "#D1D5DB",
+            dash: { length: 4 },
+          },
+        ],
+        width: boxW,
+        height: boxH,
+      },
+      {
+        text: "sin geometría",
+        fontSize: 7,
+        color: "#9CA3AF",
+        alignment: "center",
+        margin: [0, -(boxH / 2 + 6), 0, 0],
+      },
+    ],
+  } as Content
+}
+
+/**
+ * Croquis de la plancha completa (piezas en su posición) para la página
+ * de "Pedidos de fabricación".
+ */
+function renderSheetToDataUrl(
+  sheet: NestedSheet,
+  sheetConfig: SheetConfig,
+  boxW: number,
+  boxH: number,
+): string | null {
+  if (typeof document === "undefined") return null
+  if (!sheet.pieces.length) return null
+
+  const sw = Math.max(sheetConfig.width, 1)
+  const sh = Math.max(sheetConfig.height, 1)
+
+  const dpr = 2
+  const canvas = document.createElement("canvas")
+  canvas.width = Math.max(1, Math.round(boxW * dpr))
+  canvas.height = Math.max(1, Math.round(boxH * dpr))
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+
+  ctx.scale(dpr, dpr)
+  ctx.fillStyle = "#FFFFFF"
+  ctx.fillRect(0, 0, boxW, boxH)
+
+  const pad = 10
+  const s = Math.min((boxW - pad * 2) / sw, (boxH - pad * 2) / sh)
+  const ox = pad + (boxW - pad * 2 - sw * s) / 2
+  const oy = pad + (boxH - pad * 2 - sh * s) / 2
+
+  // Plancha
+  ctx.fillStyle = "#F3F4F6"
+  ctx.fillRect(ox, oy, sw * s, sh * s)
+  ctx.strokeStyle = "#374151"
+  ctx.lineWidth = 1.2
+  ctx.strokeRect(ox, oy, sw * s, sh * s)
+
+  const drawPath = (
+    pts: { x: number; y: number }[],
+    color: string,
+    lineW: number,
+  ) => {
+    if (pts.length < 2) return
+    const step = Math.max(1, Math.floor(pts.length / 200))
+    ctx.beginPath()
+    for (let i = 0; i < pts.length; i += step) {
+      const p = pts[i]
+      const x = ox + p.x * s
+      const y = oy + (sh - p.y) * s // Y invertido respecto a CAD
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.strokeStyle = color
+    ctx.lineWidth = lineW
+    ctx.lineJoin = "round"
+    ctx.stroke()
+  }
+
+  for (const piece of sheet.pieces) {
+    if (piece.subEntities && piece.subEntities.length > 0) {
+      for (const se of piece.subEntities) {
+        const pts = se.outline?.points
+        if (pts && pts.length >= 2) {
+          drawPath(pts, se.color ?? "#111827", 0.9)
+        }
+      }
+    } else {
+      const pts = piece.outline?.points
+      if (pts && pts.length >= 2) {
+        drawPath(pts, piece.color ?? "#111827", 0.9)
+      }
+    }
+  }
+
+  try {
+    return canvas.toDataURL("image/png")
+  } catch {
+    return null
+  }
+}
+
+function sheetSketch(
+  sheet: NestedSheet,
+  sheetConfig: SheetConfig,
+  boxW: number,
+  boxH: number,
+): Content {
+  const dataUrl = renderSheetToDataUrl(sheet, sheetConfig, boxW, boxH)
+  if (dataUrl) {
+    return { image: dataUrl, width: boxW, height: boxH }
+  }
+  return {
+    canvas: [
+      {
+        type: "rect",
+        x: 1,
+        y: 1,
+        w: boxW - 2,
+        h: boxH - 2,
+        lineWidth: 0.7,
+        lineColor: "#D1D5DB",
+      },
+    ],
     width: boxW,
     height: boxH,
   } as unknown as Content
@@ -380,14 +565,20 @@ export async function exportNestingReportPdf({
   catalog.forEach((entry, idx) => {
     const sample = sampleById.get(entry.pieceId)
     const sketch = sample
-      ? pieceSketch(sample, 90, 52)
-      : ({ text: "—", fontSize: 8, alignment: "center" } as Content)
+      ? pieceSketch(sample, 150, 95)
+      : ({
+          text: "—",
+          fontSize: 8,
+          color: "#9CA3AF",
+          alignment: "center",
+          margin: [0, 40, 0, 0],
+        } as Content)
     const area = entry.width * entry.height
     const weight = pieceWeightKg(area, thickMm)
 
     const infoTable: Content = {
       table: {
-        widths: [78, "*"],
+        widths: [82, "*"],
         body: [
           labelValue("No. de pieza:", String(idx + 1)),
           labelValue("Pieza:", entry.displayName),
@@ -408,13 +599,14 @@ export async function exportNestingReportPdf({
     }
 
     content.push({
+      unbreakable: true,
       table: {
-        widths: [100, "*"],
+        widths: [158, "*"],
         body: [[sketch, infoTable]],
       },
       layout: tableLayout(),
-      margin: [0, 0, 0, 6],
-    })
+      margin: [0, 0, 0, 8],
+    } as Content)
   })
 
   // ========== 4. Pedidos de fabricación por plancha ==========
@@ -449,6 +641,8 @@ export async function exportNestingReportPdf({
     const tMm =
       sheet.thicknessMm != null && sheet.thicknessMm > 0 ? sheet.thicknessMm : thickMm
 
+    const layoutImg = sheetSketch(sheet, sheetConfig, 520, 280)
+
     content.push({
       stack: [
         {
@@ -457,6 +651,12 @@ export async function exportNestingReportPdf({
           bold: true,
           margin: [0, 4, 0, 6],
         },
+        // Croquis de la plancha (arriba, a ancho completo)
+        {
+          stack: [layoutImg],
+          margin: [0, 0, 0, 10],
+        },
+        // Tabla de piezas + metadatos del pedido
         {
           columns: [
             {
@@ -469,10 +669,10 @@ export async function exportNestingReportPdf({
               layout: tableLayout(),
             },
             {
-              width: 140,
+              width: 155,
               margin: [8, 0, 0, 0],
               table: {
-                widths: [58, "*"],
+                widths: [64, "*"],
                 body: [
                   labelValue("Pedido de fabricación:", `${base}_${si + 1}`),
                   labelValue("Programa principal:", progName),
@@ -502,8 +702,8 @@ export async function exportNestingReportPdf({
   })
 
   const docDefinition: TDocumentDefinitions = {
-    pageSize: "LETTER",
-    pageMargins: [36, 36, 36, 40],
+    pageSize: "A4",
+    pageMargins: [24, 24, 24, 32],
     info: {
       title: `Paquete de producción : ${reportId}`,
       author: responsable?.trim() || "ETM Nesting",
