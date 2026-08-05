@@ -10,6 +10,7 @@ import type { PlacedPiece, NestedSheet } from "../engine/types"
 import type { BridgeSettings } from "../export/dxf-export"
 import { formatSheetRangeLabel } from "../utils/svg-render"
 import { useNestingProject } from "../hooks/use-nesting-project"
+import { useSheetHistory } from "../hooks/use-sheet-history"
 import { constrainToMode } from "../utils/transform-mode"
 
 import { Toolbar } from "./toolbar"
@@ -44,6 +45,19 @@ const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
 export function NestingPage() {
   const { isCompact } = useResponsive()
   const project = useNestingProject()
+  const history = useSheetHistory()
+
+  // Mantener referencias actualizadas de project/history para poder leerlas
+  // dentro de efectos sin tener que incluir los objetos completos en el
+  // array de dependencias (su identidad puede cambiar entre renders).
+  const projectRef = useRef(project)
+  useEffect(() => {
+    projectRef.current = project
+  })
+  const historyRef = useRef(history)
+  useEffect(() => {
+    historyRef.current = history
+  })
 
   const [previewRowId, setPreviewRowId] = useState<string | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
@@ -52,11 +66,12 @@ export function NestingPage() {
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
-  const [positionOverrides, setPositionOverrides] = useState<Record<number, { dx: number; dy: number }>>({})
-  const [angleOverrides, setAngleOverrides] = useState<Record<number, number>>({})
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
   const [dismissedRestoredBanner, setDismissedRestoredBanner] = useState<boolean>(false)
+
+  const positionOverrides = history.positionOverrides
+  const angleOverrides = history.angleOverrides
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -72,6 +87,25 @@ export function NestingPage() {
     }
   }, [isCompact])
 
+  // Atajos Ctrl+Z / Ctrl+Shift+Z
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const mod = e.ctrlKey || e.metaKey
+      if (!mod) return
+      const key = e.key.toLowerCase()
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault()
+        history.undo()
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault()
+        history.redo()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [history])
+
   // Restaurar edits + tab desde draft (una sola vez)
   const editsHydratedRef = useRef(false)
   useEffect(() => {
@@ -84,23 +118,28 @@ export function NestingPage() {
     const key = String(idx ?? 0)
     const snap = edits[key]
     if (snap) {
-      setPositionOverrides(snap.positionOverrides ?? {})
-      setAngleOverrides(snap.angleOverrides ?? {})
+      history.replace({
+        positionOverrides: snap.positionOverrides ?? {},
+        angleOverrides: snap.angleOverrides ?? {},
+      })
+    } else {
+      history.reset()
     }
-  }, [project.sessionReady, project.sessionRestored])
+  }, [project.sessionReady, project.sessionRestored, history, project])
 
-  // Persistir edits de la plancha activa
+  // Persistir edits de la plancha activa usando ref para evitar loops
   useEffect(() => {
-    if (!project.sessionReady || !editsHydratedRef.current) return
+    const p = projectRef.current
+    if (!p.sessionReady || !editsHydratedRef.current) return
     const key = String(activeGroupIndex)
-    const prev = project.getSheetEdits()
-    project.setSheetEdits({
+    const prev = p.getSheetEdits()
+    p.setSheetEdits({
       ...prev,
       [key]: { positionOverrides, angleOverrides },
     })
-    project.setActiveGroupIndexForSession(activeGroupIndex)
-    project.requestSessionSave()
-  }, [positionOverrides, angleOverrides, activeGroupIndex, project.sessionReady])
+    p.setActiveGroupIndexForSession(activeGroupIndex)
+    p.requestSessionSave()
+  }, [positionOverrides, angleOverrides, activeGroupIndex])
 
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
@@ -138,9 +177,22 @@ export function NestingPage() {
     })
   }, [activeGroup, positionOverrides, angleOverrides])
 
+  // Cambio de plancha.
+  // IMPORTANTE: se leen `project` y `history` a través de refs (no como
+  // dependencia directa del efecto) porque ambos objetos pueden recibir una
+  // nueva identidad en cada render de sus hooks de origen. Si se incluyeran
+  // como dependencias, el efecto se re-ejecutaría en cada render y, como
+  // llama a `history.replace(...)` (que hace setState), se generaría un
+  // bucle infinito de renders. Las únicas dependencias reales del efecto
+  // son valores primitivos: el índice activo y la cantidad de grupos.
   useEffect(() => {
-    setPositionOverrides({})
-    setAngleOverrides({})
+    const p = projectRef.current
+    const h = historyRef.current
+    const snap = p.getSheetEdits()[String(activeGroupIndex)]
+    h.replace({
+      positionOverrides: snap?.positionOverrides ?? {},
+      angleOverrides: snap?.angleOverrides ?? {},
+    })
     setSelectedPieceIndices([])
   }, [activeGroupIndex, project.sheetGroups.length])
 
@@ -217,27 +269,32 @@ export function NestingPage() {
     let wantDy = dy
     ;({ dx: wantDx, dy: wantDy } = constrainToMode(transformMode ?? "free", wantDx, wantDy))
 
-    setPositionOverrides((prev) => {
-      const next = { ...prev }
-      for (const idx of pieceIndices) {
-        const cur = next[idx] ?? { dx: 0, dy: 0 }
-        next[idx] = { dx: cur.dx + wantDx, dy: cur.dy + wantDy }
-      }
-      return next
+    const prev = history.positionOverrides
+    const nextPos = { ...prev }
+    for (const idx of pieceIndices) {
+      const cur = nextPos[idx] ?? { dx: 0, dy: 0 }
+      nextPos[idx] = { dx: cur.dx + wantDx, dy: cur.dy + wantDy }
+    }
+    const n = pieceIndices.length
+    history.commit(n === 1 ? "Mover pieza" : `Mover ${n} piezas`, {
+      positionOverrides: nextPos,
+      angleOverrides: history.angleOverrides,
     })
-  }, [transformMode])
+  }, [transformMode, history])
 
   const handleRotateSelected = useCallback((pieceIndices: number[], degrees: number) => {
     if (pieceIndices.length === 0 || Math.abs(degrees) < 1e-9) return
-    setAngleOverrides((prev) => {
-      const next = { ...prev }
-      for (const idx of pieceIndices) {
-        const cur = next[idx] ?? 0
-        next[idx] = ((cur + degrees) % 360 + 360) % 360
-      }
-      return next
+    const nextAng = { ...history.angleOverrides }
+    for (const idx of pieceIndices) {
+      const cur = nextAng[idx] ?? 0
+      nextAng[idx] = ((cur + degrees) % 360 + 360) % 360
+    }
+    const sign = degrees >= 0 ? "+" : ""
+    history.commit(`Rotar ${sign}${degrees}°`, {
+      positionOverrides: history.positionOverrides,
+      angleOverrides: nextAng,
     })
-  }, [])
+  }, [history])
 
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return
@@ -246,27 +303,29 @@ export function NestingPage() {
     if (!refPiece) return
     const refBounds = boundingRect(refPiece.outline)
 
-    setPositionOverrides((prev) => {
-      const next = { ...prev }
-      for (const idx of selectedPieceIndices) {
-        if (idx === refIndex) continue
-        const piece = canvasPieces[idx]
-        if (!piece) continue
-        const b = boundingRect(piece.outline)
-        const current = prev[idx] ?? { dx: 0, dy: 0 }
-        let dx = current.dx
-        let dy = current.dy
-        if (mode === "left") dx = current.dx + (refBounds.x - b.x)
-        else if (mode === "right") dx = current.dx + (refBounds.x + refBounds.width - (b.x + b.width))
-        else if (mode === "center-h") dx = current.dx + (refBounds.x + refBounds.width / 2 - (b.x + b.width / 2))
-        else if (mode === "top") dy = current.dy + (refBounds.y - b.y)
-        else if (mode === "bottom") dy = current.dy + (refBounds.y + refBounds.height - (b.y + b.height))
-        else if (mode === "center-v") dy = current.dy + (refBounds.y + refBounds.height / 2 - (b.y + b.height / 2))
-        next[idx] = { dx, dy }
-      }
-      return next
+    const prev = history.positionOverrides
+    const next = { ...prev }
+    for (const idx of selectedPieceIndices) {
+      if (idx === refIndex) continue
+      const piece = canvasPieces[idx]
+      if (!piece) continue
+      const b = boundingRect(piece.outline)
+      const current = prev[idx] ?? { dx: 0, dy: 0 }
+      let dx = current.dx
+      let dy = current.dy
+      if (mode === "left") dx = current.dx + (refBounds.x - b.x)
+      else if (mode === "right") dx = current.dx + (refBounds.x + refBounds.width - (b.x + b.width))
+      else if (mode === "center-h") dx = current.dx + (refBounds.x + refBounds.width / 2 - (b.x + b.width / 2))
+      else if (mode === "top") dy = current.dy + (refBounds.y - b.y)
+      else if (mode === "bottom") dy = current.dy + (refBounds.y + refBounds.height - (b.y + b.height))
+      else if (mode === "center-v") dy = current.dy + (refBounds.y + refBounds.height / 2 - (b.y + b.height / 2))
+      next[idx] = { dx, dy }
+    }
+    history.commit("Alinear piezas", {
+      positionOverrides: next,
+      angleOverrides: history.angleOverrides,
     })
-  }, [selectedPieceIndices, canvasPieces])
+  }, [selectedPieceIndices, canvasPieces, history])
 
   const handleRun = useCallback(() => {
     setActiveGroupIndex(0)
@@ -331,7 +390,7 @@ export function NestingPage() {
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
               <SheetDimensionsFields settings={project.settings} onChange={project.onSettingsChange} />
             </div>
-            
+
             <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white/3 p-3 overflow-hidden">
               <PieceList ref={pieceListRef} {...pieceListProps} />
             </div>
@@ -459,8 +518,7 @@ export function NestingPage() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
               onClick={() => {
                 project.onDiscardSession()
-                setPositionOverrides({})
-                setAngleOverrides({})
+                history.reset()
                 setSelectedPieceIndices([])
                 setActiveGroupIndex(0)
               }}
@@ -526,6 +584,25 @@ export function NestingPage() {
             {canvasPieces.length > 0 && (
               <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-1.5">
                 <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
+                  <button
+                    type="button"
+                    disabled={!history.canUndo}
+                    onClick={() => history.undo()}
+                    className="rounded-lg px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:opacity-30"
+                    title={history.canUndo ? "Deshacer (Ctrl+Z)" : "Nada que deshacer"}
+                  >
+                    ↶
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!history.canRedo}
+                    onClick={() => history.redo()}
+                    className="rounded-lg px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:opacity-30"
+                    title={history.canRedo ? "Rehacer (Ctrl+Shift+Z)" : "Nada que rehacer"}
+                  >
+                    ↷
+                  </button>
+                  <div className="h-4 w-px bg-white/10" />
                   <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
                     Modo
                   </span>
@@ -634,9 +711,9 @@ export function NestingPage() {
         onSaveProject={project.onSaveProject}
       />
 
-      <PiecePreviewDialog 
-        row={previewRow} 
-        onClose={() => setPreviewRowId(null)} 
+      <PiecePreviewDialog
+        row={previewRow}
+        onClose={() => setPreviewRowId(null)}
         onRotate={(id, deg) => project.onRotate(id, deg)}
         onMirrorX={(id) => project.onMirrorX(id)}
         onMirrorY={(id) => project.onMirrorY(id)}

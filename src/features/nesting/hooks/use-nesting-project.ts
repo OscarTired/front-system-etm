@@ -155,7 +155,7 @@ export function useNestingProject() {
   }, [sheetGroups, sheetConfig])
 
   const handleRemove = useCallback((id: string) => setRows((prev) => prev.filter((r) => r.id !== id)), [])
-  
+
   const handleClearAll = useCallback(() => {
     setRows([])
     clearSheets()
@@ -306,6 +306,12 @@ export function useNestingProject() {
     activeGroupIndexRef.current = index
   }, [])
 
+  // Estables (sin deps): leen el ref en el momento de la llamada, no capturan
+  // ningún valor de closure. Antes eran arrow functions inline en el objeto
+  // de retorno, lo que les daba una identidad nueva en cada render.
+  const getSheetEdits = useCallback(() => sheetEditsRef.current, [])
+  const getActiveGroupIndexForSession = useCallback(() => activeGroupIndexRef.current, [])
+
   const discardSession = useCallback(() => {
     void clearNestingDraft()
     setRows([])
@@ -400,52 +406,101 @@ export function useNestingProject() {
     }
   }, [rows, settings, machine, sheets])
 
-  return {
-    rows,
-    settings,
-    machine,
-    nomenclatura,
-    sheetConfig,
-    sheetGroups,
-    sheets,
-    conflictIds,
-    canRun,
-    isRunning,
-    progress,
-    error,
-    nextColor,
-    getSheetStats,
+  // El objeto de retorno se memoiza para que su identidad solo cambie cuando
+  // cambia alguno de sus valores/funciones reales. Sin esto, cualquier
+  // componente que use `project` como dependencia de un useEffect (o de un
+  // useMemo/useCallback) se re-ejecuta en cada render de este hook, lo que
+  // puede encadenar renders infinitos si ese efecto a su vez actualiza estado.
+  return useMemo(
+    () => ({
+      rows,
+      settings,
+      machine,
+      nomenclatura,
+      sheetConfig,
+      sheetGroups,
+      sheets,
+      conflictIds,
+      canRun,
+      isRunning,
+      progress,
+      error,
+      nextColor,
+      getSheetStats,
 
-    sessionRestored,
-    sessionSavedAt,
-    sessionReady,
-    onDiscardSession: discardSession,
-    setSheetEdits,
-    setActiveGroupIndexForSession,
-    requestSessionSave,
-    getSheetEdits: () => sheetEditsRef.current,
-    getActiveGroupIndexForSession: () => activeGroupIndexRef.current,
+      sessionRestored,
+      sessionSavedAt,
+      sessionReady,
+      onDiscardSession: discardSession,
+      setSheetEdits,
+      setActiveGroupIndexForSession,
+      requestSessionSave,
+      getSheetEdits,
+      getActiveGroupIndexForSession,
 
-    onSettingsChange: handleSettingsChange,
-    onMachineChange: handleMachineChange,
+      onSettingsChange: handleSettingsChange,
+      onMachineChange: handleMachineChange,
 
-    onRemove: handleRemove,
-    onClearAll: handleClearAll,
-    onUpdateQuantity: handleUpdateQuantity,
-    onAddCad: handleAddCad,
-    onRotate: handleRotate,
-    onMirrorX: handleMirrorX,
-    onMirrorY: handleMirrorY,
-    onDuplicate: handleDuplicate,
+      onRemove: handleRemove,
+      onClearAll: handleClearAll,
+      onUpdateQuantity: handleUpdateQuantity,
+      onAddCad: handleAddCad,
+      onRotate: handleRotate,
+      onMirrorX: handleMirrorX,
+      onMirrorY: handleMirrorY,
+      onDuplicate: handleDuplicate,
 
-    onRun: handleRun,
-    onCancel: cancel,
-    onExportSheet: handleExportSheet,
-    onExportMaterializedSheet: exportMaterializedSheet,
-    onSaveProject: handleSaveProject,
-    onOpenProjectFile: handleOpenProjectFile,
-    onNewProject: handleNewProject,
-  }
+      onRun: handleRun,
+      onCancel: cancel,
+      onExportSheet: handleExportSheet,
+      onExportMaterializedSheet: exportMaterializedSheet,
+      onSaveProject: handleSaveProject,
+      onOpenProjectFile: handleOpenProjectFile,
+      onNewProject: handleNewProject,
+    }),
+    [
+      rows,
+      settings,
+      machine,
+      nomenclatura,
+      sheetConfig,
+      sheetGroups,
+      sheets,
+      conflictIds,
+      canRun,
+      isRunning,
+      progress,
+      error,
+      nextColor,
+      getSheetStats,
+      sessionRestored,
+      sessionSavedAt,
+      sessionReady,
+      discardSession,
+      setSheetEdits,
+      setActiveGroupIndexForSession,
+      requestSessionSave,
+      getSheetEdits,
+      getActiveGroupIndexForSession,
+      handleSettingsChange,
+      handleMachineChange,
+      handleRemove,
+      handleClearAll,
+      handleUpdateQuantity,
+      handleAddCad,
+      handleRotate,
+      handleMirrorX,
+      handleMirrorY,
+      handleDuplicate,
+      handleRun,
+      cancel,
+      handleExportSheet,
+      exportMaterializedSheet,
+      handleSaveProject,
+      handleOpenProjectFile,
+      handleNewProject,
+    ]
+  )
 }
 
 export type UseNestingProjectReturn = ReturnType<typeof useNestingProject>
