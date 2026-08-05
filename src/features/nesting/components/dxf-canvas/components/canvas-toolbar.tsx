@@ -6,7 +6,6 @@ import {
   ZoomOut,
   Maximize,
   Target,
-  Grid,
   Ruler,
   CircleDot,
   Triangle,
@@ -20,6 +19,12 @@ import {
   ChevronsRight,
   Wrench,
   ChevronDown,
+  Circle,
+  Hash,
+  Plus,
+  Ban,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import type { MeasureTool, CanvasTool } from "../types/types"
 import { TOOL_LABELS } from "../types/types"
@@ -54,6 +59,10 @@ export interface CanvasToolbarProps {
   snapEnabled: boolean
   onToggleSnap: () => void
 
+  /** Estilo del fondo del canvas (cuadrícula). */
+  gridStyle?: "dots" | "lines" | "cross" | "none"
+  onGridStyleChange?: (style: "dots" | "lines" | "cross" | "none") => void
+
   hasToolpath: boolean
   simPanelOpen: boolean
   simRunning: boolean
@@ -84,6 +93,8 @@ export function CanvasToolbar({
   onResetTool,
   snapEnabled,
   onToggleSnap,
+  gridStyle = "dots",
+  onGridStyleChange,
   hasToolpath,
   simPanelOpen,
   simRunning,
@@ -98,6 +109,7 @@ export function CanvasToolbar({
 }: CanvasToolbarProps) {
   const [open, setOpen] = useState(false)
   const [speedPopoverOpen, setSpeedPopoverOpen] = useState(false)
+  const [displayOpen, setDisplayOpen] = useState(false)
 
   const handleClose = () => {
     onResetTool()
@@ -168,10 +180,75 @@ export function CanvasToolbar({
             type="button"
             onClick={onToggleGrid}
             className={`${mdBtn} ${showGrid ? mdBtnActive : ""}`}
-            title="Cuadrícula"
+            title={showGrid ? "Ocultar fondo" : "Mostrar fondo"}
           >
-            <Grid size={16} strokeWidth={1.75} />
+            {showGrid ? (
+              <Eye size={16} strokeWidth={1.75} />
+            ) : (
+              <EyeOff size={16} strokeWidth={1.75} />
+            )}
           </button>
+
+          {onGridStyleChange && (
+            <Popover open={displayOpen} onOpenChange={setDisplayOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={`${mdBtn} ${showGrid && gridStyle !== "none" ? mdBtnActive : ""}`}
+                  title="Estilo de fondo"
+                >
+                  {gridStyle === "lines" ? (
+                    <Hash size={16} strokeWidth={1.75} />
+                  ) : gridStyle === "cross" ? (
+                    <Plus size={16} strokeWidth={1.75} />
+                  ) : gridStyle === "none" ? (
+                    <Ban size={16} strokeWidth={1.75} />
+                  ) : (
+                    <CircleDot size={16} strokeWidth={1.75} />
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="right"
+                align="start"
+                className="w-48 border-white/10 bg-[#141416] p-1.5 text-neutral-100"
+              >
+                <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
+                  Fondo
+                </p>
+                {(
+                  [
+                    { style: "dots" as const, label: "Puntos", icon: CircleDot },
+                    { style: "lines" as const, label: "Líneas", icon: Hash },
+                    { style: "cross" as const, label: "Cruces", icon: Plus },
+                    { style: "none" as const, label: "Ninguno", icon: Ban },
+                  ] as const
+                ).map(({ style, label, icon: Icon }) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => {
+                      onGridStyleChange(style)
+                      if (style === "none") {
+                        if (showGrid) onToggleGrid()
+                      } else if (!showGrid) {
+                        onToggleGrid()
+                      }
+                      setDisplayOpen(false)
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-white/8 ${
+                      (showGrid ? gridStyle : "none") === style
+                        ? "bg-white/10 text-white"
+                        : "text-neutral-300"
+                    }`}
+                  >
+                    <Icon size={14} className="opacity-70" />
+                    {label}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          )}
 
           <div className={mdDivider} />
 

@@ -88,6 +88,8 @@ export function DxfCanvas({
 
   const [showGrid, setShowGrid] = useState(true)
   const [snapEnabled, setSnapEnabled] = useState(true)
+  /** Fondo del canvas: puntos, líneas, cruces o ninguno. */
+  const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">("dots")
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null)
 
   const view = useCanvasView()
@@ -144,6 +146,8 @@ export function DxfCanvas({
         dragPreview,
         snapGuides: snapGuidesRef.current,
         boxSelectScreen,
+        showGrid,
+        gridStyle,
       })
     })
   }, [
@@ -159,6 +163,8 @@ export function DxfCanvas({
     measure.activeTool,
     snapCandidate,
     boxSelectScreen,
+    showGrid,
+    gridStyle,
   ])
 
   useEffect(() => {
@@ -560,13 +566,7 @@ export function DxfCanvas({
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-hidden"
-      style={{
-        backgroundColor: "#0a0a0c",
-        backgroundImage: showGrid
-          ? "radial-gradient(circle, #3a3a3f 1.5px, transparent 1.5px)"
-          : "none",
-        backgroundSize: "24px 24px",
-      }}
+      style={{ backgroundColor: "#0a0a0c" }}
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none" style={{ cursor: "default" }} />
 
@@ -720,6 +720,8 @@ export function DxfCanvas({
         onResetTool={measure.resetTool}
         snapEnabled={snapEnabled}
         onToggleSnap={() => setSnapEnabled((v) => !v)}
+        gridStyle={gridStyle}
+        onGridStyleChange={setGridStyle}
         hasToolpath={sim.hasToolpath}
         simPanelOpen={sim.panelOpen}
         simRunning={sim.running}

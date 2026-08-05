@@ -21,6 +21,9 @@ type Props = {
   onExportSheet: (format: "dxf" | "nsp", sheetIndex: number) => void
   onSaveProject: () => void
   nameById?: PieceNameMap
+  /** Opcionales para el paquete de producción (estilo TruTops). */
+  cliente?: string
+  maquina?: string
 }
 
 export function ExportDialog({
@@ -33,6 +36,8 @@ export function ExportDialog({
   onExportSheet,
   onSaveProject,
   nameById,
+  cliente,
+  maquina,
 }: Props) {
   const catalog = useMemo(
     () => (sheets ? buildPieceCatalog(sheets, nameById) : []),
@@ -41,7 +46,16 @@ export function ExportDialog({
 
   function handleExportReport() {
     if (!sheets) return
-    void exportNestingReportPdf({ nomenclatura, sheets, sheetConfig, nameById })
+    void exportNestingReportPdf({
+      nomenclatura,
+      sheets,
+      sheetConfig,
+      nameById,
+      materialLabel: nomenclatura.material,
+      espesorLabel: nomenclatura.espesor,
+      cliente,
+      maquina,
+    })
   }
 
   return (

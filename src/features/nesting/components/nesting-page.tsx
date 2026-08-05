@@ -64,6 +64,8 @@ export function NestingPage() {
   })
   const historyRef = useRef(history)
   const deleteSelectedRef = useRef<(() => void) | null>(null)
+  /** Selección a aplicar tras cambiar de tab (p.ej. Ubicar). */
+  const pendingSelectRef = useRef<number[] | null>(null)
   useEffect(() => {
     historyRef.current = history
   })
@@ -216,7 +218,13 @@ export function NestingPage() {
         angleOverrides: snap.angleOverrides ?? {},
       })
     }
-    setSelectedPieceIndices([])
+    // Ubicar: no borrar la selección pendiente
+    if (pendingSelectRef.current) {
+      setSelectedPieceIndices(pendingSelectRef.current)
+      pendingSelectRef.current = null
+    } else {
+      setSelectedPieceIndices([])
+    }
   }, [activeGroupIndex])
 
   // Si se borró la última pieza de una plancha, el grupo desaparece → ajustar tab
@@ -486,16 +494,21 @@ export function NestingPage() {
         const group = groups[gi]
         const idx = group.sheet.pieces.findIndex((p) => p.pieceId === row.id)
         if (idx >= 0) {
-          setActiveGroupIndex(gi)
-          setSelectedPieceIndices([idx])
+          // Un solo paso: tab + selección (el effect de activeGroupIndex
+          // aplicará pendingSelectRef en vez de limpiar).
+          if (gi === activeGroupIndex) {
+            setSelectedPieceIndices([idx])
+          } else {
+            pendingSelectRef.current = [idx]
+            setActiveGroupIndex(gi)
+          }
           setActivePanel("inspector")
           return
         }
       }
-      // No nesteada: solo resaltar en lista vía preview opcional
       setPreviewRowId(row.id)
     },
-    [project.sheetGroups],
+    [project.sheetGroups, activeGroupIndex],
   )
 
 
@@ -934,6 +947,8 @@ export function NestingPage() {
         nomenclatura={project.nomenclatura}
         onExportSheet={handleExportSheet}
         onSaveProject={project.onSaveProject}
+        cliente={project.settings.cliente}
+        maquina={project.machine.maquina}
       />
 
       <PiecePreviewDialog

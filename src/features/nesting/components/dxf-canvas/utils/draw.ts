@@ -47,6 +47,9 @@ export interface DrawContext {
   snapGuides?: { axis: "x" | "y"; value: number }[]
   /** Rect de box-select en coords de pantalla del canvas (CSS px). */
   boxSelectScreen?: { x0: number; y0: number; x1: number; y1: number } | null
+  /** Cuadrícula en coords mundo (se adapta al zoom). */
+  gridStyle?: "dots" | "lines" | "cross" | "none"
+  showGrid?: boolean
 }
 
 export function strokeToolpathUntil(
@@ -126,6 +129,89 @@ function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, scale: number) {
   }
 }
 
+
+/** Paso de cuadrícula en mm que se ve ~24–48 px en pantalla. */
+function niceGridStep(scale: number): number {
+  const targetPx = 32
+  const raw = targetPx / Math.max(scale, 1e-9)
+  const exp = Math.floor(Math.log10(raw))
+  const base = Math.pow(10, exp)
+  const frac = raw / base
+  let mult = 1
+  if (frac > 5) mult = 10
+  else if (frac > 2) mult = 5
+  else if (frac > 1) mult = 2
+  return mult * base
+}
+
+/**
+ * Dibuja la cuadrícula en coords locales del nesting (ya transformadas por el caller).
+ * view: scale + offset en pantalla; w/h CSS del canvas.
+ */
+function drawWorldGrid(
+  ctx: CanvasRenderingContext2D,
+  view: ViewState,
+  canvasW: number,
+  canvasH: number,
+  scale: number,
+  style: "dots" | "lines" | "cross",
+) {
+  const step = niceGridStep(scale)
+  const majorEvery = 5
+  const { offsetX, offsetY } = view
+
+  // Esquina superior-izquierda del viewport en coords mundo
+  // screen = center + offset + local * scale  =>  local = (screen - center - offset) / scale
+  const inv = 1 / scale
+  const worldLeft = (-canvasW / 2 - offsetX) * inv
+  const worldTop = (-canvasH / 2 - offsetY) * inv
+  const worldRight = (canvasW / 2 - offsetX) * inv
+  const worldBottom = (canvasH / 2 - offsetY) * inv
+
+  const x0 = Math.floor(worldLeft / step) * step
+  const y0 = Math.floor(worldTop / step) * step
+
+  ctx.save()
+  ctx.lineCap = "butt"
+
+  if (style === "lines" || style === "cross") {
+    for (let x = x0; x <= worldRight + step; x += step) {
+      const major = Math.abs(Math.round(x / step)) % majorEvery === 0
+      ctx.strokeStyle = major ? "#3a3a42" : "#252528"
+      ctx.lineWidth = (major ? 1 : 0.6) / scale
+      ctx.beginPath()
+      ctx.moveTo(x, worldTop - step)
+      ctx.lineTo(x, worldBottom + step)
+      ctx.stroke()
+    }
+    for (let y = y0; y <= worldBottom + step; y += step) {
+      const major = Math.abs(Math.round(y / step)) % majorEvery === 0
+      ctx.strokeStyle = major ? "#3a3a42" : "#252528"
+      ctx.lineWidth = (major ? 1 : 0.6) / scale
+      ctx.beginPath()
+      ctx.moveTo(worldLeft - step, y)
+      ctx.lineTo(worldRight + step, y)
+      ctx.stroke()
+    }
+  }
+
+  if (style === "dots" || style === "cross") {
+    const r = 1.2 / scale
+    ctx.fillStyle = "#3a3a3f"
+    ctx.beginPath()
+    for (let x = x0; x <= worldRight + step; x += step) {
+      for (let y = y0; y <= worldBottom + step; y += step) {
+        ctx.moveTo(x + r, y)
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+      }
+    }
+    ctx.fill()
+  }
+
+  ctx.restore()
+}
+
+
 export function drawScene(d: DrawContext) {
   const {
     ctx,
@@ -149,6 +235,8 @@ export function drawScene(d: DrawContext) {
     localToScreen,
     dragPreview,
     snapGuides,
+    gridStyle = "dots",
+    showGrid = true,
   } = d
 
   const { scale, offsetX, offsetY } = view
@@ -165,6 +253,11 @@ export function drawScene(d: DrawContext) {
     ctx.strokeStyle = SHEET_STROKE
     ctx.lineWidth = 1 / scale
     ctx.strokeRect(0, 0, sheetSize.width, sheetSize.height)
+  }
+
+  // Cuadrícula en espacio mundo (paso adaptativo al zoom, estilo FreeCAD/CAD)
+  if (showGrid && gridStyle !== "none") {
+    drawWorldGrid(ctx, view, w, h, scale, gridStyle)
   }
 
   const simActive = simProgress > 0.001
