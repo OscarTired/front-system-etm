@@ -14,7 +14,16 @@ import { groupIdenticalSheets } from "../utils/svg-render"
 import { buildSheetFileName, type Nomenclatura } from "../export/nomenclatura"
 import { generateSheetDxf, type BridgeSettings } from "../export/dxf-export"
 import { generateSheetNsp } from "../export/nsp-export"
-import { serializeProject, parseProjectFile, ProjectFileParseError, type ProjectPieceEntry } from "../export/project-file"
+import {
+  serializeProjectV2,
+  parseProjectFile,
+  isProjectFileV2,
+  ProjectFileParseError,
+  type ProjectPieceEntry,
+  type ProjectFile,
+  type ProjectFileV2,
+} from "../export/project-file"
+import { nestingProjectsApi } from "../api/nesting-projects.api"
 import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, type MachineSettings } from "../types/project-settings"
 import { downloadTextFile, saveTextFile } from "../utils/file-helpers"
 import type { PieceRow, CadRow } from "../components/piece-list"
@@ -305,10 +314,10 @@ export function useNestingProject() {
     }
   }, [nomenclatura, sheetConfig, defaultBridgeSettings])
 
-  const handleSaveProject = useCallback(() => {
-    const pieces: ProjectPieceEntry[] = rows.map((row) => ({
+  const buildPiecesPayload = useCallback((): ProjectPieceEntry[] => {
+    return rows.map((row) => ({
       id: row.id,
-      source: "cad",
+      source: "cad" as const,
       fileName: row.fileName,
       width: row.width,
       height: row.height,
@@ -318,16 +327,62 @@ export function useNestingProject() {
       subEntities: row.subEntities,
       material: row.material,
     }))
-    const json = serializeProject({ sheet: sheetConfig, pieces })
-    void saveTextFile(`nesting-proyecto-${Date.now()}.json`, json, "application/json", [".json"])
-  }, [rows, sheetConfig])
+  }, [rows])
 
-  const handleOpenProjectFile = useCallback(async (file: File | undefined) => {
-    if (!file) return null
-    try {
-      const text = await file.text()
-      const project = parseProjectFile(text)
-      setSettings((s) => ({ ...s, sheetWidth: String(project.sheet.width), sheetHeight: String(project.sheet.height), margin: String(project.sheet.margin) }))
+  const buildProjectV2 = useCallback(
+    (name?: string): ProjectFileV2 => {
+      const pieces = buildPiecesPayload()
+      return {
+        formatVersion: 2,
+        name: name?.trim() || undefined,
+        savedAt: new Date().toISOString(),
+        sheet: sheetConfig,
+        settings,
+        machine,
+        pieces,
+        rows: pieces,
+        sheets: sheets ?? null,
+        activeGroupIndex: activeGroupIndexRef.current,
+        editsBySheet: { ...sheetEditsRef.current },
+      }
+    },
+    [buildPiecesPayload, sheetConfig, settings, machine, sheets],
+  )
+
+  const applyProjectFile = useCallback(
+    (project: ProjectFile) => {
+      if (isProjectFileV2(project)) {
+        setSettings(project.settings)
+        setMachine(project.machine)
+        const pieceList = project.rows?.length ? project.rows : project.pieces
+        const loadedRows: PieceRow[] = pieceList.map((p) => ({
+          id: p.id,
+          source: "cad",
+          fileName: p.fileName ?? "pieza.dxf",
+          outline: p.outline,
+          subEntities: p.subEntities ?? [],
+          width: p.width,
+          height: p.height,
+          quantity: String(p.quantity),
+          color: p.color,
+          material: p.material ?? { thickness: -1, dinNorm: "N/D", alloy: "N/D" },
+        }))
+        setRows(loadedRows)
+        sheetEditsRef.current = project.editsBySheet ?? {}
+        activeGroupIndexRef.current = project.activeGroupIndex ?? 0
+        if (project.sheets && project.sheets.length > 0) {
+          restoreSheets(project.sheets)
+        } else {
+          clearSheets()
+        }
+        return
+      }
+      setSettings((s) => ({
+        ...s,
+        sheetWidth: String(project.sheet.width),
+        sheetHeight: String(project.sheet.height),
+        margin: String(project.sheet.margin),
+      }))
       const loadedRows: PieceRow[] = project.pieces.map((p) => ({
         id: p.id,
         source: "cad",
@@ -341,11 +396,62 @@ export function useNestingProject() {
         material: p.material ?? { thickness: -1, dinNorm: "N/D", alloy: "N/D" },
       }))
       setRows(loadedRows)
-      return null
-    } catch (err) {
-      return err instanceof ProjectFileParseError ? err.message : "Proyecto inválido"
-    }
-  }, [])
+      sheetEditsRef.current = {}
+      activeGroupIndexRef.current = 0
+      clearSheets()
+    },
+    [restoreSheets, clearSheets],
+  )
+
+  const handleSaveProjectLocal = useCallback(
+    async (name?: string) => {
+      const payload = buildProjectV2(name)
+      const base = (name?.trim() || "nesting-proyecto").replace(/[^\w.-]+/g, "_")
+      const json = serializeProjectV2(payload)
+      await saveTextFile(`${base}.json`, json, "application/json", [".json"])
+    },
+    [buildProjectV2],
+  )
+
+  const handleSaveProjectBackend = useCallback(
+    async (name: string, existingId?: string) => {
+      const payload = buildProjectV2(name)
+      if (existingId) {
+        await nestingProjectsApi.update(existingId, { name, project: payload })
+      } else {
+        await nestingProjectsApi.create({ name, project: payload })
+      }
+    },
+    [buildProjectV2],
+  )
+
+  const handleSaveProject = useCallback(() => {
+    void handleSaveProjectLocal()
+  }, [handleSaveProjectLocal])
+
+  const handleOpenProjectFile = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return null
+      try {
+        const text = await file.text()
+        const project = parseProjectFile(text)
+        applyProjectFile(project)
+        return null
+      } catch (err) {
+        return err instanceof ProjectFileParseError ? err.message : "Proyecto inválido"
+      }
+    },
+    [applyProjectFile],
+  )
+
+  const handleOpenProjectFromBackend = useCallback(
+    async (id: string) => {
+      const project = await nestingProjectsApi.get(id)
+      const normalized = parseProjectFile(JSON.stringify(project))
+      applyProjectFile(normalized)
+    },
+    [applyProjectFile],
+  )
 
   const handleNewProject = useCallback(() => {
     setRows([])
@@ -518,8 +624,12 @@ export function useNestingProject() {
       onExportSheet: handleExportSheet,
       onExportMaterializedSheet: exportMaterializedSheet,
       onSaveProject: handleSaveProject,
+      onSaveProjectLocal: handleSaveProjectLocal,
+      onSaveProjectBackend: handleSaveProjectBackend,
       onOpenProjectFile: handleOpenProjectFile,
+      onOpenProjectFromBackend: handleOpenProjectFromBackend,
       onNewProject: handleNewProject,
+      buildProjectV2,
     }),
     [
       rows,
@@ -561,8 +671,12 @@ export function useNestingProject() {
       handleExportSheet,
       exportMaterializedSheet,
       handleSaveProject,
+      handleSaveProjectLocal,
+      handleSaveProjectBackend,
       handleOpenProjectFile,
+      handleOpenProjectFromBackend,
       handleNewProject,
+      buildProjectV2,
     ]
   )
 }

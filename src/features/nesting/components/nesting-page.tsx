@@ -17,6 +17,7 @@ import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
+import { ProjectDialog } from "./project-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
@@ -74,6 +75,8 @@ export function NestingPage() {
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
   const [selectedPieceIndices, setSelectedPieceIndices] = useState<number[]>([])
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
@@ -673,8 +676,14 @@ export function NestingPage() {
 
       <Toolbar
         onNew={handleNewProject}
-        onOpen={() => projectInputRef.current?.click()}
-        onSave={project.onSaveProject}
+        onOpen={() => {
+          setProjectDialogMode("open")
+          setProjectDialogOpen(true)
+        }}
+        onSave={() => {
+          setProjectDialogMode("save")
+          setProjectDialogOpen(true)
+        }}
         onImport={() => pieceListRef.current?.triggerImport()}
         onExport={() => setExportDialogOpen(true)}
         onToggleLayers={() => {
@@ -936,6 +945,46 @@ export function NestingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ProjectDialog
+        open={projectDialogOpen}
+        mode={projectDialogMode}
+        onClose={() => setProjectDialogOpen(false)}
+        suggestedName={
+          project.settings.cliente
+            ? `nesting-${project.settings.cliente}`
+            : "proyecto-nesting"
+        }
+        onSaveToBackend={async (name, existingId) => {
+          await project.onSaveProjectBackend(name, existingId)
+        }}
+        onSaveLocal={async (name) => {
+          await project.onSaveProjectLocal(name)
+        }}
+        onOpenFromBackend={async (id) => {
+          await project.onOpenProjectFromBackend(id)
+          const idx = project.getActiveGroupIndexForSession()
+          setActiveGroupIndex(idx)
+          setSelectedPieceIndices([])
+          const snap = project.getSheetEdits()[String(idx)]
+          history.replace({
+            positionOverrides: snap?.positionOverrides ?? {},
+            angleOverrides: snap?.angleOverrides ?? {},
+          })
+        }}
+        onOpenLocalFile={async (file) => {
+          const err = await project.onOpenProjectFile(file)
+          if (err) throw new Error(err)
+          const idx = project.getActiveGroupIndexForSession()
+          setActiveGroupIndex(idx)
+          setSelectedPieceIndices([])
+          const snap = project.getSheetEdits()[String(idx)]
+          history.replace({
+            positionOverrides: snap?.positionOverrides ?? {},
+            angleOverrides: snap?.angleOverrides ?? {},
+          })
+        }}
+      />
 
       <ExportDialog
         nameById={nameById}
