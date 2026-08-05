@@ -55,7 +55,6 @@ export function DateCalendar({
     touchStartX.current = null;
   };
 
-  // Función para ir y seleccionar la fecha de hoy
   const handleTodayClick = () => {
     const today = getToday();
     setViewDate(today);
@@ -65,7 +64,7 @@ export function DateCalendar({
   return (
     <div
       className={cn(
-        "w-full max-w-xs p-3 select-none touch-pan-y flex flex-col gap-2",
+        "w-full max-w-xs mx-auto p-3 select-none touch-pan-y flex flex-col gap-2",
         className
       )}
       onTouchStart={handleTouchStart}
@@ -81,7 +80,6 @@ export function DateCalendar({
 
       <CalendarGrid weeks={weeks} onSelectDay={onSelect} />
 
-      {/* Botón Hoy */}
       <div className="pt-2 border-t border-white/10 flex justify-center">
         <button
           type="button"

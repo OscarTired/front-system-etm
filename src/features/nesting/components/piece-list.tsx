@@ -87,6 +87,27 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     return () => clearTimeout(timer)
   }, [errorMsg])
 
+
+  /** Misma base (sin extensión): heredar espesor/material de un hermano ya cargado. */
+  const inheritMaterialFromSibling = (
+    fileName: string,
+    material: MaterialData,
+    pool: CadRow[]
+  ): MaterialData => {
+    if (material.thickness > 0 && material.dinNorm !== "N/D") return material
+    const stem = fileName.replace(/\.[^.]+$/, "").toLowerCase()
+    const sibling = pool.find((r) => {
+      const s = r.fileName.replace(/\.[^.]+$/, "").toLowerCase()
+      return s === stem && r.material.thickness > 0
+    })
+    if (!sibling) return material
+    return {
+      thickness: material.thickness > 0 ? material.thickness : sibling.material.thickness,
+      dinNorm: material.dinNorm !== "N/D" ? material.dinNorm : sibling.material.dinNorm,
+      alloy: material.alloy !== "N/D" ? material.alloy : sibling.material.alloy,
+    }
+  }
+
   const handleFilesSelected = async (files: FileList | null) => {
     if (!files || files.length === 0) return
 
@@ -154,7 +175,11 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         height: cadData.height,
         quantity: "1",
         color: nextColor(),
-        material: scanMaterialData(file.name, text),
+        material: inheritMaterialFromSibling(
+          file.name,
+          scanMaterialData(file.name, text),
+          [...rows, ...newRows]
+        ),
       })
       existingFileNames.add(file.name.toLowerCase())
     }

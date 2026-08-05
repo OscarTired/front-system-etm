@@ -39,7 +39,7 @@ export function optimize(
     const k = keys[0]
     const sheets = chosen.optimize(buckets.get(k)!, options)
     const thicknessMm = k === "sin-espesor" ? undefined : parseFloat(k)
-    return sheets.map((s) => ({ ...s, thicknessMm }))
+    return sheets.filter((s) => s.pieces.length > 0).map((s) => ({ ...s, thicknessMm }))
   }
 
   const all: NestedSheet[] = []
@@ -64,7 +64,8 @@ export function optimize(
   }
 
   options.onProgress?.(1)
-  return all
+  // Nunca devolver planchas vacías (0% fantasmas en tabs)
+  return all.filter((s) => s.pieces.length > 0)
 }
 
 export * from "./types"

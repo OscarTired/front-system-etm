@@ -125,7 +125,7 @@ export function DatePicker({
           e.preventDefault();
         }}
         floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
-        className="flex flex-col items-center w-full gap-3 p-4"
+        className="w-full max-w-xs mx-auto flex flex-col items-center justify-center gap-3 p-4"
       >
         {isMobile && (
           <div className="w-full flex justify-center">
@@ -144,7 +144,7 @@ export function DatePicker({
           </div>
         )}
 
-        <div className="flex w-full justify-center">
+        <div className="w-full flex justify-center">
           <DateCalendar
             value={value}
             displayDate={livePreviewDate}

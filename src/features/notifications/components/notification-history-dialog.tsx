@@ -137,7 +137,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
           onInteractOutside={preventNestedDialogClose}
         >
 
-          <DialogHeader className="px-5 py-4">
+          <DialogHeader className="shrink-0 px-5 py-4">
 
             <div className="flex items-start gap-4">
 
@@ -180,7 +180,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
           </div>
 
-          <ScrollArea className={cn("min-h-0 px-5 py-4", isCenteredState && "flex-1 flex flex-col")}>
+          <ScrollArea className={cn("min-h-0 flex-1 px-5 py-4", isCenteredState && "flex flex-col")}>
 
             {loading ? (
               <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2.5 my-auto min-h-65">
@@ -226,7 +226,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
           </ScrollArea>
 
-          <div className="px-5 py-4">
+          <div className="shrink-0 px-5 py-4">
 
             <div className="flex items-center justify-between">
 

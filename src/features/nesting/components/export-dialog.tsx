@@ -48,7 +48,7 @@ export function ExportDialog({
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         size="large"
-        className="flex max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl bg-[#121214] p-0 text-neutral-100 shadow-2xl"
+        className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl bg-[#121214] p-0 text-neutral-100 shadow-2xl"
       >
         {/* Header fijo */}
         <div className="shrink-0">
@@ -103,14 +103,13 @@ export function ExportDialog({
           </div>
         </div>
 
-        {/*
-          Clave del scroll en desktop:
-          1. max-h-[85vh] en DialogContent (no crece sin límite)
-          2. Wrapper flex-1 min-h-0 overflow-hidden → altura real
-          3. ScrollArea h-full → scrollea con scrollbar custom
+        {/* 
+          Corrección de scroll en desktop:
+          Cambiamos a h-0 flex-1 para forzar al contenedor a respetar el espacio restante 
+          restando el header y las acciones fijas de arriba.
         */}
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+        <div className="relative flex-1 min-h-0 w-full overflow-hidden">
+          <ScrollArea className="h-full w-full">
             <div className="flex flex-col gap-5 px-5 pb-5 pt-3">
               {/* Planchas por Lote / Grupo */}
               <div className="flex flex-col gap-2">

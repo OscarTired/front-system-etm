@@ -29,15 +29,39 @@ function pickBestThickness(candidates: number[]): number {
   const ok = candidates.filter(isPlausibleThickness)
   if (ok.length === 0) return -1
 
+  // 1) Exact match con stock habitual (prioridad)
+  const stockHits: number[] = []
   for (const c of ok) {
     for (const stock of COMMON_THICKNESSES) {
-      if (Math.abs(c - stock) < 0.051) return stock
+      if (Math.abs(c - stock) < 0.051) {
+        stockHits.push(stock)
+        break
+      }
     }
   }
+  if (stockHits.length > 0) {
+    // Si hay varios stock matches, el más frecuente en candidates
+    const counts = new Map<number, number>()
+    for (const s of stockHits) counts.set(s, (counts.get(s) ?? 0) + 1)
+    let best = stockHits[0]
+    let bestN = 0
+    for (const [s, n] of counts) {
+      if (n > bestN) {
+        best = s
+        bestN = n
+      }
+    }
+    return best
+  }
 
+  // 2) Valores con decimales (típicos de espesor real)
   const withDecimals = ok.filter((v) => Math.abs(v - Math.round(v)) > 1e-6)
   if (withDecimals.length === 1) return withDecimals[0]
   if (withDecimals.length > 1) return Math.min(...withDecimals)
+
+  // 3) Evitar 1 suelto si hay alternativas ≥ 1.2 (1 suele ser contador en #~11)
+  const withoutOne = ok.filter((v) => Math.abs(v - 1) > 0.05)
+  if (withoutOne.length > 0) return Math.min(...withoutOne)
 
   return Math.min(...ok)
 }
