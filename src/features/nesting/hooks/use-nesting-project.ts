@@ -175,7 +175,29 @@ export function useNestingProject() {
 
   const handleUpdateQuantity = useCallback((id: string, quantity: string) =>
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
-  const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
+  const handleAddCad = useCallback((newRows: CadRow[]) => {
+    setRows((prev) => [...prev, ...newRows])
+    // Auto-rellenar espesor / material del proyecto si están vacíos
+    setSettings((s) => {
+      let next = s
+      if (!s.espesor?.trim()) {
+        const thick = newRows.find((r) => r.material?.thickness > 0)?.material.thickness
+        if (thick != null && thick > 0) {
+          next = { ...next, espesor: `${thick}` }
+        }
+      }
+      if (!s.material?.trim()) {
+        const mat = newRows.find(
+          (r) => r.material?.dinNorm && r.material.dinNorm !== "N/D"
+        )?.material.dinNorm
+          ?? newRows.find(
+            (r) => r.material?.alloy && r.material.alloy !== "N/D"
+          )?.material.alloy
+        if (mat) next = { ...next, material: mat }
+      }
+      return next
+    })
+  }, [])
 
   const transformRow = useCallback(
     (id: string, transform: (o: PieceOutline, pivot: Point2D) => PieceOutline) => {

@@ -39,6 +39,8 @@ export interface PieceListProps {
   onClearAll: () => void
   onUpdateQuantity: (id: string, quantity: string) => void
   onPreviewRow: (row: CadRow) => void
+  /** Ubicar pieza nesteada en tabs + canvas. */
+  onLocateRow?: (row: CadRow) => void
   onRotate: (id: string, degrees: number) => void
   onMirrorX: (id: string) => void
   onMirrorY: (id: string) => void
@@ -60,6 +62,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     onClearAll,
     onUpdateQuantity,
     onPreviewRow,
+    onLocateRow,
     onRotate,
     onMirrorX,
     onMirrorY,
@@ -385,6 +388,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                       disabled={disabled}
                       highlighted={highlightedIds?.has(row.id)}
                       onPreview={onPreviewRow}
+                    onLocate={onLocateRow}
                       onUpdateQuantity={onUpdateQuantity}
                       onDuplicate={onDuplicate}
                       onRemove={onRemove}

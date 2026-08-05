@@ -25,7 +25,13 @@ import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
@@ -72,7 +78,7 @@ export function NestingPage() {
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
   const [dismissedRestoredBanner, setDismissedRestoredBanner] = useState<boolean>(false)
-  const [pendingDelete, setPendingDelete] = useState<"sheet" | "project" | null>(null)
+  const [pendingDelete, setPendingDelete] = useState(false)
 
   const positionOverrides = history.positionOverrides
   const angleOverrides = history.angleOverrides
@@ -445,16 +451,14 @@ export function NestingPage() {
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedPieceIndices.length === 0 || !activeGroup) return
-    setPendingDelete("sheet")
+    setPendingDelete(true)
   }, [selectedPieceIndices, activeGroup])
 
   const confirmDeleteFromSheet = useCallback(() => {
     if (selectedPieceIndices.length === 0 || !activeGroup) return
     project.removePlacedPieces(activeGroup.startIndex, selectedPieceIndices)
     setSelectedPieceIndices([])
-    // No history.reset(): el layout cambia; el usuario puede re-nestear.
-    // Los overrides de índices eliminados quedan huérfanos y se ignoran al dibujar.
-    setPendingDelete(null)
+    setPendingDelete(false)
   }, [selectedPieceIndices, activeGroup, project])
 
   const confirmDeleteFromProject = useCallback(() => {
@@ -469,10 +473,31 @@ export function NestingPage() {
       project.onRemove(id)
     }
     setSelectedPieceIndices([])
-    setPendingDelete(null)
+    setPendingDelete(false)
   }, [selectedPieceIndices, activeGroup, project, canvasPieces])
 
   deleteSelectedRef.current = handleDeleteSelected
+
+  /** Desde el listado: ir al tab de la plancha que contiene la pieza y seleccionarla. */
+  const handleLocateRow = useCallback(
+    (row: { id: string }) => {
+      const groups = project.sheetGroups
+      for (let gi = 0; gi < groups.length; gi++) {
+        const group = groups[gi]
+        const idx = group.sheet.pieces.findIndex((p) => p.pieceId === row.id)
+        if (idx >= 0) {
+          setActiveGroupIndex(gi)
+          setSelectedPieceIndices([idx])
+          setActivePanel("inspector")
+          return
+        }
+      }
+      // No nesteada: solo resaltar en lista vía preview opcional
+      setPreviewRowId(row.id)
+    },
+    [project.sheetGroups],
+  )
+
 
   const pieceListProps: PieceListProps = useMemo(
     () => ({
@@ -484,6 +509,7 @@ export function NestingPage() {
       onClearAll: project.onClearAll,
       onUpdateQuantity: project.onUpdateQuantity,
       onPreviewRow: (row) => setPreviewRowId(row.id),
+      onLocateRow: handleLocateRow,
       onRotate: project.onRotate,
       onMirrorX: project.onMirrorX,
       onMirrorY: project.onMirrorY,
@@ -491,7 +517,8 @@ export function NestingPage() {
       nextColor: project.nextColor,
       highlightedIds,
     }),
-    [project, highlightedIds]
+    [project, highlightedIds,
+      handleLocateRow,]
   )
 
   const hasOverrides = Object.keys(positionOverrides).length > 0 || Object.keys(angleOverrides).length > 0
@@ -566,6 +593,7 @@ export function NestingPage() {
                           disabled={project.isRunning}
                           highlighted
                           onPreview={(row) => setPreviewRowId(row.id)}
+                          onLocate={handleLocateRow}
                           onUpdateQuantity={project.onUpdateQuantity}
                           onDuplicate={project.onDuplicate}
                           onRemove={project.onRemove}
@@ -720,10 +748,7 @@ export function NestingPage() {
                 onMovePieces={handleMovePieces}
                 onRotateSelected={handleRotateSelected}
                 onDeleteSelected={() => handleDeleteSelected()}
-                onDeleteFromProject={() => {
-                  if (selectedPieceIndices.length === 0 || !activeGroup) return
-                  setPendingDelete("project")
-                }}
+                onDeleteFromProject={() => handleDeleteSelected()}
                 transformMode={transformMode}
                 onTransformModeChange={setTransformMode}
                 rotationStep={rotationStep}
@@ -854,35 +879,50 @@ export function NestingPage() {
         </SheetContent>
       </Sheet>
 
-      <ActionDialog
-        open={pendingDelete === "sheet"}
-        title="Quitar de la plancha"
-        description={
-          selectedPieceIndices.length === 1
-            ? "¿Quitar la pieza seleccionada de esta plancha? Seguirá en el listado del proyecto."
-            : `¿Quitar ${selectedPieceIndices.length} piezas de esta plancha? Seguirán en el listado del proyecto.`
-        }
-        icon={Trash2}
-        confirmLabel="Quitar de plancha"
-        variant="danger"
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDeleteFromSheet}
-      />
-
-      <ActionDialog
-        open={pendingDelete === "project"}
-        title="Eliminar del proyecto"
-        description={
-          selectedPieceIndices.length === 1
-            ? "¿Eliminar la pieza de la plancha y del listado del proyecto? Esta acción no se puede deshacer fácilmente."
-            : `¿Eliminar ${selectedPieceIndices.length} piezas de la plancha y del listado? Esta acción no se puede deshacer fácilmente.`
-        }
-        icon={Trash2}
-        confirmLabel="Eliminar del proyecto"
-        variant="danger"
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDeleteFromProject}
-      />
+      <Dialog open={pendingDelete} onOpenChange={(open) => !open && setPendingDelete(false)}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-2xl border-white/10 bg-neutral-900 p-5 text-white shadow-2xl">
+          <DialogHeader>
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+              <Trash2 size={20} />
+            </div>
+            <DialogTitle className="text-lg font-bold text-white">Eliminar piezas</DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed text-neutral-400">
+              {selectedPieceIndices.length === 1
+                ? "Elige cómo eliminar la pieza seleccionada."
+                : `Elige cómo eliminar las ${selectedPieceIndices.length} piezas seleccionadas.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={confirmDeleteFromSheet}
+              className="flex w-full flex-col items-start rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+            >
+              <span className="text-sm font-semibold text-neutral-100">Quitar de la plancha</span>
+              <span className="text-[11px] text-neutral-500">
+                Solo del layout nesteado. Sigue en el listado del proyecto.
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={confirmDeleteFromProject}
+              className="flex w-full flex-col items-start rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-left transition hover:bg-red-500/20"
+            >
+              <span className="text-sm font-semibold text-red-300">Eliminar del proyecto</span>
+              <span className="text-[11px] text-red-300/70">
+                De la plancha y del listado (BOM). No se puede deshacer fácilmente.
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingDelete(false)}
+              className="mt-1 w-full rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-400 transition hover:bg-white/10 hover:text-white"
+            >
+              Cancelar
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ExportDialog
         nameById={nameById}

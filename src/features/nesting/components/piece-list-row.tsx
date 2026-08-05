@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle, Copy, Eye, Trash2 } from "lucide-react"
+import { AlertTriangle, Copy, Eye, Trash2, Crosshair } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/shared/utils/utils"
@@ -13,6 +13,8 @@ export interface PieceListRowProps {
   /** Resalta la fila (ej. pieza seleccionada en canvas). */
   highlighted?: boolean
   onPreview?: (row: CadRow) => void
+  /** Ubicar la pieza en la plancha nesteada (cambia tab + selección). */
+  onLocate?: (row: CadRow) => void
   onUpdateQuantity: (id: string, quantity: string) => void
   onDuplicate: (id: string) => void
   onRemove: (id: string) => void
@@ -29,6 +31,7 @@ export function PieceListRow({
   disabled = false,
   highlighted = false,
   onPreview,
+  onLocate,
   onUpdateQuantity,
   onDuplicate,
   onRemove,
@@ -52,17 +55,30 @@ export function PieceListRow({
         <div className="min-w-0 flex-1 truncate text-xs font-medium text-neutral-200" title={row.fileName}>
           {row.fileName}
         </div>
-        {onPreview && (
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            className="h-6 w-6 shrink-0 text-neutral-300 hover:text-white"
-            onClick={() => onPreview(row)}
-            title="Ver pieza"
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
-        )}
+        <div className="flex shrink-0 items-center gap-0.5">
+          {onLocate && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="h-6 w-6 text-neutral-300 hover:text-white"
+              onClick={() => onLocate(row)}
+              title="Ubicar en plancha"
+            >
+              <Crosshair className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {onPreview && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="h-6 w-6 text-neutral-300 hover:text-white"
+              onClick={() => onPreview(row)}
+              title="Ver pieza"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 w-full">

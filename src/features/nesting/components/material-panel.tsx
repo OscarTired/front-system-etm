@@ -192,15 +192,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
         
         <div className="flex flex-col gap-3 p-1">
           <div className="grid grid-cols-2 gap-2.5">
-            <Field label="Muesca">
-              <Input 
-                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-                inputMode="decimal" 
-                value={settings.muesca} 
-                onChange={(e) => onChange({ muesca: e.target.value })} 
-              />
-            </Field>
-            <Field label="Separación">
+            <Field label="Separación (mm)">
               <Input 
                 className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
                 inputMode="decimal" 
@@ -208,19 +200,8 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
                 onChange={(e) => onChange({ separacion: e.target.value })} 
               />
             </Field>
+            <div />
           </div>
-
-          <Field label="Prioridad">
-            <FieldSelect
-              value={settings.prioridad}
-              onChange={(value) => onChange({ prioridad: value })}
-              options={[
-                { value: "normal", label: "Normal" },
-                { value: "alta", label: "Alta" },
-                { value: "baja", label: "Baja" },
-              ]}
-            />
-          </Field>
 
           <Field label="Rotación permitida">
             <FieldSelect
@@ -235,7 +216,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
           </Field>
         </div>
         <span className="text-[10px] text-neutral-500 px-1">
-          * Los parámetros de corte se guardan automáticamente en la configuración del proyecto.
+          * Separación y rotación se aplican al nestear. Se guardan con el proyecto.
         </span>
       </div>
 

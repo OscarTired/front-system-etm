@@ -680,16 +680,8 @@ export function DxfCanvas({
                   onClick={() => onDeleteSelected?.(selectedPieceIndices)}
                 >
                   <Trash2 className="mr-2 h-4 w-4 opacity-70" />
-                  Quitar de la plancha
+                  Eliminar…
                   <span className="ml-auto text-[10px] text-neutral-500">Supr</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={!onDeleteFromProject || selectedPieceIndices.length === 0}
-                  onClick={() => onDeleteFromProject?.(selectedPieceIndices)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4 opacity-70" />
-                  Eliminar del proyecto
                 </DropdownMenuItem>
               </>
             ) : (
