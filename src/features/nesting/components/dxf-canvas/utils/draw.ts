@@ -536,7 +536,10 @@ export function drawScene(d: DrawContext) {
     ctx.fillText(text, px, py)
   }
 
-  // Box select overlay (screen space)
+  // Box select / zoom window overlay (coords CSS del canvas).
+  // Debe usar el mismo transform dpr que el resto del scene; con identity
+  // el rect queda en píxeles de dispositivo y se desfasaba al hacer zoom
+  // de página (devicePixelRatio no entero).
   if (d.boxSelectScreen) {
     const { x0, y0, x1, y1 } = d.boxSelectScreen
     const x = Math.min(x0, x1)
@@ -545,7 +548,7 @@ export function drawScene(d: DrawContext) {
     const h = Math.abs(y1 - y0)
     const rtl = x1 < x0 // derecha→izquierda = intersect
     ctx.save()
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = rtl ? "rgba(34, 197, 94, 0.12)" : "rgba(59, 130, 246, 0.12)"
     ctx.strokeStyle = rtl ? "rgba(34, 197, 94, 0.85)" : "rgba(59, 130, 246, 0.85)"
     ctx.lineWidth = 1

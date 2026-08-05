@@ -24,9 +24,15 @@ export function useCanvasView() {
     (canvas: HTMLCanvasElement | null, clientX: number, clientY: number): Point | null => {
       if (!canvas) return null
       const rect = canvas.getBoundingClientRect()
+      // Con zoom de página, rect.width puede diferir de clientWidth;
+      // normalizamos a espacio CSS del layout del canvas.
+      const cssW = canvas.clientWidth || rect.width
+      const cssH = canvas.clientHeight || rect.height
+      const sx = cssW / (rect.width || 1)
+      const sy = cssH / (rect.height || 1)
       const { scale, offsetX, offsetY } = viewRef.current
-      const cx = clientX - rect.left - rect.width / 2 - offsetX
-      const cy = clientY - rect.top - rect.height / 2 - offsetY
+      const cx = (clientX - rect.left) * sx - cssW / 2 - offsetX
+      const cy = (clientY - rect.top) * sy - cssH / 2 - offsetY
       return { x: cx / scale, y: cy / scale }
     },
     []

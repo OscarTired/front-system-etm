@@ -186,23 +186,32 @@ export function useNestingProject() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => {
     setRows((prev) => [...prev, ...newRows])
-    // Auto-rellenar espesor / material del proyecto si están vacíos
+    // Auto-rellenar espesor / material solo si hay un único valor claro
+    // (si hay varios, el panel muestra "Varios" y no se fuerza uno).
     setSettings((s) => {
       let next = s
       if (!s.espesor?.trim()) {
-        const thick = newRows.find((r) => r.material?.thickness > 0)?.material.thickness
-        if (thick != null && thick > 0) {
-          next = { ...next, espesor: `${thick}` }
+        const thicks = new Set(
+          newRows
+            .map((r) => r.material?.thickness)
+            .filter((t): t is number => typeof t === "number" && t > 0)
+            .map((t) => Math.round(t * 100) / 100),
+        )
+        if (thicks.size === 1) {
+          next = { ...next, espesor: `${[...thicks][0]}` }
         }
       }
       if (!s.material?.trim()) {
-        const mat = newRows.find(
-          (r) => r.material?.dinNorm && r.material.dinNorm !== "N/D"
-        )?.material.dinNorm
-          ?? newRows.find(
-            (r) => r.material?.alloy && r.material.alloy !== "N/D"
-          )?.material.alloy
-        if (mat) next = { ...next, material: mat }
+        const mats = new Set<string>()
+        for (const r of newRows) {
+          const din = r.material?.dinNorm
+          const alloy = r.material?.alloy
+          if (din && din !== "N/D") mats.add(din)
+          else if (alloy && alloy !== "N/D") mats.add(alloy)
+        }
+        if (mats.size === 1) {
+          next = { ...next, material: [...mats][0] }
+        }
       }
       return next
     })

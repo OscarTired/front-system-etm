@@ -15,9 +15,18 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/shared/utils/utils"
 import type { ProjectSettings } from "../types/project-settings"
 
+export type PieceMaterialSummary = {
+  /** Espesores distintos detectados en piezas CAD (mm). */
+  thicknesses: number[]
+  /** Normas / aleaciones distintas (dinNorm o alloy). */
+  materials: string[]
+}
+
 export interface MaterialPanelProps {
   settings: ProjectSettings
   onChange: (patch: Partial<ProjectSettings>) => void
+  /** Resumen de materiales de las piezas cargadas (multi-espesor / multi-material). */
+  pieceMaterials?: PieceMaterialSummary
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -141,7 +150,16 @@ export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps
   )
 }
 
-export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
+export function MaterialPanel({ settings, onChange, pieceMaterials }: MaterialPanelProps) {
+  const multiThick = (pieceMaterials?.thicknesses.length ?? 0) > 1
+  const multiMat = (pieceMaterials?.materials.length ?? 0) > 1
+  const thickLabel = multiThick
+    ? `Varios: ${pieceMaterials!.thicknesses.map((t) => (Number.isInteger(t) ? String(t) : t.toFixed(2))).join(", ")} mm`
+    : null
+  const matLabel = multiMat
+    ? `Varios: ${pieceMaterials!.materials.join(", ")}`
+    : null
+
   return (
     <div className="flex flex-col gap-4 p-3">
       
@@ -168,21 +186,39 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
             />
           </Field>
           <Field label="Material">
-            <Input 
-              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-              placeholder="INOX"
-              value={settings.material} 
-              onChange={(e) => onChange({ material: e.target.value })} 
-            />
+            {multiMat ? (
+              <div className="flex min-h-9 flex-col justify-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
+                <span className="text-xs font-medium text-amber-200/90">{matLabel}</span>
+                <span className="text-[10px] text-amber-500/80">
+                  Hay más de un material en las piezas. No se fija uno solo.
+                </span>
+              </div>
+            ) : (
+              <Input 
+                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
+                placeholder="INOX"
+                value={settings.material} 
+                onChange={(e) => onChange({ material: e.target.value })} 
+              />
+            )}
           </Field>
           <Field label="Espesor">
-            <Input 
-              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-              inputMode="decimal" 
-              placeholder="Ej: 3.0 mm"
-              value={settings.espesor} 
-              onChange={(e) => onChange({ espesor: e.target.value })} 
-            />
+            {multiThick ? (
+              <div className="flex min-h-9 flex-col justify-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
+                <span className="text-xs font-medium text-amber-200/90">{thickLabel}</span>
+                <span className="text-[10px] text-amber-500/80">
+                  Hay más de un espesor en las piezas. No se fija uno solo.
+                </span>
+              </div>
+            ) : (
+              <Input 
+                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
+                inputMode="decimal" 
+                placeholder="Ej: 3.0 mm"
+                value={settings.espesor} 
+                onChange={(e) => onChange({ espesor: e.target.value })} 
+              />
+            )}
           </Field>
         </div>
       </div>

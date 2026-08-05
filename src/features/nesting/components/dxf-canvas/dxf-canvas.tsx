@@ -220,6 +220,17 @@ export function DxfCanvas({
       canvas.style.cursor = c
     }
 
+    /** Punto en CSS px del canvas, robusto al zoom de página del navegador. */
+    const canvasCssPoint = (clientX: number, clientY: number) => {
+      const rect = canvas.getBoundingClientRect()
+      const sx = (canvas.clientWidth || rect.width) / (rect.width || 1)
+      const sy = (canvas.clientHeight || rect.height) / (rect.height || 1)
+      return {
+        x: (clientX - rect.left) * sx,
+        y: (clientY - rect.top) * sy,
+      }
+    }
+
     const onPointerDown = (e: PointerEvent) => {
       setCtxMenu(null)
       if (e.button === 2) return
@@ -243,8 +254,7 @@ export function DxfCanvas({
 
       // Zoom window: arrastrar rectángulo → fit
       if (canvasTool === "zoomWindow" && measure.activeTool === "none") {
-        const rect = canvas.getBoundingClientRect()
-        const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        const screenPt = canvasCssPoint(e.clientX, e.clientY)
         zoomWindowRef.current = {
           startScreen: screenPt,
           curScreen: screenPt,
@@ -300,8 +310,7 @@ export function DxfCanvas({
 
         // Select + vacío → box select; pieza no seleccionada → click en pointerUp
         if (hit === null && canvasTool === "select") {
-          const rect = canvas.getBoundingClientRect()
-          const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+          const screenPt = canvasCssPoint(e.clientX, e.clientY)
           boxSelectRef.current = {
             startScreen: screenPt,
             curScreen: screenPt,
@@ -337,8 +346,7 @@ export function DxfCanvas({
 
     const onPointerMove = (e: PointerEvent) => {
       if (boxSelectRef.current || zoomWindowRef.current) {
-        const rect = canvas.getBoundingClientRect()
-        const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        const screenPt = canvasCssPoint(e.clientX, e.clientY)
         const local = view.screenToLocal(canvas, e.clientX, e.clientY)
         const active = boxSelectRef.current ?? zoomWindowRef.current
         if (active) {
@@ -682,7 +690,7 @@ export function DxfCanvas({
       className="relative h-full w-full overflow-hidden"
       style={{ backgroundColor: "#0a0a0c" }}
     >
-      <canvas ref={canvasRef} className="h-full w-full touch-none" style={{ cursor: "default" }} />
+      <canvas ref={canvasRef} className="h-full w-full touch-none select-none" style={{ cursor: "default" }} />
 
       {/* Status bar */}
       <div

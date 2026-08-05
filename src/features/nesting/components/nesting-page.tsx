@@ -17,6 +17,7 @@ import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
+import { ProjectDialog } from "./project-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
@@ -77,6 +78,8 @@ export function NestingPage() {
   const offsetsClipboardRef = useRef<{ dx: number; dy: number; angle: number } | null>(null)
   const [offsetsClipboardVersion, setOffsetsClipboardVersion] = useState(0)
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
@@ -317,6 +320,23 @@ export function NestingPage() {
     }
     return set
   }, [selectedPieceIndices, canvasPieces])
+
+  const pieceMaterialsSummary = useMemo(() => {
+    const thicks = new Set<number>()
+    const mats = new Set<string>()
+    for (const r of project.rows) {
+      const t = r.material?.thickness
+      if (typeof t === "number" && t > 0) thicks.add(Math.round(t * 100) / 100)
+      const din = r.material?.dinNorm
+      const alloy = r.material?.alloy
+      if (din && din !== "N/D") mats.add(din)
+      else if (alloy && alloy !== "N/D") mats.add(alloy)
+    }
+    return {
+      thicknesses: Array.from(thicks).sort((a, b) => a - b),
+      materials: Array.from(mats).sort(),
+    }
+  }, [project.rows])
 
   const nameById = useMemo(() => {
     const map: Record<string, string> = {}
@@ -629,7 +649,7 @@ export function NestingPage() {
               {activePanel === "project-material" && (
                 <div className="flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3">
                   <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Proyecto y material</h2>
-                  <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} />
+                  <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} pieceMaterials={pieceMaterialsSummary} />
                 </div>
               )}
 
@@ -770,8 +790,14 @@ export function NestingPage() {
 
       <Toolbar
         onNew={handleNewProject}
-        onOpen={() => projectInputRef.current?.click()}
-        onSave={project.onSaveProject}
+        onOpen={() => {
+          setProjectDialogMode("open")
+          setProjectDialogOpen(true)
+        }}
+        onSave={() => {
+          setProjectDialogMode("save")
+          setProjectDialogOpen(true)
+        }}
         onImport={() => pieceListRef.current?.triggerImport()}
         onExport={() => setExportDialogOpen(true)}
         onToggleLayers={() => {
@@ -1035,6 +1061,48 @@ export function NestingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ProjectDialog
+        open={projectDialogOpen}
+        mode={projectDialogMode}
+        onClose={() => setProjectDialogOpen(false)}
+        suggestedName={
+          project.settings.cliente
+            ? `nesting-${project.settings.cliente}`
+            : "proyecto-nesting"
+        }
+        onSaveToBackend={async (name, existingId) => {
+          await project.onSaveProjectBackend(name, existingId)
+        }}
+        onSaveLocal={async (name) => {
+          await project.onSaveProjectLocal(name)
+        }}
+        onOpenFromBackend={async (id) => {
+          await project.onOpenProjectFromBackend(id)
+          const idx = project.getActiveGroupIndexForSession()
+          setActiveGroupIndex(idx)
+          setSelectedPieceIndices([])
+          const snap = project.getSheetEdits()[String(idx)]
+          history.replace({
+            positionOverrides: snap?.positionOverrides ?? {},
+            angleOverrides: snap?.angleOverrides ?? {},
+          })
+          setLockedPieceIndices(snap?.lockedIndices ?? [])
+        }}
+        onOpenLocalFile={async (file) => {
+          const err = await project.onOpenProjectFile(file)
+          if (err) throw new Error(err)
+          const idx = project.getActiveGroupIndexForSession()
+          setActiveGroupIndex(idx)
+          setSelectedPieceIndices([])
+          const snap = project.getSheetEdits()[String(idx)]
+          history.replace({
+            positionOverrides: snap?.positionOverrides ?? {},
+            angleOverrides: snap?.angleOverrides ?? {},
+          })
+          setLockedPieceIndices(snap?.lockedIndices ?? [])
+        }}
+      />
 
       <ExportDialog
         nameById={nameById}
