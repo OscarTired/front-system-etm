@@ -5,7 +5,6 @@ import {
   FilePlus,
   FolderOpen,
   Save,
-  FileDown,
   FileUp,
   Settings,
   SidebarClose,
@@ -96,9 +95,6 @@ export const Toolbar = memo(function Toolbar({
 
       <ToolbarDivider />
 
-      <ToolbarButton onClick={onImport} title="Importar DXF/GEO">
-        <FileDown className="h-5 w-5" strokeWidth={1.5} />
-      </ToolbarButton>
       <ToolbarButton onClick={onExport} title="Exportar">
         <FileUp className="h-5 w-5" strokeWidth={1.5} />
       </ToolbarButton>

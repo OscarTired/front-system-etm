@@ -17,7 +17,6 @@ import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
-import { ProjectDialog } from "./project-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
@@ -74,9 +73,10 @@ export function NestingPage() {
   const [previewRowId, setPreviewRowId] = useState<string | null>(null)
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0)
   const [selectedPieceIndices, setSelectedPieceIndices] = useState<number[]>([])
+  const [lockedPieceIndices, setLockedPieceIndices] = useState<number[]>([])
+  const offsetsClipboardRef = useRef<{ dx: number; dy: number; angle: number } | null>(null)
+  const [offsetsClipboardVersion, setOffsetsClipboardVersion] = useState(0)
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
-  const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
@@ -144,8 +144,10 @@ export function NestingPage() {
         positionOverrides: snap.positionOverrides ?? {},
         angleOverrides: snap.angleOverrides ?? {},
       })
+      setLockedPieceIndices(snap.lockedIndices ?? [])
     } else {
       history.resetAll?.() ?? history.reset()
+      setLockedPieceIndices([])
     }
   }, [project.sessionReady, project.sessionRestored, history, project])
 
@@ -157,11 +159,11 @@ export function NestingPage() {
     const prev = p.getSheetEdits()
     p.setSheetEdits({
       ...prev,
-      [key]: { positionOverrides, angleOverrides },
+      [key]: { positionOverrides, angleOverrides, lockedIndices: lockedPieceIndices },
     })
     p.setActiveGroupIndexForSession(activeGroupIndex)
     p.requestSessionSave()
-  }, [positionOverrides, angleOverrides, activeGroupIndex])
+  }, [positionOverrides, angleOverrides, lockedPieceIndices, activeGroupIndex])
 
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
@@ -323,6 +325,24 @@ export function NestingPage() {
     }
     return map
   }, [project.rows])
+
+  const collisionPairs = useMemo(() => {
+    const pairs: { a: number; b: number; nameA: string; nameB: string }[] = []
+    for (let i = 0; i < canvasPieces.length; i++) {
+      for (let j = i + 1; j < canvasPieces.length; j++) {
+        if (!piecesCollide(canvasPieces[i], canvasPieces[j])) continue
+        const idA = canvasPieces[i].pieceId
+        const idB = canvasPieces[j].pieceId
+        pairs.push({
+          a: i,
+          b: j,
+          nameA: nameById[idA] ?? idA,
+          nameB: nameById[idB] ?? idB,
+        })
+      }
+    }
+    return pairs
+  }, [canvasPieces, nameById])
 
 
   const handleSelectPiece = useCallback((index: number | null, additive: boolean) => {
@@ -595,8 +615,47 @@ export function NestingPage() {
                     sheetStats={sheetStats}
                     selectedPiece={selectedPiece}
                     selectedPieceName={selectedPieceName}
+                    selectedPieceIndex={
+                      selectedPieceIndices.length
+                        ? selectedPieceIndices[selectedPieceIndices.length - 1]
+                        : null
+                    }
                     espesor={project.settings.espesor}
                     material={project.settings.material}
+                    overrideDx={selectedOverrideDx}
+                    overrideDy={selectedOverrideDy}
+                    overrideAngle={selectedOverrideAngle}
+                    onOverrideChange={handleOverrideChange}
+                    onResetOverrides={handleResetOverrides}
+                    collisionPairs={collisionPairs}
+                    onSelectPieceIndex={(idx) => setSelectedPieceIndices([idx])}
+                    locked={
+                      selectedPieceIndices.length > 0 &&
+                      lockedPieceIndices.includes(
+                        selectedPieceIndices[selectedPieceIndices.length - 1],
+                      )
+                    }
+                    onToggleLock={() => {
+                      if (selectedPieceIndices.length === 0) return
+                      const idx = selectedPieceIndices[selectedPieceIndices.length - 1]
+                      setLockedPieceIndices((prev) =>
+                        prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
+                      )
+                    }}
+                    onCopyOffsets={() => {
+                      offsetsClipboardRef.current = {
+                        dx: selectedOverrideDx,
+                        dy: selectedOverrideDy,
+                        angle: selectedOverrideAngle,
+                      }
+                      setOffsetsClipboardVersion((v) => v + 1)
+                    }}
+                    onPasteOffsets={() => {
+                      const clip = offsetsClipboardRef.current
+                      if (!clip || selectedPieceIndices.length === 0) return
+                      handleOverrideChange(clip)
+                    }}
+                    canPasteOffsets={offsetsClipboardVersion > 0 && !!offsetsClipboardRef.current}
                   >
                     {selectedCadRow && (
                       <div className="flex flex-col gap-1">
@@ -676,14 +735,8 @@ export function NestingPage() {
 
       <Toolbar
         onNew={handleNewProject}
-        onOpen={() => {
-          setProjectDialogMode("open")
-          setProjectDialogOpen(true)
-        }}
-        onSave={() => {
-          setProjectDialogMode("save")
-          setProjectDialogOpen(true)
-        }}
+        onOpen={() => projectInputRef.current?.click()}
+        onSave={project.onSaveProject}
         onImport={() => pieceListRef.current?.triggerImport()}
         onExport={() => setExportDialogOpen(true)}
         onToggleLayers={() => {
@@ -767,6 +820,7 @@ export function NestingPage() {
                 onSelectPiece={handleSelectPiece}
                 hiddenKeys={hiddenLayerKeys.size > 0 ? Array.from(hiddenLayerKeys) : undefined}
                 collidingPieceIndices={collidingPieceIndices}
+                lockedPieceIndices={lockedPieceIndices}
                 onMovePieces={handleMovePieces}
                 onRotateSelected={handleRotateSelected}
                 onDeleteSelected={() => handleDeleteSelected()}
@@ -945,46 +999,6 @@ export function NestingPage() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <ProjectDialog
-        open={projectDialogOpen}
-        mode={projectDialogMode}
-        onClose={() => setProjectDialogOpen(false)}
-        suggestedName={
-          project.settings.cliente
-            ? `nesting-${project.settings.cliente}`
-            : "proyecto-nesting"
-        }
-        onSaveToBackend={async (name, existingId) => {
-          await project.onSaveProjectBackend(name, existingId)
-        }}
-        onSaveLocal={async (name) => {
-          await project.onSaveProjectLocal(name)
-        }}
-        onOpenFromBackend={async (id) => {
-          await project.onOpenProjectFromBackend(id)
-          const idx = project.getActiveGroupIndexForSession()
-          setActiveGroupIndex(idx)
-          setSelectedPieceIndices([])
-          const snap = project.getSheetEdits()[String(idx)]
-          history.replace({
-            positionOverrides: snap?.positionOverrides ?? {},
-            angleOverrides: snap?.angleOverrides ?? {},
-          })
-        }}
-        onOpenLocalFile={async (file) => {
-          const err = await project.onOpenProjectFile(file)
-          if (err) throw new Error(err)
-          const idx = project.getActiveGroupIndexForSession()
-          setActiveGroupIndex(idx)
-          setSelectedPieceIndices([])
-          const snap = project.getSheetEdits()[String(idx)]
-          history.replace({
-            positionOverrides: snap?.positionOverrides ?? {},
-            angleOverrides: snap?.angleOverrides ?? {},
-          })
-        }}
-      />
 
       <ExportDialog
         nameById={nameById}

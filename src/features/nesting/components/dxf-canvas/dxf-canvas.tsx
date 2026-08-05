@@ -46,6 +46,7 @@ export function DxfCanvas({
   onSelectPiece,
   hiddenKeys,
   collidingPieceIndices = [],
+  lockedPieceIndices = [],
   onMovePieces,
   onRotateSelected,
   onDeleteSelected,
@@ -68,6 +69,8 @@ export function DxfCanvas({
 
   /** Un solo objeto mutable: el draw lee pieceDragRef.current sin realloc. */
   const pieceDragRef = useRef<PieceDragState | null>(null)
+  const lockedPieceIndicesRef = useRef<number[]>(lockedPieceIndices)
+  lockedPieceIndicesRef.current = lockedPieceIndices
   /** Espacio mantenido → pan de vista (estilo CAD), no mueve piezas. */
   const spaceHeldRef = useRef(false)
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
@@ -226,8 +229,14 @@ export function DxfCanvas({
 
         // Arrastre de pieza(s) ya seleccionadas
         if (hit !== null && selectedPieceIndices.includes(hit)) {
+          const locked = new Set(lockedPieceIndicesRef.current)
+          const movable = selectedPieceIndices.filter((i) => !locked.has(i))
+          if (movable.length === 0) {
+            // Todas bloqueadas: no arrastrar
+            return
+          }
           pieceDragRef.current = {
-            pieceIndices: [...selectedPieceIndices],
+            pieceIndices: movable,
             startLocal: rawPoint,
             offset: { x: 0, y: 0 },
           }

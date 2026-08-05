@@ -177,7 +177,7 @@ export function DialogContent({
           "hide-scrollbar",
           "overscroll-contain",
           "rounded-2xl",
-          "bg-[#101012]",
+          "bg-[#171717]",
           "p-6",
           "shadow-2xl",
           "outline-none",

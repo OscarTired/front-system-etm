@@ -15,6 +15,8 @@ const IDB_VERSION = 1
 export type SheetEditSnapshot = {
   positionOverrides: Record<number, { dx: number; dy: number }>
   angleOverrides: Record<number, number>
+  /** Índices de piezas bloqueadas en esta plancha (no se arrastran). */
+  lockedIndices?: number[]
 }
 
 export type NestingDraftV1 = {

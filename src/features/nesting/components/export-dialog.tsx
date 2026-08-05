@@ -1,6 +1,6 @@
 "use client"
 import { useState, useMemo } from "react"
-import { Download, Save, Layers, FileText } from "lucide-react"
+import { FileUp, Download, Save, Layers, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
@@ -81,10 +81,10 @@ export function ExportDialog({
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         size="large"
-        className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl bg-[#121214] p-0 text-neutral-100 shadow-2xl"
+        className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl p-0 text-neutral-100 shadow-2xl"
       >
         <div className="shrink-0">
-          <FormDialogHeader title="Exportar" icon={Download} />
+          <FormDialogHeader title="Exportar" icon={FileUp} />
         </div>
 
         <div className="shrink-0 px-5 pb-2 pt-1">

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Spinner } from "@/shared/ui/spinner/spinner"
 import {
   nestingProjectsApi,
   type NestingProjectRecord,
@@ -171,7 +172,7 @@ export function ProjectDialog({
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         size="large"
-        className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl bg-[#121214] p-0 text-neutral-100 shadow-2xl"
+        className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl p-0 text-neutral-100 shadow-2xl"
       >
         <div className="shrink-0">
           <FormDialogHeader title={title} icon={Icon} />
@@ -192,11 +193,19 @@ export function ProjectDialog({
             </label>
             <div className="flex flex-wrap gap-2">
               <Button type="button" size="sm" disabled={saving} onClick={() => void handleSaveNew()} className="gap-1.5">
-                <Cloud className="h-3.5 w-3.5" />
+                {saving ? (
+                  <Spinner className="h-3.5 w-3.5 text-neutral-200" />
+                ) : (
+                  <Cloud className="h-3.5 w-3.5" />
+                )}
                 Guardar en servidor
               </Button>
               <Button type="button" size="sm" variant="ghost" disabled={saving} onClick={() => void handleLocalSave()} className="gap-1.5 text-neutral-300">
-                <HardDrive className="h-3.5 w-3.5" />
+                {saving ? (
+                  <Spinner className="h-3.5 w-3.5 text-neutral-200" />
+                ) : (
+                  <HardDrive className="h-3.5 w-3.5" />
+                )}
                 Descargar .json
               </Button>
             </div>
@@ -235,14 +244,21 @@ export function ProjectDialog({
             onClick={() => void refresh()}
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
           >
-            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+            {loading ? (
+              <Spinner className="h-3 w-3 text-neutral-400" />
+            ) : (
+              <RefreshCw className="h-3 w-3" />
+            )}
             Actualizar
           </button>
         </div>
 
         <ScrollArea className="min-h-0 flex-1 px-5 pb-5">
           {loading && items.length === 0 ? (
-            <p className="py-8 text-center text-xs text-neutral-500">Cargando…</p>
+            <div className="flex flex-col items-center justify-center gap-2 py-12">
+              <Spinner className="h-5 w-5 text-neutral-400" />
+              <p className="text-xs text-neutral-500">Cargando…</p>
+            </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center text-xs text-neutral-500">
               <FileJson className="h-8 w-8 opacity-40" />
@@ -274,11 +290,13 @@ export function ProjectDialog({
                     <div className="flex shrink-0 items-center gap-1">
                       {mode === "open" && (
                         <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => void handleOpen(item.id)} className="h-8 text-xs">
+                          {busy ? <Spinner className="mr-1.5 h-3 w-3 text-neutral-300" /> : null}
                           Abrir
                         </Button>
                       )}
                       {mode === "save" && (
                         <Button type="button" size="sm" variant="ghost" disabled={busy || saving} onClick={() => void handleOverwrite(item.id, label)} className="h-8 text-xs">
+                          {busy ? <Spinner className="mr-1.5 h-3 w-3 text-neutral-300" /> : null}
                           Sobrescribir
                         </Button>
                       )}
@@ -286,10 +304,14 @@ export function ProjectDialog({
                         type="button"
                         disabled={busy}
                         onClick={() => void handleDelete(item.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-500/15 hover:text-red-400 disabled:opacity-50"
                         title="Eliminar"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        {busy ? (
+                          <Spinner className="h-3.5 w-3.5 text-neutral-400" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
                       </button>
                     </div>
                   </li>

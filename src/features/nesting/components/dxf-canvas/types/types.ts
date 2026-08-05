@@ -73,6 +73,8 @@ export interface DxfCanvasProps {
   onSelectPiece?: (index: number | null, additive: boolean) => void
   hiddenKeys?: string[]
   collidingPieceIndices?: number[]
+  /** Piezas bloqueadas: no inician arrastre. */
+  lockedPieceIndices?: number[]
   onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void
   /** Eliminar piezas seleccionadas de la plancha. */
