@@ -14,13 +14,15 @@ import {
   Crosshair,
   X,
   Magnet,
+  MousePointer2,
+  Hand,
   Play,
   Pause,
   SkipBack,
   ChevronsRight,
   Wrench,
 } from "lucide-react"
-import type { MeasureTool } from "../types/types"
+import type { MeasureTool, CanvasTool } from "../types/types"
 import { TOOL_LABELS } from "../types/types"
 
 const mdBtn =
@@ -38,6 +40,9 @@ export interface CanvasToolbarProps {
   onFit: () => void
   onFocusSelected: () => void
   canFocusSelected: boolean
+
+  canvasTool?: CanvasTool
+  onCanvasToolChange?: (tool: CanvasTool) => void
 
   activeTool: MeasureTool
   onToggleTool: (tool: Exclude<MeasureTool, "none">) => void
@@ -66,6 +71,8 @@ export function CanvasToolbar({
   onFit,
   onFocusSelected,
   canFocusSelected,
+  canvasTool = "select",
+  onCanvasToolChange,
   activeTool,
   onToggleTool,
   onResetTool,

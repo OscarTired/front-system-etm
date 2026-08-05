@@ -48,6 +48,9 @@ export interface ToolpathSeg {
 
 export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "coords"
 
+/** Herramienta de interacción del canvas (distinta de measure). */
+export type CanvasTool = "select" | "pan"
+
 export type Measurement =
   | { id: string; kind: "distance"; a: Point; b: Point; value: number }
   | { id: string; kind: "radius"; center: Point; radius: number; anglePoint: Point }

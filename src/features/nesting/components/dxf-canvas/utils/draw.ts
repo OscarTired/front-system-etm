@@ -45,6 +45,8 @@ export interface DrawContext {
   /** Preview de arrastre: se aplica con ctx.translate, sin clonar entidades. */
   dragPreview?: PieceDragPreview | null
   snapGuides?: { axis: "x" | "y"; value: number }[]
+  /** Rect de box-select en coords de pantalla del canvas (CSS px). */
+  boxSelectScreen?: { x0: number; y0: number; x1: number; y1: number } | null
 }
 
 export function strokeToolpathUntil(
@@ -440,4 +442,24 @@ export function drawScene(d: DrawContext) {
     ctx.fillStyle = MEASURE_COLOR
     ctx.fillText(text, px, py)
   }
+
+  // Box select overlay (screen space)
+  if (d.boxSelectScreen) {
+    const { x0, y0, x1, y1 } = d.boxSelectScreen
+    const x = Math.min(x0, x1)
+    const y = Math.min(y0, y1)
+    const w = Math.abs(x1 - x0)
+    const h = Math.abs(y1 - y0)
+    const rtl = x1 < x0 // derecha→izquierda = intersect
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.fillStyle = rtl ? "rgba(34, 197, 94, 0.12)" : "rgba(59, 130, 246, 0.12)"
+    ctx.strokeStyle = rtl ? "rgba(34, 197, 94, 0.85)" : "rgba(59, 130, 246, 0.85)"
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 3])
+    ctx.fillRect(x, y, w, h)
+    ctx.strokeRect(x, y, w, h)
+    ctx.restore()
+  }
+
 }

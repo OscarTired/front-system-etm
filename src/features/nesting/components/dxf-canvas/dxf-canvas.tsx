@@ -1,13 +1,20 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertTriangle, Trash2, X } from "lucide-react"
+import { AlertTriangle, Trash2, X, MousePointer2, Hand } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { CanvasToolbar } from "./components/canvas-toolbar"
 import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
-import { hitTestPieceAt } from "./utils/hit-test"
+import { hitTestPieceAt, piecesInBox } from "./utils/hit-test"
 import {
   buildCollisionIndex,
   resolveDragOffset,
@@ -15,7 +22,7 @@ import {
   type SnapGuide,
 } from "./utils/collision"
 import { findNearestSnap } from "./utils/snap"
-import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
+import type { DxfCanvasProps, Entity, Point, SnapCandidate, CanvasTool } from "./types/types"
 import { constrainToMode } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
 import { useMeasurements } from "./hooks/use-measurements"
@@ -60,6 +67,26 @@ export function DxfCanvas({
   const pieceDragRef = useRef<PieceDragState | null>(null)
   /** Espacio mantenido → pan de vista (estilo CAD), no mueve piezas. */
   const spaceHeldRef = useRef(false)
+  /** select = clic/box/move piezas; pan = arrastrar vista con LMB */
+  const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
+  
+  const boxSelectRef = useRef<{
+    startScreen: { x: number; y: number }
+    curScreen: { x: number; y: number }
+    startLocal: { x: number; y: number }
+    curLocal: { x: number; y: number }
+  } | null>(null)
+
+  const [boxSelectScreen, setBoxSelectScreen] = useState<{
+    x0: number; y0: number; x1: number; y1: number
+  } | null>(null)
+
+  const [ctxMenu, setCtxMenu] = useState<{
+    x: number
+    y: number
+    pieceIndex: number | null
+  } | null>(null)
+
   /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
   const collisionIndexRef = useRef<CollisionIndex | null>(null)
   /** Guías de snap magnético del frame actual (draw las lee sin setState). */
@@ -122,6 +149,7 @@ export function DxfCanvas({
         localToScreen: (p) => view.localToScreen(canvas, p),
         dragPreview,
         snapGuides: snapGuidesRef.current,
+        boxSelectScreen,
       })
     })
   }, [
@@ -136,6 +164,7 @@ export function DxfCanvas({
     measure.hoverScreen,
     measure.activeTool,
     snapCandidate,
+    boxSelectScreen,
   ])
 
   useEffect(() => {
@@ -172,12 +201,16 @@ export function DxfCanvas({
     }
 
     const onPointerDown = (e: PointerEvent) => {
+      setCtxMenu(null)
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
 
-      // Botón medio o Espacio+drag = pan de vista (no mueve piezas)
-      const forcePan = spaceHeldRef.current || e.button === 1
-      if (forcePan) {
+      const rect = canvas.getBoundingClientRect()
+      const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+
+      // Botón medio o Espacio o tool pan = pan de vista
+      const forcePan = spaceHeldRef.current || e.button === 1 || canvasTool === "pan"
+      if (forcePan && e.button !== 2) {
         draggingRef.current = {
           startX: e.clientX,
           startY: e.clientY,
@@ -189,6 +222,9 @@ export function DxfCanvas({
         setCursor("grabbing")
         return
       }
+
+      // Clic derecho: no inicia drag (menú en contextmenu)
+      if (e.button === 2) return
 
       if (measure.activeTool === "none") {
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
@@ -205,8 +241,21 @@ export function DxfCanvas({
           return
         }
 
-        // Clic en pieza no seleccionada: posible selección en pointerUp;
-        // registramos drag de vista pero si no se mueve, será click.
+        // Tool select + vacío o pieza no seleccionada:
+        // si vacío → box select; si pieza → click select en pointerUp
+        if (hit === null && canvasTool === "select") {
+          boxSelectRef.current = {
+            startScreen: screenPt,
+            curScreen: screenPt,
+            startLocal: rawPoint,
+            curLocal: rawPoint,
+          }
+          setBoxSelectScreen({ x0: screenPt.x, y0: screenPt.y, x1: screenPt.x, y1: screenPt.y })
+          canvas.setPointerCapture(e.pointerId)
+          setCursor("crosshair")
+          return
+        }
+
         draggingRef.current = {
           startX: e.clientX,
           startY: e.clientY,
@@ -215,7 +264,6 @@ export function DxfCanvas({
           moved: false,
         }
         canvas.setPointerCapture(e.pointerId)
-        if (hit === null) setCursor("grabbing")
         return
       }
 
@@ -230,6 +278,24 @@ export function DxfCanvas({
     }
 
     const onPointerMove = (e: PointerEvent) => {
+      // Box select en curso
+      if (boxSelectRef.current) {
+        const rect = canvas.getBoundingClientRect()
+        const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        const local = view.screenToLocal(canvas, e.clientX, e.clientY)
+        boxSelectRef.current.curScreen = screenPt
+        if (local) boxSelectRef.current.curLocal = local
+        const b = boxSelectRef.current
+        setBoxSelectScreen({
+          x0: b.startScreen.x,
+          y0: b.startScreen.y,
+          x1: screenPt.x,
+          y1: screenPt.y,
+        })
+        scheduleDraw()
+        return
+      }
+
       if (measure.activeTool !== "none") {
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         const rect = canvas.getBoundingClientRect()
@@ -306,13 +372,47 @@ export function DxfCanvas({
     }
 
     const onPointerUp = (e: PointerEvent) => {
+      // Finalizar box select
+      if (boxSelectRef.current) {
+        const box = boxSelectRef.current
+        boxSelectRef.current = null
+        setBoxSelectScreen(null)
+        const minX = Math.min(box.startLocal.x, box.curLocal.x)
+        const maxX = Math.max(box.startLocal.x, box.curLocal.x)
+        const minY = Math.min(box.startLocal.y, box.curLocal.y)
+        const maxY = Math.max(box.startLocal.y, box.curLocal.y)
+        const w = maxX - minX
+        const h = maxY - minY
+        // Clic sin arrastre real → deselect si no hay shift
+        if (w < 1e-3 && h < 1e-3) {
+          if (onSelectPiece && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            onSelectPiece(null, false)
+          }
+          setCursor("default")
+          scheduleDraw()
+          return
+        }
+        // L→R contain, R→L intersect (convención CAD)
+        const mode = box.curScreen.x >= box.startScreen.x ? "contain" : "intersect"
+        const hits = piecesInBox(
+          entitiesRef.current,
+          { minX, minY, maxX, maxY },
+          mode
+        )
+        if (onSelectPiece) {
+          const additive = e.shiftKey || e.ctrlKey || e.metaKey
+          if (!additive) onSelectPiece(null, false)
+          for (const idx of hits) onSelectPiece(idx, true)
+        }
+        setCursor("default")
+        scheduleDraw()
+        return
+      }
+
       const pieceDrag = pieceDragRef.current
       pieceDragRef.current = null
       if (pieceDrag) {
         const { offset, pieceIndices } = pieceDrag
-        // SIEMPRE confirmar el offset ya clampeado en el drag.
-        // No revalidar aquí: el contacto borde-borde es válido y
-        // un segundo test con floats distintos provocaba el "snap back".
         if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
           onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
@@ -361,16 +461,32 @@ export function DxfCanvas({
       scheduleDraw()
     }
 
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+      const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
+      if (!rawPoint) return
+      const hit =
+        measure.activeTool === "none"
+          ? hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+          : null
+      if (hit !== null && onSelectPiece && !selectedPieceIndices.includes(hit)) {
+        onSelectPiece(hit, false)
+      }
+      setCtxMenu({ x: e.clientX, y: e.clientY, pieceIndex: hit })
+    }
+
     canvas.addEventListener("pointerdown", onPointerDown)
     window.addEventListener("pointermove", onPointerMove)
     window.addEventListener("pointerup", onPointerUp)
     canvas.addEventListener("wheel", onWheel, { passive: false })
+    canvas.addEventListener("contextmenu", onContextMenu)
 
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown)
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
       canvas.removeEventListener("wheel", onWheel)
+      canvas.removeEventListener("contextmenu", onContextMenu)
     }
   }, [
     view,
@@ -384,6 +500,7 @@ export function DxfCanvas({
     scheduleDraw,
     pieces,
     sheetSize,
+    canvasTool,
   ])
 
   const handleZoom = useCallback(
@@ -416,6 +533,14 @@ export function DxfCanvas({
       if (e.code === "Space") {
         e.preventDefault()
         spaceHeldRef.current = true
+        return
+      }
+      if (e.key === "v" || e.key === "V") {
+        setCanvasTool("select")
+        return
+      }
+      if (e.key === "h" || e.key === "H") {
+        setCanvasTool("pan")
         return
       }
       if (e.key === "Escape") {
@@ -453,7 +578,94 @@ export function DxfCanvas({
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none" style={{ cursor: "default" }} />
 
+      {/* Indicador visual de modo (V / H) */}
+      <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
+        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-[#101012]/90 p-1 shadow-lg backdrop-blur-sm">
+          <button
+            type="button"
+            title="Seleccionar (V)"
+            onClick={() => setCanvasTool("select")}
+            className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
+              canvasTool === "select"
+                ? "bg-white/15 text-white"
+                : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <MousePointer2 className="h-3.5 w-3.5" />
+            V
+          </button>
+          <button
+            type="button"
+            title="Pan (H) — también Espacio+drag"
+            onClick={() => setCanvasTool("pan")}
+            className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
+              canvasTool === "pan"
+                ? "bg-white/15 text-white"
+                : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <Hand className="h-3.5 w-3.5" />
+            H
+          </button>
+        </div>
+      </div>
+
+      {/* Menú Contextual con Shadcn UI */}
+      {ctxMenu && (
+        <DropdownMenu open onOpenChange={(o) => { if (!o) setCtxMenu(null) }}>
+          <DropdownMenuTrigger asChild>
+            <span
+              className="fixed h-0 w-0"
+              style={{ left: ctxMenu.x, top: ctxMenu.y }}
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="min-w-48 border-white/10 bg-[#141416] text-neutral-100">
+            {ctxMenu.pieceIndex !== null || selectedPieceIndices.length > 0 ? (
+              <>
+                <DropdownMenuItem
+                  disabled={!onRotateSelected || selectedPieceIndices.length === 0}
+                  onClick={() => onRotateSelected?.(selectedPieceIndices, rotationStep)}
+                >
+                  Rotar +{rotationStep}°
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!onRotateSelected || selectedPieceIndices.length === 0}
+                  onClick={() => onRotateSelected?.(selectedPieceIndices, -rotationStep)}
+                >
+                  Rotar -{rotationStep}°
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={selectedPieceIndices.length === 0}
+                  onClick={() => handleFocus()}
+                >
+                  Enfocar selección
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem onClick={() => onSelectPiece?.(null, false)}>
+                  Quitar selección
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => setCanvasTool("select")}>
+                  Herramienta: Seleccionar (V)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCanvasTool("pan")}>
+                  Herramienta: Pan (H)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem onClick={() => handleFit()}>
+                  Ajustar a plancha
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
       <CanvasToolbar
+        canvasTool={canvasTool}
+        onCanvasToolChange={setCanvasTool}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid((v) => !v)}
         onZoomIn={() => handleZoom("in")}

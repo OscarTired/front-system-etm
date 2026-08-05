@@ -90,3 +90,52 @@ export function hitTestPieceAt(
 
   return hit
 }
+
+
+/** AABB por pieza a partir de entities (para box-select). */
+export function pieceBoundsMap(
+  entities: Entity[]
+): Map<number, { minX: number; minY: number; maxX: number; maxY: number }> {
+  const byPiece = new Map<number, Entity[]>()
+  for (const e of entities) {
+    if (e.pieceIndex === undefined) continue
+    const list = byPiece.get(e.pieceIndex)
+    if (list) list.push(e)
+    else byPiece.set(e.pieceIndex, [e])
+  }
+  const out = new Map<number, { minX: number; minY: number; maxX: number; maxY: number }>()
+  for (const [idx, ents] of byPiece) {
+    const b = computeBounds(ents)
+    if (b) out.set(idx, b)
+  }
+  return out
+}
+
+/** Piezas dentro / que intersectan un rectángulo en coords locales. */
+export function piecesInBox(
+  entities: Entity[],
+  box: { minX: number; minY: number; maxX: number; maxY: number },
+  mode: "contain" | "intersect"
+): number[] {
+  const bounds = pieceBoundsMap(entities)
+  const hits: number[] = []
+  for (const [idx, b] of bounds) {
+    if (mode === "contain") {
+      if (
+        b.minX >= box.minX &&
+        b.maxX <= box.maxX &&
+        b.minY >= box.minY &&
+        b.maxY <= box.maxY
+      ) {
+        hits.push(idx)
+      }
+    } else {
+      if (
+        !(b.maxX < box.minX || b.minX > box.maxX || b.maxY < box.minY || b.minY > box.maxY)
+      ) {
+        hits.push(idx)
+      }
+    }
+  }
+  return hits
+}

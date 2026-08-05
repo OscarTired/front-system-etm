@@ -20,6 +20,7 @@ import { ExportDialog } from "./export-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
+import { PieceListRow } from "./piece-list-row"
 import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -123,7 +124,7 @@ export function NestingPage() {
         angleOverrides: snap.angleOverrides ?? {},
       })
     } else {
-      history.reset()
+      history.resetAll?.() ?? history.reset()
     }
   }, [project.sessionReady, project.sessionRestored, history, project])
 
@@ -177,24 +178,30 @@ export function NestingPage() {
     })
   }, [activeGroup, positionOverrides, angleOverrides])
 
-  // Cambio de plancha.
-  // IMPORTANTE: se leen `project` y `history` a través de refs (no como
-  // dependencia directa del efecto) porque ambos objetos pueden recibir una
-  // nueva identidad en cada render de sus hooks de origen. Si se incluyeran
-  // como dependencias, el efecto se re-ejecutaría en cada render y, como
-  // llama a `history.replace(...)` (que hace setState), se generaría un
-  // bucle infinito de renders. Las únicas dependencias reales del efecto
-  // son valores primitivos: el índice activo y la cantidad de grupos.
+  // Cambio de plancha: stack de undo/redo **independiente** por tab.
+  // setActiveKey solo cambia el stack activo (no borra el historial de otras planchas).
   useEffect(() => {
-    const p = projectRef.current
     const h = historyRef.current
+    const p = projectRef.current
+    h.setActiveKey(activeGroupIndex)
+    // Si el stack de esta plancha está vacío, hidratar desde snapshot de sesión
     const snap = p.getSheetEdits()[String(activeGroupIndex)]
-    h.replace({
-      positionOverrides: snap?.positionOverrides ?? {},
-      angleOverrides: snap?.angleOverrides ?? {},
-    })
+    const empty =
+      Object.keys(h.positionOverrides).length === 0 &&
+      Object.keys(h.angleOverrides).length === 0
+    if (
+      empty &&
+      snap &&
+      (Object.keys(snap.positionOverrides).length > 0 ||
+        Object.keys(snap.angleOverrides).length > 0)
+    ) {
+      h.replace({
+        positionOverrides: snap.positionOverrides ?? {},
+        angleOverrides: snap.angleOverrides ?? {},
+      })
+    }
     setSelectedPieceIndices([])
-  }, [activeGroupIndex, project.sheetGroups.length])
+  }, [activeGroupIndex])
 
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
@@ -241,6 +248,7 @@ export function NestingPage() {
         key: String(group.startIndex),
         label: `${formatSheetRangeLabel(group)}${group.count > 1 ? ` ×${group.count}` : ""}`,
         usagePercent: project.getSheetStats(i)?.usagePercent ?? 0,
+        thicknessMm: group.sheet.thicknessMm,
       })),
     [project.sheetGroups, project.getSheetStats]
   )
@@ -249,6 +257,35 @@ export function NestingPage() {
   const selectedPiece = selectedPieceIndices.length > 0
     ? canvasPieces[selectedPieceIndices[selectedPieceIndices.length - 1]] ?? null
     : null
+
+  const selectedPieceName = useMemo(() => {
+    if (!selectedPiece) return null
+    const row = project.rows.find((r) => r.id === selectedPiece.pieceId)
+    return row?.fileName ?? selectedPiece.pieceId
+  }, [selectedPiece, project.rows])
+
+  const selectedCadRow = useMemo(() => {
+    if (!selectedPiece) return null
+    return project.rows.find((r) => r.id === selectedPiece.pieceId) ?? null
+  }, [selectedPiece, project.rows])
+
+  const highlightedIds = useMemo(() => {
+    const set = new Set<string>()
+    for (const idx of selectedPieceIndices) {
+      const p = canvasPieces[idx]
+      if (p?.pieceId) set.add(p.pieceId)
+    }
+    return set
+  }, [selectedPieceIndices, canvasPieces])
+
+  const nameById = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const r of project.rows) {
+      map[r.id] = r.fileName
+    }
+    return map
+  }, [project.rows])
+
 
   const handleSelectPiece = useCallback((index: number | null, additive: boolean) => {
     if (index === null) {
@@ -360,8 +397,9 @@ export function NestingPage() {
       onMirrorY: project.onMirrorY,
       onDuplicate: project.onDuplicate,
       nextColor: project.nextColor,
+      highlightedIds,
     }),
-    [project]
+    [project, highlightedIds]
   )
 
   const hasOverrides = Object.keys(positionOverrides).length > 0 || Object.keys(angleOverrides).length > 0
@@ -421,9 +459,28 @@ export function NestingPage() {
                   <PropertiesPanel
                     sheetStats={sheetStats}
                     selectedPiece={selectedPiece}
+                    selectedPieceName={selectedPieceName}
                     espesor={project.settings.espesor}
                     material={project.settings.material}
-                  />
+                  >
+                    {selectedCadRow && (
+                      <div className="flex flex-col gap-1">
+                        <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                          Editar en lista
+                        </div>
+                        <PieceListRow
+                          row={selectedCadRow}
+                          conflict={project.conflictIds.has(selectedCadRow.id)}
+                          disabled={project.isRunning}
+                          highlighted
+                          onPreview={(row) => setPreviewRowId(row.id)}
+                          onUpdateQuantity={project.onUpdateQuantity}
+                          onDuplicate={project.onDuplicate}
+                          onRemove={project.onRemove}
+                        />
+                      </div>
+                    )}
+                  </PropertiesPanel>
                 </div>
               )}
             </div>
@@ -518,7 +575,7 @@ export function NestingPage() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
               onClick={() => {
                 project.onDiscardSession()
-                history.reset()
+                history.resetAll?.() ?? history.reset()
                 setSelectedPieceIndices([])
                 setActiveGroupIndex(0)
               }}
@@ -701,6 +758,7 @@ export function NestingPage() {
       </Sheet>
 
       <ExportDialog
+        nameById={nameById}
         open={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
         sheetGroups={project.sheetGroups}

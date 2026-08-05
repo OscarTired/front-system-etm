@@ -1,18 +1,32 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 
 export type SheetEditState = {
   positionOverrides: Record<number, { dx: number; dy: number }>
   angleOverrides: Record<number, number>
 }
 
-export type HistoryEntry = {
+type HistoryEntry = {
   label: string
   state: SheetEditState
 }
 
+type Stack = {
+  past: HistoryEntry[]
+  future: HistoryEntry[]
+  current: SheetEditState
+}
+
 const MAX_STACK = 80
+
+function emptyState(): SheetEditState {
+  return { positionOverrides: {}, angleOverrides: {} }
+}
+
+function emptyStack(): Stack {
+  return { past: [], future: [], current: emptyState() }
+}
 
 function cloneState(s: SheetEditState): SheetEditState {
   return {
@@ -41,113 +55,101 @@ function statesEqual(a: SheetEditState, b: SheetEditState): boolean {
 }
 
 /**
- * Historial snapshot de edición de plancha (overrides pos/ángulo).
- * - commit(label, next): apila estado anterior y aplica next
- * - undo / redo
- * - reset: limpia al cambiar plancha / Nestear / restaurar sesión
- *
- * IMPORTANTE: el objeto retornado está memoizado con useMemo. Sin esto,
- * cada render devuelve un objeto con identidad nueva, lo que rompe cualquier
- * useEffect en un consumidor que lo incluya en su array de dependencias
- * (puede producir bucles infinitos si ese efecto a su vez llama a alguna
- * función que actualice estado, como `replace`).
+ * Historial **por plancha** (clave = índice de tab / grupo).
+ * Ctrl+Z en plancha 2 no afecta plancha 1.
  */
-export function useSheetHistory(initial?: SheetEditState) {
-  const empty: SheetEditState = initial ?? { positionOverrides: {}, angleOverrides: {} }
-  const [state, setState] = useState<SheetEditState>(empty)
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-  const [lastLabel, setLastLabel] = useState<string | null>(null)
+export function useSheetHistory() {
+  const stacksRef = useRef<Record<string, Stack>>({})
+  const keyRef = useRef("0")
+  const [, bump] = useState(0)
+  const rerender = useCallback(() => bump((n) => n + 1), [])
 
-  const pastRef = useRef<HistoryEntry[]>([])
-  const futureRef = useRef<HistoryEntry[]>([])
-  const stateRef = useRef(state)
-  stateRef.current = state
-
-  const syncFlags = useCallback(() => {
-    setCanUndo(pastRef.current.length > 0)
-    setCanRedo(futureRef.current.length > 0)
+  const ensure = useCallback((key: string): Stack => {
+    if (!stacksRef.current[key]) stacksRef.current[key] = emptyStack()
+    return stacksRef.current[key]
   }, [])
+
+  const getStack = useCallback(() => ensure(keyRef.current), [ensure])
+
+  const setActiveKey = useCallback(
+    (key: string | number) => {
+      keyRef.current = String(key)
+      ensure(keyRef.current)
+      rerender()
+    },
+    [ensure, rerender]
+  )
 
   const commit = useCallback(
     (label: string, next: SheetEditState) => {
-      const prev = stateRef.current
-      if (statesEqual(prev, next)) return
-      pastRef.current = [...pastRef.current, { label, state: cloneState(prev) }].slice(-MAX_STACK)
-      futureRef.current = []
-      const cloned = cloneState(next)
-      stateRef.current = cloned
-      setState(cloned)
-      setLastLabel(label)
-      syncFlags()
+      const stack = getStack()
+      if (statesEqual(stack.current, next)) return
+      stack.past = [...stack.past, { label, state: cloneState(stack.current) }].slice(-MAX_STACK)
+      stack.future = []
+      stack.current = cloneState(next)
+      rerender()
     },
-    [syncFlags]
+    [getStack, rerender]
   )
 
-  /** Aplica next sin historiar (hidratación, cambio de tab, nest). */
   const replace = useCallback(
     (next: SheetEditState) => {
-      pastRef.current = []
-      futureRef.current = []
-      const cloned = cloneState(next)
-      stateRef.current = cloned
-      setState(cloned)
-      setLastLabel(null)
-      syncFlags()
+      const stack = getStack()
+      stack.past = []
+      stack.future = []
+      stack.current = cloneState(next)
+      rerender()
     },
-    [syncFlags]
+    [getStack, rerender]
   )
 
   const undo = useCallback(() => {
-    const past = pastRef.current
-    if (past.length === 0) return
-    const entry = past[past.length - 1]
-    pastRef.current = past.slice(0, -1)
-    futureRef.current = [
-      ...futureRef.current,
-      { label: entry.label, state: cloneState(stateRef.current) },
-    ]
-    const restored = cloneState(entry.state)
-    stateRef.current = restored
-    setState(restored)
-    setLastLabel(`Deshacer: ${entry.label}`)
-    syncFlags()
-  }, [syncFlags])
+    const stack = getStack()
+    if (stack.past.length === 0) return
+    const entry = stack.past[stack.past.length - 1]
+    stack.past = stack.past.slice(0, -1)
+    stack.future = [...stack.future, { label: entry.label, state: cloneState(stack.current) }]
+    stack.current = cloneState(entry.state)
+    rerender()
+  }, [getStack, rerender])
 
   const redo = useCallback(() => {
-    const future = futureRef.current
-    if (future.length === 0) return
-    const entry = future[future.length - 1]
-    futureRef.current = future.slice(0, -1)
-    pastRef.current = [
-      ...pastRef.current,
-      { label: entry.label, state: cloneState(stateRef.current) },
-    ]
-    const restored = cloneState(entry.state)
-    stateRef.current = restored
-    setState(restored)
-    setLastLabel(`Rehacer: ${entry.label}`)
-    syncFlags()
-  }, [syncFlags])
+    const stack = getStack()
+    if (stack.future.length === 0) return
+    const entry = stack.future[stack.future.length - 1]
+    stack.future = stack.future.slice(0, -1)
+    stack.past = [...stack.past, { label: entry.label, state: cloneState(stack.current) }]
+    stack.current = cloneState(entry.state)
+    rerender()
+  }, [getStack, rerender])
 
   const reset = useCallback(() => {
-    replace({ positionOverrides: {}, angleOverrides: {} })
+    replace(emptyState())
   }, [replace])
 
-  return useMemo(
-    () => ({
-      state,
-      positionOverrides: state.positionOverrides,
-      angleOverrides: state.angleOverrides,
-      commit,
-      replace,
-      undo,
-      redo,
-      reset,
-      canUndo,
-      canRedo,
-      lastLabel,
-    }),
-    [state, commit, replace, undo, redo, reset, canUndo, canRedo, lastLabel]
-  )
+  /** Borra todos los stacks (Nestear / descartar sesión). */
+  const resetAll = useCallback(() => {
+    stacksRef.current = {}
+    keyRef.current = "0"
+    ensure("0")
+    rerender()
+  }, [ensure, rerender])
+
+  const stack = ensure(keyRef.current)
+
+  return {
+    activeKey: keyRef.current,
+    setActiveKey,
+    state: stack.current,
+    positionOverrides: stack.current.positionOverrides,
+    angleOverrides: stack.current.angleOverrides,
+    commit,
+    replace,
+    undo,
+    redo,
+    reset,
+    resetAll,
+    canUndo: stack.past.length > 0,
+    canRedo: stack.future.length > 0,
+  }
 }

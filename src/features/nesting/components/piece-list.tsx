@@ -2,6 +2,7 @@
 
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState, useMemo } from "react"
 import { Import, FileWarning, AlertTriangle, Eye, Layers, Copy, Search, X, Trash2 } from "lucide-react"
+import { PieceListRow } from "./piece-list-row"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -43,6 +44,8 @@ export interface PieceListProps {
   onMirrorY: (id: string) => void
   onDuplicate: (id: string) => void
   nextColor: () => string
+  /** ids de filas resaltadas (selección en canvas). */
+  highlightedIds?: Set<string>
 }
 
 type GroupByType = "none" | "thickness" | "material"
@@ -62,6 +65,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     onMirrorY,
     onDuplicate,
     nextColor,
+    highlightedIds,
   },
   ref
 ) {
@@ -349,61 +353,17 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                     </div>
                   )}
                   {items.map((row) => (
-                    <div  
+                    <PieceListRow
                       key={row.id}
-                      className={`flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border ${
-                        conflictIds.has(row.id) ? "bg-amber-500/15" : "bg-white/3 hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2 w-full">
-                        <div className="min-w-0 flex-1 truncate text-xs font-medium text-neutral-200" title={row.fileName}>
-                          {row.fileName}
-                        </div>
-                        <Button size="icon-sm" variant="ghost" className="h-6 w-6 shrink-0 text-neutral-300 hover:text-white" onClick={() => onPreviewRow(row)} title="Ver pieza">
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 w-full">
-                        <div className="min-w-0 flex-1 flex items-center gap-1 text-[10px] text-neutral-400 truncate">
-                          <span className="shrink-0">{row.width.toFixed(0)}×{row.height.toFixed(0)}</span>
-                          {row.material.thickness > 0 && (
-                            <span className="text-neutral-500 truncate">
-                              · {row.material.thickness}mm{row.material.dinNorm !== "N/D" && ` · ${row.material.dinNorm}`}
-                            </span>
-                          )}
-                          {conflictIds.has(row.id) && (
-                            <span className="flex items-center gap-0.5 text-amber-400 shrink-0">
-                              <AlertTriangle className="h-2.5 w-2.5" /> conflicto
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Input 
-                            placeholder="Cant." 
-                            inputMode="numeric" 
-                            value={row.quantity} 
-                            disabled={disabled} 
-                            onChange={(e) => handleQuantityChange(row.id, e.target.value)} 
-                            className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-ring" 
-                          />
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            className="h-7 w-7 shrink-0 text-neutral-400 hover:text-white"
-                            disabled={disabled}
-                            onClick={() => onDuplicate(row.id)}
-                            title="Duplicar pieza"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="icon-sm" variant="ghost" className="h-7 w-7 text-neutral-400 hover:text-destructive" disabled={disabled} onClick={() => onRemove(row.id)} title="Eliminar">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                      row={row}
+                      conflict={conflictIds.has(row.id)}
+                      disabled={disabled}
+                      highlighted={highlightedIds?.has(row.id)}
+                      onPreview={onPreviewRow}
+                      onUpdateQuantity={onUpdateQuantity}
+                      onDuplicate={onDuplicate}
+                      onRemove={onRemove}
+                    />
                   ))}
                 </div>
               ))}

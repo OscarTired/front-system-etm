@@ -4,7 +4,7 @@ import type { CanvasElement, Content, TDocumentDefinitions } from "pdfmake/inter
 import { boundingRect } from "../engine/geometry"
 import { calculateSheetUsagePercent } from "../engine/sheet-usage"
 import type { NestedSheet, SheetConfig } from "../engine/types"
-import { buildPieceCatalog } from "./piece-catalog"
+import { buildPieceCatalog, type PieceNameMap } from "./piece-catalog"
 import { buildBaseName, type Nomenclatura } from "./nomenclatura"
 import { groupIdenticalSheets, formatSheetRangeLabel, type SheetGroup } from "../utils/svg-render"
 
@@ -197,16 +197,23 @@ function buildSheetPreview(group: SheetGroup, sheetConfig: SheetConfig): Content
   } as unknown as Content
 }
 
-function buildCatalogTable(sheets: NestedSheet[]) {
-  const catalog = buildPieceCatalog(sheets)
+function buildCatalogTable(sheets: NestedSheet[], nameById?: PieceNameMap) {
+  const catalog = buildPieceCatalog(sheets, nameById)
   if (catalog.length === 0) return null
 
   const body = [
-    [headerCell("Pieza"), headerCell("Dimensiones"), headerCell("Perímetro"), headerCell("Cantidad")],
+    [
+      headerCell("Pieza"),
+      headerCell("Dimensiones"),
+      headerCell("Perímetro"),
+      headerCell("Ángulos"),
+      headerCell("Cantidad"),
+    ],
     ...catalog.map((c) => [
-      bodyCell(c.pieceId, "left"),
-      bodyCell(`${c.width.toFixed(0)}×${c.height.toFixed(0)}mm`),
-      bodyCell(`${c.perimeter.toFixed(0)}mm`),
+      bodyCell(c.displayName, "left"),
+      bodyCell(`${c.width.toFixed(0)}×${c.height.toFixed(0)} mm`),
+      bodyCell(`${c.perimeter.toFixed(0)} mm`),
+      bodyCell(c.angles.map((a) => `${a}°`).join(", ")),
       bodyCell(String(c.quantity)),
     ]),
   ]
@@ -215,7 +222,7 @@ function buildCatalogTable(sheets: NestedSheet[]) {
     stack: [
       { text: "CATÁLOGO DE PIEZAS (BOM)", fontSize: 12, bold: true, margin: [0, 0, 0, 8] },
       {
-        table: { headerRows: 1, widths: ["*", 120, 100, 80], body },
+        table: { headerRows: 1, widths: ["*", 100, 80, 70, 50], body },
         layout: tableLayout(),
       },
     ],
@@ -223,10 +230,67 @@ function buildCatalogTable(sheets: NestedSheet[]) {
   } as unknown as Content
 }
 
+/** Detalle por plancha: cada pieza individual (estilo reporte C++/PrintDialog). */
+function buildPerSheetPieceTables(sheets: NestedSheet[], nameById?: PieceNameMap): Content[] {
+  const blocks: Content[] = [
+    { text: "DETALLE POR PLANCHA", fontSize: 12, bold: true, margin: [0, 16, 0, 8] } as Content,
+  ]
+
+  sheets.forEach((sheet, si) => {
+    const thick =
+      sheet.thicknessMm != null && sheet.thicknessMm > 0
+        ? ` · ${sheet.thicknessMm} mm`
+        : ""
+    const rows = [
+      [
+        headerCell("#"),
+        headerCell("Pieza"),
+        headerCell("X"),
+        headerCell("Y"),
+        headerCell("Ángulo"),
+        headerCell("Ancho"),
+        headerCell("Alto"),
+      ],
+      ...sheet.pieces.map((p, pi) => {
+        const b = boundingRect(p.outline)
+        const name = nameById?.[p.pieceId] ?? p.pieceId
+        return [
+          bodyCell(String(pi + 1)),
+          bodyCell(name, "left"),
+          bodyCell(p.x.toFixed(1)),
+          bodyCell(p.y.toFixed(1)),
+          bodyCell(`${p.angle}°`),
+          bodyCell(b.width.toFixed(1)),
+          bodyCell(b.height.toFixed(1)),
+        ]
+      }),
+    ]
+    blocks.push({
+      stack: [
+        {
+          text: `Plancha #${si + 1}${thick} — ${sheet.pieces.length} pieza(s)`,
+          fontSize: 10,
+          bold: true,
+          margin: [0, 8, 0, 4],
+        },
+        {
+          table: { headerRows: 1, widths: [24, "*", 48, 48, 40, 48, 48], body: rows },
+          layout: tableLayout(),
+        },
+      ],
+      margin: [0, 0, 0, 4],
+    } as unknown as Content)
+  })
+
+  return blocks
+}
+
 export interface NestingReportOptions {
   nomenclatura: Nomenclatura
   sheets: NestedSheet[]
   sheetConfig: SheetConfig
+  /** pieceId → nombre de archivo / etiqueta legible */
+  nameById?: PieceNameMap
 }
 
 /**
@@ -236,7 +300,12 @@ export interface NestingReportOptions {
  * instalado y usado en /reports), no con QPainter — mismo resultado
  * (reporte visual con las planchas dibujadas), stack distinto.
  */
-export async function exportNestingReportPdf({ nomenclatura, sheets, sheetConfig }: NestingReportOptions): Promise<void> {
+export async function exportNestingReportPdf({
+  nomenclatura,
+  sheets,
+  sheetConfig,
+  nameById,
+}: NestingReportOptions): Promise<void> {
   ensureFonts()
 
   const groups = groupIdenticalSheets(sheets)
@@ -251,8 +320,10 @@ export async function exportNestingReportPdf({ nomenclatura, sheets, sheetConfig
     ...groups.map((g) => buildSheetPreview(g, sheetConfig)),
   ]
 
-  const catalogSection = buildCatalogTable(sheets)
+  const catalogSection = buildCatalogTable(sheets, nameById)
   if (catalogSection) content.push(catalogSection)
+
+  content.push(...buildPerSheetPieceTables(sheets, nameById))
 
   const docDefinition: TDocumentDefinitions = {
     pageSize: "A4",
