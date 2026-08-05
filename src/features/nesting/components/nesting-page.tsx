@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal } from "lucide-react"
+import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, RotateCcw, X } from "lucide-react"
 
 import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
 import { piecesCollide } from "../engine/polygon-collision"
@@ -56,6 +56,7 @@ export function NestingPage() {
   const [angleOverrides, setAngleOverrides] = useState<Record<number, number>>({})
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
+  const [dismissedRestoredBanner, setDismissedRestoredBanner] = useState<boolean>(false)
 
   const projectInputRef = useRef<HTMLInputElement>(null)
   const pieceListRef = useRef<PieceListHandle>(null)
@@ -436,28 +437,46 @@ export function NestingPage() {
         onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
       />
 
-      {project.sessionRestored && (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs text-amber-100">
-          <span>
-            Trabajo restaurado
-            {project.sessionSavedAt
-              ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}`
-              : ""}
-            . Se guardó solo en este navegador.
-          </span>
-          <button
-            type="button"
-            className="rounded-md bg-white/10 px-2.5 py-1 font-medium text-white hover:bg-white/15"
-            onClick={() => {
-              project.onDiscardSession()
-              setPositionOverrides({})
-              setAngleOverrides({})
-              setSelectedPieceIndices([])
-              setActiveGroupIndex(0)
-            }}
-          >
-            Descartar y empezar de cero
-          </button>
+      {project.sessionRestored && !dismissedRestoredBanner && (
+        <div className="mx-4 mt-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white/3 p-3 shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 text-neutral-300">
+              <Info className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-medium text-white truncate">Trabajo restaurado</span>
+              <span className="text-[11px] text-neutral-400 truncate">
+                Recuperado del navegador
+                {project.sessionSavedAt
+                  ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}`
+                  : ""}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+              onClick={() => {
+                project.onDiscardSession()
+                setPositionOverrides({})
+                setAngleOverrides({})
+                setSelectedPieceIndices([])
+                setActiveGroupIndex(0)
+              }}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Descartar</span>
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+              onClick={() => setDismissedRestoredBanner(true)}
+              title="Cerrar aviso"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
