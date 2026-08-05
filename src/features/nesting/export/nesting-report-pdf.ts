@@ -77,7 +77,7 @@ function pieceWeightKg(areaMm2: number, thicknessMm: number): number {
 }
 
 /**
- * Dibuja la geometría de una pieza en un canvas del navegador y devuelve data URL PNG.
+ * Dibuja la geometría de una pieza en blanco y negro en un canvas del navegador.
  */
 function renderPieceToDataUrl(
   piece: PlacedPiece,
@@ -86,21 +86,21 @@ function renderPieceToDataUrl(
 ): string | null {
   if (typeof document === "undefined") return null
 
-  type PathPts = { points: { x: number; y: number }[]; color?: string }
+  type PathPts = { points: { x: number; y: number }[] }
   const paths: PathPts[] = []
 
   if (piece.subEntities && piece.subEntities.length > 0) {
     for (const se of piece.subEntities) {
       const pts = se.outline?.points
       if (pts && pts.length >= 2) {
-        paths.push({ points: pts, color: se.color ?? "#111827" })
+        paths.push({ points: pts })
       }
     }
   }
   if (paths.length === 0) {
     const pts = piece.outline?.points ?? []
     if (pts.length >= 2) {
-      paths.push({ points: pts, color: piece.color ?? "#111827" })
+      paths.push({ points: pts })
     }
   }
   if (paths.length === 0) return null
@@ -159,7 +159,8 @@ function renderPieceToDataUrl(
     if (dist < Math.max(bw, bh) * 0.02) {
       ctx.lineTo(ox + (p0.x - minX) * s, oy + (maxY - p0.y) * s)
     }
-    ctx.strokeStyle = path.color && path.color.startsWith("#") ? path.color : "#111827"
+    // Forzado a negro puro para blanco y negro estricto
+    ctx.strokeStyle = "#000000"
     ctx.lineWidth = strokeW
     ctx.lineJoin = "round"
     ctx.lineCap = "round"
@@ -211,6 +212,9 @@ function pieceSketch(piece: PlacedPiece, boxW: number, boxH: number): Content {
   } as Content
 }
 
+/**
+ * Dibuja la plancha anidada en blanco y negro en un canvas del navegador.
+ */
 function renderSheetToDataUrl(
   sheet: NestedSheet,
   sheetConfig: SheetConfig,
@@ -240,9 +244,9 @@ function renderSheetToDataUrl(
   const oy = pad + (boxH - pad * 2 - sh * s) / 2
   const pieceStroke = 0.28
 
-  ctx.fillStyle = "#F8FAFC"
+  ctx.fillStyle = "#FFFFFF" // Fondo blanco limpio
   ctx.fillRect(ox, oy, sw * s, sh * s)
-  ctx.strokeStyle = "#9CA3AF"
+  ctx.strokeStyle = "#374151" // Marco de chapa gris oscuro
   ctx.lineWidth = 0.5
   ctx.strokeRect(ox, oy, sw * s, sh * s)
 
@@ -261,7 +265,8 @@ function renderSheetToDataUrl(
       if (i === 0) ctx.moveTo(x, y)
       else ctx.lineTo(x, y)
     }
-    ctx.strokeStyle = color
+    // Forzado a negro puro para las piezas dentro de la plancha
+    ctx.strokeStyle = "#000000"
     ctx.lineWidth = lineW
     ctx.lineJoin = "round"
     ctx.lineCap = "round"
@@ -273,13 +278,13 @@ function renderSheetToDataUrl(
       for (const se of piece.subEntities) {
         const pts = se.outline?.points
         if (pts && pts.length >= 2) {
-          drawPath(pts, se.color ?? "#111827", pieceStroke)
+          drawPath(pts, "#000000", pieceStroke)
         }
       }
     } else {
       const pts = piece.outline?.points
       if (pts && pts.length >= 2) {
-        drawPath(pts, piece.color ?? "#111827", pieceStroke)
+        drawPath(pts, "#000000", pieceStroke)
       }
     }
   }
