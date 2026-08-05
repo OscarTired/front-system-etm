@@ -209,9 +209,9 @@ export function CanvasToolbar({
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                side="right"
+                side="bottom"
                 align="start"
-                className="w-48 border-white/10 bg-[#141416] p-1.5 text-neutral-100"
+                className="w-48 border-white/10 p-1.5 text-neutral-100"
               >
                 <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
                   Fondo
