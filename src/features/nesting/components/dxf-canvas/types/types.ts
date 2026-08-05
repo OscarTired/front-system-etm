@@ -77,6 +77,8 @@ export interface DxfCanvasProps {
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void
   /** Eliminar piezas seleccionadas de la plancha. */
   onDeleteSelected?: (pieceIndices: number[]) => void
+  /** Eliminar de plancha + listado del proyecto (opcional). */
+  onDeleteFromProject?: (pieceIndices: number[]) => void
   /** Modo de transformación manual en plancha. Default: free. */
   transformMode?: TransformMode
   onTransformModeChange?: (mode: TransformMode) => void

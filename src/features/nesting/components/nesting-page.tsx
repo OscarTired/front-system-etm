@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, RotateCcw, X } from "lucide-react"
+import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, RotateCcw, X, Trash2 } from "lucide-react"
 
 import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
 import { piecesCollide } from "../engine/polygon-collision"
@@ -25,6 +25,7 @@ import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
@@ -71,6 +72,7 @@ export function NestingPage() {
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
   const [dismissedRestoredBanner, setDismissedRestoredBanner] = useState<boolean>(false)
+  const [pendingDelete, setPendingDelete] = useState<"sheet" | "project" | null>(null)
 
   const positionOverrides = history.positionOverrides
   const angleOverrides = history.angleOverrides
@@ -443,10 +445,32 @@ export function NestingPage() {
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedPieceIndices.length === 0 || !activeGroup) return
+    setPendingDelete("sheet")
+  }, [selectedPieceIndices, activeGroup])
+
+  const confirmDeleteFromSheet = useCallback(() => {
+    if (selectedPieceIndices.length === 0 || !activeGroup) return
     project.removePlacedPieces(activeGroup.startIndex, selectedPieceIndices)
     setSelectedPieceIndices([])
-    history.reset()
-  }, [selectedPieceIndices, activeGroup, project, history])
+    // No history.reset(): el layout cambia; el usuario puede re-nestear.
+    // Los overrides de índices eliminados quedan huérfanos y se ignoran al dibujar.
+    setPendingDelete(null)
+  }, [selectedPieceIndices, activeGroup, project])
+
+  const confirmDeleteFromProject = useCallback(() => {
+    if (selectedPieceIndices.length === 0 || !activeGroup) return
+    const pieceIds = new Set(
+      selectedPieceIndices
+        .map((i) => canvasPieces[i]?.pieceId)
+        .filter((id): id is string => Boolean(id)),
+    )
+    project.removePlacedPieces(activeGroup.startIndex, selectedPieceIndices)
+    for (const id of pieceIds) {
+      project.onRemove(id)
+    }
+    setSelectedPieceIndices([])
+    setPendingDelete(null)
+  }, [selectedPieceIndices, activeGroup, project, canvasPieces])
 
   deleteSelectedRef.current = handleDeleteSelected
 
@@ -530,12 +554,6 @@ export function NestingPage() {
                     selectedPieceName={selectedPieceName}
                     espesor={project.settings.espesor}
                     material={project.settings.material}
-                  
-                    overrideDx={selectedOverrideDx}
-                    overrideDy={selectedOverrideDy}
-                    overrideAngle={selectedOverrideAngle}
-                    onOverrideChange={handleOverrideChange}
-                    onResetOverrides={handleResetOverrides}
                   >
                     {selectedCadRow && (
                       <div className="flex flex-col gap-1">
@@ -702,6 +720,10 @@ export function NestingPage() {
                 onMovePieces={handleMovePieces}
                 onRotateSelected={handleRotateSelected}
                 onDeleteSelected={() => handleDeleteSelected()}
+                onDeleteFromProject={() => {
+                  if (selectedPieceIndices.length === 0 || !activeGroup) return
+                  setPendingDelete("project")
+                }}
                 transformMode={transformMode}
                 onTransformModeChange={setTransformMode}
                 rotationStep={rotationStep}
@@ -831,6 +853,36 @@ export function NestingPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ActionDialog
+        open={pendingDelete === "sheet"}
+        title="Quitar de la plancha"
+        description={
+          selectedPieceIndices.length === 1
+            ? "¿Quitar la pieza seleccionada de esta plancha? Seguirá en el listado del proyecto."
+            : `¿Quitar ${selectedPieceIndices.length} piezas de esta plancha? Seguirán en el listado del proyecto.`
+        }
+        icon={Trash2}
+        confirmLabel="Quitar de plancha"
+        variant="danger"
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteFromSheet}
+      />
+
+      <ActionDialog
+        open={pendingDelete === "project"}
+        title="Eliminar del proyecto"
+        description={
+          selectedPieceIndices.length === 1
+            ? "¿Eliminar la pieza de la plancha y del listado del proyecto? Esta acción no se puede deshacer fácilmente."
+            : `¿Eliminar ${selectedPieceIndices.length} piezas de la plancha y del listado? Esta acción no se puede deshacer fácilmente.`
+        }
+        icon={Trash2}
+        confirmLabel="Eliminar del proyecto"
+        variant="danger"
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteFromProject}
+      />
 
       <ExportDialog
         nameById={nameById}

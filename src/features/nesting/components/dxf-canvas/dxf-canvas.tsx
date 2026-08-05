@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertTriangle, Trash2, X, MousePointer2, Hand } from "lucide-react"
+import { AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +49,7 @@ export function DxfCanvas({
   onMovePieces,
   onRotateSelected,
   onDeleteSelected,
+  onDeleteFromProject,
   transformMode = "free",
   rotationStep = 90,
 }: DxfCanvasProps) {
@@ -650,22 +651,26 @@ export function DxfCanvas({
                   disabled={!onRotateSelected || selectedPieceIndices.length === 0}
                   onClick={() => onRotateSelected?.(selectedPieceIndices, rotationStep)}
                 >
+                  <RotateCw className="mr-2 h-4 w-4 opacity-70" />
                   Rotar +{rotationStep}°
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={!onRotateSelected || selectedPieceIndices.length === 0}
                   onClick={() => onRotateSelected?.(selectedPieceIndices, -rotationStep)}
                 >
+                  <RotateCw className="mr-2 h-4 w-4 opacity-70 -scale-x-100" />
                   Rotar -{rotationStep}°
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={selectedPieceIndices.length === 0}
                   onClick={() => handleFocus()}
                 >
+                  <Focus className="mr-2 h-4 w-4 opacity-70" />
                   Enfocar selección
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => onSelectPiece?.(null, false)}>
+                  <CircleSlash className="mr-2 h-4 w-4 opacity-70" />
                   Quitar selección
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
@@ -674,20 +679,34 @@ export function DxfCanvas({
                   disabled={!onDeleteSelected || selectedPieceIndices.length === 0}
                   onClick={() => onDeleteSelected?.(selectedPieceIndices)}
                 >
-                  Eliminar de la plancha
+                  <Trash2 className="mr-2 h-4 w-4 opacity-70" />
+                  Quitar de la plancha
                   <span className="ml-auto text-[10px] text-neutral-500">Supr</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={!onDeleteFromProject || selectedPieceIndices.length === 0}
+                  onClick={() => onDeleteFromProject?.(selectedPieceIndices)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4 opacity-70" />
+                  Eliminar del proyecto
                 </DropdownMenuItem>
               </>
             ) : (
               <>
                 <DropdownMenuItem onClick={() => setCanvasTool("select")}>
-                  Herramienta: Seleccionar (V)
+                  <MousePointer2 className="mr-2 h-4 w-4 opacity-70" />
+                  Seleccionar
+                  <span className="ml-auto text-[10px] text-neutral-500">V</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCanvasTool("pan")}>
-                  Herramienta: Pan (H)
+                  <Hand className="mr-2 h-4 w-4 opacity-70" />
+                  Pan
+                  <span className="ml-auto text-[10px] text-neutral-500">H</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => handleFit()}>
+                  <Maximize2 className="mr-2 h-4 w-4 opacity-70" />
                   Ajustar a plancha
                 </DropdownMenuItem>
               </>

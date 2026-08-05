@@ -42,7 +42,7 @@ export function CanvasContextMenu({ x, y, items, onClose }: Props) {
   return (
     <div
       ref={ref}
-      className="fixed z-50 min-w-[180px] rounded-lg border border-white/10 bg-[#141416]/98 py-1 shadow-xl backdrop-blur-md"
+      className="fixed z-50 min-w-45 rounded-lg border border-white/10 bg-[#141416]/98 py-1 shadow-xl backdrop-blur-md"
       style={{ left, top }}
       role="menu"
     >

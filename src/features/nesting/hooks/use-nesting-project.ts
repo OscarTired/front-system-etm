@@ -16,7 +16,7 @@ import { generateSheetDxf, type BridgeSettings } from "../export/dxf-export"
 import { generateSheetNsp } from "../export/nsp-export"
 import { serializeProject, parseProjectFile, ProjectFileParseError, type ProjectPieceEntry } from "../export/project-file"
 import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, type MachineSettings } from "../types/project-settings"
-import { downloadTextFile } from "../utils/file-helpers"
+import { downloadTextFile, saveTextFile } from "../utils/file-helpers"
 import type { PieceRow, CadRow } from "../components/piece-list"
 import type { SheetStats } from "../components/properties-panel"
 import {
@@ -267,14 +267,20 @@ export function useNestingProject() {
     if (!sheets) return
     const sheet = sheets[sheetIndex]
     const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
-    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf")
-    else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
+    if (format === "dxf") {
+      void saveTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf", [".dxf"])
+    } else {
+      void saveTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml", [".nsp"])
+    }
   }, [sheets, nomenclatura, sheetConfig, defaultBridgeSettings])
 
   const exportMaterializedSheet = useCallback((format: "dxf" | "nsp", sheet: NestedSheet, sheetIndex: number, bridges?: BridgeSettings) => {
     const fileName = buildSheetFileName(nomenclatura, sheet.pieces.length, sheetIndex)
-    if (format === "dxf") downloadTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf")
-    else downloadTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml")
+    if (format === "dxf") {
+      void saveTextFile(`${fileName}.dxf`, generateSheetDxf(sheet, sheetConfig, bridges ?? defaultBridgeSettings), "application/dxf", [".dxf"])
+    } else {
+      void saveTextFile(`${fileName}.nsp`, generateSheetNsp(sheet, sheetConfig), "application/xml", [".nsp"])
+    }
   }, [nomenclatura, sheetConfig, defaultBridgeSettings])
 
   const handleSaveProject = useCallback(() => {
@@ -291,7 +297,7 @@ export function useNestingProject() {
       material: row.material,
     }))
     const json = serializeProject({ sheet: sheetConfig, pieces })
-    downloadTextFile(`nesting-proyecto-${Date.now()}.json`, json, "application/json")
+    void saveTextFile(`nesting-proyecto-${Date.now()}.json`, json, "application/json", [".json"])
   }, [rows, sheetConfig])
 
   const handleOpenProjectFile = useCallback(async (file: File | undefined) => {

@@ -76,7 +76,7 @@ export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex w-full items-start justify-between rounded-lg px-2 py-2 text-left hover:bg-white/[0.03]"
+        className="flex w-full items-start justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps
           </div>
 
           {!isExpanded && (
-            <div className="mt-1 pl-[22px]">
+            <div className="mt-1 pl-5.5">
               <div className="text-xs font-medium text-neutral-300">
                 {settings.sheetWidth} × {settings.sheetHeight} mm
               </div>
