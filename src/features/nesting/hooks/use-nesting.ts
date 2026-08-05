@@ -87,9 +87,11 @@ export function useNesting(): UseNestingResult {
   }, []);
 
   const restoreSheets = useCallback((next: NestedSheet[] | null) => {
-    setSheets(next);
-    setStatus(next && next.length > 0 ? "done" : "idle");
-    setProgress(next && next.length > 0 ? 1 : 0);
+    const cleaned = next ? next.filter((s) => s.pieces.length > 0) : null;
+    const final = cleaned && cleaned.length > 0 ? cleaned : null;
+    setSheets(final);
+    setStatus(final ? "done" : "idle");
+    setProgress(final ? 1 : 0);
     setError(null);
   }, []);
 

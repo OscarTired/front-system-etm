@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { CanvasTool } from "./types/types"
 
 import { CanvasToolbar } from "./components/canvas-toolbar"
 import { drawScene } from "./utils/draw"
@@ -22,7 +23,7 @@ import {
   type SnapGuide,
 } from "./utils/collision"
 import { findNearestSnap } from "./utils/snap"
-import type { DxfCanvasProps, Entity, Point, SnapCandidate, CanvasTool } from "./types/types"
+import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { constrainToMode } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
 import { useMeasurements } from "./hooks/use-measurements"
@@ -47,6 +48,7 @@ export function DxfCanvas({
   collidingPieceIndices = [],
   onMovePieces,
   onRotateSelected,
+  onDeleteSelected,
   transformMode = "free",
   rotationStep = 90,
 }: DxfCanvasProps) {
@@ -67,26 +69,17 @@ export function DxfCanvas({
   const pieceDragRef = useRef<PieceDragState | null>(null)
   /** Espacio mantenido → pan de vista (estilo CAD), no mueve piezas. */
   const spaceHeldRef = useRef(false)
-  /** select = clic/box/move piezas; pan = arrastrar vista con LMB */
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
-  
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
   const boxSelectRef = useRef<{
     startScreen: { x: number; y: number }
     curScreen: { x: number; y: number }
     startLocal: { x: number; y: number }
     curLocal: { x: number; y: number }
   } | null>(null)
-
   const [boxSelectScreen, setBoxSelectScreen] = useState<{
     x0: number; y0: number; x1: number; y1: number
   } | null>(null)
-
-  const [ctxMenu, setCtxMenu] = useState<{
-    x: number
-    y: number
-    pieceIndex: number | null
-  } | null>(null)
-
   /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
   const collisionIndexRef = useRef<CollisionIndex | null>(null)
   /** Guías de snap magnético del frame actual (draw las lee sin setState). */
@@ -202,15 +195,13 @@ export function DxfCanvas({
 
     const onPointerDown = (e: PointerEvent) => {
       setCtxMenu(null)
+      if (e.button === 2) return
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
 
-      const rect = canvas.getBoundingClientRect()
-      const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
-
-      // Botón medio o Espacio o tool pan = pan de vista
+      // Botón medio o Espacio+drag = pan de vista (no mueve piezas)
       const forcePan = spaceHeldRef.current || e.button === 1 || canvasTool === "pan"
-      if (forcePan && e.button !== 2) {
+      if (forcePan) {
         draggingRef.current = {
           startX: e.clientX,
           startY: e.clientY,
@@ -222,9 +213,6 @@ export function DxfCanvas({
         setCursor("grabbing")
         return
       }
-
-      // Clic derecho: no inicia drag (menú en contextmenu)
-      if (e.button === 2) return
 
       if (measure.activeTool === "none") {
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
@@ -241,9 +229,10 @@ export function DxfCanvas({
           return
         }
 
-        // Tool select + vacío o pieza no seleccionada:
-        // si vacío → box select; si pieza → click select en pointerUp
+        // Select + vacío → box select; pieza no seleccionada → click en pointerUp
         if (hit === null && canvasTool === "select") {
+          const rect = canvas.getBoundingClientRect()
+          const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
           boxSelectRef.current = {
             startScreen: screenPt,
             curScreen: screenPt,
@@ -278,7 +267,6 @@ export function DxfCanvas({
     }
 
     const onPointerMove = (e: PointerEvent) => {
-      // Box select en curso
       if (boxSelectRef.current) {
         const rect = canvas.getBoundingClientRect()
         const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
@@ -372,7 +360,6 @@ export function DxfCanvas({
     }
 
     const onPointerUp = (e: PointerEvent) => {
-      // Finalizar box select
       if (boxSelectRef.current) {
         const box = boxSelectRef.current
         boxSelectRef.current = null
@@ -383,7 +370,6 @@ export function DxfCanvas({
         const maxY = Math.max(box.startLocal.y, box.curLocal.y)
         const w = maxX - minX
         const h = maxY - minY
-        // Clic sin arrastre real → deselect si no hay shift
         if (w < 1e-3 && h < 1e-3) {
           if (onSelectPiece && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
             onSelectPiece(null, false)
@@ -392,13 +378,8 @@ export function DxfCanvas({
           scheduleDraw()
           return
         }
-        // L→R contain, R→L intersect (convención CAD)
         const mode = box.curScreen.x >= box.startScreen.x ? "contain" : "intersect"
-        const hits = piecesInBox(
-          entitiesRef.current,
-          { minX, minY, maxX, maxY },
-          mode
-        )
+        const hits = piecesInBox(entitiesRef.current, { minX, minY, maxX, maxY }, mode)
         if (onSelectPiece) {
           const additive = e.shiftKey || e.ctrlKey || e.metaKey
           if (!additive) onSelectPiece(null, false)
@@ -413,6 +394,9 @@ export function DxfCanvas({
       pieceDragRef.current = null
       if (pieceDrag) {
         const { offset, pieceIndices } = pieceDrag
+        // SIEMPRE confirmar el offset ya clampeado en el drag.
+        // No revalidar aquí: el contacto borde-borde es válido y
+        // un segundo test con floats distintos provocaba el "snap back".
         if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
           onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
@@ -535,6 +519,13 @@ export function DxfCanvas({
         spaceHeldRef.current = true
         return
       }
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedPieceIndices.length > 0 && onDeleteSelected) {
+          e.preventDefault()
+          onDeleteSelected(selectedPieceIndices)
+        }
+        return
+      }
       if (e.key === "v" || e.key === "V") {
         setCanvasTool("select")
         return
@@ -578,7 +569,41 @@ export function DxfCanvas({
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none" style={{ cursor: "default" }} />
 
-      {/* Indicador visual de modo (V / H) */}
+      {/* Status bar */}
+      <div
+        data-slot="canvas-status-bar"
+        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[min(90%,28rem)] flex-wrap items-center gap-2 rounded-full bg-[#101012]/90 px-3 py-1.5 text-[10px] text-neutral-400 shadow-lg backdrop-blur-sm"
+      >
+        <span className="font-semibold text-neutral-200">
+          {canvasTool === "select" ? "V · Seleccionar" : "H · Pan"}
+        </span>
+        <span className="text-white/15">|</span>
+        <span>
+          {selectedPieceIndices.length === 0
+            ? "Sin selección"
+            : selectedPieceIndices.length === 1
+              ? "1 pieza"
+              : `${selectedPieceIndices.length} piezas`}
+        </span>
+        {collidingPieceIndices.length > 0 && (
+          <>
+            <span className="text-white/15">|</span>
+            <span className="text-red-400">
+              {collidingPieceIndices.length} colisión
+              {collidingPieceIndices.length === 1 ? "" : "es"}
+            </span>
+          </>
+        )}
+        {canvasTool === "select" && (
+          <>
+            <span className="text-white/15">|</span>
+            <span className="text-neutral-500">Arrastra vacío = box (L→R / R→L)</span>
+          </>
+        )}
+      </div>
+
+
+      {/* Indicador modo interacción V/H */}
       <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
         <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-[#101012]/90 p-1 shadow-lg backdrop-blur-sm">
           <button
@@ -610,7 +635,6 @@ export function DxfCanvas({
         </div>
       </div>
 
-      {/* Menú Contextual con Shadcn UI */}
       {ctxMenu && (
         <DropdownMenu open onOpenChange={(o) => { if (!o) setCtxMenu(null) }}>
           <DropdownMenuTrigger asChild>
@@ -644,6 +668,15 @@ export function DxfCanvas({
                 <DropdownMenuItem onClick={() => onSelectPiece?.(null, false)}>
                   Quitar selección
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={!onDeleteSelected || selectedPieceIndices.length === 0}
+                  onClick={() => onDeleteSelected?.(selectedPieceIndices)}
+                >
+                  Eliminar de la plancha
+                  <span className="ml-auto text-[10px] text-neutral-500">Supr</span>
+                </DropdownMenuItem>
               </>
             ) : (
               <>
@@ -664,8 +697,6 @@ export function DxfCanvas({
       )}
 
       <CanvasToolbar
-        canvasTool={canvasTool}
-        onCanvasToolChange={setCanvasTool}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid((v) => !v)}
         onZoomIn={() => handleZoom("in")}

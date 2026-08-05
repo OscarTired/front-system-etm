@@ -48,7 +48,6 @@ export interface ToolpathSeg {
 
 export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "coords"
 
-/** Herramienta de interacción del canvas (distinta de measure). */
 export type CanvasTool = "select" | "pan"
 
 export type Measurement =
@@ -76,6 +75,8 @@ export interface DxfCanvasProps {
   collidingPieceIndices?: number[]
   onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void
+  /** Eliminar piezas seleccionadas de la plancha. */
+  onDeleteSelected?: (pieceIndices: number[]) => void
   /** Modo de transformación manual en plancha. Default: free. */
   transformMode?: TransformMode
   onTransformModeChange?: (mode: TransformMode) => void

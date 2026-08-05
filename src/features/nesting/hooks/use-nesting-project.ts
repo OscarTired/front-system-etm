@@ -98,7 +98,15 @@ export function useNestingProject() {
     widthMm: Number(settings.puentesAncho) || 0,
   }), [settings.puentesHabilitado, settings.puentesCantidad, settings.puentesAncho])
 
-  const sheetGroups = useMemo(() => (sheets ? groupIdenticalSheets(sheets) : []), [sheets])
+  /** Planchas con al menos 1 pieza (sin fantasmas 0%). */
+  const nonEmptySheets = useMemo(
+    () => (sheets ? sheets.filter((s) => s.pieces.length > 0) : null),
+    [sheets]
+  )
+  const sheetGroups = useMemo(
+    () => (nonEmptySheets ? groupIdenticalSheets(nonEmptySheets) : []),
+    [nonEmptySheets]
+  )
 
   const validPieces = useMemo<NestingPiece[]>(() => {
     const pieces: NestingPiece[] = []
@@ -185,7 +193,31 @@ export function useNestingProject() {
             outline: transform(sub.outline, pivot),
           }))
           const bounds = boundsOfPiece(outline, subEntities)
-          return {
+        
+  /**
+   * Quita piezas colocadas de una plancha del resultado de nest.
+   * `sheetIndex` = índice real en el arreglo `sheets` (p.ej. group.startIndex).
+   * Si la plancha queda vacía, se elimina del resultado.
+   */
+  const removePlacedPieces = useCallback(
+    (sheetIndex: number, pieceIndices: number[]) => {
+      if (!sheets || pieceIndices.length === 0) return
+      if (sheetIndex < 0 || sheetIndex >= sheets.length) return
+      const removeSet = new Set(pieceIndices)
+      const working = sheets.map((s, i) => {
+        if (i !== sheetIndex) return s
+        return {
+          ...s,
+          pieces: s.pieces.filter((_, pi) => !removeSet.has(pi)),
+        }
+      })
+      const next = working.filter((s) => s.pieces.length > 0)
+      restoreSheets(next.length > 0 ? next : null)
+    },
+    [sheets, restoreSheets]
+  )
+
+  return {
             ...r,
             outline,
             subEntities,

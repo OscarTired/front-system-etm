@@ -56,6 +56,7 @@ export function NestingPage() {
     projectRef.current = project
   })
   const historyRef = useRef(history)
+  const deleteSelectedRef = useRef<(() => void) | null>(null)
   useEffect(() => {
     historyRef.current = history
   })
@@ -88,19 +89,26 @@ export function NestingPage() {
     }
   }, [isCompact])
 
-  // Atajos Ctrl+Z / Ctrl+Shift+Z
+  // Atajos: Ctrl+Z / Ctrl+Shift+Z, Supr = eliminar de plancha
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       const mod = e.ctrlKey || e.metaKey
-      if (!mod) return
       const key = e.key.toLowerCase()
-      if (key === "z" && !e.shiftKey) {
+      if (mod) {
+        if (key === "z" && !e.shiftKey) {
+          e.preventDefault()
+          history.undo()
+        } else if ((key === "z" && e.shiftKey) || key === "y") {
+          e.preventDefault()
+          history.redo()
+        }
+        return
+      }
+      if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault()
-        history.undo()
-      } else if ((key === "z" && e.shiftKey) || key === "y") {
-        e.preventDefault()
-        history.redo()
+        // handleDeleteSelected se lee vía ref para no re-bind cada render
+        deleteSelectedRef.current?.()
       }
     }
     window.addEventListener("keydown", onKey)
@@ -202,6 +210,17 @@ export function NestingPage() {
     }
     setSelectedPieceIndices([])
   }, [activeGroupIndex])
+
+  // Si se borró la última pieza de una plancha, el grupo desaparece → ajustar tab
+  useEffect(() => {
+    if (project.sheetGroups.length === 0) {
+      setActiveGroupIndex(0)
+      return
+    }
+    if (activeGroupIndex >= project.sheetGroups.length) {
+      setActiveGroupIndex(project.sheetGroups.length - 1)
+    }
+  }, [project.sheetGroups.length, activeGroupIndex])
 
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
@@ -382,6 +401,55 @@ export function NestingPage() {
     setPreviewRowId(null)
   }, [project])
 
+
+  const selectedOverrideDx = selectedPieceIndices.length
+    ? positionOverrides[selectedPieceIndices[selectedPieceIndices.length - 1]]?.dx ?? 0
+    : 0
+  const selectedOverrideDy = selectedPieceIndices.length
+    ? positionOverrides[selectedPieceIndices[selectedPieceIndices.length - 1]]?.dy ?? 0
+    : 0
+  const selectedOverrideAngle = selectedPieceIndices.length
+    ? angleOverrides[selectedPieceIndices[selectedPieceIndices.length - 1]] ?? 0
+    : 0
+
+  const handleOverrideChange = useCallback(
+    (next: { dx: number; dy: number; angle: number }) => {
+      if (selectedPieceIndices.length === 0) return
+      const idx = selectedPieceIndices[selectedPieceIndices.length - 1]
+      const nextPos = { ...history.positionOverrides, [idx]: { dx: next.dx, dy: next.dy } }
+      const nextAng = { ...history.angleOverrides, [idx]: ((next.angle % 360) + 360) % 360 }
+      history.commit("Editar posición", {
+        positionOverrides: nextPos,
+        angleOverrides: nextAng,
+      })
+    },
+    [selectedPieceIndices, history]
+  )
+
+  const handleResetOverrides = useCallback(() => {
+    if (selectedPieceIndices.length === 0) return
+    const nextPos = { ...history.positionOverrides }
+    const nextAng = { ...history.angleOverrides }
+    for (const idx of selectedPieceIndices) {
+      delete nextPos[idx]
+      delete nextAng[idx]
+    }
+    history.commit("Restablecer posición", {
+      positionOverrides: nextPos,
+      angleOverrides: nextAng,
+    })
+  }, [selectedPieceIndices, history])
+
+
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedPieceIndices.length === 0 || !activeGroup) return
+    project.removePlacedPieces(activeGroup.startIndex, selectedPieceIndices)
+    setSelectedPieceIndices([])
+    history.reset()
+  }, [selectedPieceIndices, activeGroup, project, history])
+
+  deleteSelectedRef.current = handleDeleteSelected
+
   const pieceListProps: PieceListProps = useMemo(
     () => ({
       rows: project.rows,
@@ -462,6 +530,12 @@ export function NestingPage() {
                     selectedPieceName={selectedPieceName}
                     espesor={project.settings.espesor}
                     material={project.settings.material}
+                  
+                    overrideDx={selectedOverrideDx}
+                    overrideDy={selectedOverrideDy}
+                    overrideAngle={selectedOverrideAngle}
+                    onOverrideChange={handleOverrideChange}
+                    onResetOverrides={handleResetOverrides}
                   >
                     {selectedCadRow && (
                       <div className="flex flex-col gap-1">
@@ -627,6 +701,7 @@ export function NestingPage() {
                 collidingPieceIndices={collidingPieceIndices}
                 onMovePieces={handleMovePieces}
                 onRotateSelected={handleRotateSelected}
+                onDeleteSelected={() => handleDeleteSelected()}
                 transformMode={transformMode}
                 onTransformModeChange={setTransformMode}
                 rotationStep={rotationStep}
