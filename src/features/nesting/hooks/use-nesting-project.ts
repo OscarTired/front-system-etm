@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useNesting } from "./use-nesting"
 import {
@@ -19,6 +19,14 @@ import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, t
 import { downloadTextFile } from "../utils/file-helpers"
 import type { PieceRow, CadRow } from "../components/piece-list"
 import type { SheetStats } from "../components/properties-panel"
+import {
+  loadNestingDraft,
+  saveNestingDraft,
+  clearNestingDraft,
+  draftHasWork,
+  type NestingDraftV1,
+  type SheetEditSnapshot,
+} from "../export/nesting-session"
 
 const PIECE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#eab308", "#ec4899", "#a855f7"]
 
@@ -67,8 +75,16 @@ export function useNestingProject() {
     []
   )
 
-  const { status, progress, sheets, error, run, cancel } = useNesting()
+  const { status, progress, sheets, error, run, cancel, restoreSheets, clearSheets } = useNesting()
   const isRunning = status === "running"
+  const [sessionRestored, setSessionRestored] = useState(false)
+  const [sessionSavedAt, setSessionSavedAt] = useState<string | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
+  const sheetEditsRef = useRef<Record<string, SheetEditSnapshot>>({})
+  const activeGroupIndexRef = useRef(0)
+  const skipNextSaveRef = useRef(false)
+  const [editsTick, setEditsTick] = useState(0)
+  const requestSessionSave = useCallback(() => setEditsTick((n) => n + 1), [])
 
   const sheetConfig: SheetConfig = useMemo(() => ({
     width: Number(settings.sheetWidth) || 1000,
@@ -139,7 +155,16 @@ export function useNestingProject() {
   }, [sheetGroups, sheetConfig])
 
   const handleRemove = useCallback((id: string) => setRows((prev) => prev.filter((r) => r.id !== id)), [])
-  const handleClearAll = useCallback(() => setRows([]), [])
+  
+  const handleClearAll = useCallback(() => {
+    setRows([])
+    clearSheets()
+    sheetEditsRef.current = {}
+    void clearNestingDraft()
+    setSessionRestored(false)
+    setSessionSavedAt(null)
+  }, [clearSheets])
+
   const handleUpdateQuantity = useCallback((id: string, quantity: string) =>
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, quantity } : r))), [])
   const handleAddCad = useCallback((newRows: CadRow[]) => setRows((prev) => [...prev, ...newRows]), [])
@@ -197,7 +222,6 @@ export function useNestingProject() {
 
   const handleRun = useCallback(() => {
       if (validPieces.length === 0 || isRunning) return
-      // fast = AABB + esquinas + calados (rápido). precise = grilla polígono (lento, no usar en UI).
       run(validPieces, {
         sheet: sheetConfig,
         mode: "fast",
@@ -266,7 +290,115 @@ export function useNestingProject() {
     setRows([])
     setSettings(defaultProjectSettings())
     setMachine(defaultMachineSettings())
+    clearSheets()
+    sheetEditsRef.current = {}
+    activeGroupIndexRef.current = 0
+    void clearNestingDraft()
+    setSessionRestored(false)
+    setSessionSavedAt(null)
+  }, [clearSheets])
+
+  const setSheetEdits = useCallback((edits: Record<string, SheetEditSnapshot>) => {
+    sheetEditsRef.current = edits
   }, [])
+
+  const setActiveGroupIndexForSession = useCallback((index: number) => {
+    activeGroupIndexRef.current = index
+  }, [])
+
+  const discardSession = useCallback(() => {
+    void clearNestingDraft()
+    setRows([])
+    setSettings(defaultProjectSettings())
+    setMachine(defaultMachineSettings())
+    clearSheets()
+    sheetEditsRef.current = {}
+    activeGroupIndexRef.current = 0
+    setSessionRestored(false)
+    setSessionSavedAt(null)
+  }, [clearSheets])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const draft = await loadNestingDraft()
+      if (cancelled) return
+      if (draftHasWork(draft) && draft) {
+        skipNextSaveRef.current = true
+        setSettings(draft.settings)
+        setMachine(draft.machine)
+        setRows(draft.rows)
+        sheetEditsRef.current = draft.editsBySheet ?? {}
+        activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
+        if (draft.sheets && draft.sheets.length > 0) {
+          restoreSheets(draft.sheets)
+        }
+        setSessionRestored(true)
+        setSessionSavedAt(draft.savedAt)
+      }
+      setSessionReady(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [restoreSheets])
+
+  useEffect(() => {
+    if (!sessionReady) return
+    if (isRunning) return
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false
+      return
+    }
+    if (rows.length === 0 && !sheets?.length) return
+    const timer = window.setTimeout(() => {
+      const draft: NestingDraftV1 = {
+        formatVersion: 1,
+        savedAt: new Date().toISOString(),
+        settings,
+        machine,
+        rows,
+        sheets,
+        activeGroupIndex: activeGroupIndexRef.current,
+        editsBySheet: sheetEditsRef.current,
+      }
+      void saveNestingDraft(draft).then((where) => {
+        if (where !== "failed") setSessionSavedAt(draft.savedAt)
+      })
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [rows, settings, machine, sheets, sessionReady, isRunning, editsTick])
+
+  useEffect(() => {
+    const flush = () => {
+      if (rows.length === 0 && !sheets?.length) return
+      const draft: NestingDraftV1 = {
+        formatVersion: 1,
+        savedAt: new Date().toISOString(),
+        settings,
+        machine,
+        rows,
+        sheets,
+        activeGroupIndex: activeGroupIndexRef.current,
+        editsBySheet: sheetEditsRef.current,
+      }
+      try {
+        localStorage.setItem("etm:nesting:draft:v1", JSON.stringify(draft))
+      } catch {
+        /* ignore */
+      }
+      void saveNestingDraft(draft)
+    }
+    const onVis = () => {
+      if (document.visibilityState === "hidden") flush()
+    }
+    window.addEventListener("beforeunload", flush)
+    document.addEventListener("visibilitychange", onVis)
+    return () => {
+      window.removeEventListener("beforeunload", flush)
+      document.removeEventListener("visibilitychange", onVis)
+    }
+  }, [rows, settings, machine, sheets])
 
   return {
     rows,
@@ -283,6 +415,16 @@ export function useNestingProject() {
     error,
     nextColor,
     getSheetStats,
+
+    sessionRestored,
+    sessionSavedAt,
+    sessionReady,
+    onDiscardSession: discardSession,
+    setSheetEdits,
+    setActiveGroupIndexForSession,
+    requestSessionSave,
+    getSheetEdits: () => sheetEditsRef.current,
+    getActiveGroupIndexForSession: () => activeGroupIndexRef.current,
 
     onSettingsChange: handleSettingsChange,
     onMachineChange: handleMachineChange,

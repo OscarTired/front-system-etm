@@ -15,6 +15,9 @@ export interface UseNestingResult {
   error: string | null;
   run: (pieces: NestingPiece[], options: Omit<NestingOptions, "onProgress" | "signal">) => void;
   cancel: () => void;
+  /** Restaura planchas desde draft (F5 / autosave). No pasa por el worker. */
+  restoreSheets: (sheets: NestedSheet[] | null) => void;
+  clearSheets: () => void;
 }
 
 /**
@@ -83,5 +86,19 @@ export function useNesting(): UseNestingResult {
     setStatus("cancelled");
   }, []);
 
-  return { status, progress, sheets, error, run, cancel };
+  const restoreSheets = useCallback((next: NestedSheet[] | null) => {
+    setSheets(next);
+    setStatus(next && next.length > 0 ? "done" : "idle");
+    setProgress(next && next.length > 0 ? 1 : 0);
+    setError(null);
+  }, []);
+
+  const clearSheets = useCallback(() => {
+    setSheets(null);
+    setStatus("idle");
+    setProgress(0);
+    setError(null);
+  }, []);
+
+  return { status, progress, sheets, error, run, cancel, restoreSheets, clearSheets };
 }

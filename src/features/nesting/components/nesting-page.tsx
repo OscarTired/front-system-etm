@@ -71,6 +71,36 @@ export function NestingPage() {
     }
   }, [isCompact])
 
+  // Restaurar edits + tab desde draft (una sola vez)
+  const editsHydratedRef = useRef(false)
+  useEffect(() => {
+    if (!project.sessionReady || editsHydratedRef.current) return
+    editsHydratedRef.current = true
+    if (!project.sessionRestored) return
+    const idx = project.getActiveGroupIndexForSession()
+    if (typeof idx === "number" && idx >= 0) setActiveGroupIndex(idx)
+    const edits = project.getSheetEdits()
+    const key = String(idx ?? 0)
+    const snap = edits[key]
+    if (snap) {
+      setPositionOverrides(snap.positionOverrides ?? {})
+      setAngleOverrides(snap.angleOverrides ?? {})
+    }
+  }, [project.sessionReady, project.sessionRestored])
+
+  // Persistir edits de la plancha activa
+  useEffect(() => {
+    if (!project.sessionReady || !editsHydratedRef.current) return
+    const key = String(activeGroupIndex)
+    const prev = project.getSheetEdits()
+    project.setSheetEdits({
+      ...prev,
+      [key]: { positionOverrides, angleOverrides },
+    })
+    project.setActiveGroupIndexForSession(activeGroupIndex)
+    project.requestSessionSave()
+  }, [positionOverrides, angleOverrides, activeGroupIndex, project.sessionReady])
+
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
   const canvasPieces: PlacedPiece[] = useMemo(() => {
@@ -131,7 +161,6 @@ export function NestingPage() {
     const colliding = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        // Respetar calados: pieza dentro de hueco de otra ? colisión
         if (piecesCollide(canvasPieces[i], canvasPieces[j])) {
           colliding.add(i)
           colliding.add(j)
@@ -183,7 +212,6 @@ export function NestingPage() {
   const handleMovePieces = useCallback((pieceIndices: number[], dx: number, dy: number) => {
     if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return
 
-    // Aplicamos constrainToMode antes de registrar el desplazamiento
     let wantDx = dx
     let wantDy = dy
     ;({ dx: wantDx, dy: wantDy } = constrainToMode(transformMode ?? "free", wantDx, wantDy))
@@ -407,6 +435,31 @@ export function NestingPage() {
         onSettings={() => {}}
         onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
       />
+
+      {project.sessionRestored && (
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs text-amber-100">
+          <span>
+            Trabajo restaurado
+            {project.sessionSavedAt
+              ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}`
+              : ""}
+            . Se guardó solo en este navegador.
+          </span>
+          <button
+            type="button"
+            className="rounded-md bg-white/10 px-2.5 py-1 font-medium text-white hover:bg-white/15"
+            onClick={() => {
+              project.onDiscardSession()
+              setPositionOverrides({})
+              setAngleOverrides({})
+              setSelectedPieceIndices([])
+              setActiveGroupIndex(0)
+            }}
+          >
+            Descartar y empezar de cero
+          </button>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {!isCompact && (
