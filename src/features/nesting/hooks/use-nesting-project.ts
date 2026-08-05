@@ -193,11 +193,25 @@ export function useNestingProject() {
             outline: transform(sub.outline, pivot),
           }))
           const bounds = boundsOfPiece(outline, subEntities)
-        
+          return {
+            ...r,
+            outline,
+            subEntities,
+            width: bounds.width,
+            height: bounds.height,
+          }
+        })
+      )
+    },
+    []
+  )
+
   /**
    * Quita piezas colocadas de una plancha del resultado de nest.
    * `sheetIndex` = índice real en el arreglo `sheets` (p.ej. group.startIndex).
    * Si la plancha queda vacía, se elimina del resultado.
+   * Solo toca esa plancha (opción A): si formaba parte de un grupo ×N,
+   * al cambiar deja de ser idéntica y el grupo se recalcula solo.
    */
   const removePlacedPieces = useCallback(
     (sheetIndex: number, pieceIndices: number[]) => {
@@ -215,19 +229,6 @@ export function useNestingProject() {
       restoreSheets(next.length > 0 ? next : null)
     },
     [sheets, restoreSheets]
-  )
-
-  return {
-            ...r,
-            outline,
-            subEntities,
-            width: bounds.width,
-            height: bounds.height,
-          }
-        })
-      )
-    },
-    []
   )
 
   const handleRotate = useCallback((id: string, degrees: number) => {
@@ -482,6 +483,8 @@ export function useNestingProject() {
       onMirrorY: handleMirrorY,
       onDuplicate: handleDuplicate,
 
+      removePlacedPieces,
+
       onRun: handleRun,
       onCancel: cancel,
       onExportSheet: handleExportSheet,
@@ -524,6 +527,7 @@ export function useNestingProject() {
       handleMirrorX,
       handleMirrorY,
       handleDuplicate,
+      removePlacedPieces,
       handleRun,
       cancel,
       handleExportSheet,

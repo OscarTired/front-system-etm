@@ -22,6 +22,12 @@ export interface PropertiesPanelProps {
   material?: string
   /** Slot bajo propiedades (ej. fila editable del piece-list). */
   children?: ReactNode
+  /** Overrides de instancia en plancha (editables). */
+  overrideDx?: number
+  overrideDy?: number
+  overrideAngle?: number
+  onOverrideChange?: (next: { dx: number; dy: number; angle: number }) => void
+  onResetOverrides?: () => void
 }
 
 function StatRow({ label, value }: { label: string; value: string }) {
@@ -42,6 +48,11 @@ export function PropertiesPanel({
   espesor,
   material,
   children,
+  overrideDx = 0,
+  overrideDy = 0,
+  overrideAngle = 0,
+  onOverrideChange,
+  onResetOverrides,
 }: PropertiesPanelProps) {
   if (selectedPiece) {
     const bounds = boundingRect(selectedPiece.outline)
@@ -71,6 +82,54 @@ export function PropertiesPanel({
           {material && <StatRow label="Material" value={material} />}
           {espesor && <StatRow label="Espesor" value={`${espesor} mm`} />}
         </div>
+
+        {onOverrideChange && (
+          <div className="mt-1 flex flex-col gap-1.5 rounded-xl bg-white/3 p-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                Posición en plancha
+              </span>
+              {onResetOverrides && (
+                <button
+                  type="button"
+                  className="text-[10px] text-neutral-400 hover:text-white"
+                  onClick={onResetOverrides}
+                >
+                  Restablecer
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(
+                [
+                  ["dx", overrideDx, "ΔX mm"],
+                  ["dy", overrideDy, "ΔY mm"],
+                  ["angle", overrideAngle, "Áng °"],
+                ] as const
+              ).map(([key, val, label]) => (
+                <label key={key} className="flex flex-col gap-0.5">
+                  <span className="px-0.5 text-[9px] text-neutral-500">{label}</span>
+                  <input
+                    type="number"
+                    step={key === "angle" ? 1 : 0.1}
+                    className="h-7 rounded-md border-none bg-white/5 px-1.5 text-xs text-neutral-100 outline-none focus:ring-1 focus:ring-white/20"
+                    value={Number.isFinite(val) ? val : 0}
+                    onChange={(e) => {
+                      const n = parseFloat(e.target.value)
+                      if (!Number.isFinite(n)) return
+                      onOverrideChange({
+                        dx: key === "dx" ? n : overrideDx,
+                        dy: key === "dy" ? n : overrideDy,
+                        angle: key === "angle" ? n : overrideAngle,
+                      })
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {children && <div className="mt-1 flex flex-col gap-1">{children}</div>}
       </div>
     )
