@@ -48,7 +48,7 @@ export interface ToolpathSeg {
 
 export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "coords"
 
-export type CanvasTool = "select" | "pan"
+export type CanvasTool = "select" | "pan" | "zoomWindow" | "rotate"
 
 export type Measurement =
   | { id: string; kind: "distance"; a: Point; b: Point; value: number }
@@ -77,6 +77,12 @@ export interface DxfCanvasProps {
   lockedPieceIndices?: number[]
   onMovePieces?: (pieceIndices: number[], dx: number, dy: number) => void
   onRotateSelected?: (pieceIndices: number[], degrees: number) => void
+  /** Rotar selección alrededor de un pivot en coords de plancha (grados). */
+  onRotateAroundPivot?: (
+    pieceIndices: number[],
+    pivot: { x: number; y: number },
+    degrees: number,
+  ) => void
   /** Eliminar piezas seleccionadas de la plancha. */
   onDeleteSelected?: (pieceIndices: number[]) => void
   /** Eliminar de plancha + listado del proyecto (opcional). */

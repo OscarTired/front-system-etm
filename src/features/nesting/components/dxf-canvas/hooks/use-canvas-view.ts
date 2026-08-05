@@ -115,6 +115,7 @@ export function useCanvasView() {
     viewRef,
     localToScreen,
     screenToLocal,
+    fitToBounds,
     fitToSheetOrEntities,
     focusEntities,
     zoomAt,

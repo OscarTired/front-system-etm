@@ -479,6 +479,41 @@ export function NestingPage() {
     })
   }, [selectedPieceIndices, history])
 
+  const handleRotateAroundPivot = useCallback(
+    (pieceIndices: number[], pivot: { x: number; y: number }, degrees: number) => {
+      if (pieceIndices.length === 0 || Math.abs(degrees) < 1e-6) return
+      const rad = (degrees * Math.PI) / 180
+      const cos = Math.cos(rad)
+      const sin = Math.sin(rad)
+      const nextPos = { ...history.positionOverrides }
+      const nextAng = { ...history.angleOverrides }
+      for (const idx of pieceIndices) {
+        if (lockedPieceIndices.includes(idx)) continue
+        const piece = canvasPieces[idx]
+        if (!piece) continue
+        const b = boundingRect(piece.outline)
+        const cx = b.x + b.width / 2
+        const cy = b.y + b.height / 2
+        const dx0 = cx - pivot.x
+        const dy0 = cy - pivot.y
+        const nx = pivot.x + dx0 * cos - dy0 * sin
+        const ny = pivot.y + dx0 * sin + dy0 * cos
+        const prev = nextPos[idx] ?? { dx: 0, dy: 0 }
+        nextPos[idx] = {
+          dx: prev.dx + (nx - cx),
+          dy: prev.dy + (ny - cy),
+        }
+        nextAng[idx] = (((nextAng[idx] ?? 0) + degrees) % 360 + 360) % 360
+      }
+      history.commit("Rotar pivot", {
+        positionOverrides: nextPos,
+        angleOverrides: nextAng,
+      })
+    },
+    [history, canvasPieces, lockedPieceIndices],
+  )
+
+
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedPieceIndices.length === 0 || !activeGroup) return
@@ -823,6 +858,7 @@ export function NestingPage() {
                 lockedPieceIndices={lockedPieceIndices}
                 onMovePieces={handleMovePieces}
                 onRotateSelected={handleRotateSelected}
+                onRotateAroundPivot={handleRotateAroundPivot}
                 onDeleteSelected={() => handleDeleteSelected()}
                 onDeleteFromProject={() => handleDeleteSelected()}
                 transformMode={transformMode}

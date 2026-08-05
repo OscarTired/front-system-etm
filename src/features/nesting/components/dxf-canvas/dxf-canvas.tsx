@@ -49,6 +49,7 @@ export function DxfCanvas({
   lockedPieceIndices = [],
   onMovePieces,
   onRotateSelected,
+  onRotateAroundPivot,
   onDeleteSelected,
   onDeleteFromProject,
   transformMode = "free",
@@ -84,6 +85,22 @@ export function DxfCanvas({
   const [boxSelectScreen, setBoxSelectScreen] = useState<{
     x0: number; y0: number; x1: number; y1: number
   } | null>(null)
+  /** Zoom window: mismo esquema de rectángulo que box select. */
+  const zoomWindowRef = useRef<{
+    startScreen: { x: number; y: number }
+    curScreen: { x: number; y: number }
+    startLocal: { x: number; y: number }
+    curLocal: { x: number; y: number }
+  } | null>(null)
+  /** Rotate tool: pivot + ángulo inicial del puntero. */
+  const rotateDragRef = useRef<{
+    pivot: { x: number; y: number }
+    startAngle: number
+    currentDelta: number
+    pieceIndices: number[]
+  } | null>(null)
+  const [rotatePivotScreen, setRotatePivotScreen] = useState<{ x: number; y: number } | null>(null)
+  const [rotatePreviewDelta, setRotatePreviewDelta] = useState(0)
   /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
   const collisionIndexRef = useRef<CollisionIndex | null>(null)
   /** Guías de snap magnético del frame actual (draw las lee sin setState). */
@@ -224,6 +241,42 @@ export function DxfCanvas({
         return
       }
 
+      // Zoom window: arrastrar rectángulo → fit
+      if (canvasTool === "zoomWindow" && measure.activeTool === "none") {
+        const rect = canvas.getBoundingClientRect()
+        const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        zoomWindowRef.current = {
+          startScreen: screenPt,
+          curScreen: screenPt,
+          startLocal: rawPoint,
+          curLocal: rawPoint,
+        }
+        setBoxSelectScreen({ x0: screenPt.x, y0: screenPt.y, x1: screenPt.x, y1: screenPt.y })
+        canvas.setPointerCapture(e.pointerId)
+        setCursor("crosshair")
+        return
+      }
+
+      // Rotate around pivot: clic = pivot, arrastrar = ángulo
+      if (canvasTool === "rotate" && measure.activeTool === "none") {
+        const locked = new Set(lockedPieceIndicesRef.current)
+        const movable = selectedPieceIndices.filter((i) => !locked.has(i))
+        if (movable.length === 0) return
+        const pivot = { x: rawPoint.x, y: rawPoint.y }
+        rotateDragRef.current = {
+          pivot,
+          startAngle: Number.NaN,
+          currentDelta: 0,
+          pieceIndices: movable,
+        }
+        const rect = canvas.getBoundingClientRect()
+        setRotatePivotScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+        setRotatePreviewDelta(0)
+        canvas.setPointerCapture(e.pointerId)
+        setCursor("crosshair")
+        return
+      }
+
       if (measure.activeTool === "none") {
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
 
@@ -283,19 +336,40 @@ export function DxfCanvas({
     }
 
     const onPointerMove = (e: PointerEvent) => {
-      if (boxSelectRef.current) {
+      if (boxSelectRef.current || zoomWindowRef.current) {
         const rect = canvas.getBoundingClientRect()
         const screenPt = { x: e.clientX - rect.left, y: e.clientY - rect.top }
         const local = view.screenToLocal(canvas, e.clientX, e.clientY)
-        boxSelectRef.current.curScreen = screenPt
-        if (local) boxSelectRef.current.curLocal = local
-        const b = boxSelectRef.current
-        setBoxSelectScreen({
-          x0: b.startScreen.x,
-          y0: b.startScreen.y,
-          x1: screenPt.x,
-          y1: screenPt.y,
-        })
+        const active = boxSelectRef.current ?? zoomWindowRef.current
+        if (active) {
+          active.curScreen = screenPt
+          if (local) active.curLocal = local
+          setBoxSelectScreen({
+            x0: active.startScreen.x,
+            y0: active.startScreen.y,
+            x1: screenPt.x,
+            y1: screenPt.y,
+          })
+        }
+        scheduleDraw()
+        return
+      }
+
+      if (rotateDragRef.current) {
+        const local = view.screenToLocal(canvas, e.clientX, e.clientY)
+        if (local) {
+          const rd = rotateDragRef.current
+          const dx = local.x - rd.pivot.x
+          const dy = local.y - rd.pivot.y
+          if (Math.hypot(dx, dy) > 1e-3) {
+            const ang = Math.atan2(dy, dx)
+            if (Number.isNaN(rd.startAngle)) rd.startAngle = ang
+            let delta = ((ang - rd.startAngle) * 180) / Math.PI
+            if (e.shiftKey) delta = Math.round(delta / 15) * 15
+            rd.currentDelta = delta
+            setRotatePreviewDelta(delta)
+          }
+        }
         scheduleDraw()
         return
       }
@@ -376,6 +450,36 @@ export function DxfCanvas({
     }
 
     const onPointerUp = (e: PointerEvent) => {
+      if (zoomWindowRef.current) {
+        const box = zoomWindowRef.current
+        zoomWindowRef.current = null
+        setBoxSelectScreen(null)
+        const minX = Math.min(box.startLocal.x, box.curLocal.x)
+        const maxX = Math.max(box.startLocal.x, box.curLocal.x)
+        const minY = Math.min(box.startLocal.y, box.curLocal.y)
+        const maxY = Math.max(box.startLocal.y, box.curLocal.y)
+        if (maxX - minX > 1e-2 && maxY - minY > 1e-2) {
+          view.fitToBounds(canvas, { minX, minY, maxX, maxY }, 0.95)
+        }
+        setCursor("crosshair")
+        scheduleDraw()
+        return
+      }
+
+      if (rotateDragRef.current) {
+        const rd = rotateDragRef.current
+        rotateDragRef.current = null
+        setRotatePivotScreen(null)
+        const delta = rd.currentDelta
+        setRotatePreviewDelta(0)
+        if (Math.abs(delta) > 0.05) {
+          onRotateAroundPivot?.(rd.pieceIndices, rd.pivot, delta)
+        }
+        setCursor("crosshair")
+        scheduleDraw()
+        return
+      }
+
       if (boxSelectRef.current) {
         const box = boxSelectRef.current
         boxSelectRef.current = null
@@ -496,6 +600,7 @@ export function DxfCanvas({
     selectedPieceIndices,
     onSelectPiece,
     onMovePieces,
+    onRotateAroundPivot,
     transformMode,
     scheduleDraw,
     pieces,
@@ -743,6 +848,36 @@ export function DxfCanvas({
         onSeek={sim.seek}
         onSpeedChange={sim.setSpeed}
       />
+
+      {rotatePivotScreen && (
+        <div
+          className="pointer-events-none absolute z-20"
+          style={{ left: rotatePivotScreen.x, top: rotatePivotScreen.y, transform: "translate(-50%, -50%)" }}
+        >
+          <div className="relative flex h-6 w-6 items-center justify-center">
+            <div className="absolute h-px w-6 bg-cyan-400" />
+            <div className="absolute h-6 w-px bg-cyan-400" />
+            <div className="absolute h-2 w-2 rounded-full border border-cyan-300 bg-cyan-400/30" />
+          </div>
+          {Math.abs(rotatePreviewDelta) > 0.05 && (
+            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-[#101012]/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
+              {rotatePreviewDelta > 0 ? "+" : ""}
+              {rotatePreviewDelta.toFixed(1)}°
+            </div>
+          )}
+        </div>
+      )}
+
+      {canvasTool === "zoomWindow" && !boxSelectScreen && (
+        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
+          Arrastra un rectángulo para hacer zoom
+        </div>
+      )}
+      {canvasTool === "rotate" && !rotatePivotScreen && (
+        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
+          Clic = pivot · arrastrar = ángulo (Shift = 15°)
+        </div>
+      )}
 
       {measure.activeTool !== "none" && (
         <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md transition-opacity duration-200">
