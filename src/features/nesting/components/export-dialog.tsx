@@ -1,10 +1,11 @@
 "use client"
-import { useMemo } from "react"
+import { useState, useMemo } from "react"
 import { Download, Save, Layers, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { FormDialogHeader } from "@/shared/ui/dialogs/form-dialog/form-dialog-header"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Spinner } from "@/shared/ui/spinner/spinner"
 import type { NestedSheet, SheetConfig } from "../engine/types"
 import { formatSheetRangeLabel, type SheetGroup } from "../utils/svg-render"
 import { buildPieceCatalog, type PieceNameMap } from "../export/piece-catalog"
@@ -18,10 +19,9 @@ type Props = {
   sheets: NestedSheet[] | null
   sheetConfig: SheetConfig
   nomenclatura: Nomenclatura
-  onExportSheet: (format: "dxf" | "nsp", sheetIndex: number) => void
+  onExportSheet: (format: "dxf" | "nsp", sheetIndex: number) => Promise<void> | void
   onSaveProject: () => void
   nameById?: PieceNameMap
-  /** Opcionales para el paquete de producción (estilo TruTops). */
   cliente?: string
   maquina?: string
 }
@@ -39,23 +39,42 @@ export function ExportDialog({
   cliente,
   maquina,
 }: Props) {
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [exportingSheetKey, setExportingSheetKey] = useState<string | null>(null)
+
   const catalog = useMemo(
     () => (sheets ? buildPieceCatalog(sheets, nameById) : []),
     [sheets, nameById],
   )
 
-  function handleExportReport() {
-    if (!sheets) return
-    void exportNestingReportPdf({
-      nomenclatura,
-      sheets,
-      sheetConfig,
-      nameById,
-      materialLabel: nomenclatura.material,
-      espesorLabel: nomenclatura.espesor,
-      cliente,
-      maquina,
-    })
+  async function handleExportReport() {
+    if (!sheets || isExportingPdf) return
+    try {
+      setIsExportingPdf(true)
+      await exportNestingReportPdf({
+        nomenclatura,
+        sheets,
+        sheetConfig,
+        nameById,
+        materialLabel: nomenclatura.material,
+        espesorLabel: nomenclatura.espesor,
+        cliente,
+        maquina,
+      })
+    } finally {
+      setIsExportingPdf(false)
+    }
+  }
+
+  async function handleSheetAction(format: "dxf" | "nsp", sheetIndex: number) {
+    const key = `${sheetIndex}-${format}`
+    if (exportingSheetKey === key) return
+    try {
+      setExportingSheetKey(key)
+      await onExportSheet(format, sheetIndex)
+    } finally {
+      setExportingSheetKey(null)
+    }
   }
 
   return (
@@ -64,12 +83,10 @@ export function ExportDialog({
         size="large"
         className="flex h-[85vh] max-h-[85vh] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-2xl bg-[#121214] p-0 text-neutral-100 shadow-2xl"
       >
-        {/* Header fijo */}
         <div className="shrink-0">
           <FormDialogHeader title="Exportar" icon={Download} />
         </div>
 
-        {/* Acciones Generales — FIJO, no scrollea */}
         <div className="shrink-0 px-5 pb-2 pt-1">
           <div className="flex flex-col gap-2">
             <span className="px-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
@@ -97,15 +114,20 @@ export function ExportDialog({
               {sheets && sheets.length > 0 && (
                 <button
                   type="button"
+                  disabled={isExportingPdf}
                   onClick={handleExportReport}
-                  className="group flex items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-white/8"
+                  className="group flex items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-white/8 disabled:opacity-50"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-400 transition-colors group-hover:text-white">
-                    <FileText size={18} />
+                  <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-400 transition-colors group-hover:text-white">
+                    {isExportingPdf ? (
+                      <Spinner className="h-4 w-4 text-neutral-200" />
+                    ) : (
+                      <FileText size={18} />
+                    )}
                   </div>
                   <div className="flex min-w-0 flex-col">
                     <span className="text-sm font-medium text-neutral-200">
-                      Reporte PDF
+                      {isExportingPdf ? "Generando Reporte PDF..." : "Reporte PDF"}
                     </span>
                     <span className="truncate text-[11px] text-neutral-500">
                       Resumen, vista de cada plancha y catálogo (BOM)
@@ -117,15 +139,9 @@ export function ExportDialog({
           </div>
         </div>
 
-        {/* 
-          Corrección de scroll en desktop:
-          Cambiamos a h-0 flex-1 para forzar al contenedor a respetar el espacio restante 
-          restando el header y las acciones fijas de arriba.
-        */}
         <div className="relative flex-1 min-h-0 w-full overflow-hidden">
           <ScrollArea className="h-full w-full">
             <div className="flex flex-col gap-5 px-5 pb-5 pt-3">
-              {/* Planchas por Lote / Grupo */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between px-0.5">
                   <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
@@ -144,51 +160,67 @@ export function ExportDialog({
                     </p>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      {sheetGroups.map((group, index) => (
-                        <div
-                          key={group.startIndex}
-                          style={{ animationDelay: `${Math.min(index, 8) * 25}ms` }}
-                          className="animate-comment-in flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-white/4"
-                        >
-                          <div className="flex min-w-0 flex-col">
-                            <span className="flex items-center gap-2 text-sm font-medium text-neutral-200">
-                              {formatSheetRangeLabel(group)}
-                              {group.count > 1 && (
-                                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-neutral-300">
-                                  ×{group.count}
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-[11px] text-neutral-500">
-                              {group.sheet.pieces.length} piezas
-                            </span>
+                      {sheetGroups.map((group, index) => {
+                        const loadingDxf = exportingSheetKey === `${group.startIndex}-dxf`
+                        const loadingNsp = exportingSheetKey === `${group.startIndex}-nsp`
+
+                        return (
+                          <div
+                            key={group.startIndex}
+                            style={{ animationDelay: `${Math.min(index, 8) * 25}ms` }}
+                            className="animate-comment-in flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-white/4"
+                          >
+                            <div className="flex min-w-0 flex-col">
+                              <span className="flex items-center gap-2 text-sm font-medium text-neutral-200">
+                                {formatSheetRangeLabel(group)}
+                                {group.count > 1 && (
+                                  <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-neutral-300">
+                                    ×{group.count}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-[11px] text-neutral-500">
+                                {group.sheet.pieces.length} piezas
+                              </span>
+                            </div>
+                            <div className="flex shrink-0 gap-2">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                disabled={loadingDxf || loadingNsp}
+                                onClick={() => handleSheetAction("dxf", group.startIndex)}
+                                className="h-8 border-0 bg-white/5 px-3 text-xs text-neutral-200 shadow-none hover:bg-white/10 disabled:opacity-50"
+                              >
+                                {loadingDxf ? (
+                                  <Spinner className="mr-1.5 h-3.5 w-3.5 text-neutral-200" />
+                                ) : (
+                                  <Download size={14} className="mr-1.5 opacity-70" />
+                                )}
+                                {loadingDxf ? "Exportando..." : "DXF"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                disabled={loadingDxf || loadingNsp}
+                                onClick={() => handleSheetAction("nsp", group.startIndex)}
+                                className="h-8 border-0 bg-white/5 px-3 text-xs text-neutral-200 shadow-none hover:bg-white/10 disabled:opacity-50"
+                              >
+                                {loadingNsp ? (
+                                  <Spinner className="mr-1.5 h-3.5 w-3.5 text-neutral-200" />
+                                ) : (
+                                  <Download size={14} className="mr-1.5 opacity-70" />
+                                )}
+                                {loadingNsp ? "Exportando..." : "NSP"}
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex shrink-0 gap-2">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => onExportSheet("dxf", group.startIndex)}
-                              className="h-8 border-0 bg-white/5 px-3 text-xs text-neutral-200 shadow-none hover:bg-white/10"
-                            >
-                              <Download size={14} className="mr-1.5 opacity-70" /> DXF
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => onExportSheet("nsp", group.startIndex)}
-                              className="h-8 border-0 bg-white/5 px-3 text-xs text-neutral-200 shadow-none hover:bg-white/10"
-                            >
-                              <Download size={14} className="mr-1.5 opacity-70" /> NSP
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Catálogo (BOM) */}
               {catalog.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-1.5 px-0.5">

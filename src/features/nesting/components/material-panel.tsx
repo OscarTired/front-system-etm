@@ -154,13 +154,15 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
           <Field label="Proyecto">
             <Input 
               className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
+              placeholder="001-M"
               value={settings.proyecto} 
               onChange={(e) => onChange({ proyecto: e.target.value })} 
             />
           </Field>
           <Field label="Cliente">
             <Input 
-              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
+              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+              placeholder="ETM" 
               value={settings.cliente} 
               onChange={(e) => onChange({ cliente: e.target.value })} 
             />
@@ -168,6 +170,7 @@ export function MaterialPanel({ settings, onChange }: MaterialPanelProps) {
           <Field label="Material">
             <Input 
               className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
+              placeholder="INOX"
               value={settings.material} 
               onChange={(e) => onChange({ material: e.target.value })} 
             />
