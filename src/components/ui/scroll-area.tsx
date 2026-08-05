@@ -21,7 +21,7 @@ export interface ScrollAreaProps
   contentClassName?: string
 }
 
-export function ScrollArea({
+function ScrollArea({
   className,
   contentClassName,
   children,
@@ -243,3 +243,17 @@ export function ScrollArea({
     </div>
   )
 }
+
+// Mantenido solo por compatibilidad con los call sites que ya
+// renderizaban <ScrollBar /> como hijo explícito (patrón de Radix:
+// <ScrollArea>...<ScrollBar/></ScrollArea>). El ScrollArea nuevo no
+// usa un thumb sintético — el scroll es nativo del navegador,
+// estilizado vía las clases .themed-scrollbar-x/y en globals.css —
+// así que esto no necesita renderizar nada. Se puede borrar de a
+// poco de cada call site cuando se toque ese archivo por otra razón.
+function ScrollBar(_: React.ComponentProps<"div"> & { orientation?: Orientation }) {
+  void _
+  return null
+}
+
+export { ScrollArea, ScrollBar }

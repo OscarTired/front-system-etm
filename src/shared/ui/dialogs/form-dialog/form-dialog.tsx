@@ -78,7 +78,7 @@ export function FormDialog({
 
       <DialogContent
         size="large"
-        className="flex max-h-dvh w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+        className="flex max-h-dvh w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
       >
 
         <FormDialogHeader
