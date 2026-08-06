@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 import {
   ZoomIn,
   ZoomOut,
@@ -125,6 +127,21 @@ export function CanvasToolbar({
   const [open, setOpen] = useState(false)
   const [speedPopoverOpen, setSpeedPopoverOpen] = useState(false)
   const [displayOpen, setDisplayOpen] = useState(false)
+  const { isCompact } = useResponsive()
+
+  // Mismo patrón que sheet-tabs.tsx para el panel scrolleable en mobile:
+  // drag-scroll (arrastrar con el dedo/mouse) + fade en los bordes para
+  // que quede claro que hay más botones a los costados en vez de sentirse
+  // "cortado". Se declaran siempre (reglas de hooks) aunque solo se
+  // conecten al DOM cuando isCompact.
+  const {
+    containerRef: toolScrollRef,
+    handleMouseDown: handleToolMouseDown,
+    handleMouseMove: handleToolMouseMove,
+    handleClickCapture: handleToolClickCapture,
+    stopDragging: stopToolDragging,
+  } = useDragScroll()
+  const { leftFade, rightFade } = useHorizontalFade({ containerRef: toolScrollRef })
 
   // Auto-abre el panel de herramientas al seleccionar una pieza en el canvas.
   // No lo auto-cerramos al deseleccionar: si el usuario lo dejó abierto
@@ -138,8 +155,6 @@ export function CanvasToolbar({
     if (canFocusSelected) setOpen(true)
   }, [canFocusSelected])
 
-  const { isCompact } = useResponsive()
-
   const handleClose = () => {
     onResetTool()
     onCloseSim()
@@ -150,9 +165,20 @@ export function CanvasToolbar({
   const isToolActive = activeTool !== "none"
 
   return (
-    <div className="pointer-events-none absolute left-3 top-3 z-25 flex flex-col items-start gap-2">
-      {/* Fila superior: FAB principal + Barra de Herramientas */}
-      <div className="flex items-center gap-2">
+    <div
+      className={`pointer-events-none absolute left-3 top-3 z-25 flex flex-col items-start gap-2 ${
+        isCompact ? "right-3" : ""
+      }`}
+    >
+      {/* Fila superior: FAB principal + Barra de Herramientas.
+          En mobile agregamos `right-3` arriba para que este contenedor
+          conozca su ancho REAL disponible (viewport menos los 2 márgenes
+          de la página) — antes el panel de abajo usaba `calc(100vw-...)`
+          como referencia, que ignoraba el padding de la página (`<main
+          className="px-4">`), así que se pasaba del borde real del
+          canvas y el `overflow-hidden` del canvas lo recortaba a mitad
+          de ícono en vez de dejarlo scrollear completo. */}
+      <div className={`flex items-center gap-2 ${isCompact ? "w-full" : ""}`}>
         {/* FAB — siempre visible */}
         <button
           type="button"
@@ -174,22 +200,39 @@ export function CanvasToolbar({
         </button>
 
         {/* Panel principal de herramientas.
-            En mobile el ancho fijo (max-w-150 ≈ 600px) se recortaba contra
-            el borde de la pantalla y algunos botones quedaban inalcanzables;
-            acá lo topamos al viewport disponible y agregamos scroll interno ocultando la barra. */}
+            Mobile: en vez de un max-w mágico basado en el viewport, el
+            panel es `min-w-0 flex-1` dentro de una fila ya acotada a su
+            ancho real (ver arriba) — así SIEMPRE calza exacto contra el
+            borde del canvas, nunca se recorta. Además, mismo patrón que
+            sheet-tabs.tsx: fade en los bordes + drag-scroll, para que
+            quede claro que hay más botones deslizando en vez de sentirse
+            "cortado". */}
         <div
+          ref={isCompact ? toolScrollRef : undefined}
+          onMouseDown={isCompact ? handleToolMouseDown : undefined}
+          onMouseMove={isCompact ? handleToolMouseMove : undefined}
+          onMouseUp={isCompact ? stopToolDragging : undefined}
+          onMouseLeave={isCompact ? stopToolDragging : undefined}
+          onClickCapture={isCompact ? handleToolClickCapture : undefined}
+          style={
+            isCompact
+              ? {
+                  WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+                  maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+                }
+              : undefined
+          }
           className={`
-            pointer-events-auto flex items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full
+            pointer-events-auto flex items-center gap-0.5 overflow-y-hidden rounded-full
             bg-[#1c1c1e]/92 py-1 pl-1.5 pr-1.5
             shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
             ${
-              open
-                ? isCompact
-                  ? "max-w-[calc(100vw-4.5rem)] opacity-100"
-                  : "max-w-150 opacity-100"
-                : "max-w-0 opacity-0 pointer-events-none"
+              isCompact
+                ? `themed-scrollbar-x cursor-grab overflow-x-auto active:cursor-grabbing ${
+                    open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+                  }`
+                : `overflow-x-hidden ${open ? "max-w-150 opacity-100" : "max-w-0 opacity-0 pointer-events-none"}`
             }
           `}
         >
@@ -259,7 +302,8 @@ export function CanvasToolbar({
               <PopoverContent
                 side="bottom"
                 align="start"
-                className="w-48 border-white/10 p-1.5 text-neutral-100"
+                floatingClassName="w-48 border-white/10"
+                className="p-1.5 text-neutral-100"
               >
                 <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
                   Fondo
@@ -459,7 +503,7 @@ export function CanvasToolbar({
                 <ChevronDown size={12} className={`transition-transform duration-200 ${speedPopoverOpen ? "rotate-180" : ""}`} />
               </button>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="center" sideOffset={8} className="w-24 p-1 text-neutral-200">
+            <PopoverContent side="bottom" align="center" sideOffset={8} floatingClassName="w-24" className="p-1 text-neutral-200">
               <div className="flex flex-col gap-0.5">
                 {SPEEDS.map((s) => (
                   <button
