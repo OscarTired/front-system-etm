@@ -8,13 +8,8 @@ import {
   BarChart3,
   Copy,
   ClipboardPaste,
-  FilePlus,
-  FileUp,
-  FolderOpen,
   Info,
   Lock,
-  Save,
-  Settings,
   Unlock,
 } from "lucide-react"
 
@@ -33,17 +28,7 @@ export type CollisionPairInfo = {
   nameB: string
 }
 
-export type ProjectToolbarActions = {
-  onNew: () => void
-  onOpen: () => void
-  onSave: () => void
-  onExport: () => void
-  onSettings?: () => void
-}
-
 export interface PropertiesPanelProps {
-  /** Acciones de proyecto (antes toolbar superior). Box propio arriba. */
-  projectActions?: ProjectToolbarActions | null
   sheetStats: SheetStats | null
   selectedPiece: PlacedPiece | null
   selectedPieceName?: string | null
@@ -78,43 +63,7 @@ function StatRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-
-function ProjectActionsRow({ actions }: { actions: ProjectToolbarActions }) {
-  const btn =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
-  return (
-    <div className="flex flex-col gap-1.5 rounded-xl bg-white/3 p-2">
-      <span className="px-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-        Proyecto
-      </span>
-      <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-0.5">
-          <button type="button" className={btn} title="Nuevo proyecto" onClick={actions.onNew}>
-            <FilePlus className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-          <button type="button" className={btn} title="Abrir proyecto" onClick={actions.onOpen}>
-            <FolderOpen className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-          <button type="button" className={btn} title="Guardar proyecto" onClick={actions.onSave}>
-            <Save className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-          <div className="mx-1 h-4 w-px bg-white/10" aria-hidden />
-          <button type="button" className={btn} title="Exportar" onClick={actions.onExport}>
-            <FileUp className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-        </div>
-        {actions.onSettings && (
-          <button type="button" className={btn} title="Configuración" onClick={actions.onSettings}>
-            <Settings className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export function PropertiesPanel({
-  projectActions = null,
   sheetStats,
   selectedPiece,
   selectedPieceName,
@@ -155,7 +104,6 @@ export function PropertiesPanel({
 
     return (
       <div className="flex flex-col gap-2 p-2">
-        {projectActions && <ProjectActionsRow actions={projectActions} />}
         <div className="mb-1 flex items-center justify-between px-1">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
             <Info className="h-3 w-3" /> Pieza seleccionada
@@ -297,7 +245,6 @@ export function PropertiesPanel({
   if (sheetStats) {
     return (
       <div className="flex flex-col gap-2 p-2">
-        {projectActions && <ProjectActionsRow actions={projectActions} />}
         <div className="mb-1 flex items-center justify-between px-1">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
             <BarChart3 className="h-3 w-3" /> Plancha activa
@@ -341,12 +288,9 @@ export function PropertiesPanel({
   }
 
   return (
-    <div className="flex flex-col gap-2 p-2">
-      {projectActions && <ProjectActionsRow actions={projectActions} />}
-      <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-xs text-neutral-500">
-        <Info className="h-5 w-5 opacity-40" />
-        Selecciona una pieza o nestear para ver propiedades.
-      </div>
+    <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-xs text-neutral-500">
+      <Info className="h-5 w-5 opacity-40" />
+      Selecciona una pieza o nestear para ver propiedades.
     </div>
   )
 }

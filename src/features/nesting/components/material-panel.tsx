@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Sliders, Layers, Scissors, Check, ChevronRight } from "lucide-react"
+import {
+  ChevronRight,
+  FilePlus,
+  FileUp,
+  FolderOpen,
+  Layers,
+  Save,
+  Sliders,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -22,11 +30,18 @@ export type PieceMaterialSummary = {
   materials: string[]
 }
 
+export type ProjectToolbarActions = {
+  onNew: () => void
+  onOpen: () => void
+  onSave: () => void
+  onExport: () => void
+}
+
 export interface MaterialPanelProps {
   settings: ProjectSettings
   onChange: (patch: Partial<ProjectSettings>) => void
-  /** Resumen de materiales de las piezas cargadas (multi-espesor / multi-material). */
-  pieceMaterials?: PieceMaterialSummary
+  pieceMaterials?: PieceMaterialSummary | null
+  projectActions?: ProjectToolbarActions | null
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -38,119 +53,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function FieldSelect<T extends string>({
-  value,
-  options,
+export function MaterialPanel({
+  settings,
   onChange,
-}: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (value: T) => void
-}) {
-  const current = options.find((option) => option.value === value)
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-9 w-full min-w-0 justify-between rounded-lg bg-neutral-950/40 px-3 text-xs font-normal text-neutral-200 border-0 hover:bg-neutral-900 hover:text-white"
-        >
-          <span className="truncate">{current?.label ?? value}</span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-52 rounded-xl border-white/10 bg-[#121214] text-neutral-200 shadow-2xl">
-        <DropdownMenuRadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
-          {options.map((option) => (
-            <DropdownMenuRadioItem 
-              key={option.value} 
-              value={option.value} 
-              className="text-xs focus:bg-white/10 focus:text-white cursor-pointer py-2"
-            >
-              {option.label}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-export function SheetDimensionsFields({ settings, onChange }: MaterialPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  return (
-    <div className="flex flex-col rounded-xl px-3 py-2 transition-colors">
-      <button
-        type="button"
-        onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex w-full items-start justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Layers className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
-            <span className="text-xs font-medium text-neutral-200">Dimensiones</span>
-          </div>
-
-          {!isExpanded && (
-            <div className="mt-1 pl-5.5">
-              <div className="text-xs font-medium text-neutral-300">
-                {settings.sheetWidth} × {settings.sheetHeight} mm
-              </div>
-              <div className="text-[11px] text-neutral-500">
-                Margen: {settings.margin} mm
-              </div>
-            </div>
-          )}
-        </div>
-
-        <ChevronRight
-          className={cn(
-            "mt-0.5 h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-200",
-            isExpanded && "rotate-90"
-          )}
-        />
-      </button>
-
-      <div
-        className={cn(
-          "grid grid-cols-3 gap-2.5 overflow-hidden transition-all duration-200 ease-in-out",
-          isExpanded ? "mt-3 max-h-32 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-        )}
-      >
-        <Field label="Ancho (mm)">
-          <Input
-            className="h-9 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
-            inputMode="decimal"
-            value={settings.sheetWidth}
-            onChange={(e) => onChange({ sheetWidth: e.target.value })}
-          />
-        </Field>
-
-        <Field label="Alto (mm)">
-          <Input
-            className="h-9 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
-            inputMode="decimal"
-            value={settings.sheetHeight}
-            onChange={(e) => onChange({ sheetHeight: e.target.value })}
-          />
-        </Field>
-
-        <Field label="Margen (mm)">
-          <Input
-            className="h-9 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
-            inputMode="decimal"
-            value={settings.margin}
-            onChange={(e) => onChange({ margin: e.target.value })}
-          />
-        </Field>
-      </div>
-    </div>
-  )
-}
-
-export function MaterialPanel({ settings, onChange, pieceMaterials }: MaterialPanelProps) {
+  pieceMaterials,
+  projectActions = null,
+}: MaterialPanelProps) {
   const multiThick = (pieceMaterials?.thicknesses.length ?? 0) > 1
   const multiMat = (pieceMaterials?.materials.length ?? 0) > 1
   const thickLabel = multiThick
@@ -160,128 +68,182 @@ export function MaterialPanel({ settings, onChange, pieceMaterials }: MaterialPa
     ? `Varios: ${pieceMaterials!.materials.join(", ")}`
     : null
 
+  const [isProjectExpanded, setIsProjectExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(true)
+  const btn =
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+
   return (
-    <div className="flex flex-col gap-4 p-3">
-      
-      {/* Bloque 1: Información General */}
-      <div className="flex flex-col gap-2">
-        <span className="flex items-center gap-2 text-xs font-semibold text-neutral-400 px-1">
-          <Sliders className="h-3.5 w-3.5" /> Información General
-        </span>
-        <div className="grid grid-cols-2 gap-2.5 p-1">
-          <Field label="Proyecto">
-            <Input 
-              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-              placeholder="001-M"
-              value={settings.proyecto} 
-              onChange={(e) => onChange({ proyecto: e.target.value })} 
-            />
-          </Field>
-          <Field label="Cliente">
-            <Input 
-              className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
-              placeholder="ETM" 
-              value={settings.cliente} 
-              onChange={(e) => onChange({ cliente: e.target.value })} 
-            />
-          </Field>
-          <Field label="Material">
-            {multiMat ? (
-              <div className="flex min-h-9 flex-col justify-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
-                <span className="text-xs font-medium text-amber-200/90">{matLabel}</span>
-                <span className="text-[10px] text-amber-500/80">
-                  Hay más de un material en las piezas. No se fija uno solo.
-                </span>
-              </div>
-            ) : (
-              <Input 
-                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-                placeholder="INOX"
-                value={settings.material} 
-                onChange={(e) => onChange({ material: e.target.value })} 
-              />
-            )}
-          </Field>
-          <Field label="Espesor">
-            {multiThick ? (
-              <div className="flex min-h-9 flex-col justify-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
-                <span className="text-xs font-medium text-amber-200/90">{thickLabel}</span>
-                <span className="text-[10px] text-amber-500/80">
-                  Hay más de un espesor en las piezas. No se fija uno solo.
-                </span>
-              </div>
-            ) : (
-              <Input 
-                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-                inputMode="decimal" 
-                placeholder="Ej: 3.0 mm"
-                value={settings.espesor} 
-                onChange={(e) => onChange({ espesor: e.target.value })} 
-              />
-            )}
-          </Field>
-        </div>
-      </div>
+    <div className="flex flex-col gap-3">
+      {projectActions && (
+        <div className="flex flex-col rounded-xl items-center bg-white/2 p-1 transition-colors">
+          <button
+            type="button"
+            onClick={() => setIsProjectExpanded((prev) => !prev)}
+            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+          >
+            <div className="flex items-center gap-2">
+              <FolderOpen className="h-3.5 w-3.5 text-cyan-400" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Proyecto</span>
+            </div>
 
-      {/* Bloque 2: Parámetros de Corte */}
-      <div className="flex flex-col gap-2">
-        <span className="flex items-center gap-2 text-xs font-semibold text-neutral-400 px-1">
-          <Scissors className="h-3.5 w-3.5" /> Parámetros de Corte
-        </span>
-        
-        <div className="flex flex-col gap-3 p-1">
-          <div className="grid grid-cols-2 gap-2.5">
-            <Field label="Separación (mm)">
-              <Input 
-                className="h-9 rounded-lg bg-neutral-950/50 border-0 text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30" 
-                inputMode="decimal" 
-                value={settings.separacion} 
-                onChange={(e) => onChange({ separacion: e.target.value })} 
-              />
-            </Field>
-            <div />
-          </div>
-
-          <Field label="Rotación permitida">
-            <FieldSelect
-              value={settings.rotacionPermitida}
-              onChange={(value) => onChange({ rotacionPermitida: value } as any)}
-              options={[
-                { value: "0-90-180-270", label: "0° / 90° / 180° / 270°" },
-                { value: "libre", label: "Libre" },
-                { value: "ninguna", label: "Ninguna (0°)" },
-              ]}
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 text-neutral-500 transition-transform duration-200",
+                isProjectExpanded && "rotate-90"
+              )}
             />
-          </Field>
-        </div>
-        <span className="text-[10px] text-neutral-500 px-1">
-          * Separación y rotación se aplican al nestear. Se guardan con el proyecto.
-        </span>
-      </div>
+          </button>
 
-      {/* Bloque 3: Puentes / Micro-uniones */}
-      <div className="p-1">
-        <button
-          type="button"
-          onClick={() => onChange({ puentesHabilitado: !settings.puentesHabilitado })}
-          className="flex w-full items-center justify-between text-left cursor-pointer select-none"
-        >
-          <span className="text-xs font-medium text-neutral-300">
-            Puentes / Micro-uniones
-          </span>
           <div
             className={cn(
-              "flex size-4 items-center justify-center rounded border transition-colors",
-              settings.puentesHabilitado
-                ? "border-cyan-500 bg-cyan-500 text-neutral-950"
-                : "border-neutral-700 bg-transparent text-transparent"
+              "flex flex-col gap-2 overflow-hidden transition-all duration-200 ease-in-out",
+              isProjectExpanded ? "mt-2 max-h-50 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
             )}
           >
-            <Check size={10} strokeWidth={3} />
+            <div className="flex items-center gap-0.5 rounded-lg bg-black/25 p-2">
+              <button type="button" className={btn} title="Nuevo proyecto" onClick={projectActions.onNew}>
+                <FilePlus className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+              <button type="button" className={btn} title="Abrir proyecto" onClick={projectActions.onOpen}>
+                <FolderOpen className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+              <button type="button" className={btn} title="Guardar proyecto" onClick={projectActions.onSave}>
+                <Save className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+              <div className="mx-1 h-4 w-px bg-white/10" aria-hidden />
+              <button type="button" className={btn} title="Exportar" onClick={projectActions.onExport}>
+                <FileUp className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
-        </button>
-      </div>
+        </div>
+      )}
 
+      {/* Contenedor principal estilo Box unificado */}
+      <div className="flex flex-col rounded-xl bg-white/[0.02] p-1 transition-colors">
+        <button
+          type="button"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+        >
+          <div className="flex items-center gap-2">
+            <Sliders className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Configuración</span>
+          </div>
+
+          <ChevronRight
+            className={cn(
+              "h-4 w-4 text-neutral-500 transition-transform duration-200",
+              isExpanded && "rotate-90"
+            )}
+          />
+        </button>
+
+        <div
+          className={cn(
+            "flex flex-col gap-3 overflow-hidden transition-all duration-200 ease-in-out",
+            isExpanded ? "mt-2 max-h-[600px] opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
+          )}
+        >
+          {/* Dimensiones */}
+          <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
+            <div className="flex items-center gap-2 mb-2">
+              <Layers className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+              <span className="text-xs font-medium text-neutral-200">Dimensiones de Plancha</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Ancho (mm)">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  inputMode="decimal"
+                  value={settings.sheetWidth}
+                  onChange={(e) => onChange({ sheetWidth: e.target.value })}
+                />
+              </Field>
+
+              <Field label="Alto (mm)">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  inputMode="decimal"
+                  value={settings.sheetHeight}
+                  onChange={(e) => onChange({ sheetHeight: e.target.value })}
+                />
+              </Field>
+
+              <Field label="Margen (mm)">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  inputMode="decimal"
+                  value={settings.margin}
+                  onChange={(e) => onChange({ margin: e.target.value })}
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Información General */}
+          <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
+            <div className="flex items-center gap-2 mb-2">
+              <Sliders className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Información General</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Field label="Proyecto">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  placeholder="001-M"
+                  value={settings.proyecto}
+                  onChange={(e) => onChange({ proyecto: e.target.value })}
+                />
+              </Field>
+              <Field label="Cliente">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  placeholder="ETM"
+                  value={settings.cliente}
+                  onChange={(e) => onChange({ cliente: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Field label="Material">
+                {multiMat ? (
+                  <div className="flex min-h-14 flex-col items-center justify-center text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
+                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{matLabel}</span>
+                    <span className="text-[10px] text-amber-500/80">Varios materiales</span>
+                  </div>
+                ) : (
+                  <Input
+                    className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
+                    placeholder="INOX"
+                    value={settings.material}
+                    onChange={(e) => onChange({ material: e.target.value })}
+                  />
+                )}
+              </Field>
+
+              <Field label="Espesor">
+                {multiThick ? (
+                  <div className="flex min-h-14 flex-col items-center justify-center truncate uppercase text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
+                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{thickLabel}</span>
+                    <span className="text-[10px] text-amber-500/80">Varios espesores</span>
+                  </div>
+                ) : (
+                  <Input
+                    className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
+                    inputMode="decimal"
+                    placeholder="Ej: 3.0 mm"
+                    value={settings.espesor}
+                    onChange={(e) => onChange({ espesor: e.target.value })}
+                  />
+                )}
+              </Field>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
