@@ -107,10 +107,17 @@ export function PropertiesPanel({
 
     return (
       <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              setIsExpanded((prev) => !prev)
+            }
+          }}
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-white/3"
         >
           <div className="flex items-center gap-2">
             <Info className="h-3.5 w-3.5 text-cyan-400" />
@@ -142,7 +149,7 @@ export function PropertiesPanel({
               }`}
             />
           </div>
-        </button>
+        </div>
 
         <div
           className={`flex flex-col gap-3 overflow-hidden transition-all duration-200 ease-in-out ${
@@ -271,10 +278,17 @@ export function PropertiesPanel({
   if (sheetStats) {
     return (
       <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              setIsExpanded((prev) => !prev)
+            }
+          }}
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-white/3"
         >
           <div className="flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
@@ -286,7 +300,7 @@ export function PropertiesPanel({
               isExpanded ? "rotate-90" : ""
             }`}
           />
-        </button>
+        </div>
 
         <div
           className={`flex flex-col gap-3 overflow-hidden transition-all duration-200 ease-in-out ${
