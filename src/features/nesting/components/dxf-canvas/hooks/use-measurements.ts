@@ -1,7 +1,56 @@
+"use client"
+
 import { useCallback, useState } from "react"
-import { angleOfVector, pointInPolygon, polygonArea, polygonPerimeter } from "../utils/geometry-utils"
 import type { Entity, Measurement, MeasureTool, Point } from "../types/types"
-import { HIT_TOLERANCE_PX } from "../types/types"
+import { pointInPolygon, polygonArea, polygonPerimeter } from "../utils/geometry-utils"
+
+const HIT_TOLERANCE_PX = 8
+
+function angleOfVector(origin: Point, p: Point) {
+  return Math.atan2(p.y - origin.y, p.x - origin.x)
+}
+
+export type ToolClickOptions = {
+  /** Shift = forzar cota horizontal o vertical (eje dominante). */
+  shiftKey?: boolean
+}
+
+/**
+ * Auto-cota del bounding box de una selección (ancho + alto).
+ * `bounds` en coords mundo.
+ */
+export function measurementsFromBBox(
+  bounds: { x: number; y: number; width: number; height: number },
+  offsetMm = 12,
+): Measurement[] {
+  const { x, y, width, height } = bounds
+  if (width < 1e-6 && height < 1e-6) return []
+  const id = Date.now()
+  const out: Measurement[] = []
+  // Ancho (horizontal) arriba
+  if (width > 1e-6) {
+    out.push({
+      id: `bbox-w-${id}`,
+      kind: "distance",
+      a: { x, y: y + height },
+      b: { x: x + width, y: y + height },
+      value: width,
+      offset: offsetMm,
+    })
+  }
+  // Alto (vertical) a la derecha
+  if (height > 1e-6) {
+    out.push({
+      id: `bbox-h-${id}`,
+      kind: "distance",
+      a: { x: x + width, y },
+      b: { x: x + width, y: y + height },
+      value: height,
+      offset: offsetMm,
+    })
+  }
+  return out
+}
 
 export function useMeasurements() {
   const [activeTool, setActiveTool] = useState<MeasureTool>("none")
@@ -32,6 +81,11 @@ export function useMeasurements() {
 
   const clearMeasurements = useCallback(() => setMeasurements([]), [])
 
+  const addMeasurements = useCallback((items: Measurement[]) => {
+    if (items.length === 0) return
+    setMeasurements((prev) => [...prev, ...items])
+  }, [])
+
   const hitTestCircleOrArc = useCallback(
     (entities: Entity[], point: Point, scale: number): { center: Point; radius: number } | null => {
       const tol = HIT_TOLERANCE_PX / scale
@@ -42,7 +96,7 @@ export function useMeasurements() {
       }
       return null
     },
-    []
+    [],
   )
 
   const hitTestClosedContour = useCallback((entities: Entity[], point: Point): Point[] | null => {
@@ -54,18 +108,24 @@ export function useMeasurements() {
   }, [])
 
   const handleToolClick = useCallback(
-    (point: Point, entities: Entity[], scale: number) => {
+    (point: Point, entities: Entity[], scale: number, opts?: ToolClickOptions) => {
       if (activeTool === "distance") {
-        // Clic 1 = A, clic 2 = B, clic 3 = posición de la cota (offset)
         if (pendingPoints.length < 2) {
-          setPendingPoints([...pendingPoints, point])
+          let p = point
+          // Shift en el 2º clic: forzar H o V respecto al primero
+          if (opts?.shiftKey && pendingPoints.length === 1) {
+            const a = pendingPoints[0]
+            const adx = Math.abs(point.x - a.x)
+            const ady = Math.abs(point.y - a.y)
+            p = adx >= ady ? { x: point.x, y: a.y } : { x: a.x, y: point.y }
+          }
+          setPendingPoints([...pendingPoints, p])
           return
         }
         const [a, b] = pendingPoints
         const dx = b.x - a.x
         const dy = b.y - a.y
         const len = Math.hypot(dx, dy) || 1
-        // Normal unitario perpendicular
         const nx = -dy / len
         const ny = dx / len
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
@@ -118,7 +178,7 @@ export function useMeasurements() {
         const perimeter = polygonPerimeter(contour)
         const centroid = contour.reduce(
           (acc, p) => ({ x: acc.x + p.x / contour.length, y: acc.y + p.y / contour.length }),
-          { x: 0, y: 0 }
+          { x: 0, y: 0 },
         )
         setMeasurements((prev) => [
           ...prev,
@@ -133,7 +193,7 @@ export function useMeasurements() {
         ])
       }
     },
-    [activeTool, pendingPoints, hitTestCircleOrArc, hitTestClosedContour]
+    [activeTool, pendingPoints, hitTestCircleOrArc, hitTestClosedContour],
   )
 
   return {
@@ -148,6 +208,7 @@ export function useMeasurements() {
     toggleTool,
     removeMeasurement,
     clearMeasurements,
+    addMeasurements,
     handleToolClick,
   }
 }

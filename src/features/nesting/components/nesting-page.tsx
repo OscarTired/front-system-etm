@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, Trash2, RotateCcw, X } from "lucide-react"
+import { Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, Trash2, RotateCcw, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
@@ -23,10 +23,12 @@ import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { MaterialPanel } from "./material-panel"
 import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
 import { PieceListRow } from "./piece-list-row"
-import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { NestingShell, type NestingPanelId } from "./nesting-shell"
+import { NestingConfirmDialog } from "./nesting-confirm-dialog"
+import { NestingPageSkeleton } from "./nesting-page-skeleton"
+import { NestingToast } from "../hooks/nesting-feedback"
 import {
   Dialog,
   DialogContent,
@@ -34,7 +36,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 
@@ -43,17 +44,8 @@ const DxfCanvas = dynamic(
   { ssr: false }
 )
 
-type PanelView = "sheet-pieces" | "project-material" | "layers" | "inspector"
-
-const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
-  { value: "project-material", label: "Proyecto y Material", icon: SlidersHorizontal },
-  { value: "sheet-pieces", label: "Piezas", icon: LayoutGrid },
-  { value: "layers", label: "Capas", icon: Layers },
-  { value: "inspector", label: "Inspector", icon: Info },
-]
-
 export function NestingPage() {
-  const { isCompact } = useResponsive()
+  // Responsive: NestingShell
   const project = useNestingProject()
   const history = useSheetHistory()
 
@@ -82,8 +74,8 @@ export function NestingPage() {
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
   const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
-  const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
-  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState<boolean>(false)
+  const [activePanel, setActivePanel] = useState<NestingPanelId | null>("sheet-pieces")
+  const [pendingRenest, setPendingRenest] = useState(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
@@ -100,11 +92,6 @@ export function NestingPage() {
     [previewRowId, project.rows]
   )
 
-  useEffect(() => {
-    if (!isCompact) {
-      setIsMobilePanelOpen(false)
-    }
-  }, [isCompact])
 
   // Mostrar notificación de trabajo restaurado vía sonner
   const sessionToastShownRef = useRef(false)
@@ -423,7 +410,6 @@ export function NestingPage() {
     })
   }, [transformMode, history])
 
-  /** Tras rotar (ángulo + override de posición), ¿sigue dentro de la plancha? */
   const outlineInsideSheet = useCallback(
     (outline: { points: { x: number; y: number }[] }) => {
       const b = boundingRect(outline)
@@ -443,23 +429,21 @@ export function NestingPage() {
   const handleRotateSelected = useCallback((pieceIndices: number[], degrees: number) => {
     if (pieceIndices.length === 0 || Math.abs(degrees) < 1e-9) return
     if (!activeGroup) return
-
     const nextAng = { ...history.angleOverrides }
     const rawPieces = activeGroup.sheet.pieces
     const rotating = new Set(pieceIndices)
-
-    // Simular geometría resultante de cada pieza a rotar
     const simulated: { idx: number; piece: PlacedPiece }[] = []
 
     for (const idx of pieceIndices) {
-      if (lockedPieceIndices.includes(idx)) continue
+      if (lockedPieceIndices.includes(idx)) {
+        NestingToast.locked()
+        return
+      }
       const p = rawPieces[idx]
       if (!p) continue
       const cur = nextAng[idx] ?? 0
       const newAng = ((cur + degrees) % 360 + 360) % 360
       nextAng[idx] = newAng
-
-      // Misma lógica que canvasPieces: rotar desde outline nest + aplicar override pos
       let piece: PlacedPiece = p
       if (newAng) {
         const b = boundingRect(p.outline)
@@ -488,32 +472,32 @@ export function NestingPage() {
           })),
         }
       }
-
-      // Fuera de plancha → rechazar toda la rotación del grupo
       if (!outlineInsideSheet(piece.outline)) {
+        NestingToast.rotateOutOfSheet()
         return
       }
       simulated.push({ idx, piece })
     }
-
     if (simulated.length === 0) return
-
-    // Colisión con piezas que no rotan (y entre sí)
     for (const { idx, piece } of simulated) {
       for (let o = 0; o < canvasPieces.length; o++) {
         if (o === idx) continue
         if (rotating.has(o)) {
-          // Contra otra del grupo: usar su simulación si existe
           const otherSim = simulated.find((s) => s.idx === o)
-          if (otherSim && piecesCollide(piece, otherSim.piece)) return
+          if (otherSim && piecesCollide(piece, otherSim.piece)) {
+            NestingToast.rotateCollision()
+            return
+          }
           continue
         }
-        if (piecesCollide(piece, canvasPieces[o])) return
+        if (piecesCollide(piece, canvasPieces[o])) {
+          NestingToast.rotateCollision()
+          return
+        }
       }
     }
-
     const sign = degrees >= 0 ? "+" : ""
-    history.commit(`Rotar ${sign}${degrees}°`, {
+    history.commit("Rotar " + sign + degrees + "\u00b0", {
       positionOverrides: history.positionOverrides,
       angleOverrides: nextAng,
     })
@@ -583,18 +567,43 @@ export function NestingPage() {
       }
     }
 
-    if (moved === 0) return
+    if (moved === 0) {
+      NestingToast.alignNone()
+      return
+    }
     history.commit("Alinear piezas", {
       positionOverrides: next,
       angleOverrides: history.angleOverrides,
     })
   }, [selectedPieceIndices, canvasPieces, history, lockedPieceIndices])
 
-  const handleRun = useCallback(() => {
+  const doRunNesting = useCallback(() => {
+    history.replace({ positionOverrides: {}, angleOverrides: {} })
+    setLockedPieceIndices([])
     setActiveGroupIndex(0)
     setSelectedPieceIndices([])
     project.onRun()
-  }, [project])
+  }, [project, history])
+
+  const handleRun = useCallback(() => {
+    if (project.isRunning) {
+      NestingToast.nestRunning()
+      return
+    }
+    if (project.rows.length === 0) {
+      NestingToast.nestEmpty()
+      return
+    }
+    const hasNest = project.sheetGroups.length > 0
+    const hasEdits =
+      Object.keys(history.positionOverrides).length > 0 ||
+      Object.keys(history.angleOverrides).length > 0
+    if (hasNest || hasEdits) {
+      setPendingRenest(true)
+      return
+    }
+    doRunNesting()
+  }, [project, history, doRunNesting])
 
   const handleOpenProjectFile = useCallback(async (file: File | undefined) => {
     if (!file) return
@@ -655,9 +664,6 @@ export function NestingPage() {
       const sin = Math.sin(rad)
       const nextPos = { ...history.positionOverrides }
       const nextAng = { ...history.angleOverrides }
-      const rotating = new Set(pieceIndices)
-      const simulated: { idx: number; piece: PlacedPiece }[] = []
-
       for (const idx of pieceIndices) {
         if (lockedPieceIndices.includes(idx)) continue
         const piece = canvasPieces[idx]
@@ -669,59 +675,19 @@ export function NestingPage() {
         const dy0 = cy - pivot.y
         const nx = pivot.x + dx0 * cos - dy0 * sin
         const ny = pivot.y + dx0 * sin + dy0 * cos
-        const ddx = nx - cx
-        const ddy = ny - cy
         const prev = nextPos[idx] ?? { dx: 0, dy: 0 }
         nextPos[idx] = {
-          dx: prev.dx + ddx,
-          dy: prev.dy + ddy,
+          dx: prev.dx + (nx - cx),
+          dy: prev.dy + (ny - cy),
         }
         nextAng[idx] = (((nextAng[idx] ?? 0) + degrees) % 360 + 360) % 360
-
-        // Geometría resultante: rotar outline actual alrededor del pivot de pieza + traslación del centro
-        const rotatedOutline = rotateOutlineAroundPoint(piece.outline, degrees, { x: cx, y: cy })
-        const movedOutline = {
-          points: rotatedOutline.points.map((pt) => ({ x: pt.x + ddx, y: pt.y + ddy })),
-        }
-        if (!outlineInsideSheet(movedOutline)) return
-
-        const testPiece: PlacedPiece = {
-          ...piece,
-          x: piece.x + ddx,
-          y: piece.y + ddy,
-          angle: ((piece.angle + degrees) % 360 + 360) % 360,
-          outline: movedOutline,
-          subEntities: piece.subEntities?.map((s) => {
-            const ro = rotateOutlineAroundPoint(s.outline, degrees, { x: cx, y: cy })
-            return {
-              ...s,
-              outline: { points: ro.points.map((pt) => ({ x: pt.x + ddx, y: pt.y + ddy })) },
-            }
-          }),
-        }
-        simulated.push({ idx, piece: testPiece })
       }
-
-      if (simulated.length === 0) return
-
-      for (const { idx, piece } of simulated) {
-        for (let o = 0; o < canvasPieces.length; o++) {
-          if (o === idx) continue
-          if (rotating.has(o)) {
-            const otherSim = simulated.find((s) => s.idx === o)
-            if (otherSim && piecesCollide(piece, otherSim.piece)) return
-            continue
-          }
-          if (piecesCollide(piece, canvasPieces[o])) return
-        }
-      }
-
       history.commit("Rotar pivot", {
         positionOverrides: nextPos,
         angleOverrides: nextAng,
       })
     },
-    [history, canvasPieces, lockedPieceIndices, outlineInsideSheet],
+    [history, canvasPieces, lockedPieceIndices],
   )
 
 
@@ -814,20 +780,14 @@ export function NestingPage() {
     project.onExportSheet(format, sheetIndex, bridges)
   }, [hasOverrides, activeGroup, canvasPieces, project])
 
-  const renderSidePanelContent = () => (
-    <div className="flex h-full flex-col gap-3 overflow-hidden">
-      <EntityExpandedToggle
-        value={activePanel}
-        onChange={setActivePanel}
-        options={PANEL_OPTIONS}
-      />
+  const panelBody = (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
 
-      <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
-        {activePanel === "sheet-pieces" ? (
+        {(activePanel ?? "sheet-pieces") === "sheet-pieces" ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3 p-3">
             <PieceList ref={pieceListRef} {...pieceListProps} />
           </div>
-        ) : activePanel === "project-material" ? (
+        ) : (activePanel ?? "sheet-pieces") === "project-material" ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
             <div className="shrink-0 px-3 pt-3 pb-2">
             </div>
@@ -853,7 +813,7 @@ export function NestingPage() {
               </div>
             </ScrollArea>
           </div>
-        ) : activePanel === "layers" ? (
+        ) : (activePanel ?? "sheet-pieces") === "layers" ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
             <ScrollArea className="min-h-0 flex-1">
               <div className="flex flex-col gap-3 px-3 pb-3 box-border pt-3">
@@ -941,45 +901,50 @@ export function NestingPage() {
         )}
       </div>
 
-      <div className="pt-3 mt-auto shrink-0">
-        {!project.isRunning ? (
-          <Button size="default" className="w-full" disabled={!project.canRun} onClick={handleRun}>
-            Nestear
-          </Button>
-        ) : (
-          <Button
-            size="default"
-            variant="outline"
-            className="w-full relative overflow-hidden bg-neutral-900 border-none text-white hover:bg-neutral-900 cursor-pointer"
-            onClick={project.onCancel}
-            title="Haz clic para cancelar"
-          >
-            <div
-              className="absolute left-0 top-0 bottom-0 bg-white transition-all duration-150 pointer-events-none opacity-20"
-              style={{ width: `${Math.round(project.progress * 100)}%` }}
-            />
-            <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">
-              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-              <span>
-                Calculando...{" "}
-                <span className="inline-block min-w-[3ch] text-right">
-                  {Math.round(project.progress * 100)}
-                </span>
-                %
-              </span>
-            </span>
-          </Button>
-        )}
+  )
 
-        {project.error && (
-          <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive mt-2">{project.error}</p>
-        )}
-      </div>
+  const nestFooter = (
+    <div className="flex flex-col gap-2">
+      {!project.isRunning ? (
+        <Button size="default" className="w-full" disabled={!project.canRun} onClick={handleRun}>
+          Nestear
+        </Button>
+      ) : (
+        <Button
+          size="default"
+          variant="outline"
+          className="relative w-full cursor-pointer overflow-hidden border-none bg-neutral-900 text-white hover:bg-neutral-900"
+          onClick={project.onCancel}
+          title="Cancelar"
+        >
+          <div
+            className="pointer-events-none absolute bottom-0 left-0 top-0 bg-white opacity-20 transition-all duration-150"
+            style={{ width: `${Math.round(project.progress * 100)}%` }}
+          />
+          <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            <span>
+              Calculando...{" "}
+              <span className="inline-block min-w-[3ch] text-right">
+                {Math.round(project.progress * 100)}
+              </span>
+              %
+            </span>
+          </span>
+        </Button>
+      )}
+      {project.error && (
+        <p className="mt-1 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{project.error}</p>
+      )}
     </div>
   )
 
+  if (!project.sessionReady) {
+    return <NestingPageSkeleton />
+  }
+
   return (
-    <div className="mx-auto flex w-full max-w-400 flex-col h-full min-h-0 overflow-hidden relative">
+    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-400 flex-col overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -991,16 +956,15 @@ export function NestingPage() {
         }}
       />
 
-
-      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
-        {!isCompact && (
-          <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 shadow-sm p-3">
-            {renderSidePanelContent()}
-          </aside>
-        )}
-
-        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 shadow-sm p-3">
-          {project.sheetGroups.length > 0 && (
+      <div className="min-h-0 flex-1 overflow-hidden p-2">
+        <NestingShell
+          activePanel={activePanel}
+          onActivePanelChange={setActivePanel}
+          panel={panelBody}
+          footer={nestFooter}
+          workspace={
+            <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 p-2 shadow-sm">
+{project.sheetGroups.length > 0 && (
             <div className="shrink-0 w-full min-w-0">
               <SheetTabs
                 items={sheetTabItems}
@@ -1147,19 +1111,19 @@ export function NestingPage() {
               </div>
             )}
           </div>
-        </main>
+            </div>
+          }
+        />
       </div>
 
-      <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-        <SheetContent className="flex flex-col gap-3 p-4 bg-neutral-950 border-none">
-          <SheetHeader className="p-0">
-            <SheetTitle>Panel de Control</SheetTitle>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-hidden">
-            {renderSidePanelContent()}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <NestingConfirmDialog
+        open={pendingRenest}
+        onOpenChange={setPendingRenest}
+        title="Nestear de nuevo"
+        description="Se recalculará el acomodo desde cero y se perderán los movimientos, rotaciones y bloqueos manuales de las planchas actuales."
+        confirmLabel="Nestear de nuevo"
+        onConfirm={doRunNesting}
+      />
 
       <Dialog open={pendingDelete} onOpenChange={(open) => !open && setPendingDelete(false)}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md rounded-2xl border-white/10 bg-neutral-900 p-5 text-white shadow-2xl">
