@@ -18,8 +18,6 @@ export interface NestingConfirmDialogProps {
   cancelLabel?: string
   destructive?: boolean
   onConfirm: () => void
-  secondaryLabel?: string
-  onSecondary?: () => void
 }
 
 export function NestingConfirmDialog({
@@ -31,8 +29,6 @@ export function NestingConfirmDialog({
   cancelLabel = "Cancelar",
   destructive = false,
   onConfirm,
-  secondaryLabel,
-  onSecondary,
 }: NestingConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,19 +48,6 @@ export function NestingConfirmDialog({
           >
             {cancelLabel}
           </Button>
-          {secondaryLabel && onSecondary && (
-            <Button
-              type="button"
-              variant="outline"
-              className="border-white/15 bg-transparent text-neutral-200 hover:bg-white/5"
-              onClick={() => {
-                onSecondary()
-                onOpenChange(false)
-              }}
-            >
-              {secondaryLabel}
-            </Button>
-          )}
           <Button
             type="button"
             className={

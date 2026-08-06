@@ -26,7 +26,7 @@ import { findNearestSnap, findSmartSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { constrainToMode } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
-import { useMeasurements } from "./hooks/use-measurements"
+import { useMeasurements, measurementsFromBBox } from "./hooks/use-measurements"
 import { useSimulation } from "./hooks/use-simulation"
 
 export type { NestingPieceInput, LayerInfo, DxfCanvasProps } from "./types/types"
@@ -547,7 +547,8 @@ export function DxfCanvas({
           measure.handleToolClick(
             snap ? snap.point : rawPoint,
             entitiesRef.current,
-            view.viewRef.current.scale
+            view.viewRef.current.scale,
+            { shiftKey: e.shiftKey },
           )
           return
         }
@@ -655,6 +656,32 @@ export function DxfCanvas({
     view.focusEntities(canvasRef.current, selected)
     scheduleDraw()
   }, [view, selectedPieceIndices, scheduleDraw])
+
+
+  const handleAutoBboxDim = useCallback(() => {
+    if (selectedPieceIndices.length === 0) return
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const i of selectedPieceIndices) {
+      const piece = pieces[i]
+      if (!piece?.outline?.length) continue
+      for (const pt of piece.outline) {
+        minX = Math.min(minX, pt.x)
+        minY = Math.min(minY, pt.y)
+        maxX = Math.max(maxX, pt.x)
+        maxY = Math.max(maxY, pt.y)
+      }
+    }
+    if (!Number.isFinite(minX)) return
+    measure.addMeasurements(
+      measurementsFromBBox({
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      }),
+    )
+    scheduleDraw()
+  }, [selectedPieceIndices, pieces, measure, scheduleDraw])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -871,6 +898,8 @@ export function DxfCanvas({
         onFit={handleFit}
         onFocusSelected={handleFocus}
         canFocusSelected={selectedPieceIndices.length > 0}
+        onAutoBboxDim={handleAutoBboxDim}
+        canAutoBboxDim={selectedPieceIndices.length > 0}
         activeTool={measure.activeTool}
         onToggleTool={measure.toggleTool}
         onResetTool={measure.resetTool}

@@ -74,6 +74,10 @@ export interface CanvasToolbarProps {
   onResetSim: () => void
   onSeek: (v: number) => void
   onSpeedChange: (v: number) => void
+
+  /** Auto-cota del bbox de la selección. */
+  onAutoBboxDim?: () => void
+  canAutoBboxDim?: boolean
 }
 
 const SPEEDS = [0.5, 1, 2, 4] as const
@@ -106,6 +110,8 @@ export function CanvasToolbar({
   onResetSim,
   onSeek,
   onSpeedChange,
+  onAutoBboxDim,
+  canAutoBboxDim = false,
 }: CanvasToolbarProps) {
   const [open, setOpen] = useState(false)
   const [speedPopoverOpen, setSpeedPopoverOpen] = useState(false)
@@ -173,6 +179,15 @@ export function CanvasToolbar({
           >
             <Target size={16} strokeWidth={1.75} />
           </button>
+        <button
+          type="button"
+          onClick={onAutoBboxDim}
+          disabled={!canAutoBboxDim || !onAutoBboxDim}
+          className={mdBtn}
+          title="Auto-cota bbox (selección)"
+        >
+          <Square size={16} strokeWidth={1.75} />
+        </button>
 
           <div className={mdDivider} />
 
