@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash, HelpCircle } from "lucide-react"
+import { AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash, HelpCircle, Move, MoveHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,10 +24,11 @@ import {
 } from "./utils/collision"
 import { findNearestSnap, findSmartSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
-import { constrainToMode } from "../../utils/transform-mode"
+import { resolveAxisLock } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
 import { useMeasurements, measurementsFromBBox } from "./hooks/use-measurements"
 import { useSimulation } from "./hooks/use-simulation"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 export type { NestingPieceInput, LayerInfo, DxfCanvasProps } from "./types/types"
 export { computeLayerList } from "./utils/entities"
@@ -36,6 +37,16 @@ type PieceDragState = {
   pieceIndices: number[]
   startLocal: Point
   offset: Point
+  /**
+   * Eje bloqueado en modo "geometric" (movimiento restringido a 1 eje).
+   * Se decide UNA vez, al primer movimiento con distancia suficiente
+   * desde el punto de inicio, y se mantiene fijo hasta soltar el drag.
+   * Antes se recalculaba en cada pointermove comparando dx/dy
+   * acumulados — cerca de la diagonal (45°) un jitter mínimo del mouse
+   * hacía que el eje "ganador" cambiara de golpe entre X e Y en medio
+   * del arrastre, y la pieza se veía "tambalear" saltando de eje.
+   */
+  axisLock: "x" | "y" | null
 }
 
 export function DxfCanvas({
@@ -52,8 +63,10 @@ export function DxfCanvas({
   onDeleteSelected,
   onDeleteFromProject,
   transformMode = "free",
+  onTransformModeChange,
   rotationStep = 90,
 }: DxfCanvasProps) {
+  const { isCompact } = useResponsive()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const entitiesRef = useRef<Entity[]>([])
@@ -74,6 +87,20 @@ export function DxfCanvas({
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
   const [showCanvasHelp, setShowCanvasHelp] = useState(false)
+  const [statusActionsOpen, setStatusActionsOpen] = useState(false)
+  const hasSelection = selectedPieceIndices.length > 0
+  // Mismo patrón que el auto-open del canvas-toolbar (ver ese archivo):
+  // al seleccionar algo se muestran las acciones de una vez, y al
+  // deseleccionar se cierran para no dejar un hueco vacío abierto en el
+  // pill. Es "ajustar estado cuando cambia una prop derivada" — se
+  // podría evitar el efecto llevando `statusActionsOpen` a puramente
+  // derivado (`open = hasSelection`), pero eso le quitaría al usuario
+  // la posibilidad de colapsar las acciones manualmente sin perder la
+  // selección, que es justo lo que este pill ofrece.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStatusActionsOpen(hasSelection)
+  }, [hasSelection])
 
   // Efecto para ocultar la guía de ayuda automáticamente después de 9 segundos
   useEffect(() => {
@@ -201,7 +228,18 @@ export function DxfCanvas({
       view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize)
       scheduleDraw()
     })
-  }, [pieces, sheetSize?.width, sheetSize?.height, hiddenKeys])
+    // `view` y `sim` ahora son estables (memoizados en sus hooks), así
+    // que sí pueden ir en las deps sin causar reruns de más.
+    // `scheduleDraw` queda afuera A PROPÓSITO: su identidad cambia por
+    // razones que NO deberían disparar este efecto pesado (selección,
+    // mediciones activas, estilo de grilla, etc. — ver sus propias deps
+    // más arriba). Este efecto solo debe reconstruir colisiones/entidades/
+    // toolpath y reajustar la cámara cuando cambian las piezas, el
+    // tamaño de la plancha o las capas ocultas; siempre usa la versión
+    // más reciente de scheduleDraw vía closure, sin necesitar re-ejecutarse
+    // por eso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pieces, sheetSize, hiddenKeys, view, sim])
 
   useEffect(() => {
     scheduleDraw()
@@ -297,6 +335,7 @@ export function DxfCanvas({
             pieceIndices: movable,
             startLocal: rawPoint,
             offset: { x: 0, y: 0 },
+            axisLock: null,
           }
           canvas.setPointerCapture(e.pointerId)
           setCursor("move")
@@ -401,7 +440,10 @@ export function DxfCanvas({
         if (rawPoint) {
           let wantDx = rawPoint.x - pieceDrag.startLocal.x
           let wantDy = rawPoint.y - pieceDrag.startLocal.y
-          ;({ dx: wantDx, dy: wantDy } = constrainToMode(transformMode, wantDx, wantDy))
+          const axisResult = resolveAxisLock(transformMode, wantDx, wantDy, pieceDrag.axisLock)
+          wantDx = axisResult.dx
+          wantDy = axisResult.dy
+          pieceDrag.axisLock = axisResult.lock
           const resolved = resolveDragOffset(
             pieces,
             pieceDrag.pieceIndices,
@@ -548,7 +590,7 @@ export function DxfCanvas({
             snap ? snap.point : rawPoint,
             entitiesRef.current,
             view.viewRef.current.scale,
-            { shiftKey: e.shiftKey },
+            { shiftKey: e.shiftKey, edgeSegment: snap?.segment },
           )
           return
         }
@@ -727,7 +769,7 @@ export function DxfCanvas({
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("keyup", onKeyUp)
     }
-  }, [selectedPieceIndices, onRotateSelected, rotationStep, onSelectPiece, measure])
+  }, [selectedPieceIndices, onRotateSelected, rotationStep, onSelectPiece, measure, onDeleteSelected])
 
   return (
     <div
@@ -737,22 +779,34 @@ export function DxfCanvas({
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none select-none" style={{ cursor: "default" }} />
 
-      {/* Barra de estado inferior minimalista y limpia */}
+      {/* Barra de estado inferior. Cuando hay selección, el texto "N
+          piezas" es tappable/clickable y expande las acciones (misma
+          técnica de max-w+opacity que el FAB de canvas-toolbar.tsx) —
+          antes esto vivía DUPLICADO: este pill solo mostraba el conteo,
+          y en nesting-page.tsx había otra barra completa aparte, siempre
+          expandida, con "X · N sel. · Eliminar · Rotar+90/-90" debajo
+          del canvas. Se fusionaron en un solo lugar. */}
       <div
         data-slot="canvas-status-bar"
-        className="absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-[#101012]/95 px-3 py-1.5 text-xs text-neutral-400 shadow-lg backdrop-blur-sm"
+        className={`absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-[#101012]/95 py-1.5 text-xs text-neutral-400 shadow-lg backdrop-blur-sm ${
+          isCompact ? "px-2.5" : "px-3"
+        }`}
       >
-        <span className="font-semibold text-neutral-200">
-          {canvasTool === "select" ? "V · Seleccionar" : "H · Pan"}
-        </span>
-        <span className="text-white/15">|</span>
-        <span>
-          {selectedPieceIndices.length === 0
-            ? "Sin selección"
-            : selectedPieceIndices.length === 1
+        {selectedPieceIndices.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setStatusActionsOpen((v) => !v)}
+            className="min-w-[5.5rem] text-left text-neutral-200 hover:text-white"
+            aria-expanded={statusActionsOpen}
+            title={statusActionsOpen ? "Ocultar acciones" : "Ver acciones"}
+          >
+            {selectedPieceIndices.length === 1
               ? "1 pieza"
               : `${selectedPieceIndices.length} piezas`}
-        </span>
+          </button>
+        ) : (
+          <span className="min-w-[5.5rem] text-neutral-200">Sin selección</span>
+        )}
         {collidingPieceIndices.length > 0 && (
           <>
             <span className="text-white/15">|</span>
@@ -761,7 +815,63 @@ export function DxfCanvas({
             </span>
           </>
         )}
-        
+
+        {/* Acciones de selección — mismo patrón de expansión (max-w +
+            opacity) que el panel principal del canvas-toolbar. */}
+        {selectedPieceIndices.length > 0 && (
+          <div
+            className={`flex items-center gap-0.5 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              statusActionsOpen ? "max-w-80 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+            }`}
+          >
+            <span className="text-white/15">|</span>
+            <button
+              type="button"
+              onClick={() => onSelectPiece?.(null, false)}
+              className="rounded-full p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
+              title="Deseleccionar"
+            >
+              <CircleSlash size={13} />
+            </button>
+            <button
+              type="button"
+              disabled={!onDeleteSelected}
+              onClick={() => onDeleteSelected?.(selectedPieceIndices)}
+              className="rounded-full p-1.5 text-red-400 hover:bg-red-500/15 disabled:pointer-events-none disabled:opacity-30"
+              title="Eliminar"
+            >
+              <Trash2 size={13} />
+            </button>
+            <div className="mx-0.5 h-4 w-px shrink-0 bg-white/10" />
+            <button
+              type="button"
+              disabled={!onRotateSelected}
+              onClick={() => onRotateSelected?.(selectedPieceIndices, rotationStep)}
+              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+            >
+              +{rotationStep}°
+            </button>
+            <button
+              type="button"
+              disabled={!onRotateSelected}
+              onClick={() => onRotateSelected?.(selectedPieceIndices, -rotationStep)}
+              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+            >
+              −{rotationStep}°
+            </button>
+            <button
+              type="button"
+              onClick={() => setCanvasTool("rotate")}
+              className={`whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium hover:bg-white/10 hover:text-white ${
+                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-300" : "text-neutral-300"
+              }`}
+              title="Rotar libre arrastrando (Shift = pasos de 15°)"
+            >
+              Libre
+            </button>
+          </div>
+        )}
+
         {/* Botón de ayuda desplegable */}
         <div className="relative flex items-center">
           <button
@@ -787,34 +897,39 @@ export function DxfCanvas({
         </div>
       </div>
 
-      {/* Indicador modo interacción V/H superior */}
+      {/* Indicador modo interacción V/H superior — única fuente de verdad
+          del modo activo (antes se repetía también en la barra de estado). */}
       <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
         <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-[#101012]/90 p-1 shadow-lg backdrop-blur-sm">
           <button
             type="button"
             title="Seleccionar (V)"
             onClick={() => setCanvasTool("select")}
-            className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
+            className={`flex h-8 items-center gap-1.5 rounded-full text-[11px] font-semibold transition-colors ${
+              isCompact ? "w-8 justify-center px-0" : "px-2.5"
+            } ${
               canvasTool === "select"
                 ? "bg-white/15 text-white"
                 : "text-neutral-400 hover:bg-white/10 hover:text-white"
             }`}
           >
             <MousePointer2 className="h-3.5 w-3.5" />
-            V
+            {!isCompact && "V"}
           </button>
           <button
             type="button"
             title="Pan (H)"
             onClick={() => setCanvasTool("pan")}
-            className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
+            className={`flex h-8 items-center gap-1.5 rounded-full text-[11px] font-semibold transition-colors ${
+              isCompact ? "w-8 justify-center px-0" : "px-2.5"
+            } ${
               canvasTool === "pan"
                 ? "bg-white/15 text-white"
                 : "text-neutral-400 hover:bg-white/10 hover:text-white"
             }`}
           >
             <Hand className="h-3.5 w-3.5" />
-            H
+            {!isCompact && "H"}
           </button>
         </div>
       </div>
@@ -846,11 +961,33 @@ export function DxfCanvas({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={selectedPieceIndices.length === 0}
+                  onClick={() => setCanvasTool("rotate")}
+                >
+                  <RotateCw className="mr-2 h-4 w-4 opacity-70" />
+                  Rotar libre (arrastrar)
+                  <span className="ml-auto text-[10px] text-neutral-500">Shift = 15°</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={selectedPieceIndices.length === 0}
                   onClick={() => handleFocus()}
                 >
                   <Focus className="mr-2 h-4 w-4 opacity-70" />
                   Enfocar selección
                 </DropdownMenuItem>
+                {onTransformModeChange && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onTransformModeChange(transformMode === "free" ? "geometric" : "free")
+                    }
+                  >
+                    {transformMode === "free" ? (
+                      <MoveHorizontal className="mr-2 h-4 w-4 opacity-70" />
+                    ) : (
+                      <Move className="mr-2 h-4 w-4 opacity-70" />
+                    )}
+                    {transformMode === "free" ? "Restringir a un eje" : "Movimiento libre"}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => onSelectPiece?.(null, false)}>
                   <CircleSlash className="mr-2 h-4 w-4 opacity-70" />
@@ -879,6 +1016,22 @@ export function DxfCanvas({
                   Pan
                   <span className="ml-auto text-[10px] text-neutral-500">H</span>
                 </DropdownMenuItem>
+                {onTransformModeChange && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onTransformModeChange(transformMode === "free" ? "geometric" : "free")
+                    }
+                  >
+                    {transformMode === "free" ? (
+                      <MoveHorizontal className="mr-2 h-4 w-4 opacity-70" />
+                    ) : (
+                      <Move className="mr-2 h-4 w-4 opacity-70" />
+                    )}
+                    {transformMode === "free"
+                      ? "Restringir movimiento a un eje"
+                      : "Activar movimiento libre"}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => handleFit()}>
                   <Maximize2 className="mr-2 h-4 w-4 opacity-70" />
@@ -905,6 +1058,8 @@ export function DxfCanvas({
         onResetTool={measure.resetTool}
         snapEnabled={snapEnabled}
         onToggleSnap={() => setSnapEnabled((v) => !v)}
+        transformMode={transformMode}
+        onTransformModeChange={onTransformModeChange}
         gridStyle={gridStyle}
         onGridStyleChange={setGridStyle}
         hasToolpath={sim.hasToolpath}

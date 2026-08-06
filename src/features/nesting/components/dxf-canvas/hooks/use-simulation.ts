@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ToolpathSeg } from "../types/types"
 
 const BASE_MM_PER_SEC = 80
@@ -121,24 +121,46 @@ export function useSimulation() {
     }
   }, [running, speed])
 
-  return {
-    panelOpen,
-    running,
-    progress,
-    speed,
-    hasToolpath,
-    progressRef,
-    runningRef,
-    totalLengthRef,
-    segmentsRef,
-    fullPath2DRef,
-    setToolpath,
-    clearOverlayIfIdle,
-    openPanel,
-    closePanel,
-    togglePlay,
-    reset,
-    seek,
-    setSpeed,
-  }
+  // Igual que en useCanvasView: sin memoizar, este objeto era nuevo en
+  // cada render sin importar si algo cambió, así que ningún efecto podía
+  // depender de `sim` de forma segura (se re-ejecutaba siempre). Acá SÍ
+  // hay estado real (panelOpen/running/progress/speed/hasToolpath), así
+  // que memoizamos contra esos valores: `sim` solo cambia de identidad
+  // cuando alguno de ellos cambia de verdad, nunca por un render ajeno.
+  return useMemo(
+    () => ({
+      panelOpen,
+      running,
+      progress,
+      speed,
+      hasToolpath,
+      progressRef,
+      runningRef,
+      totalLengthRef,
+      segmentsRef,
+      fullPath2DRef,
+      setToolpath,
+      clearOverlayIfIdle,
+      openPanel,
+      closePanel,
+      togglePlay,
+      reset,
+      seek,
+      setSpeed,
+    }),
+    [
+      panelOpen,
+      running,
+      progress,
+      speed,
+      hasToolpath,
+      setToolpath,
+      clearOverlayIfIdle,
+      openPanel,
+      closePanel,
+      togglePlay,
+      reset,
+      seek,
+    ],
+  )
 }

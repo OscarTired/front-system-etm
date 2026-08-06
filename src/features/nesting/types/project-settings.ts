@@ -12,6 +12,17 @@ export interface ProjectSettings {
   separacion: string
   rotacionPermitida: "0-90-180-270" | "libre" | "ninguna"
   prioridad: "normal" | "alta" | "baja"
+  /**
+   * Motor de empaquetado: "fast" usa AABB (rápido, aprovechamiento
+   * normal). "precise" usa el polígono real de la pieza + nesting
+   * dentro de calados (huecos) de piezas ya puestas — mejor
+   * aprovechamiento de plancha, pero notablemente más lento porque
+   * evalúa muchas más posiciones/ángulos con colisión de polígono real
+   * en vez de rectángulos. Combinarlo con rotacionPermitida="libre"
+   * (24 ángulos en vez de 4) multiplica el costo — vale la pena
+   * avisarlo en la UI en vez de solo dejarlo lento en silencio.
+   */
+  empaquetadoPreciso: boolean
   /** Si está activo, el DXF exportado corta cada contorno de pieza con micro-uniones (huecos chicos) en vez de un contorno cerrado continuo, para que la pieza no se suelte sola durante el corte. Cableado al pipeline real de exportación. */
   puentesHabilitado: boolean
   /** Cantidad de puentes por contorno, distribuidos parejo por longitud de perímetro. */
@@ -33,6 +44,7 @@ export function defaultProjectSettings(): ProjectSettings {
     separacion: "0",
     rotacionPermitida: "0-90-180-270",
     prioridad: "normal",
+    empaquetadoPreciso: false,
     puentesHabilitado: false,
     puentesCantidad: "4",
     puentesAncho: "1",

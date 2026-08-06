@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { computeBounds } from "../utils/geometry-utils"
 import type { Entity, Point, ViewState } from "../types/types"
 
@@ -117,15 +117,36 @@ export function useCanvasView() {
     }
   }, [])
 
-  return {
-    viewRef,
-    localToScreen,
-    screenToLocal,
-    fitToBounds,
-    fitToSheetOrEntities,
-    focusEntities,
-    zoomAt,
-    zoomBy,
-    panBy,
-  }
+  // Todos los métodos de arriba son estables (deps vacías o solo otros
+  // callbacks estables), así que el objeto que devolvemos puede ser
+  // memoizado con seguridad: su identidad no cambia entre renders salvo
+  // que React remonte el hook. Esto es lo que permite que otros hooks/
+  // efectos (ej. el useEffect principal de dxf-canvas.tsx) puedan listar
+  // `view` en sus dependencias sin que eso dispare un re-render en cada
+  // frame — antes de esto, cada render devolvía un objeto `{ ...​ }`
+  // nuevo y cualquier efecto que dependiera de `view` se re-ejecutaba
+  // siempre, sin importar si algo relevante cambió.
+  return useMemo(
+    () => ({
+      viewRef,
+      localToScreen,
+      screenToLocal,
+      fitToBounds,
+      fitToSheetOrEntities,
+      focusEntities,
+      zoomAt,
+      zoomBy,
+      panBy,
+    }),
+    [
+      localToScreen,
+      screenToLocal,
+      fitToBounds,
+      fitToSheetOrEntities,
+      focusEntities,
+      zoomAt,
+      zoomBy,
+      panBy,
+    ],
+  )
 }

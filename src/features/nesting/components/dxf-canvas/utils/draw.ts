@@ -11,7 +11,6 @@ import {
   COLLISION_COLOR,
   MEASURE_COLOR,
   MEASURE_PENDING_COLOR,
-  SELECTED_HALO,
   SELECTED_STROKE,
   SHEET_STROKE,
 } from "../types/types"
@@ -470,24 +469,9 @@ export function drawScene(d: DrawContext) {
     }
   }
 
-  for (const idx of selectedPieceIndices) {
-    const selectedEntities = entities.filter((e) => e.pieceIndex === idx)
-    const bounds = computeBounds(selectedEntities)
-    if (bounds) {
-      const pad = 3 / scale
-      const shift = dragSet?.has(idx) ? { x: ddx, y: ddy } : { x: 0, y: 0 }
-      ctx.strokeStyle = SELECTED_HALO
-      ctx.lineWidth = 1 / scale
-      ctx.setLineDash([4 / scale, 4 / scale])
-      ctx.strokeRect(
-        bounds.minX - pad + shift.x,
-        bounds.minY - pad + shift.y,
-        bounds.maxX - bounds.minX + pad * 2,
-        bounds.maxY - bounds.minY + pad * 2
-      )
-      ctx.setLineDash([])
-    }
-  }
+  // Nota: se retiró el halo dashed (SELECTED_HALO) del bbox de selección.
+  // El contorno de la pieza ya cambia a SELECTED_STROKE (blanco) arriba,
+  // eso es suficiente feedback visual sin el rectángulo punteado extra.
 
   for (const idx of collidingPieceIndices) {
     const collidingEntities = entities.filter((e) => e.pieceIndex === idx)
@@ -674,6 +658,61 @@ export function drawScene(d: DrawContext) {
     activeTool !== "coords"
   ) {
     drawHoverEdge(ctx, snapCandidate.segment, scale)
+  }
+
+  // Cota inteligente: preview de la medición ANTES de hacer click.
+  // Con la herramienta de distancia activa y el cursor sobre una arista
+  // (sin puntos elegidos todavía), se ve de una vez el valor + las líneas
+  // de cota fantasma sobre esa arista — igual que "smart dimension" en
+  // SolidWorks/Fusion. Un solo click sobre esto la confirma (ver
+  // use-measurements.ts). Semitransparente para distinguirla de una cota
+  // ya confirmada.
+  if (
+    activeTool === "distance" &&
+    pendingPoints.length === 0 &&
+    snapCandidate?.segment
+  ) {
+    const { a, b } = snapCandidate.segment
+    const len = Math.hypot(b.x - a.x, b.y - a.y)
+    if (len > 1e-3) {
+      ctx.save()
+      ctx.globalAlpha = 0.55
+      drawCadDistance(ctx, a, b, 12, scale)
+      ctx.restore()
+
+      // Texto del valor en screen-space (mismo patrón que el label del
+      // primer punto pendiente más arriba), para que no se deforme con
+      // el zoom y quede siempre nítido/legible.
+      const off = 12 / scale
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const nx = -dy / len
+      const ny = dx / len
+      const mid = {
+        x: (a.x + b.x) / 2 + nx * off,
+        y: (a.y + b.y) / 2 + ny * off,
+      }
+      ctx.save()
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const sp = localToScreen(mid)
+      const text = fmtMm(len)
+      ctx.font = "11px ui-sans-serif, system-ui"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      const metrics = ctx.measureText(text)
+      ctx.globalAlpha = 0.85
+      ctx.fillStyle = "rgba(10,10,12,0.85)"
+      ctx.fillRect(sp.x - metrics.width / 2 - 4, sp.y - 9, metrics.width + 8, 18)
+      ctx.fillStyle = MEASURE_PENDING_COLOR
+      ctx.fillText(text, sp.x, sp.y)
+      ctx.restore()
+      // Restaurar transform de mundo para que el resto de la escena
+      // (osnap marker, etc.) siga dibujándose en las coords correctas.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const { scale: sc2, offsetX: ox2, offsetY: oy2 } = d.view
+      ctx.translate(d.canvasWidth / 2 + ox2, d.canvasHeight / 2 + oy2)
+      ctx.scale(sc2, sc2)
+    }
   }
 
   if (snapCandidate) {

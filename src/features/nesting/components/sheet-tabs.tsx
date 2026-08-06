@@ -5,7 +5,7 @@ import { cn } from "@/shared/utils/utils"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
 import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Layers } from "lucide-react"
 
 export interface SheetTabItem {
   key: string
@@ -140,13 +140,21 @@ export function SheetTabs({
               )
             }
 
-            // Grupo por espesor: pestaña compacta + popover con miembros
+            // Grupo por espesor: pestaña compacta + popover con miembros.
+            // "N grupos" en vez de índices crudos (#1,#2) que no dicen
+            // nada sin abrir el popover; el ícono de capas marca que es
+            // un agrupador, no una plancha suelta.
+            const groupWord = group.members.length === 1 ? "grupo" : "grupos"
+            const tooltip = `${thicknessLabel(group.thicknessMm)} · ${group.members.length} ${groupWord} de plancha (${group.members
+              .map((m) => m.item.label)
+              .join(", ")})`
             return (
               <Popover key={group.key}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
                     aria-pressed={isGroupActive}
+                    title={tooltip}
                     onClick={() => {
                       if (!isGroupActive) onChange(primary.index)
                     }}
@@ -157,16 +165,12 @@ export function SheetTabs({
                         : "text-neutral-500 hover:text-neutral-300"
                     )}
                   >
-                                        <span className="whitespace-nowrap">
+                    <Layers className="h-3.5 w-3.5 opacity-70" />
+                    <span className="whitespace-nowrap">
                       {thicknessLabel(group.thicknessMm)}
-                      <span className="ml-1 text-neutral-400">
-                        {group.members.length === 1
-                          ? `#${group.members[0].index + 1}`
-                          : group.members.length <= 4
-                            ? group.members.map((m) => `#${m.index + 1}`).join(",")
-                            : `#${group.members[0].index + 1}…#${group.members[group.members.length - 1].index + 1}`}
+                      <span className="ml-1.5 text-neutral-400">
+                        · {group.members.length} {groupWord}
                       </span>
-                      <span className="ml-1 text-neutral-500">×{group.members.length}</span>
                     </span>
                     <span
                       className={cn(
@@ -184,7 +188,7 @@ export function SheetTabs({
                   className="w-64 border-white/10 bg-[#141416] p-1.5 text-neutral-100"
                 >
                   <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-                    Planchas {group.members.map((m) => `#${m.index + 1}`).join(", ")} · {thicknessLabel(group.thicknessMm)}
+                    {thicknessLabel(group.thicknessMm)} · {group.members.length} {groupWord} de plancha
                   </div>
                   <div className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
                     {group.members.map(({ index, item }) => {

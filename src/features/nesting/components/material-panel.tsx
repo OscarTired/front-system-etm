@@ -242,6 +242,47 @@ export function MaterialPanel({
               </Field>
             </div>
           </div>
+
+          {/* Empaquetado: fast (AABB, rápido) vs precise (polígono real +
+              nesting en calados, mejor aprovechamiento pero más lento —
+              antes esto estaba hardcodeado a "fast" en el motor sin
+              ninguna forma de acceder a "precise" desde la UI). */}
+          <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
+            <div className="flex items-center gap-2 mb-2">
+              <Sliders className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Empaquetado</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.empaquetadoPreciso}
+              onClick={() => onChange({ empaquetadoPreciso: !settings.empaquetadoPreciso })}
+              className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1 text-left"
+            >
+              <span className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium text-neutral-200">Empaquetado preciso</span>
+                <span className="text-[10px] leading-snug text-neutral-500">
+                  Usa el contorno real de cada pieza (incluye calados) en vez
+                  de su rectángulo — mejor aprovechamiento de plancha, pero
+                  el cálculo de Nestear tarda notablemente más, sobre todo
+                  combinado con rotación libre.
+                </span>
+              </span>
+              <span
+                className={cn(
+                  "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+                  settings.empaquetadoPreciso ? "bg-cyan-500" : "bg-white/15"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform",
+                    settings.empaquetadoPreciso && "translate-x-4"
+                  )}
+                />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import {
   ZoomIn,
   ZoomOut,
@@ -25,8 +26,10 @@ import {
   Ban,
   Eye,
   EyeOff,
+  Move,
+  MoveHorizontal,
 } from "lucide-react"
-import type { MeasureTool, CanvasTool } from "../types/types"
+import type { MeasureTool, CanvasTool, TransformMode } from "../types/types"
 import { TOOL_LABELS } from "../types/types"
 import {
   Popover,
@@ -58,6 +61,10 @@ export interface CanvasToolbarProps {
   onResetTool: () => void
   snapEnabled: boolean
   onToggleSnap: () => void
+
+  /** Movimiento libre vs restringido a un eje dominante (ortogonal). */
+  transformMode?: TransformMode
+  onTransformModeChange?: (mode: TransformMode) => void
 
   /** Estilo del fondo del canvas (cuadrícula). */
   gridStyle?: "dots" | "lines" | "cross" | "none"
@@ -97,6 +104,8 @@ export function CanvasToolbar({
   onResetTool,
   snapEnabled,
   onToggleSnap,
+  transformMode = "free",
+  onTransformModeChange,
   gridStyle = "dots",
   onGridStyleChange,
   hasToolpath,
@@ -116,6 +125,20 @@ export function CanvasToolbar({
   const [open, setOpen] = useState(false)
   const [speedPopoverOpen, setSpeedPopoverOpen] = useState(false)
   const [displayOpen, setDisplayOpen] = useState(false)
+
+  // Auto-abre el panel de herramientas al seleccionar una pieza en el canvas.
+  // No lo auto-cerramos al deseleccionar: si el usuario lo dejó abierto
+  // a propósito (ej. está midiendo), no queremos cerrarlo debajo de él.
+  // No es un caso "puramente derivado" (por eso no lo reemplazamos por un
+  // cálculo en el render): solo debe abrirse una vez al iniciar la
+  // selección, no permanecer forzado a `true` mientras haya selección
+  // (el usuario puede cerrarlo manualmente y que se quede cerrado).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (canFocusSelected) setOpen(true)
+  }, [canFocusSelected])
+
+  const { isCompact } = useResponsive()
 
   const handleClose = () => {
     onResetTool()
@@ -150,31 +173,41 @@ export function CanvasToolbar({
           {open ? <X size={18} strokeWidth={1.75} /> : <Wrench size={18} strokeWidth={1.75} />}
         </button>
 
-        {/* Panel principal de herramientas */}
+        {/* Panel principal de herramientas.
+            En mobile el ancho fijo (max-w-150 ≈ 600px) se recortaba contra
+            el borde de la pantalla y algunos botones quedaban inalcanzables;
+            acá lo topamos al viewport disponible y agregamos scroll interno ocultando la barra. */}
         <div
           className={`
-            pointer-events-auto flex items-center gap-0.5 overflow-hidden rounded-full
+            pointer-events-auto flex items-center gap-0.5 overflow-x-auto overflow-y-hidden rounded-full
             bg-[#1c1c1e]/92 py-1 pl-1.5 pr-1.5
             shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-            ${open ? "max-w-150 opacity-100" : "max-w-0 opacity-0 pointer-events-none"}
+            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+            ${
+              open
+                ? isCompact
+                  ? "max-w-[calc(100vw-4.5rem)] opacity-100"
+                  : "max-w-150 opacity-100"
+                : "max-w-0 opacity-0 pointer-events-none"
+            }
           `}
         >
           {/* Vista */}
-          <button type="button" onClick={onZoomIn} className={mdBtn} title="Acercar">
+          <button type="button" onClick={onZoomIn} className={`${mdBtn}`} title="Acercar">
             <ZoomIn size={16} strokeWidth={1.75} />
           </button>
-          <button type="button" onClick={onZoomOut} className={mdBtn} title="Alejar">
+          <button type="button" onClick={onZoomOut} className={`${mdBtn}`} title="Alejar">
             <ZoomOut size={16} strokeWidth={1.75} />
           </button>
-          <button type="button" onClick={onFit} className={mdBtn} title="Ajustar a la vista">
+          <button type="button" onClick={onFit} className={`${mdBtn}`} title="Ajustar a la vista">
             <Maximize size={16} strokeWidth={1.75} />
           </button>
           <button
             type="button"
             onClick={onFocusSelected}
             disabled={!canFocusSelected}
-            className={mdBtn}
+            className={`${mdBtn}`}
             title="Centrar en selección"
           >
             <Target size={16} strokeWidth={1.75} />
@@ -183,7 +216,7 @@ export function CanvasToolbar({
           type="button"
           onClick={onAutoBboxDim}
           disabled={!canAutoBboxDim || !onAutoBboxDim}
-          className={mdBtn}
+          className={`${mdBtn}`}
           title="Auto-cota bbox (selección)"
         >
           <Square size={16} strokeWidth={1.75} />
@@ -304,6 +337,31 @@ export function CanvasToolbar({
           >
             <Magnet size={16} strokeWidth={1.75} />
           </button>
+
+          {onTransformModeChange && (
+            <button
+              type="button"
+              onClick={() =>
+                onTransformModeChange(transformMode === "free" ? "geometric" : "free")
+              }
+              className={`${mdBtn} ${
+                transformMode === "geometric"
+                  ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300"
+                  : ""
+              }`}
+              title={
+                transformMode === "free"
+                  ? "Movimiento libre (clic para restringir a un eje)"
+                  : "Movimiento restringido a un eje (clic para mover libre)"
+              }
+            >
+              {transformMode === "free" ? (
+                <Move size={16} strokeWidth={1.75} />
+              ) : (
+                <MoveHorizontal size={16} strokeWidth={1.75} />
+              )}
+            </button>
+          )}
 
           {/* Botón X de salida de herramienta */}
           <div

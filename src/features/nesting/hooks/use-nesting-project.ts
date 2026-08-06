@@ -315,11 +315,11 @@ export function useNestingProject() {
       if (validPieces.length === 0 || isRunning) return
       run(validPieces, {
         sheet: sheetConfig,
-        mode: "fast",
+        mode: settings.empaquetadoPreciso ? "precise" : "fast",
         separation: Number(settings.separacion) || 0,
         rotationMode: settings.rotacionPermitida,
       })
-    }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida])
+    }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida, settings.empaquetadoPreciso])
 
   const handleExportSheet = useCallback((format: "dxf" | "nsp", sheetIndex: number, bridges?: BridgeSettings) => {
     if (!sheets) return

@@ -11,7 +11,6 @@ import {
   AlignEndVertical,
   AlignCenterVertical,
   Trash2,
-  X,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -83,6 +82,23 @@ export function NestingPage() {
   const [activePanel, setActivePanel] = useState<NestingPanelView>("sheet-pieces")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
+
+  // Estas dos props se pasan al DxfCanvas y de ahí alimentan el
+  // useEffect que reconstruye entidades/colisiones/toolpath y reajusta
+  // la cámara (fitToSheetOrEntities). Antes se creaban inline en cada
+  // render (`{{ width, height }}` y `Array.from(...)`), o sea nunca eran
+  // el mismo objeto/array aunque el contenido no cambiara — eso hacía
+  // que ese efecto se re-ejecutara en CADA render de esta página, no
+  // solo cuando de verdad cambiaban piezas/plancha/capas ocultas. Con
+  // useMemo, la identidad solo cambia cuando el contenido real cambia.
+  const sheetSize = useMemo(
+    () => ({ width: project.sheetConfig.width, height: project.sheetConfig.height }),
+    [project.sheetConfig.width, project.sheetConfig.height],
+  )
+  const hiddenKeysArray = useMemo(
+    () => Array.from(hiddenLayerKeys),
+    [hiddenLayerKeys],
+  )
   const [transformMode, setTransformMode] = useState<"free" | "geometric">("free")
   const [rotationStep, setRotationStep] = useState<15 | 45 | 90 | 180>(90)
   const [pendingDelete, setPendingDelete] = useState(false)
@@ -145,11 +161,23 @@ export function NestingPage() {
   }, [history])
 
   const editsHydratedRef = useRef(false)
+  // Este efecto SÍ debe llamar setState directo en su cuerpo: es
+  // hidratación única de estado local (posición/ángulo/piezas
+  // bloqueadas) desde un sistema externo (sesión persistida), disparada
+  // cuando ese sistema pasa a estar listo (project.sessionReady). Está
+  // protegido con editsHydratedRef para que corra como máximo una vez
+  // por sesión — no hay cascada de renders posible. El lint
+  // react-hooks/set-state-in-effect marca cualquier setState en un
+  // efecto sin distinguir este caso ("sincronizar con sistema externo",
+  // que su propia guía marca como uso correcto) de un antipatrón real;
+  // forzar esto a otro patrón para complacer al lint agregaría
+  // complejidad sin ganar nada.
   useEffect(() => {
     if (!project.sessionReady || editsHydratedRef.current) return
     editsHydratedRef.current = true
     if (!project.sessionRestored) return
     const idx = project.getActiveGroupIndexForSession()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (typeof idx === "number" && idx >= 0) setActiveGroupIndex(idx)
     const edits = project.getSheetEdits()
     const snap = edits[String(idx ?? 0)]
@@ -178,9 +206,12 @@ export function NestingPage() {
     p.requestSessionSave()
   }, [positionOverrides, angleOverrides, lockedPieceIndices, activeGroupIndex])
 
-  useEffect(() => {
-    if (!isCompact) setIsMobilePanelOpen(false)
-  }, [isCompact])
+  // Antes había un useEffect que resetaba isMobilePanelOpen a false al
+  // salir de isCompact. Era redundante: el <Sheet> más abajo ya se
+  // renderiza con `open={isCompact && isMobilePanelOpen}`, así que en
+  // desktop el panel queda cerrado visualmente sin importar el valor
+  // interno de isMobilePanelOpen — no hace falta sincronizarlo con un
+  // efecto (era exactamente el caso de "You Might Not Need an Effect").
 
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
@@ -284,8 +315,14 @@ export function NestingPage() {
     () =>
       project.sheetGroups.map((group, i) => ({
         key: String(i),
-        label: `${formatSheetRangeLabel(group)}${group.count > 1 ? ` ×${group.count}` : ""}`,
+        // formatSheetRangeLabel ya incluye el rango "#2-5" cuando hay
+        // varias planchas idénticas consecutivas: no repetir el conteo
+        // acá también (antes decía "Planchas #2-5 · 3mm ×4", redundante).
+        label: formatSheetRangeLabel(group),
         usagePercent: project.getSheetStats(i)?.usagePercent ?? 0,
+        // Espesor real de la plancha, para que SheetTabs pueda agrupar
+        // correctamente por espesor en vez de meter todo en "s/esp.".
+        thicknessMm: group.sheet.thicknessMm,
       })),
     [project.sheetGroups, project.getSheetStats],
   )
@@ -660,16 +697,18 @@ export function NestingPage() {
             {dxfCanvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
-                sheetSize={{ width: project.sheetConfig.width, height: project.sheetConfig.height }}
+                sheetSize={sheetSize}
                 selectedPieceIndices={selectedPieceIndices}
                 onSelectPiece={handleSelectPiece}
-                hiddenKeys={Array.from(hiddenLayerKeys)}
+                hiddenKeys={hiddenKeysArray}
                 collidingPieceIndices={collidingPieceIndices}
                 onMovePieces={transforms.handleMovePieces}
                 onRotateSelected={transforms.handleRotateSelected}
                 onRotateAroundPivot={transforms.handleRotateAroundPivot}
                 rotationStep={rotationStep}
                 transformMode={transformMode}
+                onTransformModeChange={setTransformMode}
+                onDeleteSelected={() => handleDeleteSelected()}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-neutral-500">
@@ -678,74 +717,39 @@ export function NestingPage() {
             )}
           </div>
 
-          {selectedPieceIndices.length > 0 && (
+          {/* La barra de deseleccionar/eliminar/rotar que vivía acá se
+              fusionó con el pill de estado del canvas (dxf-canvas.tsx) —
+              antes eran 2 elementos redundantes mostrando lo mismo
+              ("N piezas" arriba de "N sel." abajo), en dos estilos
+              distintos. "Alinear" sí queda acá: es una acción de nivel
+              de página (necesita 2+ piezas y no tiene equivalente en el
+              canvas). */}
+          {selectedPieceIndices.length >= 2 && (
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPieceIndices([])}
-                  className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white"
-                  title="Deseleccionar"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <span className="px-2 text-[11px] text-neutral-400">
-                  {selectedPieceIndices.length} sel.
+              <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
+                <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                  Alinear
                 </span>
-                <button
-                  type="button"
-                  onClick={handleDeleteSelected}
-                  className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
-                  title="Eliminar"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-                <div className="h-4 w-px bg-white/10" />
-                <button
-                  type="button"
-                  onClick={() =>
-                    transforms.handleRotateSelected(selectedPieceIndices, rotationStep)
-                  }
-                  className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
-                >
-                  Rotar +{rotationStep}°
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    transforms.handleRotateSelected(selectedPieceIndices, -rotationStep)
-                  }
-                  className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
-                >
-                  Rotar −{rotationStep}°
-                </button>
+                {(
+                  [
+                    ["left", AlignLeft],
+                    ["center-h", AlignCenterHorizontal],
+                    ["right", AlignRight],
+                    ["top", AlignStartVertical],
+                    ["center-v", AlignCenterVertical],
+                    ["bottom", AlignEndVertical],
+                  ] as const
+                ).map(([mode, Icon]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => transforms.handleAlign(mode, selectedPieceIndices)}
+                    className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                ))}
               </div>
-              {selectedPieceIndices.length >= 2 && (
-                <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
-                  <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                    Alinear
-                  </span>
-                  {(
-                    [
-                      ["left", AlignLeft],
-                      ["center-h", AlignCenterHorizontal],
-                      ["right", AlignRight],
-                      ["top", AlignStartVertical],
-                      ["center-v", AlignCenterVertical],
-                      ["bottom", AlignEndVertical],
-                    ] as const
-                  ).map(([mode, Icon]) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => transforms.handleAlign(mode, selectedPieceIndices)}
-                      className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
-                    >
-                      <Icon className="h-4 w-4" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </main>

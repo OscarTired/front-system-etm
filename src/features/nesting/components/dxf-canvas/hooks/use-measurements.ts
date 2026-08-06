@@ -13,6 +13,14 @@ function angleOfVector(origin: Point, p: Point) {
 export type ToolClickOptions = {
   /** Shift = forzar cota horizontal o vertical (eje dominante). */
   shiftKey?: boolean
+  /**
+   * Arista detectada bajo el cursor (viene del smart-snap). Si está
+   * presente y todavía no hay puntos pendientes, el click "confirma"
+   * de una vez la cota de esa arista completa (A→B), sin pedir un
+   * segundo click — esto es lo que hace que la cota se sienta como
+   * "un preview que ya está listo" en vez de un flujo de 2 clicks.
+   */
+  edgeSegment?: { a: Point; b: Point }
 }
 
 /**
@@ -110,6 +118,29 @@ export function useMeasurements() {
   const handleToolClick = useCallback(
     (point: Point, entities: Entity[], scale: number, opts?: ToolClickOptions) => {
       if (activeTool === "distance") {
+        // Smart dimension: si el cursor ya está sobre una arista detectada
+        // (edgeSegment, viene del hover/preview) y todavía no elegiste
+        // ningún punto, el click confirma de una vez la cota completa de
+        // esa arista — no hace falta un segundo click para "cerrar" la
+        // medición como pasaba antes.
+        if (pendingPoints.length === 0 && opts?.edgeSegment) {
+          const { a, b } = opts.edgeSegment
+          const len = Math.hypot(b.x - a.x, b.y - a.y)
+          if (len > 1e-6) {
+            setMeasurements((prev) => [
+              ...prev,
+              {
+                id: `d-${Date.now()}`,
+                kind: "distance",
+                a,
+                b,
+                value: len,
+                offset: 12,
+              },
+            ])
+            return
+          }
+        }
         if (pendingPoints.length < 2) {
           let p = point
           // Shift en el 2º clic: forzar H o V respecto al primero
