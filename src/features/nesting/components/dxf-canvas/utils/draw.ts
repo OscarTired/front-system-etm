@@ -212,6 +212,75 @@ function drawWorldGrid(
 }
 
 
+
+/** Cota estilo CAD: extensiones + línea de cota + ticks + (sin texto; texto en screen pass). */
+function drawCadDistance(
+  ctx: CanvasRenderingContext2D,
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  offset: number | undefined,
+  scale: number,
+) {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const len = Math.hypot(dx, dy)
+  if (len < 1e-9) return
+  const ux = dx / len
+  const uy = dy / len
+  const nx = -uy
+  const ny = ux
+  // offset por defecto ~14px en pantalla
+  const off = offset ?? 14 / scale
+  const ext = 4 / scale // extensión más allá de la línea de cota
+  const gap = 2 / scale // hueco desde el punto de medida
+
+  const a0 = { x: a.x + nx * gap, y: a.y + ny * gap }
+  const b0 = { x: b.x + nx * gap, y: b.y + ny * gap }
+  const a1 = { x: a.x + nx * (off + Math.sign(off || 1) * ext), y: a.y + ny * (off + Math.sign(off || 1) * ext) }
+  const b1 = { x: b.x + nx * (off + Math.sign(off || 1) * ext), y: b.y + ny * (off + Math.sign(off || 1) * ext) }
+  const aD = { x: a.x + nx * off, y: a.y + ny * off }
+  const bD = { x: b.x + nx * off, y: b.y + ny * off }
+
+  ctx.save()
+  ctx.strokeStyle = MEASURE_COLOR
+  ctx.fillStyle = MEASURE_COLOR
+  ctx.lineWidth = 1 / scale
+  ctx.lineCap = "round"
+
+  // Líneas de extensión (punteadas suaves)
+  ctx.setLineDash([3 / scale, 2.5 / scale])
+  ctx.beginPath()
+  ctx.moveTo(a0.x, a0.y)
+  ctx.lineTo(a1.x, a1.y)
+  ctx.moveTo(b0.x, b0.y)
+  ctx.lineTo(b1.x, b1.y)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  // Línea de cota
+  ctx.beginPath()
+  ctx.moveTo(aD.x, aD.y)
+  ctx.lineTo(bD.x, bD.y)
+  ctx.stroke()
+
+  // Ticks / flechas en extremos (45°)
+  const tick = 5 / scale
+  for (const p of [aD, bD]) {
+    ctx.beginPath()
+    ctx.moveTo(p.x - ux * tick - nx * tick * 0.6, p.y - uy * tick - ny * tick * 0.6)
+    ctx.lineTo(p.x + ux * tick + nx * tick * 0.6, p.y + uy * tick + ny * tick * 0.6)
+    ctx.stroke()
+  }
+
+  // Puntos de origen
+  for (const p of [a, b]) {
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, 2 / scale, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
 export function drawScene(d: DrawContext) {
   const {
     ctx,
@@ -361,27 +430,36 @@ export function drawScene(d: DrawContext) {
 
   for (const m of measurements) {
     if (m.kind === "distance") {
-      ctx.setLineDash([5 / scale, 4 / scale])
+      drawCadDistance(ctx, m.a, m.b, m.offset, scale)
+    } else if (m.kind === "radius") {
+      ctx.save()
+      ctx.strokeStyle = MEASURE_COLOR
+      ctx.fillStyle = MEASURE_COLOR
+      ctx.lineWidth = 1 / scale
+      // círculo de referencia tenue
+      ctx.setLineDash([3 / scale, 2 / scale])
       ctx.beginPath()
-      ctx.moveTo(m.a.x, m.a.y)
-      ctx.lineTo(m.b.x, m.b.y)
+      ctx.arc(m.center.x, m.center.y, m.radius, 0, Math.PI * 2)
       ctx.stroke()
       ctx.setLineDash([])
-      for (const p of [m.a, m.b]) {
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    } else if (m.kind === "radius") {
-      ctx.setLineDash([4 / scale, 3 / scale])
+      // leader centro → punto
       ctx.beginPath()
       ctx.moveTo(m.center.x, m.center.y)
       ctx.lineTo(m.anglePoint.x, m.anglePoint.y)
       ctx.stroke()
-      ctx.setLineDash([])
+      // cruz en centro
+      const c = 4 / scale
       ctx.beginPath()
-      ctx.arc(m.center.x, m.center.y, 2.5 / scale, 0, Math.PI * 2)
+      ctx.moveTo(m.center.x - c, m.center.y)
+      ctx.lineTo(m.center.x + c, m.center.y)
+      ctx.moveTo(m.center.x, m.center.y - c)
+      ctx.lineTo(m.center.x, m.center.y + c)
+      ctx.stroke()
+      // punto en perímetro
+      ctx.beginPath()
+      ctx.arc(m.anglePoint.x, m.anglePoint.y, 2 / scale, 0, Math.PI * 2)
       ctx.fill()
+      ctx.restore()
     } else if (m.kind === "angle") {
       ctx.setLineDash([4 / scale, 3 / scale])
       ctx.beginPath()
@@ -411,19 +489,21 @@ export function drawScene(d: DrawContext) {
   if (pendingPoints.length > 0) {
     ctx.fillStyle = MEASURE_PENDING_COLOR
     ctx.strokeStyle = MEASURE_PENDING_COLOR
-    ctx.setLineDash([4 / scale, 3 / scale])
-    ctx.beginPath()
-    pendingPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
-    if (hoverLocal) ctx.lineTo(hoverLocal.x, hoverLocal.y)
-    ctx.stroke()
-    ctx.setLineDash([])
+    ctx.lineWidth = 1 / scale
     for (const p of pendingPoints) {
       ctx.beginPath()
       ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2)
       ctx.fill()
     }
-    const last = pendingPoints[pendingPoints.length - 1]
-    if (hoverLocal) {
+    if (pendingPoints.length === 1 && hoverLocal) {
+      // Primer punto → línea guía al cursor + ejes ortho
+      ctx.setLineDash([4 / scale, 3 / scale])
+      ctx.beginPath()
+      ctx.moveTo(pendingPoints[0].x, pendingPoints[0].y)
+      ctx.lineTo(hoverLocal.x, hoverLocal.y)
+      ctx.stroke()
+      ctx.setLineDash([])
+      const last = pendingPoints[0]
       const guideTol = 2 / scale
       ctx.strokeStyle = MEASURE_COLOR
       ctx.lineWidth = 0.75 / scale
@@ -441,6 +521,46 @@ export function drawScene(d: DrawContext) {
         ctx.stroke()
       }
       ctx.setLineDash([])
+      // valor provisional
+      const v = Math.hypot(hoverLocal.x - last.x, hoverLocal.y - last.y)
+      if (v > 1e-3) {
+        const mid = { x: (last.x + hoverLocal.x) / 2, y: (last.y + hoverLocal.y) / 2 }
+        // label in screen space drawn later via measurements path — quick world text
+        ctx.save()
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        const sp = localToScreen(mid)
+        const text = fmtMm(v)
+        ctx.font = "11px ui-sans-serif, system-ui"
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        const metrics = ctx.measureText(text)
+        ctx.fillStyle = "rgba(10,10,12,0.85)"
+        ctx.fillRect(sp.x - metrics.width / 2 - 4, sp.y - 9, metrics.width + 8, 18)
+        ctx.fillStyle = MEASURE_PENDING_COLOR
+        ctx.fillText(text, sp.x, sp.y)
+        ctx.restore()
+        // restore world transform for rest of scene
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        const { scale: sc, offsetX, offsetY } = d.view
+        const w = d.canvasWidth
+        const h = d.canvasHeight
+        ctx.translate(w / 2 + offsetX, h / 2 + offsetY)
+        ctx.scale(sc, sc)
+      }
+    } else if (pendingPoints.length >= 2) {
+      // A+B fijos → preview cota con offset desde hover
+      const [a, b] = pendingPoints
+      let offset: number | undefined
+      if (hoverLocal) {
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        const len = Math.hypot(dx, dy) || 1
+        const nx = -dy / len
+        const ny = dx / len
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+        offset = (hoverLocal.x - mid.x) * nx + (hoverLocal.y - mid.y) * ny
+      }
+      drawCadDistance(ctx, a, b, offset, scale)
     }
   }
 
@@ -496,7 +616,16 @@ export function drawScene(d: DrawContext) {
       let labelLocal: Point
       let text: string
       if (m.kind === "distance") {
-        labelLocal = { x: (m.a.x + m.b.x) / 2, y: (m.a.y + m.b.y) / 2 }
+        const dx = m.b.x - m.a.x
+        const dy = m.b.y - m.a.y
+        const len = Math.hypot(dx, dy) || 1
+        const nx = -dy / len
+        const ny = dx / len
+        const off = m.offset ?? 14 / (d.view.scale || 1)
+        labelLocal = {
+          x: (m.a.x + m.b.x) / 2 + nx * off,
+          y: (m.a.y + m.b.y) / 2 + ny * off,
+        }
         text = fmtMm(m.value)
       } else if (m.kind === "radius") {
         labelLocal = m.anglePoint

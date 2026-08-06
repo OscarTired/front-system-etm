@@ -51,7 +51,15 @@ export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "c
 export type CanvasTool = "select" | "pan" | "zoomWindow" | "rotate"
 
 export type Measurement =
-  | { id: string; kind: "distance"; a: Point; b: Point; value: number }
+  | {
+      id: string
+      kind: "distance"
+      a: Point
+      b: Point
+      value: number
+      /** Offset perpendicular del trazo de cota (unidades mundo). Default auto. */
+      offset?: number
+    }
   | { id: string; kind: "radius"; center: Point; radius: number; anglePoint: Point }
   | { id: string; kind: "angle"; vertex: Point; p1: Point; p2: Point; degrees: number }
   | { id: string; kind: "area"; points: Point[]; area: number; perimeter: number; centroid: Point }

@@ -56,12 +56,20 @@ export function useMeasurements() {
   const handleToolClick = useCallback(
     (point: Point, entities: Entity[], scale: number) => {
       if (activeTool === "distance") {
-        const next = [...pendingPoints, point]
-        if (next.length < 2) {
-          setPendingPoints(next)
+        // Clic 1 = A, clic 2 = B, clic 3 = posición de la cota (offset)
+        if (pendingPoints.length < 2) {
+          setPendingPoints([...pendingPoints, point])
           return
         }
-        const [a, b] = next
+        const [a, b] = pendingPoints
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        const len = Math.hypot(dx, dy) || 1
+        // Normal unitario perpendicular
+        const nx = -dy / len
+        const ny = dx / len
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+        const offset = (point.x - mid.x) * nx + (point.y - mid.y) * ny
         setMeasurements((prev) => [
           ...prev,
           {
@@ -69,7 +77,8 @@ export function useMeasurements() {
             kind: "distance",
             a,
             b,
-            value: Math.hypot(b.x - a.x, b.y - a.y),
+            value: len,
+            offset,
           },
         ])
         setPendingPoints([])

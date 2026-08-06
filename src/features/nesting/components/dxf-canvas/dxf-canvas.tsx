@@ -75,6 +75,16 @@ export function DxfCanvas({
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
   const [showCanvasHelp, setShowCanvasHelp] = useState(false)
 
+  // Efecto para ocultar la guía de ayuda automáticamente después de 9 segundos
+  useEffect(() => {
+    if (showCanvasHelp) {
+      const timer = setTimeout(() => {
+        setShowCanvasHelp(false)
+      }, 9000)
+      return () => clearTimeout(timer)
+    }
+  }, [showCanvasHelp])
+
   const boxSelectRef = useRef<{
     startScreen: { x: number; y: number }
     curScreen: { x: number; y: number }
@@ -558,8 +568,29 @@ export function DxfCanvas({
       scheduleDraw()
     }
 
+    // Clic derecho (anticlick) para salir/cancelar herramientas o ediciones activas
     const onContextMenu = (e: MouseEvent) => {
       e.preventDefault()
+
+      if (measure.activeTool !== "none") {
+        measure.resetTool()
+        setSnapCandidate(null)
+        setCursor("default")
+        scheduleDraw()
+        return
+      }
+
+      if (canvasTool === "zoomWindow" || canvasTool === "rotate") {
+        setCanvasTool("select")
+        zoomWindowRef.current = null
+        rotateDragRef.current = null
+        setBoxSelectScreen(null)
+        setRotatePivotScreen(null)
+        setCursor("default")
+        scheduleDraw()
+        return
+      }
+
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
       const hit =
@@ -650,6 +681,8 @@ export function DxfCanvas({
       }
       if (e.key === "Escape") {
         onSelectPiece?.(null, false)
+        measure.resetTool()
+        setCanvasTool("select")
         return
       }
       if (e.key !== "r" && e.key !== "R") return
@@ -667,7 +700,7 @@ export function DxfCanvas({
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("keyup", onKeyUp)
     }
-  }, [selectedPieceIndices, onRotateSelected, rotationStep, onSelectPiece])
+  }, [selectedPieceIndices, onRotateSelected, rotationStep, onSelectPiece, measure])
 
   return (
     <div
@@ -702,7 +735,7 @@ export function DxfCanvas({
           </>
         )}
         
-        {/* Botón de ayuda desplegable (implementando tu sugerencia de icono info) */}
+        {/* Botón de ayuda desplegable */}
         <div className="relative flex items-center">
           <button
             type="button"
@@ -715,11 +748,12 @@ export function DxfCanvas({
 
           {showCanvasHelp && (
             <div className="absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md">
-              <div className="font-semibold text-white mb-1">Guía rápida de interacción:</div>
+              <div className="z-90 font-semibold text-white mb-1">Guía rápida de interacción:</div>
               <ul className="space-y-1 text-neutral-400">
                 <li>• <strong className="text-neutral-200">V</strong>: Modo Selección</li>
                 <li>• <strong className="text-neutral-200">H o Espacio+Arrastrar</strong>: Panorámica</li>
                 <li>• <strong className="text-neutral-200">Arrastrar fondo</strong>: Selección por caja</li>
+                <li>• <strong className="text-neutral-200">Anticlick</strong>: Salir de herramienta actual</li>
               </ul>
             </div>
           )}
@@ -878,12 +912,12 @@ export function DxfCanvas({
 
       {canvasTool === "zoomWindow" && !boxSelectScreen && (
         <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
-          Arrastra un rectángulo para hacer zoom
+          Arrastra un rectángulo para hacer zoom (Anticlick para salir)
         </div>
       )}
       {canvasTool === "rotate" && !rotatePivotScreen && (
         <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
-          Clic = pivot · arrastrar = ángulo (Shift = 15°)
+          Clic = pivot · arrastrar = ángulo (Shift = 15°) (Anticlick para salir)
         </div>
       )}
 
@@ -891,8 +925,10 @@ export function DxfCanvas({
         <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md transition-opacity duration-200">
           {measure.activeTool === "distance" &&
             (measure.pendingPoints.length === 0
-              ? "Clic en el primer punto"
-              : "Clic en el segundo punto")}
+              ? "Cota: clic en el primer punto (snap a arista/extremo)"
+              : measure.pendingPoints.length === 1
+                ? "Cota: clic en el segundo punto"
+                : "Cota: clic para colocar la línea de cota")}
           {measure.activeTool === "radius" && "Clic sobre un círculo o arco"}
           {measure.activeTool === "angle" &&
             (measure.pendingPoints.length === 0
@@ -902,6 +938,7 @@ export function DxfCanvas({
                 : "Clic en el segundo punto")}
           {measure.activeTool === "area" && "Clic dentro de un contorno cerrado"}
           {measure.activeTool === "coords" && "Mueve el mouse para ver X / Y"}
+          {" (Anticlick para salir)"}
         </div>
       )}
 

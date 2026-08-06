@@ -14,7 +14,6 @@ import { useNestingProject } from "../hooks/use-nesting-project"
 import { useSheetHistory } from "../hooks/use-sheet-history"
 import { constrainToMode } from "../utils/transform-mode"
 
-import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
@@ -47,7 +46,7 @@ const DxfCanvas = dynamic(
 type PanelView = "sheet-pieces" | "project-material" | "layers" | "inspector"
 
 const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
-  { value: "sheet-pieces", label: "Plancha y Piezas", icon: LayoutGrid },
+  { value: "sheet-pieces", label: "Piezas", icon: LayoutGrid },
   { value: "project-material", label: "Proyecto y Material", icon: SlidersHorizontal },
   { value: "layers", label: "Capas", icon: Layers },
   { value: "inspector", label: "Inspector", icon: Info },
@@ -700,40 +699,53 @@ export function NestingPage() {
 
       <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
         {activePanel === "sheet-pieces" ? (
-          <div className="flex h-full flex-col gap-3 overflow-hidden">
-            <div className="shrink-0 flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Plancha</h2>
-              <SheetDimensionsFields settings={project.settings} onChange={project.onSettingsChange} />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3 p-3">
+            <PieceList ref={pieceListRef} {...pieceListProps} />
+          </div>
+        ) : activePanel === "project-material" ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
+            <div className="shrink-0 border-b border-white/6 px-3 py-2.5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                Proyecto y material
+              </h2>
             </div>
-
-            <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-white/3 p-3 overflow-hidden">
-              <PieceList ref={pieceListRef} {...pieceListProps} />
-            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="flex flex-col gap-2 p-3 pb-4">
+                <SheetDimensionsFields settings={project.settings} onChange={project.onSettingsChange} />
+                <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} pieceMaterials={pieceMaterialsSummary} />
+              </div>
+            </ScrollArea>
+          </div>
+        ) : activePanel === "layers" ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="p-3">
+                <LayerManager
+                  layers={layerList}
+                  hiddenKeys={hiddenLayerKeys}
+                  onToggle={handleToggleLayer}
+                  onShowAll={handleShowAllLayers}
+                />
+              </div>
+            </ScrollArea>
           </div>
         ) : (
-          <ScrollArea className="h-full w-full">
-            <div className="flex flex-col gap-3 pb-4">
-              {activePanel === "project-material" && (
-                <div className="flex flex-col gap-2.5 rounded-2xl bg-white/3 p-3">
-                  <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Proyecto y material</h2>
-                  <MaterialPanel settings={project.settings} onChange={project.onSettingsChange} pieceMaterials={pieceMaterialsSummary} />
-                </div>
-              )}
-
-              {activePanel === "layers" && (
-                <div className="rounded-2xl bg-white/3 p-3">
-                  <LayerManager
-                    layers={layerList}
-                    hiddenKeys={hiddenLayerKeys}
-                    onToggle={handleToggleLayer}
-                    onShowAll={handleShowAllLayers}
-                  />
-                </div>
-              )}
-
-              {activePanel === "inspector" && (
-                <div className="rounded-2xl bg-white/3 p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="p-2">
                   <PropertiesPanel
+                    projectActions={{
+                      onNew: handleNewProject,
+                      onOpen: () => {
+                        setProjectDialogMode("open")
+                        setProjectDialogOpen(true)
+                      },
+                      onSave: () => {
+                        setProjectDialogMode("save")
+                        setProjectDialogOpen(true)
+                      },
+                      onExport: () => setExportDialogOpen(true),
+                    }}
                     sheetStats={sheetStats}
                     selectedPiece={selectedPiece}
                     selectedPieceName={selectedPieceName}
@@ -798,10 +810,9 @@ export function NestingPage() {
                       </div>
                     )}
                   </PropertiesPanel>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
+          </div>
         )}
       </div>
 
@@ -855,26 +866,23 @@ export function NestingPage() {
         }}
       />
 
-      <Toolbar
-        onNew={handleNewProject}
-        onOpen={() => {
-          setProjectDialogMode("open")
-          setProjectDialogOpen(true)
-        }}
-        onSave={() => {
-          setProjectDialogMode("save")
-          setProjectDialogOpen(true)
-        }}
-        onImport={() => pieceListRef.current?.triggerImport()}
-        onExport={() => setExportDialogOpen(true)}
-        onToggleLayers={() => {
-          setActivePanel("layers")
-          if (isCompact) setIsMobilePanelOpen(true)
-        }}
-        layersHidden={hiddenLayerKeys.size > 0}
-        onSettings={() => {}}
-        onTogglePanel={isCompact ? () => setIsMobilePanelOpen(true) : undefined}
-      />
+      {isCompact && (
+        <div className="flex h-12 shrink-0 items-center justify-between gap-1 border-b border-white/6 px-3">
+          <button
+            type="button"
+            className="rounded-lg px-2 py-1.5 text-xs text-neutral-400 hover:bg-white/10 hover:text-white"
+            onClick={() => setIsMobilePanelOpen(true)}
+          >
+            Panel
+          </button>
+          <div className="flex items-center gap-0.5 text-xs text-neutral-400">
+            <button type="button" className="rounded-lg px-2 py-1.5 hover:bg-white/10 hover:text-white" onClick={handleNewProject}>Nuevo</button>
+            <button type="button" className="rounded-lg px-2 py-1.5 hover:bg-white/10 hover:text-white" onClick={() => { setProjectDialogMode("open"); setProjectDialogOpen(true) }}>Abrir</button>
+            <button type="button" className="rounded-lg px-2 py-1.5 hover:bg-white/10 hover:text-white" onClick={() => { setProjectDialogMode("save"); setProjectDialogOpen(true) }}>Guardar</button>
+            <button type="button" className="rounded-lg px-2 py-1.5 hover:bg-white/10 hover:text-white" onClick={() => setExportDialogOpen(true)}>Exportar</button>
+          </div>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {!isCompact && (
