@@ -11,12 +11,10 @@ import {
   AlignEndVertical,
   AlignCenterVertical,
   Trash2,
-  RotateCcw,
   X,
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { boundingRect } from "../engine/geometry"
 import { piecesCollide } from "../engine/polygon-collision"
 import type { NestedSheet } from "../engine/types"
 import type { BridgeSettings } from "../export/dxf-export"
@@ -27,7 +25,6 @@ import { useCanvasPieces } from "../hooks/use-canvas-pieces"
 import { useNestingTransforms } from "../hooks/use-nesting-transforms"
 import { useNestingClipboard } from "../hooks/use-nesting-clipboard"
 import { useNestingRun } from "../hooks/use-nesting-run"
-import { useNestingSession } from "../hooks/use-nesting-session"
 
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
