@@ -33,6 +33,7 @@ export type PieceRow = CadRow
 export interface PieceListProps {
   rows: PieceRow[]
   conflictIds: Set<string>
+  onOpenDiagnostics?: () => void
   disabled: boolean
   onAddCad: (rows: CadRow[]) => void
   onRemove: (id: string) => void
@@ -56,6 +57,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   {
     rows,
     conflictIds,
+    onOpenDiagnostics,
     disabled,
     onAddCad,
     onRemove,
@@ -284,6 +286,21 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
           </span>
         </div>
         <div className="flex items-center gap-1">
+          {onOpenDiagnostics && rows.length > 0 && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className={conflictIds.size > 0 ? "text-amber-400 hover:text-amber-300" : "text-neutral-400 hover:text-white"}
+              onClick={onOpenDiagnostics}
+              title={
+                conflictIds.size > 0
+                  ? `Diagnóstico (${conflictIds.size} conflictos)`
+                  : "Diagnóstico de piezas"
+              }
+            >
+              <AlertTriangle className="h-4 w-4" />
+            </Button>
+          )}
           {rows.length > 0 && (
             <Button size="icon-sm" variant="ghost" className="text-neutral-400 hover:text-destructive" onClick={onClearAll} disabled={disabled} title="Eliminar todos">
               <Trash2 className="h-4 w-4" />

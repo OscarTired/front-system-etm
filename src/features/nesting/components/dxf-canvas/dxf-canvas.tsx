@@ -22,7 +22,7 @@ import {
   type CollisionIndex,
   type SnapGuide,
 } from "./utils/collision"
-import { findNearestSnap } from "./utils/snap"
+import { findNearestSnap, findSmartSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { constrainToMode } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
@@ -383,15 +383,17 @@ export function DxfCanvas({
       }
 
       if (measure.activeTool !== "none") {
+        setCursor("crosshair")
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         const rect = canvas.getBoundingClientRect()
         const usesPointSnap =
           measure.activeTool === "distance" ||
           measure.activeTool === "angle" ||
-          measure.activeTool === "coords"
+          measure.activeTool === "coords" ||
+          measure.activeTool === "radius"
         const snap =
           snapEnabled && usesPointSnap && rawPoint
-            ? findNearestSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+            ? findSmartSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale)
             : null
         setSnapCandidate(snap)
         measure.setHoverLocal(snap ? snap.point : rawPoint)
@@ -544,10 +546,12 @@ export function DxfCanvas({
 
         if (measure.activeTool !== "none" && measure.activeTool !== "coords") {
           const usesPointSnap =
-            measure.activeTool === "distance" || measure.activeTool === "angle"
+            measure.activeTool === "distance" ||
+            measure.activeTool === "angle" ||
+            measure.activeTool === "radius"
           const snap =
             snapEnabled && usesPointSnap
-              ? findNearestSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+              ? findSmartSnap(entitiesRef.current, rawPoint!, view.viewRef.current.scale)
               : null
           measure.handleToolClick(
             snap ? snap.point : rawPoint,

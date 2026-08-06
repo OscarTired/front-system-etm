@@ -72,6 +72,7 @@ export function useNestingProject() {
   }, [])
 
   const [rows, setRows] = useState<PieceRow[]>([])
+  const [forgivenIds, setForgivenIds] = useState<Set<string>>(() => new Set())
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
   const [machine, setMachine] = useState<MachineSettings>(defaultMachineSettings)
 
@@ -140,14 +141,30 @@ export function useNestingProject() {
   const materialAudit = useMemo(() => {
     const auditable: AuditablePiece[] = rows
       .filter((r): r is CadRow => r.source === "cad" && r.material.thickness > 0)
-      .map((r) => ({ id: r.id, material: r.material }))
+      .map((r) => ({
+        id: r.id,
+        material: r.material,
+        forgiven: forgivenIds.has(r.id),
+      }))
     return auditable.length > 1 ? auditMaterials(auditable) : null
-  }, [rows])
+  }, [rows, forgivenIds])
 
   const conflictIds = useMemo(() => {
     if (!materialAudit) return new Set<string>()
-    return new Set(materialAudit.results.filter((r) => r.hasConflict).map((r) => r.id))
-  }, [materialAudit])
+    return new Set(
+      materialAudit.results
+        .filter((r) => r.hasConflict && !forgivenIds.has(r.id))
+        .map((r) => r.id),
+    )
+  }, [materialAudit, forgivenIds])
+
+  const forgiveConflict = useCallback((id: string) => {
+    setForgivenIds((prev) => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+  }, [])
 
   const canRun = validPieces.length > 0 && !isRunning
 
@@ -175,6 +192,7 @@ export function useNestingProject() {
 
   const handleClearAll = useCallback(() => {
     setRows([])
+    setForgivenIds(new Set())
     clearSheets()
     sheetEditsRef.current = {}
     void clearNestingDraft()
@@ -597,6 +615,9 @@ export function useNestingProject() {
       sheetGroups,
       sheets,
       conflictIds,
+      materialAudit,
+      forgivenIds,
+      forgiveConflict,
       canRun,
       isRunning,
       progress,
@@ -649,6 +670,9 @@ export function useNestingProject() {
       sheetGroups,
       sheets,
       conflictIds,
+      materialAudit,
+      forgivenIds,
+      forgiveConflict,
       canRun,
       isRunning,
       progress,

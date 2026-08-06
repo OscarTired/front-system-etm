@@ -46,7 +46,7 @@ export function PieceListRow({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border",
-        conflict ? "bg-amber-500/15" : "bg-white/3 hover:bg-white/5",
+        "bg-white/3 hover:bg-white/5",
         highlighted && "ring-1 ring-blue-400/50 bg-blue-500/10",
         className
       )}
@@ -93,8 +93,8 @@ export function PieceListRow({
             </span>
           )}
           {conflict && (
-            <span className="flex items-center gap-0.5 text-amber-400 shrink-0">
-              <AlertTriangle className="h-2.5 w-2.5" /> conflicto
+            <span className="shrink-0 text-amber-400" title="Conflicto de material — ver Diagnóstico">
+              <AlertTriangle className="h-3.5 w-3.5" />
             </span>
           )}
         </div>

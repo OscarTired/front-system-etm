@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, Trash2 } from "lucide-react"
+import { Layers, Info, Loader2, AlignLeft, AlignRight, AlignCenterHorizontal, AlignStartVertical, AlignEndVertical, AlignCenterVertical, LayoutGrid, SlidersHorizontal, Trash2, RotateCcw, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { boundingRect, rotateOutlineAroundPoint } from "../engine/geometry"
@@ -18,10 +18,11 @@ import { Toolbar } from "./toolbar"
 import { SheetTabs, type SheetTabItem } from "./sheet-tabs"
 import { PropertiesPanel } from "./properties-panel"
 import { ExportDialog } from "./export-dialog"
+import { DiagnosticsDialog } from "./diagnostics-dialog"
 import { ProjectDialog } from "./project-dialog"
 import { PiecePreviewDialog } from "./piece-preview-dialog"
 import { SheetDimensionsFields, MaterialPanel } from "./material-panel"
-import { PieceList, type PieceListHandle, type PieceListProps } from "./piece-list"
+import { PieceList, type CadRow, type PieceListHandle, type PieceListProps } from "./piece-list"
 import { PieceListRow } from "./piece-list-row"
 import { EntityExpandedToggle, type EntityExpandedToggleOption } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -79,6 +80,7 @@ export function NestingPage() {
   const offsetsClipboardRef = useRef<{ dx: number; dy: number; angle: number } | null>(null)
   const [offsetsClipboardVersion, setOffsetsClipboardVersion] = useState(0)
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false)
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
   const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
   const [activePanel, setActivePanel] = useState<PanelView>("sheet-pieces")
@@ -118,7 +120,7 @@ export function NestingPage() {
         }`,
         duration: Infinity,
         action: {
-          label: "Empezar nuevo proyecto",
+          label: "Descartar",
           onClick: () => {
             project.onDiscardSession()
             history.resetAll?.() ?? history.reset()
@@ -445,8 +447,23 @@ export function NestingPage() {
 
     const prev = history.positionOverrides
     const next = { ...prev }
-    for (const idx of selectedPieceIndices) {
-      if (idx === refIndex) continue
+    const locked = new Set(lockedPieceIndices)
+    let moved = 0
+
+    // Ordenar de más cercano a más lejano al ref respecto al eje de alineación
+    const sortedIndices = [...selectedPieceIndices].filter(idx => idx !== refIndex && !locked.has(idx)).sort((iA, iB) => {
+      const pieceA = canvasPieces[iA]
+      const pieceB = canvasPieces[iB]
+      if (!pieceA || !pieceB) return 0
+      const bA = boundingRect(pieceA.outline)
+      const bB = boundingRect(pieceB.outline)
+      if (mode === "left" || mode === "right" || mode === "center-h") {
+        return Math.abs(bA.x - refBounds.x) - Math.abs(bB.x - refBounds.x)
+      }
+      return Math.abs(bA.y - refBounds.y) - Math.abs(bB.y - refBounds.y)
+    })
+
+    for (const idx of sortedIndices) {
       const piece = canvasPieces[idx]
       if (!piece) continue
       const b = boundingRect(piece.outline)
@@ -459,13 +476,38 @@ export function NestingPage() {
       else if (mode === "top") dy = current.dy + (refBounds.y - b.y)
       else if (mode === "bottom") dy = current.dy + (refBounds.y + refBounds.height - (b.y + b.height))
       else if (mode === "center-v") dy = current.dy + (refBounds.y + refBounds.height / 2 - (b.y + b.height / 2))
-      next[idx] = { dx, dy }
+
+      // Comprobar colisión temporal antes de aplicar
+      const testPiece: PlacedPiece = {
+        ...piece,
+        x: piece.x + (dx - current.dx),
+        y: piece.y + (dy - current.dy),
+        outline: { points: piece.outline.points.map((pt) => ({ x: pt.x + (dx - current.dx), y: pt.y + (dy - current.dy) })) },
+      }
+
+      let collides = false
+      for (let o = 0; o < canvasPieces.length; o++) {
+        if (o === idx) continue
+        // Si ya movimos otra pieza o está fija, evaluamos contra su posición temporal/actual
+        const other = canvasPieces[o]
+        if (piecesCollide(testPiece, other)) {
+          collides = true
+          break
+        }
+      }
+
+      if (!collides) {
+        next[idx] = { dx, dy }
+        moved++
+      }
     }
+
+    if (moved === 0) return
     history.commit("Alinear piezas", {
       positionOverrides: next,
       angleOverrides: history.angleOverrides,
     })
-  }, [selectedPieceIndices, canvasPieces, history])
+  }, [selectedPieceIndices, canvasPieces, history, lockedPieceIndices])
 
   const handleRun = useCallback(() => {
     setActiveGroupIndex(0)
@@ -619,6 +661,7 @@ export function NestingPage() {
     () => ({
       rows: project.rows,
       conflictIds: project.conflictIds,
+      onOpenDiagnostics: () => setDiagnosticsOpen(true),
       disabled: project.isRunning,
       onAddCad: project.onAddCad,
       onRemove: project.onRemove,
@@ -633,8 +676,7 @@ export function NestingPage() {
       nextColor: project.nextColor,
       highlightedIds,
     }),
-    [project, highlightedIds,
-      handleLocateRow,]
+    [project, highlightedIds, handleLocateRow]
   )
 
   const hasOverrides = Object.keys(positionOverrides).length > 0 || Object.keys(angleOverrides).length > 0
@@ -957,7 +999,10 @@ export function NestingPage() {
                 </div>
                 {selectedPieceIndices.length >= 2 && (
                   <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
-                    <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                    <span
+                      className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500 cursor-help"
+                      title="Última pieza seleccionada (Ctrl+click) = referencia. No mueve si colisiona."
+                    >
                       Alinear ({selectedPieceIndices.length})
                     </span>
                     <div className="h-4 w-px bg-white/10" />
@@ -1044,6 +1089,16 @@ export function NestingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DiagnosticsDialog
+        open={diagnosticsOpen}
+        onClose={() => setDiagnosticsOpen(false)}
+        rows={project.rows}
+        audit={project.materialAudit ?? null}
+        forgivenIds={project.forgivenIds ?? new Set()}
+        onForgive={(id) => project.forgiveConflict(id)}
+        onRemove={(id) => project.onRemove(id)}
+      />
 
       <ProjectDialog
         open={projectDialogOpen}
