@@ -185,7 +185,8 @@ export function SheetTabs({
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  className="w-64 border-white/10 bg-[#141416] p-1.5 text-neutral-100"
+                  floatingClassName="w-64 border-white/10 bg-[#141416]"
+                  className="p-1.5 text-neutral-100"
                 >
                   <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
                     {thicknessLabel(group.thicknessMm)} · {group.members.length} {groupWord} de plancha
