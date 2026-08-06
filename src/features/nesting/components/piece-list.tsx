@@ -389,7 +389,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
           </div>
         ) : (
           <ScrollArea className="h-full w-full">
-            <div className="flex flex-col gap-3 w-full px-3 box-border pb-3">  
+            <div className="flex flex-col gap-3 w-full px-3 py-2 box-border pb-3">  
               {groupedEntries.map(({ groupKey, items }) => (
                 <div key={groupKey ?? "default"} className="flex flex-col gap-2">
                   {groupKey && (

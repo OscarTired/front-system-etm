@@ -13,6 +13,7 @@ export const NestingToast = {
     toast.warning("No se pudo alinear", {
       description: "No hay espacio libre hacia la posición objetivo.",
     }),
+  alignNeedTwo: () => toast.message("Selecciona al menos 2 piezas para alinear"),
   needSelection: () => toast.message("Selecciona una o más piezas"),
   locked: () =>
     toast.message("Pieza bloqueada", {

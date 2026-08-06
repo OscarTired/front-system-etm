@@ -66,7 +66,7 @@ export function useNestingTransforms(opts: {
       let moveDx = dx
       let moveDy = dy
       if (transformMode === "geometric") {
-        const c = constrainToMode(dx, dy, "geometric")
+        const c = constrainToMode(transformMode, dx, dy)
         moveDx = c.dx
         moveDy = c.dy
       }
