@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, Loader2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section/collapsible-height-section"
-import { MaterialPanel, SheetDimensionsFields } from "./material-panel"
+import { MaterialPanel } from "./material-panel"
 import { MachinePanel } from "./machine-panel"
 import { PieceList, type PieceListProps, type PieceListHandle } from "./piece-list"
 import type { ProjectSettings, MachineSettings } from "../types/project-settings"
@@ -141,7 +141,6 @@ export const Sidebar = memo(
           <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
             Plancha
           </h2>
-          <SheetDimensionsFields settings={settings} onChange={onSettingsChange} />
         </section>
 
         <CollapsibleSection title="Proyecto y material" defaultOpen={false}>
