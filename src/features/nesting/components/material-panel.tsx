@@ -121,7 +121,7 @@ export function MaterialPanel({
       )}
 
       {/* Contenedor principal estilo Box unificado */}
-      <div className="flex flex-col rounded-xl bg-white/[0.02] p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
@@ -143,7 +143,7 @@ export function MaterialPanel({
         <div
           className={cn(
             "flex flex-col gap-3 overflow-hidden transition-all duration-200 ease-in-out",
-            isExpanded ? "mt-2 max-h-[600px] opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
+            isExpanded ? "mt-2 max-h-150 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
           )}
         >
           {/* Dimensiones */}
