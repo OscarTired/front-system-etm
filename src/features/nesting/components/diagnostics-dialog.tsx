@@ -188,12 +188,12 @@ export function DiagnosticsDialog({
                     <tr
                       key={row.id}
                       className={cn(
-                        "transition-colors hover:bg-white/[0.02]",
-                        conflict && "bg-amber-500/[0.04] hover:bg-amber-500/[0.07]",
-                        forgiven && "bg-emerald-500/[0.03]"
+                        "transition-colors hover:bg-white/2",
+                        conflict && "bg-amber-500/4 hover:bg-amber-500/[0.07]",
+                        forgiven && "bg-emerald-500/3"
                       )}
                     >
-                      <td className="max-w-[300px] truncate px-4 py-3 font-medium text-neutral-200">
+                      <td className="max-w-75 truncate px-4 py-3 font-medium text-neutral-200">
                         <div className="flex items-center gap-2">
                           {conflict && (
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
