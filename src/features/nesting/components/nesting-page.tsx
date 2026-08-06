@@ -423,19 +423,101 @@ export function NestingPage() {
     })
   }, [transformMode, history])
 
+  /** Tras rotar (ángulo + override de posición), ¿sigue dentro de la plancha? */
+  const outlineInsideSheet = useCallback(
+    (outline: { points: { x: number; y: number }[] }) => {
+      const b = boundingRect(outline)
+      const m = project.sheetConfig.margin ?? 0
+      const w = project.sheetConfig.width
+      const h = project.sheetConfig.height
+      return (
+        b.x >= m - 0.05 &&
+        b.y >= m - 0.05 &&
+        b.x + b.width <= w - m + 0.05 &&
+        b.y + b.height <= h - m + 0.05
+      )
+    },
+    [project.sheetConfig],
+  )
+
   const handleRotateSelected = useCallback((pieceIndices: number[], degrees: number) => {
     if (pieceIndices.length === 0 || Math.abs(degrees) < 1e-9) return
+    if (!activeGroup) return
+
     const nextAng = { ...history.angleOverrides }
+    const rawPieces = activeGroup.sheet.pieces
+    const rotating = new Set(pieceIndices)
+
+    // Simular geometría resultante de cada pieza a rotar
+    const simulated: { idx: number; piece: PlacedPiece }[] = []
+
     for (const idx of pieceIndices) {
+      if (lockedPieceIndices.includes(idx)) continue
+      const p = rawPieces[idx]
+      if (!p) continue
       const cur = nextAng[idx] ?? 0
-      nextAng[idx] = ((cur + degrees) % 360 + 360) % 360
+      const newAng = ((cur + degrees) % 360 + 360) % 360
+      nextAng[idx] = newAng
+
+      // Misma lógica que canvasPieces: rotar desde outline nest + aplicar override pos
+      let piece: PlacedPiece = p
+      if (newAng) {
+        const b = boundingRect(p.outline)
+        const pivot = { x: b.x + b.width / 2, y: b.y + b.height / 2 }
+        piece = {
+          ...p,
+          angle: ((p.angle + newAng) % 360 + 360) % 360,
+          outline: rotateOutlineAroundPoint(p.outline, newAng, pivot),
+          subEntities: p.subEntities?.map((s) => ({
+            ...s,
+            outline: rotateOutlineAroundPoint(s.outline, newAng, pivot),
+          })),
+        }
+      }
+      const override = history.positionOverrides[idx]
+      if (override) {
+        const { dx, dy } = override
+        piece = {
+          ...piece,
+          x: piece.x + dx,
+          y: piece.y + dy,
+          outline: { points: piece.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
+          subEntities: piece.subEntities?.map((s) => ({
+            ...s,
+            outline: { points: s.outline.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) },
+          })),
+        }
+      }
+
+      // Fuera de plancha → rechazar toda la rotación del grupo
+      if (!outlineInsideSheet(piece.outline)) {
+        return
+      }
+      simulated.push({ idx, piece })
     }
+
+    if (simulated.length === 0) return
+
+    // Colisión con piezas que no rotan (y entre sí)
+    for (const { idx, piece } of simulated) {
+      for (let o = 0; o < canvasPieces.length; o++) {
+        if (o === idx) continue
+        if (rotating.has(o)) {
+          // Contra otra del grupo: usar su simulación si existe
+          const otherSim = simulated.find((s) => s.idx === o)
+          if (otherSim && piecesCollide(piece, otherSim.piece)) return
+          continue
+        }
+        if (piecesCollide(piece, canvasPieces[o])) return
+      }
+    }
+
     const sign = degrees >= 0 ? "+" : ""
     history.commit(`Rotar ${sign}${degrees}°`, {
       positionOverrides: history.positionOverrides,
       angleOverrides: nextAng,
     })
-  }, [history])
+  }, [history, activeGroup, lockedPieceIndices, canvasPieces, outlineInsideSheet])
 
   const handleAlign = useCallback((mode: "left" | "right" | "top" | "bottom" | "center-h" | "center-v") => {
     if (selectedPieceIndices.length < 2) return
@@ -573,6 +655,9 @@ export function NestingPage() {
       const sin = Math.sin(rad)
       const nextPos = { ...history.positionOverrides }
       const nextAng = { ...history.angleOverrides }
+      const rotating = new Set(pieceIndices)
+      const simulated: { idx: number; piece: PlacedPiece }[] = []
+
       for (const idx of pieceIndices) {
         if (lockedPieceIndices.includes(idx)) continue
         const piece = canvasPieces[idx]
@@ -584,19 +669,59 @@ export function NestingPage() {
         const dy0 = cy - pivot.y
         const nx = pivot.x + dx0 * cos - dy0 * sin
         const ny = pivot.y + dx0 * sin + dy0 * cos
+        const ddx = nx - cx
+        const ddy = ny - cy
         const prev = nextPos[idx] ?? { dx: 0, dy: 0 }
         nextPos[idx] = {
-          dx: prev.dx + (nx - cx),
-          dy: prev.dy + (ny - cy),
+          dx: prev.dx + ddx,
+          dy: prev.dy + ddy,
         }
         nextAng[idx] = (((nextAng[idx] ?? 0) + degrees) % 360 + 360) % 360
+
+        // Geometría resultante: rotar outline actual alrededor del pivot de pieza + traslación del centro
+        const rotatedOutline = rotateOutlineAroundPoint(piece.outline, degrees, { x: cx, y: cy })
+        const movedOutline = {
+          points: rotatedOutline.points.map((pt) => ({ x: pt.x + ddx, y: pt.y + ddy })),
+        }
+        if (!outlineInsideSheet(movedOutline)) return
+
+        const testPiece: PlacedPiece = {
+          ...piece,
+          x: piece.x + ddx,
+          y: piece.y + ddy,
+          angle: ((piece.angle + degrees) % 360 + 360) % 360,
+          outline: movedOutline,
+          subEntities: piece.subEntities?.map((s) => {
+            const ro = rotateOutlineAroundPoint(s.outline, degrees, { x: cx, y: cy })
+            return {
+              ...s,
+              outline: { points: ro.points.map((pt) => ({ x: pt.x + ddx, y: pt.y + ddy })) },
+            }
+          }),
+        }
+        simulated.push({ idx, piece: testPiece })
       }
+
+      if (simulated.length === 0) return
+
+      for (const { idx, piece } of simulated) {
+        for (let o = 0; o < canvasPieces.length; o++) {
+          if (o === idx) continue
+          if (rotating.has(o)) {
+            const otherSim = simulated.find((s) => s.idx === o)
+            if (otherSim && piecesCollide(piece, otherSim.piece)) return
+            continue
+          }
+          if (piecesCollide(piece, canvasPieces[o])) return
+        }
+      }
+
       history.commit("Rotar pivot", {
         positionOverrides: nextPos,
         angleOverrides: nextAng,
       })
     },
-    [history, canvasPieces, lockedPieceIndices],
+    [history, canvasPieces, lockedPieceIndices, outlineInsideSheet],
   )
 
 

@@ -6,20 +6,26 @@ export function computeSnapCandidates(entities: Entity[]): SnapCandidate[] {
   const out: SnapCandidate[] = []
   for (const e of entities) {
     if (e.kind === "line") {
-      out.push({ point: e.a, type: "endpoint" })
-      out.push({ point: e.b, type: "endpoint" })
+      out.push({ point: e.a, type: "endpoint", segment: { a: e.a, b: e.b } })
+      out.push({ point: e.b, type: "endpoint", segment: { a: e.a, b: e.b } })
       out.push({
         point: { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2 },
         type: "midpoint",
+        segment: { a: e.a, b: e.b },
       })
     } else if (e.kind === "polyline") {
       for (let i = 0; i < e.points.length; i++) {
-        out.push({ point: e.points[i], type: "endpoint" })
         const next = e.points[i + 1] ?? (e.closed ? e.points[0] : null)
+        out.push({
+          point: e.points[i],
+          type: "endpoint",
+          segment: next ? { a: e.points[i], b: next } : undefined,
+        })
         if (next) {
           out.push({
             point: { x: (e.points[i].x + next.x) / 2, y: (e.points[i].y + next.y) / 2 },
             type: "midpoint",
+            segment: { a: e.points[i], b: next },
           })
         }
       }
@@ -48,14 +54,16 @@ export function findNearestSnap(
   return best
 }
 
-
-/** Proyección al segmento más cercano (para regla inteligente punta↔línea). */
+/**
+ * Arista más cercana + proyección.
+ * Incluye `segment` para resaltar la arista (estilo AutoCAD).
+ */
 export function findNearestEdgeSnap(
   entities: Entity[],
   point: Point,
-  scale: number,
+  scale: number
 ): SnapCandidate | null {
-  const tol = (SNAP_TOLERANCE_PX * 1.5) / scale
+  const tol = (SNAP_TOLERANCE_PX * 2) / scale
   let best: SnapCandidate | null = null
   let bestDist = tol
 
@@ -70,10 +78,13 @@ export function findNearestEdgeSnap(
     const d = Math.hypot(point.x - proj.x, point.y - proj.y)
     if (d < bestDist) {
       bestDist = d
-      // endpoint si está casi en extremo, si no midpoint como "sobre arista"
-      const type =
-        t < 0.02 || t > 0.98 ? "endpoint" : ("midpoint" as const)
-      best = { point: proj, type }
+      const type: SnapCandidate["type"] =
+        t < 0.02 ? "endpoint" : t > 0.98 ? "endpoint" : "nearest"
+      best = {
+        point: t < 0.02 ? a : t > 0.98 ? b : proj,
+        type: type === "endpoint" && (t < 0.02 || t > 0.98) ? "endpoint" : t > 0.45 && t < 0.55 ? "midpoint" : "nearest",
+        segment: { a, b },
+      }
     }
   }
 
@@ -96,7 +107,14 @@ export function findNearestEdgeSnap(
 export function findSmartSnap(
   entities: Entity[],
   point: Point,
-  scale: number,
+  scale: number
 ): SnapCandidate | null {
-  return findNearestSnap(entities, point, scale) ?? findNearestEdgeSnap(entities, point, scale)
+  const pt = findNearestSnap(entities, point, scale)
+  if (pt) {
+    // Aún así buscar arista cercana para highlight
+    const edge = findNearestEdgeSnap(entities, point, scale)
+    if (edge?.segment) return { ...pt, segment: edge.segment }
+    return pt
+  }
+  return findNearestEdgeSnap(entities, point, scale)
 }

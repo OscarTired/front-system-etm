@@ -66,7 +66,10 @@ export type Measurement =
 
 export interface SnapCandidate {
   point: Point
-  type: "endpoint" | "midpoint" | "center"
+  /** endpoint = cuadrado, midpoint = triángulo, center = círculo, nearest = reloj en arista (AutoCAD). */
+  type: "endpoint" | "midpoint" | "center" | "nearest"
+  /** Arista bajo el cursor — se resalta al medir. */
+  segment?: { a: Point; b: Point }
 }
 
 /** Libre = arrastre continuo; Geométrico = ejes + rotación en pasos fijos. */
