@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash } from "lucide-react"
+import { AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash, HelpCircle } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,6 @@ export { computeLayerList } from "./utils/entities"
 type PieceDragState = {
   pieceIndices: number[]
   startLocal: Point
-  /** Offset actual en coords mundo — se lee en cada frame de draw sin clonar entidades. */
   offset: Point
 }
 
@@ -68,14 +67,14 @@ export function DxfCanvas({
     moved: boolean
   } | null>(null)
 
-  /** Un solo objeto mutable: el draw lee pieceDragRef.current sin realloc. */
   const pieceDragRef = useRef<PieceDragState | null>(null)
   const lockedPieceIndicesRef = useRef<number[]>(lockedPieceIndices)
   lockedPieceIndicesRef.current = lockedPieceIndices
-  /** Espacio mantenido → pan de vista (estilo CAD), no mueve piezas. */
   const spaceHeldRef = useRef(false)
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
+  const [showCanvasHelp, setShowCanvasHelp] = useState(false)
+
   const boxSelectRef = useRef<{
     startScreen: { x: number; y: number }
     curScreen: { x: number; y: number }
@@ -85,14 +84,12 @@ export function DxfCanvas({
   const [boxSelectScreen, setBoxSelectScreen] = useState<{
     x0: number; y0: number; x1: number; y1: number
   } | null>(null)
-  /** Zoom window: mismo esquema de rectángulo que box select. */
   const zoomWindowRef = useRef<{
     startScreen: { x: number; y: number }
     curScreen: { x: number; y: number }
     startLocal: { x: number; y: number }
     curLocal: { x: number; y: number }
   } | null>(null)
-  /** Rotate tool: pivot + ángulo inicial del puntero. */
   const rotateDragRef = useRef<{
     pivot: { x: number; y: number }
     startAngle: number
@@ -101,14 +98,11 @@ export function DxfCanvas({
   } | null>(null)
   const [rotatePivotScreen, setRotatePivotScreen] = useState<{ x: number; y: number } | null>(null)
   const [rotatePreviewDelta, setRotatePreviewDelta] = useState(0)
-  /** Índice espacial de colisión — se reconstruye solo cuando cambian pieces. */
   const collisionIndexRef = useRef<CollisionIndex | null>(null)
-  /** Guías de snap magnético del frame actual (draw las lee sin setState). */
   const snapGuidesRef = useRef<SnapGuide[]>([])
 
   const [showGrid, setShowGrid] = useState(true)
   const [snapEnabled, setSnapEnabled] = useState(true)
-  /** Fondo del canvas: puntos, líneas, cruces o ninguno. */
   const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">("dots")
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null)
 
@@ -197,7 +191,6 @@ export function DxfCanvas({
       view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize)
       scheduleDraw()
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pieces, sheetSize?.width, sheetSize?.height, hiddenKeys])
 
   useEffect(() => {
@@ -220,7 +213,6 @@ export function DxfCanvas({
       canvas.style.cursor = c
     }
 
-    /** Punto en CSS px del canvas, robusto al zoom de página del navegador. */
     const canvasCssPoint = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect()
       const sx = (canvas.clientWidth || rect.width) / (rect.width || 1)
@@ -237,7 +229,6 @@ export function DxfCanvas({
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
 
-      // Botón medio o Espacio+drag = pan de vista (no mueve piezas)
       const forcePan = spaceHeldRef.current || e.button === 1 || canvasTool === "pan"
       if (forcePan) {
         draggingRef.current = {
@@ -252,7 +243,6 @@ export function DxfCanvas({
         return
       }
 
-      // Zoom window: arrastrar rectángulo → fit
       if (canvasTool === "zoomWindow" && measure.activeTool === "none") {
         const screenPt = canvasCssPoint(e.clientX, e.clientY)
         zoomWindowRef.current = {
@@ -267,7 +257,6 @@ export function DxfCanvas({
         return
       }
 
-      // Rotate around pivot: clic = pivot, arrastrar = ángulo
       if (canvasTool === "rotate" && measure.activeTool === "none") {
         const locked = new Set(lockedPieceIndicesRef.current)
         const movable = selectedPieceIndices.filter((i) => !locked.has(i))
@@ -290,14 +279,10 @@ export function DxfCanvas({
       if (measure.activeTool === "none") {
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
 
-        // Arrastre de pieza(s) ya seleccionadas
         if (hit !== null && selectedPieceIndices.includes(hit)) {
           const locked = new Set(lockedPieceIndicesRef.current)
           const movable = selectedPieceIndices.filter((i) => !locked.has(i))
-          if (movable.length === 0) {
-            // Todas bloqueadas: no arrastrar
-            return
-          }
+          if (movable.length === 0) return
           pieceDragRef.current = {
             pieceIndices: movable,
             startLocal: rawPoint,
@@ -308,7 +293,6 @@ export function DxfCanvas({
           return
         }
 
-        // Select + vacío → box select; pieza no seleccionada → click en pointerUp
         if (hit === null && canvasTool === "select") {
           const screenPt = canvasCssPoint(e.clientX, e.clientY)
           boxSelectRef.current = {
@@ -524,9 +508,6 @@ export function DxfCanvas({
       pieceDragRef.current = null
       if (pieceDrag) {
         const { offset, pieceIndices } = pieceDrag
-        // SIEMPRE confirmar el offset ya clampeado en el drag.
-        // No revalidar aquí: el contacto borde-borde es válido y
-        // un segundo test con floats distintos provocaba el "snap back".
         if (Math.abs(offset.x) > 0.01 || Math.abs(offset.y) > 0.01) {
           onMovePieces?.(pieceIndices, offset.x, offset.y)
         }
@@ -696,10 +677,10 @@ export function DxfCanvas({
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none select-none" style={{ cursor: "default" }} />
 
-      {/* Status bar */}
+      {/* Barra de estado inferior minimalista y limpia */}
       <div
         data-slot="canvas-status-bar"
-        className="pointer-events-none absolute bottom-3 left-3 z-20 flex max-w-[min(90%,28rem)] flex-wrap items-center gap-2 rounded-full bg-[#101012]/90 px-3 py-1.5 text-[10px] text-neutral-400 shadow-lg backdrop-blur-sm"
+        className="absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-[#101012]/95 px-3 py-1.5 text-xs text-neutral-400 shadow-lg backdrop-blur-sm"
       >
         <span className="font-semibold text-neutral-200">
           {canvasTool === "select" ? "V · Seleccionar" : "H · Pan"}
@@ -715,22 +696,37 @@ export function DxfCanvas({
         {collidingPieceIndices.length > 0 && (
           <>
             <span className="text-white/15">|</span>
-            <span className="text-red-400">
-              {collidingPieceIndices.length} colisión
-              {collidingPieceIndices.length === 1 ? "" : "es"}
+            <span className="text-red-400 font-medium">
+              {collidingPieceIndices.length} colisión{collidingPieceIndices.length === 1 ? "" : "es"}
             </span>
           </>
         )}
-        {canvasTool === "select" && (
-          <>
-            <span className="text-white/15">|</span>
-            <span className="text-neutral-500">Arrastra vacío = box (L→R / R→L)</span>
-          </>
-        )}
+        
+        {/* Botón de ayuda desplegable (implementando tu sugerencia de icono info) */}
+        <div className="relative flex items-center">
+          <button
+            type="button"
+            onClick={() => setShowCanvasHelp((prev) => !prev)}
+            className="ml-1 rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            title="Ayuda de atajos"
+          >
+            <HelpCircle size={13} />
+          </button>
+
+          {showCanvasHelp && (
+            <div className="absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md">
+              <div className="font-semibold text-white mb-1">Guía rápida de interacción:</div>
+              <ul className="space-y-1 text-neutral-400">
+                <li>• <strong className="text-neutral-200">V</strong>: Modo Selección</li>
+                <li>• <strong className="text-neutral-200">H o Espacio+Arrastrar</strong>: Panorámica</li>
+                <li>• <strong className="text-neutral-200">Arrastrar fondo</strong>: Selección por caja</li>
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
-
-      {/* Indicador modo interacción V/H */}
+      {/* Indicador modo interacción V/H superior */}
       <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
         <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-[#101012]/90 p-1 shadow-lg backdrop-blur-sm">
           <button
@@ -748,7 +744,7 @@ export function DxfCanvas({
           </button>
           <button
             type="button"
-            title="Pan (H) — también Espacio+drag"
+            title="Pan (H)"
             onClick={() => setCanvasTool("pan")}
             className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold transition-colors ${
               canvasTool === "pan"
@@ -918,41 +914,44 @@ export function DxfCanvas({
         </div>
       )}
 
+      {/* Panel de mediciones con altura segura sobre la barra inferior */}
       {measure.measurements.length > 0 && (
-        <div className="absolute bottom-4 left-4 z-10 flex max-h-[40%] max-w-55 flex-col gap-1 overflow-y-auto rounded-2xl bg-[#1c1c1e]/92 p-2 shadow-[0_4px_16px_rgba(0,0,0,0.4)] backdrop-blur-md">
-          <div className="flex items-center justify-between px-1.5 pb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-              Mediciones
+        <div className="absolute bottom-14 left-3 z-30 flex max-h-[45%] w-72 flex-col gap-1.5 overflow-y-auto rounded-2xl bg-[#141416]/95 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md">
+          <div className="flex items-center justify-between px-1 pb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+              Mediciones Activas
             </span>
             <button
               type="button"
               onClick={measure.clearMeasurements}
-              className="rounded-full p-1 text-neutral-500 transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
               title="Borrar todas"
             >
-              <Trash2 size={12} />
+              <Trash2 size={14} />
             </button>
           </div>
-          {measure.measurements.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 text-[11px] text-neutral-200"
-            >
-              <span className="truncate">
-                {m.kind === "distance" && fmtMm(m.value)}
-                {m.kind === "radius" && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
-                {m.kind === "angle" && `${m.degrees.toFixed(1)}°`}
-                {m.kind === "area" && `${(m.area / 1_000_000).toFixed(4)}m²`}
-              </span>
-              <button
-                type="button"
-                onClick={() => measure.removeMeasurement(m.id)}
-                className="shrink-0 rounded-full p-0.5 text-neutral-500 transition-colors hover:bg-white/10 hover:text-white"
+          <div className="flex flex-col gap-1.5 pt-1">
+            {measure.measurements.map((m) => (
+              <div
+                key={m.id}
+                className="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2 text-xs text-neutral-200 hover:bg-white/10 transition-colors"
               >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
+                <span className="font-medium truncate">
+                  {m.kind === "distance" && fmtMm(m.value)}
+                  {m.kind === "radius" && `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`}
+                  {m.kind === "angle" && `${m.degrees.toFixed(1)}°`}
+                  {m.kind === "area" && `${(m.area / 1_000_000).toFixed(4)}m²`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => measure.removeMeasurement(m.id)}
+                  className="shrink-0 rounded-lg p-1 text-neutral-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
