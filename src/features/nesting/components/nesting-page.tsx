@@ -46,8 +46,8 @@ const DxfCanvas = dynamic(
 type PanelView = "sheet-pieces" | "project-material" | "layers" | "inspector"
 
 const PANEL_OPTIONS: EntityExpandedToggleOption<PanelView>[] = [
-  { value: "sheet-pieces", label: "Piezas", icon: LayoutGrid },
   { value: "project-material", label: "Proyecto y Material", icon: SlidersHorizontal },
+  { value: "sheet-pieces", label: "Piezas", icon: LayoutGrid },
   { value: "layers", label: "Capas", icon: Layers },
   { value: "inspector", label: "Inspector", icon: Info },
 ]
