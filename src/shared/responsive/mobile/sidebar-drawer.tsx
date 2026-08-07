@@ -14,10 +14,11 @@ export function SidebarDrawer() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  // Solo pathname: searchParams cambia mucho y re-disparaba close
+  // (modo closed + animate) mientras el panel aún se movía → ghost frame.
   useEffect(() => {
     closeDrawer()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, searchParams.toString()])
+  }, [pathname, closeDrawer])
 
   useEffect(() => {
     if (mode !== "open") {

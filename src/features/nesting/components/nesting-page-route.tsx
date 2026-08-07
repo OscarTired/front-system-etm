@@ -1,12 +1,22 @@
 "use client"
 
-import { NestingPage as NestingWorkspace } from "@/features/nesting/components/nesting-page"
+import dynamic from "next/dynamic"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
+import { NestingPageSkeleton } from "@/features/nesting/components/nesting-page-skeleton"
+
+const NestingWorkspace = dynamic(
+  () =>
+    import("@/features/nesting/components/nesting-page").then((m) => m.NestingPage),
+  {
+    ssr: false,
+    loading: () => <NestingPageSkeleton />,
+  },
+)
 
 /**
- * En mobile el contenido vive dentro de VerticalScroll (pt-14 + pb-20 del shell).
- * Hay que darle altura de viewport restante; si no, h-full no resuelve y el
- * canvas queda en una franja chica con vacío negro debajo.
+ * Mobile: altura = viewport − top bar − bottom nav (VerticalScroll del shell).
+ * Dynamic import: el chunk de nesting (canvas, worker, draft) no bloquea
+ * el cierre del drawer ni el primer paint al navegar.
  */
 export default function NestingRoute() {
   usePageTitle("Nesting")
@@ -15,7 +25,7 @@ export default function NestingRoute() {
     <main
       className={
         "flex min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none " +
-        "h-[calc(100dvh-8.5rem)] " + // top bar 3.5rem + bottom nav 5rem
+        "h-[calc(100dvh-8.5rem)] " +
         "tablet:h-full tablet:px-8 tablet:pb-5 " +
         "desktop:h-full desktop:py-10"
       }

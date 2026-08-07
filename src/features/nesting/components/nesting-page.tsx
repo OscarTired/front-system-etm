@@ -697,7 +697,7 @@ export function NestingPage() {
                 Panel
               </button>
             )}
-            {dxfCanvasPieces.length > 0 ? (
+            {project.sessionReady && dxfCanvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
                 sheetSize={sheetSize}
@@ -715,7 +715,9 @@ export function NestingPage() {
               />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-neutral-500">
-                Importa una pieza o presiona Nestear para verla acá.
+                {!project.sessionReady
+                  ? "Cargando workspace…"
+                  : "Importa una pieza o presiona Nestear para verla acá."}
               </div>
             )}
           </div>

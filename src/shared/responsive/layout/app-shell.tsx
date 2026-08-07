@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "motion/react"
 
@@ -100,20 +100,35 @@ function CompactShell({ children }: Props) {
 
   const isOpen = mode === "open"
   const x = useMotionValue(0)
+  const mountedRef = useRef(false)
 
-  // Cambiamos el input range a [1, DRAWER_REVEAL_OFFSET]. 
-  // Así, tan pronto como x se empieza a mover de 0 (por ejemplo, a 1 o 2), 
-  // el border-radius pasa inmediatamente a 28px. Cuando x vuelve exactamente a 0, se quita.
+  // Zona muerta mayor: el radius no parpadea en el último px del cierre.
   const borderRadius = useTransform(
     x,
-    [0, 1, DRAWER_REVEAL_OFFSET],
-    ["0px 0px 0px 0px", "28px 0px 0px 28px", "28px 0px 0px 28px"]
+    [0, 12, DRAWER_REVEAL_OFFSET],
+    ["0px 0px 0px 0px", "28px 0px 0px 28px", "28px 0px 0px 28px"],
   )
 
-  // Sincronización cuando se activa vía Botón (Hamburguesa/Chevron)
+  // Abrir: spring. Cerrar: tween (sin overshoot — el spring a 0 a veces
+  // rebota un frame y se ve como "ghost close"). Primer mount: set
+  // directo, sin animar (evita un frame fantasma al entrar a la app).
   useEffect(() => {
     const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
-    const controls = animate(x, targetX, BUTTON_SPRING)
+
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      x.set(targetX)
+      return
+    }
+
+    const controls = isOpen
+      ? animate(x, targetX, BUTTON_SPRING)
+      : animate(x, targetX, {
+          type: "tween",
+          duration: 0.22,
+          ease: [0.22, 1, 0.36, 1],
+        })
+
     return () => controls.stop()
   }, [isOpen, x])
 
