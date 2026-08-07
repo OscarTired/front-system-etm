@@ -896,11 +896,24 @@ export function drawScene(d: DrawContext) {
       ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2)
       ctx.fill()
     }
+    // El ángulo se mide EN el vértice (1er punto) entre los rayos hacia
+    // el 2º y 3º punto — antes el preview dibujaba un camino conectado
+    // (vértice → p1 → cursor, una sola línea quebrada que pasa POR p1),
+    // dando la impresión visual de que el ángulo se abría en p1. Al
+    // confirmar, la medición real es en el vértice entre 2 rayos
+    // independientes — se sentía como que "se invertía" de golpe. Ahora
+    // el preview dibuja esos mismos 2 rayos independientes desde el
+    // vértice, para que se vea igual desde el primer momento.
+    const vertex = pendingPoints[0]
     ctx.setLineDash([4 / scale, 3 / scale])
     ctx.beginPath()
-    pendingPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+    if (pendingPoints.length >= 2) {
+      const p1 = pendingPoints[1]
+      ctx.moveTo(vertex.x, vertex.y)
+      ctx.lineTo(p1.x, p1.y)
+    }
     if (hoverLocal && pendingPoints.length < 3) {
-      const last = pendingPoints[pendingPoints.length - 1]
+      ctx.moveTo(vertex.x, vertex.y)
       ctx.lineTo(hoverLocal.x, hoverLocal.y)
     }
     ctx.stroke()
