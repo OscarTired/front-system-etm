@@ -267,7 +267,10 @@ export function DxfCanvas({
       raf = requestAnimationFrame(() => {
         const canvasEl = canvasRef.current
         if (!canvasEl) return
-        view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+        // No resetear zoom/pan del usuario (medir, acercar a un detalle, etc.)
+        if (!view.hasUserInteracted()) {
+          view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+        }
         scheduleDraw()
       })
     })
@@ -537,7 +540,7 @@ export function DxfCanvas({
           measure.activeTool === "radius"
         const snap =
           snapEnabled && usesPointSnap && rawPoint
-            ? findSmartSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale)
+            ? findSmartSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale, sheetSize)
             : null
         setSnapCandidate(snap)
         measure.setHoverLocal(snap ? snap.point : rawPoint)
@@ -700,7 +703,7 @@ export function DxfCanvas({
             measure.activeTool === "radius"
           const snap =
             snapEnabled && usesPointSnap
-              ? findSmartSnap(entitiesRef.current, rawPoint!, view.viewRef.current.scale)
+              ? findSmartSnap(entitiesRef.current, rawPoint!, view.viewRef.current.scale, sheetSize)
               : null
           measure.handleToolClick(
             snap ? snap.point : rawPoint,
@@ -802,11 +805,13 @@ export function DxfCanvas({
   )
 
   const handleFit = useCallback(() => {
+    view.allowAutoFit()
     view.fitToSheetOrEntities(canvasRef.current, entitiesRef.current, sheetSize, isCompact)
     scheduleDraw()
-  }, [view, sheetSize, scheduleDraw])
+  }, [view, sheetSize, isCompact, scheduleDraw])
 
   const handleFocus = useCallback(() => {
+    view.allowAutoFit()
     if (selectedPieceIndices.length === 0) return
     const selectedSet = new Set(selectedPieceIndices)
     const selected = entitiesRef.current.filter(
