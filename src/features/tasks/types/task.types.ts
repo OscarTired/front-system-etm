@@ -74,4 +74,7 @@ export interface Task{
 
   workflowSteps:WorkflowStep[]
 
+  /** Comentarios activos de la tarea (listado). */
+  commentCount?: number
+
 }

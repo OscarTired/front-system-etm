@@ -66,6 +66,8 @@ export interface WorkflowStep{
 
   updatedAt:string
 
+  commentCount?: number
+
 }
 
 export interface WorkflowHistoryEntry{

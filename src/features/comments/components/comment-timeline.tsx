@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
@@ -49,22 +49,22 @@ export function CommentTimeline({
   }=useDeleteComment(target)
 
   const targetId = getTargetId(target)
+  const markedReadRef = useRef<string | null>(null)
 
-  // Los comentarios recientes se ven directamente acá, sin necesidad
-  // de abrir "Ver historial". Si ya hay comentarios cargados, se
-  // consideran vistos: marcamos como leídas las notificaciones de
-  // este target igual que en CommentHistoryDialog (incluye proyecto).
+  // Una sola vez por target al tener datos. Evita PATCH /comments/read
+  // en bucle cuando comments.length / loading parpadean o el padre re-renderiza.
   useEffect(() => {
-
     if (loading || comments.length === 0) return
+    if (markedReadRef.current === targetId) return
+    markedReadRef.current = targetId
 
     commentsService
       .markCommentsAsRead(target)
       .catch(() => {
-        // no crítico
+        // no crítico — permitir reintento si falla
+        markedReadRef.current = null
       })
-
-  }, [loading, comments.length, target.scope, targetId])
+  }, [loading, comments.length, target.scope, targetId, target])
 
   function handleConfirmDelete(){
     if(!pendingDelete){

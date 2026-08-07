@@ -16,7 +16,6 @@ import {
 import { KpiCarousel, type KpiItem } from "@/shared/ui/mini-card/kpi-carousel"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getProcessProgress } from "@/features/processes/selectors/get-process-progress"
-import { useComments } from "@/features/comments/hooks/use-comments"
 import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
 
 import { ProcessProductionCard } from "./cards/process-production-card"
@@ -48,12 +47,11 @@ export function ProcessExpandedRow({
   const workflowStepId =
     processTask.workflowStep?.id
 
-  // Obtenemos los comentarios del workflow step (si existe) para contar los mensajes
-  const { comments } = useComments(
-    { scope: "workflowStep", workflowStepId: workflowStepId ?? "" },
-    !!workflowStepId
-  )
-  const totalComments = comments.length
+  // activeView / dialog se declaran más abajo; el count del badge
+  // no justifica fetch de todos los comentarios de cada fila.
+  // CommentHistoryDialog / panel de mensajes hacen su propio fetch con enabled.
+  const totalComments =
+    processTask.workflowStep?.commentCount ?? 0
 
   const isMaterialProcess =
     processCode === "CT" ||

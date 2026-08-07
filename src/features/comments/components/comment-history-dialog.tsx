@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { MessageSquare, Search, Trash2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/shared/ui/spinner/spinner"
@@ -57,15 +57,19 @@ export function CommentHistoryDialog({
 
   const targetId = getTargetId(target)
 
-  useEffect(() => {
+  const markedReadRef = useRef<string | null>(null)
 
+  useEffect(() => {
     if (!open) return
+    if (markedReadRef.current === targetId) return
+    markedReadRef.current = targetId
 
     commentsService
       .markCommentsAsRead(target)
-      .catch(() => {})
-
-  }, [open, target.scope, targetId])
+      .catch(() => {
+        markedReadRef.current = null
+      })
+  }, [open, target.scope, targetId, target])
 
   const filteredComments = search.trim()
     ? comments.filter(c =>

@@ -35,4 +35,7 @@ export interface Project{
 
   status:Status
 
+  /** Comentarios activos (viene del listado, no requiere GET /comments). */
+  commentCount?: number
+
 }

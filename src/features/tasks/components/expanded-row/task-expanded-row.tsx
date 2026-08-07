@@ -49,10 +49,6 @@ export function TaskExpandedRow({
   const isTarget = urlTaskId === task.id
   const tabParam = searchParams.get("tab")
 
-  // Obtenemos los comentarios de la tarea para contar los mensajes
-  const { comments } = useComments({ scope: "task", taskId: task.id })
-  const totalComments = comments.length
-
   const [
     activeView,
     setActiveView,
@@ -62,6 +58,18 @@ export function TaskExpandedRow({
     commentsDialogOpen,
     setCommentsDialogOpen,
   ] = useState(false)
+
+  // Solo fetch al ver mensajes — no por cada fila de la lista.
+  const commentsEnabled =
+    activeView === "comments" || commentsDialogOpen
+
+  const { comments } = useComments(
+    { scope: "task", taskId: task.id },
+    commentsEnabled,
+  )
+  const totalComments = commentsEnabled
+    ? comments.length
+    : (task.commentCount ?? 0)
 
   useEffect(() => {
     if (!isTarget) {

@@ -44,9 +44,28 @@ export function ProjectExpandedRow({
   const isTarget = urlProjectId === project.id
   const tabParam = searchParams.get("tab")
 
-  // Obtenemos los comentarios del proyecto para contar los mensajes
-  const { comments } = useComments({ scope: "project", projectId: project.id })
-  const totalComments = comments.length
+  const [
+    activeView,
+    setActiveView,
+  ] = useState<"tasks" | "comments" | "kpis">("tasks")
+
+  const [
+    commentsDialogOpen,
+    setCommentsDialogOpen,
+  ] = useState(false)
+
+  // Solo fetch cuando el usuario mira mensajes (no en cada fila de la lista).
+  const commentsEnabled =
+    activeView === "comments" || commentsDialogOpen
+
+  const { comments } = useComments(
+    { scope: "project", projectId: project.id },
+    commentsEnabled,
+  )
+  // Badge desde el listado; al abrir mensajes, comments.length es la fuente viva.
+  const totalComments = commentsEnabled
+    ? comments.length
+    : (project.commentCount ?? 0)
 
   const {
     totalTasks,
@@ -86,16 +105,6 @@ export function ProjectExpandedRow({
     tasks,
     project.id,
   ])
-
-  const [
-    activeView,
-    setActiveView,
-  ] = useState<"tasks" | "comments" | "kpis">("tasks")
-
-  const [
-    commentsDialogOpen,
-    setCommentsDialogOpen,
-  ] = useState(false)
 
   useEffect(() => {
     if (!isTarget) {
