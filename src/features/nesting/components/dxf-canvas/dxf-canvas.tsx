@@ -84,6 +84,16 @@ export function DxfCanvas({
   const lockedPieceIndicesRef = useRef<number[]>(lockedPieceIndices)
   lockedPieceIndicesRef.current = lockedPieceIndices
   const spaceHeldRef = useRef(false)
+  /** Pointers activos para pan/pinch táctil (pointerId → client coords). */
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pinchRef = useRef<{
+    startDist: number
+    startScale: number
+    startOffsetX: number
+    startOffsetY: number
+    midX: number
+    midY: number
+  } | null>(null)
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
   const [showCanvasHelp, setShowCanvasHelp] = useState(false)
@@ -140,7 +150,7 @@ export function DxfCanvas({
 
   const [showGrid, setShowGrid] = useState(true)
   const [snapEnabled, setSnapEnabled] = useState(true)
-  const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">("dots")
+  const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">(isCompact ? "lines" : "dots")
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null)
 
   const view = useCanvasView()
@@ -297,6 +307,35 @@ export function DxfCanvas({
     const onPointerDown = (e: PointerEvent) => {
       setCtxMenu(null)
       if (e.button === 2) return
+
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // 2+ dedos: iniciar pinch-zoom (móvil/tablet)
+      if (pointersRef.current.size === 2) {
+        const pts = [...pointersRef.current.values()]
+        const dx = pts[1].x - pts[0].x
+        const dy = pts[1].y - pts[0].y
+        const dist = Math.hypot(dx, dy) || 1
+        const midX = (pts[0].x + pts[1].x) / 2
+        const midY = (pts[0].y + pts[1].y) / 2
+        pinchRef.current = {
+          startDist: dist,
+          startScale: view.viewRef.current.scale,
+          startOffsetX: view.viewRef.current.offsetX,
+          startOffsetY: view.viewRef.current.offsetY,
+          midX,
+          midY,
+        }
+        // Cancelar pan/drag de 1 dedo
+        draggingRef.current = null
+        pieceDragRef.current = null
+        boxSelectRef.current = null
+        zoomWindowRef.current = null
+        setBoxSelectScreen(null)
+        canvas.setPointerCapture(e.pointerId)
+        return
+      }
+
       const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
       if (!rawPoint) return
 
@@ -366,6 +405,20 @@ export function DxfCanvas({
         }
 
         if (hit === null && canvasTool === "select") {
+          // Móvil/tablet: arrastrar en vacío = pan (más natural que box-select).
+          // Desktop: box-select como antes.
+          if (isCompact) {
+            draggingRef.current = {
+              startX: e.clientX,
+              startY: e.clientY,
+              startOffsetX: view.viewRef.current.offsetX,
+              startOffsetY: view.viewRef.current.offsetY,
+              moved: false,
+            }
+            canvas.setPointerCapture(e.pointerId)
+            setCursor("grabbing")
+            return
+          }
           const screenPt = canvasCssPoint(e.clientX, e.clientY)
           boxSelectRef.current = {
             startScreen: screenPt,
@@ -401,6 +454,41 @@ export function DxfCanvas({
     }
 
     const onPointerMove = (e: PointerEvent) => {
+      if (pointersRef.current.has(e.pointerId)) {
+        pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      }
+
+      // Pinch zoom + pan de 2 dedos
+      if (pinchRef.current && pointersRef.current.size >= 2) {
+        const pts = [...pointersRef.current.values()]
+        const dx = pts[1].x - pts[0].x
+        const dy = pts[1].y - pts[0].y
+        const dist = Math.hypot(dx, dy) || 1
+        const midX = (pts[0].x + pts[1].x) / 2
+        const midY = (pts[0].y + pts[1].y) / 2
+        const pinch = pinchRef.current
+        const factor = dist / pinch.startDist
+        const newScale = Math.min(200, Math.max(0.01, pinch.startScale * factor))
+
+        // Zoom hacia el punto medio de los dedos
+        const rect = canvas.getBoundingClientRect()
+        const cx = midX - rect.left - rect.width / 2
+        const cy = midY - rect.top - rect.height / 2
+        const scaleRatio = newScale / pinch.startScale
+        // Pan: mover el centro según el desplazamiento del midpoint
+        const midDx = midX - pinch.midX
+        const midDy = midY - pinch.midY
+
+        view.viewRef.current = {
+          scale: newScale,
+          offsetX: pinch.startOffsetX * scaleRatio + cx * (1 - scaleRatio) + midDx,
+          offsetY: pinch.startOffsetY * scaleRatio + cy * (1 - scaleRatio) + midDy,
+          rotationDeg: view.viewRef.current.rotationDeg ?? 0,
+        }
+        scheduleDraw()
+        return
+      }
+
       if (boxSelectRef.current || zoomWindowRef.current) {
         const screenPt = canvasCssPoint(e.clientX, e.clientY)
         const local = view.screenToLocal(canvas, e.clientX, e.clientY)
@@ -519,6 +607,11 @@ export function DxfCanvas({
     }
 
     const onPointerUp = (e: PointerEvent) => {
+      pointersRef.current.delete(e.pointerId)
+      if (pointersRef.current.size < 2) {
+        pinchRef.current = null
+      }
+
       if (zoomWindowRef.current) {
         const box = zoomWindowRef.current
         zoomWindowRef.current = null
@@ -696,6 +789,7 @@ export function DxfCanvas({
     pieces,
     sheetSize,
     canvasTool,
+    isCompact,
   ])
 
   const handleZoom = useCallback(
