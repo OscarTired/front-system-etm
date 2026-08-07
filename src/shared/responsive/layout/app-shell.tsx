@@ -12,7 +12,6 @@ import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 import { PullToRefresh } from "../mobile/pull-to-refresh"
-import { cn } from "@/shared/utils/utils"
 
 type Props = {
   children: ReactNode
@@ -136,23 +135,22 @@ function CompactShell({ children }: Props) {
 
       {/* Panel de app: solo translate3d + radius en 2 estados */}
       <div
-        className={cn(
-          "absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden bg-[#050505]",
-          isOpen && "pointer-events-none",
-        )}
+        className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden bg-[#050505]"
         style={{
           transform: isOpen
             ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
             : "translate3d(0, 0, 0)",
           borderRadius: isOpen ? CURVE_ROUNDED : CURVE_SQUARE,
           transition: PANEL_TRANSITION,
-          // Solo transform en compositor; el radius cambia al inicio/fin
-          // del estado, no frame a frame con JS.
           willChange: "transform",
         }}
-        inert={isOpen ? true : undefined}
       >
-        <TopBar />
+        {/* TopBar por encima del overlay para que el hamburger siga
+            recibiendo el toggle (abrir/cerrar). */}
+        <div className="relative z-30">
+          <TopBar />
+        </div>
+
         {isImmersive ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-14 pb-20">
             {children}
@@ -171,6 +169,18 @@ function CompactShell({ children }: Props) {
           </PullToRefresh>
         )}
         <BottomNavigation />
+
+        {/* Cualquier toque en el panel (contenido / bottom nav) cierra.
+            No usa pointer-events-none: si no, el click cae al vacío y
+            no cierra. */}
+        {isOpen && (
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            className="absolute inset-x-0 top-14 bottom-0 z-20 cursor-default"
+            onClick={closeDrawer}
+          />
+        )}
       </div>
     </div>
   )
