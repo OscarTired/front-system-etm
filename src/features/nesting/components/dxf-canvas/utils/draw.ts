@@ -55,6 +55,8 @@ export interface DrawContext {
     v: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
     center: { x: number; y: number }
   } | null
+  /** Contorno bajo el cursor con la herramienta de área activa. */
+  areaHoverContour?: Point[] | null
 }
 
 export function strokeToolpathUntil(
@@ -923,6 +925,27 @@ export function drawScene(d: DrawContext) {
     drawHoverEdge(ctx, snapCandidate.segment, scale)
   }
 
+  // Área: relleno + contorno resaltado del hueco/pieza bajo el cursor.
+  // Antes esta era la única herramienta sin ningún feedback visual al
+  // pasar el mouse — como trabaja sobre un contorno completo (no un
+  // punto), no tiene sentido el círculo amarillo de snap; se resalta
+  // el contorno entero para que quede claro qué se va a medir al hacer
+  // clic.
+  if (activeTool === "area" && d.areaHoverContour && d.areaHoverContour.length >= 3) {
+    ctx.save()
+    ctx.beginPath()
+    const pts = d.areaHoverContour
+    ctx.moveTo(pts[0].x, pts[0].y)
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
+    ctx.closePath()
+    ctx.fillStyle = "rgba(250,204,21,0.15)"
+    ctx.fill()
+    ctx.strokeStyle = "#facc15"
+    ctx.lineWidth = 1.5 / scale
+    ctx.stroke()
+    ctx.restore()
+  }
+
   // Cota inteligente de ARISTA: solo con herramienta "smart" activa.
   // Preview fantasma de la arista bajo el cursor (sin clic).
   if (activeTool === "smart" && snapCandidate?.segment && !d.smartSpans) {
@@ -1097,9 +1120,16 @@ export function drawScene(d: DrawContext) {
         text = `R${m.radius.toFixed(1)} · ⌀${(m.radius * 2).toFixed(1)}`
       } else if (m.kind === "angle") {
         const midAngle = (angleOfVector(m.vertex, m.p1) + angleOfVector(m.vertex, m.p2)) / 2
+        // Antes: offset de 24 fijo en mm de mundo, sin dividir por el
+        // scale (a diferencia de "distance", que sí lo hace). Con zoom
+        // alto esos 24mm se convertían en muchos px de pantalla —
+        // la etiqueta se veía "lejos" del vértice. Mismo criterio que
+        // distance: dividir por scale para que sea una distancia
+        // visual constante sin importar el zoom.
+        const angleLabelOff = 24 / (d.view.scale || 1)
         labelLocal = {
-          x: m.vertex.x + Math.cos(midAngle) * 24,
-          y: m.vertex.y + Math.sin(midAngle) * 24,
+          x: m.vertex.x + Math.cos(midAngle) * angleLabelOff,
+          y: m.vertex.y + Math.sin(midAngle) * angleLabelOff,
         }
         text = `${m.degrees.toFixed(1)}°`
       } else {

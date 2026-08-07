@@ -1,5 +1,5 @@
 import type { Point2D } from "../engine/types"
-import { classifyDxfColor } from "./classify-dxf-color"
+import { classifyDxfColor, CUT_COLOR } from "./classify-dxf-color"
 import { emptyCadData, type CadData, type CadEntity } from "./types"
 import { sampleArc, sampleBulgeArc, sampleCircle } from "./geometry-sampling"
 
@@ -16,14 +16,21 @@ function samePoint(a: Point2D, b: Point2D): boolean {
   return Math.hypot(a.x - b.x, a.y - b.y) < CHAIN_EPS
 }
 
-function chainFragments(fragments: Point2D[][]): { points: Point2D[]; closed: boolean }[] {
+interface Fragment {
+  points: Point2D[]
+  layer: string
+  color: string
+}
+
+function chainFragments(fragments: Fragment[]): { points: Point2D[]; closed: boolean; layer: string; color: string }[] {
   const used = new Array(fragments.length).fill(false)
-  const chains: { points: Point2D[]; closed: boolean }[] = []
+  const chains: { points: Point2D[]; closed: boolean; layer: string; color: string }[] = []
 
   for (let i = 0; i < fragments.length; i++) {
     if (used[i]) continue
     used[i] = true
-    let chain = [...fragments[i]]
+    let chain = [...fragments[i].points]
+    const memberIdx = [i]
 
     let extended = true
     while (extended) {
@@ -34,7 +41,7 @@ function chainFragments(fragments: Point2D[][]): { points: Point2D[]; closed: bo
 
       for (let j = 0; j < fragments.length; j++) {
         if (used[j]) continue
-        const frag = fragments[j]
+        const frag = fragments[j].points
         const fStart = frag[0]
         const fEnd = frag[frag.length - 1]
 
@@ -50,13 +57,33 @@ function chainFragments(fragments: Point2D[][]): { points: Point2D[]; closed: bo
           continue
         }
         used[j] = true
+        memberIdx.push(j)
         extended = true
         break
       }
     }
 
     const closed = chain.length > 2 && samePoint(chain[0], chain[chain.length - 1])
-    chains.push({ points: chain, closed })
+    // Encadenar es puramente geométrico (por eso se ignora layer/color
+    // al buscar quién conecta con quién): un DXF real a veces tiene un
+    // tramo de UN MISMO contorno de corte con un color/capa distinto
+    // al resto por error de dibujo (ej. un arco quedó en la capa de
+    // marca/doblez por accidente) — si agrupábamos por capa+color
+    // ANTES de encadenar, ese tramo quedaba separado del resto y la
+    // pieza se veía "partida" (mitad de un color, mitad de otro).
+    // Ya con la cadena geométrica completa, se decide la clasificación
+    // UNA vez: si algún fragmento del contorno es de corte, el
+    // contorno completo es de corte (un tramo mal coloreado no debe
+    // convertir en "no cortable" el resto de un perfil real);
+    // si todos sus fragmentos son de marca, se mantiene como marca.
+    const members = memberIdx.map((k) => fragments[k])
+    const anyCut = members.some((f) => f.color === CUT_COLOR)
+    const color = anyCut ? CUT_COLOR : members[0].color
+    const layer = anyCut
+      ? (members.find((f) => f.color === CUT_COLOR)?.layer ?? members[0].layer)
+      : members[0].layer
+
+    chains.push({ points: chain, closed, layer, color })
   }
 
   return chains
@@ -245,24 +272,20 @@ export function parseDxf(fileContent: string): CadData {
 
   if (allPoints.length === 0) return emptyCadData()
 
-  // Encadenar fragmentos sueltos que en realidad forman un solo
-  // contorno continuo (ver chainFragments arriba). Se agrupa por
-  // capa+color para no mezclar, por ejemplo, una línea de corte con
-  // una de marca/doblez aunque geométricamente se toquen.
-  const groups = new Map<string, { layer: string; color: string; frags: Point2D[][] }>()
-  for (const e of entities) {
-    const key = `${e.layer}\u0000${e.color}`
-    const g = groups.get(key)
-    if (g) g.frags.push(e.outline.points)
-    else groups.set(key, { layer: e.layer, color: e.color, frags: [e.outline.points] })
-  }
-
-  const chainedEntities: CadEntity[] = []
-  for (const { layer, color, frags } of groups.values()) {
-    for (const chain of chainFragments(frags)) {
-      chainedEntities.push({ outline: { points: chain.points }, layer, color })
-    }
-  }
+  // Encadenar TODOS los fragmentos en un solo pool geométrico (ver el
+  // comentario dentro de chainFragments sobre por qué ya no se agrupa
+  // por capa+color antes de esto).
+  const fragmentsPool: Fragment[] = entities.map((e) => ({
+    points: e.outline.points,
+    layer: e.layer,
+    color: e.color,
+  }))
+  const chains = chainFragments(fragmentsPool)
+  const chainedEntities: CadEntity[] = chains.map((c) => ({
+    outline: { points: c.points },
+    layer: c.layer,
+    color: c.color,
+  }))
 
   // Bounding box + normalizado a origen (0,0). El original también
   // invierte Y acá porque Qt dibuja con Y hacia abajo; nuestro modelo

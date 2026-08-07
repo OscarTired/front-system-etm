@@ -67,6 +67,7 @@ export function DxfCanvas({
   transformMode = "free",
   onTransformModeChange,
   rotationStep = 90,
+  sheetKey,
 }: DxfCanvasProps) {
   const { isCompact } = useResponsive()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -171,10 +172,32 @@ export function DxfCanvas({
     v: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
     center: { x: number; y: number }
   } | null>(null)
+  /**
+   * Contorno bajo el cursor con la herramienta de área activa. Antes
+   * esta herramienta era la única sin ningún feedback visual al pasar
+   * el mouse (las demás muestran el círculo amarillo de snap) — como
+   * el área trabaja sobre un contorno completo, no un punto, se
+   * resalta el contorno entero en vez de un punto de snap.
+   */
+  const [areaHoverContour, setAreaHoverContour] = useState<Point[] | null>(null)
 
   const view = useCanvasView()
   const sim = useSimulation()
   const measure = useMeasurements()
+
+  // Al cambiar de plancha/pestaña, las mediciones (coords de mundo de
+  // una plancha específica) ya no tienen sentido geométrico — se
+  // limpian. La herramienta activa NO se desactiva (ver
+  // resetMeasurementsOnly): seguir en modo regla al cambiar de pestaña
+  // es una preferencia de flujo de trabajo, no un dato de esa plancha.
+  // No se ejecuta al montar (sheetKey siempre "cambia" desde undefined
+  // la primera vez) porque en ese punto no hay nada que limpiar todavía.
+  const sheetKeyRef = useRef(sheetKey)
+  useEffect(() => {
+    if (sheetKeyRef.current === sheetKey) return
+    sheetKeyRef.current = sheetKey
+    measure.resetMeasurementsOnly()
+  }, [sheetKey, measure])
 
   const scheduleDraw = useCallback(() => {
     if (drawRafRef.current !== null) return
@@ -229,6 +252,7 @@ export function DxfCanvas({
         showGrid,
         gridStyle,
         smartSpans,
+        areaHoverContour,
       })
     })
   }, [
@@ -244,6 +268,7 @@ export function DxfCanvas({
     measure.activeTool,
     snapCandidate,
     smartSpans,
+    areaHoverContour,
     boxSelectScreen,
     showGrid,
     gridStyle,
@@ -612,6 +637,13 @@ export function DxfCanvas({
             : null
         setSnapCandidate(snap)
         setSmartSpans(null)
+
+        if (measure.activeTool === "area" && rawPoint) {
+          setAreaHoverContour(measure.hitTestClosedContour(entitiesRef.current, rawPoint))
+        } else {
+          setAreaHoverContour(null)
+        }
+
         let hoverPt = snap ? snap.point : rawPoint
         // Con 1 punto pendiente en distancia: proyectar hover a H/V si está cerca
         // (las guías dashed se dibujan en draw.ts con el mismo criterio).
@@ -673,19 +705,24 @@ export function DxfCanvas({
           else if (hit !== null) setCursor("pointer")
           else setCursor("grab")
         }
-        // Sin herramienta: no mostrar cotas fantasma
         // Sin herramienta: no mostrar cotas fantasma. Se llama siempre
         // al setter (no se lee smartSpans/snapCandidate, que no están
         // en las deps de este efecto a propósito) — inofensivo si ya
         // son null, y evita depender de un closure con valor obsoleto.
         setSnapCandidate(null)
         setSmartSpans(null)
+        setAreaHoverContour(null)
       }
 
       // Cota inteligente: SOLO con la herramienta "smart" activa.
       // Sin clics: solo posicionar el puntero sobre arista o centro del objeto.
       if (measure.activeTool === "smart" && !draggingRef.current) {
         setCursor("crosshair")
+        // Mismo criterio que snapCandidate/smartSpans: no leer el
+        // valor actual (closure obsoleto, areaHoverContour no está en
+        // las deps de este efecto a propósito). Llamar siempre al
+        // setter es inofensivo si ya es null.
+        setAreaHoverContour(null)
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         if (!rawPoint) return
         const scale = view.viewRef.current.scale

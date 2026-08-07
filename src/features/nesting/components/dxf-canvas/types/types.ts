@@ -114,6 +114,14 @@ export interface DxfCanvasProps {
   /** Paso angular en modo geométrico (grados). Default: 90. */
   rotationStep?: RotationStep
   onRotationStepChange?: (step: RotationStep) => void
+  /**
+   * Identidad de la plancha/pestaña actual (ej. activeGroupIndex). Las
+   * mediciones (regla/ángulo/etc) son coordenadas de mundo específicas
+   * de una plancha — al cambiar de plancha, se limpian (pero la
+   * herramienta activa NO se desactiva, ver resetMeasurementsOnly en
+   * use-measurements.ts).
+   */
+  sheetKey?: string | number
 }
 
 /** Offset temporal mientras se arrastran piezas (preview en vivo). */

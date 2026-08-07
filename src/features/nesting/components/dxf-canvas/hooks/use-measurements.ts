@@ -98,6 +98,22 @@ export function useMeasurements() {
     setHoverScreen(null)
   }, [])
 
+  /**
+   * Igual que resetTool pero SIN desactivar la herramienta — para usar
+   * al cambiar de plancha/pestaña. Las mediciones están en coordenadas
+   * de mundo de una plancha específica; mostrarlas sobre otra plancha
+   * distinta no tiene sentido geométrico ("se quedan pegadas"). Pero
+   * el MODO de trabajo (que sigas en modo regla, por ejemplo) es una
+   * preferencia del usuario, no un dato geométrico — no hay razón para
+   * sacarlo de la herramienta solo por cambiar de pestaña.
+   */
+  const resetMeasurementsOnly = useCallback(() => {
+    setPendingPoints([])
+    setMeasurements([])
+    setHoverLocal(null)
+    setHoverScreen(null)
+  }, [])
+
   const toggleTool = useCallback((tool: Exclude<MeasureTool, "none">) => {
     setActiveTool((prev) => {
       if (prev === tool) {
@@ -140,17 +156,59 @@ export function useMeasurements() {
     setMeasurements((prev) => [...prev, ...items])
   }, [])
 
+  /**
+   * Ningún lugar del pipeline (dxf-parser.ts → entities.ts) construye
+   * jamás una entidad `kind: "circle"` o `"arc"` real — todo círculo u
+   * agujero de un DXF llega como `kind: "polyline"` genérico (puntos
+   * sampleados alrededor del círculo). Por eso la herramienta de radio/
+   * diámetro nunca encontraba nada: buscaba un tipo de entidad que
+   * jamás se construye. Esto detecta si una polyline cerrada es, en la
+   * práctica, un círculo (todos sus puntos a ~la misma distancia del
+   * centroide) y la trata como tal.
+   */
+  const detectCircleFromPolyline = useCallback(
+    (points: Point[]): { center: Point; radius: number } | null => {
+      if (points.length < 8) return null
+      let pts = points
+      const f = pts[0]
+      const l = pts[pts.length - 1]
+      if (Math.hypot(f.x - l.x, f.y - l.y) < 1e-4 && pts.length >= 9) pts = pts.slice(0, -1)
+      if (pts.length < 8) return null
+
+      const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length
+      const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length
+      const dists = pts.map((p) => Math.hypot(p.x - cx, p.y - cy))
+      const avgR = dists.reduce((s, d) => s + d, 0) / dists.length
+      if (avgR < 1e-6) return null
+      const maxDev = Math.max(...dists.map((d) => Math.abs(d - avgR)))
+      // Tolerancia ~1.5% del radio: un círculo sampleado cae muy por
+      // dentro de esto; un hexágono/octágono real se sale por mucho más
+      // (>10%), así que no hay falsos positivos con polígonos reales.
+      if (maxDev / avgR > 0.015) return null
+      return { center: { x: cx, y: cy }, radius: avgR }
+    },
+    [],
+  )
+
   const hitTestCircleOrArc = useCallback(
     (entities: Entity[], point: Point, scale: number): { center: Point; radius: number } | null => {
       const tol = HIT_TOLERANCE_PX / scale
       for (const e of entities) {
-        if (e.kind !== "circle" && e.kind !== "arc") continue
-        const dist = Math.hypot(point.x - e.center.x, point.y - e.center.y)
-        if (Math.abs(dist - e.radius) <= tol) return { center: e.center, radius: e.radius }
+        if (e.kind === "circle" || e.kind === "arc") {
+          const dist = Math.hypot(point.x - e.center.x, point.y - e.center.y)
+          if (Math.abs(dist - e.radius) <= tol) return { center: e.center, radius: e.radius }
+          continue
+        }
+        if (e.kind === "polyline") {
+          const circle = detectCircleFromPolyline(e.points)
+          if (!circle) continue
+          const dist = Math.hypot(point.x - circle.center.x, point.y - circle.center.y)
+          if (Math.abs(dist - circle.radius) <= tol) return circle
+        }
       }
       return null
     },
-    [],
+    [detectCircleFromPolyline],
   )
 
   const hitTestClosedContour = useCallback((entities: Entity[], point: Point): Point[] | null => {
@@ -291,5 +349,7 @@ export function useMeasurements() {
     updateMeasurementOffset,
     addMeasurements,
     handleToolClick,
+    hitTestClosedContour,
+    resetMeasurementsOnly,
   }
 }

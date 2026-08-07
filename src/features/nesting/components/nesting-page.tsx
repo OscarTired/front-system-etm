@@ -719,6 +719,7 @@ export function NestingPage() {
                     transformMode={transformMode}
                     onTransformModeChange={setTransformMode}
                     onDeleteSelected={() => handleDeleteSelected()}
+                    sheetKey={activeGroupIndex}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -807,6 +808,7 @@ export function NestingPage() {
                   transformMode={transformMode}
                   onTransformModeChange={setTransformMode}
                   onDeleteSelected={() => handleDeleteSelected()}
+                  sheetKey={activeGroupIndex}
                 />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
@@ -948,4 +950,4 @@ export function NestingPage() {
       />
     </div>
   )
-} 
+}
