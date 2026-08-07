@@ -1,10 +1,10 @@
 import type { Point2D } from "../engine/types"
 import { emptyCadData, type CadData, type CadEntity } from "./types"
 import { sampleArc, sampleCircle } from "./geometry-sampling"
+import { type Fragment, chainAndDedupe } from "./chain-fragments"
+import { MARK_COLOR, CUT_COLOR } from "./classify-dxf-color"
 
 const MARK_LAYER_CODES = new Set(["2", "3", "4", "5", "99"])
-const MARK_COLOR = "#FFA500"
-const CUT_COLOR = "#00FF00"
 
 function classifyGeoColor(layerCode: string): string {
   // Capa 1 es siempre corte; por descarte, cualquier otra no listada también.
@@ -42,7 +42,7 @@ export function parseGeo(fileContent: string): CadData {
   }
 
   // 2. Bloque de geometría: líneas "#~3...1" abren, cualquier otro "#~..." cierra.
-  const entities: CadEntity[] = []
+  const rawFragments: Fragment[] = []
   const allPoints: Point2D[] = []
   let inGeom = false
 
@@ -63,7 +63,12 @@ export function parseGeo(fileContent: string): CadData {
 
       if (p1 && p2) {
         const pts = [p1, p2]
-        entities.push({ outline: { points: pts }, layer: layerCode, color: classifyGeoColor(layerCode) })
+        rawFragments.push({
+          points: pts,
+          layer: layerCode,
+          color: classifyGeoColor(layerCode),
+          isClosingEdge: false,
+        })
         allPoints.push(...pts)
       }
     } else if (line === "CIR" && i + 3 < lines.length) {
@@ -73,7 +78,12 @@ export function parseGeo(fileContent: string): CadData {
 
       if (center && r > 0.05) {
         const pts = sampleCircle(center.x, center.y, r)
-        entities.push({ outline: { points: pts }, layer: layerCode, color: classifyGeoColor(layerCode) })
+        rawFragments.push({
+          points: pts,
+          layer: layerCode,
+          color: classifyGeoColor(layerCode),
+          isClosingEdge: false,
+        })
         allPoints.push(...pts)
       }
     } else if (line === "ARC" && i + 3 < lines.length) {
@@ -100,7 +110,12 @@ export function parseGeo(fileContent: string): CadData {
               ? sampleArc(c.x, c.y, r, startDeg, endDeg)
               : sampleArc(c.x, c.y, r, endDeg, startDeg).reverse()
 
-          entities.push({ outline: { points: pts }, layer: layerCode, color: classifyGeoColor(layerCode) })
+          rawFragments.push({
+            points: pts,
+            layer: layerCode,
+            color: classifyGeoColor(layerCode),
+            isClosingEdge: false,
+          })
           allPoints.push(...pts)
         }
       }
@@ -125,9 +140,15 @@ export function parseGeo(fileContent: string): CadData {
   const height = maxY - minY
   const normalize = (p: Point2D): Point2D => ({ x: p.x - minX, y: p.y - minY })
 
-  const normalizedEntities = entities.map((e) => ({
-    ...e,
-    outline: { points: e.outline.points.map(normalize) },
+  // Encadenar los LIN/CIR/ARC sueltos en contornos continuos — antes
+  // esto NUNCA pasaba para .geo: cada segmento quedaba como su propio
+  // fragmento sin conectar con el resto (mismo bug que tenía DXF antes
+  // de arreglarlo, pero intacto acá porque son parsers separados).
+  const chains = chainAndDedupe(rawFragments)
+  const normalizedEntities: CadEntity[] = chains.map((c) => ({
+    outline: { points: c.points.map(normalize) },
+    layer: c.layer,
+    color: c.color,
   }))
 
   return {

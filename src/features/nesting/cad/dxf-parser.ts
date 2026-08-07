@@ -1,136 +1,13 @@
 import type { Point2D } from "../engine/types"
-import { classifyDxfColor, CUT_COLOR } from "./classify-dxf-color"
+import { classifyDxfColor } from "./classify-dxf-color"
 import { emptyCadData, type CadData, type CadEntity } from "./types"
 import { sampleArc, sampleBulgeArc, sampleCircle } from "./geometry-sampling"
+import { type Fragment, chainAndDedupe } from "./chain-fragments"
 
 interface PolyVertex {
   x: number
   y: number
   bulge: number
-}
-
-/** Tolerancia (mm) para considerar que dos extremos son "el mismo punto". */
-const CHAIN_EPS = 0.01
-
-function samePoint(a: Point2D, b: Point2D): boolean {
-  return Math.hypot(a.x - b.x, a.y - b.y) < CHAIN_EPS
-}
-
-interface Fragment {
-  points: Point2D[]
-  layer: string
-  color: string
-  /** true si es el tramo sintético que "cierra" una polilínea marcada
-   * como cerrada en el DXF — candidato a anularse si coincide con el
-   * cierre de otra polilínea (ver el comentario en commitEntity). */
-  isClosingEdge: boolean
-}
-
-function chainFragments(fragments: Fragment[]): { points: Point2D[]; closed: boolean; layer: string; color: string }[] {
-  const used = new Array(fragments.length).fill(false)
-  const chains: { points: Point2D[]; closed: boolean; layer: string; color: string }[] = []
-
-  for (let i = 0; i < fragments.length; i++) {
-    if (used[i]) continue
-    used[i] = true
-    let chain = [...fragments[i].points]
-    const memberIdx = [i]
-
-    let extended = true
-    while (extended) {
-      extended = false
-      const start = chain[0]
-      const end = chain[chain.length - 1]
-      if (chain.length > 2 && samePoint(start, end)) break // ya cerró
-
-      for (let j = 0; j < fragments.length; j++) {
-        if (used[j]) continue
-        const frag = fragments[j].points
-        const fStart = frag[0]
-        const fEnd = frag[frag.length - 1]
-
-        if (samePoint(end, fStart)) {
-          chain = chain.concat(frag.slice(1))
-        } else if (samePoint(end, fEnd)) {
-          chain = chain.concat([...frag].reverse().slice(1))
-        } else if (samePoint(start, fEnd)) {
-          chain = frag.slice(0, -1).concat(chain)
-        } else if (samePoint(start, fStart)) {
-          chain = [...frag].reverse().slice(0, -1).concat(chain)
-        } else {
-          continue
-        }
-        used[j] = true
-        memberIdx.push(j)
-        extended = true
-        break
-      }
-    }
-
-    const closed = chain.length > 2 && samePoint(chain[0], chain[chain.length - 1])
-    // Encadenar es puramente geométrico (por eso se ignora layer/color
-    // al buscar quién conecta con quién): un DXF real a veces tiene un
-    // tramo de UN MISMO contorno de corte con un color/capa distinto
-    // al resto por error de dibujo (ej. un arco quedó en la capa de
-    // marca/doblez por accidente) — si agrupábamos por capa+color
-    // ANTES de encadenar, ese tramo quedaba separado del resto y la
-    // pieza se veía "partida" (mitad de un color, mitad de otro).
-    // Ya con la cadena geométrica completa, se decide la clasificación
-    // UNA vez: si algún fragmento del contorno es de corte, el
-    // contorno completo es de corte (un tramo mal coloreado no debe
-    // convertir en "no cortable" el resto de un perfil real);
-    // si todos sus fragmentos son de marca, se mantiene como marca.
-    const members = memberIdx.map((k) => fragments[k])
-    const anyCut = members.some((f) => f.color === CUT_COLOR)
-    const color = anyCut ? CUT_COLOR : members[0].color
-    const layer = anyCut
-      ? (members.find((f) => f.color === CUT_COLOR)?.layer ?? members[0].layer)
-      : members[0].layer
-
-    chains.push({ points: chain, closed, layer, color })
-  }
-
-  return chains
-}
-
-/**
- * Si dos fragmentos "de cierre" (ver isClosingEdge) tienen los mismos
- * 2 extremos (en cualquier orden), son la misma arista compartida
- * internamente entre dos mitades de un contorno — se anulan ambos.
- * Lo que sobra sigue de largo hacia chainFragments tal cual.
- */
-function cancelDuplicateClosingEdges(fragments: Fragment[]): Fragment[] {
-  const keyOf = (f: Fragment) => {
-    const a = f.points[0]
-    const b = f.points[f.points.length - 1]
-    // Redondeo a la tolerancia de encadenado para que el orden de los
-    // extremos no importe y para tolerar el mismo ruido numérico que
-    // ya tolera samePoint().
-    const round = (v: number) => Math.round(v / CHAIN_EPS) * CHAIN_EPS
-    const pa = `${round(a.x)},${round(a.y)}`
-    const pb = `${round(b.x)},${round(b.y)}`
-    return pa < pb ? `${pa}|${pb}` : `${pb}|${pa}`
-  }
-
-  const byKey = new Map<string, number[]>()
-  fragments.forEach((f, i) => {
-    if (!f.isClosingEdge) return
-    const k = keyOf(f)
-    const list = byKey.get(k)
-    if (list) list.push(i)
-    else byKey.set(k, [i])
-  })
-
-  const cancelled = new Set<number>()
-  for (const idxs of byKey.values()) {
-    // Anular de a pares; si queda 1 suelto (sin pareja), se conserva.
-    for (let n = 0; n + 1 < idxs.length; n += 2) {
-      cancelled.add(idxs[n])
-      cancelled.add(idxs[n + 1])
-    }
-  }
-
-  return fragments.filter((_, i) => !cancelled.has(i))
 }
 
 /**
@@ -346,8 +223,7 @@ export function parseDxf(fileContent: string): CadData {
   //    un solo pool geométrico (ver el comentario dentro de
   //    chainFragments sobre por qué ya no se agrupa por capa+color
   //    antes de esto).
-  const survivingFragments = cancelDuplicateClosingEdges(rawFragments)
-  const chains = chainFragments(survivingFragments)
+  const chains = chainAndDedupe(rawFragments)
   const chainedEntities: CadEntity[] = chains.map((c) => ({
     outline: { points: c.points },
     layer: c.layer,

@@ -8,6 +8,10 @@ import { ChevronDown, MoreHorizontal } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import {
+  ENTITY_ICONS,
+  type EntityIcon,
+} from "@/shared/constants/entity-icons"
 
 import type { Project } from "../types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
@@ -22,6 +26,27 @@ import { ProjectRowActions } from "../components/actions/project-row-actions"
 import { ProjectExpandedRow } from "../components/expanded-row/project-expanded-row"
 import { IconAction } from "@/shared/ui/actions/icon-action"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
+
+/** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
+function formatCodeBadge(code: string) {
+  const match = code.match(/^(\d{2}-\d{3})/)
+  return match ? match[1] : code
+}
+
+function EntityIconBadge({
+  icon,
+  color,
+  size = 12,
+}: {
+  icon?: EntityIcon
+  color: string
+  size?: number
+}) {
+  if (!icon) return null
+  const Icon = ENTITY_ICONS[icon]
+  if (!Icon) return null
+  return <Icon size={size} strokeWidth={2.25} style={{ color }} className="shrink-0" />
+}
 
 type Props = {
   project: Project
@@ -49,10 +74,6 @@ export function ProjectMobileCard({
     }
   }, [expanded])
 
-  // Sin esto, useFocusedRow (el mecanismo que expande la card al
-  // llegar desde una notificación/link) solo abría el PRIMER nivel
-  // — el segundo nivel (el panel de abajo, con Tareas/Comentarios/
-  // KPIs) seguía requiriendo el toque manual en MoreHorizontal.
   useEffect(() => {
     if (expanded && isTarget) {
       setShowPipeline(true)
@@ -60,9 +81,6 @@ export function ProjectMobileCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, isTarget])
 
-  // Mismo criterio que ya usa TaskPipelineCard/TaskMobileCard/
-  // ProcessMobileCard: un proyecto finalizado, mostrado solo porque
-  // el historial está activo, queda atenuado.
   const isDimmed = isProjectCompleted(project)
 
   return (
@@ -75,15 +93,15 @@ export function ProjectMobileCard({
           onClick={onToggle}
           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* Código completo con el color del cliente */}
+          {/* Código YY-NNN — un poco más grande solo en desktop */}
           <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
+            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
               backgroundColor: `${project.client.color}15`,
               color: project.client.color,
             }}
           >
-            {project.projectCode}
+            {formatCodeBadge(project.projectCode)}
           </span>
 
           <div className="min-w-0 flex-1">
@@ -91,15 +109,68 @@ export function ProjectMobileCard({
               {project.name}
             </p>
 
-            {/* ID (sequence) debajo del nombre */}
-            <p className="mt-0.5 truncate text-xs text-neutral-500">
-              {String(project.sequence).padStart(3, "0")}
-            </p>
-          </div>
+            {/* Datos compactos debajo del nombre — se desvanecen al expandir */}
+            <div
+              className={cn(
+                "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
+                expanded
+                  ? "max-h-0 opacity-0"
+                  : "max-h-5 opacity-100",
+              )}
+            >
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: project.client.color }}
+              />
+              <span className="shrink-0 truncate text-neutral-400">
+                {project.client.name}
+              </span>
 
-          <span className="shrink-0 text-xs text-neutral-500">
-            {formatDate(project.deliveryDate)}
-          </span>
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              {/* Etapa: icono + color en móvil, nombre en desktop */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={project.stage.icon}
+                    color={project.stage.color}
+                    size={12}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: project.stage.color }}
+                >
+                  {project.stage.name}
+                </span>
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              {/* Estado: icono + color en móvil, nombre en desktop */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={project.status.icon}
+                    color={project.status.color}
+                    size={12}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: project.status.color }}
+                >
+                  {project.status.name}
+                </span>
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              <span className="min-w-0 truncate text-neutral-400">
+                {project.pm.name}
+              </span>
+            </div>
+          </div>
 
           <ChevronDown
             size={16}
@@ -126,6 +197,14 @@ export function ProjectMobileCard({
               />
             </button>
 
+            {/* ID antes del cliente */}
+            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
+              <span className="text-xs font-medium text-neutral-500">ID</span>
+              <span className="font-semibold tracking-wide text-neutral-300">
+                {String(project.sequence).padStart(3, "0")}
+              </span>
+            </div>
+
             <ProjectClientCell project={project} triggerVariant="row" rowLabel="Cliente" />
             <ProjectStageCell project={project} triggerVariant="row" rowLabel="Etapa" />
             <ProjectStatusCell project={project} triggerVariant="row" rowLabel="Estado" />
@@ -138,6 +217,13 @@ export function ProjectMobileCard({
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
+              {/* ID antes del cliente */}
+              <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
+                {String(project.sequence).padStart(3, "0")}
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
               <span
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: project.client.color }}
@@ -146,25 +232,52 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span
-                className="shrink-0 truncate"
-                style={{ color: project.stage.color }}
-              >
-                {project.stage.name}
+              {/* Etapa: icono en móvil */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={project.stage.icon}
+                    color={project.stage.color}
+                    size={13}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: project.stage.color }}
+                >
+                  {project.stage.name}
+                </span>
               </span>
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span
-                className="shrink-0 truncate"
-                style={{ color: project.status.color }}
-              >
-                {project.status.name}
+              {/* Estado: icono en móvil */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={project.status.icon}
+                    color={project.status.color}
+                    size={13}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: project.status.color }}
+                >
+                  {project.status.name}
+                </span>
               </span>
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">{project.pm.name}</span>
+              <span className="min-w-0 truncate text-neutral-400">
+                {project.pm.name}
+              </span>
+            </span>
+
+            {/* Fecha junto al chevron interno */}
+            <span className="shrink-0 text-xs text-neutral-500">
+              {formatDate(project.deliveryDate)}
             </span>
 
             <ChevronDown

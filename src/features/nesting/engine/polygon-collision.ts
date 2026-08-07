@@ -126,9 +126,23 @@ export function extractSolidWithHoles(
   subEntities?: SubEntity[]
 ): SolidWithHoles {
   const rings: Point2D[][] = []
-  if (outline.points.length >= 3) rings.push(outline.points)
-  for (const s of subEntities ?? []) {
-    if (s.outline.points.length >= 3) rings.push(s.outline.points)
+  // `outline.points` es el respaldo "fusionado" (todos los puntos de
+  // todas las entidades originales, concatenados en orden de parseo,
+  // SIN encadenar) — antes se agregaba SIEMPRE como candidato más, a
+  // competir por área contra los subEntities ya correctamente
+  // encadenados. Como es una secuencia arbitraria (no un polígono
+  // real, puede autointersectarse), su "área" por la fórmula del
+  // shoelace es impredecible y a veces resultaba MAYOR que el
+  // contorno real — eligiendo el respaldo roto como "exterior" de la
+  // pieza en vez del contorno de verdad. Ahora solo se usa si de
+  // verdad no hay subEntities (el respaldo documentado en el tipo:
+  // "solo si no hay subOutlines").
+  if (subEntities && subEntities.length > 0) {
+    for (const s of subEntities) {
+      if (s.outline.points.length >= 3) rings.push(s.outline.points)
+    }
+  } else if (outline.points.length >= 3) {
+    rings.push(outline.points)
   }
   if (rings.length === 0) {
     return { outer: [], holes: [], box: { minX: 0, minY: 0, maxX: 0, maxY: 0 } }

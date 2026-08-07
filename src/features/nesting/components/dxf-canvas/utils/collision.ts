@@ -23,12 +23,21 @@ export type PieceGeom = {
 export function pieceCollisionGeom(piece: NestingPieceInput): PieceGeom | null {
   const rings: Point[][] = []
 
-  if (piece.outline && piece.outline.length >= 3) {
+  // `piece.outline` es el respaldo "fusionado" documentado en el tipo
+  // ("solo si no hay subOutlines") — antes se agregaba SIEMPRE como
+  // candidato más a competir por área contra los subOutlines ya
+  // correctamente encadenados. Como es una secuencia arbitraria de
+  // puntos (no necesariamente un polígono real), su área por la
+  // fórmula del shoelace es impredecible y a veces "ganaba" siendo
+  // elegido como el contorno exterior en vez del contorno real de la
+  // pieza — esto es lo que hacía que piezas colisionaran de nuevo sin
+  // razón aparente. Mismo fix que en engine/polygon-collision.ts.
+  if (piece.subOutlines.length > 0) {
+    for (const sub of piece.subOutlines) {
+      if (sub.points.length >= 3) rings.push(sub.points)
+    }
+  } else if (piece.outline && piece.outline.length >= 3) {
     rings.push(piece.outline)
-  }
-
-  for (const sub of piece.subOutlines) {
-    if (sub.points.length >= 3) rings.push(sub.points)
   }
 
   if (rings.length === 0) return null
