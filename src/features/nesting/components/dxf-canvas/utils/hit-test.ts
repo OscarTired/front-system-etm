@@ -1,4 +1,4 @@
-import type { Entity, Point } from "../types/types"
+import type { Entity, Measurement, Point } from "../types/types"
 import { computeBounds, pointInPolygon } from "./geometry-utils"
 import { HIT_TOLERANCE_PX } from "../types/types"
 
@@ -138,4 +138,37 @@ export function piecesInBox(
     }
   }
   return hits
+}
+
+/**
+ * Detecta si un punto (coords mundo) cayó sobre la LÍNEA de cota ya
+ * dibujada de una medición de distancia (no sobre la geometría de la
+ * pieza) — esto es lo que permite agarrar una cota ya puesta y
+ * arrastrarla para reposicionarla, en vez de quedar fija en el offset
+ * que tenía al momento de ponerla. Replica la misma geometría que
+ * `drawCadDistance` en draw.ts (línea de cota desplazada `offset` en
+ * la perpendicular de a→b), así que el hit-test coincide exactamente
+ * con lo que el usuario ve dibujado.
+ */
+export function hitTestDimensionLine(
+  measurements: Measurement[],
+  point: Point,
+  scale: number,
+): Extract<Measurement, { kind: "distance" }> | null {
+  const tol = HIT_TOLERANCE_PX / scale
+  for (const m of measurements) {
+    if (m.kind !== "distance") continue
+    const { a, b } = m
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len = Math.hypot(dx, dy)
+    if (len < 1e-9) continue
+    const nx = -dy / len
+    const ny = dx / len
+    const off = m.offset ?? 14 / scale
+    const aD = { x: a.x + nx * off, y: a.y + ny * off }
+    const bD = { x: b.x + nx * off, y: b.y + ny * off }
+    if (distToSegment(point, aD, bD) <= tol) return m
+  }
+  return null
 }
