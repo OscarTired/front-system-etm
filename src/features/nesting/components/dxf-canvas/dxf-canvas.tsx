@@ -15,7 +15,7 @@ import { CanvasToolbar } from "./components/canvas-toolbar"
 import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
-import { hitTestPieceAt, piecesInBox } from "./utils/hit-test"
+import { hitTestPieceAt, piecesInBox, hitTestDimensionLine } from "./utils/hit-test"
 import {
   buildCollisionIndex,
   resolveDragOffset,
@@ -81,6 +81,17 @@ export function DxfCanvas({
   } | null>(null)
 
   const pieceDragRef = useRef<PieceDragState | null>(null)
+  /**
+   * Drag para "jalar" una cota de distancia ya colocada y moverla lejos
+   * de la geometría, como en un plano real (AutoCAD/SolidWorks: la cota
+   * queda clicable/arrastrable después de puesta, no fija para siempre
+   * en el offset que tenía al momento del 2º click).
+   */
+  const measurementDragRef = useRef<{
+    id: string
+    a: Point
+    b: Point
+  } | null>(null)
   const lockedPieceIndicesRef = useRef<number[]>(lockedPieceIndices)
   lockedPieceIndicesRef.current = lockedPieceIndices
   const spaceHeldRef = useRef(false)
@@ -390,6 +401,27 @@ export function DxfCanvas({
       }
 
       if (measure.activeTool === "none") {
+        // Agarrar una cota YA colocada para reposicionarla (jalar el
+        // offset, como en un plano real). Va antes del hit-test de
+        // piezas: si la línea de cota está encima de una pieza, gana
+        // la cota, porque es lo más específico que el usuario puede
+        // estar apuntando a esa altura de zoom.
+        const measurementHit = hitTestDimensionLine(
+          measure.measurements,
+          rawPoint,
+          view.viewRef.current.scale,
+        )
+        if (measurementHit) {
+          measurementDragRef.current = {
+            id: measurementHit.id,
+            a: measurementHit.a,
+            b: measurementHit.b,
+          }
+          canvas.setPointerCapture(e.pointerId)
+          setCursor("move")
+          return
+        }
+
         const hit = hitTestPieceAt(entitiesRef.current, rawPoint, view.viewRef.current.scale)
 
         if (hit !== null && selectedPieceIndices.includes(hit)) {
@@ -459,6 +491,26 @@ export function DxfCanvas({
     const onPointerMove = (e: PointerEvent) => {
       if (pointersRef.current.has(e.pointerId)) {
         pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      }
+
+      // Arrastrando una cota ya colocada: recalcular su offset según
+      // la posición actual del cursor, igual que el cálculo de offset
+      // del 2º click al ponerla por primera vez.
+      if (measurementDragRef.current) {
+        const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
+        if (rawPoint) {
+          const { id, a, b } = measurementDragRef.current
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const len = Math.hypot(dx, dy) || 1
+          const nx = -dy / len
+          const ny = dx / len
+          const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+          const offset = (rawPoint.x - mid.x) * nx + (rawPoint.y - mid.y) * ny
+          measure.updateMeasurementOffset(id, offset)
+          scheduleDraw()
+        }
+        return
       }
 
       // Pinch zoom + pan de 2 dedos
@@ -615,6 +667,13 @@ export function DxfCanvas({
         pinchRef.current = null
       }
 
+      if (measurementDragRef.current) {
+        measurementDragRef.current = null
+        setCursor("default")
+        scheduleDraw()
+        return
+      }
+
       if (zoomWindowRef.current) {
         const box = zoomWindowRef.current
         zoomWindowRef.current = null
@@ -709,7 +768,7 @@ export function DxfCanvas({
             snap ? snap.point : rawPoint,
             entitiesRef.current,
             view.viewRef.current.scale,
-            { shiftKey: e.shiftKey, edgeSegment: snap?.segment },
+            { shiftKey: e.shiftKey },
           )
           return
         }
