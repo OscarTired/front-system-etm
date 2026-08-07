@@ -54,8 +54,8 @@ const SORT_OPTIONS: {
   {
     value: "code",
     label: "Correlativo",
-    color: "#A78BFA",
-    icon: "document",
+    color: "#F59E0B",
+    icon: "hash",
   },
   {
     value: "manual",

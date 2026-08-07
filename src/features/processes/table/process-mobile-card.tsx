@@ -7,6 +7,10 @@ import { ChevronDown } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import {
+  ENTITY_ICONS,
+  type EntityIcon,
+} from "@/shared/constants/entity-icons"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
@@ -17,6 +21,27 @@ import { processAccess } from "../access/process-access"
 import { ProcessOperatorCell } from "../components/cells/process-operator-cell"
 import { ProcessRowActions } from "../components/actions/process-row-actions"
 import { ProcessExpandedRow } from "../components/expanded-row/process-expanded-row"
+
+/** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
+function formatCodeBadge(code: string) {
+  const match = code.match(/^(\d{2}-\d{3})/)
+  return match ? match[1] : code
+}
+
+function EntityIconBadge({
+  icon,
+  color,
+  size = 12,
+}: {
+  icon?: EntityIcon
+  color: string
+  size?: number
+}) {
+  if (!icon) return null
+  const Icon = ENTITY_ICONS[icon]
+  if (!Icon) return null
+  return <Icon size={size} strokeWidth={2.25} style={{ color }} className="shrink-0" />
+}
 
 type Props = {
   processTask: ProcessTask
@@ -68,56 +93,94 @@ export function ProcessMobileCard({
           }}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-3 pr-2 pl-2 text-left"
         >
+          {/* Código del proyecto YY-NNN — más grande solo en desktop */}
           <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
+            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
               backgroundColor: `${project.client.color}15`,
               color: project.client.color,
             }}
           >
-            {String(task.taskNumber).padStart(3, "0")}
+            {formatCodeBadge(project.projectCode)}
           </span>
 
-          {/* Ajuste: flex-col e items-start para que los hijos ajusten su hit area al texto */}
           <div className="flex min-w-0 flex-1 flex-col items-start">
             {isMobile ? (
-
-              <>
-                <span className="max-w-full truncate text-sm font-semibold text-white">
-                  {task.reference}
-                </span>
-
-                <span className="mt-0.5 max-w-full truncate text-xs text-neutral-500">
-                  {project.projectCode}
-                </span>
-              </>
-
+              <span className="max-w-full truncate text-sm font-semibold text-white">
+                {task.reference}
+              </span>
             ) : (
-
-              <>
-                <Link
-                  href={`/tasks?taskId=${task.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="max-w-full truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
-                >
-                  {task.reference}
-                </Link>
-
-                <Link
-                  href={`/projects?projectId=${project.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="mt-0.5 max-w-full truncate text-xs text-neutral-500 transition-colors hover:text-cyan-300"
-                >
-                  {project.projectCode}
-                </Link>
-              </>
-
+              <Link
+                href={`/tasks?taskId=${task.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
+              >
+                {task.reference}
+              </Link>
             )}
-          </div>
 
-          <span className="shrink-0 text-xs text-neutral-500">
-            {formatDate(task.deliveryDate)}
-          </span>
+            {/* Datos compactos debajo del nombre — se desvanecen al expandir */}
+            <div
+              className={cn(
+                "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
+                expanded
+                  ? "max-h-0 opacity-0"
+                  : "max-h-5 opacity-100",
+              )}
+            >
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: project.client.color }}
+              />
+              <span className="shrink-0 truncate text-neutral-400">
+                {project.client.name}
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              {/* Prioridad: icono en móvil si existe, nombre en desktop */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={priority.icon}
+                    color={priority.color}
+                    size={12}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: priority.color }}
+                >
+                  {priority.name}
+                </span>
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              {/* Estado workflow: icono en móvil */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={statusLabel.icon}
+                    color={statusLabel.color}
+                    size={12}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: statusLabel.color }}
+                >
+                  {statusLabel.label}
+                </span>
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
+              <span className="min-w-0 truncate text-neutral-400">
+                {operator?.name ?? "Sin asignar"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {stepId && processCode && (
@@ -164,6 +227,32 @@ export function ProcessMobileCard({
               />
             </button>
 
+            {/* ID de tarea antes del operario */}
+            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
+              <span className="text-xs font-medium text-neutral-500">ID</span>
+              <span className="font-semibold tracking-wide text-neutral-300">
+                {String(task.taskNumber).padStart(3, "0")}
+              </span>
+            </div>
+
+            {/* Código completo del proyecto */}
+            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
+              <span className="text-xs font-medium text-neutral-500">Proyecto</span>
+              {isMobile ? (
+                <span className="font-semibold tracking-wide text-neutral-300">
+                  {project.projectCode}
+                </span>
+              ) : (
+                <Link
+                  href={`/projects?projectId=${project.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-semibold tracking-wide text-neutral-300 transition-colors hover:text-cyan-300"
+                >
+                  {project.projectCode}
+                </Link>
+              )}
+            </div>
+
             <ProcessOperatorCell
               processTask={processTask}
               triggerVariant="row"
@@ -177,30 +266,69 @@ export function ProcessMobileCard({
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
+              {/* ID antes del cliente */}
+              <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
+                {String(task.taskNumber).padStart(3, "0")}
+              </span>
+
+              <span className="shrink-0 text-neutral-600">·</span>
+
               <span
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: project.client.color }}
               />
               <span className="shrink-0 truncate">{project.client.name}</span>
+
               <span className="shrink-0 text-neutral-600">·</span>
-              <span
-                className="shrink-0 truncate"
-                style={{ color: priority.color }}
-              >
-                {priority.name}
+
+              {/* Prioridad: icono en móvil */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={priority.icon}
+                    color={priority.color}
+                    size={13}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: priority.color }}
+                >
+                  {priority.name}
+                </span>
               </span>
+
               <span className="shrink-0 text-neutral-600">·</span>
-              <span
-                className="shrink-0 truncate"
-                style={{ color: statusLabel.color }}
-              >
-                {statusLabel.label}
+
+              {/* Estado: icono en móvil */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={statusLabel.icon}
+                    color={statusLabel.color}
+                    size={13}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline"
+                  style={{ color: statusLabel.color }}
+                >
+                  {statusLabel.label}
+                </span>
               </span>
+
               <span className="shrink-0 text-neutral-600">·</span>
+
               <span className="min-w-0 truncate text-neutral-400">
                 {operator?.name ?? "Sin asignar operario"}
               </span>
             </span>
+
+            {/* Fecha junto al chevron interno */}
+            <span className="shrink-0 text-xs text-neutral-500">
+              {formatDate(task.deliveryDate)}
+            </span>
+
             <ChevronDown
               size={14}
               className="shrink-0 text-neutral-500"

@@ -33,71 +33,65 @@ import {
   TaskSortTrigger,
 } from "./task-sort-trigger"
 
-const SORT_OPTIONS:{
-  value:TaskSortMode
-  label:string
-  color:string
-  icon:EntityIcon
-}[]=[
+const SORT_OPTIONS: {
+  value: TaskSortMode
+  label: string
+  color: string
+  icon: EntityIcon
+}[] = [
   {
-    value:"priority",
-    label:"Prioridad",
-    color:"#EF4444",
-    icon:"urgent",
+    value: "priority",
+    label: "Prioridad",
+    color: "#EF4444",
+    icon: "urgent",
   },
   {
-    value:"delivery",
-    label:"Entrega",    
-    color:"#06B6D4",
-    icon:"clock",
+    value: "delivery",
+    label: "Entrega",
+    color: "#06B6D4",
+    icon: "clock",
   },
   {
-    value:"sequence",
-    label:"Secuencia",
-    color:"#8B5CF6",
-    icon:"document",
+    value: "sequence",
+    label: "Secuencia",
+    color: "#8B5CF6",
+    icon: "document",
   },
   {
-    value:"manual",
-    label:"Manual",
-    color:"#bdc4cf",
-    icon:"settings",
+    value: "code",
+    label: "Correlativo",
+    color: "#F59E0B",
+    icon: "hash",
+  },
+  {
+    value: "manual",
+    label: "Manual",
+    color: "#bdc4cf",
+    icon: "settings",
   },
 ]
 
-export function TaskSortButton(){
+export function TaskSortButton() {
+  const [open, setOpen] = useState(false)
 
-  const [open,setOpen]=
-    useState(false)
+  const taskSortMode = useSortStore(
+    state => state.taskSortMode,
+  )
 
-  const taskSortMode=
-    useSortStore(
-      state=>
-        state.taskSortMode
-    )
+  const setTaskSortMode = useSortStore(
+    state => state.setTaskSortMode,
+  )
 
-  const setTaskSortMode=
-    useSortStore(
-      state=>
-        state.setTaskSortMode
-    )
+  const current = SORT_OPTIONS.find(
+    option => option.value === taskSortMode,
+  )
 
-  const current=
-    SORT_OPTIONS.find(
-      option=>
-        option.value===
-        taskSortMode
-    )
-
-  return(
-
+  return (
     <Popover
       open={open}
       onOpenChange={setOpen}
     >
-
       <PopoverTrigger asChild>
-
         <TaskSortTrigger
           label={
             current?.label.toUpperCase() ??
@@ -105,7 +99,6 @@ export function TaskSortButton(){
           }
           active={open}
         />
-
       </PopoverTrigger>
 
       <PopoverContent
@@ -114,54 +107,38 @@ export function TaskSortButton(){
         floatingClassName="w-64"
         className="p-2"
       >
-
         <Command
           className="bg-transparent"
         >
-
           <CommandList
             className="max-h-80 overflow-y-auto"
           >
-
             <CommandGroup>
-
               {SORT_OPTIONS.map(
-                option=>(
-
+                option => (
                   <SelectOption
                     key={option.value}
                     label={option.label}
                     icon={option.icon}
                     color={option.color}
                     selected={
-                      option.value===
+                      option.value ===
                       taskSortMode
                     }
                     disableCheckAnimation
-                    onSelect={()=>{
-
+                    onSelect={() => {
                       setTaskSortMode(
-                        option.value
+                        option.value,
                       )
-
                       setOpen(false)
-
                     }}
                   />
-
-                )
+                ),
               )}
-
             </CommandGroup>
-
           </CommandList>
-
         </Command>
-
       </PopoverContent>
-
     </Popover>
-
   )
-
 }

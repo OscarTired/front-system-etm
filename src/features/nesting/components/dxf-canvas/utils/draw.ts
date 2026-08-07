@@ -754,8 +754,19 @@ export function drawScene(d: DrawContext) {
       const r = 14 / scale
       const a1 = angleOfVector(m.vertex, m.p1)
       const a2 = angleOfVector(m.vertex, m.p2)
+      // ctx.arc() por defecto barre en sentido horario de a1 a a2 — eso
+      // puede ser el ángulo reflejo (el largo, >180°) según en qué
+      // cuadrante caiga cada rayo, mientras que `m.degrees` (el número
+      // que se muestra) YA está normalizado al ángulo corto
+      // (use-measurements.ts hace `if (degrees > 180) degrees = 360 -
+      // degrees`). Sin esto, el arquito dibujado podía verse "dando la
+      // vuelta" por fuera en vez de marcar el ángulo interior que dice
+      // el número.
+      const twoPi = Math.PI * 2
+      const clockwiseDiff = ((a2 - a1) % twoPi + twoPi) % twoPi
+      const sweepIsReflex = clockwiseDiff > Math.PI
       ctx.beginPath()
-      ctx.arc(m.vertex.x, m.vertex.y, r, a1, a2)
+      ctx.arc(m.vertex.x, m.vertex.y, r, a1, a2, sweepIsReflex)
       ctx.stroke()
     } else if (m.kind === "area") {
       ctx.fillStyle = `${MEASURE_COLOR}22`

@@ -8,6 +8,7 @@ export type TaskSortMode =
   | "priority"
   | "delivery"
   | "sequence"
+  | "code"
 
 export type ProjectSortMode =
   | "manual"

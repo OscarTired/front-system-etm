@@ -49,6 +49,15 @@ export function createTaskView<T>({
     )
   }
 
+  if (mode === "code") {
+    return view.sort((a, b) =>
+      compareProjectCode(
+        extract(a).project.projectCode,
+        extract(b).project.projectCode,
+      ),
+    )
+  }
+
   // priority
   return view.sort((a, b) => {
     const taskA = extract(a)

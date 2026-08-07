@@ -28,6 +28,7 @@ import {
   FoldHorizontal,
   Gauge,
   HardHat,
+  Hash,
   InspectionPanel,
   Layers3,
   LucideIcon,
@@ -146,6 +147,7 @@ export const ENTITY_ICONS = {
   cog: Cog,
   pickaxe: Pickaxe,
   save: Save,
+  hash: Hash,
 
 } satisfies Record<string, LucideIcon>
 
