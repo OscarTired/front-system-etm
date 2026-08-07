@@ -248,7 +248,9 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         }
       }
 
-      // ── B) Outer: bottom-left original con salto en Y ────────────────
+      // ── B) Outer: candidatos en bordes (BLF) + grilla + snap al contacto ──
+      // Los candidatos en aristas de piezas ya colocadas eliminan el "aire"
+      // de la grilla gruesa cuando separation=0.
       for (let si = 0; si < sheets.length && !placed; si++) {
         if (signal?.cancelled) break;
 
@@ -256,59 +258,137 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
           inflateRect(boundingRect(p.outline), pad)
         );
 
-        for (
-          let x = sheet.margin;
-          x <= limitX + 0.001 && !placed;
-          x += searchStep
-        ) {
-          let y = sheet.margin;
-          while (y <= limitY + 0.001 && !placed) {
-            if (signal?.cancelled) break;
+        const collidesAt = (x: number, y: number, w: number, h: number): boolean => {
+          if (x < sheet.margin - 0.001 || y < sheet.margin - 0.001) return true;
+          if (x + w > limitX + 0.001 || y + h > limitY + 0.001) return true;
+          const test = inflateRect({ x, y, width: w, height: h }, pad);
+          for (const pr of placedBounds) {
+            if (rectsOverlap(test, pr)) return true;
+          }
+          return false;
+        };
 
-            let minSafeYJump = limitY;
-            let variantPlaced = false;
+        /** Empuja a la izquierda y abajo hasta el contacto (sin solapar). */
+        const snapTight = (
+          x0: number,
+          y0: number,
+          w: number,
+          h: number,
+        ): { x: number; y: number } => {
+          let x = x0;
+          let y = y0;
+          // Snap -X
+          let lo = sheet.margin;
+          let hi = x;
+          for (let it = 0; it < 24; it++) {
+            if (hi - lo < 0.02) break;
+            const mid = (lo + hi) / 2;
+            if (collidesAt(mid, y, w, h)) lo = mid;
+            else hi = mid;
+          }
+          x = hi;
+          // Snap -Y
+          lo = sheet.margin;
+          hi = y;
+          for (let it = 0; it < 24; it++) {
+            if (hi - lo < 0.02) break;
+            const mid = (lo + hi) / 2;
+            if (collidesAt(x, mid, w, h)) lo = mid;
+            else hi = mid;
+          }
+          y = hi;
+          return { x, y };
+        };
 
-            for (const variant of variants) {
-              if (x + variant.bounds.width > limitX + 0.001) continue;
-              if (y + variant.bounds.height > limitY + 0.001) continue;
+        // Candidatos: origen + borde derecho / superior de cada pieza colocada
+        const xCand: number[] = [sheet.margin];
+        const yCand: number[] = [sheet.margin];
+        for (const pr of placedBounds) {
+          xCand.push(pr.x + pr.width);
+          yCand.push(pr.y + pr.height);
+        }
+        // Orden bottom-left: primero Y chica, luego X chica
+        const pairs: { x: number; y: number }[] = [];
+        for (const y of yCand) {
+          for (const x of xCand) {
+            pairs.push({ x, y });
+          }
+        }
+        pairs.sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
-              const testRect: Rect = {
-                x,
-                y,
-                width: variant.bounds.width,
-                height: variant.bounds.height,
-              };
-              const testRectPadded = inflateRect(testRect, pad);
+        for (const { x: cx, y: cy } of pairs) {
+          if (placed || signal?.cancelled) break;
+          for (const variant of variants) {
+            if (cx + variant.bounds.width > limitX + 0.001) continue;
+            if (cy + variant.bounds.height > limitY + 0.001) continue;
+            if (collidesAt(cx, cy, variant.bounds.width, variant.bounds.height)) continue;
+            const s = snapTight(cx, cy, variant.bounds.width, variant.bounds.height);
+            if (collidesAt(s.x, s.y, variant.bounds.width, variant.bounds.height)) continue;
+            const pp = placePiece(piece, variant, s.x, s.y);
+            sheets[si].pieces.push(pp);
+            sheetSolids[si].push(
+              extractSolidWithHoles(pp.outline, pp.subEntities)
+            );
+            placed = true;
+            break;
+          }
+        }
 
-              let collision = false;
-              let collisionYJump = 0;
+        // Fallback grilla (planchas grandes / huecos raros) + snap
+        if (!placed) {
+          for (
+            let x = sheet.margin;
+            x <= limitX + 0.001 && !placed;
+            x += searchStep
+          ) {
+            let y = sheet.margin;
+            while (y <= limitY + 0.001 && !placed) {
+              if (signal?.cancelled) break;
+              let minSafeYJump = limitY;
+              let variantPlaced = false;
 
-              for (const placedRect of placedBounds) {
-                if (rectsOverlap(testRectPadded, placedRect)) {
-                  collision = true;
-                  const jump =
-                    placedRect.y + placedRect.height - testRectPadded.y;
-                  if (jump > collisionYJump) collisionYJump = jump;
+              for (const variant of variants) {
+                if (x + variant.bounds.width > limitX + 0.001) continue;
+                if (y + variant.bounds.height > limitY + 0.001) continue;
+
+                const testRectPadded = inflateRect(
+                  { x, y, width: variant.bounds.width, height: variant.bounds.height },
+                  pad,
+                );
+                let collision = false;
+                let collisionYJump = 0;
+                for (const placedRect of placedBounds) {
+                  if (rectsOverlap(testRectPadded, placedRect)) {
+                    collision = true;
+                    const jump =
+                      placedRect.y + placedRect.height - testRectPadded.y;
+                    if (jump > collisionYJump) collisionYJump = jump;
+                  }
+                }
+                if (!collision) {
+                  const s = snapTight(
+                    x,
+                    y,
+                    variant.bounds.width,
+                    variant.bounds.height,
+                  );
+                  const pp = placePiece(piece, variant, s.x, s.y);
+                  sheets[si].pieces.push(pp);
+                  sheetSolids[si].push(
+                    extractSolidWithHoles(pp.outline, pp.subEntities)
+                  );
+                  placed = true;
+                  variantPlaced = true;
+                  break;
+                } else if (collisionYJump > 0 && collisionYJump < minSafeYJump) {
+                  minSafeYJump = collisionYJump;
                 }
               }
 
-              if (!collision) {
-                const pp = placePiece(piece, variant, x, y);
-                sheets[si].pieces.push(pp);
-                sheetSolids[si].push(
-                  extractSolidWithHoles(pp.outline, pp.subEntities)
-                );
-                placed = true;
-                variantPlaced = true;
-                break;
-              } else if (collisionYJump > 0 && collisionYJump < minSafeYJump) {
-                minSafeYJump = collisionYJump;
-              }
+              if (variantPlaced) break;
+              if (minSafeYJump >= limitY - y) break;
+              y += Math.max(searchStep, minSafeYJump);
             }
-
-            if (variantPlaced) break;
-            if (minSafeYJump >= limitY - y) break;
-            y += Math.max(searchStep, minSafeYJump);
           }
         }
       }
