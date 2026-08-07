@@ -149,7 +149,7 @@ export function SheetTabs({
               .map((m) => m.item.label)
               .join(", ")})`
             return (
-              <Popover key={group.key}>
+              <Popover key={group.key} ignoreGlobalClose>
                 <PopoverTrigger asChild>
                   <button
                     type="button"

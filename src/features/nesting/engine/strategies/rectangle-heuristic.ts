@@ -269,6 +269,18 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         };
 
         /** Empuja a la izquierda y abajo hasta el contacto (sin solapar). */
+        /**
+         * Empuja a la izquierda y abajo hasta el contacto (sin solapar).
+         *
+         * Antes esto empujaba en X UNA vez y en Y UNA vez, sin volver a
+         * intentar X después de mover Y. Al bajar en Y la pieza puede
+         * quedar frente a un obstáculo distinto que sí permite empujarla
+         * más a la izquierda — sin repetir el pase, la pieza se queda en
+         * una posición "suficientemente buena" pero no la más ajustada,
+         * dejando huecos entre piezas que en realidad podrían tocarse.
+         * Ahora se repite X→Y hasta que ninguno de los dos mueve más
+         * (convergencia), con un tope de iteraciones por seguridad.
+         */
         const snapTight = (
           x0: number,
           y0: number,
@@ -277,26 +289,37 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
         ): { x: number; y: number } => {
           let x = x0;
           let y = y0;
-          // Snap -X
-          let lo = sheet.margin;
-          let hi = x;
-          for (let it = 0; it < 24; it++) {
-            if (hi - lo < 0.02) break;
-            const mid = (lo + hi) / 2;
-            if (collidesAt(mid, y, w, h)) lo = mid;
-            else hi = mid;
+
+          for (let pass = 0; pass < 6; pass++) {
+            const prevX = x;
+            const prevY = y;
+
+            // Snap -X
+            let lo = sheet.margin;
+            let hi = x;
+            for (let it = 0; it < 24; it++) {
+              if (hi - lo < 0.02) break;
+              const mid = (lo + hi) / 2;
+              if (collidesAt(mid, y, w, h)) lo = mid;
+              else hi = mid;
+            }
+            x = hi;
+
+            // Snap -Y
+            lo = sheet.margin;
+            hi = y;
+            for (let it = 0; it < 24; it++) {
+              if (hi - lo < 0.02) break;
+              const mid = (lo + hi) / 2;
+              if (collidesAt(x, mid, w, h)) lo = mid;
+              else hi = mid;
+            }
+            y = hi;
+
+            // Convergió: ni X ni Y se movieron en este pase.
+            if (Math.abs(x - prevX) < 0.02 && Math.abs(y - prevY) < 0.02) break;
           }
-          x = hi;
-          // Snap -Y
-          lo = sheet.margin;
-          hi = y;
-          for (let it = 0; it < 24; it++) {
-            if (hi - lo < 0.02) break;
-            const mid = (lo + hi) / 2;
-            if (collidesAt(x, mid, w, h)) lo = mid;
-            else hi = mid;
-          }
-          y = hi;
+
           return { x, y };
         };
 

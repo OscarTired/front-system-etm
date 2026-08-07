@@ -24,6 +24,18 @@ const PopoverOpenContext = React.createContext<boolean>(false)
 
 type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
   forceFloating?: boolean
+  /**
+   * Por default, CUALQUIER <Dialog> que se abra en la app dispara
+   * "close-all-popovers" y cierra este popover — pensado para que un
+   * diálogo modal nunca quede superpuesto con un popover abierto
+   * detrás. Para popovers que son navegación persistente (ej. el
+   * selector de plancha/grupo), eso es contraproducente: el usuario
+   * quiere poder ir cambiando de plancha sin que la lista se cierre
+   * sola. `ignoreGlobalClose` opta afuera de ese cierre global para
+   * ESTE popover puntual, sin tocar el comportamiento default de
+   * todos los demás.
+   */
+  ignoreGlobalClose?: boolean
 }
 
 type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
@@ -37,6 +49,7 @@ type PopoverAnchorProps = React.ComponentProps<typeof PopoverPrimitive.Anchor>
 
 export function Popover({
   forceFloating = false,
+  ignoreGlobalClose = false,
   children,
   onOpenChange,
   open,
@@ -60,6 +73,7 @@ export function Popover({
   )
 
   React.useEffect(() => {
+    if (ignoreGlobalClose) return
     const handleClosePopovers = () => {
       if (isOpen) {
         handleOpenChange(false)
@@ -70,7 +84,7 @@ export function Popover({
     return () => {
       window.removeEventListener("close-all-popovers", handleClosePopovers)
     }
-  }, [isOpen, handleOpenChange])
+  }, [isOpen, handleOpenChange, ignoreGlobalClose])
 
   const close = () => handleOpenChange(false)
 

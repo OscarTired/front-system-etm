@@ -81,7 +81,10 @@ export function DiagnosticsDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="flex max-h-[85vh] w-[min(960px,95vw)] max-w-none flex-col gap-0 overflow-hidden border-white/10 bg-[#141416] p-0 text-neutral-200 shadow-2xl sm:max-w-none">
+      <DialogContent
+        size="large"
+        className="flex max-h-[85vh] w-[min(960px,95vw)] max-w-none flex-col gap-0 overflow-hidden border-white/10 bg-[#141416] p-0 text-neutral-200 shadow-2xl sm:max-w-none"
+      >
         <DialogHeader className="shrink-0 border-b border-white/8 px-6 py-4 pr-12">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>

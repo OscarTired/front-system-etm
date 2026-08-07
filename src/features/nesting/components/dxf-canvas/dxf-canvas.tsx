@@ -1186,7 +1186,13 @@ export function DxfCanvas({
           </button>
 
           {showCanvasHelp && (
-            <div className="absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md">
+            <div
+              className={
+                isCompact
+                  ? "fixed inset-x-3 bottom-16 z-40 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md"
+                  : "absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md"
+              }
+            >
               <div className="z-90 font-semibold text-white mb-1">Guía rápida de interacción:</div>
               <ul className="space-y-1 text-neutral-400">
                 <li>• <strong className="text-neutral-200">V</strong>: Modo Selección</li>
