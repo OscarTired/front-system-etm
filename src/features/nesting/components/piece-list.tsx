@@ -157,7 +157,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       }
 
       if (!isSupportedCadFile(file.name)) {
-        rejected.push(`${file.name} (no soportado)`)
+        rejected.push(`${file.name} (solo .dxf, .geo o .pdf)`)
         continue
       }
       
@@ -354,10 +354,15 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         </div>
       )}
 
+      {/*
+        iOS/Safari: accept solo con ".dxf" suele grisar o esconder DXF
+        (no hay UTI/MIME estándar). Se listan extensiones + MIME genéricos;
+        el filtro real sigue en handleFilesSelected (isSupportedCadFile / isPdfFile).
+      */}
       <input
         ref={fileInputRef}
         type="file"
-        accept=".dxf,.geo,.pdf"
+        accept={CAD_IMPORT_ACCEPT}
         multiple
         className="hidden"
         onChange={(e) => {
