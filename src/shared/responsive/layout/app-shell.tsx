@@ -8,6 +8,7 @@ import { SidebarShowButton } from "./sidebar/sidebar-show-button"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
+import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
@@ -29,16 +30,8 @@ const CURVE_RADIUS = 28
 const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
 const CURVE_SQUARE = "0px 0px 0px 0px"
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
-
-/** Ancho del menú revelado (mismo que el aside del drawer). */
 const DRAWER_WIDTH_PX = 248
-
-/**
- * Solo transform (capa del compositor). Sin spring, sin motion value,
- * sin interpolar border-radius por frame.
- */
-const PANEL_TRANSITION =
-  "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)"
+const PANEL_TRANSITION = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)"
 
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
@@ -58,9 +51,7 @@ function DesktopShell({ children }: Props) {
       ? CURVE_SQUARE
       : CURVE_ROUNDED
 
-  const handleTransitionEnd = (
-    event: React.TransitionEvent<HTMLElement>,
-  ) => {
+  const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) return
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
@@ -70,7 +61,6 @@ function DesktopShell({ children }: Props) {
   return (
     <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
       <AppSidebar />
-
       <main
         onTransitionEnd={handleTransitionEnd}
         className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
@@ -92,14 +82,11 @@ function DesktopShell({ children }: Props) {
 }
 
 /**
- * Mismo gesto visual de antes (el contenido se desplaza y deja ver el
- * menú debajo), pero barato:
+ * Mobile shell.
  *
- * 1. El sidebar está estático detrás (no anima).
- * 2. Solo el panel de contenido usa `translate3d` (GPU).
- * 3. `border-radius` en dos estados (abierto/cerrado), no interpolado
- *    en cada frame con useTransform.
- * 4. CSS transition — sin spring ni animate() de motion en el hilo JS.
+ * - Drawer reveal: solo translate3d del panel (GPU). Menú estático detrás.
+ * - Rutas immersive (ver immersive-routes.ts): slot con altura real para
+ *   tools full-screen. El resto usa VerticalScroll + pull-to-refresh.
  */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -107,7 +94,7 @@ function CompactShell({ children }: Props) {
   const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
 
   const isOpen = mode === "open"
-  const isImmersive = pathname.startsWith("/nesting")
+  const immersive = isImmersiveRoute(pathname)
 
   useEffect(() => {
     closeDrawer()
@@ -124,7 +111,6 @@ function CompactShell({ children }: Props) {
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-white select-none">
-      {/* Menú fijo detrás */}
       <div
         className="absolute inset-y-0 left-0 z-0"
         style={{ width: DRAWER_WIDTH_PX }}
@@ -133,7 +119,6 @@ function CompactShell({ children }: Props) {
         <AppSidebar variant="drawer" open={isOpen} />
       </div>
 
-      {/* Panel principal */}
       <div
         className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
         style={{
@@ -147,12 +132,13 @@ function CompactShell({ children }: Props) {
       >
         <TopBar />
 
-        {isImmersive ? (
-          /*
-            Nesting a pantalla: capa propia entre top (3.5rem) y bottom (5rem).
-            z-10 para no quedar bajo el bottom nav ni “perderse”.
-          */
-          <div className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden">
+        {immersive ? (
+          // Slot full-bleed entre top bar (3.5rem) y bottom nav (5rem).
+          // Los pages immersive deben usar absolute inset-0 aquí dentro.
+          <div
+            data-immersive-slot
+            className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden"
+          >
             {children}
           </div>
         ) : (
@@ -184,7 +170,6 @@ function CompactShell({ children }: Props) {
       </div>
     </div>
   )
-
 }
 
 export function AppShell({ children }: Props) {

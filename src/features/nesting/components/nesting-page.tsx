@@ -655,7 +655,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="relative h-full w-full min-h-0 overflow-hidden bg-[#050505]">
+    <div className="absolute inset-0 overflow-hidden bg-[#050505] desktop:relative desktop:h-full">
       <input
         ref={projectInputRef}
         type="file"
@@ -667,21 +667,84 @@ export function NestingPage() {
         }}
       />
 
-      <div
-        className={
-          isCompact
-            ? "flex h-full min-h-0 w-full flex-col gap-1 p-1"
-            : "flex h-full min-h-0 gap-4 overflow-hidden p-4"
-        }
-      >
-        {!isCompact && (
+      {/* —— Desktop: sidebar + canvas —— */}
+      {!isCompact && (
+        <div className="flex h-full min-h-0 gap-4 overflow-hidden p-4">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
-        )}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
+            <div className="w-full shrink-0">
+              {project.sheetGroups.length > 0 ? (
+                <SheetTabs
+                  items={sheetTabItems}
+                  activeIndex={activeGroupIndex}
+                  onChange={(i) => {
+                    setActiveGroupIndex(i)
+                    setSelectedPieceIndices([])
+                  }}
+                />
+              ) : null}
+            </div>
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
+              {project.sessionReady && dxfCanvasPieces.length > 0 ? (
+                <DxfCanvas
+                  pieces={dxfCanvasPieces}
+                  sheetSize={sheetSize}
+                  selectedPieceIndices={selectedPieceIndices}
+                  onSelectPiece={handleSelectPiece}
+                  hiddenKeys={hiddenKeysArray}
+                  collidingPieceIndices={collidingPieceIndices}
+                  onMovePieces={transforms.handleMovePieces}
+                  onRotateSelected={transforms.handleRotateSelected}
+                  onRotateAroundPivot={transforms.handleRotateAroundPivot}
+                  rotationStep={rotationStep}
+                  transformMode={transformMode}
+                  onTransformModeChange={setTransformMode}
+                  onDeleteSelected={() => handleDeleteSelected()}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+                  {!project.sessionReady ? "Cargando workspace…" : "Importá una pieza o presioná Nestear"}
+                </div>
+              )}
+            </div>
+            {selectedPieceIndices.length >= 2 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
+                  <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                    Alinear
+                  </span>
+                  {(
+                    [
+                      ["left", AlignLeft],
+                      ["center-h", AlignCenterHorizontal],
+                      ["right", AlignRight],
+                      ["top", AlignStartVertical],
+                      ["center-v", AlignCenterVertical],
+                      ["bottom", AlignEndVertical],
+                    ] as const
+                  ).map(([mode, Icon]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => transforms.handleAlign(mode, selectedPieceIndices)}
+                      className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    >
+                      <Icon className="h-4 w-4" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden">
-          <div className="flex w-full shrink-0 items-center gap-1.5">
+      {/* —— Mobile: tabs fijos + canvas con alto REAL (absolute) —— */}
+      {isCompact && (
+        <div className="absolute inset-0">
+          <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1">
             <div className="min-w-0 flex-1">
               {project.sheetGroups.length > 0 ? (
                 <SheetTabs
@@ -694,23 +757,22 @@ export function NestingPage() {
                 />
               ) : (
                 <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500 ring-1 ring-white/6">
-                  Sin planchas — importá piezas y nestéá
+                  Sin planchas
                 </div>
               )}
             </div>
-            {isCompact && (
-              <button
-                type="button"
-                aria-label="Abrir panel"
-                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10"
-                onClick={() => setIsMobilePanelOpen(true)}
-              >
-                <SlidersHorizontal size={16} strokeWidth={2.2} />
-              </button>
-            )}
+            <button
+              type="button"
+              aria-label="Abrir panel"
+              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10"
+              onClick={() => setIsMobilePanelOpen(true)}
+            >
+              <SlidersHorizontal size={16} strokeWidth={2.2} />
+            </button>
           </div>
 
-          <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
+          {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
+          <div className="absolute inset-x-0 bottom-0 top-12 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8 mx-1 mb-1">
             {project.sessionReady && dxfCanvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
@@ -734,56 +796,18 @@ export function NestingPage() {
                     ? "Cargando workspace…"
                     : "Importá una pieza o presioná Nestear"}
                 </p>
-                {isCompact && (
-                  <button
-                    type="button"
-                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
-                    onClick={() => setIsMobilePanelOpen(true)}
-                  >
-                    Abrir panel
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
+                  onClick={() => setIsMobilePanelOpen(true)}
+                >
+                  Abrir panel
+                </button>
               </div>
             )}
           </div>
-
-          {/* La barra de deseleccionar/eliminar/rotar que vivía acá se
-              fusionó con el pill de estado del canvas (dxf-canvas.tsx) —
-              antes eran 2 elementos redundantes mostrando lo mismo
-              ("N piezas" arriba de "N sel." abajo), en dos estilos
-              distintos. "Alinear" sí queda acá: es una acción de nivel
-              de página (necesita 2+ piezas y no tiene equivalente en el
-              canvas). */}
-          {selectedPieceIndices.length >= 2 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
-                <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                  Alinear
-                </span>
-                {(
-                  [
-                    ["left", AlignLeft],
-                    ["center-h", AlignCenterHorizontal],
-                    ["right", AlignRight],
-                    ["top", AlignStartVertical],
-                    ["center-v", AlignCenterVertical],
-                    ["bottom", AlignEndVertical],
-                  ] as const
-                ).map(([mode, Icon]) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => transforms.handleAlign(mode, selectedPieceIndices)}
-                    className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
         <SheetContent className="flex flex-col gap-3 border-none bg-neutral-950 p-4">

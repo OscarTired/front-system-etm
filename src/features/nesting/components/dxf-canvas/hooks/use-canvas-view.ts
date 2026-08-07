@@ -114,8 +114,9 @@ export function useCanvasView() {
       const bounds = sheetSize
         ? { minX: 0, minY: 0, maxX: sheetSize.width, maxY: sheetSize.height }
         : computeBounds(entities)
-      // preferPortrait (móvil): menos padding → la plancha llena más pantalla
-      fitToBounds(canvas, bounds, preferPortrait ? 0.96 : 0.9, {
+      // preferPortrait: margen para FABs, status bar y rounded del contenedor.
+      // 0.96 recortaba los bordes de la plancha en móvil.
+      fitToBounds(canvas, bounds, preferPortrait ? 0.84 : 0.9, {
         allowAutoRotate: true,
         preferPortrait,
       })
@@ -163,6 +164,15 @@ export function useCanvasView() {
     }
   }, [])
 
+  // Todos los métodos de arriba son estables (deps vacías o solo otros
+  // callbacks estables), así que el objeto que devolvemos puede ser
+  // memoizado con seguridad: su identidad no cambia entre renders salvo
+  // que React remonte el hook. Esto es lo que permite que otros hooks/
+  // efectos (ej. el useEffect principal de dxf-canvas.tsx) puedan listar
+  // `view` en sus dependencias sin que eso dispare un re-render en cada
+  // frame — antes de esto, cada render devolvía un objeto `{ ...​ }`
+  // nuevo y cualquier efecto que dependiera de `view` se re-ejecutaba
+  // siempre, sin importar si algo relevante cambió.
   return useMemo(
     () => ({
       viewRef,
