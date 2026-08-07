@@ -8,6 +8,8 @@ import type { Entity, Point, ViewState } from "../types/types"
  */
 export function useCanvasView() {
   const viewRef = useRef<ViewState>({ scale: 1, offsetX: 0, offsetY: 0, rotationDeg: 0 })
+  /** true si el usuario hizo zoom/pan: no pisar la cámara con auto-fit. */
+  const userInteractedRef = useRef(false)
 
   const localToScreen = useCallback((canvas: HTMLCanvasElement | null, p: Point): Point => {
     if (!canvas) return { x: 0, y: 0 }
@@ -192,6 +194,7 @@ export function useCanvasView() {
   const zoomAt = useCallback(
     (canvas: HTMLCanvasElement | null, clientX: number, clientY: number, factor: number) => {
       if (!canvas) return
+      userInteractedRef.current = true
       const rect = canvas.getBoundingClientRect()
       const cx = clientX - rect.left - rect.width / 2
       const cy = clientY - rect.top - rect.height / 2
@@ -208,6 +211,7 @@ export function useCanvasView() {
   )
 
   const zoomBy = useCallback((factor: number) => {
+    userInteractedRef.current = true
     viewRef.current = {
       ...viewRef.current,
       scale: viewRef.current.scale * factor,
@@ -215,12 +219,20 @@ export function useCanvasView() {
   }, [])
 
   const panBy = useCallback((dx: number, dy: number, startOffsetX: number, startOffsetY: number) => {
+    userInteractedRef.current = true
     viewRef.current = {
       ...viewRef.current,
       offsetX: startOffsetX + dx,
       offsetY: startOffsetY + dy,
     }
   }, [])
+
+  /** Llamar antes de un fit explícito (botón Ajustar / focus selección). */
+  const allowAutoFit = useCallback(() => {
+    userInteractedRef.current = false
+  }, [])
+
+  const hasUserInteracted = useCallback(() => userInteractedRef.current, [])
 
   return useMemo(
     () => ({
@@ -233,6 +245,8 @@ export function useCanvasView() {
       zoomAt,
       zoomBy,
       panBy,
+      allowAutoFit,
+      hasUserInteracted,
     }),
     [
       localToScreen,
@@ -243,6 +257,8 @@ export function useCanvasView() {
       zoomAt,
       zoomBy,
       panBy,
+      allowAutoFit,
+      hasUserInteracted,
     ],
   )
 }
