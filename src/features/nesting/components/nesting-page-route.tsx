@@ -13,16 +13,13 @@ const NestingWorkspace = dynamic(
   },
 )
 
-/**
- * El shell mobile marca /nesting como immersive (sin VerticalScroll) y
- * deja un slot pt-14 pb-20 con flex-1. Acá solo hay que ocupar h-full.
- */
+/** Shell mobile: /nesting es immersive (slot flex-1 + pt-14/pb-20). Solo h-full. */
 export default function NestingRoute() {
   usePageTitle("Nesting")
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-2 text-white select-none desktop:px-8 desktop:py-10">
-      <header className="mb-4 hidden flex-wrap items-center justify-between gap-4 desktop:flex">
+    <main className="flex h-full min-h-0 w-full flex-col bg-[#050505] text-white select-none">
+      <header className="mb-4 hidden shrink-0 flex-wrap items-center justify-between gap-4 px-8 desktop:flex desktop:pt-6">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">NESTING</h1>
           <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
@@ -30,10 +27,9 @@ export default function NestingRoute() {
             Acomodo de piezas en plancha
           </p>
         </div>
-        <div aria-hidden className="h-10 w-10 shrink-0" />
       </header>
 
-      <section className="min-h-0 flex-1">
+      <section className="min-h-0 flex-1 px-1.5 pb-1 desktop:px-8 desktop:pb-6">
         <NestingWorkspace />
       </section>
     </main>

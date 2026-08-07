@@ -1,15 +1,13 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import { motion, useMotionValue, useTransform, animate, type PanInfo } from "motion/react"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
-import { SidebarDrawer } from "@/shared/responsive/mobile/sidebar-drawer"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
@@ -33,18 +31,27 @@ const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
 const CURVE_SQUARE = "0px 0px 0px 0px"
 const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
+/** Ancho del menú revelado (mismo que el aside del drawer). */
+const DRAWER_WIDTH_PX = 248
+
+/**
+ * Solo transform (capa del compositor). Sin spring, sin motion value,
+ * sin interpolar border-radius por frame.
+ */
+const PANEL_TRANSITION =
+  "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)"
+
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
 
-  // Reset scroll al navegar sin remount del contenedor
   useEffect(() => {
     const el = document.querySelector<HTMLElement>("[data-desktop-scroll]")
     if (el) el.scrollTop = 0
   }, [pathname])
 
-  const visualState = useSidebarStore(state => state.visualState)
+  const visualState = useSidebarStore((state) => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
-    state => state.notifyClipTransitionEnd,
+    (state) => state.notifyClipTransitionEnd,
   )
 
   const borderRadius =
@@ -56,7 +63,6 @@ function DesktopShell({ children }: Props) {
     event: React.TransitionEvent<HTMLElement>,
   ) => {
     if (event.target !== event.currentTarget) return
-
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
     }
@@ -75,7 +81,10 @@ function DesktopShell({ children }: Props) {
         }}
       >
         <DesktopTopBar />
-        <div className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto" data-desktop-scroll>
+        <div
+          className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+          data-desktop-scroll
+        >
           {children}
         </div>
       </main>
@@ -83,99 +92,86 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-// Configuración del drawer nativo
-const DRAWER_REVEAL_OFFSET = 248
-
-// Resorte para la interacción por botones (hamburguesa / click)
-const BUTTON_SPRING = {
-  type: "spring",
-  stiffness: 350,
-  damping: 35,
-  mass: 0.3,
-} as const
-
+/**
+ * Mismo gesto visual de antes (el contenido se desplaza y deja ver el
+ * menú debajo), pero barato:
+ *
+ * 1. El sidebar está estático detrás (no anima).
+ * 2. Solo el panel de contenido usa `translate3d` (GPU).
+ * 3. `border-radius` en dos estados (abierto/cerrado), no interpolado
+ *    en cada frame con useTransform.
+ * 4. CSS transition — sin spring ni animate() de motion en el hilo JS.
+ */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
-  const mode = useMobileNavStore(s => s.mode)
+  const mode = useMobileNavStore((s) => s.mode)
+  const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
 
   const isOpen = mode === "open"
-  const x = useMotionValue(0)
-  const mountedRef = useRef(false)
-
-  // Nesting necesita altura real, no el scroll de página del shell.
   const isImmersive = pathname.startsWith("/nesting")
 
-  // Zona muerta mayor: el radius no parpadea en el último px del cierre.
-  const borderRadius = useTransform(
-    x,
-    [0, 12, DRAWER_REVEAL_OFFSET],
-    ["0px 0px 0px 0px", "28px 0px 0px 28px", "28px 0px 0px 28px"],
-  )
-
-  // Abrir: spring. Cerrar: tween (sin overshoot — el spring a 0 a veces
-  // rebota un frame y se ve como "ghost close"). Primer mount: set
-  // directo, sin animar (evita un frame fantasma al entrar a la app).
   useEffect(() => {
-    const targetX = isOpen ? DRAWER_REVEAL_OFFSET : 0
+    closeDrawer()
+  }, [pathname, closeDrawer])
 
-    if (!mountedRef.current) {
-      mountedRef.current = true
-      x.set(targetX)
-      return
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDrawer()
     }
-
-    const controls = isOpen
-      ? animate(x, targetX, BUTTON_SPRING)
-      : animate(x, targetX, {
-          type: "tween",
-          duration: 0.22,
-          ease: [0.22, 1, 0.36, 1],
-        })
-
-    return () => controls.stop()
-  }, [isOpen, x])
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isOpen, closeDrawer])
 
   return (
-    <div className="relative h-dvh overflow-hidden select-none bg-[#1d1c1c] text-white">
-      <SidebarDrawer />
+    <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-white select-none">
+      {/* Menú fijo detrás — no se anima */}
+      <div
+        className="absolute inset-y-0 left-0 z-0 w-[248px] max-w-[85vw]"
+        style={{ width: DRAWER_WIDTH_PX }}
+        aria-hidden={!isOpen}
+      >
+        <AppSidebar variant="drawer" open={isOpen} />
+      </div>
 
-      <motion.div
+      {/* Panel de app: solo translate3d + radius en 2 estados */}
+      <div
+        className={cn(
+          "absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden bg-[#050505]",
+          isOpen && "pointer-events-none",
+        )}
         style={{
-          x,
-          borderRadius,
-          touchAction: isImmersive ? "none" : "pan-y",
+          transform: isOpen
+            ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
+            : "translate3d(0, 0, 0)",
+          borderRadius: isOpen ? CURVE_ROUNDED : CURVE_SQUARE,
+          transition: PANEL_TRANSITION,
+          // Solo transform en compositor; el radius cambia al inicio/fin
+          // del estado, no frame a frame con JS.
+          willChange: "transform",
         }}
-        className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
+        inert={isOpen ? true : undefined}
       >
         <TopBar />
-        <div
-          inert={isOpen}
-          className={cn(
-            "flex min-h-0 flex-1 flex-col",
-            isOpen && "pointer-events-none select-none",
-          )}
-        >
-          {isImmersive ? (
-            // Sin VerticalScroll: el workspace usa TODO el alto entre top y bottom nav.
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-14 pb-20">
+        {isImmersive ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-14 pb-20">
+            {children}
+          </div>
+        ) : (
+          <PullToRefresh>
+            <VerticalScroll
+              resetKey={pathname}
+              containerClassName="h-full"
+              className="overflow-x-hidden pt-14 pb-20"
+              arrowTopOffset={64}
+              arrowBottomOffset={88}
+            >
               {children}
-            </div>
-          ) : (
-            <PullToRefresh>
-              <VerticalScroll
-                resetKey={pathname}
-                containerClassName="h-full"
-                className="overflow-x-hidden pt-14 pb-20"
-                arrowTopOffset={64}
-                arrowBottomOffset={88}
-              >
-                {children}
-              </VerticalScroll>
-            </PullToRefresh>
-          )}
-          <BottomNavigation />
-        </div>
-      </motion.div>
+            </VerticalScroll>
+          </PullToRefresh>
+        )}
+        <BottomNavigation />
+      </div>
     </div>
   )
 }
@@ -188,16 +184,8 @@ export function AppShell({ children }: Props) {
   }
 
   if (isMobile) {
-    return (
-      <CompactShell>
-        {children}
-      </CompactShell>
-    )
+    return <CompactShell>{children}</CompactShell>
   }
 
-  return (
-    <DesktopShell>
-      {children}
-    </DesktopShell>
-  )
+  return <DesktopShell>{children}</DesktopShell>
 }

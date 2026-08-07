@@ -11,6 +11,7 @@ import {
   AlignEndVertical,
   AlignCenterVertical,
   Trash2,
+  SlidersHorizontal
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -666,37 +667,42 @@ export function NestingPage() {
         }}
       />
 
-      <div className="flex min-h-0 flex-1 gap-2 overflow-hidden p-0 desktop:gap-4 desktop:p-4">
+      <div className="flex h-full min-h-0 flex-1 gap-2 overflow-hidden p-0 desktop:gap-4 desktop:p-4">
         {!isCompact && (
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
         )}
 
-        <main className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-2xl bg-white/3 p-1.5 shadow-sm desktop:gap-2 desktop:p-3">
-          {project.sheetGroups.length > 0 && (
-            <div className="w-full min-w-0 shrink-0">
-              <SheetTabs
-                items={sheetTabItems}
-                activeIndex={activeGroupIndex}
-                onChange={(i) => {
-                  setActiveGroupIndex(i)
-                  setSelectedPieceIndices([])
-                }}
-              />
+        <main className="grid h-full min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-1.5 overflow-hidden rounded-2xl bg-white/3 p-1.5 shadow-sm desktop:gap-2 desktop:p-3">
+          <div className="flex w-full min-w-0 shrink-0 items-center gap-1.5">
+            <div className="min-w-0 flex-1">
+              {project.sheetGroups.length > 0 ? (
+                <SheetTabs
+                  items={sheetTabItems}
+                  activeIndex={activeGroupIndex}
+                  onChange={(i) => {
+                    setActiveGroupIndex(i)
+                    setSelectedPieceIndices([])
+                  }}
+                />
+              ) : (
+                <div className="h-9 rounded-xl bg-white/4 ring-1 ring-white/6" />
+              )}
             </div>
-          )}
-
-          <div className="relative min-h-0 flex-1 overflow-hidden">
             {isCompact && (
               <button
                 type="button"
-                className="absolute left-2 top-2 z-20 rounded-xl bg-neutral-900/90 px-3 py-2 text-xs text-white ring-1 ring-white/10"
+                aria-label="Abrir panel"
+                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10 transition hover:bg-white/10"
                 onClick={() => setIsMobilePanelOpen(true)}
               >
-                Panel
+                <SlidersHorizontal size={16} strokeWidth={2.2} />
               </button>
             )}
+          </div>
+
+          <div className="relative min-h-0 overflow-hidden rounded-xl bg-black/20">
             {project.sessionReady && dxfCanvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
