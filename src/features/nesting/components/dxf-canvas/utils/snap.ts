@@ -103,18 +103,108 @@ export function findNearestEdgeSnap(
   return best
 }
 
-/** Snap compuesto: extremos/centros primero, si no hay, proyección a arista. */
+/** Snap compuesto: extremos/centros primero, si no hay, proyección a arista.
+ *  Incluye bordes de plancha si se pasa `sheetSize` (medir respecto a la plancha).
+ */
 export function findSmartSnap(
   entities: Entity[],
   point: Point,
-  scale: number
+  scale: number,
+  sheetSize?: { width: number; height: number },
 ): SnapCandidate | null {
+  // Preferir helper que ya contempla plancha (esquinas + proyección a aristas)
+  if (sheetSize) {
+    const withSheet = findNearestSnapWithSheet(entities, point, scale, sheetSize)
+    if (withSheet) return withSheet
+  }
   const pt = findNearestSnap(entities, point, scale)
   if (pt) {
-    // Aún así buscar arista cercana para highlight
     const edge = findNearestEdgeSnap(entities, point, scale)
     if (edge?.segment) return { ...pt, segment: edge.segment }
     return pt
   }
   return findNearestEdgeSnap(entities, point, scale)
+}
+
+
+/** Añade esquinas y aristas de la plancha como candidatos de snap. */
+export function sheetSnapCandidates(
+  sheetSize?: { width: number; height: number },
+): SnapCandidate[] {
+  if (!sheetSize || sheetSize.width <= 0 || sheetSize.height <= 0) return []
+  const { width: w, height: h } = sheetSize
+  const corners: Point[] = [
+    { x: 0, y: 0 },
+    { x: w, y: 0 },
+    { x: w, y: h },
+    { x: 0, y: h },
+  ]
+  const edges: { a: Point; b: Point }[] = [
+    { a: corners[0], b: corners[1] },
+    { a: corners[1], b: corners[2] },
+    { a: corners[2], b: corners[3] },
+    { a: corners[3], b: corners[0] },
+  ]
+  const out: SnapCandidate[] = []
+  for (const c of corners) {
+    out.push({ point: c, type: "endpoint" })
+  }
+  for (const e of edges) {
+    out.push({
+      point: { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2 },
+      type: "midpoint",
+      segment: e,
+    })
+  }
+  return out
+}
+
+/**
+ * Snap a entidades + borde de plancha (para medir respecto a la plancha).
+ */
+export function findNearestSnapWithSheet(
+  entities: Entity[],
+  point: Point,
+  scale: number,
+  sheetSize?: { width: number; height: number },
+): SnapCandidate | null {
+  const tol = SNAP_TOLERANCE_PX / scale
+  let best: SnapCandidate | null = findNearestSnap(entities, point, scale)
+  let bestDist = best
+    ? Math.hypot(point.x - best.point.x, point.y - best.point.y)
+    : tol
+
+  for (const c of sheetSnapCandidates(sheetSize)) {
+    const d = Math.hypot(point.x - c.point.x, point.y - c.point.y)
+    if (d < bestDist) {
+      bestDist = d
+      best = c
+    }
+  }
+
+  // Proyección a aristas de plancha
+  if (sheetSize) {
+    const { width: w, height: h } = sheetSize
+    const edges: { a: Point; b: Point }[] = [
+      { a: { x: 0, y: 0 }, b: { x: w, y: 0 } },
+      { a: { x: w, y: 0 }, b: { x: w, y: h } },
+      { a: { x: w, y: h }, b: { x: 0, y: h } },
+      { a: { x: 0, y: h }, b: { x: 0, y: 0 } },
+    ]
+    for (const e of edges) {
+      const vx = e.b.x - e.a.x
+      const vy = e.b.y - e.a.y
+      const len2 = vx * vx + vy * vy
+      if (len2 < 1e-18) continue
+      let tt = ((point.x - e.a.x) * vx + (point.y - e.a.y) * vy) / len2
+      tt = Math.max(0, Math.min(1, tt))
+      const proj = { x: e.a.x + tt * vx, y: e.a.y + tt * vy }
+      const d = Math.hypot(point.x - proj.x, point.y - proj.y)
+      if (d < bestDist) {
+        bestDist = d
+        best = { point: proj, type: "nearest", segment: e }
+      }
+    }
+  }
+  return best
 }
