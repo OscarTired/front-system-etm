@@ -567,6 +567,8 @@ export function useNestingProject() {
         // Hidratar en transition: no bloquear el primer paint del shell.
         startTransition(() => {
           setSettings(draft.settings)
+          setAppliedSeparation(Number(draft.settings.separacion) || 0)
+          setAppliedMode(draft.settings.empaquetadoPreciso ? "precise" : "fast")
           setMachine(draft.machine)
           setRows(draft.rows)
           sheetEditsRef.current = draft.editsBySheet ?? {}

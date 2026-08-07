@@ -720,7 +720,10 @@ export function drawScene(d: DrawContext) {
     }
   }
 
-  if (pendingPoints.length > 0) {
+  // Preview de medición en curso — la "cota jalada" (drawCadDistance)
+  // SOLO aplica a la regla (distance). Área/ángulo/radio no deben usarla.
+  if (pendingPoints.length > 0 && activeTool === "distance") {
+
     ctx.fillStyle = MEASURE_PENDING_COLOR
     ctx.strokeStyle = MEASURE_PENDING_COLOR
     ctx.lineWidth = 1 / scale
@@ -823,6 +826,27 @@ export function drawScene(d: DrawContext) {
     }
   }
 
+
+
+  if (pendingPoints.length > 0 && activeTool === "angle") {
+    ctx.fillStyle = MEASURE_PENDING_COLOR
+    ctx.strokeStyle = MEASURE_PENDING_COLOR
+    ctx.lineWidth = 1.25 / scale
+    for (const p of pendingPoints) {
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, 3 / scale, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.setLineDash([4 / scale, 3 / scale])
+    ctx.beginPath()
+    pendingPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+    if (hoverLocal && pendingPoints.length < 3) {
+      const last = pendingPoints[pendingPoints.length - 1]
+      ctx.lineTo(hoverLocal.x, hoverLocal.y)
+    }
+    ctx.stroke()
+    ctx.setLineDash([])
+  }
 
   if (snapGuides && snapGuides.length > 0) {
     ctx.save()

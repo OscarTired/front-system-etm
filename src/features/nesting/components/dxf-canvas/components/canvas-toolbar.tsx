@@ -144,6 +144,30 @@ export function CanvasToolbar({
   } = useDragScroll()
   const { leftFade, rightFade } = useHorizontalFade({ containerRef: toolScrollRef })
 
+  const isToolActive = activeTool !== "none"
+
+  // Solo mostrar scrollbar cuando el contenido DE VERDAD desborda.
+  // Evita el flash del themed-scrollbar al abrir el panel (max-w animado).
+  const [toolsOverflow, setToolsOverflow] = useState(false)
+  useEffect(() => {
+    const el = toolScrollRef.current
+    if (!el) return
+    const check = () => {
+      setToolsOverflow(el.scrollWidth > el.clientWidth + 2)
+    }
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    // Re-check tras la animación de apertura (~300ms)
+    const t1 = window.setTimeout(check, 320)
+    const t2 = window.setTimeout(check, 600)
+    return () => {
+      ro.disconnect()
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+  }, [open, isCompact, isToolActive, toolScrollRef])
+
   // Auto-abre el panel de herramientas al seleccionar una pieza en el canvas.
   // No lo auto-cerramos al deseleccionar: si el usuario lo dejó abierto
   // a propósito (ej. está midiendo), no queremos cerrarlo debajo de él.
@@ -162,8 +186,6 @@ export function CanvasToolbar({
     setSpeedPopoverOpen(false)
     setOpen(false)
   }
-
-  const isToolActive = activeTool !== "none"
 
   return (
     <div
@@ -209,7 +231,7 @@ export function CanvasToolbar({
             quede claro que hay más botones deslizando en vez de sentirse
             "cortado". */}
         <div
-          ref={isCompact ? toolScrollRef : undefined}
+          ref={toolScrollRef}
           onMouseDown={isCompact ? handleToolMouseDown : undefined}
           onMouseMove={isCompact ? handleToolMouseMove : undefined}
           onMouseUp={isCompact ? stopToolDragging : undefined}
@@ -230,10 +252,16 @@ export function CanvasToolbar({
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
             ${
               isCompact
-                ? `themed-scrollbar-x cursor-grab overflow-x-auto active:cursor-grabbing ${
-                    open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+                ? `cursor-grab active:cursor-grabbing ${
+                    toolsOverflow ? "themed-scrollbar-x overflow-x-auto" : "overflow-x-hidden"
+                  } ${open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"}`
+                : `${
+                    toolsOverflow ? "themed-scrollbar-x overflow-x-auto" : "overflow-x-hidden"
+                  } ${
+                    open
+                      ? "max-w-[min(52rem,calc(100vw-6rem))] opacity-100"
+                      : "max-w-0 opacity-0 pointer-events-none"
                   }`
-                : `overflow-x-hidden ${open ? "max-w-150 opacity-100" : "max-w-0 opacity-0 pointer-events-none"}`
             }
           `}
         >

@@ -210,44 +210,67 @@ export function withDragOffset(
 }
 
 
+
 /**
- * Intersección de la recta horizontal y=y0 con el segmento a→b.
- * Devuelve x o null.
+ * Intersección H/V con regla anti-doble-conteo en vértices.
  */
 function intersectHorizontal(y0: number, a: Point, b: Point): number | null {
-  const dy = b.y - a.y
-  if (Math.abs(dy) < 1e-12) return null
-  const t = (y0 - a.y) / dy
-  if (t < -1e-9 || t > 1 + 1e-9) return null
-  return a.x + t * (b.x - a.x)
+  if (Math.abs(b.y - a.y) < 1e-12) return null
+  let y1 = a.y, y2 = b.y, x1 = a.x, x2 = b.x
+  if (y1 > y2) { y1 = b.y; y2 = a.y; x1 = b.x; x2 = a.x }
+  if (y0 < y1 - 1e-12 || y0 >= y2 - 1e-12) return null
+  const tt = (y0 - y1) / (y2 - y1)
+  return x1 + tt * (x2 - x1)
 }
 
 function intersectVertical(x0: number, a: Point, b: Point): number | null {
-  const dx = b.x - a.x
-  if (Math.abs(dx) < 1e-12) return null
-  const t = (x0 - a.x) / dx
-  if (t < -1e-9 || t > 1 + 1e-9) return null
-  return a.y + t * (b.y - a.y)
+  if (Math.abs(b.x - a.x) < 1e-12) return null
+  let x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y
+  if (x1 > x2) { x1 = b.x; x2 = a.x; y1 = b.y; y2 = a.y }
+  if (x0 < x1 - 1e-12 || x0 >= x2 - 1e-12) return null
+  const tt = (x0 - x1) / (x2 - x1)
+  return y1 + tt * (y2 - y1)
+}
+
+function dedupeSorted(hits: number[], eps = 1e-6): number[] {
+  if (hits.length === 0) return hits
+  hits.sort((u, v) => u - v)
+  const out: number[] = [hits[0]]
+  for (let i = 1; i < hits.length; i++) {
+    if (Math.abs(hits[i] - out[out.length - 1]) > eps) out.push(hits[i])
+  }
+  return out
+}
+
+function normalizeLoop(polygon: Point[]): Point[] | null {
+  if (polygon.length < 3) return null
+  let pts = polygon
+  const f = polygon[0]
+  const l = polygon[polygon.length - 1]
+  if (Math.hypot(f.x - l.x, f.y - l.y) < 1e-4 && polygon.length >= 4) {
+    pts = polygon.slice(0, -1)
+  }
+  return pts.length >= 3 ? pts : null
 }
 
 /**
- * Span horizontal/vertical real del polígono que pasa por `origin`
- * (raycast a aristas, no bbox). Devuelve los dos puntos de la cota
- * o null si el origen no está dentro / no hay intersecciones.
+ * Span H/V real del polígono por el punto (raycast a aristas).
+ * El polígono se trata siempre como cerrado.
  */
 export function axisSpanThroughPoint(
   polygon: Point[],
   origin: Point,
   axis: "h" | "v",
 ): { a: Point; b: Point; value: number } | null {
-  if (polygon.length < 3) return null
-  if (!pointInPolygon(origin, polygon)) return null
+  const pts = normalizeLoop(polygon)
+  if (!pts) return null
+  if (!pointInPolygon(origin, pts)) return null
 
   const hits: number[] = []
-  const n = polygon.length
+  const n = pts.length
   for (let i = 0; i < n; i++) {
-    const a = polygon[i]
-    const b = polygon[(i + 1) % n]
+    const a = pts[i]
+    const b = pts[(i + 1) % n]
     if (axis === "h") {
       const x = intersectHorizontal(origin.y, a, b)
       if (x != null) hits.push(x)
@@ -256,38 +279,60 @@ export function axisSpanThroughPoint(
       if (y != null) hits.push(y)
     }
   }
-  if (hits.length < 2) return null
-  hits.sort((u, v) => u - v)
+  const uniq = dedupeSorted(hits)
+  if (uniq.length < 2) return null
 
-  // Intervalos [hits[0],hits[1]], [hits[2],hits[3]], … — elegir el que contiene origin
   const o = axis === "h" ? origin.x : origin.y
-  for (let i = 0; i + 1 < hits.length; i += 2) {
-    const lo = hits[i]
-    const hi = hits[i + 1]
+  for (let i = 0; i + 1 < uniq.length; i += 2) {
+    const lo = uniq[i]
+    const hi = uniq[i + 1]
     if (o >= lo - 1e-6 && o <= hi + 1e-6) {
       const value = hi - lo
       if (value < 1e-6) return null
-      if (axis === "h") {
-        return {
-          a: { x: lo, y: origin.y },
-          b: { x: hi, y: origin.y },
-          value,
-        }
-      }
-      return {
-        a: { x: origin.x, y: lo },
-        b: { x: origin.x, y: hi },
-        value,
-      }
+      return axis === "h"
+        ? { a: { x: lo, y: origin.y }, b: { x: hi, y: origin.y }, value }
+        : { a: { x: origin.x, y: lo }, b: { x: origin.x, y: hi }, value }
     }
   }
-  // Fallback: extremos globales (convexos)
-  const lo = hits[0]
-  const hi = hits[hits.length - 1]
+  const lo = uniq[0]
+  const hi = uniq[uniq.length - 1]
   const value = hi - lo
   if (value < 1e-6) return null
-  if (axis === "h") {
-    return { a: { x: lo, y: origin.y }, b: { x: hi, y: origin.y }, value }
+  return axis === "h"
+    ? { a: { x: lo, y: origin.y }, b: { x: hi, y: origin.y }, value }
+    : { a: { x: origin.x, y: lo }, b: { x: origin.x, y: hi }, value }
+}
+
+export type SmartSpan = { a: Point; b: Point; value: number }
+
+/**
+ * Contorno (cualquier polyline ≥3 pts, closed o no) que contiene el punto
+ * → spans H/V. Preferimos el de menor área (pieza / calado interno).
+ */
+export function findSmartSpansAtPoint(
+  entities: Entity[],
+  origin: Point,
+): { h: SmartSpan | null; v: SmartSpan | null; center: Point } | null {
+  let best: {
+    h: SmartSpan | null
+    v: SmartSpan | null
+    center: Point
+    area: number
+  } | null = null
+
+  for (const e of entities) {
+    if (e.kind !== "polyline" || e.points.length < 3) continue
+    const pts = normalizeLoop(e.points)
+    if (!pts) continue
+    if (!pointInPolygon(origin, pts)) continue
+    const h = axisSpanThroughPoint(pts, origin, "h")
+    const v = axisSpanThroughPoint(pts, origin, "v")
+    if (!h && !v) continue
+    const area = Math.abs(polygonArea(pts))
+    if (!best || area < best.area) {
+      best = { h, v, center: { x: origin.x, y: origin.y }, area }
+    }
   }
-  return { a: { x: origin.x, y: lo }, b: { x: origin.x, y: hi }, value }
+  if (!best) return null
+  return { h: best.h, v: best.v, center: best.center }
 }

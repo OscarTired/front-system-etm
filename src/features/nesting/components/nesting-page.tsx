@@ -240,12 +240,12 @@ export function NestingPage() {
 
   const rawPieces = activeGroup?.sheet.pieces ?? []
 
-  const settingsSeparationMm = Number(project.settings.separacion) || 0
-  /** Colisión visual: separación del último nest, no el valor del input (evita rojo en vivo). */
-  const separationMm =
-    project.sheets && project.sheets.length > 0
-      ? (project.appliedSeparation ?? settingsSeparationMm)
-      : settingsSeparationMm
+  /**
+   * Colisión visual SOLO con la separación del último nest aplicado.
+   * Cambiar el input de separación NO debe pintar piezas en rojo hasta
+   * nestear de nuevo (appliedSeparation se actualiza en handleRun).
+   */
+  const separationMm = project.appliedSeparation
 
   const transforms = useNestingTransforms({
     history,
@@ -290,18 +290,24 @@ export function NestingPage() {
 
   const layerList = useMemo(() => computeLayerList(dxfCanvasPieces), [dxfCanvasPieces])
 
+  /**
+   * Rojo solo por solape geométrico real (polígonos).
+   * La separación del input NO interviene aquí: es constraint del motor
+   * al nestear. Así cambiar "separación" no pinta rojo hasta un nest
+   * que deje piezas realmente superpuestas.
+   */
   const collidingPieceIndices = useMemo(() => {
     const set = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (piecesCollide(canvasPieces[i], canvasPieces[j], separationMm)) {
+        if (piecesCollide(canvasPieces[i], canvasPieces[j], 0)) {
           set.add(i)
           set.add(j)
         }
       }
     }
     return Array.from(set)
-  }, [canvasPieces, separationMm])
+  }, [canvasPieces])
 
   const handleToggleLayer = useCallback((key: string) => {
     setHiddenLayerKeys((prev) => {
@@ -378,7 +384,7 @@ export function NestingPage() {
     const pairs: { a: number; b: number; nameA: string; nameB: string }[] = []
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (!piecesCollide(canvasPieces[i], canvasPieces[j], separationMm)) continue
+        if (!piecesCollide(canvasPieces[i], canvasPieces[j], 0)) continue
         const idA = canvasPieces[i]?.pieceId
         const idB = canvasPieces[j]?.pieceId
         const nameA =

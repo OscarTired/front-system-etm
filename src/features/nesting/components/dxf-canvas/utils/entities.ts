@@ -15,10 +15,15 @@ export function piecesToEntities(
         const layerKey = (sub.layer ?? color).toUpperCase()
         if (hidden.has(layerKey) || hidden.has(color.toUpperCase())) continue
         if (sub.points.length >= 2) {
+          const pts = sub.points
+          const loopClosed =
+            pts.length >= 3 &&
+            Math.hypot(pts[0].x - pts[pts.length - 1].x, pts[0].y - pts[pts.length - 1].y) < 1e-3
           out.push({
             kind: "polyline",
-            points: sub.points,
-            closed: false,
+            points: pts,
+            // Contornos CAD casi siempre son loops (aunque el flag venga false)
+            closed: loopClosed || pts.length >= 3,
             color,
             pieceIndex,
             layer: sub.layer,

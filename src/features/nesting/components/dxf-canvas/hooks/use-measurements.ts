@@ -154,11 +154,33 @@ export function useMeasurements() {
   )
 
   const hitTestClosedContour = useCallback((entities: Entity[], point: Point): Point[] | null => {
+    // CAD subOutlines suelen venir closed:false aunque sean loops cerrados
+    let best: Point[] | null = null
+    let bestArea = Infinity
     for (const e of entities) {
-      if (e.kind !== "polyline" || !e.closed || e.points.length < 3) continue
-      if (pointInPolygon(point, e.points)) return e.points
+      if (e.kind !== "polyline" || e.points.length < 3) continue
+      let pts = e.points
+      const f = pts[0]
+      const l = pts[pts.length - 1]
+      if (Math.hypot(f.x - l.x, f.y - l.y) < 1e-4 && pts.length >= 4) {
+        pts = pts.slice(0, -1)
+      }
+      if (pts.length < 3) continue
+      if (!pointInPolygon(point, pts)) continue
+      // Preferir el contorno de menor área (calado interno)
+      let area = 0
+      for (let i = 0; i < pts.length; i++) {
+        const p1 = pts[i]
+        const p2 = pts[(i + 1) % pts.length]
+        area += p1.x * p2.y - p2.x * p1.y
+      }
+      area = Math.abs(area) / 2
+      if (area < bestArea) {
+        bestArea = area
+        best = pts
+      }
     }
-    return null
+    return best
   }, [])
 
   const handleToolClick = useCallback(
