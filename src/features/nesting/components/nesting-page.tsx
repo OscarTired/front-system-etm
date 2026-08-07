@@ -673,7 +673,7 @@ export function NestingPage() {
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
             <div className="w-full shrink-0">
               {project.sheetGroups.length > 0 ? (
                 <SheetTabs
@@ -686,28 +686,30 @@ export function NestingPage() {
                 />
               ) : null}
             </div>
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
-              {project.sessionReady && dxfCanvasPieces.length > 0 ? (
-                <DxfCanvas
-                  pieces={dxfCanvasPieces}
-                  sheetSize={sheetSize}
-                  selectedPieceIndices={selectedPieceIndices}
-                  onSelectPiece={handleSelectPiece}
-                  hiddenKeys={hiddenKeysArray}
-                  collidingPieceIndices={collidingPieceIndices}
-                  onMovePieces={transforms.handleMovePieces}
-                  onRotateSelected={transforms.handleRotateSelected}
-                  onRotateAroundPivot={transforms.handleRotateAroundPivot}
-                  rotationStep={rotationStep}
-                  transformMode={transformMode}
-                  onTransformModeChange={setTransformMode}
-                  onDeleteSelected={() => handleDeleteSelected()}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                  {!project.sessionReady ? "Cargando workspace…" : "Importá una pieza o presioná Nestear"}
-                </div>
-              )}
+            <div className="relative min-h-0 flex-1 rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
+              <div className="absolute inset-0 overflow-hidden rounded-xl">
+                {project.sessionReady && dxfCanvasPieces.length > 0 ? (
+                  <DxfCanvas
+                    pieces={dxfCanvasPieces}
+                    sheetSize={sheetSize}
+                    selectedPieceIndices={selectedPieceIndices}
+                    onSelectPiece={handleSelectPiece}
+                    hiddenKeys={hiddenKeysArray}
+                    collidingPieceIndices={collidingPieceIndices}
+                    onMovePieces={transforms.handleMovePieces}
+                    onRotateSelected={transforms.handleRotateSelected}
+                    onRotateAroundPivot={transforms.handleRotateAroundPivot}
+                    rotationStep={rotationStep}
+                    transformMode={transformMode}
+                    onTransformModeChange={setTransformMode}
+                    onDeleteSelected={() => handleDeleteSelected()}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+                    {!project.sessionReady ? "Cargando workspace…" : "Importá una pieza o presioná Nestear"}
+                  </div>
+                )}
+              </div>
             </div>
             {selectedPieceIndices.length >= 2 && (
               <div className="flex flex-wrap items-center gap-2">
@@ -772,39 +774,41 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8 mx-1 mb-1">
-            {project.sessionReady && dxfCanvasPieces.length > 0 ? (
-              <DxfCanvas
-                pieces={dxfCanvasPieces}
-                sheetSize={sheetSize}
-                selectedPieceIndices={selectedPieceIndices}
-                onSelectPiece={handleSelectPiece}
-                hiddenKeys={hiddenKeysArray}
-                collidingPieceIndices={collidingPieceIndices}
-                onMovePieces={transforms.handleMovePieces}
-                onRotateSelected={transforms.handleRotateSelected}
-                onRotateAroundPivot={transforms.handleRotateAroundPivot}
-                rotationStep={rotationStep}
-                transformMode={transformMode}
-                onTransformModeChange={setTransformMode}
-                onDeleteSelected={() => handleDeleteSelected()}
-              />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
-                <p>
-                  {!project.sessionReady
-                    ? "Cargando workspace…"
-                    : "Importá una pieza o presioná Nestear"}
-                </p>
-                <button
-                  type="button"
-                  className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
-                  onClick={() => setIsMobilePanelOpen(true)}
-                >
-                  Abrir panel
-                </button>
-              </div>
-            )}
+          <div className="absolute inset-x-0 bottom-0 top-12 rounded-xl bg-[#0a0a0c] ring-1 ring-white/8 mx-1 mb-1">
+            <div className="absolute inset-0 overflow-hidden rounded-xl">
+              {project.sessionReady && dxfCanvasPieces.length > 0 ? (
+                <DxfCanvas
+                  pieces={dxfCanvasPieces}
+                  sheetSize={sheetSize}
+                  selectedPieceIndices={selectedPieceIndices}
+                  onSelectPiece={handleSelectPiece}
+                  hiddenKeys={hiddenKeysArray}
+                  collidingPieceIndices={collidingPieceIndices}
+                  onMovePieces={transforms.handleMovePieces}
+                  onRotateSelected={transforms.handleRotateSelected}
+                  onRotateAroundPivot={transforms.handleRotateAroundPivot}
+                  rotationStep={rotationStep}
+                  transformMode={transformMode}
+                  onTransformModeChange={setTransformMode}
+                  onDeleteSelected={() => handleDeleteSelected()}
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
+                  <p>
+                    {!project.sessionReady
+                      ? "Cargando workspace…"
+                      : "Importá una pieza o presioná Nestear"}
+                  </p>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
+                    onClick={() => setIsMobilePanelOpen(true)}
+                  >
+                    Abrir panel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
