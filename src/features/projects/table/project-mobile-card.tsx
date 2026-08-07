@@ -54,11 +54,9 @@ export function ProjectMobileCard({
   // — el segundo nivel (el panel de abajo, con Tareas/Comentarios/
   // KPIs) seguía requiriendo el toque manual en MoreHorizontal.
   useEffect(() => {
-
     if (expanded && isTarget) {
       setShowPipeline(true)
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, isTarget])
 
@@ -77,15 +75,15 @@ export function ProjectMobileCard({
           onClick={onToggle}
           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* ID con el color del cliente aplicado dinámicamente */}
-          <span 
+          {/* Código completo con el color del cliente */}
+          <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
-            style={{ 
-              backgroundColor: `${project.client.color}15`, 
-              color: project.client.color 
+            style={{
+              backgroundColor: `${project.client.color}15`,
+              color: project.client.color,
             }}
           >
-            {String(project.sequence).padStart(3, "0")}
+            {project.projectCode}
           </span>
 
           <div className="min-w-0 flex-1">
@@ -93,8 +91,9 @@ export function ProjectMobileCard({
               {project.name}
             </p>
 
+            {/* ID (sequence) debajo del nombre */}
             <p className="mt-0.5 truncate text-xs text-neutral-500">
-              {project.projectCode}
+              {String(project.sequence).padStart(3, "0")}
             </p>
           </div>
 

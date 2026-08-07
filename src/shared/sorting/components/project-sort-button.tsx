@@ -33,71 +33,59 @@ import {
   ProjectSortTrigger,
 } from "./project-sort-trigger"
 
-const SORT_OPTIONS:{
-  value:ProjectSortMode
-  label:string
-  color:string
-  icon:EntityIcon
-}[]=[
-
+const SORT_OPTIONS: {
+  value: ProjectSortMode
+  label: string
+  color: string
+  icon: EntityIcon
+}[] = [
   {
-    value:"delivery",
-    label:"Entrega",
-    color:"#06B6D4",
-    icon:"clock",
+    value: "delivery",
+    label: "Entrega",
+    color: "#06B6D4",
+    icon: "clock",
   },
-
   {
-    value:"sequence",
-    label:"Secuencia",
-    color:"#8B5CF6",
-    icon:"document",
+    value: "sequence",
+    label: "Secuencia",
+    color: "#8B5CF6",
+    icon: "document",
   },
-
   {
-    value:"manual",
-    label:"Manual",
-    color:"#CBD5E1",
-    icon:"settings",
+    value: "code",
+    label: "Correlativo",
+    color: "#A78BFA",
+    icon: "document",
   },
-
+  {
+    value: "manual",
+    label: "Manual",
+    color: "#CBD5E1",
+    icon: "settings",
+  },
 ]
 
-export function ProjectSortButton(){
+export function ProjectSortButton() {
+  const [open, setOpen] = useState(false)
 
-  const[
-    open,
-    setOpen,
-  ]=useState(false)
+  const projectSortMode = useSortStore(
+    state => state.projectSortMode,
+  )
 
-  const projectSortMode=
-    useSortStore(
-      state=>
-        state.projectSortMode,
-    )
+  const setProjectSortMode = useSortStore(
+    state => state.setProjectSortMode,
+  )
 
-  const setProjectSortMode=
-    useSortStore(
-      state=>
-        state.setProjectSortMode,
-    )
+  const current = SORT_OPTIONS.find(
+    option => option.value === projectSortMode,
+  )
 
-  const current=
-    SORT_OPTIONS.find(
-      option=>
-        option.value===
-        projectSortMode,
-    )
-
-  return(
-
+  return (
     <Popover
       open={open}
       onOpenChange={setOpen}
     >
-
       <PopoverTrigger asChild>
-
         <ProjectSortTrigger
           label={
             current?.label.toUpperCase() ??
@@ -105,7 +93,6 @@ export function ProjectSortButton(){
           }
           active={open}
         />
-
       </PopoverTrigger>
 
       <PopoverContent
@@ -114,52 +101,36 @@ export function ProjectSortButton(){
         floatingClassName="w-64"
         className="p-2"
       >
-
         <Command
           className="bg-transparent"
         >
-
           <CommandList
             className="max-h-80 overflow-y-auto"
           >
-
             <CommandGroup>
-
-              {SORT_OPTIONS.map(option=>(
-
+              {SORT_OPTIONS.map(option => (
                 <SelectOption
                   key={option.value}
                   label={option.label}
                   icon={option.icon}
                   color={option.color}
                   selected={
-                    option.value===
+                    option.value ===
                     projectSortMode
                   }
                   disableCheckAnimation
-                  onSelect={()=>{
-
+                  onSelect={() => {
                     setProjectSortMode(
                       option.value,
                     )
-
                     setOpen(false)
-
                   }}
                 />
-
               ))}
-
             </CommandGroup>
-
           </CommandList>
-
         </Command>
-
       </PopoverContent>
-
     </Popover>
-
   )
-
 }

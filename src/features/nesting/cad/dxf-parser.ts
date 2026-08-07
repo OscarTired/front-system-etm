@@ -20,6 +20,10 @@ interface Fragment {
   points: Point2D[]
   layer: string
   color: string
+  /** true si es el tramo sintético que "cierra" una polilínea marcada
+   * como cerrada en el DXF — candidato a anularse si coincide con el
+   * cierre de otra polilínea (ver el comentario en commitEntity). */
+  isClosingEdge: boolean
 }
 
 function chainFragments(fragments: Fragment[]): { points: Point2D[]; closed: boolean; layer: string; color: string }[] {
@@ -90,6 +94,46 @@ function chainFragments(fragments: Fragment[]): { points: Point2D[]; closed: boo
 }
 
 /**
+ * Si dos fragmentos "de cierre" (ver isClosingEdge) tienen los mismos
+ * 2 extremos (en cualquier orden), son la misma arista compartida
+ * internamente entre dos mitades de un contorno — se anulan ambos.
+ * Lo que sobra sigue de largo hacia chainFragments tal cual.
+ */
+function cancelDuplicateClosingEdges(fragments: Fragment[]): Fragment[] {
+  const keyOf = (f: Fragment) => {
+    const a = f.points[0]
+    const b = f.points[f.points.length - 1]
+    // Redondeo a la tolerancia de encadenado para que el orden de los
+    // extremos no importe y para tolerar el mismo ruido numérico que
+    // ya tolera samePoint().
+    const round = (v: number) => Math.round(v / CHAIN_EPS) * CHAIN_EPS
+    const pa = `${round(a.x)},${round(a.y)}`
+    const pb = `${round(b.x)},${round(b.y)}`
+    return pa < pb ? `${pa}|${pb}` : `${pb}|${pa}`
+  }
+
+  const byKey = new Map<string, number[]>()
+  fragments.forEach((f, i) => {
+    if (!f.isClosingEdge) return
+    const k = keyOf(f)
+    const list = byKey.get(k)
+    if (list) list.push(i)
+    else byKey.set(k, [i])
+  })
+
+  const cancelled = new Set<number>()
+  for (const idxs of byKey.values()) {
+    // Anular de a pares; si queda 1 suelto (sin pareja), se conserva.
+    for (let n = 0; n + 1 < idxs.length; n += 2) {
+      cancelled.add(idxs[n])
+      cancelled.add(idxs[n + 1])
+    }
+  }
+
+  return fragments.filter((_, i) => !cancelled.has(i))
+}
+
+/**
  * Linetypes DXF estándar para líneas de centro/referencia (código 6),
  * nunca geometría real a cortar — convención universal de dibujo CAD.
  */
@@ -128,7 +172,7 @@ export function parseDxf(fileContent: string): CadData {
   let isClosedPoly = false
   let inOldPolyline = false
 
-  const entities: CadEntity[] = []
+  const rawFragments: Fragment[] = []
   const allPoints: Point2D[] = []
 
   const commitEntity = () => {
@@ -145,6 +189,7 @@ export function parseDxf(fileContent: string): CadData {
     }
 
     let points: Point2D[] = []
+    let closingEdge: Point2D[] | null = null
 
     if (currentType === "LINE") {
       if (Math.abs(x1 - x2) > 0.001 || Math.abs(y1 - y2) > 0.001) {
@@ -163,7 +208,6 @@ export function parseDxf(fileContent: string): CadData {
       }
     } else if ((currentType === "LWPOLYLINE" || currentType === "POLYLINE") && polyVertices.length > 0) {
       const verts = [...polyVertices]
-      if (isClosedPoly && verts.length > 2) verts.push(verts[0])
 
       for (let i = 0; i < verts.length - 1; i++) {
         const p1: Point2D = { x: verts[i].x, y: verts[i].y }
@@ -178,12 +222,36 @@ export function parseDxf(fileContent: string): CadData {
           points.push(...sampleBulgeArc(p1, p2, bulge))
         }
       }
+
+      // El tramo que "cierra" la polilínea (del último vértice de
+      // vuelta al primero) se guarda APARTE en vez de pegarlo al mismo
+      // array de puntos. Motivo: un "ojo chino"/óvalo real a veces
+      // viene en el DXF como DOS polilíneas separadas (mitad superior
+      // e inferior), cada una marcada individualmente como "cerrada"
+      // — cada mitad se autocierra con una cuerda recta por su lado
+      // en vez de conectarse con la otra mitad. Si esa cuerda de
+      // cierre coincide (mismos 2 extremos) con la cuerda de cierre de
+      // OTRA polilínea, son la misma arista compartida internamente:
+      // se anulan las dos más abajo, dejando las mitades libres para
+      // encadenarse en un solo contorno real.
+      if (isClosedPoly && verts.length > 2 && points.length > 0) {
+        const last = verts[verts.length - 1]
+        const first = verts[0]
+        const bulge = last.bulge
+        const p1: Point2D = { x: last.x, y: last.y }
+        const p2: Point2D = { x: first.x, y: first.y }
+        closingEdge = Math.abs(bulge) < 0.0001 ? [p1, p2] : [p1, ...sampleBulgeArc(p1, p2, bulge)]
+      }
     }
 
     if (points.length > 0 && !isConstructionLinetype(currentLinetype)) {
       const color = classifyDxfColor(currentLayer, currentColor)
-      entities.push({ outline: { points }, layer: currentLayer, color })
+      rawFragments.push({ points, layer: currentLayer, color, isClosingEdge: false })
       allPoints.push(...points)
+      if (closingEdge) {
+        rawFragments.push({ points: closingEdge, layer: currentLayer, color, isClosingEdge: true })
+        allPoints.push(...closingEdge)
+      }
     }
 
     currentType = ""
@@ -272,15 +340,14 @@ export function parseDxf(fileContent: string): CadData {
 
   if (allPoints.length === 0) return emptyCadData()
 
-  // Encadenar TODOS los fragmentos en un solo pool geométrico (ver el
-  // comentario dentro de chainFragments sobre por qué ya no se agrupa
-  // por capa+color antes de esto).
-  const fragmentsPool: Fragment[] = entities.map((e) => ({
-    points: e.outline.points,
-    layer: e.layer,
-    color: e.color,
-  }))
-  const chains = chainFragments(fragmentsPool)
+  // 1) Anular pares de aristas de cierre duplicadas (mitades de un
+  //    mismo contorno que el DXF cerró cada una por su lado — ver
+  //    isClosingEdge). 2) Encadenar TODOS los fragmentos restantes en
+  //    un solo pool geométrico (ver el comentario dentro de
+  //    chainFragments sobre por qué ya no se agrupa por capa+color
+  //    antes de esto).
+  const survivingFragments = cancelDuplicateClosingEdges(rawFragments)
+  const chains = chainFragments(survivingFragments)
   const chainedEntities: CadEntity[] = chains.map((c) => ({
     outline: { points: c.points },
     layer: c.layer,

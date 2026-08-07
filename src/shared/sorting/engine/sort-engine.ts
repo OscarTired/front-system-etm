@@ -31,7 +31,6 @@ export function createTaskView<T>({
   mode,
   getTask,
 }: TaskViewParams<T>): T[] {
-
   if (mode === "manual") return base
 
   const extract = getTask ?? ((item: T) => item as unknown as Task)
@@ -63,7 +62,6 @@ export function createTaskView<T>({
 
     return toTime(taskA.deliveryDate) - toTime(taskB.deliveryDate)
   })
-
 }
 
 type ProjectViewParams = {
@@ -75,7 +73,6 @@ export function createProjectView({
   base,
   mode,
 }: ProjectViewParams): Project[] {
-
   if (mode === "manual") return base
 
   const view = [...base]
@@ -84,9 +81,29 @@ export function createProjectView({
     return view.sort((a, b) => toTime(a.deliveryDate) - toTime(b.deliveryDate))
   }
 
+  if (mode === "code") {
+    return view.sort((a, b) => compareProjectCode(a.projectCode, b.projectCode))
+  }
+
   // sequence
   return view.sort((a, b) => a.sequence - b.sequence)
+}
 
+/** Parsea YY-NNN-(M|E|EM) → { year, num } */
+function parseProjectCode(code: string) {
+  const match = code.match(/^(\d{2})-(\d{3})-(?:M|E|EM)$/)
+  if (!match) return { year: 0, num: 0 }
+  return {
+    year: parseInt(match[1], 10),
+    num: parseInt(match[2], 10),
+  }
+}
+
+function compareProjectCode(a: string, b: string) {
+  const pa = parseProjectCode(a)
+  const pb = parseProjectCode(b)
+  if (pa.year !== pb.year) return pa.year - pb.year
+  return pa.num - pb.num
 }
 
 function toTime(date?: string | null) {

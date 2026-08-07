@@ -47,7 +47,6 @@ export function ProjectTable({
   showHistory,
   reorderProjects,
 }: Props) {
-
   const expand = useEntityExpand()
 
   const projectSortMode = useSortStore(
@@ -94,7 +93,6 @@ export function ProjectTable({
     : active
 
   useEffect(() => {
-
     if (!expand.expandedRowId) {
       return
     }
@@ -106,7 +104,6 @@ export function ProjectTable({
     if (!exists) {
       expand.setExpandedRowId(null)
     }
-
   }, [
     displayedProjects,
     expand.expandedRowId,
@@ -125,14 +122,14 @@ export function ProjectTable({
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/50">
-            {String(project.sequence).padStart(3, "0")}
-          </span>
-          <span className="text-[11px] font-medium tracking-wide text-white/50">
             {project.projectCode}
           </span>
         </div>
         <div className="mt-1 truncate text-sm font-semibold text-white">
           {project.name}
+        </div>
+        <div className="mt-0.5 text-[11px] text-white/40">
+          {String(project.sequence).padStart(3, "0")}
         </div>
       </div>
     ),
@@ -143,15 +140,10 @@ export function ProjectTable({
   }
 
   return (
-
     <>
-
       <div className="flex flex-col gap-2 pb-2">
-
         {displayedProjects.map(project => {
-
           const card = (
-
             <ProjectMobileCard
               project={project}
               tasks={tasks}
@@ -164,36 +156,25 @@ export function ProjectTable({
                 )
               }
             />
-
           )
 
           return (
-
             <div key={project.id} data-expanded-row-id={project.id}>
-
               {/* templateColumns vacío porque la card maneja su
                   propio layout, no un grid de columnas. */}
               {dragApi.renderRow(project, card, "", project.id)}
-
             </div>
-
           )
-
         })}
 
         {displayedProjects.length === 0 && (
-
           <div className="flex h-24 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
             Sin proyectos
           </div>
-
         )}
-
       </div>
 
       {isManualMode && dragApi.overlay}
-
     </>
-
   )
 }
