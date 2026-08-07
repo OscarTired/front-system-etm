@@ -111,17 +111,75 @@ export function useCanvasView() {
       sheetSize?: { width: number; height: number },
       preferPortrait = false,
     ) => {
+      if (!canvas) return
+
+      // Espacio extra en mm para stroke + anti-aliasing
+      const STROKE_PAD_MM = 3
+
       const bounds = sheetSize
-        ? { minX: 0, minY: 0, maxX: sheetSize.width, maxY: sheetSize.height }
+        ? {
+            minX: -STROKE_PAD_MM,
+            minY: -STROKE_PAD_MM,
+            maxX: sheetSize.width + STROKE_PAD_MM,
+            maxY: sheetSize.height + STROKE_PAD_MM,
+          }
         : computeBounds(entities)
-      // preferPortrait: margen para FABs, status bar y rounded del contenedor.
-      // 0.96 recortaba los bordes de la plancha en móvil.
-      fitToBounds(canvas, bounds, preferPortrait ? 0.84 : 0.9, {
-        allowAutoRotate: true,
-        preferPortrait,
-      })
+
+      if (!bounds) return
+
+      const w = canvas.clientWidth
+      const h = canvas.clientHeight
+      if (w === 0 || h === 0) return
+
+      // Reserva fija en px para chrome de UI (status bar, FABs, top bar, redondeo)
+      const chromeTop = preferPortrait ? 56 : 48
+      const chromeBottom = preferPortrait ? 64 : 52
+      const chromeSide = preferPortrait ? 16 : 24
+
+      const usableW = Math.max(1, w - chromeSide * 2)
+      const usableH = Math.max(1, h - chromeTop - chromeBottom)
+
+      const drawW = bounds.maxX - bounds.minX || 1
+      const drawH = bounds.maxY - bounds.minY || 1
+
+      const canvasPortrait = h >= w * 0.95 || preferPortrait
+      const sheetLandscape = drawW > drawH * 1.05
+      const rotationDeg: 0 | 90 =
+        canvasPortrait && sheetLandscape ? 90 : 0
+
+      // Padding residual suave (ya restamos chrome en px)
+      const padding = 0.92
+
+      const scale =
+        rotationDeg === 90
+          ? Math.min((usableW / drawH) * padding, (usableH / drawW) * padding)
+          : Math.min((usableW / drawW) * padding, (usableH / drawH) * padding)
+
+      const centerX = (bounds.minX + bounds.maxX) / 2
+      const centerY = (bounds.minY + bounds.maxY) / 2
+
+      // Desplazar el centro visual hacia arriba un poco para compensar
+      // que el status bar ocupa más abajo que el top bar.
+      const visualBiasY = (chromeBottom - chromeTop) / 2
+
+      let ox = -centerX * scale
+      let oy = -centerY * scale + visualBiasY
+
+      if (rotationDeg === 90) {
+        const rx = -centerY * scale
+        const ry = centerX * scale
+        ox = -rx
+        oy = -ry + visualBiasY
+      }
+
+      viewRef.current = {
+        scale,
+        offsetX: ox,
+        offsetY: oy,
+        rotationDeg,
+      }
     },
-    [fitToBounds]
+    []
   )
 
   const focusEntities = useCallback(
@@ -164,15 +222,6 @@ export function useCanvasView() {
     }
   }, [])
 
-  // Todos los métodos de arriba son estables (deps vacías o solo otros
-  // callbacks estables), así que el objeto que devolvemos puede ser
-  // memoizado con seguridad: su identidad no cambia entre renders salvo
-  // que React remonte el hook. Esto es lo que permite que otros hooks/
-  // efectos (ej. el useEffect principal de dxf-canvas.tsx) puedan listar
-  // `view` en sus dependencias sin que eso dispare un re-render en cada
-  // frame — antes de esto, cada render devolvía un objeto `{ ...​ }`
-  // nuevo y cualquier efecto que dependiera de `view` se re-ejecutaba
-  // siempre, sin importar si algo relevante cambió.
   return useMemo(
     () => ({
       viewRef,
