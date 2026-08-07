@@ -76,19 +76,6 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-// Rutas que necesitan el viewport completo, sin el scroll vertical ni
-// el gesto de pull-to-refresh del shell normal — páginas tipo canvas/CAD
-// (nesting) donde arrastrar sobre el contenido significa "mover pieza"
-// o "hacer pan", no "refrescar la página" o "hacer scroll". El resto de
-// la app sigue exactamente igual; esto es un opt-out puntual, no un
-// cambio de comportamiento global.
-const FULL_BLEED_ROUTES = ["/nesting"]
-
-function isFullBleedRoute(pathname: string | null): boolean {
-  if (!pathname) return false
-  return FULL_BLEED_ROUTES.some((route) => pathname.startsWith(route))
-}
-
 // Configuración del drawer nativo
 const DRAWER_REVEAL_OFFSET = 248
 
@@ -103,7 +90,6 @@ const BUTTON_SPRING = {
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const mode = useMobileNavStore(s => s.mode)
-  const fullBleed = isFullBleedRoute(pathname)
 
   const isOpen = mode === "open"
   const x = useMotionValue(0)
@@ -144,28 +130,17 @@ function CompactShell({ children }: Props) {
             isOpen && "pointer-events-none select-none"
           )}
         >
-          {fullBleed ? (
-            // Full-bleed: el contenido (canvas/CAD) ocupa TODO el alto
-            // disponible, sin scroll de página ni gesto de pull-to-refresh
-            // (que competiría con arrastrar sobre el canvas para mover
-            // piezas o hacer pan). El propio contenido maneja su scroll
-            // interno si lo necesita.
-            <div key={pathname} className="min-h-0 flex-1 overflow-hidden">
+          <PullToRefresh>
+            <VerticalScroll
+              key={pathname}
+              containerClassName="h-full"
+              className="overflow-x-hidden pt-14 pb-20"
+              arrowTopOffset={64}
+              arrowBottomOffset={88}
+            >
               {children}
-            </div>
-          ) : (
-            <PullToRefresh>
-              <VerticalScroll
-                key={pathname}
-                containerClassName="h-full"
-                className="overflow-x-hidden pt-14 pb-20"
-                arrowTopOffset={64}
-                arrowBottomOffset={88}
-              >
-                {children}
-              </VerticalScroll>
-            </PullToRefresh>
-          )}
+            </VerticalScroll>
+          </PullToRefresh>
           <BottomNavigation />
         </div>
       </motion.div>
