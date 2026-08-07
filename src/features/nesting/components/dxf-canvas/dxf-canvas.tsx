@@ -796,7 +796,7 @@ export function DxfCanvas({
           <button
             type="button"
             onClick={() => setStatusActionsOpen((v) => !v)}
-            className="min-w-[5.5rem] text-left text-neutral-200 hover:text-white"
+            className="min-w-22 text-left text-neutral-200 hover:text-white"
             aria-expanded={statusActionsOpen}
             title={statusActionsOpen ? "Ocultar acciones" : "Ver acciones"}
           >
@@ -805,7 +805,7 @@ export function DxfCanvas({
               : `${selectedPieceIndices.length} piezas`}
           </button>
         ) : (
-          <span className="min-w-[5.5rem] text-neutral-200">Sin selección</span>
+          <span className="min-w-22 text-neutral-200">Sin selección</span>
         )}
         {collidingPieceIndices.length > 0 && (
           <>

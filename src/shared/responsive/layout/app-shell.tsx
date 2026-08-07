@@ -35,6 +35,13 @@ const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
+
+  // Reset scroll al navegar sin remount del contenedor
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>("[data-desktop-scroll]")
+    if (el) el.scrollTop = 0
+  }, [pathname])
+
   const visualState = useSidebarStore(state => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
     state => state.notifyClipTransitionEnd,
@@ -68,7 +75,7 @@ function DesktopShell({ children }: Props) {
         }}
       >
         <DesktopTopBar />
-        <div key={pathname} className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto" data-desktop-scroll>
           {children}
         </div>
       </main>
@@ -132,7 +139,7 @@ function CompactShell({ children }: Props) {
         >
           <PullToRefresh>
             <VerticalScroll
-              key={pathname}
+              resetKey={pathname}
               containerClassName="h-full"
               className="overflow-x-hidden pt-14 pb-20"
               arrowTopOffset={64}

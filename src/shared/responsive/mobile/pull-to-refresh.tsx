@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, useMotionValue, useTransform, animate } from "motion/react"
 import { RefreshCw } from "lucide-react"
 
-// 64px de umbral y 0.5 de resistencia no son números que yo haya
-// elegido — son la convención real del gesto: UIRefreshControl de
-// iOS dispara entre 60-80pt, SwipeRefreshLayout de Android usa un
-// rango equivalente, y el "rubber-band" a mitad de velocidad (en vez
-// de 1:1 con el dedo) es el mismo comportamiento que el overscroll
-// nativo de iOS. No hay nada acá para "ajustar después" — es el
-// estándar del patrón, no un valor de mi proyecto.
+// 64px de umbral y 0.5 de resistencia = convención UIRefreshControl / SwipeRefreshLayout.
 const REFRESH_THRESHOLD = 64
 const MAX_PULL = 96
 const DRAG_RESISTANCE = 0.5
@@ -20,24 +14,40 @@ type Props = {
   children: React.ReactNode
 }
 
+/**
+ * Busca el contenedor de scroll en cada gesto (no cachea el nodo).
+ * VerticalScroll se remonta con key={pathname}; si cacheáramos el nodo,
+ * los listeners quedarían en un DOM desmontado tras la 1ª navegación.
+ */
+function findScrollEl(root: HTMLElement | null): HTMLElement | null {
+  return root?.querySelector<HTMLElement>("[data-vertical-scroll-container]") ?? null
+}
+
 export function PullToRefresh({ children }: Props) {
   const router = useRouter()
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const refreshingRef = useRef(false)
 
   const y = useMotionValue(0)
   const iconOpacity = useTransform(y, [0, REFRESH_THRESHOLD], [0, 1])
   const iconRotate = useTransform(y, [0, REFRESH_THRESHOLD], [0, 180])
 
   useEffect(() => {
-    const scrollEl = wrapperRef.current?.querySelector<HTMLElement>("[data-vertical-scroll-container]")
-    if (!scrollEl) return
+    refreshingRef.current = refreshing
+  }, [refreshing])
+
+  useEffect(() => {
+    const root = wrapperRef.current
+    if (!root) return
 
     let dragging = false
     let startY = 0
 
     const handleTouchStart = (event: TouchEvent) => {
-      if (refreshing || scrollEl.scrollTop > 0) return
+      if (refreshingRef.current) return
+      const scrollEl = findScrollEl(root)
+      if (!scrollEl || scrollEl.scrollTop > 0) return
       dragging = true
       startY = event.touches[0].clientY
     }
@@ -63,14 +73,8 @@ export function PullToRefresh({ children }: Props) {
         setRefreshing(true)
         animate(y, REFRESH_THRESHOLD * 0.6)
 
-        // router.refresh() (Next.js App Router) revalida los datos
-        // del servidor para la ruta actual sin hard-reload — no pierde
-        // estado de cliente como haría window.location.reload().
         router.refresh()
 
-        // App Router no expone una promesa para "cuándo terminó" el
-        // refresh; el settle visual evita que el indicador desaparezca
-        // de un salto apenas se dispara.
         window.setTimeout(() => {
           setRefreshing(false)
           animate(y, 0)
@@ -80,18 +84,19 @@ export function PullToRefresh({ children }: Props) {
       }
     }
 
-    scrollEl.addEventListener("touchstart", handleTouchStart, { passive: true })
-    scrollEl.addEventListener("touchmove", handleTouchMove, { passive: false })
-    scrollEl.addEventListener("touchend", handleTouchEnd, { passive: true })
-    scrollEl.addEventListener("touchcancel", handleTouchEnd, { passive: true })
+    // Delegación en el wrapper (estable). El scrollEl se resuelve en cada touch.
+    root.addEventListener("touchstart", handleTouchStart, { passive: true })
+    root.addEventListener("touchmove", handleTouchMove, { passive: false })
+    root.addEventListener("touchend", handleTouchEnd, { passive: true })
+    root.addEventListener("touchcancel", handleTouchEnd, { passive: true })
 
     return () => {
-      scrollEl.removeEventListener("touchstart", handleTouchStart)
-      scrollEl.removeEventListener("touchmove", handleTouchMove)
-      scrollEl.removeEventListener("touchend", handleTouchEnd)
-      scrollEl.removeEventListener("touchcancel", handleTouchEnd)
+      root.removeEventListener("touchstart", handleTouchStart)
+      root.removeEventListener("touchmove", handleTouchMove)
+      root.removeEventListener("touchend", handleTouchEnd)
+      root.removeEventListener("touchcancel", handleTouchEnd)
     }
-  }, [y, refreshing, router])
+  }, [y, router])
 
   return (
     <div ref={wrapperRef} className="relative flex min-h-0 flex-1 flex-col">
@@ -101,7 +106,10 @@ export function PullToRefresh({ children }: Props) {
       >
         <div className="flex size-9 items-center justify-center rounded-full bg-neutral-900/90 shadow-lg shadow-black/30 backdrop-blur-xl">
           <motion.div style={{ rotate: refreshing ? undefined : iconRotate }}>
-            <RefreshCw size={16} className={refreshing ? "animate-spin text-cyan-400" : "text-neutral-300"} />
+            <RefreshCw
+              size={16}
+              className={refreshing ? "animate-spin text-cyan-400" : "text-neutral-300"}
+            />
           </motion.div>
         </div>
       </motion.div>

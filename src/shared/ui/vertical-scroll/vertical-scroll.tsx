@@ -16,6 +16,11 @@ type Props = {
   arrowBottomOffset?: number
   arrowAlign?: "center" | "right"
   arrowClassName?: string
+  /**
+   * Cuando cambia (ej. pathname), scrollTop = 0 sin desmontar el contenedor.
+   * Preferible a key={pathname} en el padre.
+   */
+  resetKey?: string
 }
 
 const ARROW_ALIGN_CLASSNAME: Record<"center" | "right", string> = {
@@ -48,12 +53,21 @@ export function VerticalScroll({
   arrowBottomOffset = 4,
   arrowAlign = "center",
   arrowClassName,
+  resetKey,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
+
+  // Reset scroll al navegar sin remount (evita jank + listeners PTR muertos)
+  useEffect(() => {
+    if (resetKey === undefined) return
+    const el = containerRef.current
+    if (!el) return
+    el.scrollTop = 0
+  }, [resetKey])
 
   const updateArrows = useCallback(() => {
     const el = containerRef.current
