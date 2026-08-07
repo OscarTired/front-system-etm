@@ -389,7 +389,7 @@ export function drawScene(d: DrawContext) {
     showGrid = true,
   } = d
 
-  const { scale, offsetX, offsetY } = view
+  const { scale, offsetX, offsetY, rotationDeg = 0 } = view
   const dpr = window.devicePixelRatio || 1
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -397,6 +397,9 @@ export function drawScene(d: DrawContext) {
 
   ctx.save()
   ctx.translate(w / 2 + offsetX, h / 2 + offsetY)
+  if (rotationDeg === 90) {
+    ctx.rotate(Math.PI / 2)
+  }
   ctx.scale(scale, scale)
 
   if (sheetSize) {

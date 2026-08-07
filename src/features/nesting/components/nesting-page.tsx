@@ -655,7 +655,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden">
+    <div className="relative h-full w-full min-h-0 overflow-hidden bg-[#050505]">
       <input
         ref={projectInputRef}
         type="file"
@@ -667,15 +667,21 @@ export function NestingPage() {
         }}
       />
 
-      <div className="flex h-full min-h-0 flex-1 gap-2 overflow-hidden p-0 desktop:gap-4 desktop:p-4">
+      <div
+        className={
+          isCompact
+            ? "flex h-full min-h-0 w-full flex-col gap-1 p-1"
+            : "flex h-full min-h-0 gap-4 overflow-hidden p-4"
+        }
+      >
         {!isCompact && (
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
         )}
 
-        <main className="grid h-full min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-1.5 overflow-hidden rounded-2xl bg-white/3 p-1.5 shadow-sm desktop:gap-2 desktop:p-3">
-          <div className="flex w-full min-w-0 shrink-0 items-center gap-1.5">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden">
+          <div className="flex w-full shrink-0 items-center gap-1.5">
             <div className="min-w-0 flex-1">
               {project.sheetGroups.length > 0 ? (
                 <SheetTabs
@@ -687,14 +693,16 @@ export function NestingPage() {
                   }}
                 />
               ) : (
-                <div className="h-9 rounded-xl bg-white/4 ring-1 ring-white/6" />
+                <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500 ring-1 ring-white/6">
+                  Sin planchas — importá piezas y nestéá
+                </div>
               )}
             </div>
             {isCompact && (
               <button
                 type="button"
                 aria-label="Abrir panel"
-                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10 transition hover:bg-white/10"
+                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10"
                 onClick={() => setIsMobilePanelOpen(true)}
               >
                 <SlidersHorizontal size={16} strokeWidth={2.2} />
@@ -702,7 +710,7 @@ export function NestingPage() {
             )}
           </div>
 
-          <div className="relative min-h-0 overflow-hidden rounded-xl bg-black/20">
+          <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
             {project.sessionReady && dxfCanvasPieces.length > 0 ? (
               <DxfCanvas
                 pieces={dxfCanvasPieces}
@@ -720,10 +728,21 @@ export function NestingPage() {
                 onDeleteSelected={() => handleDeleteSelected()}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-neutral-500">
-                {!project.sessionReady
-                  ? "Cargando workspace…"
-                  : "Importa una pieza o presiona Nestear para verla acá."}
+              <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
+                <p>
+                  {!project.sessionReady
+                    ? "Cargando workspace…"
+                    : "Importá una pieza o presioná Nestear"}
+                </p>
+                {isCompact && (
+                  <button
+                    type="button"
+                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
+                    onClick={() => setIsMobilePanelOpen(true)}
+                  >
+                    Abrir panel
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -763,7 +782,7 @@ export function NestingPage() {
               </div>
             </div>
           )}
-        </main>
+        </div>
       </div>
 
       <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>

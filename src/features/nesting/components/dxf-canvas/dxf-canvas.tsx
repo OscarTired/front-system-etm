@@ -225,7 +225,7 @@ export function DxfCanvas({
     const { segments, totalLength, fullPath } = buildToolpath(entities)
     sim.setToolpath(segments, totalLength, fullPath)
     requestAnimationFrame(() => {
-      view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize)
+      view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize, isCompact)
       scheduleDraw()
     })
     // `view` y `sim` ahora son estables (memoizados en sus hooks), así
@@ -245,13 +245,36 @@ export function DxfCanvas({
     scheduleDraw()
   }, [scheduleDraw, sim.progress])
 
+  // Al cambiar el tamaño del contenedor (rotación, sheet panel, teclado
+  // móvil) re-fit: si no, el scale queda del tamaño anterior y se ve
+  // la plancha chica con hueco negro.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    const observer = new ResizeObserver(() => scheduleDraw())
+    let raf = 0
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const canvasEl = canvasRef.current
+        if (!canvasEl) return
+        view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+        scheduleDraw()
+      })
+    })
     observer.observe(container)
-    return () => observer.disconnect()
-  }, [scheduleDraw])
+    return () => {
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+    }
+  }, [scheduleDraw, view, sheetSize, isCompact])
+
+  // Al entrar/salir de layout compacto, reorientar plancha.
+  useEffect(() => {
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+    scheduleDraw()
+  }, [isCompact, sheetSize, view, scheduleDraw])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -685,7 +708,7 @@ export function DxfCanvas({
   )
 
   const handleFit = useCallback(() => {
-    view.fitToSheetOrEntities(canvasRef.current, entitiesRef.current, sheetSize)
+    view.fitToSheetOrEntities(canvasRef.current, entitiesRef.current, sheetSize, isCompact)
     scheduleDraw()
   }, [view, sheetSize, scheduleDraw])
 

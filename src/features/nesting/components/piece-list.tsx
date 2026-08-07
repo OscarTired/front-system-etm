@@ -53,6 +53,11 @@ export interface PieceListProps {
 
 type GroupByType = "none" | "thickness" | "material"
 
+// Extensiones y tipos MIME amplios para garantizar compatibilidad total en iOS y Android
+const CAD_IMPORT_ACCEPT = ".dxf,.geo,.pdf,.nps,application/pdf,application/dxf,application/octet-stream,text/plain,text/csv"
+
+const isNpsFile = (fileName: string) => fileName.toLowerCase().endsWith(".nps")
+
 export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(function PieceList(
   {
     rows,
@@ -91,7 +96,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     const timer = setTimeout(() => setErrorMsg(null), 4000)
     return () => clearTimeout(timer)
   }, [errorMsg])
-
 
   /** Misma base (sin extensión): heredar espesor/material de un hermano ya cargado. */
   const inheritMaterialFromSibling = (
@@ -156,8 +160,9 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         continue
       }
 
-      if (!isSupportedCadFile(file.name)) {
-        rejected.push(`${file.name} (solo .dxf, .geo o .pdf)`)
+      const isCadOrNps = isSupportedCadFile(file.name) || isNpsFile(file.name)
+      if (!isCadOrNps) {
+        rejected.push(`${file.name} (solo .dxf, .geo, .pdf o .nps)`)
         continue
       }
       
@@ -227,12 +232,6 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
     dragCounterRef.current = 0
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       void handleFilesSelected(e.dataTransfer.files)
-    }
-  }
-
-  const handleQuantityChange = (id: string, value: string) => {
-    if (value === "" || /^\d+$/.test(value)) {
-      onUpdateQuantity(id, value)
     }
   }
 
@@ -355,9 +354,8 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       )}
 
       {/*
-        iOS/Safari: accept solo con ".dxf" suele grisar o esconder DXF
-        (no hay UTI/MIME estándar). Se listan extensiones + MIME genéricos;
-        el filtro real sigue en handleFilesSelected (isSupportedCadFile / isPdfFile).
+        iOS/Safari: accept solo con extensiones suele ocultar archivos CAD/NPS.
+        Se listan extensiones + MIME genéricos compatibles en móviles.
       */}
       <input
         ref={fileInputRef}
@@ -389,7 +387,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             </div>
             <div className="space-y-0.5">
               <p className="text-xs font-medium text-neutral-400">Arrastra archivos o haz clic</p>
-              <p className="text-[11px] text-neutral-500">Soporta DXF, GEO o PDF</p>
+              <p className="text-[11px] text-neutral-500">Soporta DXF, GEO, PDF o NPS</p>
             </div>
           </div>
         ) : (
@@ -411,7 +409,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
                       disabled={disabled}
                       highlighted={highlightedIds?.has(row.id)}
                       onPreview={onPreviewRow}
-                    onLocate={onLocateRow}
+                      onLocate={onLocateRow}
                       onUpdateQuantity={onUpdateQuantity}
                       onDuplicate={onDuplicate}
                       onRemove={onRemove}

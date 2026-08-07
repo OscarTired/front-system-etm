@@ -7,6 +7,8 @@ export interface ViewState {
   scale: number
   offsetX: number
   offsetY: number
+  /** 0 = normal; 90 = vista girada (móvil + plancha apaisada). */
+  rotationDeg?: 0 | 90
 }
 
 export type Entity =

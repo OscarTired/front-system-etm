@@ -124,18 +124,18 @@ function CompactShell({ children }: Props) {
 
   return (
     <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-white select-none">
-      {/* Menú fijo detrás — no se anima */}
+      {/* Menú fijo detrás */}
       <div
-        className="absolute inset-y-0 left-0 z-0 w-[248px] max-w-[85vw]"
+        className="absolute inset-y-0 left-0 z-0"
         style={{ width: DRAWER_WIDTH_PX }}
         aria-hidden={!isOpen}
       >
         <AppSidebar variant="drawer" open={isOpen} />
       </div>
 
-      {/* Panel de app: solo translate3d + radius en 2 estados */}
+      {/* Panel principal */}
       <div
-        className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden bg-[#050505]"
+        className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
         style={{
           transform: isOpen
             ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
@@ -145,45 +145,46 @@ function CompactShell({ children }: Props) {
           willChange: "transform",
         }}
       >
-        {/* TopBar por encima del overlay para que el hamburger siga
-            recibiendo el toggle (abrir/cerrar). */}
-        <div className="relative z-30">
-          <TopBar />
-        </div>
+        <TopBar />
 
         {isImmersive ? (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-14 pb-20">
+          /*
+            Nesting a pantalla: capa propia entre top (3.5rem) y bottom (5rem).
+            z-10 para no quedar bajo el bottom nav ni “perderse”.
+          */
+          <div className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden">
             {children}
           </div>
         ) : (
-          <PullToRefresh>
-            <VerticalScroll
-              resetKey={pathname}
-              containerClassName="h-full"
-              className="overflow-x-hidden pt-14 pb-20"
-              arrowTopOffset={64}
-              arrowBottomOffset={88}
-            >
-              {children}
-            </VerticalScroll>
-          </PullToRefresh>
+          <div className="absolute inset-0 z-10 flex min-h-0 flex-col pt-14 pb-20">
+            <PullToRefresh>
+              <VerticalScroll
+                resetKey={pathname}
+                containerClassName="h-full"
+                className="overflow-x-hidden"
+                arrowTopOffset={64}
+                arrowBottomOffset={88}
+              >
+                {children}
+              </VerticalScroll>
+            </PullToRefresh>
+          </div>
         )}
+
         <BottomNavigation />
 
-        {/* Cualquier toque en el panel (contenido / bottom nav) cierra.
-            No usa pointer-events-none: si no, el click cae al vacío y
-            no cierra. */}
         {isOpen && (
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="absolute inset-x-0 top-14 bottom-0 z-20 cursor-default"
+            className="absolute inset-x-0 top-14 bottom-0 z-30 cursor-default"
             onClick={closeDrawer}
           />
         )}
       </div>
     </div>
   )
+
 }
 
 export function AppShell({ children }: Props) {
