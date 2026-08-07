@@ -15,29 +15,35 @@ export interface UseNestingResult {
   error: string | null;
   run: (pieces: NestingPiece[], options: Omit<NestingOptions, "onProgress" | "signal">) => void;
   cancel: () => void;
-  /** Restaura planchas desde draft (F5 / autosave). No pasa por el worker. */
   restoreSheets: (sheets: NestedSheet[] | null) => void;
   clearSheets: () => void;
 }
 
 /**
- * Corre el nesting en un Web Worker dedicado (uno por componente que
- * use el hook), para no bloquear la UI mientras calcula. El worker se
- * crea una sola vez al montar y se destruye al desmontar.
+ * Worker síncrono: el mensaje "cancel" NO se procesa mientras optimize()
+ * bloquea el event loop del worker. Por eso cancel = terminate + recrear.
+ * Cada run lleva un generation id para ignorar resultados tardíos.
  */
 export function useNesting(): UseNestingResult {
   const workerRef = useRef<Worker | null>(null);
+  const genRef = useRef(0);
+  const prevSheetsRef = useRef<NestedSheet[] | null>(null);
+  const sheetsRef = useRef<NestedSheet[] | null>(null);
   const [status, setStatus] = useState<NestingStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [sheets, setSheets] = useState<NestedSheet[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // type module required by some Next/webpack setups for TS workers
-    const worker = new Worker(new URL("../workers/nesting.worker.ts", import.meta.url));
+    sheetsRef.current = sheets;
+  }, [sheets]);
 
-    worker.onmessage = (event: MessageEvent<NestingWorkerResponse>) => {
+  const bindWorker = useCallback((worker: Worker) => {
+    worker.onmessage = (event: MessageEvent<NestingWorkerResponse & { gen?: number }>) => {
       const msg = event.data;
+      // Ignorar mensajes de una generación ya cancelada/reemplazada
+      if (typeof msg.gen === "number" && msg.gen !== genRef.current) return;
+
       if (msg.type === "progress") {
         setProgress(msg.progress);
       } else if (msg.type === "done") {
@@ -45,7 +51,6 @@ export function useNesting(): UseNestingResult {
         setStatus("done");
         setProgress(1);
       } else if (msg.type === "cancelled") {
-        // Resultado parcial opcional; dejamos sheets para no perder trabajo
         setSheets(msg.sheets.length > 0 ? msg.sheets : null);
         setStatus("cancelled");
       } else if (msg.type === "error") {
@@ -58,33 +63,65 @@ export function useNesting(): UseNestingResult {
       setError(ev.message || "Error en el worker de nesting");
       setStatus("error");
     };
+  }, []);
 
+  const spawnWorker = useCallback(() => {
+    const worker = new Worker(new URL("../workers/nesting.worker.ts", import.meta.url));
+    bindWorker(worker);
     workerRef.current = worker;
+    return worker;
+  }, [bindWorker]);
 
+  useEffect(() => {
+    spawnWorker();
     return () => {
-      worker.terminate();
+      workerRef.current?.terminate();
       workerRef.current = null;
     };
-  }, []);
+  }, [spawnWorker]);
+
+  /** Mata el worker en curso (CPU deja de calcular) y abre uno limpio. */
+  const killAndRespawn = useCallback(() => {
+    genRef.current += 1;
+    try {
+      workerRef.current?.terminate();
+    } catch {
+      /* ignore */
+    }
+    workerRef.current = null;
+    spawnWorker();
+  }, [spawnWorker]);
 
   const run = useCallback(
     (pieces: NestingPiece[], options: Omit<NestingOptions, "onProgress" | "signal">) => {
+      // Si había un precise colgado, matarlo antes de arrancar (fast u otro).
+      killAndRespawn();
+      const gen = genRef.current;
+
+      prevSheetsRef.current = sheetsRef.current;
       setStatus("running");
       setProgress(0);
       setSheets(null);
       setError(null);
 
-      const request: NestingWorkerRequest = { type: "run", pieces, options };
+      const request: NestingWorkerRequest & { gen?: number } = {
+        type: "run",
+        pieces,
+        options,
+        gen,
+      };
       workerRef.current?.postMessage(request);
     },
-    []
+    [killAndRespawn],
   );
 
   const cancel = useCallback(() => {
-    const request: NestingWorkerRequest = { type: "cancel" };
-    workerRef.current?.postMessage(request);
-    setStatus("cancelled");
-  }, []);
+    // terminate = para YA el precise en background (postMessage cancel no alcanza).
+    killAndRespawn();
+    setSheets(prevSheetsRef.current);
+    setStatus(prevSheetsRef.current ? "done" : "cancelled");
+    setProgress(prevSheetsRef.current ? 1 : 0);
+  }, [killAndRespawn]);
 
   const restoreSheets = useCallback((next: NestedSheet[] | null) => {
     const cleaned = next ? next.filter((s) => s.pieces.length > 0) : null;

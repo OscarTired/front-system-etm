@@ -49,8 +49,12 @@ export interface DrawContext {
   /** Cuadrícula en coords mundo (se adapta al zoom). */
   gridStyle?: "dots" | "lines" | "cross" | "none"
   showGrid?: boolean
-  /** BBox de polígono cerrado bajo el cursor (cota inteligente centro). */
-  smartBBox?: { x: number; y: number; width: number; height: number } | null
+  /** Spans H/V por raycast (cota inteligente). */
+  smartSpans?: {
+    h: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+    v: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+    center: { x: number; y: number }
+  } | null
 }
 
 export function strokeToolpathUntil(
@@ -649,26 +653,10 @@ export function drawScene(d: DrawContext) {
     }
   }
 
-  // Nota: se retiró el halo dashed (SELECTED_HALO) del bbox de selección.
-  // El contorno de la pieza ya cambia a SELECTED_STROKE (blanco) arriba,
-  // eso es suficiente feedback visual sin el rectángulo punteado extra.
-
-  for (const idx of collidingPieceIndices) {
-    const collidingEntities = entities.filter((e) => e.pieceIndex === idx)
-    const bounds = computeBounds(collidingEntities)
-    if (bounds) {
-      const pad = 4 / scale
-      const shift = dragSet?.has(idx) ? { x: ddx, y: ddy } : { x: 0, y: 0 }
-      ctx.strokeStyle = COLLISION_COLOR
-      ctx.lineWidth = 2 / scale
-      ctx.strokeRect(
-        bounds.minX - pad + shift.x,
-        bounds.minY - pad + shift.y,
-        bounds.maxX - bounds.minX + pad * 2,
-        bounds.maxY - bounds.minY + pad * 2
-      )
-    }
-  }
+  // Nota: se retiró el halo dashed (SELECTED_HALO) del bbox de selección
+  // y el strokeRect AABB rojo de colisión. La pieza en colisión ya se
+  // pinta con COLLISION_COLOR en el stroke de sus entidades (arriba);
+  // un rectángulo envolvente tapaba la geometría real.
 
   ctx.lineWidth = 1.5 / scale
   ctx.strokeStyle = MEASURE_COLOR
@@ -867,7 +855,7 @@ export function drawScene(d: DrawContext) {
 
   // Cota inteligente de ARISTA: solo con herramienta "smart" activa.
   // Preview fantasma de la arista bajo el cursor (sin clic).
-  if (activeTool === "smart" && snapCandidate?.segment && !d.smartBBox) {
+  if (activeTool === "smart" && snapCandidate?.segment && !d.smartSpans) {
     const { a, b } = snapCandidate.segment
     const len = Math.hypot(b.x - a.x, b.y - a.y)
     if (len > 1e-3) {
@@ -906,76 +894,66 @@ export function drawScene(d: DrawContext) {
     }
   }
 
-  // Cota inteligente de OBJETO (centro): cruz que choca con las aristas
-  // horizontales y verticales del bbox + cotas de ancho y alto.
-  if (activeTool === "smart" && d.smartBBox) {
-    const bb = d.smartBBox
-    const cx = bb.x + bb.width / 2
-    const cy = bb.y + bb.height / 2
+  // Cota inteligente: cruz H/V por raycast a aristas reales + cotas.
+  if (activeTool === "smart" && d.smartSpans) {
+    const { h, v, center } = d.smartSpans
+    const cx = center.x
+    const cy = center.y
 
-    // Cruz dashed desde el centro hasta las 4 aristas del bbox
     ctx.save()
     ctx.strokeStyle = MEASURE_PENDING_COLOR
     ctx.lineWidth = 1 / scale
     ctx.setLineDash([4 / scale, 3 / scale])
-    ctx.globalAlpha = 0.85
-    // Horizontal: de borde izq a borde der, pasando por el centro
-    ctx.beginPath()
-    ctx.moveTo(bb.x, cy)
-    ctx.lineTo(bb.x + bb.width, cy)
-    ctx.stroke()
-    // Vertical: de borde inf a borde sup
-    ctx.beginPath()
-    ctx.moveTo(cx, bb.y)
-    ctx.lineTo(cx, bb.y + bb.height)
-    ctx.stroke()
+    ctx.globalAlpha = 0.9
+    if (h) {
+      ctx.beginPath()
+      ctx.moveTo(h.a.x, h.a.y)
+      ctx.lineTo(h.b.x, h.b.y)
+      ctx.stroke()
+    }
+    if (v) {
+      ctx.beginPath()
+      ctx.moveTo(v.a.x, v.a.y)
+      ctx.lineTo(v.b.x, v.b.y)
+      ctx.stroke()
+    }
     ctx.setLineDash([])
-    // Marcas en los extremos (donde choca con la arista)
     const tick = 4 / scale
     ctx.lineWidth = 1.25 / scale
-    for (const [px, py, horiz] of [
-      [bb.x, cy, false],
-      [bb.x + bb.width, cy, false],
-      [cx, bb.y, true],
-      [cx, bb.y + bb.height, true],
-    ] as const) {
+    const ends: { x: number; y: number; horiz: boolean }[] = []
+    if (h) {
+      ends.push({ x: h.a.x, y: h.a.y, horiz: false }, { x: h.b.x, y: h.b.y, horiz: false })
+    }
+    if (v) {
+      ends.push({ x: v.a.x, y: v.a.y, horiz: true }, { x: v.b.x, y: v.b.y, horiz: true })
+    }
+    for (const e of ends) {
       ctx.beginPath()
-      if (horiz) {
-        ctx.moveTo(px - tick, py)
-        ctx.lineTo(px + tick, py)
+      if (e.horiz) {
+        ctx.moveTo(e.x - tick, e.y)
+        ctx.lineTo(e.x + tick, e.y)
       } else {
-        ctx.moveTo(px, py - tick)
-        ctx.lineTo(px, py + tick)
+        ctx.moveTo(e.x, e.y - tick)
+        ctx.lineTo(e.x, e.y + tick)
       }
       ctx.stroke()
     }
-    // Punto central
     ctx.fillStyle = MEASURE_PENDING_COLOR
     ctx.beginPath()
     ctx.arc(cx, cy, 3 / scale, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
 
-    // Cotas de ancho (arriba) y alto (derecha)
-    const dims = [
-      {
-        a: { x: bb.x, y: bb.y + bb.height },
-        b: { x: bb.x + bb.width, y: bb.y + bb.height },
-        value: bb.width,
-        offset: 14,
-      },
-      {
-        a: { x: bb.x + bb.width, y: bb.y },
-        b: { x: bb.x + bb.width, y: bb.y + bb.height },
-        value: bb.height,
-        offset: 14,
-      },
-    ]
+    const dims = [h, v].filter(Boolean) as {
+      a: { x: number; y: number }
+      b: { x: number; y: number }
+      value: number
+    }[]
     for (const dim of dims) {
       if (dim.value < 1e-3) continue
       ctx.save()
-      ctx.globalAlpha = 0.8
-      drawCadDistance(ctx, dim.a, dim.b, dim.offset, scale)
+      ctx.globalAlpha = 0.85
+      drawCadDistance(ctx, dim.a, dim.b, 12, scale)
       ctx.restore()
       const len = dim.value
       const dx = dim.b.x - dim.a.x
@@ -983,7 +961,7 @@ export function drawScene(d: DrawContext) {
       const l = Math.hypot(dx, dy) || 1
       const nx = -dy / l
       const ny = dx / l
-      const off = dim.offset / scale
+      const off = 12 / scale
       const mid = {
         x: (dim.a.x + dim.b.x) / 2 + nx * off,
         y: (dim.a.y + dim.b.y) / 2 + ny * off,

@@ -14,6 +14,7 @@ import {
   SlidersHorizontal
 } from "lucide-react"
 import { toast } from "sonner"
+import { NestingToast } from "../hooks/nesting-feedback"
 
 import { piecesCollide } from "../engine/polygon-collision"
 import type { NestedSheet } from "../engine/types"
@@ -123,20 +124,11 @@ export function NestingPage() {
   useEffect(() => {
     if (!project.sessionRestored || sessionToastShownThisRuntime) return
     sessionToastShownThisRuntime = true
-    toast("Trabajo restaurado", {
-      description: `Recuperado del navegador${
-        project.sessionSavedAt ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}` : ""
-      }`,
-      duration: 8_000,
-      action: {
-        label: "Descartar",
-        onClick: () => {
-          project.onDiscardSession()
-          history.resetAll?.() ?? history.reset()
-          setSelectedPieceIndices([])
-          setActiveGroupIndex(0)
-        },
-      },
+    NestingToast.sessionRestored(project.sessionSavedAt, () => {
+      project.onDiscardSession()
+      history.resetAll?.() ?? history.reset()
+      setSelectedPieceIndices([])
+      setActiveGroupIndex(0)
     })
   }, [project.sessionRestored, project.sessionSavedAt, project, history])
 
@@ -248,7 +240,12 @@ export function NestingPage() {
 
   const rawPieces = activeGroup?.sheet.pieces ?? []
 
-  const separationMm = Number(project.settings.separacion) || 0
+  const settingsSeparationMm = Number(project.settings.separacion) || 0
+  /** Colisión visual: separación del último nest, no el valor del input (evita rojo en vivo). */
+  const separationMm =
+    project.sheets && project.sheets.length > 0
+      ? (project.appliedSeparation ?? settingsSeparationMm)
+      : settingsSeparationMm
 
   const transforms = useNestingTransforms({
     history,
@@ -520,28 +517,38 @@ export function NestingPage() {
           Nestear
         </Button>
       ) : (
-        <Button
-          size="default"
-          variant="outline"
-          className="relative w-full cursor-pointer overflow-hidden border-none bg-neutral-900 text-white hover:bg-neutral-900"
-          onClick={project.onCancel}
-          title="Cancelar"
-        >
+        <div className="flex flex-col gap-2">
           <div
-            className="pointer-events-none absolute bottom-0 left-0 top-0 bg-white opacity-20 transition-all duration-150"
-            style={{ width: `${Math.round(project.progress * 100)}%` }}
-          />
-          <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            <span>
-              Calculando...{" "}
-              <span className="inline-block min-w-[3ch] text-right">
-                {Math.round(project.progress * 100)}
+            className="relative w-full overflow-hidden rounded-md border border-white/10 bg-neutral-900 px-3 py-2 text-center text-sm text-white"
+            role="progressbar"
+            aria-valuenow={Math.round(project.progress * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="pointer-events-none absolute bottom-0 left-0 top-0 bg-cyan-500/25 transition-all duration-150"
+              style={{ width: `${Math.round(project.progress * 100)}%` }}
+            />
+            <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+              <span>
+                Calculando…{" "}
+                <span className="inline-block min-w-[3ch] text-right">
+                  {Math.round(project.progress * 100)}
+                </span>
+                %
               </span>
-              %
             </span>
-          </span>
-        </Button>
+          </div>
+          <Button
+            size="default"
+            variant="outline"
+            className="w-full border-red-500/40 text-red-300 hover:bg-red-500/15 hover:text-red-200"
+            onClick={project.onCancel}
+          >
+            Cancelar nest
+          </Button>
+        </div>
       )}
       {project.error && (
         <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{project.error}</p>
@@ -832,6 +839,7 @@ export function NestingPage() {
         description="Se recalculará el acomodo desde cero y se perderán movimientos, rotaciones y bloqueos manuales."
         confirmLabel="Nestear de nuevo"
         onConfirm={doRunNesting}
+        autoDismissSeconds={10}
       />
 
       <Dialog open={pendingDelete} onOpenChange={(open) => !open && setPendingDelete(false)}>

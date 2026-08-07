@@ -15,6 +15,7 @@ import { CanvasToolbar } from "./components/canvas-toolbar"
 import { drawScene } from "./utils/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
+import { axisSpanThroughPoint } from "./utils/geometry-utils"
 import { hitTestPieceAt, piecesInBox, hitTestDimensionLine } from "./utils/hit-test"
 import {
   buildCollisionIndex,
@@ -163,12 +164,11 @@ export function DxfCanvas({
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">(isCompact ? "lines" : "dots")
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null)
-  /** BBox del polígono cerrado bajo el cursor (cota inteligente sin herramienta). */
-  const [smartBBox, setSmartBBox] = useState<{
-    x: number
-    y: number
-    width: number
-    height: number
+  /** Spans H/V por raycast en el polígono bajo el cursor (cota inteligente). */
+  const [smartSpans, setSmartSpans] = useState<{
+    h: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+    v: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+    center: { x: number; y: number }
   } | null>(null)
 
   const view = useCanvasView()
@@ -227,7 +227,7 @@ export function DxfCanvas({
         boxSelectScreen,
         showGrid,
         gridStyle,
-        smartBBox,
+        smartSpans,
       })
     })
   }, [
@@ -242,7 +242,7 @@ export function DxfCanvas({
     measure.hoverScreen,
     measure.activeTool,
     snapCandidate,
-    smartBBox,
+    smartSpans,
     boxSelectScreen,
     showGrid,
     gridStyle,
@@ -610,7 +610,7 @@ export function DxfCanvas({
             ? findSmartSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale, sheetSize)
             : null
         setSnapCandidate(snap)
-        setSmartBBox(null)
+        setSmartSpans(null)
         let hoverPt = snap ? snap.point : rawPoint
         // Con 1 punto pendiente en distancia: proyectar hover a H/V si está cerca
         // (las guías dashed se dibujan en draw.ts con el mismo criterio).
@@ -674,7 +674,7 @@ export function DxfCanvas({
         }
         // Sin herramienta: no mostrar cotas fantasma
         if (snapCandidate) setSnapCandidate(null)
-        if (smartBBox) setSmartBBox(null)
+        if (smartSpans) setSmartSpans(null)
       }
 
       // Cota inteligente: SOLO con la herramienta "smart" activa.
@@ -701,59 +701,35 @@ export function DxfCanvas({
 
         if (preferEdge && edgeSnap) {
           setSnapCandidate(edgeSnap)
-          setSmartBBox(null)
+          setSmartSpans(null)
           measure.setHoverLocal(edgeSnap.point)
         } else {
-          // Polígono cerrado bajo el cursor → bbox H+V si está cerca del centro
-          let foundBBox: { x: number; y: number; width: number; height: number } | null = null
+          // Dentro de polígono cerrado → raycast H/V a aristas reales
+          let spans: {
+            h: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+            v: { a: { x: number; y: number }; b: { x: number; y: number }; value: number } | null
+            center: { x: number; y: number }
+          } | null = null
           for (const ent of entitiesRef.current) {
             if (ent.kind !== "polyline" || !ent.closed || ent.points.length < 3) continue
-            let inside = false
-            const pts = ent.points
-            for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-              const xi = pts[i].x, yi = pts[i].y
-              const xj = pts[j].x, yj = pts[j].y
-              if (
-                (yi > rawPoint.y) !== (yj > rawPoint.y) &&
-                rawPoint.x < ((xj - xi) * (rawPoint.y - yi)) / (yj - yi + 1e-18) + xi
-              ) {
-                inside = !inside
-              }
-            }
-            if (!inside) continue
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-            for (const pt of pts) {
-              minX = Math.min(minX, pt.x)
-              minY = Math.min(minY, pt.y)
-              maxX = Math.max(maxX, pt.x)
-              maxY = Math.max(maxY, pt.y)
-            }
-            const cx = (minX + maxX) / 2
-            const cy = (minY + maxY) / 2
-            const distCenterPx = Math.hypot(rawPoint.x - cx, rawPoint.y - cy) * scale
-            const halfDiagPx = Math.hypot(maxX - minX, maxY - minY) * scale * 0.5
-            // Zona amplia alrededor del centro para mostrar ambas cotas + cruz
-            if (distCenterPx < Math.max(40, halfDiagPx * 0.55)) {
-              foundBBox = {
-                x: minX,
-                y: minY,
-                width: maxX - minX,
-                height: maxY - minY,
-              }
+            const h = axisSpanThroughPoint(ent.points, rawPoint, "h")
+            const v = axisSpanThroughPoint(ent.points, rawPoint, "v")
+            if (h || v) {
+              spans = { h, v, center: rawPoint }
               break
             }
           }
-          if (foundBBox) {
+          if (spans) {
             setSnapCandidate(null)
-            setSmartBBox(foundBBox)
+            setSmartSpans(spans)
             measure.setHoverLocal(rawPoint)
           } else if (edgeSnap) {
             setSnapCandidate(edgeSnap)
-            setSmartBBox(null)
+            setSmartSpans(null)
             measure.setHoverLocal(edgeSnap.point)
           } else {
             setSnapCandidate(null)
-            setSmartBBox(null)
+            setSmartSpans(null)
             measure.setHoverLocal(rawPoint)
           }
         }

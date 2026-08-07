@@ -208,3 +208,86 @@ export function withDragOffset(
   if (!drag || pieceIndex === undefined || !drag.indices.has(pieceIndex)) return p
   return { x: p.x + drag.dx, y: p.y + drag.dy }
 }
+
+
+/**
+ * Intersección de la recta horizontal y=y0 con el segmento a→b.
+ * Devuelve x o null.
+ */
+function intersectHorizontal(y0: number, a: Point, b: Point): number | null {
+  const dy = b.y - a.y
+  if (Math.abs(dy) < 1e-12) return null
+  const t = (y0 - a.y) / dy
+  if (t < -1e-9 || t > 1 + 1e-9) return null
+  return a.x + t * (b.x - a.x)
+}
+
+function intersectVertical(x0: number, a: Point, b: Point): number | null {
+  const dx = b.x - a.x
+  if (Math.abs(dx) < 1e-12) return null
+  const t = (x0 - a.x) / dx
+  if (t < -1e-9 || t > 1 + 1e-9) return null
+  return a.y + t * (b.y - a.y)
+}
+
+/**
+ * Span horizontal/vertical real del polígono que pasa por `origin`
+ * (raycast a aristas, no bbox). Devuelve los dos puntos de la cota
+ * o null si el origen no está dentro / no hay intersecciones.
+ */
+export function axisSpanThroughPoint(
+  polygon: Point[],
+  origin: Point,
+  axis: "h" | "v",
+): { a: Point; b: Point; value: number } | null {
+  if (polygon.length < 3) return null
+  if (!pointInPolygon(origin, polygon)) return null
+
+  const hits: number[] = []
+  const n = polygon.length
+  for (let i = 0; i < n; i++) {
+    const a = polygon[i]
+    const b = polygon[(i + 1) % n]
+    if (axis === "h") {
+      const x = intersectHorizontal(origin.y, a, b)
+      if (x != null) hits.push(x)
+    } else {
+      const y = intersectVertical(origin.x, a, b)
+      if (y != null) hits.push(y)
+    }
+  }
+  if (hits.length < 2) return null
+  hits.sort((u, v) => u - v)
+
+  // Intervalos [hits[0],hits[1]], [hits[2],hits[3]], … — elegir el que contiene origin
+  const o = axis === "h" ? origin.x : origin.y
+  for (let i = 0; i + 1 < hits.length; i += 2) {
+    const lo = hits[i]
+    const hi = hits[i + 1]
+    if (o >= lo - 1e-6 && o <= hi + 1e-6) {
+      const value = hi - lo
+      if (value < 1e-6) return null
+      if (axis === "h") {
+        return {
+          a: { x: lo, y: origin.y },
+          b: { x: hi, y: origin.y },
+          value,
+        }
+      }
+      return {
+        a: { x: origin.x, y: lo },
+        b: { x: origin.x, y: hi },
+        value,
+      }
+    }
+  }
+  // Fallback: extremos globales (convexos)
+  const lo = hits[0]
+  const hi = hits[hits.length - 1]
+  const value = hi - lo
+  if (value < 1e-6) return null
+  if (axis === "h") {
+    return { a: { x: lo, y: origin.y }, b: { x: hi, y: origin.y }, value }
+  }
+  return { a: { x: origin.x, y: lo }, b: { x: origin.x, y: hi }, value }
+}

@@ -1,6 +1,7 @@
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useNesting } from "./use-nesting"
+import { NestingToast } from "./nesting-feedback"
 import {
   boundingRect,
   rotateOutlineAroundPoint,
@@ -80,10 +81,11 @@ export function useNestingProject() {
   const [settings, setSettings] = useState<ProjectSettings>(defaultProjectSettings)
   const [machine, setMachine] = useState<MachineSettings>(defaultMachineSettings)
 
-  const handleSettingsChange = useCallback(
-    (patch: Partial<ProjectSettings>) => setSettings((s) => ({ ...s, ...patch })),
-    []
-  )
+  /** Separación con la que se calculó el último nest (colisión en vivo usa esto). */
+  const [appliedSeparation, setAppliedSeparation] = useState(0)
+  /** Modo con el que se calculó el último nest. */
+  const [appliedMode, setAppliedMode] = useState<"fast" | "precise">("fast")
+
   const handleMachineChange = useCallback(
     (patch: Partial<MachineSettings>) => setMachine((m) => ({ ...m, ...patch })),
     []
@@ -91,6 +93,33 @@ export function useNestingProject() {
 
   const { status, progress, sheets, error, run, cancel, restoreSheets, clearSheets } = useNesting()
   const isRunning = status === "running"
+  const sheetsRef = useRef(sheets)
+  sheetsRef.current = sheets
+
+  const handleSettingsChange = useCallback((patch: Partial<ProjectSettings>) => {
+    setSettings((s) => {
+      const next = { ...s, ...patch }
+      const hasSheets = Boolean(sheetsRef.current && sheetsRef.current.length > 0)
+      if (hasSheets) {
+        if (patch.separacion !== undefined && patch.separacion !== s.separacion) {
+          NestingToast.renestNeeded(
+            "Cambió la separación. Nestear de nuevo para aplicar el nuevo valor.",
+          )
+        }
+        if (
+          patch.empaquetadoPreciso !== undefined &&
+          patch.empaquetadoPreciso !== s.empaquetadoPreciso
+        ) {
+          NestingToast.renestNeeded(
+            patch.empaquetadoPreciso
+              ? "Activaste empaquetado preciso. Nestear de nuevo para aplicarlo."
+              : "Cambiaste a empaquetado rápido. Nestear de nuevo para aplicarlo.",
+          )
+        }
+      }
+      return next
+    })
+  }, [])
   const [sessionRestored, setSessionRestored] = useState(false)
   const [sessionSavedAt, setSessionSavedAt] = useState<string | null>(null)
   const [sessionReady, setSessionReady] = useState(false)
@@ -317,10 +346,14 @@ export function useNestingProject() {
 
   const handleRun = useCallback(() => {
       if (validPieces.length === 0 || isRunning) return
+      const mode = settings.empaquetadoPreciso ? "precise" : "fast"
+      const separation = Number(settings.separacion) || 0
+      setAppliedMode(mode)
+      setAppliedSeparation(separation)
       run(validPieces, {
         sheet: sheetConfig,
-        mode: settings.empaquetadoPreciso ? "precise" : "fast",
-        separation: Number(settings.separacion) || 0,
+        mode,
+        separation,
         rotationMode: settings.rotacionPermitida,
       })
     }, [validPieces, isRunning, run, sheetConfig, settings.separacion, settings.rotacionPermitida, settings.empaquetadoPreciso])
@@ -660,6 +693,8 @@ export function useNestingProject() {
 
       removePlacedPieces,
 
+      appliedSeparation,
+      appliedMode,
       onRun: handleRun,
       onCancel: cancel,
       onExportSheet: handleExportSheet,
@@ -710,6 +745,8 @@ export function useNestingProject() {
       handleMirrorY,
       handleDuplicate,
       removePlacedPieces,
+      appliedSeparation,
+      appliedMode,
       handleRun,
       cancel,
       handleExportSheet,
