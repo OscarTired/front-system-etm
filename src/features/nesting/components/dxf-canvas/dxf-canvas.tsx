@@ -674,8 +674,12 @@ export function DxfCanvas({
           else setCursor("grab")
         }
         // Sin herramienta: no mostrar cotas fantasma
-        if (snapCandidate) setSnapCandidate(null)
-        if (smartSpans) setSmartSpans(null)
+        // Sin herramienta: no mostrar cotas fantasma. Se llama siempre
+        // al setter (no se lee smartSpans/snapCandidate, que no están
+        // en las deps de este efecto a propósito) — inofensivo si ya
+        // son null, y evita depender de un closure con valor obsoleto.
+        setSnapCandidate(null)
+        setSmartSpans(null)
       }
 
       // Cota inteligente: SOLO con la herramienta "smart" activa.
@@ -697,7 +701,7 @@ export function DxfCanvas({
           tt = Math.max(0, Math.min(1, tt))
           const proj = { x: a.x + tt * vx, y: a.y + tt * vy }
           const distPx = Math.hypot(rawPoint.x - proj.x, rawPoint.y - proj.y) * scale
-          preferEdge = distPx < 16
+          preferEdge = distPx < 10
         }
 
         // Prioridad: si el puntero está DENTRO de un contorno → cruz H/V.

@@ -17,9 +17,18 @@ export function pointInPolygon(point: Point2D, polygon: Point2D[]): boolean {
   return inside
 }
 
+/**
+ * Normalizado a distancia perpendicular real en mm (no al producto
+ * cruzado sin normalizar) — con coordenadas grandes y aristas cortas
+ * (muescas/tabs de piezas), un umbral fijo sobre el cruce crudo no
+ * alcanza contra el ruido de punto flotante.
+ */
 function orient(a: Point2D, b: Point2D, c: Point2D): number {
-  const v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y)
-  if (Math.abs(v) < 1e-10) return 0
+  const abx = b.x - a.x
+  const aby = b.y - a.y
+  const len = Math.hypot(abx, aby) || 1
+  const v = (aby * (c.x - b.x) - abx * (c.y - b.y)) / len
+  if (Math.abs(v) < 1e-4) return 0
   return v > 0 ? 1 : 2
 }
 
@@ -32,7 +41,7 @@ function segmentsProperIntersect(a1: Point2D, a2: Point2D, b1: Point2D, b2: Poin
   return o1 !== o2 && o3 !== o4
 }
 
-function bbox(pts: Point2D[]) {
+export function bbox(pts: Point2D[]) {
   let minX = Infinity,
     minY = Infinity,
     maxX = -Infinity,
@@ -46,13 +55,44 @@ function bbox(pts: Point2D[]) {
   return { minX, minY, maxX, maxY }
 }
 
-function areaAbs(pts: Point2D[]): number {
+export function areaAbs(pts: Point2D[]): number {
   let a = 0
   for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
     a += pts[j].x * pts[i].y - pts[i].x * pts[j].y
   }
   return Math.abs(a) * 0.5
 }
+
+/** Distancia del punto al borde más cercano del polígono. */
+function distToPolygonBoundary(point: Point2D, polygon: Point2D[]): number {
+  let min = Infinity
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[j]
+    const b = polygon[i]
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len2 = dx * dx + dy * dy
+    let t = len2 > 1e-12 ? ((point.x - a.x) * dx + (point.y - a.y) * dy) / len2 : 0
+    t = Math.max(0, Math.min(1, t))
+    const d = Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy))
+    if (d < min) min = d
+  }
+  return min
+}
+
+/**
+ * Un punto justo SOBRE el borde (piezas en unilínea, separación 0)
+ * puede leer "inside" por error de precisión del ray-casting — exige
+ * más de `eps` de distancia a cualquier arista para contar como
+ * overlap real, no solo contacto.
+ */
+function pointStrictlyInsidePolygon(point: Point2D, polygon: Point2D[], eps: number): boolean {
+  if (!pointInPolygon(point, polygon)) return false
+  return distToPolygonBoundary(point, polygon) > eps
+}
+
+/** Tolerancia de "está tocando el borde, no es overlap real" en mm. */
+const TOUCH_EPS = 0.05
 
 /** Solape de sólidos (contacto de borde OK). */
 export function solidsOverlap(a: Point2D[], b: Point2D[]): boolean {
@@ -69,9 +109,9 @@ export function solidsOverlap(a: Point2D[], b: Point2D[]): boolean {
     }
   }
   const samples = [0, 0.25, 0.5, 0.75].map((t) => a[Math.min(a.length - 1, (t * a.length) | 0)])
-  for (const p of samples) if (pointInPolygon(p, b)) return true
+  for (const p of samples) if (pointStrictlyInsidePolygon(p, b, TOUCH_EPS)) return true
   const samplesB = [0, 0.25, 0.5, 0.75].map((t) => b[Math.min(b.length - 1, (t * b.length) | 0)])
-  for (const p of samplesB) if (pointInPolygon(p, a)) return true
+  for (const p of samplesB) if (pointStrictlyInsidePolygon(p, a, TOUCH_EPS)) return true
   return false
 }
 

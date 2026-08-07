@@ -15,6 +15,21 @@ function toastWithCountdown(
 ) {
   const id = `nest-cd-${title}-${Date.now()}`
   let left = Math.round(COUNTDOWN_MS / 1000)
+  let stopped = false
+
+  // Antes esto seguía reemitiendo el toast cada segundo con
+  // setInterval sin importar que el usuario ya lo hubiera descartado
+  // (con el botón "Descartar" o cerrándolo a mano) — se veía como si
+  // "insistiera" en volver a aparecer hasta agotar los 10s completos.
+  // `stopInterval` centraliza apagar el timer una sola vez, desde
+  // cualquiera de los 3 caminos de salida: el botón de acción, el
+  // cierre manual/swipe (onDismiss), o el auto-cierre normal
+  // (onAutoClose) cuando el contador llega a 0 por su cuenta.
+  const stopInterval = () => {
+    if (stopped) return
+    stopped = true
+    window.clearInterval(timer)
+  }
 
   const show = () => {
     const description = `${baseDescription} · se cierra en ${left}s`
@@ -22,7 +37,17 @@ function toastWithCountdown(
       id,
       description,
       duration: COUNTDOWN_MS + 500,
-      action,
+      action: action
+        ? {
+            label: action.label,
+            onClick: () => {
+              stopInterval()
+              action.onClick()
+            },
+          }
+        : undefined,
+      onDismiss: stopInterval,
+      onAutoClose: stopInterval,
     }
     if (kind === "warning") toast.warning(title, opts)
     else if (kind === "success") toast.success(title, opts)
@@ -31,9 +56,10 @@ function toastWithCountdown(
 
   show()
   const timer = window.setInterval(() => {
+    if (stopped) return
     left -= 1
     if (left <= 0) {
-      window.clearInterval(timer)
+      stopInterval()
       toast.dismiss(id)
       return
     }

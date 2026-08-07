@@ -1,4 +1,4 @@
-import { angleOfVector, fmtMm, computeBounds } from "./geometry-utils"
+import { angleOfVector, fmtMm, computeBounds, pointInPolygon } from "./geometry-utils"
 import type {
   Entity,
   Measurement,
@@ -370,6 +370,52 @@ function drawWorldGrid(
 
 
 /** Cota estilo AutoCAD: extensiones sólidas + línea de cota + flechas + ticks. */
+/**
+ * Las etiquetas de cota (el texto con el valor en mm) se dibujaban
+ * siempre al mismo offset fijo desde la línea medida, sin importar si
+ * eso las hacía caer encima del relleno/aristas de una pieza — se veía
+ * "pegado" a las líneas del dibujo en vez de quedar en un hueco vacío
+ * como en un plano real.
+ *
+ * Esto prueba unos pocos offsets candidatos (más lejos, y del otro
+ * lado de la línea) y devuelve el primero cuyo punto central NO caiga
+ * dentro de ninguna pieza. Si ninguno tiene espacio libre, devuelve el
+ * offset original (mejor mostrar la cota superpuesta que no mostrarla).
+ */
+function findClearLabelOffset(
+  mid: Point,
+  nx: number,
+  ny: number,
+  baseOffset: number,
+  entities: Entity[],
+): number {
+  const pieceLoops: Point[][] = []
+  for (const e of entities) {
+    if (e.kind === "polyline" && e.closed && e.points.length >= 3) {
+      pieceLoops.push(e.points)
+    }
+  }
+  if (pieceLoops.length === 0) return baseOffset
+
+  const sign = baseOffset >= 0 ? 1 : -1
+  const mag = Math.abs(baseOffset)
+  // Mismo lado más lejos → lado opuesto más cerca → lado opuesto más lejos.
+  const candidates = [
+    baseOffset,
+    sign * mag * 1.8,
+    sign * mag * 2.6,
+    -sign * mag,
+    -sign * mag * 1.8,
+    -sign * mag * 2.6,
+  ]
+  for (const off of candidates) {
+    const p = { x: mid.x + nx * off, y: mid.y + ny * off }
+    const inside = pieceLoops.some((loop) => pointInPolygon(p, loop))
+    if (!inside) return off
+  }
+  return baseOffset
+}
+
 function drawCadDistance(
   ctx: CanvasRenderingContext2D,
   a: { x: number; y: number },
@@ -883,19 +929,26 @@ export function drawScene(d: DrawContext) {
     const { a, b } = snapCandidate.segment
     const len = Math.hypot(b.x - a.x, b.y - a.y)
     if (len > 1e-3) {
-      ctx.save()
-      ctx.globalAlpha = 0.75
-      drawCadDistance(ctx, a, b, 12, scale)
-      ctx.restore()
-
-      const off = 12 / scale
+      // `offset` en drawCadDistance está en mm (unidades mundo), no px —
+      // antes la línea usaba 12mm fijo mientras la etiqueta calculaba su
+      // posición en 12/scale (px convertidos a mundo), dos cosas
+      // distintas que se iban desalineando con el zoom. Ahora ambas
+      // usan el mismo `off`, ya resuelto contra espacio libre.
       const dx = b.x - a.x
       const dy = b.y - a.y
       const nx = -dy / len
       const ny = dx / len
+      const midCenter = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+      const off = findClearLabelOffset(midCenter, nx, ny, 12, d.entities)
+
+      ctx.save()
+      ctx.globalAlpha = 0.75
+      drawCadDistance(ctx, a, b, off, scale)
+      ctx.restore()
+
       const mid = {
-        x: (a.x + b.x) / 2 + nx * off,
-        y: (a.y + b.y) / 2 + ny * off,
+        x: midCenter.x + nx * off,
+        y: midCenter.y + ny * off,
       }
       ctx.save()
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -975,20 +1028,23 @@ export function drawScene(d: DrawContext) {
     }[]
     for (const dim of dims) {
       if (dim.value < 1e-3) continue
-      ctx.save()
-      ctx.globalAlpha = 0.85
-      drawCadDistance(ctx, dim.a, dim.b, 12, scale)
-      ctx.restore()
       const len = dim.value
       const dx = dim.b.x - dim.a.x
       const dy = dim.b.y - dim.a.y
       const l = Math.hypot(dx, dy) || 1
       const nx = -dy / l
       const ny = dx / l
-      const off = 12 / scale
+      const midCenter = { x: (dim.a.x + dim.b.x) / 2, y: (dim.a.y + dim.b.y) / 2 }
+      const off = findClearLabelOffset(midCenter, nx, ny, 12, d.entities)
+
+      ctx.save()
+      ctx.globalAlpha = 0.85
+      drawCadDistance(ctx, dim.a, dim.b, off, scale)
+      ctx.restore()
+
       const mid = {
-        x: (dim.a.x + dim.b.x) / 2 + nx * off,
-        y: (dim.a.y + dim.b.y) / 2 + ny * off,
+        x: midCenter.x + nx * off,
+        y: midCenter.y + ny * off,
       }
       ctx.save()
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
