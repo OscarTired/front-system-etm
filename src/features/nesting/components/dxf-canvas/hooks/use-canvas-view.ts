@@ -234,6 +234,11 @@ export function useCanvasView() {
 
   const hasUserInteracted = useCallback(() => userInteractedRef.current, [])
 
+  /** Marcar que el usuario controla la cámara (pinch, pan, etc. que mutan el ref directo). */
+  const markUserInteracted = useCallback(() => {
+    userInteractedRef.current = true
+  }, [])
+
   return useMemo(
     () => ({
       viewRef,
@@ -247,6 +252,7 @@ export function useCanvasView() {
       panBy,
       allowAutoFit,
       hasUserInteracted,
+      markUserInteracted,
     }),
     [
       localToScreen,
@@ -259,6 +265,7 @@ export function useCanvasView() {
       panBy,
       allowAutoFit,
       hasUserInteracted,
+      markUserInteracted,
     ],
   )
 }

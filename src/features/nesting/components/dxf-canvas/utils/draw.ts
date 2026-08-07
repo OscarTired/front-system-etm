@@ -49,6 +49,8 @@ export interface DrawContext {
   /** Cuadrícula en coords mundo (se adapta al zoom). */
   gridStyle?: "dots" | "lines" | "cross" | "none"
   showGrid?: boolean
+  /** BBox de polígono cerrado bajo el cursor (cota inteligente centro). */
+  smartBBox?: { x: number; y: number; width: number; height: number } | null
 }
 
 export function strokeToolpathUntil(
@@ -740,35 +742,60 @@ export function drawScene(d: DrawContext) {
       ctx.fill()
     }
     if (pendingPoints.length === 1 && hoverLocal) {
-      // Primer punto → línea guía al cursor + ejes ortho
+      // Primer punto → línea guía al cursor + ejes ortho (estilo FreeCAD).
+      // Si el ángulo está cerca de H o V, sugerir línea dashed ortogonal y
+      // usar el punto proyectado para el valor provisional.
+      const last = pendingPoints[0]
+      const dx = hoverLocal.x - last.x
+      const dy = hoverLocal.y - last.y
+      const adx = Math.abs(dx)
+      const ady = Math.abs(dy)
+      const ang = Math.atan2(ady, adx) // 0 = H, π/2 = V
+      const ORTHO_TOL = (8 * Math.PI) / 180
+      let drawTo = hoverLocal
+      let isOrtho = false
+      if (ang < ORTHO_TOL && adx > 1e-9) {
+        drawTo = { x: hoverLocal.x, y: last.y }
+        isOrtho = true
+      } else if (ang > Math.PI / 2 - ORTHO_TOL && ady > 1e-9) {
+        drawTo = { x: last.x, y: hoverLocal.y }
+        isOrtho = true
+      }
+
+      ctx.strokeStyle = MEASURE_PENDING_COLOR
+      ctx.lineWidth = 1 / scale
       ctx.setLineDash([4 / scale, 3 / scale])
       ctx.beginPath()
-      ctx.moveTo(pendingPoints[0].x, pendingPoints[0].y)
-      ctx.lineTo(hoverLocal.x, hoverLocal.y)
+      ctx.moveTo(last.x, last.y)
+      ctx.lineTo(drawTo.x, drawTo.y)
       ctx.stroke()
       ctx.setLineDash([])
-      const last = pendingPoints[0]
-      const guideTol = 2 / scale
-      ctx.strokeStyle = MEASURE_COLOR
-      ctx.lineWidth = 0.75 / scale
-      ctx.setLineDash([2 / scale, 3 / scale])
-      if (Math.abs(hoverLocal.x - last.x) < guideTol) {
-        ctx.beginPath()
-        ctx.moveTo(last.x, last.y - 5000)
-        ctx.lineTo(last.x, last.y + 5000)
-        ctx.stroke()
+
+      // Ejes ortho infinitos dashed cuando está en modo sugerido
+      if (isOrtho) {
+        ctx.strokeStyle = MEASURE_COLOR
+        ctx.lineWidth = 0.75 / scale
+        ctx.setLineDash([3 / scale, 4 / scale])
+        if (Math.abs(drawTo.x - last.x) < 1e-9) {
+          // vertical
+          ctx.beginPath()
+          ctx.moveTo(last.x, last.y - 5000)
+          ctx.lineTo(last.x, last.y + 5000)
+          ctx.stroke()
+        } else {
+          // horizontal
+          ctx.beginPath()
+          ctx.moveTo(last.x - 5000, last.y)
+          ctx.lineTo(last.x + 5000, last.y)
+          ctx.stroke()
+        }
+        ctx.setLineDash([])
       }
-      if (Math.abs(hoverLocal.y - last.y) < guideTol) {
-        ctx.beginPath()
-        ctx.moveTo(last.x - 5000, last.y)
-        ctx.lineTo(last.x + 5000, last.y)
-        ctx.stroke()
-      }
-      ctx.setLineDash([])
-      // valor provisional
-      const v = Math.hypot(hoverLocal.x - last.x, hoverLocal.y - last.y)
+
+      // valor provisional (usa punto ortogonal si aplica)
+      const v = Math.hypot(drawTo.x - last.x, drawTo.y - last.y)
       if (v > 1e-3) {
-        const mid = { x: (last.x + hoverLocal.x) / 2, y: (last.y + hoverLocal.y) / 2 }
+        const mid = { x: (last.x + drawTo.x) / 2, y: (last.y + drawTo.y) / 2 }
         // label in screen space drawn later via measurements path — quick world text
         ctx.save()
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -838,29 +865,17 @@ export function drawScene(d: DrawContext) {
     drawHoverEdge(ctx, snapCandidate.segment, scale)
   }
 
-  // Cota inteligente: preview de la medición ANTES de hacer click.
-  // Con la herramienta de distancia activa y el cursor sobre una arista
-  // (sin puntos elegidos todavía), se ve de una vez el valor + las líneas
-  // de cota fantasma sobre esa arista — igual que "smart dimension" en
-  // SolidWorks/Fusion. Un solo click sobre esto la confirma (ver
-  // use-measurements.ts). Semitransparente para distinguirla de una cota
-  // ya confirmada.
-  if (
-    activeTool === "distance" &&
-    pendingPoints.length === 0 &&
-    snapCandidate?.segment
-  ) {
+  // Cota inteligente de ARISTA: solo con herramienta "smart" activa.
+  // Preview fantasma de la arista bajo el cursor (sin clic).
+  if (activeTool === "smart" && snapCandidate?.segment && !d.smartBBox) {
     const { a, b } = snapCandidate.segment
     const len = Math.hypot(b.x - a.x, b.y - a.y)
     if (len > 1e-3) {
       ctx.save()
-      ctx.globalAlpha = 0.55
+      ctx.globalAlpha = 0.75
       drawCadDistance(ctx, a, b, 12, scale)
       ctx.restore()
 
-      // Texto del valor en screen-space (mismo patrón que el label del
-      // primer punto pendiente más arriba), para que no se deforme con
-      // el zoom y quede siempre nítido/legible.
       const off = 12 / scale
       const dx = b.x - a.x
       const dy = b.y - a.y
@@ -878,18 +893,119 @@ export function drawScene(d: DrawContext) {
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       const metrics = ctx.measureText(text)
-      ctx.globalAlpha = 0.85
+      ctx.globalAlpha = 0.9
       ctx.fillStyle = "rgba(10,10,12,0.85)"
       ctx.fillRect(sp.x - metrics.width / 2 - 4, sp.y - 9, metrics.width + 8, 18)
       ctx.fillStyle = MEASURE_PENDING_COLOR
       ctx.fillText(text, sp.x, sp.y)
       ctx.restore()
-      // Restaurar transform de mundo para que el resto de la escena
-      // (osnap marker, etc.) siga dibujándose en las coords correctas.
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       const { scale: sc2, offsetX: ox2, offsetY: oy2 } = d.view
       ctx.translate(d.canvasWidth / 2 + ox2, d.canvasHeight / 2 + oy2)
       ctx.scale(sc2, sc2)
+    }
+  }
+
+  // Cota inteligente de OBJETO (centro): cruz que choca con las aristas
+  // horizontales y verticales del bbox + cotas de ancho y alto.
+  if (activeTool === "smart" && d.smartBBox) {
+    const bb = d.smartBBox
+    const cx = bb.x + bb.width / 2
+    const cy = bb.y + bb.height / 2
+
+    // Cruz dashed desde el centro hasta las 4 aristas del bbox
+    ctx.save()
+    ctx.strokeStyle = MEASURE_PENDING_COLOR
+    ctx.lineWidth = 1 / scale
+    ctx.setLineDash([4 / scale, 3 / scale])
+    ctx.globalAlpha = 0.85
+    // Horizontal: de borde izq a borde der, pasando por el centro
+    ctx.beginPath()
+    ctx.moveTo(bb.x, cy)
+    ctx.lineTo(bb.x + bb.width, cy)
+    ctx.stroke()
+    // Vertical: de borde inf a borde sup
+    ctx.beginPath()
+    ctx.moveTo(cx, bb.y)
+    ctx.lineTo(cx, bb.y + bb.height)
+    ctx.stroke()
+    ctx.setLineDash([])
+    // Marcas en los extremos (donde choca con la arista)
+    const tick = 4 / scale
+    ctx.lineWidth = 1.25 / scale
+    for (const [px, py, horiz] of [
+      [bb.x, cy, false],
+      [bb.x + bb.width, cy, false],
+      [cx, bb.y, true],
+      [cx, bb.y + bb.height, true],
+    ] as const) {
+      ctx.beginPath()
+      if (horiz) {
+        ctx.moveTo(px - tick, py)
+        ctx.lineTo(px + tick, py)
+      } else {
+        ctx.moveTo(px, py - tick)
+        ctx.lineTo(px, py + tick)
+      }
+      ctx.stroke()
+    }
+    // Punto central
+    ctx.fillStyle = MEASURE_PENDING_COLOR
+    ctx.beginPath()
+    ctx.arc(cx, cy, 3 / scale, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+
+    // Cotas de ancho (arriba) y alto (derecha)
+    const dims = [
+      {
+        a: { x: bb.x, y: bb.y + bb.height },
+        b: { x: bb.x + bb.width, y: bb.y + bb.height },
+        value: bb.width,
+        offset: 14,
+      },
+      {
+        a: { x: bb.x + bb.width, y: bb.y },
+        b: { x: bb.x + bb.width, y: bb.y + bb.height },
+        value: bb.height,
+        offset: 14,
+      },
+    ]
+    for (const dim of dims) {
+      if (dim.value < 1e-3) continue
+      ctx.save()
+      ctx.globalAlpha = 0.8
+      drawCadDistance(ctx, dim.a, dim.b, dim.offset, scale)
+      ctx.restore()
+      const len = dim.value
+      const dx = dim.b.x - dim.a.x
+      const dy = dim.b.y - dim.a.y
+      const l = Math.hypot(dx, dy) || 1
+      const nx = -dy / l
+      const ny = dx / l
+      const off = dim.offset / scale
+      const mid = {
+        x: (dim.a.x + dim.b.x) / 2 + nx * off,
+        y: (dim.a.y + dim.b.y) / 2 + ny * off,
+      }
+      ctx.save()
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const sp = localToScreen(mid)
+      const text = fmtMm(len)
+      ctx.font = "11px ui-sans-serif, system-ui"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      const metrics = ctx.measureText(text)
+      ctx.globalAlpha = 0.95
+      ctx.fillStyle = "rgba(10,10,12,0.9)"
+      ctx.fillRect(sp.x - metrics.width / 2 - 4, sp.y - 9, metrics.width + 8, 18)
+      ctx.fillStyle = MEASURE_PENDING_COLOR
+      ctx.fillText(text, sp.x, sp.y)
+      ctx.restore()
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const { scale: sc3, offsetX: ox3, offsetY: oy3 } = d.view
+      ctx.translate(d.canvasWidth / 2 + ox3, d.canvasHeight / 2 + oy3)
+      ctx.scale(sc3, sc3)
     }
   }
 

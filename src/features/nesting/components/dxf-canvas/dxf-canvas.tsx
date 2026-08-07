@@ -26,7 +26,7 @@ import { findNearestSnap, findSmartSnap } from "./utils/snap"
 import type { DxfCanvasProps, Entity, Point, SnapCandidate } from "./types/types"
 import { resolveAxisLock } from "../../utils/transform-mode"
 import { useCanvasView } from "./hooks/use-canvas-view"
-import { useMeasurements, measurementsFromBBox } from "./hooks/use-measurements"
+import { useMeasurements, measurementsFromBBox, applyOrthoConstraint } from "./hooks/use-measurements"
 import { useSimulation } from "./hooks/use-simulation"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
@@ -163,6 +163,13 @@ export function DxfCanvas({
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [gridStyle, setGridStyle] = useState<"dots" | "lines" | "cross" | "none">(isCompact ? "lines" : "dots")
   const [snapCandidate, setSnapCandidate] = useState<SnapCandidate | null>(null)
+  /** BBox del polígono cerrado bajo el cursor (cota inteligente sin herramienta). */
+  const [smartBBox, setSmartBBox] = useState<{
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null>(null)
 
   const view = useCanvasView()
   const sim = useSimulation()
@@ -220,6 +227,7 @@ export function DxfCanvas({
         boxSelectScreen,
         showGrid,
         gridStyle,
+        smartBBox,
       })
     })
   }, [
@@ -234,6 +242,7 @@ export function DxfCanvas({
     measure.hoverScreen,
     measure.activeTool,
     snapCandidate,
+    smartBBox,
     boxSelectScreen,
     showGrid,
     gridStyle,
@@ -246,7 +255,10 @@ export function DxfCanvas({
     const { segments, totalLength, fullPath } = buildToolpath(entities)
     sim.setToolpath(segments, totalLength, fullPath)
     requestAnimationFrame(() => {
-      view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize, isCompact)
+      // No pisar zoom/pan del usuario (medir, acercar detalle, pinch, etc.)
+      if (!view.hasUserInteracted()) {
+        view.fitToSheetOrEntities(canvasRef.current, entities, sheetSize, isCompact)
+      }
       scheduleDraw()
     })
     // `view` y `sim` ahora son estables (memoizados en sus hooks), así
@@ -292,11 +304,13 @@ export function DxfCanvas({
     }
   }, [scheduleDraw, view, sheetSize, isCompact])
 
-  // Al entrar/salir de layout compacto, reorientar plancha.
+  // Al entrar/salir de layout compacto, reorientar plancha (solo si el usuario no ha interactuado).
   useEffect(() => {
     const canvasEl = canvasRef.current
     if (!canvasEl) return
-    view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+    if (!view.hasUserInteracted()) {
+      view.fitToSheetOrEntities(canvasEl, entitiesRef.current, sheetSize, isCompact)
+    }
     scheduleDraw()
   }, [isCompact, sheetSize, view, scheduleDraw])
 
@@ -534,6 +548,7 @@ export function DxfCanvas({
         const midDx = midX - pinch.midX
         const midDy = midY - pinch.midY
 
+        view.markUserInteracted()
         view.viewRef.current = {
           scale: newScale,
           offsetX: pinch.startOffsetX * scaleRatio + cx * (1 - scaleRatio) + midDx,
@@ -581,7 +596,7 @@ export function DxfCanvas({
         return
       }
 
-      if (measure.activeTool !== "none") {
+      if (measure.activeTool !== "none" && measure.activeTool !== "smart") {
         setCursor("crosshair")
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         const rect = canvas.getBoundingClientRect()
@@ -595,7 +610,20 @@ export function DxfCanvas({
             ? findSmartSnap(entitiesRef.current, rawPoint, view.viewRef.current.scale, sheetSize)
             : null
         setSnapCandidate(snap)
-        measure.setHoverLocal(snap ? snap.point : rawPoint)
+        setSmartBBox(null)
+        let hoverPt = snap ? snap.point : rawPoint
+        // Con 1 punto pendiente en distancia: proyectar hover a H/V si está cerca
+        // (las guías dashed se dibujan en draw.ts con el mismo criterio).
+        if (
+          measure.activeTool === "distance" &&
+          measure.pendingPoints.length === 1 &&
+          hoverPt
+        ) {
+          hoverPt = applyOrthoConstraint(measure.pendingPoints[0], hoverPt, {
+            force: e.shiftKey,
+          })
+        }
+        measure.setHoverLocal(hoverPt)
         measure.setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top })
         scheduleDraw()
       }
@@ -644,6 +672,94 @@ export function DxfCanvas({
           else if (hit !== null) setCursor("pointer")
           else setCursor("grab")
         }
+        // Sin herramienta: no mostrar cotas fantasma
+        if (snapCandidate) setSnapCandidate(null)
+        if (smartBBox) setSmartBBox(null)
+      }
+
+      // Cota inteligente: SOLO con la herramienta "smart" activa.
+      // Sin clics: solo posicionar el puntero sobre arista o centro del objeto.
+      if (measure.activeTool === "smart" && !draggingRef.current) {
+        setCursor("crosshair")
+        const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
+        if (!rawPoint) return
+        const scale = view.viewRef.current.scale
+        const edgeSnap = findSmartSnap(entitiesRef.current, rawPoint, scale, sheetSize)
+
+        let preferEdge = false
+        if (edgeSnap?.segment) {
+          const { a, b } = edgeSnap.segment
+          const vx = b.x - a.x
+          const vy = b.y - a.y
+          const len2 = vx * vx + vy * vy || 1
+          let tt = ((rawPoint.x - a.x) * vx + (rawPoint.y - a.y) * vy) / len2
+          tt = Math.max(0, Math.min(1, tt))
+          const proj = { x: a.x + tt * vx, y: a.y + tt * vy }
+          const distPx = Math.hypot(rawPoint.x - proj.x, rawPoint.y - proj.y) * scale
+          preferEdge = distPx < 16
+        }
+
+        if (preferEdge && edgeSnap) {
+          setSnapCandidate(edgeSnap)
+          setSmartBBox(null)
+          measure.setHoverLocal(edgeSnap.point)
+        } else {
+          // Polígono cerrado bajo el cursor → bbox H+V si está cerca del centro
+          let foundBBox: { x: number; y: number; width: number; height: number } | null = null
+          for (const ent of entitiesRef.current) {
+            if (ent.kind !== "polyline" || !ent.closed || ent.points.length < 3) continue
+            let inside = false
+            const pts = ent.points
+            for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+              const xi = pts[i].x, yi = pts[i].y
+              const xj = pts[j].x, yj = pts[j].y
+              if (
+                (yi > rawPoint.y) !== (yj > rawPoint.y) &&
+                rawPoint.x < ((xj - xi) * (rawPoint.y - yi)) / (yj - yi + 1e-18) + xi
+              ) {
+                inside = !inside
+              }
+            }
+            if (!inside) continue
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+            for (const pt of pts) {
+              minX = Math.min(minX, pt.x)
+              minY = Math.min(minY, pt.y)
+              maxX = Math.max(maxX, pt.x)
+              maxY = Math.max(maxY, pt.y)
+            }
+            const cx = (minX + maxX) / 2
+            const cy = (minY + maxY) / 2
+            const distCenterPx = Math.hypot(rawPoint.x - cx, rawPoint.y - cy) * scale
+            const halfDiagPx = Math.hypot(maxX - minX, maxY - minY) * scale * 0.5
+            // Zona amplia alrededor del centro para mostrar ambas cotas + cruz
+            if (distCenterPx < Math.max(40, halfDiagPx * 0.55)) {
+              foundBBox = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY,
+              }
+              break
+            }
+          }
+          if (foundBBox) {
+            setSnapCandidate(null)
+            setSmartBBox(foundBBox)
+            measure.setHoverLocal(rawPoint)
+          } else if (edgeSnap) {
+            setSnapCandidate(edgeSnap)
+            setSmartBBox(null)
+            measure.setHoverLocal(edgeSnap.point)
+          } else {
+            setSnapCandidate(null)
+            setSmartBBox(null)
+            measure.setHoverLocal(rawPoint)
+          }
+        }
+        const rect = canvas.getBoundingClientRect()
+        measure.setHoverScreen({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+        scheduleDraw()
       }
 
       const drag = draggingRef.current
@@ -755,7 +871,7 @@ export function DxfCanvas({
         const rawPoint = view.screenToLocal(canvas, e.clientX, e.clientY)
         if (!rawPoint) return
 
-        if (measure.activeTool !== "none" && measure.activeTool !== "coords") {
+        if (measure.activeTool !== "none" && measure.activeTool !== "coords" && measure.activeTool !== "smart") {
           const usesPointSnap =
             measure.activeTool === "distance" ||
             measure.activeTool === "angle" ||
@@ -1303,6 +1419,8 @@ export function DxfCanvas({
                 : "Clic en el segundo punto")}
           {measure.activeTool === "area" && "Clic dentro de un contorno cerrado"}
           {measure.activeTool === "coords" && "Mueve el mouse para ver X / Y"}
+          {measure.activeTool === "smart" &&
+            "Cota inteligente: acerca el puntero al centro o a una arista (sin clic)"}
           {" (Anticlick para salir)"}
         </div>
       )}

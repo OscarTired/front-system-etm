@@ -14,6 +14,7 @@ import {
   Triangle,
   Square,
   Crosshair,
+  Scan,
   X,
   Magnet,
   Play,
@@ -348,6 +349,7 @@ export function CanvasToolbar({
           {(
             [
               ["distance", Ruler],
+              ["smart", Scan],
               ["radius", CircleDot],
               ["angle", Triangle],
               ["area", Square],

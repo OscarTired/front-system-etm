@@ -48,7 +48,15 @@ export interface ToolpathSeg {
   endLen: number
 }
 
-export type MeasureTool = "none" | "distance" | "radius" | "angle" | "area" | "coords"
+export type MeasureTool =
+  | "none"
+  | "distance"
+  | "radius"
+  | "angle"
+  | "area"
+  | "coords"
+  /** Cota inteligente: solo hover, sin clics. Hay que activarla. */
+  | "smart"
 
 export type CanvasTool = "select" | "pan" | "zoomWindow" | "rotate"
 
@@ -131,4 +139,5 @@ export const TOOL_LABELS: Record<Exclude<MeasureTool, "none">, string> = {
   angle: "Ángulo",
   area: "Área / perímetro",
   coords: "Coordenadas",
+  smart: "Cota inteligente",
 }

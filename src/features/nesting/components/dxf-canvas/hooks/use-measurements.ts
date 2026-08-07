@@ -6,8 +6,38 @@ import { pointInPolygon, polygonArea, polygonPerimeter } from "../utils/geometry
 
 const HIT_TOLERANCE_PX = 8
 
+/** Tolerancia angular (rad) para sugerir/forzar cota ortogonal (H o V). ~8°. */
+const ORTHO_ANGLE_TOL = (8 * Math.PI) / 180
+
 function angleOfVector(origin: Point, p: Point) {
   return Math.atan2(p.y - origin.y, p.x - origin.x)
+}
+
+/**
+ * Si el segundo punto está cerca de horizontal o vertical respecto al
+ * primero, proyectarlo sobre ese eje (estilo FreeCAD / AutoCAD ortho).
+ * Shift fuerza siempre el eje dominante.
+ */
+export function applyOrthoConstraint(
+  a: Point,
+  b: Point,
+  opts?: { force?: boolean; angleTol?: number },
+): Point {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const adx = Math.abs(dx)
+  const ady = Math.abs(dy)
+  if (adx < 1e-12 && ady < 1e-12) return b
+
+  if (opts?.force) {
+    return adx >= ady ? { x: b.x, y: a.y } : { x: a.x, y: b.y }
+  }
+
+  const ang = Math.atan2(ady, adx) // 0 = horizontal, π/2 = vertical
+  const tol = opts?.angleTol ?? ORTHO_ANGLE_TOL
+  if (ang < tol) return { x: b.x, y: a.y }
+  if (ang > Math.PI / 2 - tol) return { x: a.x, y: b.y }
+  return b
 }
 
 export type ToolClickOptions = {
@@ -62,15 +92,27 @@ export function useMeasurements() {
   const resetTool = useCallback(() => {
     setActiveTool("none")
     setPendingPoints([])
+    // Al salir de la herramienta, limpiar todas las cotas visibles.
+    setMeasurements([])
+    setHoverLocal(null)
+    setHoverScreen(null)
   }, [])
 
   const toggleTool = useCallback((tool: Exclude<MeasureTool, "none">) => {
     setActiveTool((prev) => {
       if (prev === tool) {
+        // Desactivar: limpiar pendientes Y mediciones colocadas.
         setPendingPoints([])
+        setMeasurements([])
+        setHoverLocal(null)
+        setHoverScreen(null)
         return "none"
       }
+      // Cambiar de herramienta: limpiar pendientes y mediciones previas.
       setPendingPoints([])
+      setMeasurements([])
+      setHoverLocal(null)
+      setHoverScreen(null)
       return tool
     })
   }, [])
@@ -123,24 +165,21 @@ export function useMeasurements() {
     (point: Point, entities: Entity[], scale: number, opts?: ToolClickOptions) => {
       if (activeTool === "distance") {
         // Regla real: punto A → punto B, siempre 2 clicks explícitos.
-        // El snap a esquinas/aristas/puntos notables sigue funcionando
-        // igual (viene de `point`, ya resuelto contra el snap más
-        // cercano antes de llamar acá) — lo que se quitó fue el atajo
-        // de "tocar cerca de una arista confirma de una vez toda la
-        // cota", que le rompía al usuario la posibilidad de medir entre
-        // dos puntos arbitrarios en vez de la arista completa.
-        if (pendingPoints.length < 2) {
-          let p = point
-          // Shift en el 2º clic: forzar H o V respecto al primero
-          if (opts?.shiftKey && pendingPoints.length === 1) {
-            const a = pendingPoints[0]
-            const adx = Math.abs(point.x - a.x)
-            const ady = Math.abs(point.y - a.y)
-            p = adx >= ady ? { x: point.x, y: a.y } : { x: a.x, y: point.y }
-          }
-          setPendingPoints([...pendingPoints, p])
+        // Tras el 1er clic, el 2º se puede ortogonalizar (auto cerca de H/V
+        // o forzado con Shift), estilo FreeCAD.
+        if (pendingPoints.length === 0) {
+          setPendingPoints([point])
           return
         }
+        if (pendingPoints.length === 1) {
+          const a = pendingPoints[0]
+          const constrained = applyOrthoConstraint(a, point, {
+            force: Boolean(opts?.shiftKey),
+          })
+          setPendingPoints([a, constrained])
+          return
+        }
+        // 3er clic: colocar offset de la línea de cota
         const [a, b] = pendingPoints
         const dx = b.x - a.x
         const dy = b.y - a.y
