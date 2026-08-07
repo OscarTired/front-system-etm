@@ -50,6 +50,8 @@ export function useNestingTransforms(opts: {
   lockedPieceIndices: number[]
   sheetConfig: SheetConfigLike
   transformMode: "free" | "geometric"
+  /** Gap mínimo entre piezas (mm). Misma semántica que el motor de nesting. */
+  separation?: number
 }) {
   const {
     history,
@@ -58,6 +60,7 @@ export function useNestingTransforms(opts: {
     lockedPieceIndices,
     sheetConfig,
     transformMode,
+    separation = 0,
   } = opts
 
   const handleMovePieces = useCallback(
@@ -148,13 +151,13 @@ export function useNestingTransforms(opts: {
           if (o === idx) continue
           if (rotating.has(o)) {
             const otherSim = simulated.find((s) => s.idx === o)
-            if (otherSim && piecesCollide(piece, otherSim.piece)) {
+            if (otherSim && piecesCollide(piece, otherSim.piece, separation)) {
               NestingToast.rotateCollision()
               return
             }
             continue
           }
-          if (piecesCollide(piece, canvasPieces[o])) {
+          if (piecesCollide(piece, canvasPieces[o], separation)) {
             NestingToast.rotateCollision()
             return
           }
@@ -167,7 +170,7 @@ export function useNestingTransforms(opts: {
         angleOverrides: nextAng,
       })
     },
-    [history, rawPieces, lockedPieceIndices, canvasPieces, sheetConfig],
+    [history, rawPieces, lockedPieceIndices, canvasPieces, sheetConfig, separation],
   )
 
   const handleRotateAroundPivot = useCallback(
@@ -289,7 +292,7 @@ export function useNestingTransforms(opts: {
                 },
               }
             }
-            if (piecesCollide(testPiece, other)) return true
+            if (piecesCollide(testPiece, other, separation)) return true
           }
           return false
         }
@@ -326,7 +329,7 @@ export function useNestingTransforms(opts: {
         angleOverrides: history.angleOverrides,
       })
     },
-    [history, canvasPieces, lockedPieceIndices],
+    [history, canvasPieces, lockedPieceIndices, separation],
   )
 
   const handleOverrideChange = useCallback(

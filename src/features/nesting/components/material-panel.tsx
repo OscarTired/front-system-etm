@@ -152,7 +152,7 @@ export function MaterialPanel({
               <Layers className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
               <span className="text-xs font-medium text-neutral-200">Dimensiones de Plancha</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Field label="Ancho (mm)">
                 <Input
                   className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
@@ -177,6 +177,16 @@ export function MaterialPanel({
                   inputMode="decimal"
                   value={settings.margin}
                   onChange={(e) => onChange({ margin: e.target.value })}
+                />
+              </Field>
+
+              <Field label="Separación (mm)">
+                <Input
+                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  inputMode="decimal"
+                  value={settings.separacion}
+                  onChange={(e) => onChange({ separacion: e.target.value })}
+                  title="Gap mínimo entre piezas (mm)"
                 />
               </Field>
             </div>

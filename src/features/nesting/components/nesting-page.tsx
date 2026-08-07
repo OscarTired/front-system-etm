@@ -248,6 +248,8 @@ export function NestingPage() {
 
   const rawPieces = activeGroup?.sheet.pieces ?? []
 
+  const separationMm = Number(project.settings.separacion) || 0
+
   const transforms = useNestingTransforms({
     history,
     canvasPieces,
@@ -255,6 +257,7 @@ export function NestingPage() {
     lockedPieceIndices,
     sheetConfig: project.sheetConfig,
     transformMode,
+    separation: separationMm,
   })
 
   const clipboard = useNestingClipboard({
@@ -294,14 +297,14 @@ export function NestingPage() {
     const set = new Set<number>()
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (piecesCollide(canvasPieces[i], canvasPieces[j])) {
+        if (piecesCollide(canvasPieces[i], canvasPieces[j], separationMm)) {
           set.add(i)
           set.add(j)
         }
       }
     }
     return Array.from(set)
-  }, [canvasPieces])
+  }, [canvasPieces, separationMm])
 
   const handleToggleLayer = useCallback((key: string) => {
     setHiddenLayerKeys((prev) => {
@@ -378,7 +381,7 @@ export function NestingPage() {
     const pairs: { a: number; b: number; nameA: string; nameB: string }[] = []
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (!piecesCollide(canvasPieces[i], canvasPieces[j])) continue
+        if (!piecesCollide(canvasPieces[i], canvasPieces[j], separationMm)) continue
         const idA = canvasPieces[i]?.pieceId
         const idB = canvasPieces[j]?.pieceId
         const nameA =
@@ -389,7 +392,7 @@ export function NestingPage() {
       }
     }
     return pairs
-  }, [canvasPieces, project.rows])
+  }, [canvasPieces, project.rows, separationMm])
 
   const handleSelectPiece = useCallback((index: number | null, additive: boolean) => {
     if (index === null) {

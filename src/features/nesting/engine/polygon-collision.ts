@@ -119,37 +119,38 @@ export function extractSolidWithHoles(
 /**
  * ¿El sólido móvil colisiona con un sólido ya colocado?
  * Permitido si el móvil está completamente dentro de un hueco del otro.
+ *
+ * `separation` (mm): gap mínimo entre contornos. Se aplica expandiendo los
+ * AABB: si al sumar `separation` aún se "tocan", se considera colisión
+ * (aunque los polígonos no se crucen). Contacto exacto a distancia
+ * `separation` se permite (umbral estricto `>`).
  */
 export function solidCollidesWith(moving: Point2D[], placed: SolidWithHoles, separation = 0): boolean {
   if (moving.length < 3 || placed.outer.length < 3) return false
 
-  // Completamente dentro de un hueco ? OK (nesting en calado)
+  // Completamente dentro de un hueco → OK (nesting en calado)
   for (const hole of placed.holes) {
-    let allIn = true
-    for (const p of moving) {
-      if (!pointInPolygon(p, hole)) {
-        allIn = false
-        break
-      }
-    }
-    if (allIn) return false
+    if (fullyInsideHole(moving, hole)) return false
   }
 
+  // Intersección real de polígonos
+  if (solidsOverlap(moving, placed.outer)) return true
+
+  // Gap mínimo: AABB de `moving` vs AABB de `placed` expandido mentalmente
+  // por `separation`. Si gap < separation → colisión.
   if (separation > 0) {
-    // Aprox: expandir bbox del colocado
-    const b = placed.box
     const mb = bbox(moving)
-    if (
-      mb.maxX + separation < b.minX ||
-      b.maxX + separation < mb.minX ||
-      mb.maxY + separation < b.minY ||
-      b.maxY + separation < mb.minY
-    ) {
-      return false
-    }
+    const pb = placed.box
+    const s = separation
+    const far =
+      mb.maxX + s <= pb.minX ||
+      pb.maxX + s <= mb.minX ||
+      mb.maxY + s <= pb.minY ||
+      pb.maxY + s <= mb.minY
+    if (!far) return true
   }
 
-  return solidsOverlap(moving, placed.outer)
+  return false
 }
 
 export function translatePoints(pts: Point2D[], dx: number, dy: number): Point2D[] {
@@ -188,23 +189,19 @@ export function piecesCollide(
     if (fullyInsideHole(outerB, hole)) return false
   }
 
-  // Contacto de borde permitido: solidsOverlap ya es estricto en intersección
   if (solidsOverlap(outerA, outerB)) return true
+
+  // Gap mínimo entre piezas (misma lógica que solidCollidesWith)
   if (separation > 0) {
     const ba = bbox(outerA)
     const bb = bbox(outerB)
-    const gapX = Math.max(0, Math.max(ba.minX - bb.maxX, bb.minX - ba.maxX))
-    const gapY = Math.max(0, Math.max(ba.minY - bb.maxY, bb.minY - ba.maxY))
-    // Si se solapan en un eje y el gap en el otro es < separation
-    const overlapX = ba.maxX + separation > bb.minX && bb.maxX + separation > ba.minX
-    const overlapY = ba.maxY + separation > bb.minY && bb.maxY + separation > ba.minY
-    if (overlapX && overlapY && (gapX < separation || gapY < separation)) {
-      // Solo si realmente están cerca en 2D (bbox expandido)
-      if (!(ba.maxX + separation < bb.minX || bb.maxX + separation < ba.minX ||
-            ba.maxY + separation < bb.minY || bb.maxY + separation < ba.minY)) {
-        return true
-      }
-    }
+    const s = separation
+    const far =
+      ba.maxX + s <= bb.minX ||
+      bb.maxX + s <= ba.minX ||
+      ba.maxY + s <= bb.minY ||
+      bb.maxY + s <= ba.minY
+    if (!far) return true
   }
   return false
 }

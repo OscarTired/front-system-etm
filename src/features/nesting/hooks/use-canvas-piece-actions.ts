@@ -35,8 +35,9 @@ export function useCanvasPieceActions(opts: {
   rawPieces: PlacedPiece[]
   lockedPieceIndices: number[]
   sheetConfig: SheetConfig
+  separation?: number
 }) {
-  const { history, canvasPieces, rawPieces, lockedPieceIndices, sheetConfig } = opts
+  const { history, canvasPieces, rawPieces, lockedPieceIndices, sheetConfig, separation = 0 } = opts
 
   const handleRotateSelected = useCallback(
     (pieceIndices: number[], degrees: number) => {
@@ -103,13 +104,13 @@ export function useCanvasPieceActions(opts: {
           if (o === idx) continue
           if (rotating.has(o)) {
             const otherSim = simulated.find((s) => s.idx === o)
-            if (otherSim && piecesCollide(piece, otherSim.piece)) {
+            if (otherSim && piecesCollide(piece, otherSim.piece, separation)) {
               NestingToast.rotateCollision()
               return
             }
             continue
           }
-          if (piecesCollide(piece, canvasPieces[o])) {
+          if (piecesCollide(piece, canvasPieces[o], separation)) {
             NestingToast.rotateCollision()
             return
           }
@@ -122,7 +123,7 @@ export function useCanvasPieceActions(opts: {
         angleOverrides: nextAng,
       })
     },
-    [history, rawPieces, lockedPieceIndices, canvasPieces, sheetConfig],
+    [history, rawPieces, lockedPieceIndices, canvasPieces, sheetConfig, separation],
   )
 
   const handleAlign = useCallback(

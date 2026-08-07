@@ -74,8 +74,10 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
     const sheets: NestedSheet[] = [];
     const sheetSolids: SolidWithHoles[][] = [];
     const separation = Math.max(0, options.separation ?? 0);
-    // Igual que el original: inflar mitad del margen (no 2× gap letal)
-    const pad = Math.max(sheet.margin / 2, separation / 2);
+    // Solo la separación entre piezas. El margen de plancha NO debe
+    // meterse como gap inter-pieza (antes margin/2 dejaba ~margen mm
+    // entre piezas aunque separacion=0).
+    const pad = separation / 2;
 
     const pieces = inputPieces.flatMap((p) =>
       Array.from({ length: p.quantity ?? 1 }, () => p)
@@ -276,16 +278,16 @@ export class RectangleHeuristicStrategy implements NestingStrategy {
                 width: variant.bounds.width,
                 height: variant.bounds.height,
               };
-              const testRectWithMargin = inflateRect(testRect, pad);
+              const testRectPadded = inflateRect(testRect, pad);
 
               let collision = false;
               let collisionYJump = 0;
 
               for (const placedRect of placedBounds) {
-                if (rectsOverlap(testRectWithMargin, placedRect)) {
+                if (rectsOverlap(testRectPadded, placedRect)) {
                   collision = true;
                   const jump =
-                    placedRect.y + placedRect.height - testRectWithMargin.y;
+                    placedRect.y + placedRect.height - testRectPadded.y;
                   if (jump > collisionYJump) collisionYJump = jump;
                 }
               }
