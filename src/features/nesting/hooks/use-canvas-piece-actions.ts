@@ -137,5 +137,3 @@ export function useCanvasPieceActions(opts: {
 
   return { handleRotateSelected, outlineInsideSheet, NestingToast }
 }
-
-// silence unused toast import if tree-shaken
