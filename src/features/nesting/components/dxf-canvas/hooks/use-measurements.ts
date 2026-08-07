@@ -13,14 +13,6 @@ function angleOfVector(origin: Point, p: Point) {
 export type ToolClickOptions = {
   /** Shift = forzar cota horizontal o vertical (eje dominante). */
   shiftKey?: boolean
-  /**
-   * Arista detectada bajo el cursor (viene del smart-snap). Si está
-   * presente y todavía no hay puntos pendientes, el click "confirma"
-   * de una vez la cota de esa arista completa (A→B), sin pedir un
-   * segundo click — esto es lo que hace que la cota se sienta como
-   * "un preview que ya está listo" en vez de un flujo de 2 clicks.
-   */
-  edgeSegment?: { a: Point; b: Point }
 }
 
 /**
@@ -89,6 +81,18 @@ export function useMeasurements() {
 
   const clearMeasurements = useCallback(() => setMeasurements([]), [])
 
+  /**
+   * Reposiciona una cota de distancia YA colocada — esto es lo que
+   * permite "jalar" la línea de cota después de puesta, como en un
+   * plano real, en vez de que el offset quede fijo desde el momento
+   * en que se hizo el 2º click.
+   */
+  const updateMeasurementOffset = useCallback((id: string, offset: number) => {
+    setMeasurements((prev) =>
+      prev.map((m) => (m.id === id && m.kind === "distance" ? { ...m, offset } : m)),
+    )
+  }, [])
+
   const addMeasurements = useCallback((items: Measurement[]) => {
     if (items.length === 0) return
     setMeasurements((prev) => [...prev, ...items])
@@ -118,29 +122,13 @@ export function useMeasurements() {
   const handleToolClick = useCallback(
     (point: Point, entities: Entity[], scale: number, opts?: ToolClickOptions) => {
       if (activeTool === "distance") {
-        // Smart dimension: si el cursor ya está sobre una arista detectada
-        // (edgeSegment, viene del hover/preview) y todavía no elegiste
-        // ningún punto, el click confirma de una vez la cota completa de
-        // esa arista — no hace falta un segundo click para "cerrar" la
-        // medición como pasaba antes.
-        if (pendingPoints.length === 0 && opts?.edgeSegment) {
-          const { a, b } = opts.edgeSegment
-          const len = Math.hypot(b.x - a.x, b.y - a.y)
-          if (len > 1e-6) {
-            setMeasurements((prev) => [
-              ...prev,
-              {
-                id: `d-${Date.now()}`,
-                kind: "distance",
-                a,
-                b,
-                value: len,
-                offset: 12,
-              },
-            ])
-            return
-          }
-        }
+        // Regla real: punto A → punto B, siempre 2 clicks explícitos.
+        // El snap a esquinas/aristas/puntos notables sigue funcionando
+        // igual (viene de `point`, ya resuelto contra el snap más
+        // cercano antes de llamar acá) — lo que se quitó fue el atajo
+        // de "tocar cerca de una arista confirma de una vez toda la
+        // cota", que le rompía al usuario la posibilidad de medir entre
+        // dos puntos arbitrarios en vez de la arista completa.
         if (pendingPoints.length < 2) {
           let p = point
           // Shift en el 2º clic: forzar H o V respecto al primero
@@ -239,6 +227,7 @@ export function useMeasurements() {
     toggleTool,
     removeMeasurement,
     clearMeasurements,
+    updateMeasurementOffset,
     addMeasurements,
     handleToolClick,
   }
