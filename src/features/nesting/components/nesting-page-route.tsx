@@ -14,22 +14,14 @@ const NestingWorkspace = dynamic(
 )
 
 /**
- * Mobile: altura = viewport − top bar − bottom nav (VerticalScroll del shell).
- * Dynamic import: el chunk de nesting (canvas, worker, draft) no bloquea
- * el cierre del drawer ni el primer paint al navegar.
+ * El shell mobile marca /nesting como immersive (sin VerticalScroll) y
+ * deja un slot pt-14 pb-20 con flex-1. Acá solo hay que ocupar h-full.
  */
 export default function NestingRoute() {
   usePageTitle("Nesting")
 
   return (
-    <main
-      className={
-        "flex min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none " +
-        "h-[calc(100dvh-8.5rem)] " +
-        "tablet:h-full tablet:px-8 tablet:pb-5 " +
-        "desktop:h-full desktop:py-10"
-      }
-    >
+    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-2 text-white select-none desktop:px-8 desktop:py-10">
       <header className="mb-4 hidden flex-wrap items-center justify-between gap-4 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">NESTING</h1>

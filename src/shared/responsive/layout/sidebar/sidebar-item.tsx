@@ -4,12 +4,13 @@ import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/shared/utils/utils"
 import { SidebarRow } from "../sidebar/sidebar-row"
+import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 
 type Props = {
   href: string
   label: string
   active: boolean
-  icon: LucideIcon // <-- Se actualiza aquí para coincidir con SidebarRow
+  icon: LucideIcon
   count?: number
   collapsed?: boolean
   isDrawer?: boolean
@@ -28,10 +29,20 @@ export function SidebarItem({
   onMouseEnter,
   onTouchStart,
 }: Props) {
+  const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
+
+  // Procesos usa /processes?code=xx (mismo pathname). Hay que cerrar en el
+  // click, no solo cuando cambia pathname — si no, en "producción" el
+  // drawer se queda abierto.
+  const handleNavigate = () => {
+    if (isDrawer) closeDrawer()
+  }
+
   if (isDrawer) {
     return (
       <Link
         href={href}
+        onClick={handleNavigate}
         onMouseEnter={onMouseEnter}
         onTouchStart={onTouchStart}
         className={cn("w-full block", active && "pointer-events-none")}

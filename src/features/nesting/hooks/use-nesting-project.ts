@@ -37,6 +37,10 @@ import {
   type SheetEditSnapshot,
 } from "../export/nesting-session"
 
+/** Cache en memoria del runtime: al salir de /nesting y volver no se
+ *  rehidrata desde IDB (lento + canvas de cero). Solo F5 usa disco. */
+let memoryDraftCache: NestingDraftV1 | null = null
+
 const PIECE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#eab308", "#ec4899", "#a855f7"]
 
 function cutLengthOf(pieces: { subEntities?: { outline: { points: { x: number; y: number }[] } }[] }[]): number {
@@ -195,7 +199,7 @@ export function useNestingProject() {
     setForgivenIds(new Set())
     clearSheets()
     sheetEditsRef.current = {}
-    void clearNestingDraft()
+    void clearNestingDraft(); memoryDraftCache = null
     setSessionRestored(false)
     setSessionSavedAt(null)
   }, [clearSheets])
@@ -487,6 +491,7 @@ export function useNestingProject() {
     clearSheets()
     sheetEditsRef.current = {}
     activeGroupIndexRef.current = 0
+    memoryDraftCache = null
     void clearNestingDraft()
     setSessionRestored(false)
     setSessionSavedAt(null)
@@ -507,6 +512,7 @@ export function useNestingProject() {
   const getActiveGroupIndexForSession = useCallback(() => activeGroupIndexRef.current, [])
 
   const discardSession = useCallback(() => {
+    memoryDraftCache = null
     void clearNestingDraft()
     setRows([])
     setSettings(defaultProjectSettings())
@@ -521,7 +527,7 @@ export function useNestingProject() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const draft = await loadNestingDraft()
+      const draft = memoryDraftCache ?? (await loadNestingDraft())
       if (cancelled) return
       if (draftHasWork(draft) && draft) {
         skipNextSaveRef.current = true
@@ -565,6 +571,7 @@ export function useNestingProject() {
         activeGroupIndex: activeGroupIndexRef.current,
         editsBySheet: sheetEditsRef.current,
       }
+      memoryDraftCache = draft
       void saveNestingDraft(draft).then((where) => {
         if (where !== "failed") setSessionSavedAt(draft.savedAt)
       })
@@ -590,6 +597,7 @@ export function useNestingProject() {
       } catch {
         /* ignore */
       }
+      memoryDraftCache = draft
       void saveNestingDraft(draft)
     }
     const onVis = () => {

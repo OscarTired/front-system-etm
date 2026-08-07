@@ -102,6 +102,9 @@ function CompactShell({ children }: Props) {
   const x = useMotionValue(0)
   const mountedRef = useRef(false)
 
+  // Nesting necesita altura real, no el scroll de página del shell.
+  const isImmersive = pathname.startsWith("/nesting")
+
   // Zona muerta mayor: el radius no parpadea en el último px del cierre.
   const borderRadius = useTransform(
     x,
@@ -137,10 +140,10 @@ function CompactShell({ children }: Props) {
       <SidebarDrawer />
 
       <motion.div
-        style={{ 
-          x, 
-          borderRadius, 
-          touchAction: "pan-y" 
+        style={{
+          x,
+          borderRadius,
+          touchAction: isImmersive ? "none" : "pan-y",
         }}
         className="absolute inset-0 z-10 flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#050505] will-change-[transform,border-radius]"
       >
@@ -149,20 +152,27 @@ function CompactShell({ children }: Props) {
           inert={isOpen}
           className={cn(
             "flex min-h-0 flex-1 flex-col",
-            isOpen && "pointer-events-none select-none"
+            isOpen && "pointer-events-none select-none",
           )}
         >
-          <PullToRefresh>
-            <VerticalScroll
-              resetKey={pathname}
-              containerClassName="h-full"
-              className="overflow-x-hidden pt-14 pb-20"
-              arrowTopOffset={64}
-              arrowBottomOffset={88}
-            >
+          {isImmersive ? (
+            // Sin VerticalScroll: el workspace usa TODO el alto entre top y bottom nav.
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-14 pb-20">
               {children}
-            </VerticalScroll>
-          </PullToRefresh>
+            </div>
+          ) : (
+            <PullToRefresh>
+              <VerticalScroll
+                resetKey={pathname}
+                containerClassName="h-full"
+                className="overflow-x-hidden pt-14 pb-20"
+                arrowTopOffset={64}
+                arrowBottomOffset={88}
+              >
+                {children}
+              </VerticalScroll>
+            </PullToRefresh>
+          )}
           <BottomNavigation />
         </div>
       </motion.div>

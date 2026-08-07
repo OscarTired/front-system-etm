@@ -654,7 +654,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-400 flex-col overflow-hidden">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <input
         ref={projectInputRef}
         type="file"
@@ -666,14 +666,14 @@ export function NestingPage() {
         }}
       />
 
-      <div className="flex min-h-0 flex-1 gap-2 overflow-hidden p-2 desktop:gap-4 desktop:p-4">
+      <div className="flex min-h-0 flex-1 gap-2 overflow-hidden p-0 desktop:gap-4 desktop:p-4">
         {!isCompact && (
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
         )}
 
-        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
+        <main className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-2xl bg-white/3 p-1.5 shadow-sm desktop:gap-2 desktop:p-3">
           {project.sheetGroups.length > 0 && (
             <div className="w-full min-w-0 shrink-0">
               <SheetTabs
