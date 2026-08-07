@@ -797,7 +797,7 @@ export function NestingPage() {
                   <p>
                     {!project.sessionReady
                       ? "Cargando workspace…"
-                      : "Importá una pieza o presioná Nestear"}
+                      : "Importa una pieza o presiona Nestear"}
                   </p>
                   <button
                     type="button"
