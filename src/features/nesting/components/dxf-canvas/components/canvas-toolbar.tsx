@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
 import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
@@ -23,7 +23,6 @@ import {
   ChevronsRight,
   Wrench,
   ChevronDown,
-  Circle,
   Hash,
   Plus,
   Ban,
@@ -38,7 +37,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover" // Ajusta la ruta de importación de tu Popover si es necesario
+} from "@/components/ui/popover"
 
 const mdBtn =
   "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors duration-150 hover:bg-white/10 hover:text-white active:bg-white/15 disabled:pointer-events-none disabled:opacity-30"
@@ -130,11 +129,6 @@ export function CanvasToolbar({
   const [displayOpen, setDisplayOpen] = useState(false)
   const { isCompact } = useResponsive()
 
-  // Mismo patrón que sheet-tabs.tsx para el panel scrolleable en mobile:
-  // drag-scroll (arrastrar con el dedo/mouse) + fade en los bordes para
-  // que quede claro que hay más botones a los costados en vez de sentirse
-  // "cortado". Se declaran siempre (reglas de hooks) aunque solo se
-  // conecten al DOM cuando isCompact.
   const {
     containerRef: toolScrollRef,
     handleMouseDown: handleToolMouseDown,
@@ -146,35 +140,72 @@ export function CanvasToolbar({
 
   const isToolActive = activeTool !== "none"
 
-  // Solo mostrar scrollbar cuando el contenido DE VERDAD desborda.
-  // Evita el flash del themed-scrollbar al abrir el panel (max-w animado).
+  /**
+   * Scrollbar solo cuando el contenido desborda de verdad.
+   * Durante la animación de max-width el clientWidth es temporalmente
+   * menor que scrollWidth → no medimos hasta transitionend.
+   */
   const [toolsOverflow, setToolsOverflow] = useState(false)
+  /** false mientras corre la animación de apertura; el RO no debe medir aún. */
+  const overflowReadyRef = useRef(false)
+
+  const measureOverflow = useCallback(() => {
+    const el = toolScrollRef.current
+    if (!el || !overflowReadyRef.current) return
+    setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
+  }, [toolScrollRef])
+
   useEffect(() => {
     const el = toolScrollRef.current
-    if (!el) return
-    const check = () => {
-      setToolsOverflow(el.scrollWidth > el.clientWidth + 2)
+
+    if (!open) {
+      overflowReadyRef.current = false
+      setToolsOverflow(false)
+      return
     }
-    check()
-    const ro = new ResizeObserver(check)
+
+    if (!el) return
+
+    // Fase animación: bloquear mediciones y barra
+    overflowReadyRef.current = false
+    setToolsOverflow(false)
+
+    const markReadyAndMeasure = () => {
+      overflowReadyRef.current = true
+      // layout estable tras el frame de transitionend
+      requestAnimationFrame(() => {
+        setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
+      })
+    }
+
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.target !== el) return
+      // Solo max-width: opacity termina antes y mediría a mitad del grow
+      if (e.propertyName !== "max-width") return
+      markReadyAndMeasure()
+    }
+
+    el.addEventListener("transitionend", onTransitionEnd)
+
+    // Fallback si el browser no dispara transitionend (prefers-reduced-motion, etc.)
+    const fallback = window.setTimeout(markReadyAndMeasure, 400)
+
+    const ro = new ResizeObserver(() => {
+      // CRÍTICO: no medir durante la animación (era la causa del flash)
+      if (!overflowReadyRef.current) return
+      setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
+    })
     ro.observe(el)
-    // Re-check tras la animación de apertura (~300ms)
-    const t1 = window.setTimeout(check, 320)
-    const t2 = window.setTimeout(check, 600)
+
     return () => {
+      el.removeEventListener("transitionend", onTransitionEnd)
+      window.clearTimeout(fallback)
       ro.disconnect()
-      window.clearTimeout(t1)
-      window.clearTimeout(t2)
+      overflowReadyRef.current = false
     }
   }, [open, isCompact, isToolActive, toolScrollRef])
 
-  // Auto-abre el panel de herramientas al seleccionar una pieza en el canvas.
-  // No lo auto-cerramos al deseleccionar: si el usuario lo dejó abierto
-  // a propósito (ej. está midiendo), no queremos cerrarlo debajo de él.
-  // No es un caso "puramente derivado" (por eso no lo reemplazamos por un
-  // cálculo en el render): solo debe abrirse una vez al iniciar la
-  // selección, no permanecer forzado a `true` mientras haya selección
-  // (el usuario puede cerrarlo manualmente y que se quede cerrado).
+  // Auto-abre el panel al seleccionar una pieza. No auto-cierra al deseleccionar.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (canFocusSelected) setOpen(true)
@@ -193,16 +224,8 @@ export function CanvasToolbar({
         isCompact ? "right-3" : ""
       }`}
     >
-      {/* Fila superior: FAB principal + Barra de Herramientas.
-          En mobile agregamos `right-3` arriba para que este contenedor
-          conozca su ancho REAL disponible (viewport menos los 2 márgenes
-          de la página) — antes el panel de abajo usaba `calc(100vw-...)`
-          como referencia, que ignoraba el padding de la página (`<main
-          className="px-4">`), así que se pasaba del borde real del
-          canvas y el `overflow-hidden` del canvas lo recortaba a mitad
-          de ícono en vez de dejarlo scrollear completo. */}
+      {/* Fila superior: FAB + barra de herramientas */}
       <div className={`flex items-center gap-2 ${isCompact ? "w-full" : ""}`}>
-        {/* FAB — siempre visible */}
         <button
           type="button"
           onClick={() => (open ? handleClose() : setOpen(true))}
@@ -222,14 +245,6 @@ export function CanvasToolbar({
           {open ? <X size={18} strokeWidth={1.75} /> : <Wrench size={18} strokeWidth={1.75} />}
         </button>
 
-        {/* Panel principal de herramientas.
-            Mobile: en vez de un max-w mágico basado en el viewport, el
-            panel es `min-w-0 flex-1` dentro de una fila ya acotada a su
-            ancho real (ver arriba) — así SIEMPRE calza exacto contra el
-            borde del canvas, nunca se recorta. Además, mismo patrón que
-            sheet-tabs.tsx: fade en los bordes + drag-scroll, para que
-            quede claro que hay más botones deslizando en vez de sentirse
-            "cortado". */}
         <div
           ref={toolScrollRef}
           onMouseDown={isCompact ? handleToolMouseDown : undefined}
@@ -251,17 +266,18 @@ export function CanvasToolbar({
             shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
             ${
+              toolsOverflow
+                ? "themed-scrollbar-x overflow-x-auto"
+                : "overflow-x-hidden"
+            }
+            ${
               isCompact
                 ? `cursor-grab active:cursor-grabbing ${
-                    toolsOverflow ? "themed-scrollbar-x overflow-x-auto" : "overflow-x-hidden"
-                  } ${open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"}`
-                : `${
-                    toolsOverflow ? "themed-scrollbar-x overflow-x-auto" : "overflow-x-hidden"
-                  } ${
-                    open
-                      ? "max-w-[min(52rem,calc(100vw-6rem))] opacity-100"
-                      : "max-w-0 opacity-0 pointer-events-none"
+                    open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
                   }`
+                : open
+                  ? "max-w-[min(52rem,calc(100vw-6rem))] opacity-100"
+                  : "max-w-0 opacity-0 pointer-events-none"
             }
           `}
         >
@@ -284,15 +300,15 @@ export function CanvasToolbar({
           >
             <Target size={16} strokeWidth={1.75} />
           </button>
-        <button
-          type="button"
-          onClick={onAutoBboxDim}
-          disabled={!canAutoBboxDim || !onAutoBboxDim}
-          className={`${mdBtn}`}
-          title="Auto-cota bbox (selección)"
-        >
-          <Square size={16} strokeWidth={1.75} />
-        </button>
+          <button
+            type="button"
+            onClick={onAutoBboxDim}
+            disabled={!canAutoBboxDim || !onAutoBboxDim}
+            className={`${mdBtn}`}
+            title="Auto-cota bbox (selección)"
+          >
+            <Square size={16} strokeWidth={1.75} />
+          </button>
 
           <div className={mdDivider} />
 
@@ -437,7 +453,7 @@ export function CanvasToolbar({
             </button>
           )}
 
-          {/* Botón X de salida de herramienta */}
+          {/* Salir de herramienta de medida */}
           <div
             className={`
               flex items-center overflow-hidden transition-all duration-300 ease-out
@@ -454,7 +470,7 @@ export function CanvasToolbar({
             </button>
           </div>
 
-          {/* Simulación (Botón disparador cuando está cerrado) */}
+          {/* Simulación — botón disparador */}
           {hasToolpath && (
             <>
               <div className={mdDivider} />
@@ -476,7 +492,7 @@ export function CanvasToolbar({
         </div>
       </div>
 
-      {/* Subpanel de simulación flotante inferior con tu Popover nativo adaptativo (Sheet en móvil / Popover en escritorio) */}
+      {/* Subpanel de simulación */}
       {hasToolpath && (
         <div
           className={`
@@ -497,9 +513,13 @@ export function CanvasToolbar({
             className={mdBtn}
             title={simRunning ? "Pausar" : "Reproducir"}
           >
-            {simRunning ? <Pause size={15} strokeWidth={1.75} /> : <Play size={15} strokeWidth={1.75} />}
+            {simRunning ? (
+              <Pause size={15} strokeWidth={1.75} />
+            ) : (
+              <Play size={15} strokeWidth={1.75} />
+            )}
           </button>
-          
+
           <button
             type="button"
             onClick={onResetSim}
@@ -521,7 +541,6 @@ export function CanvasToolbar({
             title="Progreso de corte"
           />
 
-          {/* Integración del Popover proporcionado */}
           <Popover open={speedPopoverOpen} onOpenChange={setSpeedPopoverOpen}>
             <PopoverTrigger asChild>
               <button
@@ -530,10 +549,19 @@ export function CanvasToolbar({
                 title="Velocidad de simulación"
               >
                 <span>{simSpeed}×</span>
-                <ChevronDown size={12} className={`transition-transform duration-200 ${speedPopoverOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  size={12}
+                  className={`transition-transform duration-200 ${speedPopoverOpen ? "rotate-180" : ""}`}
+                />
               </button>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="center" sideOffset={8} floatingClassName="w-24" className="p-1 text-neutral-200">
+            <PopoverContent
+              side="bottom"
+              align="center"
+              sideOffset={8}
+              floatingClassName="w-24"
+              className="p-1 text-neutral-200"
+            >
               <div className="flex flex-col gap-0.5">
                 {SPEEDS.map((s) => (
                   <button
@@ -543,9 +571,9 @@ export function CanvasToolbar({
                       onSpeedChange(s)
                       setSpeedPopoverOpen(false)
                     }}
-                    className={`flex items-center justify-between w-full rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
                       simSpeed === s
-                        ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                        ? "bg-cyan-500/20 font-semibold text-cyan-300"
                         : "text-neutral-300 hover:bg-white/8 hover:text-white"
                     }`}
                   >

@@ -22,8 +22,15 @@ export function piecesToEntities(
           out.push({
             kind: "polyline",
             points: pts,
-            // Contornos CAD casi siempre son loops (aunque el flag venga false)
-            closed: loopClosed || pts.length >= 3,
+            // Antes: `closed: loopClosed || pts.length >= 3` — forzaba
+            // cerrado a CUALQUIER fragmento de 3+ puntos, incluso un
+            // arco abierto de 180° que no era un loop. Eso dibujaba una
+            // línea recta extra uniendo sus dos puntas (la cuerda del
+            // arco). Ahora que dxf-parser.ts encadena los fragmentos
+            // sueltos en contornos completos antes de llegar acá,
+            // confiar en loopClosed (la distancia real entre el primer
+            // y el último punto) es seguro y correcto.
+            closed: loopClosed,
             color,
             pieceIndex,
             layer: sub.layer,
