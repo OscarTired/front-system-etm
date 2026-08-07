@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useNesting } from "./use-nesting"
 import {
@@ -525,16 +525,19 @@ export function useNestingProject() {
       if (cancelled) return
       if (draftHasWork(draft) && draft) {
         skipNextSaveRef.current = true
-        setSettings(draft.settings)
-        setMachine(draft.machine)
-        setRows(draft.rows)
-        sheetEditsRef.current = draft.editsBySheet ?? {}
-        activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
-        if (draft.sheets && draft.sheets.length > 0) {
-          restoreSheets(draft.sheets)
-        }
-        setSessionRestored(true)
-        setSessionSavedAt(draft.savedAt)
+        // Hidratar en transition: no bloquear el primer paint del shell.
+        startTransition(() => {
+          setSettings(draft.settings)
+          setMachine(draft.machine)
+          setRows(draft.rows)
+          sheetEditsRef.current = draft.editsBySheet ?? {}
+          activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
+          if (draft.sheets && draft.sheets.length > 0) {
+            restoreSheets(draft.sheets)
+          }
+          setSessionRestored(true)
+          setSessionSavedAt(draft.savedAt)
+        })
       }
       setSessionReady(true)
     })()

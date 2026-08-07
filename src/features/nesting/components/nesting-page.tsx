@@ -55,6 +55,10 @@ const DxfCanvas = dynamic(
   { ssr: false },
 )
 
+/** Solo mostrar toast de restauración una vez por carga real de JS (F5).
+ *  Navegar a otra ruta y volver no debe volver a molestar. */
+let sessionToastShownThisRuntime = false
+
 export function NestingPage() {
   const { isCompact } = useResponsive()
   const project = useNestingProject()
@@ -113,28 +117,27 @@ export function NestingPage() {
     [previewRowId, project.rows],
   )
 
-  // --- Session toast / undo keys / hydrate / persist (page-level) ---
-  const sessionToastShownRef = useRef(false)
+  // Toast de restauración: solo en carga fría (F5 / primer mount del runtime).
+  // Cambiar de página en el SPA no debe volver a mostrar el aviso.
   useEffect(() => {
-    if (project.sessionRestored && !sessionToastShownRef.current) {
-      sessionToastShownRef.current = true
-      toast("Trabajo restaurado", {
-        description: `Recuperado del navegador${
-          project.sessionSavedAt ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}` : ""
-        }`,
-        duration: Infinity,
-        action: {
-          label: "Descartar",
-          onClick: () => {
-            project.onDiscardSession()
-            history.resetAll?.() ?? history.reset()
-            setSelectedPieceIndices([])
-            setActiveGroupIndex(0)
-          },
+    if (!project.sessionRestored || sessionToastShownThisRuntime) return
+    sessionToastShownThisRuntime = true
+    toast("Trabajo restaurado", {
+      description: `Recuperado del navegador${
+        project.sessionSavedAt ? ` · ${new Date(project.sessionSavedAt).toLocaleString()}` : ""
+      }`,
+      duration: 8_000,
+      action: {
+        label: "Descartar",
+        onClick: () => {
+          project.onDiscardSession()
+          history.resetAll?.() ?? history.reset()
+          setSelectedPieceIndices([])
+          setActiveGroupIndex(0)
         },
-      })
-    }
-  }, [project, history])
+      },
+    })
+  }, [project.sessionRestored, project.sessionSavedAt, project, history])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -663,7 +666,7 @@ export function NestingPage() {
         }}
       />
 
-      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
+      <div className="flex min-h-0 flex-1 gap-2 overflow-hidden p-2 desktop:gap-4 desktop:p-4">
         {!isCompact && (
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
