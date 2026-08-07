@@ -1,21 +1,6 @@
 import type { Point2D } from "../engine/types"
 import { CUT_COLOR } from "./classify-dxf-color"
 
-/**
- * Lógica de encadenado de fragmentos geométricos sueltos (línea, arco,
- * polilínea) en contornos continuos — compartida entre TODOS los
- * formatos de entrada (DXF, GEO/TruTops, y cualquier otro futuro).
- *
- * Antes esta lógica vivía SOLO dentro de dxf-parser.ts: un archivo
- * .geo (TruTops) pasaba por un parser completamente distinto
- * (geo-parser.ts) que nunca la tenía, así que cada LIN/ARC/CIR del
- * .geo quedaba como su propio fragmento suelto sin conectar con nada
- * — el mismo bug que ya se había arreglado para DXF, pero intacto
- * para GEO. Extraído acá para que un fix futuro aplique en los dos
- * formatos a la vez, no en uno solo.
- */
-
-/** Tolerancia (mm) para considerar que dos extremos son "el mismo punto". */
 export const CHAIN_EPS = 0.01
 
 export function samePoint(a: Point2D, b: Point2D): boolean {
@@ -26,14 +11,6 @@ export interface Fragment {
   points: Point2D[]
   layer: string
   color: string
-  /**
-   * true si es el tramo sintético que "cierra" una polilínea marcada
-   * como cerrada en el archivo de origen — candidato a anularse si
-   * coincide con el cierre de otra polilínea (ver
-   * cancelDuplicateClosingEdges). Los formatos que no tienen este
-   * concepto (ej. GEO, donde cada LIN/ARC ya es un tramo explícito)
-   * simplemente no generan fragmentos con esto en true.
-   */
   isClosingEdge: boolean
 }
 
@@ -44,26 +21,57 @@ export interface Chain {
   color: string
 }
 
-/**
- * Une fragmentos sueltos (línea, arco, polilínea) que se tocan en sus
- * extremos en contornos continuos. Puramente geométrico: no importa
- * el layer/color de cada fragmento individual al decidir quién
- * conecta con quién — un archivo real a veces tiene un tramo de UN
- * MISMO contorno de corte con un color/capa distinto al resto por
- * error de dibujo (ej. un arco quedó en la capa de marca/doblez por
- * accidente); si agrupáramos por capa+color ANTES de encadenar, ese
- * tramo quedaría separado del resto y la pieza se vería "partida"
- * (mitad de un color, mitad de otro).
- *
- * Ya con la cadena geométrica completa, se decide la clasificación
- * UNA vez: si algún fragmento del contorno es de corte, el contorno
- * completo es de corte (un tramo mal coloreado no debe convertir en
- * "no cortable" el resto de un perfil real); si todos sus fragmentos
- * son de marca, se mantiene como marca.
- */
+function bucketKey(p: Point2D): string {
+  const bx = Math.round(p.x / CHAIN_EPS)
+  const by = Math.round(p.y / CHAIN_EPS)
+  return `${bx},${by}`
+}
+
+function neighborKeys(p: Point2D): string[] {
+  const bx = Math.round(p.x / CHAIN_EPS)
+  const by = Math.round(p.y / CHAIN_EPS)
+  const keys: string[] = []
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      keys.push(`${bx + dx},${by + dy}`)
+    }
+  }
+  return keys
+}
+
 export function chainFragments(fragments: Fragment[]): Chain[] {
   const used = new Array(fragments.length).fill(false)
   const chains: Chain[] = []
+
+  // Índice: bucket -> lista de [índice de fragmento, extremo] que cae ahí.
+  const index = new Map<string, { fragIdx: number; isStart: boolean }[]>()
+  const addToIndex = (fragIdx: number, point: Point2D, isStart: boolean) => {
+    const key = bucketKey(point)
+    const list = index.get(key)
+    if (list) list.push({ fragIdx, isStart })
+    else index.set(key, [{ fragIdx, isStart }])
+  }
+  fragments.forEach((f, idx) => {
+    addToIndex(idx, f.points[0], true)
+    addToIndex(idx, f.points[f.points.length - 1], false)
+  })
+
+  /** Busca en el índice un fragmento SIN USAR cuyo extremo toque `point`. */
+  const findMatch = (point: Point2D): { fragIdx: number; matchedStart: boolean } | null => {
+    for (const key of neighborKeys(point)) {
+      const bucket = index.get(key)
+      if (!bucket) continue
+      for (const entry of bucket) {
+        if (used[entry.fragIdx]) continue
+        const frag = fragments[entry.fragIdx].points
+        const candidatePoint = entry.isStart ? frag[0] : frag[frag.length - 1]
+        if (samePoint(point, candidatePoint)) {
+          return { fragIdx: entry.fragIdx, matchedStart: entry.isStart }
+        }
+      }
+    }
+    return null
+  }
 
   for (let i = 0; i < fragments.length; i++) {
     if (used[i]) continue
@@ -78,27 +86,27 @@ export function chainFragments(fragments: Fragment[]): Chain[] {
       const end = chain[chain.length - 1]
       if (chain.length > 2 && samePoint(start, end)) break // ya cerró
 
-      for (let j = 0; j < fragments.length; j++) {
-        if (used[j]) continue
-        const frag = fragments[j].points
-        const fStart = frag[0]
-        const fEnd = frag[frag.length - 1]
-
-        if (samePoint(end, fStart)) {
-          chain = chain.concat(frag.slice(1))
-        } else if (samePoint(end, fEnd)) {
-          chain = chain.concat([...frag].reverse().slice(1))
-        } else if (samePoint(start, fEnd)) {
-          chain = frag.slice(0, -1).concat(chain)
-        } else if (samePoint(start, fStart)) {
-          chain = [...frag].reverse().slice(0, -1).concat(chain)
-        } else {
-          continue
-        }
-        used[j] = true
-        memberIdx.push(j)
+      const matchAtEnd = findMatch(end)
+      if (matchAtEnd) {
+        const frag = fragments[matchAtEnd.fragIdx].points
+        chain = matchAtEnd.matchedStart
+          ? chain.concat(frag.slice(1))
+          : chain.concat([...frag].reverse().slice(1))
+        used[matchAtEnd.fragIdx] = true
+        memberIdx.push(matchAtEnd.fragIdx)
         extended = true
-        break
+        continue
+      }
+
+      const matchAtStart = findMatch(start)
+      if (matchAtStart) {
+        const frag = fragments[matchAtStart.fragIdx].points
+        chain = matchAtStart.matchedStart
+          ? [...frag].reverse().slice(0, -1).concat(chain)
+          : frag.slice(0, -1).concat(chain)
+        used[matchAtStart.fragIdx] = true
+        memberIdx.push(matchAtStart.fragIdx)
+        extended = true
       }
     }
 
@@ -116,13 +124,6 @@ export function chainFragments(fragments: Fragment[]): Chain[] {
   return chains
 }
 
-/**
- * Si dos fragmentos "de cierre" (ver Fragment.isClosingEdge) tienen
- * los mismos 2 extremos (en cualquier orden), son la misma arista
- * compartida internamente entre dos mitades de un contorno que el
- * archivo de origen cerró cada una por su lado — se anulan ambos. Lo
- * que sobra sigue de largo hacia chainFragments tal cual.
- */
 export function cancelDuplicateClosingEdges(fragments: Fragment[]): Fragment[] {
   const keyOf = (f: Fragment) => {
     const a = f.points[0]
@@ -157,10 +158,6 @@ export function cancelDuplicateClosingEdges(fragments: Fragment[]): Fragment[] {
   return fragments.filter((_, i) => !cancelled.has(i))
 }
 
-/**
- * Atajo para el caso común: anular cierres duplicados y encadenar en
- * un solo paso.
- */
 export function chainAndDedupe(fragments: Fragment[]): Chain[] {
   return chainFragments(cancelDuplicateClosingEdges(fragments))
 }

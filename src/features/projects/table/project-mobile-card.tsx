@@ -93,7 +93,7 @@ export function ProjectMobileCard({
           onClick={onToggle}
           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* Código YY-NNN — un poco más grande solo en desktop */}
+          {/* Código YY-NNN — más grande solo en desktop */}
           <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
@@ -128,7 +128,7 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa: icono + color en móvil, nombre en desktop */}
+              {/* Etapa: icono en móvil, nombre en desktop */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -147,7 +147,7 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono + color en móvil, nombre en desktop */}
+              {/* Estado: icono en móvil, nombre en desktop */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -171,6 +171,11 @@ export function ProjectMobileCard({
               </span>
             </div>
           </div>
+
+          {/* Fecha: solo desktop / tablet */}
+          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
+            {formatDate(project.deliveryDate)}
+          </span>
 
           <ChevronDown
             size={16}
@@ -197,7 +202,6 @@ export function ProjectMobileCard({
               />
             </button>
 
-            {/* ID antes del cliente */}
             <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
               <span className="text-xs font-medium text-neutral-500">ID</span>
               <span className="font-semibold tracking-wide text-neutral-300">
@@ -217,7 +221,6 @@ export function ProjectMobileCard({
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-              {/* ID antes del cliente */}
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(project.sequence).padStart(3, "0")}
               </span>
@@ -232,7 +235,6 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -251,7 +253,6 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -275,8 +276,8 @@ export function ProjectMobileCard({
               </span>
             </span>
 
-            {/* Fecha junto al chevron interno */}
-            <span className="shrink-0 text-xs text-neutral-500">
+            {/* Fecha interna: solo móvil */}
+            <span className="shrink-0 text-xs text-neutral-500 md:hidden">
               {formatDate(project.deliveryDate)}
             </span>
 

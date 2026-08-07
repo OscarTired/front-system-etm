@@ -73,10 +73,6 @@ export function ProcessMobileCard({
   const stepId = workflowAccess.stepId(processTask)
   const processCode = workflowAccess.processCode(processTask)
 
-  // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
-  // Tareas: una tarea que solo se ve porque el historial está
-  // activo (ya revisada en este proceso) queda atenuada, para
-  // distinguirla de un vistazo de las que siguen activas.
   const isDimmed = workflowAccess.isCompleted(processTask)
 
   return (
@@ -138,7 +134,6 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Prioridad: icono en móvil si existe, nombre en desktop */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -157,7 +152,6 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado workflow: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -181,6 +175,11 @@ export function ProcessMobileCard({
               </span>
             </div>
           </div>
+
+          {/* Fecha: solo desktop / tablet */}
+          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
+            {formatDate(task.deliveryDate)}
+          </span>
         </div>
 
         {stepId && processCode && (
@@ -227,7 +226,6 @@ export function ProcessMobileCard({
               />
             </button>
 
-            {/* ID de tarea antes del operario */}
             <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
               <span className="text-xs font-medium text-neutral-500">ID</span>
               <span className="font-semibold tracking-wide text-neutral-300">
@@ -235,7 +233,6 @@ export function ProcessMobileCard({
               </span>
             </div>
 
-            {/* Código completo del proyecto */}
             <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
               <span className="text-xs font-medium text-neutral-500">Proyecto</span>
               {isMobile ? (
@@ -266,7 +263,6 @@ export function ProcessMobileCard({
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-              {/* ID antes del cliente */}
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(task.taskNumber).padStart(3, "0")}
               </span>
@@ -281,7 +277,6 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Prioridad: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -300,7 +295,6 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -324,8 +318,8 @@ export function ProcessMobileCard({
               </span>
             </span>
 
-            {/* Fecha junto al chevron interno */}
-            <span className="shrink-0 text-xs text-neutral-500">
+            {/* Fecha interna: solo móvil */}
+            <span className="shrink-0 text-xs text-neutral-500 md:hidden">
               {formatDate(task.deliveryDate)}
             </span>
 

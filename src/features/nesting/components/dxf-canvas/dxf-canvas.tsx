@@ -1,19 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Ruler, AlertTriangle, Trash2, X, MousePointer2, Hand, Maximize2, RotateCw, Focus, CircleSlash, HelpCircle, Move, MoveHorizontal } from "lucide-react"
+import { Ruler, AlertTriangle, Trash2, X, MousePointer2, Hand, CircleSlash, HelpCircle } from "lucide-react"
 // Ruler used in measurements panel
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import type { CanvasTool } from "./types/types"
 
 import { CanvasToolbar } from "./components/canvas-toolbar"
-import { drawScene } from "./utils/draw"
+import { CanvasContextMenu } from "./components/canvas-context-menu"
+import { drawScene } from "./utils/draw/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
 import { findSmartSpansAtPoint } from "./utils/geometry-utils"
@@ -1242,117 +1236,20 @@ export function DxfCanvas({
         </div>
       </div>
 
-            {ctxMenu && (
-        <DropdownMenu open onOpenChange={(o) => { if (!o) setCtxMenu(null) }}>
-          <DropdownMenuTrigger asChild>
-            <span
-              className="fixed h-0 w-0"
-              style={{ left: ctxMenu.x, top: ctxMenu.y }}
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="min-w-48 border-white/10 bg-[#141416] text-neutral-100">
-            {/* Siempre primero: ajustar a plancha */}
-            <DropdownMenuItem onClick={() => handleFit()}>
-              <Maximize2 className="mr-2 h-4 w-4 opacity-70" />
-              Ajustar a plancha
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-white/10" />
-            {ctxMenu.pieceIndex !== null || selectedPieceIndices.length > 0 ? (
-              <>
-                <DropdownMenuItem
-                  disabled={!onRotateSelected || selectedPieceIndices.length === 0}
-                  onClick={() => onRotateSelected?.(selectedPieceIndices, rotationStep)}
-                >
-                  <RotateCw className="mr-2 h-4 w-4 opacity-70" />
-                  Rotar +{rotationStep}°
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={!onRotateSelected || selectedPieceIndices.length === 0}
-                  onClick={() => onRotateSelected?.(selectedPieceIndices, -rotationStep)}
-                >
-                  <RotateCw className="mr-2 h-4 w-4 opacity-70 -scale-x-100" />
-                  Rotar -{rotationStep}°
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={selectedPieceIndices.length === 0}
-                  onClick={() => setCanvasTool("rotate")}
-                >
-                  <RotateCw className="mr-2 h-4 w-4 opacity-70" />
-                  Rotar libre (arrastrar)
-                  <span className="ml-auto text-[10px] text-neutral-500">Shift = 15°</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={selectedPieceIndices.length === 0}
-                  onClick={() => handleFocus()}
-                >
-                  <Focus className="mr-2 h-4 w-4 opacity-70" />
-                  Enfocar selección
-                </DropdownMenuItem>
-                {onTransformModeChange && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      onTransformModeChange(transformMode === "free" ? "geometric" : "free")
-                    }
-                  >
-                    {transformMode === "free" ? (
-                      <MoveHorizontal className="mr-2 h-4 w-4 opacity-70" />
-                    ) : (
-                      <Move className="mr-2 h-4 w-4 opacity-70" />
-                    )}
-                    {transformMode === "free" ? "Restringir a un eje" : "Movimiento libre"}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  disabled={selectedPieceIndices.length === 0}
-                  onClick={() => onSelectPiece?.(null, false)}
-                >
-                  <CircleSlash className="mr-2 h-4 w-4 opacity-70" />
-                  Quitar selección
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={!onDeleteSelected || selectedPieceIndices.length === 0}
-                  onClick={() => onDeleteSelected?.(selectedPieceIndices)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4 opacity-70" />
-                  Eliminar…
-                  <span className="ml-auto text-[10px] text-neutral-500">Supr</span>
-                </DropdownMenuItem>
-              </>
-            ) : (
-              <>
-                <DropdownMenuItem onClick={() => setCanvasTool("select")}>
-                  <MousePointer2 className="mr-2 h-4 w-4 opacity-70" />
-                  Seleccionar
-                  <span className="ml-auto text-[10px] text-neutral-500">V</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setCanvasTool("pan")}>
-                  <Hand className="mr-2 h-4 w-4 opacity-70" />
-                  Pan
-                  <span className="ml-auto text-[10px] text-neutral-500">H</span>
-                </DropdownMenuItem>
-                {onTransformModeChange && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      onTransformModeChange(transformMode === "free" ? "geometric" : "free")
-                    }
-                  >
-                    {transformMode === "free" ? (
-                      <MoveHorizontal className="mr-2 h-4 w-4 opacity-70" />
-                    ) : (
-                      <Move className="mr-2 h-4 w-4 opacity-70" />
-                    )}
-                    {transformMode === "free"
-                      ? "Restringir movimiento a un eje"
-                      : "Activar movimiento libre"}
-                  </DropdownMenuItem>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      <CanvasContextMenu
+        ctxMenu={ctxMenu}
+        onClose={() => setCtxMenu(null)}
+        selectedPieceIndices={selectedPieceIndices}
+        rotationStep={rotationStep}
+        transformMode={transformMode}
+        onRotateSelected={onRotateSelected}
+        onTransformModeChange={onTransformModeChange}
+        onDeleteSelected={onDeleteSelected}
+        onSelectPiece={onSelectPiece}
+        onFit={handleFit}
+        onFocusSelected={handleFocus}
+        onSetCanvasTool={setCanvasTool}
+      />
 
       <CanvasToolbar
         showGrid={showGrid}

@@ -71,12 +71,6 @@ export function TaskMobileCard({
     }
   }, [expanded])
 
-  // Sin esto, useFocusedRow (el mecanismo que expande la card al
-  // llegar desde una notificación/link) solo abría el PRIMER nivel
-  // (esta card) — el segundo nivel (el panel de abajo, con
-  // Workflow/Comentarios/KPIs) seguía requiriendo el toque manual en
-  // MoreHorizontal, así que "abrir la notificación" nunca mostraba
-  // de verdad los comentarios sin un segundo click extra.
   useEffect(() => {
     if (expanded && isTarget) {
       setShowPipeline(true)
@@ -87,9 +81,6 @@ export function TaskMobileCard({
   const stage = taskAccess.stageLabel(task)
   const status = taskAccess.statusLabel(task)
 
-  // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
-  // Tareas y las cards de Proyectos/Procesos: una tarea finalizada,
-  // mostrada solo porque el historial está activo, queda atenuada.
   const isDimmed = taskAccess.isCompleted(task)
 
   return (
@@ -144,7 +135,6 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa: icono en móvil, nombre en desktop */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -163,7 +153,6 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono en móvil, nombre en desktop */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -187,6 +176,11 @@ export function TaskMobileCard({
               </span>
             </div>
           </div>
+
+          {/* Fecha: solo desktop / tablet */}
+          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
+            {formatDate(task.deliveryDate)}
+          </span>
 
           <ChevronDown
             size={16}
@@ -213,7 +207,6 @@ export function TaskMobileCard({
               />
             </button>
 
-            {/* ID de tarea antes de los campos */}
             <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
               <span className="text-xs font-medium text-neutral-500">ID</span>
               <span className="font-semibold tracking-wide text-neutral-300">
@@ -221,7 +214,6 @@ export function TaskMobileCard({
               </span>
             </div>
 
-            {/* Código completo del proyecto (con sufijo) */}
             <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
               <span className="text-xs font-medium text-neutral-500">Proyecto</span>
               {isMobile ? (
@@ -248,7 +240,6 @@ export function TaskMobileCard({
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-              {/* ID antes del cliente */}
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(task.taskNumber).padStart(3, "0")}
               </span>
@@ -263,7 +254,6 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -282,7 +272,6 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono en móvil */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -306,8 +295,8 @@ export function TaskMobileCard({
               </span>
             </span>
 
-            {/* Fecha junto al chevron interno */}
-            <span className="shrink-0 text-xs text-neutral-500">
+            {/* Fecha interna: solo móvil */}
+            <span className="shrink-0 text-xs text-neutral-500 md:hidden">
               {formatDate(task.deliveryDate)}
             </span>
 
