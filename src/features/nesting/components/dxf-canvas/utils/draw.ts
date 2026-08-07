@@ -104,28 +104,144 @@ export function strokeToolpathUntil(
   return headPoint
 }
 
-function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, scale: number) {
-  ctx.beginPath()
+type Aabb = { minX: number; minY: number; maxX: number; maxY: number }
+
+function aabbIntersects(a: Aabb, b: Aabb): boolean {
+  return !(a.maxX < b.minX || a.minX > b.maxX || a.maxY < b.minY || a.minY > b.maxY)
+}
+
+function entityAabb(e: Entity): Aabb | null {
   if (e.kind === "line") {
-    ctx.moveTo(e.a.x, e.a.y)
-    ctx.lineTo(e.b.x, e.b.y)
-    ctx.stroke()
-  } else if (e.kind === "polyline") {
-    e.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
-    if (e.closed) ctx.closePath()
-    ctx.stroke()
-  } else if (e.kind === "circle") {
-    ctx.arc(e.center.x, e.center.y, e.radius, 0, Math.PI * 2)
-    ctx.stroke()
-  } else if (e.kind === "arc") {
-    ctx.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle)
-    ctx.stroke()
-  } else if (e.kind === "text") {
+    return {
+      minX: Math.min(e.a.x, e.b.x),
+      minY: Math.min(e.a.y, e.b.y),
+      maxX: Math.max(e.a.x, e.b.x),
+      maxY: Math.max(e.a.y, e.b.y),
+    }
+  }
+  if (e.kind === "polyline") {
+    if (e.points.length === 0) return null
+    let minX = e.points[0].x, maxX = e.points[0].x
+    let minY = e.points[0].y, maxY = e.points[0].y
+    for (let i = 1; i < e.points.length; i++) {
+      const p = e.points[i]
+      if (p.x < minX) minX = p.x
+      if (p.x > maxX) maxX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.y > maxY) maxY = p.y
+    }
+    return { minX, minY, maxX, maxY }
+  }
+  if (e.kind === "circle") {
+    const { x, y } = e.center
+    const r = e.radius
+    return { minX: x - r, minY: y - r, maxX: x + r, maxY: y + r }
+  }
+  if (e.kind === "arc") {
+    // Conservador: bbox del círculo completo (barato y seguro)
+    const { x, y } = e.center
+    const r = e.radius
+    return { minX: x - r, minY: y - r, maxX: x + r, maxY: y + r }
+  }
+  if (e.kind === "text") {
+    return { minX: e.position.x, minY: e.position.y - e.height, maxX: e.position.x + e.height * 4, maxY: e.position.y }
+  }
+  return null
+}
+
+/** Viewport visible en coords mundo (incluye rotación 90°). */
+function viewportWorldAabb(
+  view: ViewState,
+  canvasW: number,
+  canvasH: number,
+): Aabb {
+  const { scale, offsetX, offsetY, rotationDeg = 0 } = view
+  const inv = 1 / Math.max(scale, 1e-12)
+  const corners: { x: number; y: number }[] = []
+  for (const [sx, sy] of [
+    [0, 0],
+    [canvasW, 0],
+    [0, canvasH],
+    [canvasW, canvasH],
+  ] as const) {
+    let cx = sx - canvasW / 2 - offsetX
+    let cy = sy - canvasH / 2 - offsetY
+    if (rotationDeg === 90) {
+      const ix = cy
+      const iy = -cx
+      cx = ix
+      cy = iy
+    }
+    corners.push({ x: cx * inv, y: cy * inv })
+  }
+  let minX = corners[0].x, maxX = corners[0].x
+  let minY = corners[0].y, maxY = corners[0].y
+  for (const c of corners) {
+    if (c.x < minX) minX = c.x
+    if (c.x > maxX) maxX = c.x
+    if (c.y < minY) minY = c.y
+    if (c.y > maxY) maxY = c.y
+  }
+  // margen extra para strokes
+  const pad = 2 * inv
+  return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad }
+}
+
+function buildEntityPath(e: Entity): Path2D | null {
+  const path = new Path2D()
+  if (e.kind === "line") {
+    path.moveTo(e.a.x, e.a.y)
+    path.lineTo(e.b.x, e.b.y)
+    return path
+  }
+  if (e.kind === "polyline") {
+    if (e.points.length < 2) return null
+    e.points.forEach((pt, i) => (i === 0 ? path.moveTo(pt.x, pt.y) : path.lineTo(pt.x, pt.y)))
+    if (e.closed) path.closePath()
+    return path
+  }
+  if (e.kind === "circle") {
+    path.arc(e.center.x, e.center.y, e.radius, 0, Math.PI * 2)
+    return path
+  }
+  if (e.kind === "arc") {
+    path.arc(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle)
+    return path
+  }
+  return null
+}
+
+type CachedEntity = {
+  entity: Entity
+  path: Path2D | null
+  bounds: Aabb | null
+}
+
+/** Cache de Path2D: se invalida solo cuando cambia la referencia de `entities`. */
+let pathCacheEntities: Entity[] | null = null
+let pathCache: CachedEntity[] = []
+
+function getPathCache(entities: Entity[]): CachedEntity[] {
+  if (entities === pathCacheEntities) return pathCache
+  pathCacheEntities = entities
+  pathCache = entities.map((entity) => ({
+    entity,
+    path: buildEntityPath(entity),
+    bounds: entityAabb(entity),
+  }))
+  return pathCache
+}
+
+function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, scale: number) {
+  if (e.kind === "text") {
     ctx.save()
     ctx.font = `${e.height}px sans-serif`
     ctx.fillText(e.text, e.position.x, e.position.y)
     ctx.restore()
+    return
   }
+  const path = buildEntityPath(e)
+  if (path) ctx.stroke(path)
 }
 
 
@@ -464,23 +580,46 @@ export function drawScene(d: DrawContext) {
   ctx.lineCap = "round"
   ctx.lineJoin = "round"
 
-  // Un solo pase: translate por pieza en drag (O(entidades), sin clonar arrays)
-  for (const e of entities) {
+  // Path2D cache (rebuild solo si cambia `entities`) + culling de viewport.
+  // En pan/zoom no se reconstruyen paths: solo stroke de los visibles.
+  const cached = getPathCache(entities)
+  const viewAabb = viewportWorldAabb(view, w, h)
+
+  for (const item of cached) {
+    const e = item.entity
     const isSelected = e.pieceIndex !== undefined && selectedSet.has(e.pieceIndex)
     const isColliding = e.pieceIndex !== undefined && collidingSet.has(e.pieceIndex)
     const inDrag = dragSet !== null && e.pieceIndex !== undefined && dragSet.has(e.pieceIndex)
+
+    // Culling: si está fuera del viewport y no se está arrastrando, skip
+    if (!inDrag && item.bounds && !aabbIntersects(item.bounds, viewAabb)) continue
 
     ctx.strokeStyle = isColliding ? COLLISION_COLOR : isSelected ? SELECTED_STROKE : e.color
     ctx.fillStyle = e.color
     ctx.lineWidth = (isColliding || isSelected ? 1.8 : 1) / scale
 
+    if (e.kind === "text") {
+      if (inDrag) {
+        ctx.save()
+        ctx.translate(ddx, ddy)
+        strokeEntity(ctx, e, scale)
+        ctx.restore()
+      } else {
+        strokeEntity(ctx, e, scale)
+      }
+      continue
+    }
+
+    const path = item.path
+    if (!path) continue
+
     if (inDrag) {
       ctx.save()
       ctx.translate(ddx, ddy)
-      strokeEntity(ctx, e, scale)
+      ctx.stroke(path)
       ctx.restore()
     } else {
-      strokeEntity(ctx, e, scale)
+      ctx.stroke(path)
     }
   }
   ctx.globalAlpha = 1
