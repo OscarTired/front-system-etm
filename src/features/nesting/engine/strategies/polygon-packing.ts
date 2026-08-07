@@ -59,9 +59,9 @@ function rotationAnglesFor(options: NestingOptions): number[] {
   const mode = options.rotationMode ?? "0-90-180-270"
   if (mode === "ninguna") return [0]
   if (mode === "libre") {
-    // Compromise densidad/tiempo: cada 15°
+    // Compromise densidad/tiempo: cada 30° (15° era ~2× más lento)
     const angles: number[] = []
-    for (let a = 0; a < 360; a += 15) angles.push(a)
+    for (let a = 0; a < 360; a += 30) angles.push(a)
     return angles
   }
   return [0, 90, 180, 270]
@@ -337,7 +337,7 @@ export class PolygonPackingStrategy implements NestingStrategy {
           const maxTrialsFine = Math.ceil(
             ((usableWidth / fineStep) + 2) * ((usableHeight / fineStep) + 2)
           )
-          tryGrid(si, fineStep, Math.min(maxTrialsFine, 80000))
+          tryGrid(si, fineStep, Math.min(maxTrialsFine, 25000))
         }
       }
 
