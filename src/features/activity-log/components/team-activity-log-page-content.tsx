@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
@@ -176,6 +176,7 @@ export function TeamActivityLogPageContent() {
 
   const [selectedUser, setSelectedUser] = useState<User>()
   const [date, setDate] = useState<Date | null>(new Date())
+  const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
   const filters = useMemo(
     () => ({
@@ -190,9 +191,18 @@ export function TeamActivityLogPageContent() {
 
   const { markedDates } = useActivityLogMarkedDates({
     scope: "team",
-    month: date ?? new Date(),
+    month: viewMonth,
     userId: selectedUser?.id,
   })
+
+  const handleViewMonthChange = useCallback((month: Date) => {
+    setViewMonth(month)
+  }, [])
+
+  const handleDateChange = useCallback((next: Date | null) => {
+    setDate(next)
+    if (next) setViewMonth(next)
+  }, [])
 
   const groupedLogs = useMemo(() => {
     if (selectedUser) {
@@ -249,10 +259,11 @@ export function TeamActivityLogPageContent() {
 
           <DateNavigator
             value={date}
-            onChange={setDate}
+            onChange={handleDateChange}
             placeholder="Fecha"
             maxDate={new Date()}
             markedDates={markedDates}
+            onViewMonthChange={handleViewMonthChange}
           />
 
           <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
@@ -278,10 +289,11 @@ export function TeamActivityLogPageContent() {
           <div className="justify-self-center">
             <DateNavigator
               value={date}
-              onChange={setDate}
+              onChange={handleDateChange}
               placeholder="Fecha"
               maxDate={new Date()}
               markedDates={markedDates}
+              onViewMonthChange={handleViewMonthChange}
             />
           </div>
 
