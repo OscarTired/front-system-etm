@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { BitacoraDepartmentPage } from "@/features/activity-log/components/bitacora-department-page"
-import { TeamActivityLogPageContent } from "@/features/activity-log/components/team-activity-log-page-content"
+import { TeamActivityLogPageContent } from "@/features/activity-log/components/contents/team-activity-log-page-content"
 import { BITACORA_DEPARTMENTS } from "@/features/activity-log/constants/bitacora-departments"
 import type { ActivityDepartment } from "@/features/activity-log/types/activity-log.types"
 import { useAuthStore } from "@/features/auth/store/auth-store"

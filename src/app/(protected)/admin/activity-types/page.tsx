@@ -2,7 +2,7 @@
 
 import {
   ActivityTypeActions,
-} from "@/features/activity-log/components/activity-type-actions"
+} from "@/features/activity-log/components/actions/activity-type-actions"
 
 import {
   ActivityTypesPageContent,

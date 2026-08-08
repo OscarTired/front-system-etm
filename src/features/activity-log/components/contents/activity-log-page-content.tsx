@@ -14,24 +14,24 @@ import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
 import { cn } from "@/shared/utils/utils"
 
-import { useMyActivityLog } from "../hooks/use-my-activity-log"
-import { useMyActivityLogRange } from "../hooks/use-my-activity-log-range"
-import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
-import { useMoveActivityLog } from "../hooks/use-move-activity-log"
-import { useActivityDrag } from "../hooks/use-activity-drag"
-import { useActivityLogMarkedDates } from "../hooks/use-activity-log-marked-dates"
-import type { ShiftSlotDefinition } from "../constants/shift-definitions"
-import { SHIFT_GROUPS, getSlotState } from "../constants/shift-definitions"
-import type { ActivityDepartment, ActivityLog } from "../types/activity-log.types"
-import { useBitacoraViewStore } from "../store/bitacora-view-store"
-import { getWeekRangeISO } from "../utils/week-range"
+import { useMyActivityLog } from "../../hooks/use-my-activity-log"
+import { useMyActivityLogRange } from "../../hooks/use-my-activity-log-range"
+import { useDeleteActivityLog } from "../../hooks/use-delete-activity-log"
+import { useMoveActivityLog } from "../../hooks/use-move-activity-log"
+import { useActivityDrag } from "../../hooks/use-activity-drag"
+import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
+import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
+import { SHIFT_GROUPS, getSlotState } from "../../constants/shift-definitions"
+import type { ActivityDepartment, ActivityLog } from "../../types/activity-log.types"
+import { useBitacoraViewStore } from "../../store/bitacora-view-store"
+import { getWeekRangeISO } from "../../utils/week-range"
 
-import { ShiftGroupSection } from "./shift-group-section"
-import { AutoActivitySection } from "./auto-activity-section"
-import { ActivityPickerDialog } from "./activity-picker-dialog"
-import { ActivityLogSkeleton } from "./activity-log-skeleton"
-import { BitacoraViewToggle } from "./bitacora-view-toggle"
-import { AgendaWeekView } from "./agenda-week-view"
+import { ShiftGroupSection } from "../shift-group-section"
+import { AutoActivitySection } from "../auto-activity-section"
+import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
+import { ActivityLogSkeleton } from "../skeletons/activity-log-skeleton"
+import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
+import { AgendaWeekView } from "../agenda/agenda-week-view"
 
 type ViewTab = ActivityDepartment | "REGISTROS"
 
@@ -155,9 +155,8 @@ export function ActivityLogPageContent({
     <div
       className={cn(
         "mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 transition-all duration-200",
-        // Móvil immersive: h-full del slot. Desktop: alto de viewport.
         isAgenda
-          ? "h-full min-h-0 overflow-hidden tablet:h-[calc(100dvh-5rem)]"
+          ? "tablet:h-[calc(100dvh-5rem)] tablet:min-h-0 tablet:overflow-hidden"
           : "pb-8",
       )}
     >
@@ -185,7 +184,7 @@ export function ActivityLogPageContent({
       </div>
 
       {isAgenda ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 tablet:overflow-hidden">
           <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-4 shadow-lg backdrop-blur-xl">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />

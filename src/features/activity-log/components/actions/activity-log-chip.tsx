@@ -1,7 +1,7 @@
 "use client"
 
-import { getActivityIcon } from "../constants/activity-icons"
-import type { ActivityLog } from "../types/activity-log.types"
+import { getActivityIcon } from "../../constants/activity-icons"
+import type { ActivityLog } from "../../types/activity-log.types"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {

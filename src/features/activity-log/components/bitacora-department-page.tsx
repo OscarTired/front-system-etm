@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 
-import { ActivityLogPageContent } from "./activity-log-page-content"
+import { ActivityLogPageContent } from "./contents/activity-log-page-content"
 import type { BitacoraDepartmentConfig } from "../constants/bitacora-departments"
 
 type Props = {

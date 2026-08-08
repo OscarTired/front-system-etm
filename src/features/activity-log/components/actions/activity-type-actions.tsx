@@ -10,7 +10,7 @@ import { cn } from "@/shared/utils/utils"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
-import { ActivityTypeFormDialog } from "./activity-type-form-dialog"
+import { ActivityTypeFormDialog } from "../dialogs/activity-type-form-dialog"
 
 // Mismo patrón que ProjectActions/TaskActions/UserActions: vive en
 // el header de la página (no adentro del listado), dueño de su

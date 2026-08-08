@@ -39,27 +39,27 @@ import {
 
 import {
   useActivityTypes,
-} from "../hooks/use-activity-types"
+} from "../../hooks/use-activity-types"
 
 import {
   useCreateActivityLog,
-} from "../hooks/use-create-activity-log"
+} from "../../hooks/use-create-activity-log"
 
 import {
   getActivityIcon,
-} from "../constants/activity-icons"
+} from "../../constants/activity-icons"
 
 import {
   getCurrentShift,
-} from "../constants/shift-definitions"
+} from "../../constants/shift-definitions"
 
 import type {
   ShiftSlotDefinition,
-} from "../constants/shift-definitions"
+} from "../../constants/shift-definitions"
 
 import type {
   ActivityDepartment,
-} from "../types/activity-log.types"
+} from "../../types/activity-log.types"
 
 type Props = {
   open: boolean

@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/utils"
 import {
   useBitacoraViewStore,
   type BitacoraViewMode,
-} from "../store/bitacora-view-store"
+} from "../../store/bitacora-view-store"
 
 const OPTIONS: { key: BitacoraViewMode; label: string }[] = [
   { key: "day", label: "Día" },

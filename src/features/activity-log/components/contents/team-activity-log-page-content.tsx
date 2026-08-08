@@ -12,11 +12,11 @@ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
-import { getActivityIcon } from "../constants/activity-icons"
-import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../constants/shift-definitions"
-import { useTeamActivityLog } from "../hooks/use-team-activity-log"
-import { useActivityLogMarkedDates } from "../hooks/use-activity-log-marked-dates"
-import { TeamActivityLogSkeleton } from "./team-activity-log-skeleton"
+import { getActivityIcon } from "../../constants/activity-icons"
+import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../../constants/shift-definitions"
+import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
+import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
+import { TeamActivityLogSkeleton } from "../skeletons/team-activity-log-skeleton"
 
 function startOfDayISO(date: string) {
   return new Date(`${date}T00:00:00`).toISOString()

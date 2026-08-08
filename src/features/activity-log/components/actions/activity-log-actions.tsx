@@ -10,9 +10,9 @@ import { cn } from "@/shared/utils/utils"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
-import { ActivityPickerDialog } from "./activity-picker-dialog"
+import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
 
-import type { ActivityDepartment } from "../types/activity-log.types"
+import type { ActivityDepartment } from "../../types/activity-log.types"
 
 type Props = {
   department?: ActivityDepartment

@@ -34,11 +34,11 @@ import {
 
 import {
   useActivityTypeMutations,
-} from "../hooks/use-activity-type-mutations"
+} from "../../hooks/use-activity-type-mutations"
 
 import type {
   ActivityType,
-} from "../types/activity-log.types"
+} from "../../types/activity-log.types"
 
 import type {
   EntityForm,
