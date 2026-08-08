@@ -16,6 +16,8 @@ type Props = {
   maxDate?: Date
   className?: string
   markedDates?: Record<string, DayMarker[]>
+  /** Mes visible en el popover → para pedir marked-dates del mes correcto */
+  onViewMonthChange?: (month: Date) => void
 }
 
 function addDays(date: Date, amount: number) {
@@ -32,6 +34,7 @@ export function DateNavigator({
   maxDate,
   className,
   markedDates,
+  onViewMonthChange,
 }: Props) {
   const current = value ?? new Date()
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -39,7 +42,6 @@ export function DateNavigator({
   const atMin = minDate != null && stripTime(current) <= stripTime(minDate)
   const atMax = maxDate != null && stripTime(current) >= stripTime(maxDate)
 
-  // Con el calendario abierto, las flechas no mueven el día
   const arrowsDisabled = pickerOpen
 
   function goTo(amount: number) {
@@ -67,6 +69,7 @@ export function DateNavigator({
         maxDate={maxDate}
         markedDates={markedDates}
         onOpenChange={setPickerOpen}
+        onViewMonthChange={onViewMonthChange}
       />
 
       <button

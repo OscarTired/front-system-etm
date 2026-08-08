@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
@@ -43,6 +43,7 @@ export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
   const [date, setDate] = useState<Date>(new Date())
+  const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
   const dateISO = toISODateString(date)
   const isToday = dateISO === toISODateString(new Date())
@@ -74,9 +75,19 @@ export function ActivityLogPageContent({
 
   const { markedDates } = useActivityLogMarkedDates({
     scope: "me",
-    month: date,
+    month: viewMonth,
     department: departmentQuery,
   })
+
+  const handleViewMonthChange = useCallback((month: Date) => {
+    setViewMonth(month)
+  }, [])
+
+  const handleDateChange = useCallback((next: Date | null) => {
+    const d = next ?? new Date()
+    setDate(d)
+    setViewMonth(d)
+  }, [])
 
   const { has } = usePermissions()
 
@@ -132,7 +143,9 @@ export function ActivityLogPageContent({
   }
 
   function handleAgendaLogClick(log: ActivityLog) {
-    setDate(new Date(log.loggedAt))
+    const d = new Date(log.loggedAt)
+    setDate(d)
+    setViewMonth(d)
     setViewMode("day")
   }
 
@@ -146,7 +159,6 @@ export function ActivityLogPageContent({
       )}
     >
 
-      {/* Toolbar a ancho completo → toggle siempre en el mismo sitio (derecha) */}
       <div className="shrink-0">
         <EntityToolbar
           right={
@@ -154,7 +166,11 @@ export function ActivityLogPageContent({
               {isAgenda && (
                 <button
                   type="button"
-                  onClick={() => setDate(new Date())}
+                  onClick={() => {
+                    const today = new Date()
+                    setDate(today)
+                    setViewMonth(today)
+                  }}
                   className="flex h-9 items-center rounded-lg bg-white/5 px-3 text-sm font-medium text-neutral-300 transition hover:bg-white/10 hover:text-white"
                 >
                   Hoy
@@ -168,7 +184,6 @@ export function ActivityLogPageContent({
 
       {isAgenda ? (
         <>
-          {/* Navigator Agenda — ancho completo */}
           <div className="shrink-0 rounded-2xl bg-white/2 p-4">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />
@@ -176,10 +191,11 @@ export function ActivityLogPageContent({
               <div className="flex w-full justify-center tablet:justify-self-center">
                 <DateNavigator
                   value={date}
-                  onChange={next => setDate(next ?? new Date())}
+                  onChange={handleDateChange}
                   placeholder="Fecha"
                   maxDate={new Date()}
                   markedDates={markedDates}
+                  onViewMonthChange={handleViewMonthChange}
                 />
               </div>
 
@@ -204,13 +220,15 @@ export function ActivityLogPageContent({
               anchorDate={date}
               logs={rangeLogs}
               loading={rangeLoading}
-              onSelectDay={d => setDate(d)}
+              onSelectDay={d => {
+                setDate(d)
+                setViewMonth(d)
+              }}
               onLogClick={handleAgendaLogClick}
             />
           </div>
         </>
       ) : (
-        /* Día: contenido centrado max-w-2xl; el toggle arriba ya quedó a la derecha del max-w-6xl */
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
           <div className="rounded-2xl bg-white/2 p-4">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
@@ -219,10 +237,11 @@ export function ActivityLogPageContent({
               <div className="flex w-full justify-center tablet:justify-self-center">
                 <DateNavigator
                   value={date}
-                  onChange={next => setDate(next ?? new Date())}
+                  onChange={handleDateChange}
                   placeholder="Fecha"
                   maxDate={new Date()}
                   markedDates={markedDates}
+                  onViewMonthChange={handleViewMonthChange}
                 />
               </div>
 

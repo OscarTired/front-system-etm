@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { CalendarGrid } from './calendar-grid'
 import { CalendarHeader } from './calendar-header'
 import { useCalendar } from '../hooks/use-calendar'
@@ -14,6 +14,8 @@ export interface DateCalendarProps {
   displayDate?: Date | null
   className?: string
   markedDates?: Record<string, DayMarker[]>
+  /** Mes que el usuario está viendo (cambia con ◀ ▶ del header) */
+  onViewMonthChange?: (month: Date) => void
 }
 
 export function DateCalendar({
@@ -24,8 +26,10 @@ export function DateCalendar({
   displayDate,
   className,
   markedDates,
+  onViewMonthChange,
 }: DateCalendarProps): React.JSX.Element {
   const {
+    viewDate,
     weeks,
     monthYearLabel,
     goToPreviousMonth,
@@ -39,6 +43,10 @@ export function DateCalendar({
     maxDate,
     markedDates,
   })
+
+  useEffect(() => {
+    onViewMonthChange?.(viewDate)
+  }, [viewDate, onViewMonthChange])
 
   const touchStartX = useRef<number | null>(null)
 

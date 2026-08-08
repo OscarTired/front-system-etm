@@ -39,6 +39,7 @@ export function DatePicker({
   className,
   markedDates,
   onOpenChange: onOpenChangeProp,
+  onViewMonthChange,
 }: DatePickerProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const { isMobile } = useResponsive()
@@ -158,6 +159,7 @@ export function DatePicker({
             maxDate={maxDate}
             onSelect={handleSelectDay}
             markedDates={markedDates}
+            onViewMonthChange={onViewMonthChange}
           />
         </div>
       </PopoverContent>

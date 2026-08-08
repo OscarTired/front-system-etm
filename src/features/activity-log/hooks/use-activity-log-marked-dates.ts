@@ -14,10 +14,13 @@ type Scope =
   | { scope: "team"; userId?: string; department?: ActivityDepartment }
 
 type Options = Scope & {
+  /** Mes visible en el calendario (o el del día seleccionado) */
   month: Date
+  /** Si false, no llama al backend */
   enabled?: boolean
 }
 
+/** from = 1er día del mes anterior, to = último del mes siguiente (celdas del grid) */
 function expandedMonthBoundsISO(month: Date) {
   const y = month.getFullYear()
   const m = month.getMonth()
@@ -31,6 +34,13 @@ function expandedMonthBoundsISO(month: Date) {
   return { from, to }
 }
 
+/**
+ * markedDates solo desde el backend:
+ * - scope "me"   → GET /activity-log/me/marked-dates
+ * - scope "team" → GET /activity-log/marked-dates
+ *
+ * Rango = mes visible ± 1 (cubre días grises del grid).
+ */
 export function useActivityLogMarkedDates(options: Options) {
   const { month, enabled = true } = options
   const { from, to } = useMemo(() => expandedMonthBoundsISO(month), [month])
