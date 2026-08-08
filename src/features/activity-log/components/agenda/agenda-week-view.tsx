@@ -21,14 +21,13 @@ type Props = {
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
-// Colores únicos y diferenciados para cada turno (evitando que todos sean cyan/azules)
 const DISTINCT_SHIFT_COLORS = [
-  "text-amber-400",   // Mañana / Dorado cálido
-  "text-emerald-400", // Almuerzo / Verde fresco
-  "text-rose-400",    // Tarde / Coral vibrante
-  "text-violet-400",  // Noche / Violeta profundo
-  "text-teal-400",    // Extra 1
-  "text-fuchsia-400", // Extra 2
+  "text-amber-400",
+  "text-emerald-400",
+  "text-rose-400",
+  "text-violet-400",
+  "text-teal-400",
+  "text-fuchsia-400",
 ]
 
 export function AgendaWeekView({
@@ -48,24 +47,24 @@ export function AgendaWeekView({
 
   return (
     <>
-      {/* ========== DESKTOP / TABLET — diseño original sin cambios ========== */}
-      <div className="hidden h-full min-h-100 flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl tablet:flex">
-        <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      {/* ========== DESKTOP / TABLET ========== */}
+      <div className="hidden h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl tablet:flex">
+        <div className="min-h-0 flex-1 overflow-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div
-            className="grid h-full min-w-210 bg-[#0c0c0e]"
+            className="grid h-full min-h-full min-w-210 w-full bg-[#0c0c0e]"
             style={{
               gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
-              gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(auto, 1fr))`,
+              gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(0, 1fr))`,
             }}
           >
             {/* Esquina superior izquierda */}
-            <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-r border-white/5 bg-[#0c0c0e] p-3">
+            <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-white/5 bg-[#0c0c0e] p-3">
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Turnos / Días
               </span>
             </div>
 
-            {/* Cabeceras de los días */}
+            {/* Cabeceras de días */}
             {days.map((day, i) => {
               const iso = toISODateString(day)
               const isToday = iso === todayISO
@@ -78,7 +77,7 @@ export function AgendaWeekView({
                   type="button"
                   onClick={() => onSelectDay?.(day)}
                   className={cn(
-                    "sticky top-0 z-20 border-b border-l border-white/5 bg-[#0c0c0e] px-3 py-3 text-center transition-colors duration-200",
+                    "sticky top-0 z-20 border-b border-white/5 bg-[#0c0c0e] px-3 py-3 text-center transition-colors duration-200",
                     "hover:bg-white/5",
                     isWeekend && "bg-white/2",
                     isToday && "bg-amber-500/10",
@@ -99,8 +98,12 @@ export function AgendaWeekView({
                         "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold tabular-nums transition-all duration-200",
                         isToday &&
                           "bg-amber-400 text-neutral-950 shadow-[0_0_15px_rgba(251,191,36,0.4)]",
-                        !isToday && isAnchor && "bg-white/20 text-white shadow-sm",
-                        !isToday && !isAnchor && "text-neutral-300 hover:text-white",
+                        !isToday &&
+                          isAnchor &&
+                          "bg-white/20 text-white shadow-sm",
+                        !isToday &&
+                          !isAnchor &&
+                          "text-neutral-300 hover:text-white",
                       )}
                     >
                       {day.getDate()}
@@ -110,39 +113,47 @@ export function AgendaWeekView({
               )
             })}
 
-            {/* Filas basadas en SHIFT_GROUPS */}
+            {/* Filas de turnos */}
             {SHIFT_GROUPS.map((group, index) => {
               const GroupIcon = group.icon
               const iconColorClass =
                 DISTINCT_SHIFT_COLORS[index % DISTINCT_SHIFT_COLORS.length]
+              const isLast = index === SHIFT_GROUPS.length - 1
 
               return (
                 <div key={group.key} className="contents">
-                  {/* Columna lateral del grupo */}
-                  <div className="sticky left-0 z-10 flex flex-col justify-center gap-1.5 border-b border-r border-white/5 bg-[#0c0c0e] px-3.5 py-3">
-                    <div className="flex items-center gap-2 text-neutral-300">
-                      <GroupIcon
-                        size={14}
-                        strokeWidth={2.5}
-                        className={cn("shrink-0", iconColorClass)}
-                      />
-                      <span className="text-xs font-bold uppercase tracking-wider text-white">
-                        {group.label}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-0.5 pl-5">
-                      {group.slots.map(slot => (
-                        <span
-                          key={slot.shift}
-                          className="text-[11px] font-medium tabular-nums text-neutral-400"
-                        >
-                          {slot.hours}
+                  {/* Label del turno */}
+                  <div
+                    className={cn(
+                      "sticky left-0 z-10 flex flex-col justify-center bg-[#0c0c0e] px-3.5 py-3",
+                      !isLast && "border-b border-white/5",
+                    )}
+                  >
+                    <div className="flex flex-col items-center text-center gap-1.5">
+                      <div className="flex items-center justify-center gap-2 text-neutral-300">
+                        <GroupIcon
+                          size={14}
+                          strokeWidth={2.5}
+                          className={cn("shrink-0", iconColorClass)}
+                        />
+                        <span className="text-xs font-bold uppercase tracking-wider text-white">
+                          {group.label}
                         </span>
-                      ))}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        {group.slots.map(slot => (
+                          <span
+                            key={slot.shift}
+                            className="text-[11px] font-medium tabular-nums text-neutral-400"
+                          >
+                            {slot.hours}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Celdas de los días para este grupo */}
+                  {/* Celdas por día */}
                   {days.map((day, dayIndex) => {
                     const iso = toISODateString(day)
                     const cellLogs = group.slots.flatMap(slot =>
@@ -155,14 +166,15 @@ export function AgendaWeekView({
                       <div
                         key={`${group.key}-${iso}`}
                         className={cn(
-                          "min-h-0 border-b border-l border-white/5 bg-[#0c0c0e] p-2 transition-colors duration-150",
+                          "min-h-0 bg-[#0c0c0e] p-2 transition-colors duration-150 flex flex-col justify-center",
+                          !isLast && "border-b border-white/5",
                           isWeekend && "bg-white/2",
                           isToday && "bg-amber-500/2",
                         )}
                       >
-                        <div className="flex h-full min-h-0 flex-col gap-1.5">
+                        <div className="flex flex-col justify-center gap-1.5 h-full">
                           {cellLogs.length === 0 ? (
-                            <div className="flex h-full min-h-14 items-center justify-center">
+                            <div className="flex items-center justify-center">
                               <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
                             </div>
                           ) : (
@@ -190,11 +202,11 @@ export function AgendaWeekView({
         </div>
       </div>
 
-      {/* ========== MÓVIL — strip + turnos del día (altura natural, 1 scroll) ========== */}
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#0c0c0e] tablet:hidden">
+      {/* ========== MÓVIL ========== */}
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e] tablet:hidden">
         <div
           className={cn(
-            "flex shrink-0 gap-1 overflow-x-auto border-b border-white/5 px-2 py-2.5",
+            "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
             "[-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden",
           )}
         >
@@ -238,7 +250,7 @@ export function AgendaWeekView({
           })}
         </div>
 
-        <div className="flex flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-none flex flex-col divide-y divide-white/5">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
             const iconColorClass =
@@ -246,17 +258,10 @@ export function AgendaWeekView({
             const dayLogs = group.slots.flatMap(slot =>
               logsForDayAndShift(logs, anchorISO, slot.shift),
             )
-            const isLast = index === SHIFT_GROUPS.length - 1
 
             return (
-              <section
-                key={group.key}
-                className={cn(
-                  "px-3 py-3.5",
-                  !isLast && "border-b border-white/5",
-                )}
-              >
-                <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <section key={group.key} className="flex-1 flex flex-col justify-center px-3 py-3.5 min-h-0">
+                <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <GroupIcon
                     size={14}
                     strokeWidth={2.5}
@@ -284,7 +289,7 @@ export function AgendaWeekView({
                     ))}
                   </div>
                 ) : (
-                  <p className="py-1 text-[11px] text-neutral-600">
+                  <p className="py-0.5 text-[11px] text-neutral-600">
                     Sin registros
                   </p>
                 )}

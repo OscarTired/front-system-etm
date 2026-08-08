@@ -81,10 +81,10 @@ export const NAVIGATION = [
   },
 
   {
-    title: "Bitácora",
+    title: "Registros",
     items: [
       {
-        label: "Registros",
+        label: "Bitácora",
         href: "/bitacora",
         icon: NotebookPen,
         permission: PermissionCode.ACTIVITY_LOG_READ,

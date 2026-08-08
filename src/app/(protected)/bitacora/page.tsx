@@ -26,14 +26,33 @@ export default function BitacoraPage() {
   const roleCodes = userRoles?.map(role => role.code) ?? []
   const isAdmin = roleCodes.includes("ADMIN")
 
-  const canSeeProduccion = isAdmin || BITACORA_DEPARTMENTS.PRODUCCION.roles.some(r => roleCodes.includes(r))
-  const canSeeIngenieria = isAdmin || BITACORA_DEPARTMENTS.INGENIERIA.roles.some(r => roleCodes.includes(r))
+  const canSeeProduccion =
+    isAdmin ||
+    BITACORA_DEPARTMENTS.PRODUCCION.roles.some(r => roleCodes.includes(r))
+  const canSeeIngenieria =
+    isAdmin ||
+    BITACORA_DEPARTMENTS.INGENIERIA.roles.some(r => roleCodes.includes(r))
   const canSeeTeam = has(PermissionCode.ACTIVITY_LOG_READ_ANY)
 
   const tabs: TabConfig[] = [
-    { id: "PRODUCCION" as ViewMode, label: "Producción", icon: Layers, show: canSeeProduccion },
-    { id: "INGENIERIA" as ViewMode, label: "Ingeniería", icon: Wrench, show: canSeeIngenieria },
-    { id: "TEAM" as ViewMode, label: "Equipo", icon: ShieldCheck, show: canSeeTeam },
+    {
+      id: "PRODUCCION" as ViewMode,
+      label: "Producción",
+      icon: Layers,
+      show: canSeeProduccion,
+    },
+    {
+      id: "INGENIERIA" as ViewMode,
+      label: "Ingeniería",
+      icon: Wrench,
+      show: canSeeIngenieria,
+    },
+    {
+      id: "TEAM" as ViewMode,
+      label: "Equipo",
+      icon: ShieldCheck,
+      show: canSeeTeam,
+    },
   ].filter(tab => tab.show)
 
   const [activeView, setActiveView] = useState<ViewMode>(() => {
@@ -54,27 +73,21 @@ export default function BitacoraPage() {
   }
 
   return (
-    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10 tablet:h-full">
-
-      {/* Header adaptable con estructura idéntica a la vista de Usuarios */}
-      <header className="hidden desktop:flex flex-wrap items-center justify-between gap-4 mb-4">
-        
-        {/* Título y subtítulo izquierdo */}
-        <div className="min-w-0 flex-1 items-center gap-2 flex">
+    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-3 text-white select-none tablet:px-4 desktop:px-5 desktop:py-4">
+      {/* Header desktop */}
+      <header className="mb-3 hidden shrink-0 flex-wrap items-center justify-between gap-4 desktop:flex">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             BITÁCORA
           </h1>
-
           <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
-
           <p className="min-w-0 truncate text-sm text-neutral-500">
             Control y registro de actividades
           </p>
         </div>
 
-        {/* Acciones o navegación derecha en desktop */}
         <div className="shrink-0">
-          <nav className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl">
+          <nav className="flex items-center gap-1 rounded-xl bg-neutral-900 p-1">
             {tabs.map(tab => {
               const IconComponent = tab.icon
               const isActive = activeView === tab.id
@@ -84,39 +97,24 @@ export default function BitacoraPage() {
                   key={tab.id}
                   onClick={() => setActiveView(tab.id)}
                   title={tab.label}
-                  className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors shrink-0 ${
-                    isActive 
-                      ? "bg-neutral-800 text-white shadow-sm" 
+                  className={`flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    isActive
+                      ? "bg-neutral-800 text-white shadow-sm"
                       : "text-neutral-400 hover:text-white"
                   }`}
                 >
                   <IconComponent className="h-4 w-4 shrink-0" />
-                  <span className="truncate">
-                    {tab.label}
-                  </span>
+                  <span className="truncate">{tab.label}</span>
                 </button>
               )
             })}
           </nav>
         </div>
-
       </header>
 
-      {/* Vista para dispositivos móviles / tabletas (Header alternativo) */}
-      <div className="desktop:hidden flex flex-col gap-3 mb-4 pt-4">
-        
-        {/* Título oculto en móvil/tablet pero conservado con 'hidden' */}
-        <div className="hidden items-center gap-2">
-          <h1 className="text-xl font-bold tracking-widest">
-            BITÁCORA
-          </h1>
-          <span className="h-1 w-1 rounded-full bg-neutral-700" />
-          <p className="text-xs text-neutral-500 truncate">
-            Control de actividades
-          </p>
-        </div>
-
-        <nav className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
+      {/* Header móvil / tablet */}
+      <div className="mb-3 flex shrink-0 flex-col gap-3 pt-3 desktop:hidden">
+        <nav className="flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map(tab => {
             const IconComponent = tab.icon
             const isActive = activeView === tab.id
@@ -126,41 +124,30 @@ export default function BitacoraPage() {
                 key={tab.id}
                 onClick={() => setActiveView(tab.id)}
                 title={tab.label}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-colors shrink-0 ${
-                  isActive 
-                    ? "bg-neutral-800 text-white shadow-sm" 
+                className={`flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                  isActive
+                    ? "bg-neutral-800 text-white shadow-sm"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
                 <IconComponent className="h-4 w-4 shrink-0" />
-                <span className="max-[420px]:hidden truncate">
-                  {tab.label}
-                </span>
+                <span className="max-[420px]:hidden truncate">{tab.label}</span>
               </button>
             )
           })}
         </nav>
       </div>
 
-      {/* Secciones de Contenido */}
-      <section className="mt-2 min-h-0 flex-1 tablet:mt-3 flex flex-col w-full">
+      {/* Contenido: ocupa TODO el espacio restante */}
+      <section className="flex min-h-0 w-full flex-1 flex-col">
         {activeView === "PRODUCCION" && (
-          <BitacoraDepartmentPage
-            config={BITACORA_DEPARTMENTS.PRODUCCION}
-          />
+          <BitacoraDepartmentPage config={BITACORA_DEPARTMENTS.PRODUCCION} />
         )}
-
         {activeView === "INGENIERIA" && (
-          <BitacoraDepartmentPage
-            config={BITACORA_DEPARTMENTS.INGENIERIA}
-          />
+          <BitacoraDepartmentPage config={BITACORA_DEPARTMENTS.INGENIERIA} />
         )}
-
-        {activeView === "TEAM" && (
-          <TeamActivityLogPageContent />
-        )}
+        {activeView === "TEAM" && <TeamActivityLogPageContent />}
       </section>
-
     </main>
   )
 }

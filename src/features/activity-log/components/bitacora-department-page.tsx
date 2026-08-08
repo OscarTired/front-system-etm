@@ -15,7 +15,6 @@ type Props = {
 }
 
 export function BitacoraDepartmentPage({ config }: Props) {
-
   usePageTitle(config.pageTitle)
 
   const router = useRouter()
@@ -23,7 +22,8 @@ export function BitacoraDepartmentPage({ config }: Props) {
 
   const roleCodes = userRoles?.map(role => role.code) ?? []
   const isAdmin = roleCodes.includes("ADMIN")
-  const allowed = isAdmin || config.roles.some(role => roleCodes.includes(role))
+  const allowed =
+    isAdmin || config.roles.some(role => roleCodes.includes(role))
 
   useEffect(() => {
     if (userRoles && !allowed) {
@@ -36,9 +36,8 @@ export function BitacoraDepartmentPage({ config }: Props) {
   }
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex h-full min-h-0 w-full flex-col">
       <ActivityLogPageContent department={config.department} />
     </div>
   )
-
 }
