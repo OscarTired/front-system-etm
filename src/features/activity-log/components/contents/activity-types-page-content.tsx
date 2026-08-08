@@ -11,13 +11,13 @@ import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-s
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
-import { useActivityTypes } from "../hooks/use-activity-types"
-import { useActivityTypeMutations } from "../hooks/use-activity-type-mutations"
-import { getActivityIcon } from "../constants/activity-icons"
-import { ActivityTypeFormDialog } from "./activity-type-form-dialog"
-import { ActivityTypesSkeleton } from "./activity-types-skeleton"
+import { useActivityTypes } from "../../hooks/use-activity-types"
+import { useActivityTypeMutations } from "../../hooks/use-activity-type-mutations"
+import { getActivityIcon } from "../../constants/activity-icons"
+import { ActivityTypeFormDialog } from "../dialogs/activity-type-form-dialog"
+import { ActivityTypesSkeleton } from "../skeletons/activity-types-skeleton"
 
-import type { ActivityType } from "../types/activity-log.types"
+import type { ActivityType } from "../../types/activity-log.types"
 
 function ActivityTypeRow({
   type,

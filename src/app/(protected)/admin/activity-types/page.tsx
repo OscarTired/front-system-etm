@@ -6,7 +6,7 @@ import {
 
 import {
   ActivityTypesPageContent,
-} from "@/features/activity-log/components/activity-types-page-content"
+} from "@/features/activity-log/components/contents/activity-types-page-content"
 
 import {
   usePageTitle,
