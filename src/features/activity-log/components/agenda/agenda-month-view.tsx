@@ -134,7 +134,7 @@ export function AgendaMonthView({
             key={label}
             className={cn(
               "flex items-center justify-center py-2",
-              i >= 5 && "bg-white/[0.02]",
+              i >= 5 && "bg-white/2",
             )}
           >
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 tablet:text-[11px]">
@@ -181,11 +181,11 @@ export function AgendaMonthView({
                     isMobile
                       ? "items-center justify-start gap-0.5 p-1"
                       : "items-stretch gap-1 p-1.5",
-                    isWeekend && "bg-white/[0.015]",
+                    isWeekend && "bg-white/1.5",
                     !inMonth && "opacity-35",
-                    isAnchor && "bg-white/[0.04]",
+                    isAnchor && "bg-white/4",
                     isToday && "bg-amber-500/10",
-                    !isFuture && "hover:bg-white/[0.06]",
+                    !isFuture && "hover:bg-white/6",
                     isFuture && "cursor-default opacity-40",
                   )}
                 >
