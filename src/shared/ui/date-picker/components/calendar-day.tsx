@@ -27,14 +27,14 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
         isDisabled ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
       ].join(' ')}
     >
-      {date.getDate()}
+      <span className="relative z-10">{date.getDate()}</span>
 
       {isToday && !isSelected && !hasMarkers ? (
-        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white" />
+        <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white" />
       ) : null}
 
       {hasMarkers ? (
-        <span className="absolute bottom-0.5 flex items-center justify-center gap-0.5">
+        <span className="pointer-events-none absolute bottom-0.5 left-1/2 flex -translate-x-1/2 items-center justify-center gap-0.5">
           {markers!.slice(0, 3).map((m, i) => (
             <span
               key={i}

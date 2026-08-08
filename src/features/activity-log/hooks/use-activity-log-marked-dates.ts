@@ -14,27 +14,26 @@ type Scope =
   | { scope: "team"; userId?: string; department?: ActivityDepartment }
 
 type Options = Scope & {
-  /** Cualquier día del mes visible en el calendario */
   month: Date
+  enabled?: boolean
 }
 
-function monthBoundsISO(month: Date) {
+function expandedMonthBoundsISO(month: Date) {
   const y = month.getFullYear()
   const m = month.getMonth()
-  const from = `${y}-${String(m + 1).padStart(2, "0")}-01`
-  const lastDay = new Date(y, m + 1, 0).getDate()
-  const to = `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
+
+  const prev = new Date(y, m - 1, 1)
+  const next = new Date(y, m + 1, 1)
+  const nextLast = new Date(y, m + 2, 0).getDate()
+
+  const from = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}-01`
+  const to = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(nextLast).padStart(2, "0")}`
   return { from, to }
 }
 
-/**
- * markedDates solo desde el backend:
- * - scope "me"   → GET /activity-log/me/marked-dates  (user del token)
- * - scope "team" → GET /activity-log/marked-dates     (READ_ANY)
- */
 export function useActivityLogMarkedDates(options: Options) {
-  const { month } = options
-  const { from, to } = useMemo(() => monthBoundsISO(month), [month])
+  const { month, enabled = true } = options
+  const { from, to } = useMemo(() => expandedMonthBoundsISO(month), [month])
 
   const queryKey =
     options.scope === "me"
@@ -51,6 +50,7 @@ export function useActivityLogMarkedDates(options: Options) {
 
   const { data: dates = [] } = useQuery({
     queryKey,
+    enabled,
     queryFn: ({ signal }) => {
       if (options.scope === "me") {
         return activityLogService.getMyMarkedDates(
