@@ -9,6 +9,7 @@ import {
 const OPTIONS: { key: BitacoraViewMode; label: string }[] = [
   { key: "day", label: "Día" },
   { key: "agenda", label: "Agenda" },
+  { key: "month", label: "Mes" },
 ]
 
 export function BitacoraViewToggle() {

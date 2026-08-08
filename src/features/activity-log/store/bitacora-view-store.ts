@@ -3,7 +3,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-export type BitacoraViewMode = "day" | "agenda"
+export type BitacoraViewMode = "day" | "agenda" | "month"
 
 type BitacoraViewStore = {
   viewMode: BitacoraViewMode
@@ -18,7 +18,7 @@ export const useBitacoraViewStore = create<BitacoraViewStore>()(
     }),
     {
       name: "prod-erp-bitacora-view",
-      version: 1,
+      version: 2,
     },
   ),
 )

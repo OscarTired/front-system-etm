@@ -26,7 +26,7 @@ import type {
   ActivityLog,
 } from "../../types/activity-log.types"
 import { useBitacoraViewStore } from "../../store/bitacora-view-store"
-import { getWeekRangeISO } from "../../utils/week-range"
+import { getWeekRangeISO, getMonthRangeISO } from "../../utils/week-range"
 
 import { ShiftGroupSection } from "../shift-group-section"
 import { AutoActivitySection } from "../auto-activity-section"
@@ -34,6 +34,7 @@ import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
 import { ActivityLogSkeleton } from "../skeletons/activity-log-skeleton"
 import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
 import { AgendaWeekView } from "../agenda/agenda-week-view"
+import { AgendaMonthView } from "../agenda/agenda-month-view"
 
 type ViewTab = ActivityDepartment | "REGISTROS"
 
@@ -50,15 +51,22 @@ export function ActivityLogPageContent({
   const dateISO = toISODateString(date)
   const isToday = dateISO === toISODateString(new Date())
 
-  const departmentQuery = department === "REGISTROS" ? "PRODUCCION" : department
+  const departmentQuery =
+    department === "REGISTROS" ? "PRODUCCION" : department
 
   const viewMode = useBitacoraViewStore(s => s.viewMode)
   const setViewMode = useBitacoraViewStore(s => s.setViewMode)
   const isAgenda = viewMode === "agenda"
+  const isMonth = viewMode === "month"
+  const isRangeView = isAgenda || isMonth
 
   const userId = useAuthStore(s => s.user?.id)
 
   const weekRange = useMemo(() => getWeekRangeISO(date), [date])
+  const monthRange = useMemo(() => getMonthRangeISO(date), [date])
+
+  const rangeFrom = isMonth ? monthRange.from : weekRange.from
+  const rangeTo = isMonth ? monthRange.to : weekRange.to
 
   const { logs, loading } = useMyActivityLog(
     departmentQuery,
@@ -67,8 +75,8 @@ export function ActivityLogPageContent({
 
   const { logs: rangeLogs, loading: rangeLoading } = useMyActivityLogRange(
     departmentQuery,
-    weekRange.from,
-    weekRange.to,
+    rangeFrom,
+    rangeTo,
     userId,
   )
 
@@ -156,6 +164,12 @@ export function ActivityLogPageContent({
     setPendingDelete(null)
   }
 
+  function handleSelectDay(day: Date) {
+    setDate(day)
+    setViewMonth(day)
+    setViewMode("day")
+  }
+
   function handleAgendaLogClick(log: ActivityLog) {
     const d = new Date(log.loggedAt)
     setDate(d)
@@ -163,14 +177,12 @@ export function ActivityLogPageContent({
     setViewMode("day")
   }
 
-  const entryCount = isAgenda ? rangeLogs.length : logs.length
+  const entryCount = isRangeView ? rangeLogs.length : logs.length
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden transition-all duration-200">
-      {/* Barra única: toggle izquierda | fecha centro | contador + acciones derecha */}
       <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
         <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
-          {/* IZQUIERDA: Toggle Día/Agenda + Hoy */}
           <div className="flex w-full items-center justify-center gap-2 tablet:justify-self-start tablet:justify-start">
             <BitacoraViewToggle />
 
@@ -189,7 +201,6 @@ export function ActivityLogPageContent({
             </button>
           </div>
 
-          {/* CENTRO: DateNavigator */}
           <div className="flex w-full justify-center tablet:justify-self-center">
             <DateNavigator
               value={date}
@@ -201,7 +212,6 @@ export function ActivityLogPageContent({
             />
           </div>
 
-          {/* DERECHA: contador + TAREAS */}
           <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
             <div className="flex items-center gap-2">
               <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
@@ -218,23 +228,30 @@ export function ActivityLogPageContent({
         </div>
       </div>
 
-      {isAgenda ? (
+      {isAgenda && (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 overflow-hidden">
-            <AgendaWeekView
-              anchorDate={date}
-              logs={rangeLogs}
-              loading={rangeLoading}
-              onSelectDay={d => {
-                setDate(d)
-                setViewMonth(d)
-              }}
-              onLogClick={handleAgendaLogClick}
-            />
-          </div>
+          <AgendaWeekView
+            anchorDate={date}
+            logs={rangeLogs}
+            loading={rangeLoading}
+            onSelectDay={handleSelectDay}
+            onLogClick={handleAgendaLogClick}
+          />
         </div>
-      ) : (
-        /* Vista Día: ancho completo, igual que Agenda */
+      )}
+
+      {isMonth && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <AgendaMonthView
+            anchorDate={date}
+            logs={rangeLogs}
+            loading={rangeLoading}
+            onSelectDay={handleSelectDay}
+          />
+        </div>
+      )}
+
+      {viewMode === "day" && (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
             <div className="flex w-full flex-col gap-3 pb-4">
