@@ -19,6 +19,7 @@ import { useMyActivityLogRange } from "../hooks/use-my-activity-log-range"
 import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
 import { useMoveActivityLog } from "../hooks/use-move-activity-log"
 import { useActivityDrag } from "../hooks/use-activity-drag"
+import { useActivityLogMarkedDates } from "../hooks/use-activity-log-marked-dates"
 import type { ShiftSlotDefinition } from "../constants/shift-definitions"
 import { SHIFT_GROUPS, getSlotState } from "../constants/shift-definitions"
 import type { ActivityDepartment, ActivityLog } from "../types/activity-log.types"
@@ -70,6 +71,12 @@ export function ActivityLogPageContent({
 
   const { deleteLog } = useDeleteActivityLog(departmentQuery)
   const { moveLog } = useMoveActivityLog(departmentQuery)
+
+  const { markedDates } = useActivityLogMarkedDates({
+    scope: "me",
+    month: date,
+    department: departmentQuery,
+  })
 
   const { has } = usePermissions()
 
@@ -172,6 +179,7 @@ export function ActivityLogPageContent({
                   onChange={next => setDate(next ?? new Date())}
                   placeholder="Fecha"
                   maxDate={new Date()}
+                  markedDates={markedDates}
                 />
               </div>
 
@@ -214,6 +222,7 @@ export function ActivityLogPageContent({
                   onChange={next => setDate(next ?? new Date())}
                   placeholder="Fecha"
                   maxDate={new Date()}
+                  markedDates={markedDates}
                 />
               </div>
 

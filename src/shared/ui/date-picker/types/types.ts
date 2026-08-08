@@ -16,6 +16,8 @@ export interface DatePickerProps {
   className?: string
   /** key = "YYYY-MM-DD" → puntos de color bajo el día */
   markedDates?: Record<string, DayMarker[]>
+  /** Notifica al padre cuando el popover abre/cierra (p. ej. DateNavigator) */
+  onOpenChange?: (open: boolean) => void
 }
 
 export interface CalendarDay {

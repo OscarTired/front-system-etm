@@ -29,12 +29,10 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
     >
       {date.getDate()}
 
-      {/* Punto blanco = hoy (si no está seleccionado) */}
       {isToday && !isSelected && !hasMarkers ? (
         <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white" />
       ) : null}
 
-      {/* Puntos de color = días con registros */}
       {hasMarkers ? (
         <span className="absolute bottom-0.5 flex items-center justify-center gap-0.5">
           {markers!.slice(0, 3).map((m, i) => (
@@ -42,14 +40,14 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
               key={i}
               className="h-1 w-1 rounded-full"
               style={{
-                backgroundColor: isSelected ? '#171717' : m.color,
+                backgroundColor: m.color,
+                boxShadow: isSelected ? '0 0 0 1px rgba(0,0,0,0.35)' : undefined,
               }}
             />
           ))}
         </span>
       ) : null}
 
-      {/* Hoy + markers: anillo sutil para no perder el “hoy” */}
       {isToday && !isSelected && hasMarkers ? (
         <span className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-white/40" />
       ) : null}

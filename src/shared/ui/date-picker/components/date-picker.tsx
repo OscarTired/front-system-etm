@@ -38,6 +38,7 @@ export function DatePicker({
   maxDate,
   className,
   markedDates,
+  onOpenChange: onOpenChangeProp,
 }: DatePickerProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const { isMobile } = useResponsive()
@@ -64,9 +65,13 @@ export function DatePicker({
     return parsePartialDate(inputValue)
   }, [inputValue])
 
-  const handleOpenChange = useCallback((next: boolean) => {
-    setOpen(next)
-  }, [])
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setOpen(next)
+      onOpenChangeProp?.(next)
+    },
+    [onOpenChangeProp],
+  )
 
   useEffect(() => {
     if (open && isMobile) {
@@ -93,7 +98,7 @@ export function DatePicker({
       }
       if (event.key === 'ArrowDown') {
         event.preventDefault()
-        setOpen(true)
+        handleOpenChange(true)
         return
       }
       handleInputKeyDown(event)
@@ -114,7 +119,7 @@ export function DatePicker({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
             onClick={() => {
-              if (!isMobile) setOpen(true)
+              if (!isMobile) handleOpenChange(true)
             }}
           />
         </div>
