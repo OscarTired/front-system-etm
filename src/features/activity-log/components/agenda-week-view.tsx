@@ -20,6 +20,16 @@ type Props = {
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
+// Colores únicos y diferenciados para cada turno (evitando que todos sean cyan/azules)
+const DISTINCT_SHIFT_COLORS = [
+  "text-amber-400",   // Mañana / Dorado cálido
+  "text-emerald-400", // Almuerzo / Verde fresco
+  "text-rose-400",    // Tarde / Coral vibrante
+  "text-violet-400",  // Noche / Violeta profundo
+  "text-teal-400",    // Extra 1
+  "text-fuchsia-400", // Extra 2
+]
+
 export function AgendaWeekView({
   anchorDate,
   logs,
@@ -43,14 +53,14 @@ export function AgendaWeekView({
     <div className="flex h-full min-h-100 flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
       <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <div
-          className="grid h-full min-w-210"
+          className="grid h-full min-w-210 bg-[#0c0c0e]"
           style={{
             gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
-            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(6rem, 1fr))`,
+            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(auto, 1fr))`,
           }}
         >
           {/* Esquina superior izquierda */}
-          <div className="sticky left-0 top-0 z-30 border-b border-r border-white/10 bg-[#0c0c0e]/95 p-3 backdrop-blur-md flex items-center justify-center">
+          <div className="sticky left-0 top-0 z-30 border-b border-r border-white/5 bg-[#0c0c0e] p-3 flex items-center justify-center">
             <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               Turnos / Días
             </span>
@@ -69,17 +79,17 @@ export function AgendaWeekView({
                 type="button"
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
-                  "sticky top-0 z-20 border-b border-l border-white/10 bg-[#0c0c0e]/95 px-3 py-3 text-center backdrop-blur-md transition-all duration-200",
-                  "hover:bg-white/6",
-                  isWeekend && "bg-white/1.5",
-                  isToday && "bg-cyan-500/8 shadow-[inset_0_1px_0_0_rgba(34,211,238,0.3)]",
-                  isAnchor && !isToday && "bg-white/4",
+                  "sticky top-0 z-20 border-b border-l border-white/5 bg-[#0c0c0e] px-3 py-3 text-center transition-colors duration-200",
+                  "hover:bg-white/5",
+                  isWeekend && "bg-white/2",
+                  isToday && "bg-amber-500/10",
+                  isAnchor && !isToday && "bg-white/6",
                 )}
               >
                 <div
                   className={cn(
                     "text-[11px] font-bold uppercase tracking-widest",
-                    isToday ? "text-cyan-400" : "text-neutral-400",
+                    isToday ? "text-amber-400" : "text-neutral-400",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}
@@ -89,8 +99,8 @@ export function AgendaWeekView({
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold tabular-nums transition-all duration-200",
                       isToday &&
-                        "bg-cyan-500 text-neutral-950 shadow-[0_0_15px_rgba(34,211,238,0.4)]",
-                      !isToday && isAnchor && "bg-white/15 text-white shadow-sm",
+                        "bg-amber-400 text-neutral-950 shadow-[0_0_15px_rgba(251,191,36,0.4)]",
+                      !isToday && isAnchor && "bg-white/20 text-white shadow-sm",
                       !isToday && !isAnchor && "text-neutral-300 hover:text-white",
                     )}
                   >
@@ -102,15 +112,17 @@ export function AgendaWeekView({
           })}
 
           {/* Filas basadas en SHIFT_GROUPS */}
-          {SHIFT_GROUPS.map((group) => {
+          {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
+            // Asigna un color distinto y único por cada índice de grupo
+            const iconColorClass = DISTINCT_SHIFT_COLORS[index % DISTINCT_SHIFT_COLORS.length]
 
             return (
               <div key={group.key} className="contents">
-                {/* Columna lateral del grupo con icono, título y todos sus rangos horarios */}
-                <div className="sticky left-0 z-10 flex flex-col justify-center gap-1.5 border-b border-r border-white/10 bg-[#0c0c0e]/95 px-3.5 py-3 backdrop-blur-md">
+                {/* Columna lateral del grupo */}
+                <div className="sticky left-0 z-10 flex flex-col justify-center gap-1.5 border-b border-r border-white/5 bg-[#0c0c0e] px-3.5 py-3">
                   <div className="flex items-center gap-2 text-neutral-300">
-                    <GroupIcon size={14} strokeWidth={2.5} className="text-cyan-400 shrink-0" />
+                    <GroupIcon size={14} strokeWidth={2.5} className={cn("shrink-0", iconColorClass)} />
                     <span className="text-xs font-bold uppercase tracking-wider text-white">
                       {group.label}
                     </span>
@@ -127,7 +139,6 @@ export function AgendaWeekView({
                 {/* Celdas de los días para este grupo */}
                 {days.map((day, dayIndex) => {
                   const iso = toISODateString(day)
-                  // Combina los logs de todos los slots que pertenecen a este grupo en el día actual
                   const cellLogs = group.slots.flatMap((slot) =>
                     logsForDayAndShift(logs, iso, slot.shift)
                   )
@@ -139,13 +150,12 @@ export function AgendaWeekView({
                     <div
                       key={`${group.key}-${iso}`}
                       className={cn(
-                        "min-h-0 border-b border-l border-white/10 p-2 transition-colors duration-150",
-                        isWeekend && "bg-white/1.5",
-                        isToday && "bg-cyan-500/3",
-                        isAnchor && "bg-white/2",
+                        "min-h-0 border-b border-l border-white/5 p-2 bg-[#0c0c0e] transition-colors duration-150",
+                        isWeekend && "bg-white/2",
+                        isToday && "bg-amber-500/2",
                       )}
                     >
-                      <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-y-auto scrollbar-none">
+                      <div className="flex h-full min-h-0 flex-col gap-1.5">
                         {cellLogs.length === 0 ? (
                           <div className="flex h-full min-h-14 items-center justify-center">
                             <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
@@ -155,11 +165,10 @@ export function AgendaWeekView({
                             <ActivityLogChip
                               key={log.id}
                               log={log}
-                              compact
                               onClick={
                                 onLogClick ? () => onLogClick(log) : undefined
                               }
-                              className="shrink-0 shadow-md ring-1 ring-white/10 transition-transform hover:scale-[1.02]"
+                              className="w-full shrink-0 border-0 outline-none ring-0 shadow-none transition-transform hover:scale-[1.02]"
                             />
                           ))
                         )}
