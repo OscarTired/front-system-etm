@@ -6,13 +6,24 @@ import { ChevronUp, ChevronDown } from "lucide-react"
 import { cn } from "@/shared/utils/utils"
 
 const FADE_SIZE = 9
+/** Margen mínimo para considerar que hay scroll real (evita flechas por 1–2px). */
+const SCROLL_EDGE_PX = 8
 
 type Props = {
   children: React.ReactNode
   className?: string
   containerClassName?: string
   style?: React.CSSProperties
+  /**
+   * Offset de la flecha superior respecto al borde del **slot de contenido**
+   * (el wrapper de VerticalScroll), no del viewport completo.
+   * Si el shell ya aplica pt del top bar, usar un valor pequeño (8–12).
+   */
   arrowTopOffset?: number
+  /**
+   * Igual para la flecha inferior respecto al borde inferior del slot.
+   * Si el shell ya aplica pb del bottom nav, usar un valor pequeño (8–12).
+   */
   arrowBottomOffset?: number
   arrowAlign?: "center" | "right"
   arrowClassName?: string
@@ -49,19 +60,19 @@ export function VerticalScroll({
   className,
   containerClassName,
   style,
-  arrowTopOffset = 4,
-  arrowBottomOffset = 4,
+  arrowTopOffset = 8,
+  arrowBottomOffset = 8,
   arrowAlign = "center",
   arrowClassName,
   resetKey,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number | null>(null)
 
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
 
-  // Reset scroll al navegar sin remount (evita jank + listeners PTR muertos)
   useEffect(() => {
     if (resetKey === undefined) return
     const el = containerRef.current
@@ -71,69 +82,77 @@ export function VerticalScroll({
 
   const updateArrows = useCallback(() => {
     const el = containerRef.current
+    if (!el) return
 
-    if (!el) {
+    const { scrollTop, clientHeight, scrollHeight } = el
+    const maxScroll = scrollHeight - clientHeight
+
+    // Sin overflow real → ambas off
+    if (maxScroll <= SCROLL_EDGE_PX) {
+      setCanScrollUp(false)
+      setCanScrollDown(false)
       return
     }
 
-    setCanScrollUp(el.scrollTop > 4)
-
-    setCanScrollDown(
-      el.scrollTop + el.clientHeight < el.scrollHeight - 4
-    )
+    setCanScrollUp(scrollTop > SCROLL_EDGE_PX)
+    setCanScrollDown(scrollTop < maxScroll - SCROLL_EDGE_PX)
   }, [])
+
+  const scheduleUpdate = useCallback(() => {
+    if (rafRef.current != null) return
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null
+      updateArrows()
+    })
+  }, [updateArrows])
 
   useEffect(() => {
     const el = containerRef.current
     const contentEl = contentRef.current
-
-    if (!el || !contentEl) {
-      return
-    }
+    if (!el || !contentEl) return
 
     updateArrows()
 
-    el.addEventListener("scroll", updateArrows, { passive: true })
+    el.addEventListener("scroll", scheduleUpdate, { passive: true })
 
-    const observer = new ResizeObserver(updateArrows)
-
+    const observer = new ResizeObserver(scheduleUpdate)
     observer.observe(el)
     observer.observe(contentEl)
 
     return () => {
-      el.removeEventListener("scroll", updateArrows)
+      el.removeEventListener("scroll", scheduleUpdate)
       observer.disconnect()
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
     }
-  }, [updateArrows])
+  }, [updateArrows, scheduleUpdate])
 
-  // Modificado: Ahora mandan directo al inicio o al final sin pasarse de largo
   function scrollUp() {
     const el = containerRef.current
     if (!el) return
-
-    el.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
+    el.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   function scrollDown() {
     const el = containerRef.current
     if (!el) return
-
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: "smooth",
-    })
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
   }
 
   const maskImage = useMemo(
     () => getMaskImage(canScrollUp, canScrollDown),
-    [canScrollUp, canScrollDown]
+    [canScrollUp, canScrollDown],
   )
 
   return (
-    <div className={cn("relative flex min-h-0 min-w-0 flex-col", containerClassName)}>
+    <div
+      className={cn(
+        "relative flex min-h-0 min-w-0 flex-1 flex-col",
+        containerClassName,
+      )}
+    >
       <button
         type="button"
         onClick={scrollUp}
@@ -144,7 +163,7 @@ export function VerticalScroll({
           "absolute z-20",
           ARROW_ALIGN_CLASSNAME[arrowAlign],
           "flex h-6 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+          "bg-[#18181b]/80 text-neutral-200 backdrop-blur-xl transition-opacity duration-200",
           canScrollUp ? "opacity-100" : "pointer-events-none opacity-0",
           arrowClassName,
         )}
@@ -162,7 +181,7 @@ export function VerticalScroll({
           "absolute z-20",
           ARROW_ALIGN_CLASSNAME[arrowAlign],
           "flex h-6 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+          "bg-[#18181b]/80 text-neutral-200 backdrop-blur-xl transition-opacity duration-200",
           canScrollDown ? "opacity-100" : "pointer-events-none opacity-0",
           arrowClassName,
         )}
@@ -187,7 +206,7 @@ export function VerticalScroll({
           className,
         )}
       >
-        <div ref={contentRef}>
+        <div ref={contentRef} className="min-h-0">
           {children}
         </div>
       </div>

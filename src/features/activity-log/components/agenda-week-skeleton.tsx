@@ -114,7 +114,7 @@ export function AgendaWeekSkeleton() {
                     )}
                   </>
                 ) : (
-                  <div className="h-8 rounded-lg bg-white/[0.03]" />
+                  <div className="h-8 rounded-lg bg-white/3" />
                 )}
               </div>
             </div>

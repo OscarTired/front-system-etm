@@ -33,6 +33,9 @@ const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
 const DRAWER_WIDTH_PX = 248
 const PANEL_TRANSITION = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)"
 
+/** Margen de flechas respecto al slot de contenido (chrome ya va en pt/pb). */
+const CONTENT_ARROW_INSET = 10
+
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
 
@@ -41,9 +44,9 @@ function DesktopShell({ children }: Props) {
     if (el) el.scrollTop = 0
   }, [pathname])
 
-  const visualState = useSidebarStore((state) => state.visualState)
+  const visualState = useSidebarStore(state => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
-    (state) => state.notifyClipTransitionEnd,
+    state => state.notifyClipTransitionEnd,
   )
 
   const borderRadius =
@@ -85,13 +88,14 @@ function DesktopShell({ children }: Props) {
  * Mobile shell.
  *
  * - Drawer reveal: solo translate3d del panel (GPU). Menú estático detrás.
- * - Rutas immersive (ver immersive-routes.ts): slot con altura real para
- *   tools full-screen. El resto usa VerticalScroll + pull-to-refresh.
+ * - Rutas immersive: slot con altura real (top-14 / bottom-20).
+ * - Resto: VerticalScroll + pull-to-refresh.
+ *   Las flechas se anclan al slot de contenido (ya sin chrome), no al dvh.
  */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
-  const mode = useMobileNavStore((s) => s.mode)
-  const closeDrawer = useMobileNavStore((s) => s.closeDrawer)
+  const mode = useMobileNavStore(s => s.mode)
+  const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const isOpen = mode === "open"
   const immersive = isImmersiveRoute(pathname)
@@ -133,8 +137,6 @@ function CompactShell({ children }: Props) {
         <TopBar />
 
         {immersive ? (
-          // Slot full-bleed entre top bar (3.5rem) y bottom nav (5rem).
-          // Los pages immersive deben usar absolute inset-0 aquí dentro.
           <div
             data-immersive-slot
             className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden"
@@ -146,10 +148,10 @@ function CompactShell({ children }: Props) {
             <PullToRefresh>
               <VerticalScroll
                 resetKey={pathname}
-                containerClassName="h-full"
+                containerClassName="h-full min-h-0"
                 className="overflow-x-hidden"
-                arrowTopOffset={64}
-                arrowBottomOffset={88}
+                arrowTopOffset={CONTENT_ARROW_INSET}
+                arrowBottomOffset={CONTENT_ARROW_INSET}
               >
                 {children}
               </VerticalScroll>
