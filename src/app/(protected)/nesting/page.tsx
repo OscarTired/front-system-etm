@@ -1,7 +1,17 @@
 "use client"
 
-import { NestingPage as NestingWorkspace } from "@/features/nesting/components/nesting-page"
+import dynamic from "next/dynamic"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
+import { NestingPageSkeleton } from "@/features/nesting/components/nesting-page-skeleton"
+
+const NestingWorkspace = dynamic(
+  () =>
+    import("@/features/nesting/components/nesting-page").then((m) => m.NestingPage),
+  {
+    ssr: false,
+    loading: () => <NestingPageSkeleton />,
+  },
+)
 
 export default function NestingRoute() {
   usePageTitle("Nesting")

@@ -42,6 +42,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           inputMode="numeric"
           autoComplete="off"
           spellCheck={false}
+          maxLength={10}
           value={value}
           placeholder={placeholder}
           disabled={disabled}

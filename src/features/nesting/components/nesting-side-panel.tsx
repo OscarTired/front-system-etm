@@ -22,18 +22,24 @@ export function NestingSidePanel({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {activePanel === "sheet-pieces" && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white/3 p-2">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white/3">
           {pieces}
         </div>
       )}
       {activePanel === "project-material" && (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">{projectMaterial}</div>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">
+          {projectMaterial}
+        </div>
       )}
       {activePanel === "layers" && (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">{layers}</div>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">
+          {layers}
+        </div>
       )}
       {activePanel === "inspector" && (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">{inspector}</div>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white/3">
+          {inspector}
+        </div>
       )}
     </div>
   )

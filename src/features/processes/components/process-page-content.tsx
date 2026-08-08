@@ -100,23 +100,15 @@ export function ProcessPageContent({
   }
 
   return (
-
-    <div className="relative mx-auto flex w-full max-w-400 flex-col">
-
+    <div className="relative flex h-full min-h-0 w-full flex-col">
       <div className="shrink-0">
-
         <EntityToolbar
           left={
-
             <AdaptiveActionBar
               pinned={
                 <>
                   <BackToTaskButton />
-
-                  <EntityToolbarSearch
-                    value={search}
-                    onChange={setSearch}
-                  />
+                  <EntityToolbarSearch value={search} onChange={setSearch} />
                 </>
               }
               actions={[
@@ -125,9 +117,7 @@ export function ProcessPageContent({
                   key="history"
                   count={completedCount}
                   active={showHistory}
-                  onClick={() =>
-                    setShowHistory(v => !v)
-                  }
+                  onClick={() => setShowHistory(v => !v)}
                 />,
                 <ExportMenu
                   key="export"
@@ -136,16 +126,12 @@ export function ProcessPageContent({
                 />,
               ]}
             />
-
           }
         />
-
       </div>
 
-      <div>
-
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
         <EntityExpandProvider>
-
           <ProcessTableCard
             processDefinition={processDefinition}
             processTasks={processTasks}
@@ -154,29 +140,19 @@ export function ProcessPageContent({
             focusedTaskId={focusedTaskId}
             focusToken={focusToken}
             showHistory={showHistory}
-            onHistoryRequired={() =>
-              setShowHistory(true)
-            }
-            onResolvingChange={
-              setResolvingFocus
-            }
+            onHistoryRequired={() => setShowHistory(true)}
+            onResolvingChange={setResolvingFocus}
           />
-
         </EntityExpandProvider>
-
       </div>
 
       {showResolvingOverlay && (
-
         <div
           aria-hidden
           className="pointer-events-none fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
         />
-
       )}
-
     </div>
-
   )
 
 }

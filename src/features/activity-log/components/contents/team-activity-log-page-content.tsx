@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
@@ -13,9 +13,12 @@ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
 import { getActivityIcon } from "../../constants/activity-icons"
-import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../../constants/shift-definitions"
+import {
+  SHIFT_GROUPS,
+  SHIFT_HOURS_LABEL,
+  getCurrentShift,
+} from "../../constants/shift-definitions"
 import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
-import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import { TeamActivityLogSkeleton } from "../skeletons/team-activity-log-skeleton"
 
 function startOfDayISO(date: string) {
@@ -29,7 +32,6 @@ function endOfDayISO(date: string) {
 type Log = ReturnType<typeof useTeamActivityLog>["logs"][number]
 
 function groupLogsByShift(logs: Log[]) {
-
   const buckets: {
     key: string
     label: string
@@ -38,43 +40,34 @@ function groupLogsByShift(logs: Log[]) {
   }[] = []
 
   for (const group of SHIFT_GROUPS) {
-
     const shiftsInGroup = new Set(group.slots.map(slot => slot.shift))
 
     const matched = logs.filter(log => {
-
-      const effectiveShift = log.shift ?? getCurrentShift(new Date(log.loggedAt))
-
+      const effectiveShift =
+        log.shift ?? getCurrentShift(new Date(log.loggedAt))
       return shiftsInGroup.has(effectiveShift)
-
     })
 
     if (matched.length > 0) {
-      buckets.push({ key: group.key, label: group.label, icon: group.icon, logs: matched })
+      buckets.push({
+        key: group.key,
+        label: group.label,
+        icon: group.icon,
+        logs: matched,
+      })
     }
-
   }
 
   return buckets
-
 }
 
-type ActivityCardProps = {
-  log: Log
-}
-
-function ActivityLogCard({
-  log,
-}: ActivityCardProps) {
+function ActivityLogCard({ log }: { log: Log }) {
   const Icon = getActivityIcon(log.activityType.icon)
-
-  // Igual que en groupLogsByShift: los AUTO no tienen `shift`
-  // guardado, se deriva de su hora real solo para mostrarlo acá —
-  // así el badge se ve igual sea manual o automática.
-  const effectiveShift = log.shift ?? getCurrentShift(new Date(log.loggedAt))
+  const effectiveShift =
+    log.shift ?? getCurrentShift(new Date(log.loggedAt))
 
   return (
-    <div className="rounded-2xl bg-white/3 p-4 transition-colors hover:bg-white/5">
+    <div className="w-full rounded-2xl bg-white/3 p-4 transition-colors hover:bg-white/5">
       <div className="flex items-start gap-4">
         <div
           className="flex size-10 shrink-0 items-center justify-center rounded-full"
@@ -93,18 +86,15 @@ function ActivityLogCard({
             </span>
 
             <div className="flex shrink-0 items-center gap-2">
-
               <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
                 {SHIFT_HOURS_LABEL[effectiveShift]}
               </span>
-
               <span className="text-xs text-neutral-500">
                 {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </span>
-
             </div>
           </div>
 
@@ -131,22 +121,16 @@ function ActivityLogCard({
   )
 }
 
-function ShiftBucketedLogs({
-  logs,
-}: {
-  logs: Log[]
-}) {
-
+function ShiftBucketedLogs({ logs }: { logs: Log[] }) {
   const buckets = groupLogsByShift(logs)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       {buckets.map(bucket => {
         const BucketIcon = bucket.icon
 
         return (
-          <div key={bucket.key} className="flex flex-col gap-2">
-
+          <div key={bucket.key} className="flex w-full flex-col gap-2">
             <div className="flex items-center gap-2 px-1">
               <BucketIcon size={13} className="text-neutral-500" />
               <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -154,29 +138,25 @@ function ShiftBucketedLogs({
               </span>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex w-full flex-col gap-3">
               {bucket.logs.map(log => (
                 <ActivityLogCard key={log.id} log={log} />
               ))}
             </div>
-
           </div>
         )
       })}
     </div>
   )
-
 }
 
 export function TeamActivityLogPageContent() {
-
   usePageTitle("Bitácora de Equipo")
 
   const { users } = useUsersDirectory()
 
   const [selectedUser, setSelectedUser] = useState<User>()
   const [date, setDate] = useState<Date | null>(new Date())
-  const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
   const filters = useMemo(
     () => ({
@@ -189,32 +169,12 @@ export function TeamActivityLogPageContent() {
 
   const { logs, loading } = useTeamActivityLog(filters)
 
-  const { markedDates } = useActivityLogMarkedDates({
-    scope: "team",
-    month: viewMonth,
-    userId: selectedUser?.id,
-  })
-
-  const handleViewMonthChange = useCallback((month: Date) => {
-    setViewMonth(month)
-  }, [])
-
-  const handleDateChange = useCallback((next: Date | null) => {
-    setDate(next)
-    if (next) setViewMonth(next)
-  }, [])
-
   const groupedLogs = useMemo(() => {
-    if (selectedUser) {
-      return []
-    }
+    if (selectedUser) return []
 
     const groups = new Map<
       string,
-      {
-        user: User | null
-        logs: typeof logs
-      }
+      { user: User | null; logs: typeof logs }
     >()
 
     for (const log of logs) {
@@ -244,8 +204,9 @@ export function TeamActivityLogPageContent() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <div className="rounded-2xl bg-white/2 p-4">
+    // Sin max-w: llena el ancho del main como Producción / Día
+    <div className="relative flex w-full flex-col gap-6">
+      <div className="w-full rounded-2xl bg-white/2 p-4">
         {/* Mobile */}
         <div className="flex flex-wrap items-center justify-center gap-3 tablet:hidden">
           <div className="w-56 shrink-0">
@@ -259,11 +220,9 @@ export function TeamActivityLogPageContent() {
 
           <DateNavigator
             value={date}
-            onChange={handleDateChange}
+            onChange={setDate}
             placeholder="Fecha"
             maxDate={new Date()}
-            markedDates={markedDates}
-            onViewMonthChange={handleViewMonthChange}
           />
 
           <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
@@ -273,7 +232,6 @@ export function TeamActivityLogPageContent() {
 
         {/* Desktop */}
         <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
-          {/* Izquierda */}
           <div className="justify-self-start">
             <div className="w-56">
               <UserSelect
@@ -285,19 +243,15 @@ export function TeamActivityLogPageContent() {
             </div>
           </div>
 
-          {/* Centro */}
           <div className="justify-self-center">
             <DateNavigator
               value={date}
-              onChange={handleDateChange}
+              onChange={setDate}
               placeholder="Fecha"
               maxDate={new Date()}
-              markedDates={markedDates}
-              onViewMonthChange={handleViewMonthChange}
             />
           </div>
 
-          {/* Derecha */}
           <div className="justify-self-end">
             <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
               {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
@@ -306,21 +260,21 @@ export function TeamActivityLogPageContent() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         {loading ? (
           <TeamActivityLogSkeleton />
         ) : logs.length === 0 ? (
-          <div className="flex h-40 items-center justify-center rounded-2xl border-white/10 bg-white/2 text-sm text-neutral-500">
+          <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
             Sin entradas para este filtro
           </div>
         ) : selectedUser ? (
           <ShiftBucketedLogs logs={logs} />
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex w-full flex-col gap-8">
             {groupedLogs.map(group => (
               <section
                 key={group.user?.id ?? "unknown"}
-                className="flex flex-col gap-3"
+                className="flex w-full flex-col gap-3"
               >
                 <div className="flex items-center justify-between border-b border-white/8 pb-2">
                   <div className="flex items-center gap-3">
@@ -334,9 +288,7 @@ export function TeamActivityLogPageContent() {
 
                   <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
                     {group.logs.length}{" "}
-                    {group.logs.length === 1
-                      ? "actividad"
-                      : "actividades"}
+                    {group.logs.length === 1 ? "actividad" : "actividades"}
                   </div>
                 </div>
 

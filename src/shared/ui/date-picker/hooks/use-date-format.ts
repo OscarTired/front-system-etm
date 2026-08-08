@@ -36,7 +36,6 @@ export function useDateFormat({
 
     const parsed = parseDateString(inputValue);
     if (!parsed || isDateDisabled(parsed, minDate, maxDate)) {
-      // Fecha inválida o fuera de rango: revertir al último valor válido.
       setInputValue(value ? formatDate(value) : '');
       return;
     }
@@ -59,11 +58,24 @@ export function useDateFormat({
     [commit],
   );
 
+  /**
+   * Selecciona todo al enfocar para poder reemplazar la fecha entera
+   * escribiendo de cero. La edición parcial de un segmento (solo día/mes)
+   * se resuelve en sanitizeDateInput respetando las "/".
+   */
+  const handleInputFocus = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
+    const el = event.currentTarget;
+    requestAnimationFrame(() => {
+      el.select();
+    });
+  }, []);
+
   return {
     inputValue,
     handleInputChange,
     handleInputBlur,
     handleInputKeyDown,
+    handleInputFocus,
     syncFromExternalValue,
   };
 }

@@ -40,50 +40,29 @@ import { useTasks } from "@/features/tasks/hooks/use-tasks"
 
 import { useTaskExport } from "@/features/reports/hooks/use-task-export"
 
-import{ REPORT_EXPORT_SCOPES }from"@/shared/export/constants/export-config"
+import { REPORT_EXPORT_SCOPES } from "@/shared/export/constants/export-config"
 
-type Props={
-  focusedTaskId?:string
-  focusToken?:string
-  initialShowHistory?:boolean
+type Props = {
+  focusedTaskId?: string
+  focusToken?: string
+  initialShowHistory?: boolean
 }
 
 export function TaskPageContent({
   focusedTaskId,
   focusToken,
-  initialShowHistory=false,
-}:Props){
-
+  initialShowHistory = false,
+}: Props) {
   const { isMobile } = useResponsive()
 
-  const[
-    search,
-    setSearch,
-  ]=useState("")
+  const [search, setSearch] = useState("")
+  const [showHistory, setShowHistory] = useState(initialShowHistory)
 
-  const[
-    showHistory,
-    setShowHistory,
-  ]=useState(initialShowHistory)
+  const { view, setView } = useTaskView()
 
-  const{
-    view,
-    setView,
-  }=useTaskView()
+  const { tasks, loading, reorderTasks } = useTasks()
 
-  const{
-    tasks,
-    loading,
-    reorderTasks,
-  }=useTasks()
-
-  const{
-    exporting,
-    exportPdf,
-    exportExcel,
-  }=useTaskExport(
-    tasks,
-  )
+  const { exporting, exportPdf, exportExcel } = useTaskExport(tasks)
 
   const {
     boardTasks: pipelineTasks,
@@ -94,75 +73,39 @@ export function TaskPageContent({
     showHistory,
   })
 
-  const completedCount=
-    tasks.filter(
-      task=>
-        isWorkflowCompleted(
-          task.workflowSteps,
-        ),
-    ).length
+  const completedCount = tasks.filter(task =>
+    isWorkflowCompleted(task.workflowSteps),
+  ).length
 
   async function handleExport(
-    format:"pdf"|"excel",
-    scope:ExportScope,
-  ){
+    format: "pdf" | "excel",
+    scope: ExportScope,
+  ) {
+    if (exporting || tasks.length === 0) return
 
-    if(
-      exporting||
-      tasks.length===0
-    ){
-
+    if (format === "pdf") {
+      await exportPdf(scope)
       return
-
     }
 
-    if(
-      format==="pdf"
-    ){
-
-      await exportPdf(
-        scope,
-      )
-
-      return
-
-    }
-
-    await exportExcel(
-      scope,
-    )
-
+    await exportExcel(scope)
   }
-  return(
 
-    // Desktop + vista "kanban": h-full/min-h-0/overflow-hidden — una
-    // sola pantalla, el contenido interno scrollea dentro de su
-    // propio contenedor (patrón app fija, no scroll de página).
-    // Desktop + vista "card": SIN esas restricciones — fluye con su
-    // alto real como el resto de la página.
-    // Mobile: idem, sin restricciones en ningún caso — el <main
-    // overflow-y-auto> del AppShell scrollea la página completa.
-    <div className={cn(
-      "relative mx-auto flex w-full max-w-400 flex-col",
-      !isMobile && view === "kanban"
-        ? "h-full min-h-0 overflow-hidden"
-        : "",
-    )}>
-
+  return (
+    <div
+      className={cn(
+        "relative flex h-full min-h-0 w-full flex-col",
+        !isMobile && view === "kanban" ? "overflow-hidden" : "",
+      )}
+    >
       <div className="shrink-0">
-
         <EntityToolbar
           left={
-
             <AdaptiveActionBar
               pinned={
                 <>
-                  <BackToProjectButton/>
-
-                  <EntityToolbarSearch
-                    value={search}
-                    onChange={setSearch}
-                  />
+                  <BackToProjectButton />
+                  <EntityToolbarSearch value={search} onChange={setSearch} />
                 </>
               }
               actions={[
@@ -172,11 +115,7 @@ export function TaskPageContent({
                   key="history"
                   count={completedCount}
                   active={showHistory}
-                  onClick={()=>
-                    setShowHistory(
-                      value=>!value,
-                    )
-                  }
+                  onClick={() => setShowHistory(v => !v)}
                 />,
                 <ExportMenu
                   key="export"
@@ -185,30 +124,18 @@ export function TaskPageContent({
                 />,
               ]}
               right={
-
                 !isMobile && (
-
-                  <TaskViewToggle
-                    value={view}
-                    onChange={setView}
-                  />
-
+                  <TaskViewToggle value={view} onChange={setView} />
                 )
-
               }
             />
-
           }
         />
-
       </div>
 
-      {view==="card"&&(
-
-        <div>
-
+      {view === "card" && (
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
           <EntityExpandProvider>
-
             <TaskTable
               tasks={tasks}
               loading={loading}
@@ -217,33 +144,25 @@ export function TaskPageContent({
               search={search}
               showHistory={showHistory}
               reorderTasks={reorderTasks}
-              onHistoryRequired={()=>setShowHistory(true)}
+              onHistoryRequired={() => setShowHistory(true)}
             />
-
           </EntityExpandProvider>
-
         </div>
-
       )}
 
-      {view==="kanban"&&(
-
-        <div className={cn(
-          isMobile ? "" : "min-h-0 flex-1 overflow-hidden",
-        )}>
-
+      {view === "kanban" && (
+        <div
+          className={cn(
+            isMobile ? "" : "min-h-0 flex-1 overflow-hidden",
+          )}
+        >
           <TaskPipelineBoard
             tasks={pipelineTasks}
             kpiTasks={pipelineKpiTasks}
             loading={loading}
           />
-
         </div>
-
       )}
-
     </div>
-
   )
-
 }

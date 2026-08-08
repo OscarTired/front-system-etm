@@ -245,8 +245,8 @@ export function UsersPageContent() {
   return (
     <div
       className={cn(
-        "mx-auto flex w-full max-w-400 flex-col",
-        isMobile ? "" : "h-full min-h-0 overflow-hidden",
+        "flex h-full min-h-0 w-full flex-col",
+        isMobile ? "" : "overflow-hidden",
       )}
     >
       <div className="shrink-0">

@@ -21,63 +21,36 @@ import { isProjectCompleted } from "@/features/projects/selectors/is-project-com
 import { useProjects } from "@/features/projects/hooks/use-projects"
 import { useTasks } from "@/features/tasks/hooks/use-tasks"
 
-type Props={
-  focusedProjectId?:string
-  focusToken?:string
-  initialShowHistory?:boolean
+type Props = {
+  focusedProjectId?: string
+  focusToken?: string
+  initialShowHistory?: boolean
 }
 
 export function ProjectPageContent({
   focusedProjectId,
   focusToken,
-  initialShowHistory=false,
-}:Props){
+  initialShowHistory = false,
+}: Props) {
+  const [search, setSearch] = useState("")
+  const [showHistory, setShowHistory] = useState(initialShowHistory)
 
-  const[
-    search,
-    setSearch,
-  ]=useState("")
+  const { projects, loading, reorderProjects } = useProjects()
+  const { tasks } = useTasks()
 
-  const[
-    showHistory,
-    setShowHistory,
-  ]=useState(initialShowHistory)
-
-  const{
-    projects,
-    loading,
-    reorderProjects,
-  }=useProjects()
-
-  const{
-    tasks,
-  }=useTasks()
-
-  const completedCount=useMemo(
-    ()=>projects.filter(
-      project=>
-        isProjectCompleted(
-          project,
-        ),
-    ).length,
+  const completedCount = useMemo(
+    () => projects.filter(project => isProjectCompleted(project)).length,
     [projects],
   )
 
-  return(
-
-    <div className="relative mx-auto flex w-full max-w-400 flex-col">
-
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col">
       <div className="shrink-0">
-
         <EntityToolbar
           left={
-
             <AdaptiveActionBar
               pinned={
-                <EntityToolbarSearch
-                  value={search}
-                  onChange={setSearch}
-                />
+                <EntityToolbarSearch value={search} onChange={setSearch} />
               }
               actions={[
                 <FilterBar key="filter" module="projects" />,
@@ -86,20 +59,16 @@ export function ProjectPageContent({
                   key="history"
                   count={completedCount}
                   active={showHistory}
-                  onClick={()=>setShowHistory(v=>!v)}
+                  onClick={() => setShowHistory(v => !v)}
                 />,
               ]}
             />
-
           }
         />
-
       </div>
 
-      <div>
-
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
         <EntityExpandProvider>
-
           <ProjectTable
             projects={projects}
             tasks={tasks}
@@ -110,13 +79,8 @@ export function ProjectPageContent({
             showHistory={showHistory}
             reorderProjects={reorderProjects}
           />
-
         </EntityExpandProvider>
-
       </div>
-
     </div>
-
   )
-
 }

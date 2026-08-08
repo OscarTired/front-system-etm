@@ -32,13 +32,10 @@ function ActivityTypeRow({
   onToggleActive: (type: ActivityType) => void
   onDelete: (type: ActivityType) => void
 }) {
-
   const Icon = getActivityIcon(type.icon)
 
   return (
-
-    <div className="flex items-center gap-3 rounded-xl bg-white/3 p-3">
-
+    <div className="flex w-full items-center gap-3 rounded-xl bg-white/3 p-3">
       <div
         className="flex size-9 shrink-0 items-center justify-center rounded-full"
         style={{ backgroundColor: `${type.color}22`, color: type.color }}
@@ -47,7 +44,6 @@ function ActivityTypeRow({
       </div>
 
       <div className="min-w-0 flex-1">
-
         <p className="truncate text-sm font-medium text-neutral-200">
           {type.label}
         </p>
@@ -57,11 +53,9 @@ function ActivityTypeRow({
           {" · "}
           {type.pinned ? "Predeterminada" : "Dentro de \u201cOtros\u201d"}
         </p>
-
       </div>
 
       <div className="flex items-center gap-1">
-
         <IconAction
           icon={Power}
           disabled={!canManage}
@@ -80,17 +74,12 @@ function ActivityTypeRow({
           disabled={!canManage}
           onClick={() => onDelete(type)}
         />
-
       </div>
-
     </div>
-
   )
-
 }
 
 export function ActivityTypesPageContent() {
-
   const [search, setSearch] = useState("")
 
   // true: trae también los desactivados, para poder reactivarlos.
@@ -110,7 +99,6 @@ export function ActivityTypesPageContent() {
   // nos dice el origen sin necesitar un flag isDefault/isCustom
   // aparte en el modelo).
   const { defaultTypes, customTypes } = useMemo(() => {
-
     const query = search.trim().toLowerCase()
 
     const filtered = query
@@ -121,7 +109,6 @@ export function ActivityTypesPageContent() {
       defaultTypes: filtered.filter(type => Boolean(type.code)),
       customTypes: filtered.filter(type => !type.code),
     }
-
   }, [types, search])
 
   const handleEdit = (type: ActivityType) => {
@@ -141,117 +128,92 @@ export function ActivityTypesPageContent() {
   }
 
   const handleConfirmDelete = async () => {
-
     if (!pendingDelete || !canManage) {
       return
     }
 
     await removeType(pendingDelete.id)
     setPendingDelete(null)
-
   }
 
   const hasResults = defaultTypes.length > 0 || customTypes.length > 0
 
   return (
-
-    <div className="mx-auto flex w-full max-w-400 flex-col">
-
+    <div className="relative flex h-full min-h-0 w-full flex-col">
       <div className="shrink-0">
-
         <EntityToolbar
-
           left={
-
             <div className="flex flex-wrap items-center gap-2 py-1">
-
-              <EntityToolbarSearch
-                value={search}
-                onChange={setSearch}
-              />
-
+              <EntityToolbarSearch value={search} onChange={setSearch} />
             </div>
-
           }
-
         />
-
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+        <div className="flex flex-col gap-6">
+          {loading ? (
+            <ActivityTypesSkeleton />
+          ) : (
+            <>
+              <section className="flex flex-col gap-2">
+                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                  Predeterminadas
+                </h2>
 
-        {loading ? (
+                {defaultTypes.map(type => (
+                  <ActivityTypeRow
+                    key={type.id}
+                    type={type}
+                    canManage={canManage}
+                    onEdit={handleEdit}
+                    onToggleActive={handleToggleActive}
+                    onDelete={handleDeleteRequest}
+                  />
+                ))}
 
-          <ActivityTypesSkeleton />
+                {defaultTypes.length === 0 && (
+                  <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                    {search
+                      ? "Ninguna coincide con la búsqueda"
+                      : "Sin actividades predeterminadas"}
+                  </div>
+                )}
+              </section>
 
-        ) : (
+              <section className="flex flex-col gap-2">
+                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                  Personalizadas
+                </h2>
 
-          <>
+                {customTypes.map(type => (
+                  <ActivityTypeRow
+                    key={type.id}
+                    type={type}
+                    canManage={canManage}
+                    onEdit={handleEdit}
+                    onToggleActive={handleToggleActive}
+                    onDelete={handleDeleteRequest}
+                  />
+                ))}
 
-            <section className="flex flex-col gap-2">
+                {customTypes.length === 0 && (
+                  <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                    {search
+                      ? "Ninguna coincide con la búsqueda"
+                      : "Sin actividades personalizadas todavía"}
+                  </div>
+                )}
+              </section>
 
-              <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                Predeterminadas
-              </h2>
-
-              {defaultTypes.map(type => (
-                <ActivityTypeRow
-                  key={type.id}
-                  type={type}
-                  canManage={canManage}
-                  onEdit={handleEdit}
-                  onToggleActive={handleToggleActive}
-                  onDelete={handleDeleteRequest}
-                />
-              ))}
-
-              {defaultTypes.length === 0 && (
-                <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
-                  {search
-                    ? "Ninguna coincide con la búsqueda"
-                    : "Sin actividades predeterminadas"}
+              {!hasResults && (
+                <div className="flex h-32 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                  Sin tipos de actividad todavía
                 </div>
               )}
-
-            </section>
-
-            <section className="flex flex-col gap-2">
-
-              <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                Personalizadas
-              </h2>
-
-              {customTypes.map(type => (
-                <ActivityTypeRow
-                  key={type.id}
-                  type={type}
-                  canManage={canManage}
-                  onEdit={handleEdit}
-                  onToggleActive={handleToggleActive}
-                  onDelete={handleDeleteRequest}
-                />
-              ))}
-
-              {customTypes.length === 0 && (
-                <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
-                  {search
-                    ? "Ninguna coincide con la búsqueda"
-                    : "Sin actividades personalizadas todavía"}
-                </div>
-              )}
-
-            </section>
-
-            {!hasResults && (
-              <div className="flex h-32 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
-                Sin tipos de actividad todavía
-              </div>
-            )}
-
-          </>
-
-        )}
-
+            </>
+          )}
+        </div>
       </div>
 
       <ActivityTypeFormDialog
@@ -274,9 +236,6 @@ export function ActivityTypesPageContent() {
         onClose={() => setPendingDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
     </div>
-
   )
-
 }

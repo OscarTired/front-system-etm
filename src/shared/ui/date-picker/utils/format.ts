@@ -37,24 +37,38 @@ export function parseDateString(raw: string): Date | null {
 }
 
 /**
- * Enmascara la entrada del usuario en formato dd/MM/aaaa, insertando
- * las "/" automáticamente a medida que escribe. Es necesario porque en
- * mobile el input usa inputMode="numeric": ese teclado nativo NO tiene
- * tecla "/", así que si no la insertamos nosotros el usuario nunca
- * puede escribir una fecha con separadores (solo dígitos pegados).
+ * Enmascara la entrada en dd/MM/aaaa.
  *
- * Se recalcula desde los dígitos crudos en cada pulsación (se descarta
- * cualquier "/" que ya estuviera en `raw` y se reconstruye desde cero).
- * Esto hace que backspace funcione de forma natural: al borrar el
- * último dígito de un grupo, la "/" que lo seguía desaparece sola,
- * sin necesidad de rastrear posición de cursor a mano.
+ * Dos modos:
+ * 1) Con "/": respeta segmentos (día / mes / año). Así, si el usuario
+ *    selecciona solo el día en "08/08/2026" y escribe "2", queda
+ *    "2/08/2026" y luego "20/08/2026" — no "20/82/026".
+ * 2) Solo dígitos (escritura secuencial desde vacío): inserta "/" sola.
  */
 export function sanitizeDateInput(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 8); // dd(2) + MM(2) + aaaa(4)
+  if (raw.includes('/')) {
+    const parts = raw.split('/');
 
-  const day = digits.slice(0, 2);
-  const month = digits.slice(2, 4);
-  const year = digits.slice(4, 8);
+    const day = (parts[0] ?? '').replace(/\D/g, '').slice(0, 2);
+    const month = (parts[1] ?? '').replace(/\D/g, '').slice(0, 2);
+    const year = parts.slice(2).join('').replace(/\D/g, '').slice(0, 4);
 
-  return [day, month, year].filter(Boolean).join('/');
+    const slashCount = parts.length - 1;
+
+    if (slashCount >= 2 || year.length > 0) {
+      return `${day}/${month}/${year}`;
+    }
+    if (slashCount >= 1 || month.length > 0) {
+      return `${day}/${month}`;
+    }
+    return day;
+  }
+
+  const digits = raw.replace(/\D/g, '').slice(0, 8);
+
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }

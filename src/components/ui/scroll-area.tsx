@@ -226,14 +226,11 @@ function ScrollArea({
           onClickCapture={handleClickCapture}
           className={cn(
             "h-full w-full",
-            isCompact
-              ? "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              : isHorizontal
-              ? "themed-scrollbar-x"
-              : "themed-scrollbar-y",
+            // Vertical: scrollbar siempre oculto (EntityTable, Roles, Users, etc.)
+            // Horizontal: barra themed fina cuando haga falta affordance
             isHorizontal
-              ? "cursor-grab select-none overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-              : "overflow-y-auto overflow-x-hidden",
+              ? "themed-scrollbar-x cursor-grab select-none overflow-x-auto overflow-y-hidden active:cursor-grabbing"
+              : "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto overflow-x-hidden",
             contentClassName,
           )}
         >
@@ -247,8 +244,7 @@ function ScrollArea({
 // Mantenido solo por compatibilidad con los call sites que ya
 // renderizaban <ScrollBar /> como hijo explícito (patrón de Radix:
 // <ScrollArea>...<ScrollBar/></ScrollArea>). El ScrollArea nuevo no
-// usa un thumb sintético — el scroll es nativo del navegador,
-// estilizado vía las clases .themed-scrollbar-x/y en globals.css —
+// usa un thumb sintético — el scroll es nativo del navegador —
 // así que esto no necesita renderizar nada. Se puede borrar de a
 // poco de cada call site cuando se toque ese archivo por otra razón.
 function ScrollBar(_: React.ComponentProps<"div"> & { orientation?: Orientation }) {

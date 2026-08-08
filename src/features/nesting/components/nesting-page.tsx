@@ -671,7 +671,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#050505] desktop:relative desktop:h-full">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#050505]">
       <input
         ref={projectInputRef}
         type="file"
@@ -685,7 +685,7 @@ export function NestingPage() {
 
       {/* —— Desktop: sidebar + canvas —— */}
       {!isCompact && (
-        <div className="flex h-full min-h-0 gap-4 overflow-hidden p-4">
+        <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
             {panel}
           </aside>
@@ -702,8 +702,8 @@ export function NestingPage() {
                 />
               ) : null}
             </div>
-            <div className="relative min-h-0 flex-1 rounded-xl bg-[#0a0a0c] ring-1 ring-white/8">
-              <div className="absolute inset-0 overflow-hidden rounded-xl">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
+              <div className="absolute inset-px overflow-hidden rounded-[0.65rem]">
                 {project.sessionReady && dxfCanvasPieces.length > 0 ? (
                   <DxfCanvas
                     pieces={dxfCanvasPieces}
@@ -723,7 +723,7 @@ export function NestingPage() {
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                    {!project.sessionReady ? "Cargando workspace…" : "Importá una pieza o presioná Nestear"}
+                    {!project.sessionReady ? "Cargando workspace…" : "Importa una pieza o presiona Nestear"}
                   </div>
                 )}
               </div>
@@ -791,8 +791,8 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 rounded-xl bg-[#0a0a0c] ring-1 ring-white/8 mx-1 mb-1">
-            <div className="absolute inset-0 overflow-hidden rounded-xl">
+          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
+            <div className="absolute inset-px overflow-hidden rounded-[0.65rem]">
               {project.sessionReady && dxfCanvasPieces.length > 0 ? (
                 <DxfCanvas
                   pieces={dxfCanvasPieces}

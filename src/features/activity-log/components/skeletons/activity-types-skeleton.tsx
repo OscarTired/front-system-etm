@@ -1,24 +1,21 @@
 "use client"
 
-function SkeletonActivityRow({
-  opacity,
-}: {
-  opacity: number
-}) {
+// Skeleton de tipos de actividad — calco del listado real:
+// buscador, encabezado de sección y filas a todo el ancho.
+
+const ROW_OPACITIES = [1, 0.85, 0.7, 0.55, 0.4, 0.3]
+
+function SkeletonTypeRow({ opacity }: { opacity: number }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-xl bg-white/3 p-3"
+      className="flex w-full items-center gap-3 rounded-xl bg-white/3 px-3 py-3"
       style={{ opacity }}
     >
-      <div className="size-9 shrink-0 rounded-full bg-white/10" />
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="h-4 w-32 rounded bg-white/10" />
-        <div className="h-3 w-16 rounded bg-white/8" />
-      </div>
-      <div className="flex items-center gap-1">
-        <span className="size-8 rounded-lg bg-white/8" />
-        <span className="size-8 rounded-lg bg-white/8" />
-        <span className="size-8 rounded-lg bg-white/8" />
+      <span className="size-9 shrink-0 rounded-full bg-white/10" />
+
+      <div className="min-w-0 flex-1">
+        <span className="block h-4 w-36 rounded bg-white/12" />
+        <span className="mt-1.5 block h-3 w-28 rounded bg-white/6" />
       </div>
     </div>
   )
@@ -26,29 +23,35 @@ function SkeletonActivityRow({
 
 function SkeletonSection({
   rows,
+  opacities,
 }: {
   rows: number
+  opacities: number[]
 }) {
   return (
-    <section className="flex flex-col gap-2">
-      <div className="h-3 w-28 rounded bg-white/10 px-1" />
-      <div className="flex flex-col gap-2">
-        {Array.from({ length: rows }).map((_, index) => (
-          <SkeletonActivityRow
-            key={index}
-            opacity={Math.max(1 - index * 0.15, 0.35)}
-          />
+    <div className="flex w-full flex-col gap-2">
+      <span className="h-3 w-28 rounded bg-white/8" />
+
+      <div className="flex w-full flex-col gap-1.5">
+        {opacities.slice(0, rows).map((opacity, i) => (
+          <SkeletonTypeRow key={i} opacity={opacity} />
         ))}
       </div>
-    </section>
+    </div>
   )
 }
 
 export function ActivityTypesSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-6">
-      <SkeletonSection rows={3} />
-      <SkeletonSection rows={2} />
+    <div className="flex w-full animate-pulse flex-col gap-5">
+      {/* Buscador a todo el ancho */}
+      <div className="flex h-10 w-full items-center gap-2 rounded-xl bg-white/4 px-3 ring-1 ring-white/6">
+        <span className="size-4 shrink-0 rounded bg-white/12" />
+        <span className="h-3 w-24 rounded bg-white/8" />
+      </div>
+
+      <SkeletonSection rows={3} opacities={ROW_OPACITIES} />
+      <SkeletonSection rows={2} opacities={ROW_OPACITIES.slice(1)} />
     </div>
   )
 }
