@@ -114,7 +114,7 @@ export default function BitacoraPage() {
 
       {/* Header móvil / tablet */}
       <div className="mb-3 flex shrink-0 flex-col gap-3 pt-3 desktop:hidden">
-        <nav className="flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
           {tabs.map(tab => {
             const IconComponent = tab.icon
             const isActive = activeView === tab.id

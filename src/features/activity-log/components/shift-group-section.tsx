@@ -22,14 +22,17 @@ type Props = {
   deletingLogId?: string | null
   canCreate: boolean
   canDelete: boolean
-  // Contra qué hora se calcula "¿ya llegó esta franja?" (getSlotState).
-  // Default: ahora mismo, para el día de hoy. Cuando se está viendo
-  // un día PASADO, el caller pasa las 23:59 de ESE día — comparar
-  // las franjas de un día anterior contra la hora actual real no
-  // tiene sentido (diría "todavía no llega" una franja que ya pasó
-  // hace días).
   referenceNow?: Date
 }
+
+const DISTINCT_SHIFT_COLORS = [
+  "text-amber-400",
+  "text-emerald-400",
+  "text-rose-400",
+  "text-violet-400",
+  "text-teal-400",
+  "text-fuchsia-400",
+]
 
 export function ShiftGroupSection({
   group,
@@ -51,19 +54,9 @@ export function ShiftGroupSection({
   // es genérico (solo necesita una URL), no depende de comentarios.
   const [openPhotoUrl, setOpenPhotoUrl] = useState<string | null>(null)
 
-  // Un callback de ref estable POR slot (no uno nuevo en cada
-  // render): "ref={(el) => registerSlot(slot.shift, el)}" inline
-  // crea una función distinta en cada render, y como hoverShift
-  // cambia en cada pointermove durante el drag, este componente se
-  // re-renderiza todo el tiempo — con un callback nuevo cada vez,
-  // React desregistra (llama con null) y vuelve a registrar TODOS
-  // los refs de slot en cada uno de esos renders, no solo el que
-  // está bajo el puntero. Cacheando un callback por shift, React ve
-  // la misma función entre renders y no la vuelve a disparar.
   const slotRefCallbacks = useRef<Map<DayShift, (el: HTMLElement | null) => void>>(new Map())
 
   const getSlotRefCallback = useCallback((shift: DayShift) => {
-
     let callback = slotRefCallbacks.current.get(shift)
 
     if (!callback) {
@@ -72,16 +65,15 @@ export function ShiftGroupSection({
     }
 
     return callback
-
   }, [registerSlot])
 
-  // El grupo entero se ve "apagado" solo si TODAS sus sub-franjas
-  // todavía no llegan (ej. es de mañana y falta para las 8:30) —
-  // si al menos una ya empezó, el grupo se muestra activo aunque la
-  // otra sub-franja siga en "upcoming".
   const groupUpcoming = group.slots.every(
     (slot) => getSlotState(slot, now) === "upcoming",
   )
+
+  // Asignamos un color distintivo basado en el índice o nombre del grupo para que coincida con la agenda
+  const groupIndex = group.key.charCodeAt(0) % DISTINCT_SHIFT_COLORS.length
+  const iconColorClass = DISTINCT_SHIFT_COLORS[groupIndex]
 
   return (
     <div
@@ -91,7 +83,7 @@ export function ShiftGroupSection({
       )}
     >
       <div className="flex items-center gap-2.5">
-        <group.icon size={16} className="text-neutral-400" />
+        <group.icon size={16} className={cn("shrink-0", iconColorClass)} />
 
         <span className="text-sm font-semibold text-neutral-200">
           {group.label}
@@ -99,7 +91,7 @@ export function ShiftGroupSection({
       </div>
 
       <div className="mt-3 flex flex-col gap-4">
-        {group.slots.map((slot, index) => {
+        {group.slots.map((slot) => {
           const state = getSlotState(slot, now)
           const logs = logsBySlot[slot.shift] ?? []
 
@@ -141,10 +133,7 @@ export function ShiftGroupSection({
                 )}
               </div>
 
-              {/* Lista de registros — drop zone: solo franjas ya
-                  activas (no "upcoming") aceptan una tarjeta
-                  arrastrada; registerSlot le da al hook de drag el
-                  elemento DOM contra el que chequea el puntero. */}
+              {/* Lista de registros */}
               <div
                 ref={getSlotRefCallback(slot.shift)}
                 className={cn(
@@ -234,7 +223,6 @@ export function ShiftGroupSection({
                   )
                 })}
 
-                {/* Sin registros aún en esta franja activa */}
                 {logs.length === 0 && state !== "upcoming" && (
                   <button
                     type="button"
@@ -255,7 +243,6 @@ export function ShiftGroupSection({
                   </button>
                 )}
 
-                {/* Franja que aún no llega */}
                 {logs.length === 0 && state === "upcoming" && (
                   <p className="py-2 text-center text-xs text-neutral-600">
                     Todavía no llega esta franja

@@ -166,14 +166,7 @@ export function ActivityLogPageContent({
   const entryCount = isAgenda ? rangeLogs.length : logs.length
 
   return (
-    <div
-      className={cn(
-        "flex w-full flex-col gap-3 transition-all duration-200",
-        isAgenda
-          ? "h-full min-h-0 overflow-hidden"
-          : "mx-auto max-w-3xl pb-8",
-      )}
-    >
+    <div className="flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden transition-all duration-200">
       {/* Barra única: toggle izquierda | fecha centro | contador + acciones derecha */}
       <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
         <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
@@ -241,48 +234,51 @@ export function ActivityLogPageContent({
           </div>
         </div>
       ) : (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            {loading ? (
-              <ActivityLogSkeleton />
-            ) : (
-              <>
-                {departmentQuery === "PRODUCCION" &&
-                  department !== "REGISTROS" && (
-                    <AutoActivitySection
-                      logs={logs.filter(log => log.source === "AUTO")}
-                    />
-                  )}
+        /* Vista Día: ancho completo, igual que Agenda */
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+            <div className="flex w-full flex-col gap-3 pb-4">
+              {loading ? (
+                <ActivityLogSkeleton />
+              ) : (
+                <>
+                  {departmentQuery === "PRODUCCION" &&
+                    department !== "REGISTROS" && (
+                      <AutoActivitySection
+                        logs={logs.filter(log => log.source === "AUTO")}
+                      />
+                    )}
 
-                {SHIFT_GROUPS.map(group => {
-                  const logsBySlot: Record<string, typeof logs> = {}
+                  {SHIFT_GROUPS.map(group => {
+                    const logsBySlot: Record<string, typeof logs> = {}
 
-                  for (const slot of group.slots) {
-                    logsBySlot[slot.shift] = logs.filter(
-                      log => log.shift === slot.shift,
+                    for (const slot of group.slots) {
+                      logsBySlot[slot.shift] = logs.filter(
+                        log => log.shift === slot.shift,
+                      )
+                    }
+
+                    return (
+                      <ShiftGroupSection
+                        key={group.key}
+                        group={group}
+                        logsBySlot={logsBySlot}
+                        onLogClick={handleOpenPicker}
+                        onDeleteLog={handleDeleteLog}
+                        beginDrag={beginDrag}
+                        registerSlot={registerSlot}
+                        draggingLogId={draggingLogId}
+                        hoverShift={hoverShift}
+                        deletingLogId={null}
+                        canCreate={canCreate}
+                        canDelete={canDelete}
+                        referenceNow={referenceNow}
+                      />
                     )
-                  }
-
-                  return (
-                    <ShiftGroupSection
-                      key={group.key}
-                      group={group}
-                      logsBySlot={logsBySlot}
-                      onLogClick={handleOpenPicker}
-                      onDeleteLog={handleDeleteLog}
-                      beginDrag={beginDrag}
-                      registerSlot={registerSlot}
-                      draggingLogId={draggingLogId}
-                      hoverShift={hoverShift}
-                      deletingLogId={null}
-                      canCreate={canCreate}
-                      canDelete={canDelete}
-                      referenceNow={referenceNow}
-                    />
-                  )
-                })}
-              </>
-            )}
+                  })}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
