@@ -155,7 +155,10 @@ export function ActivityLogPageContent({
     <div
       className={cn(
         "mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 transition-all duration-200",
-        isAgenda ? "h-[calc(100dvh-5rem)] min-h-150 overflow-hidden" : "pb-8",
+        // Móvil immersive: h-full del slot. Desktop: alto de viewport.
+        isAgenda
+          ? "h-full min-h-0 overflow-hidden tablet:h-[calc(100dvh-5rem)]"
+          : "pb-8",
       )}
     >
       <div className="shrink-0">
@@ -182,8 +185,8 @@ export function ActivityLogPageContent({
       </div>
 
       {isAgenda ? (
-        <div className="flex flex-1 flex-col gap-4 min-h-0 overflow-hidden">
-          <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-4 backdrop-blur-xl shadow-lg">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+          <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-4 shadow-lg backdrop-blur-xl">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />
 
@@ -214,7 +217,7 @@ export function ActivityLogPageContent({
             </div>
           </div>
 
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
             <AgendaWeekView
               anchorDate={date}
               logs={rangeLogs}
@@ -229,7 +232,7 @@ export function ActivityLogPageContent({
         </div>
       ) : (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-          <div className="rounded-2xl bg-[#0c0c0e]/80 p-4 backdrop-blur-xl shadow-lg">
+          <div className="rounded-2xl bg-[#0c0c0e]/80 p-4 shadow-lg backdrop-blur-xl">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />
 
