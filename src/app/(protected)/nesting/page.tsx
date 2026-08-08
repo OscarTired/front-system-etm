@@ -7,8 +7,8 @@ export default function NestingRoute() {
   usePageTitle("Nesting")
 
   return (
-    <main className="flex flex-col bg-[#050505] px-4 pt-0 pb-5 text-white select-none tablet:px-8 tablet:pt-0 desktop:py-10 tablet:h-full">
-      <header className="hidden flex-wrap items-center justify-between gap-4 mb-4 desktop:flex">
+    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-3 text-white select-none tablet:px-4 desktop:px-5 desktop:py-4">
+      <header className="mb-3 hidden shrink-0 flex-wrap items-center justify-between gap-4 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             NESTING
@@ -18,11 +18,10 @@ export default function NestingRoute() {
             Acomodo de piezas en plancha
           </p>
         </div>
-
         <div aria-hidden className="h-10 w-10 shrink-0" />
       </header>
 
-      <section className="mt-2 min-h-0 flex-1 tablet:mt-3">
+      <section className="flex min-h-0 w-full flex-1 flex-col">
         <NestingWorkspace />
       </section>
     </main>
