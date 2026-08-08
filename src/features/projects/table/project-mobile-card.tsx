@@ -93,7 +93,7 @@ export function ProjectMobileCard({
           onClick={onToggle}
           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* Código YY-NNN — más grande solo en desktop */}
+          {/* Código YY-NNN */}
           <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
@@ -109,7 +109,7 @@ export function ProjectMobileCard({
               {project.name}
             </p>
 
-            {/* Datos compactos debajo del nombre — se desvanecen al expandir */}
+            {/* Datos compactos en la Fila principal (CON NOMBRE del PM) */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -128,7 +128,7 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa: icono en móvil, nombre en desktop */}
+              {/* Etapa */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -147,7 +147,7 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado: icono en móvil, nombre en desktop */}
+              {/* Estado */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -166,6 +166,7 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
+              {/* PM: Nombre visible también en móvil dentro del row principal */}
               <span className="min-w-0 truncate text-neutral-400">
                 {project.pm.name}
               </span>
@@ -220,6 +221,7 @@ export function ProjectMobileCard({
             onClick={() => setShowFields(true)}
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
+            {/* Datos colapsados ADENTRO (CON ICONO/INICIAL DE PM en lugar de nombre) */}
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(project.sequence).padStart(3, "0")}
@@ -271,8 +273,24 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">
-                {project.pm.name}
+              {/* PM solo icono/inicial en móvil adentro del panel colapsado */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  {project.pm.icon ? (
+                    <EntityIconBadge
+                      icon={project.pm.icon}
+                      color={project.pm.color ?? "#a3a3a3"}
+                      size={13}
+                    />
+                  ) : (
+                    <span className="text-[11px] font-medium text-neutral-400">
+                      {project.pm.name.charAt(0)}
+                    </span>
+                  )}
+                </span>
+                <span className="hidden min-w-0 truncate text-neutral-400 md:inline">
+                  {project.pm.name}
+                </span>
               </span>
             </span>
 

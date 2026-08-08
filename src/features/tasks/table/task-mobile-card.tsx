@@ -116,7 +116,7 @@ export function TaskMobileCard({
               {task.reference}
             </p>
 
-            {/* Datos compactos debajo del nombre — se desvanecen al expandir */}
+            {/* Datos compactos en la Fila principal (CON NOMBRE de la prioridad) */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -239,6 +239,7 @@ export function TaskMobileCard({
             onClick={() => setShowFields(true)}
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
+            {/* Datos colapsados ADENTRO (CON ICONO/INICIAL DE PRIORIDAD en lugar de nombre) */}
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(task.taskNumber).padStart(3, "0")}
@@ -290,8 +291,24 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">
-                {task.priority.name}
+              {/* Prioridad solo icono/inicial en móvil adentro del panel colapsado */}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  {task.priority.icon ? (
+                    <EntityIconBadge
+                      icon={task.priority.icon}
+                      color={task.priority.color ?? "#a3a3a3"}
+                      size={13}
+                    />
+                  ) : (
+                    <span className="text-[11px] font-medium text-neutral-400">
+                      {task.priority.name.charAt(0)}
+                    </span>
+                  )}
+                </span>
+                <span className="hidden min-w-0 truncate text-neutral-400 md:inline">
+                  {task.priority.name}
+                </span>
               </span>
             </span>
 

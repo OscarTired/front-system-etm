@@ -170,8 +170,20 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">
-                {operator?.name ?? "Sin asignar"}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={operator?.icon}
+                    color={operator?.color ?? "#a3a3a3"}
+                    size={12}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline text-neutral-400"
+                  style={operator?.color ? { color: operator.color } : undefined}
+                >
+                  {operator?.name ?? "Sin asignar"}
+                </span>
               </span>
             </div>
           </div>
@@ -313,8 +325,20 @@ export function ProcessMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">
-                {operator?.name ?? "Sin asignar operario"}
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={operator?.icon}
+                    color={operator?.color ?? "#a3a3a3"}
+                    size={13}
+                  />
+                </span>
+                <span
+                  className="hidden truncate md:inline text-neutral-400"
+                  style={operator?.color ? { color: operator.color } : undefined}
+                >
+                  {operator?.name ?? "Sin asignar operario"}
+                </span>
               </span>
             </span>
 
