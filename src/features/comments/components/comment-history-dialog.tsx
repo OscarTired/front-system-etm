@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react"
 import { MessageSquare, Search, Trash2 } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/shared/ui/spinner/spinner"
 
 import {
@@ -15,7 +14,6 @@ import {
 
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { preventNestedDialogClose } from "@/shared/ui/dialogs/prevent-nested-dialog-close"
-import { cn } from "@/shared/utils/utils"
 
 import { useComments } from "../hooks/use-comments"
 import { useDeleteComment } from "../hooks/use-delete-comment"
@@ -24,6 +22,7 @@ import { CommentComposer } from "./comment-composer"
 import { CommentList } from "./comment-list"
 import { EmptyComments } from "./empty-comments"
 import type { Comment, CommentTarget } from "../types/comment.types"
+import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 type Props = {
   target: CommentTarget
@@ -46,7 +45,6 @@ export function CommentHistoryDialog({
   onEditComment,
   readOnly = false,
 }: Props) {
-
   const [search, setSearch] = useState("")
   const [pendingDelete, setPendingDelete] = useState<Comment | null>(null)
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
@@ -79,7 +77,6 @@ export function CommentHistoryDialog({
     : comments
 
   const handleEdit = (comment: Comment) => {
-
     if (onEditComment) {
       onEditComment(comment)
       onOpenChange(false)
@@ -87,55 +84,39 @@ export function CommentHistoryDialog({
     }
 
     setEditingComment(comment)
-
   }
 
   const handleConfirmDelete = () => {
-
     if (!pendingDelete) return
 
     deleteComment(pendingDelete)
     setPendingDelete(null)
-
   }
 
-  const isCenteredState = loading || filteredComments.length === 0
-
   return (
-
     <>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
-
         <DialogContent
           size="large"
-          className="flex min-h-120 max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
-
-          <DialogHeader className="px-5 py-4">
-
+          <DialogHeader className="shrink-0 px-5 py-4">
             <div className="flex items-start gap-4">
-
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                 <MessageSquare size={18} strokeWidth={2.4} />
               </div>
           
               <div className="min-w-0 flex-1">
-
                 <DialogTitle className="text-lg font-bold text-neutral-100">
                   Mensajes
                 </DialogTitle>
-
                 <DialogDescription className="sr-only">
                   Lista completa de mensajes
                 </DialogDescription>
-
               </div>
-
             </div>
-
           </DialogHeader>
 
           <div className="shrink-0 px-5 py-3">
@@ -155,7 +136,6 @@ export function CommentHistoryDialog({
           </div>
 
           <div className="shrink-0 px-5 py-3">
-
             <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
               <Search size={15} className="shrink-0 text-neutral-500" />
               <input
@@ -165,18 +145,21 @@ export function CommentHistoryDialog({
                 className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
               />
             </div>
-
           </div>
 
-          <ScrollArea className={cn("min-h-0 px-5 py-4", isCenteredState && "flex-1 flex flex-col")}>
-
+          <VerticalScroll
+            className="px-5 py-4"
+            containerClassName="min-h-0 flex-1"
+            arrowTopOffset={12}
+            arrowBottomOffset={12}
+          >
             {loading ? (
-              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2.5 my-auto min-h-65">
+              <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
                 <Spinner size={18} />
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredComments.length === 0 ? (
-              <div className="flex h-full w-full flex-1 items-center justify-center my-auto min-h-65">
+              <div className="flex min-h-65 flex-col items-center justify-center">
                 <EmptyComments />
               </div>
             ) : (
@@ -187,11 +170,8 @@ export function CommentHistoryDialog({
                 onReply={readOnly ? undefined : setReplyingTo}
               />
             )}
-
-          </ScrollArea>
-
+          </VerticalScroll>
         </DialogContent>
-
       </Dialog>
 
       <ActionDialog
@@ -208,9 +188,6 @@ export function CommentHistoryDialog({
         onClose={() => setPendingDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
     </>
-
   )
-
 }

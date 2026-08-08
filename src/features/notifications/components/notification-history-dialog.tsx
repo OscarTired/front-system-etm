@@ -15,7 +15,6 @@ import {
 
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { preventNestedDialogClose } from "@/shared/ui/dialogs/prevent-nested-dialog-close"
-import { cn } from "@/shared/utils/utils"
 
 import { useNotifications } from "../hooks/use-notifications"
 import { useMarkNotificationRead } from "../hooks/use-mark-notification-read"
@@ -26,7 +25,7 @@ import { NotificationItem } from "./notification-item"
 import { resolveNotificationHref } from "../utils/resolve-notification-href"
 
 import type { Notification } from "../types/notification.types"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 type Props = {
   open: boolean
@@ -34,7 +33,6 @@ type Props = {
 }
 
 export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
-
   const [search, setSearch] = useState("")
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Notification | null>(null)
@@ -50,7 +48,6 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
 
   const filteredNotifications = search.trim()
     ? notifications.filter(n => {
-
         const projectRef = n.task?.project ?? n.project
 
         return (
@@ -59,33 +56,25 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
           (projectRef?.name.toLowerCase().includes(search.toLowerCase()) ?? false) ||
           (projectRef?.projectCode.toLowerCase().includes(search.toLowerCase()) ?? false)
         )
-
       })
     : notifications
 
   const hasUnread = notifications.some(n => !n.read)
   const hasAny = notifications.length > 0
-  const isCenteredState = loading || filteredNotifications.length === 0
 
   const handleSelect = (notification: Notification) => {
-
     if (notification.route.history) {
-
       setConfirmingId(notification.id)
-
       return
-
     }
 
     proceedToNotification(notification)
-
   }
 
   const proceedToNotification = (
     notification: Notification,
     fromConfirm = false,
   ) => {
-
     setConfirmingId(null)
 
     if (!notification.read) {
@@ -97,19 +86,14 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
     router.push(
       resolveNotificationHref(notification, { history: fromConfirm }),
     )
-
   }
 
   const handleConfirmDeleteAll = async () => {
-
     await deleteAll()
-
     setConfirmDeleteAll(false)
-
   }
 
   const handleConfirmDeleteOne = async () => {
-
     if (!pendingDelete) {
       return
     }
@@ -121,53 +105,37 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
     setPendingDelete(
       null,
     )
-
   }
 
   return (
-
     <>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
-
         <DialogContent
           size="large"
-          className="flex min-h-120 max-h-screen w-180 max-w-180 flex-col overflow-hidden rounded-2xl bg-[#101012] p-0 text-white shadow-2xl"
+          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
-
           <DialogHeader className="shrink-0 px-5 py-4">
-
             <div className="flex items-start gap-4">
-
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-
                 <History
                   size={18}
                   strokeWidth={2.4}
                 />
-
               </div>
-
               <div className="min-w-0 flex-1">
-
                 <DialogTitle className="text-lg font-bold text-neutral-100">
                   Notificaciones
                 </DialogTitle>
-
                 <DialogDescription className="sr-only">
                   Lista completa de notificaciones
                 </DialogDescription>
-
               </div>
-
             </div>
-
           </DialogHeader>
 
           <div className="shrink-0 px-5 py-3">
-
             <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
               <Search size={15} className="shrink-0 text-neutral-500" />
               <input
@@ -177,23 +145,25 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                 className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
               />
             </div>
-
           </div>
 
-          <ScrollArea className={cn("min-h-0 flex-1 px-5 py-4", isCenteredState && "flex flex-col")}>
-
+          <VerticalScroll
+            className="px-5 py-4"
+            containerClassName="min-h-0 flex-1"
+            arrowTopOffset={12}
+            arrowBottomOffset={12}
+          >
             {loading ? (
-              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-2.5 my-auto min-h-65">
+              <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
                 <Spinner size={18} />
                 <p className="text-sm text-neutral-500">Cargando...</p>
               </div>
             ) : filteredNotifications.length === 0 ? (
-              <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-1.5 text-center my-auto min-h-65">
+              <div className="flex min-h-65 flex-col items-center justify-center gap-1.5 text-center">
                 <p className="text-sm text-neutral-500">No hay notificaciones</p>
               </div>
             ) : (
               <div className="space-y-1">
-
                 {filteredNotifications.map(notification => (
                   <NotificationItem
                     key={notification.id}
@@ -220,20 +190,14 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                       : "Cargar más"}
                   </button>
                 )}
-
               </div>
             )}
-
-          </ScrollArea>
+          </VerticalScroll>
 
           <div className="shrink-0 px-5 py-4">
-
             <div className="flex items-center justify-between">
-
               <div className="flex items-center gap-1">
-
                 {hasUnread && (
-
                   <button
                     type="button"
                     onClick={() => markAllAsRead()}
@@ -242,11 +206,9 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                   >
                     <Eraser size={16} />
                   </button>
-
                 )}
 
                 {hasAny && (
-
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteAll(true)}
@@ -255,9 +217,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                   >
                     <Trash2 size={16} />
                   </button>
-
                 )}
-
               </div>
 
               <button
@@ -267,13 +227,9 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
               >
                 Cerrar
               </button>
-
             </div>
-
           </div>
-
         </DialogContent>
-
       </Dialog>
 
       <ActionDialog
@@ -301,9 +257,6 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
         onClose={() => setPendingDelete(null)}
         onConfirm={handleConfirmDeleteOne}
       />
-
     </>
-
   )
-
 }

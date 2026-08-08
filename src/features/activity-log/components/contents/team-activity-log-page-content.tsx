@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
@@ -19,6 +19,7 @@ import {
   getCurrentShift,
 } from "../../constants/shift-definitions"
 import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
+import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import { TeamActivityLogSkeleton } from "../skeletons/team-activity-log-skeleton"
 
 function startOfDayISO(date: string) {
@@ -150,6 +151,14 @@ function ShiftBucketedLogs({ logs }: { logs: Log[] }) {
   )
 }
 
+function EntryCountBadge({ count }: { count: number }) {
+  return (
+    <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
+      {count} {count === 1 ? "entrada" : "entradas"}
+    </div>
+  )
+}
+
 export function TeamActivityLogPageContent() {
   usePageTitle("Bitácora de Equipo")
 
@@ -157,6 +166,7 @@ export function TeamActivityLogPageContent() {
 
   const [selectedUser, setSelectedUser] = useState<User>()
   const [date, setDate] = useState<Date | null>(new Date())
+  const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
   const filters = useMemo(
     () => ({
@@ -168,6 +178,22 @@ export function TeamActivityLogPageContent() {
   )
 
   const { logs, loading } = useTeamActivityLog(filters)
+
+  const { markedDates } = useActivityLogMarkedDates({
+    scope: "team",
+    userId: selectedUser?.id,
+    month: viewMonth,
+  })
+
+  const handleDateChange = useCallback((next: Date | null) => {
+    const d = next ?? new Date()
+    setDate(d)
+    setViewMonth(d)
+  }, [])
+
+  const handleViewMonthChange = useCallback((month: Date) => {
+    setViewMonth(month)
+  }, [])
 
   const groupedLogs = useMemo(() => {
     if (selectedUser) return []
@@ -204,12 +230,12 @@ export function TeamActivityLogPageContent() {
   }
 
   return (
-    // Sin max-w: llena el ancho del main como Producción / Día
-    <div className="relative flex w-full flex-col gap-6">
-      <div className="w-full rounded-2xl bg-white/2 p-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
+      {/* Toolbar */}
+      <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
         {/* Mobile */}
-        <div className="flex flex-wrap items-center justify-center gap-3 tablet:hidden">
-          <div className="w-56 shrink-0">
+        <div className="flex flex-col items-center gap-3 tablet:hidden">
+          <div className="w-full max-w-56">
             <UserSelect
               value={selectedUser}
               items={users as User[]}
@@ -220,14 +246,14 @@ export function TeamActivityLogPageContent() {
 
           <DateNavigator
             value={date}
-            onChange={setDate}
+            onChange={handleDateChange}
             placeholder="Fecha"
             maxDate={new Date()}
+            markedDates={markedDates}
+            onViewMonthChange={handleViewMonthChange}
           />
 
-          <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
-            {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
-          </div>
+          <EntryCountBadge count={logs.length} />
         </div>
 
         {/* Desktop */}
@@ -246,57 +272,60 @@ export function TeamActivityLogPageContent() {
           <div className="justify-self-center">
             <DateNavigator
               value={date}
-              onChange={setDate}
+              onChange={handleDateChange}
               placeholder="Fecha"
               maxDate={new Date()}
+              markedDates={markedDates}
+              onViewMonthChange={handleViewMonthChange}
             />
           </div>
 
           <div className="justify-self-end">
-            <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
-              {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
-            </div>
+            <EntryCountBadge count={logs.length} />
           </div>
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-6">
-        {loading ? (
-          <TeamActivityLogSkeleton />
-        ) : logs.length === 0 ? (
-          <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
-            Sin entradas para este filtro
-          </div>
-        ) : selectedUser ? (
-          <ShiftBucketedLogs logs={logs} />
-        ) : (
-          <div className="flex w-full flex-col gap-8">
-            {groupedLogs.map(group => (
-              <section
-                key={group.user?.id ?? "unknown"}
-                className="flex w-full flex-col gap-3"
-              >
-                <div className="flex items-center justify-between border-b border-white/8 pb-2">
-                  <div className="flex items-center gap-3">
-                    <DynamicBadge
-                      label={group.user?.name ?? "Sin usuario"}
-                      color={group.user?.color ?? "#71717A"}
-                      icon={group.user?.icon}
-                      width="field"
-                    />
+      {/* Lista — scroll normal, sin absolute/h-0 */}
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+        <div className="flex w-full flex-col gap-6 pb-4">
+          {loading ? (
+            <TeamActivityLogSkeleton />
+          ) : logs.length === 0 ? (
+            <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
+              Sin entradas para este filtro
+            </div>
+          ) : selectedUser ? (
+            <ShiftBucketedLogs logs={logs} />
+          ) : (
+            <div className="flex w-full flex-col gap-8">
+              {groupedLogs.map(group => (
+                <section
+                  key={group.user?.id ?? "unknown"}
+                  className="flex w-full flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between border-b border-white/8 pb-2">
+                    <div className="flex items-center gap-3">
+                      <DynamicBadge
+                        label={group.user?.name ?? "Sin usuario"}
+                        color={group.user?.color ?? "#71717A"}
+                        icon={group.user?.icon}
+                        width="field"
+                      />
+                    </div>
+
+                    <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
+                      {group.logs.length}{" "}
+                      {group.logs.length === 1 ? "actividad" : "actividades"}
+                    </div>
                   </div>
 
-                  <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
-                    {group.logs.length}{" "}
-                    {group.logs.length === 1 ? "actividad" : "actividades"}
-                  </div>
-                </div>
-
-                <ShiftBucketedLogs logs={group.logs} />
-              </section>
-            ))}
-          </div>
-        )}
+                  <ShiftBucketedLogs logs={group.logs} />
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

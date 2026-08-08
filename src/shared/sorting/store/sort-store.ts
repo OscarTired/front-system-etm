@@ -26,8 +26,8 @@ type SortStore = {
 export const useSortStore = create<SortStore>()(
   persist(
     set => ({
-      taskSortMode: "manual",
-      projectSortMode: "manual",
+      taskSortMode: "code",
+      projectSortMode: "code",
 
       setTaskSortMode: taskSortMode =>
         set({
@@ -46,8 +46,8 @@ export const useSortStore = create<SortStore>()(
         if (version < 2) {
           return {
             ...persistedState,
-            taskSortMode: "manual",
-            projectSortMode: "manual",
+            taskSortMode: "code",
+            projectSortMode: "code",
           }
         }
         return persistedState
