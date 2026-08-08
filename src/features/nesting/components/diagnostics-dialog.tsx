@@ -168,7 +168,14 @@ export function DiagnosticsDialog({
 
         <div className="min-h-0 flex-1 overflow-hidden bg-neutral-950/40">
           <ScrollArea className="h-[min(480px,55vh)]">
-            <table className="w-full border-collapse text-left text-xs">
+            {/* ScrollArea por default bloquea scroll horizontal
+                (overflow-x-hidden) — para que la tabla no se apriete
+                hasta cortar columnas en mobile, se le da su propio
+                scroll horizontal nativo + un ancho mínimo, para que
+                las columnas mantengan un tamaño legible y el usuario
+                deslice a los costados en vez de perder contenido. */}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-left text-xs">
               <thead className="sticky top-0 z-10 bg-[#161618] text-[10px] uppercase tracking-wider text-neutral-400 shadow-sm">
                 <tr>
                   <th className="px-4 py-3 font-medium">Nombre del archivo</th>
@@ -287,6 +294,7 @@ export function DiagnosticsDialog({
                 )}
               </tbody>
             </table>
+            </div>
           </ScrollArea>
         </div>
 

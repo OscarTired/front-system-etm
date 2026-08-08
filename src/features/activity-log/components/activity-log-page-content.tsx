@@ -154,11 +154,10 @@ export function ActivityLogPageContent({
   return (
     <div
       className={cn(
-        "mx-auto flex w-full max-w-6xl flex-col gap-4",
-        isAgenda && "h-[calc(100dvh-5.5rem)] min-h-0",
+        "mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 transition-all duration-200",
+        isAgenda ? "h-[calc(100dvh-5rem)] min-h-150 overflow-hidden" : "pb-8",
       )}
     >
-
       <div className="shrink-0">
         <EntityToolbar
           right={
@@ -171,7 +170,7 @@ export function ActivityLogPageContent({
                     setDate(today)
                     setViewMonth(today)
                   }}
-                  className="flex h-9 items-center rounded-lg bg-white/5 px-3 text-sm font-medium text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                  className="flex h-9 items-center rounded-xl bg-white/5 px-3.5 text-sm font-medium text-neutral-300 transition-all hover:bg-white/10 hover:text-white"
                 >
                   Hoy
                 </button>
@@ -183,8 +182,8 @@ export function ActivityLogPageContent({
       </div>
 
       {isAgenda ? (
-        <>
-          <div className="shrink-0 rounded-2xl bg-white/2 p-4">
+        <div className="flex flex-1 flex-col gap-4 min-h-0 overflow-hidden">
+          <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-4 backdrop-blur-xl shadow-lg">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />
 
@@ -201,7 +200,7 @@ export function ActivityLogPageContent({
 
               <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+                  <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
                     {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
                   </div>
 
@@ -215,7 +214,7 @@ export function ActivityLogPageContent({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1">
+          <div className="flex flex-1 min-h-0 overflow-hidden">
             <AgendaWeekView
               anchorDate={date}
               logs={rangeLogs}
@@ -227,10 +226,10 @@ export function ActivityLogPageContent({
               onLogClick={handleAgendaLogClick}
             />
           </div>
-        </>
+        </div>
       ) : (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          <div className="rounded-2xl bg-white/2 p-4">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+          <div className="rounded-2xl bg-[#0c0c0e]/80 p-4 backdrop-blur-xl shadow-lg">
             <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
               <div className="hidden tablet:block" />
 
@@ -247,7 +246,7 @@ export function ActivityLogPageContent({
 
               <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+                  <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
                     {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
                   </div>
 
@@ -333,7 +332,6 @@ export function ActivityLogPageContent({
         onClose={() => setPendingDelete(null)}
         onConfirm={handleConfirmDelete}
       />
-
     </div>
   )
 }
