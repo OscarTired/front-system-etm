@@ -1,14 +1,10 @@
-import { CalendarDay } from './calendar-day';
-import type { CalendarDay as CalendarDayModel } from '../types/types';
-import { WEEKDAY_LABELS } from '../utils/dates';
+import { CalendarDay } from './calendar-day'
+import type { CalendarDay as CalendarDayModel } from '../types/types'
+import { WEEKDAY_LABELS } from '../utils/dates'
 
-/**
- * Grid completo de semanas + etiquetas de día de la semana.
- * Única responsabilidad: layout del calendario, delega la celda a CalendarDay.
- */
 export interface CalendarGridProps {
-  weeks: CalendarDayModel[][];
-  onSelectDay: (date: Date) => void;
+  weeks: CalendarDayModel[][]
+  onSelectDay: (date: Date) => void
 }
 
 export function CalendarGrid({ weeks, onSelectDay }: CalendarGridProps): React.JSX.Element {
@@ -37,5 +33,5 @@ export function CalendarGrid({ weeks, onSelectDay }: CalendarGridProps): React.J
         )}
       </div>
     </div>
-  );
+  )
 }

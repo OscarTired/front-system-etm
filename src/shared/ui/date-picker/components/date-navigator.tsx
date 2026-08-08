@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DatePicker } from "@/shared/ui/date-picker/components/date-picker"
 import { stripTime } from "@/shared/ui/date-picker/utils/dates"
 import { cn } from "@/shared/utils/utils"
+import type { DayMarker } from "@/shared/ui/date-picker/types/types"
 
 type Props = {
   value: Date | null
@@ -13,6 +14,7 @@ type Props = {
   minDate?: Date
   maxDate?: Date
   className?: string
+  markedDates?: Record<string, DayMarker[]>
 }
 
 function addDays(date: Date, amount: number) {
@@ -21,12 +23,6 @@ function addDays(date: Date, amount: number) {
   return next
 }
 
-// Wrapper de un solo uso alrededor del DatePicker genérico: le
-// agrega flechas prev/next para correr el día sin abrir el
-// calendario. No se mete esto en DatePicker directamente porque
-// ese componente es usado en formularios/filtros donde navegar
-// "día a día" no tiene sentido (ej. fecha de nacimiento) — acá es
-// específico para vistas tipo bitácora, donde se navega por día.
 export function DateNavigator({
   value,
   onChange,
@@ -34,8 +30,8 @@ export function DateNavigator({
   minDate,
   maxDate,
   className,
+  markedDates,
 }: Props) {
-
   const current = value ?? new Date()
 
   const atMin = minDate != null && stripTime(current) <= stripTime(minDate)
@@ -46,9 +42,7 @@ export function DateNavigator({
   }
 
   return (
-
     <div className={cn("flex items-center gap-1", className)}>
-
       <button
         type="button"
         onClick={() => goTo(-1)}
@@ -65,6 +59,7 @@ export function DateNavigator({
         placeholder={placeholder}
         minDate={minDate}
         maxDate={maxDate}
+        markedDates={markedDates}
       />
 
       <button
@@ -76,9 +71,6 @@ export function DateNavigator({
       >
         <ChevronRight size={16} />
       </button>
-
     </div>
-
   )
-
 }

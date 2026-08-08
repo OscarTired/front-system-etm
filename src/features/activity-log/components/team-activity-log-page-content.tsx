@@ -15,6 +15,7 @@ import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-titl
 import { getActivityIcon } from "../constants/activity-icons"
 import { SHIFT_GROUPS, SHIFT_HOURS_LABEL, getCurrentShift } from "../constants/shift-definitions"
 import { useTeamActivityLog } from "../hooks/use-team-activity-log"
+import { useActivityLogMarkedDates } from "../hooks/use-activity-log-marked-dates"
 import { TeamActivityLogSkeleton } from "./team-activity-log-skeleton"
 
 function startOfDayISO(date: string) {
@@ -187,6 +188,12 @@ export function TeamActivityLogPageContent() {
 
   const { logs, loading } = useTeamActivityLog(filters)
 
+  const { markedDates } = useActivityLogMarkedDates({
+    scope: "team",
+    month: date ?? new Date(),
+    userId: selectedUser?.id,
+  })
+
   const groupedLogs = useMemo(() => {
     if (selectedUser) {
       return []
@@ -245,6 +252,7 @@ export function TeamActivityLogPageContent() {
             onChange={setDate}
             placeholder="Fecha"
             maxDate={new Date()}
+            markedDates={markedDates}
           />
 
           <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
@@ -273,6 +281,7 @@ export function TeamActivityLogPageContent() {
               onChange={setDate}
               placeholder="Fecha"
               maxDate={new Date()}
+              markedDates={markedDates}
             />
           </div>
 

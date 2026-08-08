@@ -1,16 +1,13 @@
-import type { CalendarDay as CalendarDayModel } from '../types/types';
+import type { CalendarDay as CalendarDayModel } from '../types/types'
 
-/**
- * Celda de un día individual dentro del grid.
- * Única responsabilidad: presentación + click de un día.
- */
 export interface CalendarDayProps {
-  day: CalendarDayModel;
-  onSelect: (date: Date) => void;
+  day: CalendarDayModel
+  onSelect: (date: Date) => void
 }
 
 export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Element {
-  const { date, isCurrentMonth, isToday, isSelected, isDisabled } = day;
+  const { date, isCurrentMonth, isToday, isSelected, isDisabled, markers } = day
+  const hasMarkers = !!markers && markers.length > 0
 
   return (
     <button
@@ -30,10 +27,32 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
         isDisabled ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
       ].join(' ')}
     >
-      {isToday && !isSelected ? (
+      {date.getDate()}
+
+      {/* Punto blanco = hoy (si no está seleccionado) */}
+      {isToday && !isSelected && !hasMarkers ? (
         <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white" />
       ) : null}
-      {date.getDate()}
+
+      {/* Puntos de color = días con registros */}
+      {hasMarkers ? (
+        <span className="absolute bottom-0.5 flex items-center justify-center gap-0.5">
+          {markers!.slice(0, 3).map((m, i) => (
+            <span
+              key={i}
+              className="h-1 w-1 rounded-full"
+              style={{
+                backgroundColor: isSelected ? '#171717' : m.color,
+              }}
+            />
+          ))}
+        </span>
+      ) : null}
+
+      {/* Hoy + markers: anillo sutil para no perder el “hoy” */}
+      {isToday && !isSelected && hasMarkers ? (
+        <span className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-white/40" />
+      ) : null}
     </button>
-  );
+  )
 }

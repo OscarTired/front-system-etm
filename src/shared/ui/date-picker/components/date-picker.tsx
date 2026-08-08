@@ -1,32 +1,32 @@
-"use client";
+"use client"
 
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
-import { DateCalendar } from './date-calendar';
-import { DateInput } from './date-input';
-import { useDateFormat } from '../hooks/use-date-format';
-import { useResponsive } from '@/shared/responsive/hooks/use-responsive';
-import type { DatePickerProps } from '../types/types';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { useCallback, useRef, useState, useMemo, useEffect } from 'react'
+import { DateCalendar } from './date-calendar'
+import { DateInput } from './date-input'
+import { useDateFormat } from '../hooks/use-date-format'
+import { useResponsive } from '@/shared/responsive/hooks/use-responsive'
+import type { DatePickerProps } from '../types/types'
 
 function parsePartialDate(input: string): Date | null {
-  const clean = input.replace(/[^\d/]/g, '');
-  const parts = clean.split('/');
+  const clean = input.replace(/[^\d/]/g, '')
+  const parts = clean.split('/')
 
   if (parts.length >= 2) {
-    const day = parseInt(parts[0], 10) || 1;
-    const month = parseInt(parts[1], 10) - 1;
-    let year = parts[2] ? parseInt(parts[2], 10) : new Date().getFullYear();
+    const day = parseInt(parts[0], 10) || 1
+    const month = parseInt(parts[1], 10) - 1
+    let year = parts[2] ? parseInt(parts[2], 10) : new Date().getFullYear()
 
     if (parts[2] && parts[2].length === 4) {
-      year = parseInt(parts[2], 10);
+      year = parseInt(parts[2], 10)
     }
 
     if (month >= 0 && month <= 11 && year > 1000 && year < 3000) {
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      return new Date(year, month, Math.min(day, daysInMonth));
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      return new Date(year, month, Math.min(day, daysInMonth))
     }
   }
-  return null;
+  return null
 }
 
 export function DatePicker({
@@ -37,18 +37,19 @@ export function DatePicker({
   minDate,
   maxDate,
   className,
+  markedDates,
 }: DatePickerProps): React.JSX.Element {
-  const [open, setOpen] = useState(false);
-  const { isMobile } = useResponsive();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const sheetInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false)
+  const { isMobile } = useResponsive()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const sheetInputRef = useRef<HTMLInputElement>(null)
 
   const handleCommit = useCallback(
     (date: Date | null) => {
-      onChange(date);
+      onChange(date)
     },
     [onChange],
-  );
+  )
 
   const {
     inputValue,
@@ -56,49 +57,49 @@ export function DatePicker({
     handleInputBlur,
     handleInputKeyDown,
     syncFromExternalValue,
-  } = useDateFormat({ value, minDate, maxDate, onCommit: handleCommit });
+  } = useDateFormat({ value, minDate, maxDate, onCommit: handleCommit })
 
   const livePreviewDate = useMemo(() => {
-    if (!inputValue) return null;
-    return parsePartialDate(inputValue);
-  }, [inputValue]);
+    if (!inputValue) return null
+    return parsePartialDate(inputValue)
+  }, [inputValue])
 
   const handleOpenChange = useCallback((next: boolean) => {
-    setOpen(next);
-  }, []);
+    setOpen(next)
+  }, [])
 
   useEffect(() => {
     if (open && isMobile) {
       if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
+        document.activeElement.blur()
       }
     }
-  }, [open, isMobile]);
+  }, [open, isMobile])
 
   const handleSelectDay = useCallback(
     (date: Date) => {
-      onChange(date);
-      syncFromExternalValue(date);
-      handleOpenChange(false);
+      onChange(date)
+      syncFromExternalValue(date)
+      handleOpenChange(false)
     },
     [onChange, syncFromExternalValue, handleOpenChange],
-  );
+  )
 
   const handleKeyDownWithEscape = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Escape') {
-        handleOpenChange(false);
-        return;
+        handleOpenChange(false)
+        return
       }
       if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        setOpen(true);
-        return;
+        event.preventDefault()
+        setOpen(true)
+        return
       }
-      handleInputKeyDown(event);
+      handleInputKeyDown(event)
     },
     [handleInputKeyDown, handleOpenChange],
-  );
+  )
 
   return (
     <Popover open={open} onOpenChange={disabled ? undefined : handleOpenChange}>
@@ -113,7 +114,7 @@ export function DatePicker({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDownWithEscape}
             onClick={() => {
-              if (!isMobile) setOpen(true);
+              if (!isMobile) setOpen(true)
             }}
           />
         </div>
@@ -122,7 +123,7 @@ export function DatePicker({
       <PopoverContent
         sideOffset={6}
         onOpenAutoFocus={(e) => {
-          e.preventDefault();
+          e.preventDefault()
         }}
         floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
         className="w-full max-w-xs mx-auto flex flex-col items-center justify-center gap-3 p-4"
@@ -133,7 +134,7 @@ export function DatePicker({
               <DateInput
                 ref={sheetInputRef}
                 value={inputValue}
-                placeholder={placeholder ?? "DD/MM/YYYY"}
+                placeholder={placeholder ?? 'DD/MM/YYYY'}
                 disabled={disabled}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
@@ -151,9 +152,10 @@ export function DatePicker({
             minDate={minDate}
             maxDate={maxDate}
             onSelect={handleSelectDay}
+            markedDates={markedDates}
           />
         </div>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

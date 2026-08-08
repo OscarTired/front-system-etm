@@ -66,6 +66,41 @@ export const activityLogService = {
     return response.data
   },
 
+  /**
+   * Días con registros del usuario autenticado.
+   * Backend fija userId desde el JWT — no se manda userId.
+   */
+  async getMyMarkedDates(
+    params: { from: string; to: string; department?: ActivityDepartment },
+    signal?: AbortSignal,
+  ) {
+    const response = await api.get<string[]>("/activity-log/me/marked-dates", {
+      signal,
+      params,
+    })
+    return response.data
+  },
+
+  /**
+   * Días con registros (equipo / filtro opcional).
+   * Requiere ACTIVITY_LOG_READ_ANY.
+   */
+  async getMarkedDates(
+    params: {
+      from: string
+      to: string
+      userId?: string
+      department?: ActivityDepartment
+    },
+    signal?: AbortSignal,
+  ) {
+    const response = await api.get<string[]>("/activity-log/marked-dates", {
+      signal,
+      params,
+    })
+    return response.data
+  },
+
   async getAll(
     filters: { userId?: string; projectId?: string; taskId?: string; from?: string; to?: string; department?: ActivityDepartment },
     signal?: AbortSignal,

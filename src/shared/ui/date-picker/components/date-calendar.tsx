@@ -1,17 +1,19 @@
-import { useRef } from 'react';
-import { CalendarGrid } from './calendar-grid';
-import { CalendarHeader } from './calendar-header';
-import { useCalendar } from '../hooks/use-calendar';
-import { getToday } from '../utils/dates';
-import { cn } from '@/shared/utils/utils';
+import { useRef } from 'react'
+import { CalendarGrid } from './calendar-grid'
+import { CalendarHeader } from './calendar-header'
+import { useCalendar } from '../hooks/use-calendar'
+import { getToday } from '../utils/dates'
+import { cn } from '@/shared/utils/utils'
+import type { DayMarker } from '../types/types'
 
 export interface DateCalendarProps {
-  value?: Date | null;
-  minDate?: Date;
-  maxDate?: Date;
-  onSelect: (date: Date) => void;
-  displayDate?: Date | null;
-  className?: string;
+  value?: Date | null
+  minDate?: Date
+  maxDate?: Date
+  onSelect: (date: Date) => void
+  displayDate?: Date | null
+  className?: string
+  markedDates?: Record<string, DayMarker[]>
 }
 
 export function DateCalendar({
@@ -21,6 +23,7 @@ export function DateCalendar({
   onSelect,
   displayDate,
   className,
+  markedDates,
 }: DateCalendarProps): React.JSX.Element {
   const {
     weeks,
@@ -30,42 +33,41 @@ export function DateCalendar({
     goToPreviousYear,
     goToNextYear,
     setViewDate,
-  } = useCalendar({ value: displayDate || value, minDate, maxDate });
+  } = useCalendar({
+    value: displayDate || value,
+    minDate,
+    maxDate,
+    markedDates,
+  })
 
-  const touchStartX = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null)
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+    touchStartX.current = e.touches[0].clientX
+  }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-
-    const touchEndX = e.changedTouches[0].clientX;
-    const diffX = touchStartX.current - touchEndX;
-
+    if (touchStartX.current === null) return
+    const touchEndX = e.changedTouches[0].clientX
+    const diffX = touchStartX.current - touchEndX
     if (Math.abs(diffX) > 40) {
-      if (diffX > 0) {
-        goToNextMonth();
-      } else {
-        goToPreviousMonth();
-      }
+      if (diffX > 0) goToNextMonth()
+      else goToPreviousMonth()
     }
-
-    touchStartX.current = null;
-  };
+    touchStartX.current = null
+  }
 
   const handleTodayClick = () => {
-    const today = getToday();
-    setViewDate(today);
-    onSelect(today);
-  };
+    const today = getToday()
+    setViewDate(today)
+    onSelect(today)
+  }
 
   return (
     <div
       className={cn(
-        "w-full max-w-xs mx-auto p-3 select-none touch-pan-y flex flex-col gap-2",
-        className
+        'w-full max-w-xs mx-auto p-3 select-none touch-pan-y flex flex-col gap-2',
+        className,
       )}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -90,5 +92,5 @@ export function DateCalendar({
         </button>
       </div>
     </div>
-  );
+  )
 }

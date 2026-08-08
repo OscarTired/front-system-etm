@@ -5,23 +5,32 @@ import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+import { useAuthStore } from "@/features/auth/store/auth-store"
 
 import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
+import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
+import { cn } from "@/shared/utils/utils"
 
 import { useMyActivityLog } from "../hooks/use-my-activity-log"
+import { useMyActivityLogRange } from "../hooks/use-my-activity-log-range"
 import { useDeleteActivityLog } from "../hooks/use-delete-activity-log"
 import { useMoveActivityLog } from "../hooks/use-move-activity-log"
 import { useActivityDrag } from "../hooks/use-activity-drag"
 import type { ShiftSlotDefinition } from "../constants/shift-definitions"
 import { SHIFT_GROUPS, getSlotState } from "../constants/shift-definitions"
 import type { ActivityDepartment, ActivityLog } from "../types/activity-log.types"
+import { useBitacoraViewStore } from "../store/bitacora-view-store"
+import { getWeekRangeISO } from "../utils/week-range"
+
 import { ShiftGroupSection } from "./shift-group-section"
 import { AutoActivitySection } from "./auto-activity-section"
 import { ActivityPickerDialog } from "./activity-picker-dialog"
 import { ActivityLogSkeleton } from "./activity-log-skeleton"
+import { BitacoraViewToggle } from "./bitacora-view-toggle"
+import { AgendaWeekView } from "./agenda-week-view"
 
 type ViewTab = ActivityDepartment | "REGISTROS"
 
@@ -37,10 +46,28 @@ export function ActivityLogPageContent({
   const dateISO = toISODateString(date)
   const isToday = dateISO === toISODateString(new Date())
 
-  // Si es "REGISTROS", mapeamos al departamento correspondiente para los hooks
   const departmentQuery = department === "REGISTROS" ? "PRODUCCION" : department
 
-  const { logs, loading } = useMyActivityLog(departmentQuery, isToday ? undefined : dateISO)
+  const viewMode = useBitacoraViewStore(s => s.viewMode)
+  const setViewMode = useBitacoraViewStore(s => s.setViewMode)
+  const isAgenda = viewMode === "agenda"
+
+  const userId = useAuthStore(s => s.user?.id)
+
+  const weekRange = useMemo(() => getWeekRangeISO(date), [date])
+
+  const { logs, loading } = useMyActivityLog(
+    departmentQuery,
+    isToday ? undefined : dateISO,
+  )
+
+  const { logs: rangeLogs, loading: rangeLoading } = useMyActivityLogRange(
+    departmentQuery,
+    weekRange.from,
+    weekRange.to,
+    userId,
+  )
+
   const { deleteLog } = useDeleteActivityLog(departmentQuery)
   const { moveLog } = useMoveActivityLog(departmentQuery)
 
@@ -97,89 +124,164 @@ export function ActivityLogPageContent({
     setPendingDelete(null)
   }
 
+  function handleAgendaLogClick(log: ActivityLog) {
+    setDate(new Date(log.loggedAt))
+    setViewMode("day")
+  }
+
+  const entryCount = isAgenda ? rangeLogs.length : logs.length
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div
+      className={cn(
+        "mx-auto flex w-full max-w-6xl flex-col gap-4",
+        isAgenda && "h-[calc(100dvh-5.5rem)] min-h-0",
+      )}
+    >
 
-      {/* Navegador de fecha y acciones */}
-      <div className="rounded-2xl bg-white/2 p-4">
-        <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
-          
-          {/* Columna izquierda vacía para mantener el DateNavigator centrado en desktop */}
-          <div className="hidden tablet:block" />
+      {/* Toolbar a ancho completo → toggle siempre en el mismo sitio (derecha) */}
+      <div className="shrink-0">
+        <EntityToolbar
+          right={
+            <div className="flex shrink-0 items-center justify-end gap-2">
+              {isAgenda && (
+                <button
+                  type="button"
+                  onClick={() => setDate(new Date())}
+                  className="flex h-9 items-center rounded-lg bg-white/5 px-3 text-sm font-medium text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  Hoy
+                </button>
+              )}
+              <BitacoraViewToggle />
+            </div>
+          }
+        />
+      </div>
 
-          {/* Siempre permanece exactamente en el centro en desktop, y arriba en móvil */}
-          <div className="flex justify-center w-full tablet:justify-self-center">
-            <DateNavigator
-              value={date}
-              onChange={next => setDate(next ?? new Date())}
-              placeholder="Fecha"
-              maxDate={new Date()}
-            />
-          </div>
+      {isAgenda ? (
+        <>
+          {/* Navigator Agenda — ancho completo */}
+          <div className="shrink-0 rounded-2xl bg-white/2 p-4">
+            <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
+              <div className="hidden tablet:block" />
 
-          {/* Acciones a la derecha en desktop, abajo en móvil */}
-          <div className="flex justify-center tablet:justify-self-end w-full tablet:w-auto">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
-                {logs.length} {logs.length === 1 ? "entrada" : "entradas"}
+              <div className="flex w-full justify-center tablet:justify-self-center">
+                <DateNavigator
+                  value={date}
+                  onChange={next => setDate(next ?? new Date())}
+                  placeholder="Fecha"
+                  maxDate={new Date()}
+                />
               </div>
 
-              {departmentQuery === "PRODUCCION" && (
-                <div className="hidden tablet:block">
-                  <TaskAreaPanelTrigger />
+              <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+                    {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
+                  </div>
+
+                  {departmentQuery === "PRODUCCION" && (
+                    <div className="hidden tablet:block">
+                      <TaskAreaPanelTrigger />
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Contenido principal */}
-      <div className="flex flex-col gap-3">
-        {loading ? (
-          <ActivityLogSkeleton />
-        ) : (
-          <>
-            {departmentQuery === "PRODUCCION" && department !== "REGISTROS" && (
-              <AutoActivitySection
-                logs={logs.filter(log => log.source === "AUTO")}
-              />
-            )}
+          <div className="min-h-0 flex-1">
+            <AgendaWeekView
+              anchorDate={date}
+              logs={rangeLogs}
+              loading={rangeLoading}
+              onSelectDay={d => setDate(d)}
+              onLogClick={handleAgendaLogClick}
+            />
+          </div>
+        </>
+      ) : (
+        /* Día: contenido centrado max-w-2xl; el toggle arriba ya quedó a la derecha del max-w-6xl */
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+          <div className="rounded-2xl bg-white/2 p-4">
+            <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
+              <div className="hidden tablet:block" />
 
-            {SHIFT_GROUPS.map((group) => {
-              const logsBySlot: Record<string, typeof logs> = {}
-
-              for (const slot of group.slots) {
-                logsBySlot[slot.shift] = logs.filter((log) => log.shift === slot.shift)
-              }
-
-              return (
-                <ShiftGroupSection
-                  key={group.key}
-                  group={group}
-                  logsBySlot={logsBySlot}
-                  onLogClick={handleOpenPicker}
-                  onDeleteLog={handleDeleteLog}
-                  beginDrag={beginDrag}
-                  registerSlot={registerSlot}
-                  draggingLogId={draggingLogId}
-                  hoverShift={hoverShift}
-                  deletingLogId={null}
-                  canCreate={canCreate}
-                  canDelete={canDelete}
-                  referenceNow={referenceNow}
+              <div className="flex w-full justify-center tablet:justify-self-center">
+                <DateNavigator
+                  value={date}
+                  onChange={next => setDate(next ?? new Date())}
+                  placeholder="Fecha"
+                  maxDate={new Date()}
                 />
-              )
-            })}
-          </>
-        )}
-      </div>
+              </div>
+
+              <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 min-w-27.5 items-center justify-center rounded-lg bg-white/5 px-3 text-sm text-neutral-400">
+                    {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
+                  </div>
+
+                  {departmentQuery === "PRODUCCION" && (
+                    <div className="hidden tablet:block">
+                      <TaskAreaPanelTrigger />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {loading ? (
+              <ActivityLogSkeleton />
+            ) : (
+              <>
+                {departmentQuery === "PRODUCCION" && department !== "REGISTROS" && (
+                  <AutoActivitySection
+                    logs={logs.filter(log => log.source === "AUTO")}
+                  />
+                )}
+
+                {SHIFT_GROUPS.map(group => {
+                  const logsBySlot: Record<string, typeof logs> = {}
+
+                  for (const slot of group.slots) {
+                    logsBySlot[slot.shift] = logs.filter(
+                      log => log.shift === slot.shift,
+                    )
+                  }
+
+                  return (
+                    <ShiftGroupSection
+                      key={group.key}
+                      group={group}
+                      logsBySlot={logsBySlot}
+                      onLogClick={handleOpenPicker}
+                      onDeleteLog={handleDeleteLog}
+                      beginDrag={beginDrag}
+                      registerSlot={registerSlot}
+                      draggingLogId={draggingLogId}
+                      hoverShift={hoverShift}
+                      deletingLogId={null}
+                      canCreate={canCreate}
+                      canDelete={canDelete}
+                      referenceNow={referenceNow}
+                    />
+                  )
+                })}
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <ActivityPickerDialog
         open={canCreate && pickerOpen}
         activeSlot={activeSlot}
         department={departmentQuery}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           setPickerOpen(open)
           if (!open) {
             setActiveSlot(null)
