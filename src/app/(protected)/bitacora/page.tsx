@@ -73,9 +73,8 @@ export default function BitacoraPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-3 text-white select-none tablet:px-4 desktop:px-5 desktop:py-4">
-      {/* Header desktop */}
-      <header className="mb-3 hidden shrink-0 flex-wrap items-center justify-between gap-4 desktop:flex">
+    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+      <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             BITÁCORA
@@ -112,8 +111,7 @@ export default function BitacoraPage() {
         </div>
       </header>
 
-      {/* Header móvil / tablet */}
-      <div className="mb-3 flex shrink-0 flex-col gap-3 pt-3 desktop:hidden">
+      <div className="mb-1 flex shrink-0 flex-col gap-2 pt-2 desktop:hidden">
         <nav className="flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
           {tabs.map(tab => {
             const IconComponent = tab.icon
@@ -138,7 +136,6 @@ export default function BitacoraPage() {
         </nav>
       </div>
 
-      {/* Contenido: ocupa TODO el espacio restante */}
       <section className="flex min-h-0 w-full flex-1 flex-col">
         {activeView === "PRODUCCION" && (
           <BitacoraDepartmentPage config={BITACORA_DEPARTMENTS.PRODUCCION} />

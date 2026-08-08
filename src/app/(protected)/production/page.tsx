@@ -28,9 +28,9 @@ export default function AssignmentPage() {
   const { state, actions } = panel
 
   return (
-    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-3 text-white select-none tablet:px-4 desktop:px-5 desktop:py-4">
+    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Header desktop */}
-      <header className="mb-3 hidden shrink-0 flex-wrap items-center justify-between gap-4 desktop:flex">
+      <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             ASIGNACIÓN
@@ -67,7 +67,7 @@ export default function AssignmentPage() {
       </header>
 
       {/* Header móvil */}
-      <div className="mb-3 flex shrink-0 items-center justify-between gap-2 desktop:hidden">
+      <div className="mb-1 flex shrink-0 items-center justify-between gap-2 desktop:hidden">
         <HistoryToggleButton
           count={state.completedCount}
           active={state.showHistory}
@@ -93,7 +93,7 @@ export default function AssignmentPage() {
 
       {/* Selector de áreas (supervisor) */}
       {state.canChooseAreas && state.configOpen && (
-        <div className="mb-3 flex shrink-0 flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
+        <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
           {state.allAreas.map(code => {
             const definition = PROCESS_DEFINITIONS[code]
             const Icon = ENTITY_ICONS[definition.icon]

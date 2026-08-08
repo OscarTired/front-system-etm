@@ -20,7 +20,7 @@ type Props = {
 
 function DesktopTopBar() {
   return (
-    <div className="flex h-12 shrink-0 items-center px-3">
+    <div className="flex h-9 shrink-0 items-center px-3">
       <SidebarShowButton />
     </div>
   )
@@ -132,7 +132,8 @@ function CompactShell({ children }: Props) {
           borderRadius: isOpen ? CURVE_ROUNDED : CURVE_SQUARE,
           transition: PANEL_TRANSITION,
           willChange: "transform",
-        }}
+        }
+        }
       >
         <TopBar />
 
