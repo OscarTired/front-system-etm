@@ -421,7 +421,7 @@ export function ActivityLogPageContent({
                 rows={3}
                 maxLength={500}
                 placeholder="Nota opcional"
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 outline-none focus:border-white/20"
+                className="w-full resize-none rounded-xl bg-white/5 px-3 py-2 text-sm text-neutral-200 outline-none focus:border-white/20"
               />
             </FormField>
           </div>
