@@ -146,8 +146,8 @@ export function NotificationBell({
           collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-          collapsedBadgeColor="bg-cyan-500 text-white"
-          badgeColor="bg-cyan-500 text-white"
+          collapsedBadgeColor="bg-cyan-900 text-white"
+          badgeColor="bg-cyan-900 text-white"
           badgeAnimated={count > 0}
         />
       </button>
