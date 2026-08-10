@@ -180,9 +180,21 @@ export function ProjectMobileCard({
             </div>
           </div>
 
-          {/* Fecha: solo desktop / tablet */}
-          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
-            {formatDate(project.deliveryDate)}
+          {/* Fecha + conteo de tareas (taskCount del API) */}
+          <span className="hidden shrink-0 items-center gap-1.5 md:inline-flex">
+            <span className="text-xs text-neutral-500">
+              {formatDate(project.deliveryDate)}
+            </span>
+            <span
+              title={
+                (project.taskCount ?? 0) === 1
+                  ? "1 tarea"
+                  : `${project.taskCount ?? 0} tareas`
+              }
+              className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-cyan-300 ring-1 ring-cyan-500/25"
+            >
+              {project.taskCount ?? 0}
+            </span>
           </span>
 
           <ChevronDown
@@ -294,9 +306,21 @@ export function ProjectMobileCard({
               </span>
             </span>
 
-            {/* Fecha interna: solo móvil */}
-            <span className="shrink-0 text-xs text-neutral-500 md:hidden">
-              {formatDate(project.deliveryDate)}
+            {/* Fecha + conteo de tareas (taskCount del API) */}
+            <span className="flex shrink-0 items-center gap-1.5 md:hidden">
+              <span className="text-xs text-neutral-500">
+                {formatDate(project.deliveryDate)}
+              </span>
+              <span
+                title={
+                  (project.taskCount ?? 0) === 1
+                    ? "1 tarea"
+                    : `${project.taskCount ?? 0} tareas`
+                }
+                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-cyan-300 ring-1 ring-cyan-500/25"
+              >
+                {project.taskCount ?? 0}
+              </span>
             </span>
 
             <ChevronDown

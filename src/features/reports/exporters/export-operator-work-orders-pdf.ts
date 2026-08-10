@@ -26,7 +26,12 @@ function ensureFonts(): void {
 }
 
 function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString("es-PE") : "—"
+  if (!value) return "—"
+  const day = value.slice(0, 10)
+  const [y, m, d] = day.split("-").map(Number)
+  if (!y || !m || !d) return "—"
+  const local = new Date(y, m - 1, d, 12)
+  return local.toLocaleDateString("es-PE")
 }
 
 /**

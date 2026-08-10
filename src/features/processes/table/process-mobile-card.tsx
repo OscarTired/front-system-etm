@@ -58,16 +58,22 @@ export function ProcessMobileCard({
 
   const { isMobile } = useResponsive()
 
-  useEffect(() => {
-    if (!expanded) {
-      setShowFields(false)
-    }
-  }, [expanded])
-
   const task = processAccess.task(processTask)
   const project = processAccess.project(processTask)
   const priority = processAccess.priority(processTask)
   const operator = processAccess.operator(processTask)
+
+  // Sin operario: al expandir, abrir campos de una (UserSelect visible).
+  // Con operario: se mantiene colapsado hasta que el usuario abra.
+  useEffect(() => {
+    if (!expanded) {
+      setShowFields(false)
+      return
+    }
+    if (!operator) {
+      setShowFields(true)
+    }
+  }, [expanded, operator])
   const statusLabel = workflowAccess.statusLabel(processTask)
 
   const stepId = workflowAccess.stepId(processTask)

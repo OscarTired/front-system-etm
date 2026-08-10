@@ -38,4 +38,7 @@ export interface Project{
   /** Comentarios activos (viene del listado, no requiere GET /comments). */
   commentCount?: number
 
+  /** Tareas activas del proyecto (viene del listado vía _count). */
+  taskCount?: number
+
 }
