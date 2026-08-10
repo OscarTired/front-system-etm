@@ -139,14 +139,17 @@ export function TeamSupervisionView({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-      <TeamSupervisionKpiBar
-        kpis={result.kpis}
-        filter={statusFilter}
-        onFilterChange={setStatusFilter}
-      />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 scrollbar-none">
+      <div className="w-full min-w-0 shrink-0">
+        <TeamSupervisionKpiBar
+          kpis={result.kpis}
+          filter={statusFilter}
+          onFilterChange={setStatusFilter}
+        />
+      </div>
+
+      <div className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto pb-4 scrollbar-none">
         {totalVisible === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
             Nadie en este filtro

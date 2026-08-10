@@ -66,7 +66,7 @@ export function TeamSupervisionKpiBar({
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-2 tablet:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-2 gap-2 tablet:grid-cols-4">
       {cards.map(card => {
         const active = card.filter !== "all" && filter === card.filter
 
@@ -82,9 +82,10 @@ export function TeamSupervisionKpiBar({
               onFilterChange(filter === card.filter ? "all" : card.filter)
             }}
             className={cn(
-              "flex flex-col items-start rounded-2xl px-3.5 py-3 text-left transition",
-              "bg-white/3 hover:bg-white/5",
-              active && "bg-white/8 ring-1 ring-white/10",
+              "flex min-w-0 flex-col items-start rounded-2xl px-3.5 py-3 text-left transition",
+              "bg-white/5 hover:bg-white/8",
+
+              active && "bg-white/1 ring-0",
             )}
           >
             <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
