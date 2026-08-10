@@ -47,7 +47,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 import { NestingPanel, type NestingPanelView } from "./nesting-panel"
@@ -62,53 +61,6 @@ const DxfCanvas = dynamic(
  *  Navegar a otra ruta y volver no debe volver a molestar. */
 let sessionToastShownThisRuntime = false
 
-
-/** Placeholder de contenido — sin layout propio (patrón agenda). */
-function Pulse({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn("block animate-pulse rounded bg-white/10", className)}
-      aria-hidden
-    />
-  )
-}
-
-/** Panel izquierdo en boot: mismas proporciones que NestingPanel. */
-function NestingPanelLoading() {
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-3" aria-busy>
-      <div className="flex gap-2">
-        <Pulse className="h-8 flex-1 rounded-lg" />
-        <Pulse className="h-8 flex-1 rounded-lg bg-white/6" />
-        <Pulse className="h-8 flex-1 rounded-lg bg-white/6" />
-      </div>
-      <Pulse className="h-9 w-full rounded-lg bg-white/6" />
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-        {[1, 0.9, 0.8, 0.7, 0.6, 0.5].map((op, i) => (
-          <span
-            key={i}
-            className="block h-12 w-full animate-pulse rounded-xl bg-white/10"
-            style={{ opacity: op }}
-            aria-hidden
-          />
-        ))}
-      </div>
-      <Pulse className="h-10 w-full rounded-md bg-white/8" />
-    </div>
-  )
-}
-
-/** Canvas en boot: plancha fantasma en el mismo slot. */
-function NestingCanvasLoading() {
-  return (
-    <div
-      className="relative flex h-full w-full items-center justify-center p-8"
-      aria-busy
-    >
-      <Pulse className="h-[72%] w-[78%] max-w-4xl rounded-sm bg-white/5 ring-1 ring-white/10" />
-    </div>
-  )
-}
 
 export function NestingPage() {
   const { isCompact } = useResponsive()
@@ -736,13 +688,11 @@ export function NestingPage() {
       {!isCompact && (
         <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
-            {project.sessionReady ? panel : <NestingPanelLoading />}
+            {panel}
           </aside>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
             <div className="w-full shrink-0">
-              {!project.sessionReady ? (
-                <Pulse className="h-9 w-full max-w-md rounded-xl bg-white/6" />
-              ) : project.sheetGroups.length > 0 ? (
+              {project.sheetGroups.length > 0 ? (
                 <SheetTabs
                   items={sheetTabItems}
                   activeIndex={activeGroupIndex}
@@ -772,11 +722,9 @@ export function NestingPage() {
                     onDeleteSelected={() => handleDeleteSelected()}
                     sheetKey={activeGroupIndex}
                   />
-                ) : !project.sessionReady ? (
-                  <NestingCanvasLoading />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                    Importa una pieza o presiona Nestear
+                    {!project.sessionReady ? "Cargando workspace…" : "Importa una pieza o presiona Nestear"}
                   </div>
                 )}
               </div>
@@ -818,9 +766,7 @@ export function NestingPage() {
         <div className="absolute inset-0">
           <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1">
             <div className="min-w-0 flex-1">
-              {!project.sessionReady ? (
-                <Pulse className="h-9 w-full rounded-xl bg-white/6" />
-              ) : project.sheetGroups.length > 0 ? (
+              {project.sheetGroups.length > 0 ? (
                 <SheetTabs
                   items={sheetTabItems}
                   activeIndex={activeGroupIndex}
@@ -865,11 +811,13 @@ export function NestingPage() {
                   onDeleteSelected={() => handleDeleteSelected()}
                   sheetKey={activeGroupIndex}
                 />
-              ) : !project.sessionReady ? (
-                <NestingCanvasLoading />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
-                  <p>Importa una pieza o presiona Nestear</p>
+                  <p>
+                    {!project.sessionReady
+                      ? "Cargando workspace…"
+                      : "Importa una pieza o presiona Nestear"}
+                  </p>
                   <button
                     type="button"
                     className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
