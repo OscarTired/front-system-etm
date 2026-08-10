@@ -47,6 +47,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { cn } from "@/shared/utils/utils"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 import { NestingPanel, type NestingPanelView } from "./nesting-panel"
@@ -61,6 +62,54 @@ const DxfCanvas = dynamic(
  *  Navegar a otra ruta y volver no debe volver a molestar. */
 let sessionToastShownThisRuntime = false
 
+/** Placeholder de contenido — sin layout propio. Mismo patrón que AgendaMonthView. */
+function Pulse({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn("block animate-pulse rounded bg-white/10", className)}
+      aria-hidden
+    />
+  )
+}
+
+function SheetTabsSkeleton() {
+  return (
+    <div className="flex items-center gap-1.5">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Pulse key={i} className="h-9 w-24 shrink-0 rounded-xl" />
+      ))}
+    </div>
+  )
+}
+
+/** Piezas "flotando" en el sheet, imitando el resultado final del nest. */
+function CanvasSkeleton() {
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      <Pulse className="absolute left-[8%] top-[14%] h-16 w-24 rounded-lg" />
+      <Pulse className="absolute left-[42%] top-[52%] h-20 w-20 rounded-full" />
+      <Pulse className="absolute left-[64%] top-[18%] h-14 w-28 rounded-lg" />
+      <Pulse className="absolute left-[22%] top-[62%] h-10 w-32 rounded-lg" />
+      <Pulse className="absolute left-[70%] top-[64%] h-16 w-16 rounded-lg" />
+    </div>
+  )
+}
+
+function PieceListSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 px-3 pb-3 pt-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2 rounded-lg bg-white/3 p-2">
+          <Pulse className="size-8 shrink-0 rounded-md" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <Pulse className="h-3 w-3/4 rounded" />
+            <Pulse className="h-2.5 w-1/2 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function NestingPage() {
   const { isCompact } = useResponsive()
@@ -209,6 +258,12 @@ export function NestingPage() {
   // desktop el panel queda cerrado visualmente sin importar el valor
   // interno de isMobilePanelOpen — no hace falta sincronizarlo con un
   // efecto (era exactamente el caso de "You Might Not Need an Effect").
+
+  // Equivalente al prop `loading` de AgendaMonthView, pero acá no hay
+  // padre externo pasándolo: la propia página consume useNestingProject()
+  // y esa es la fuente de la señal. Se deja como variable local con el
+  // mismo nombre/semántica para que el resto del JSX luzca igual.
+  const loading = !project.sessionReady
 
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
@@ -568,7 +623,11 @@ export function NestingPage() {
       activePanel={activePanel}
       onActivePanelChange={setActivePanel}
       footer={nestFooter}
-      pieces={<PieceList ref={pieceListRef} {...pieceListProps} />}
+      pieces={
+        loading
+          ? <PieceListSkeleton />
+          : <PieceList ref={pieceListRef} {...pieceListProps} />
+      }
       projectMaterial={
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
@@ -701,11 +760,13 @@ export function NestingPage() {
                     setSelectedPieceIndices([])
                   }}
                 />
+              ) : loading ? (
+                <SheetTabsSkeleton />
               ) : null}
             </div>
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
               <div className="absolute inset-px overflow-hidden rounded-4xl">
-                {project.sessionReady && dxfCanvasPieces.length > 0 ? (
+                {!loading && dxfCanvasPieces.length > 0 ? (
                   <DxfCanvas
                     pieces={dxfCanvasPieces}
                     sheetSize={sheetSize}
@@ -722,9 +783,11 @@ export function NestingPage() {
                     onDeleteSelected={() => handleDeleteSelected()}
                     sheetKey={activeGroupIndex}
                   />
+                ) : loading ? (
+                  <CanvasSkeleton />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                    {!project.sessionReady ? "Cargando workspace…" : "Importa una pieza o presiona Nestear"}
+                    Importa una pieza o presiona Nestear
                   </div>
                 )}
               </div>
@@ -775,6 +838,8 @@ export function NestingPage() {
                     setSelectedPieceIndices([])
                   }}
                 />
+              ) : loading ? (
+                <SheetTabsSkeleton />
               ) : (
                 <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500 ring-1 ring-white/6">
                   Sin planchas
@@ -811,13 +876,11 @@ export function NestingPage() {
                   onDeleteSelected={() => handleDeleteSelected()}
                   sheetKey={activeGroupIndex}
                 />
+              ) : !project.sessionReady ? (
+                <CanvasSkeleton />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
-                  <p>
-                    {!project.sessionReady
-                      ? "Cargando workspace…"
-                      : "Importa una pieza o presiona Nestear"}
-                  </p>
+                  <p>Importa una pieza o presiona Nestear</p>
                   <button
                     type="button"
                     className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
