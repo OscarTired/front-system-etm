@@ -8,7 +8,7 @@ import {
 
 const OPTIONS: { key: BitacoraViewMode; label: string }[] = [
   { key: "day", label: "Día" },
-  { key: "agenda", label: "Agenda" },
+  { key: "agenda", label: "Semana" },
   { key: "month", label: "Mes" },
 ]
 
