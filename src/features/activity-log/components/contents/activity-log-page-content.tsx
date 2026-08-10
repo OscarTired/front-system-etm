@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import { Trash2 } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
+import { Trash2, Pencil } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -10,10 +11,12 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
+import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
+import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
 import { cn } from "@/shared/utils/utils"
 
-import { useMyActivityLog } from "../../hooks/use-my-activity-log"
+import { useMyActivityLog, myActivityLogQueryKey } from "../../hooks/use-my-activity-log"
 import { useMyActivityLogRange } from "../../hooks/use-my-activity-log-range"
 import { useDeleteActivityLog } from "../../hooks/use-delete-activity-log"
 import { useMoveActivityLog } from "../../hooks/use-move-activity-log"
@@ -29,6 +32,8 @@ import type {
 } from "../../types/activity-log.types"
 import { useBitacoraViewStore } from "../../store/bitacora-view-store"
 import { getWeekRangeISO, getMonthRangeISO } from "../../utils/week-range"
+import { canDuplicateActivity } from "../../utils/duplicate-limit"
+import { activityLogService } from "../../services/activity-log.service"
 
 import { ShiftGroupSection } from "../shift-group-section"
 import { AutoActivitySection } from "../auto-activity-section"
@@ -47,6 +52,7 @@ type Props = {
 export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
+  const queryClient = useQueryClient()
   const [date, setDate] = useState<Date>(new Date())
   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
@@ -122,6 +128,9 @@ export function ActivityLogPageContent({
   const [pickerOpen, setPickerOpen] = useState(false)
   const [activeSlot, setActiveSlot] = useState<ShiftSlotDefinition | null>(null)
   const [pendingDelete, setPendingDelete] = useState<ActivityLog | null>(null)
+  const [editingLog, setEditingLog] = useState<ActivityLog | null>(null)
+  const [editNote, setEditNote] = useState("")
+  const [editSaving, setEditSaving] = useState(false)
 
   function handleOpenPicker(slot: ShiftSlotDefinition) {
     if (!canCreate) return
@@ -131,12 +140,13 @@ export function ActivityLogPageContent({
 
   function handleMoveLog(id: string, shift: ShiftSlotDefinition["shift"], isDuplicate: boolean) {
     if (!canCreate) return
+    if (id.startsWith("optimistic-")) return
 
     if (isDuplicate) {
-      // Ctrl/Cmd+arrastrar sobre una actividad MANUAL: crear una
-      // copia en la franja destino, dejando el original intacto.
       const source = logs.find(l => l.id === id)
-      if (!source) return
+      if (!source || source.source !== "MANUAL") return
+      const asTarget = { ...source, shift } as ActivityLog
+      if (!canDuplicateActivity(logs, asTarget)) return
       createLog({
         activityTypeId: source.activityType.id,
         projectId: source.project?.id ?? undefined,
@@ -148,6 +158,40 @@ export function ActivityLogPageContent({
     }
 
     moveLog({ id, shift }).catch(() => {})
+  }
+
+  function isLogBusy(logId: string) {
+    if (logId.startsWith("optimistic-")) return true
+    if (pendingDelete?.id === logId) return true
+    return false
+  }
+
+  function canDuplicateLog(log: ActivityLog) {
+    return canDuplicateActivity(logs, log)
+  }
+
+  function handleEditLog(log: ActivityLog) {
+    if (log.source !== "MANUAL") return
+    if (log.id.startsWith("optimistic-")) return
+    if (!canCreate) return
+    setEditingLog(log)
+    setEditNote(log.note ?? "")
+  }
+
+  async function handleSaveEdit() {
+    if (!editingLog) return
+    setEditSaving(true)
+    try {
+      await activityLogService.update(editingLog.id, {
+        note: editNote.trim() ? editNote.trim() : null,
+      })
+      await queryClient.invalidateQueries({
+        queryKey: myActivityLogQueryKey(departmentQuery),
+      })
+      setEditingLog(null)
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   const { getState, isOpen } = useShiftSchedule(
@@ -298,10 +342,13 @@ export function ActivityLogPageContent({
                         registerSlot={registerSlot}
                         draggingLogId={draggingLogId}
                         hoverShift={hoverShift}
-                        deletingLogId={null}
+                        deletingLogId={pendingDelete?.id ?? null}
                         canCreate={canCreate}
                         canDelete={canDelete}
                         slotState={getState}
+                        isLogBusy={isLogBusy}
+                        canDuplicateLog={canDuplicateLog}
+                        onEditLog={handleEditLog}
                       />
                     )
                   })}
@@ -340,6 +387,47 @@ export function ActivityLogPageContent({
         onClose={() => setPendingDelete(null)}
         onConfirm={handleConfirmDelete}
       />
+
+      <FormDialog
+        open={!!editingLog}
+        title="Editar actividad"
+        icon={Pencil}
+        canSave={!editSaving}
+        saving={editSaving}
+        saveLabel="Guardar"
+        onClose={() => {
+          if (editSaving) return
+          setEditingLog(null)
+        }}
+        onSave={() => {
+          void handleSaveEdit()
+        }}
+      >
+        {editingLog && (
+          <div className="flex flex-col gap-3 p-1">
+            <p className="text-sm text-neutral-400">
+              {editingLog.activityType.label}
+              {editingLog.project && (
+                <span className="text-cyan-400">
+                  {" "}
+                  · {editingLog.project.projectCode}
+                </span>
+              )}
+            </p>
+            <FormField label="Nota">
+              <textarea
+                value={editNote}
+                onChange={e => setEditNote(e.target.value)}
+                rows={3}
+                maxLength={500}
+                placeholder="Nota opcional"
+                className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 outline-none focus:border-white/20"
+              />
+            </FormField>
+          </div>
+        )}
+      </FormDialog>
+
     </div>
   )
 }

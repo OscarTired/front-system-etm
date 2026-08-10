@@ -92,6 +92,14 @@ export interface CreateActivityTypeDto {
   pinned?: boolean
 }
 
+export interface UpdateActivityLogDto {
+  shift?: DayShift
+  activityTypeId?: string
+  projectId?: string
+  taskId?: string | null
+  note?: string | null
+}
+
 export interface UpdateActivityTypeDto {
   label?: string
   icon?: string

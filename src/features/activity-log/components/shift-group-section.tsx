@@ -1,10 +1,15 @@
 "use client"
 
 import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
-import { Trash2, Image as ImageIcon, Plus, Copy, Pencil } from "lucide-react"
+import { Trash2, Image as ImageIcon, Plus, Copy, Pencil, MoreHorizontal } from "lucide-react"
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
 import { cn } from "@/shared/utils/utils"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
 import { CommentImageDialog } from "@/features/comments/components/comment-image-dialog"
 
 import type { ShiftGroupDefinition, ShiftSlotDefinition } from "../constants/shift-definitions"
@@ -225,31 +230,42 @@ export function ShiftGroupSection({
                         )}
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <span className="text-xs text-neutral-500">
+                      {/* Hora + acciones pegadas a la derecha */}
+                      <div
+                        data-activity-drag-ignore
+                        className="ml-auto flex shrink-0 items-center gap-1 self-start"
+                      >
+                        <span className="tabular-nums text-xs text-neutral-500">
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
                         </span>
 
-                        {isManual && (
-                          <>
+                        {/* Desktop: iconos en hover (slide-in) */}
+                        <div
+                          className={cn(
+                            "hidden items-center gap-0.5 tablet:flex",
+                            "translate-x-1 opacity-0 transition-all duration-150",
+                            "group-hover:translate-x-0 group-hover:opacity-100",
+                            "group-focus-within:translate-x-0 group-focus-within:opacity-100",
+                          )}
+                        >
+                          {isManual && onEditLog && (
                             <button
                               type="button"
-                              data-activity-drag-ignore
-                              disabled={!canCreate || busy || !onEditLog}
+                              disabled={busy}
                               title="Editar"
                               aria-label="Editar entrada"
-                              onClick={() => onEditLog?.(log)}
-                              className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-amber-500/10 hover:text-amber-400 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:opacity-35 tablet:opacity-0 tablet:group-hover:opacity-100"
+                              onClick={() => onEditLog(log)}
+                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
                             >
                               <Pencil size={14} />
                             </button>
-
+                          )}
+                          {isManual && (
                             <button
                               type="button"
-                              data-activity-drag-ignore
                               disabled={!canCreate || busy || !allowDup}
                               title={
                                 !allowDup
@@ -262,23 +278,80 @@ export function ShiftGroupSection({
                                 e.stopPropagation()
                                 beginDrag(e, log, true)
                               }}
-                              className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-sky-500/10 hover:text-sky-400 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:opacity-35 tablet:opacity-0 tablet:group-hover:opacity-100"
+                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
                             >
                               <Copy size={14} />
                             </button>
-                          </>
-                        )}
+                          )}
+                          {(isManual || canDelete) && (
+                            <button
+                              type="button"
+                              disabled={!canDelete || busy || deletingLogId === log.id}
+                              title="Eliminar"
+                              aria-label="Eliminar entrada"
+                              onClick={() => onDeleteLog(log)}
+                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
 
-                        <button
-                          type="button"
-                          data-activity-drag-ignore
-                          onClick={() => onDeleteLog(log)}
-                          disabled={!canDelete || busy || deletingLogId === log.id}
-                          aria-label="Eliminar entrada"
-                          className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400 focus-visible:opacity-100 disabled:opacity-35 disabled:cursor-not-allowed tablet:opacity-0 tablet:group-hover:opacity-100"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {/* Móvil: ⋮ → Popover (en mobile el shared Popover es bottom sheet) */}
+                        {isManual && (
+                          <div className="tablet:hidden">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  aria-label="Más acciones"
+                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/8 hover:text-neutral-300 disabled:cursor-not-allowed disabled:opacity-35"
+                                >
+                                  <MoreHorizontal size={16} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                align="end"
+                                className="w-52 p-1.5"
+                              >
+                                {onEditLog && (
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => onEditLog(log)}
+                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                  >
+                                    <Pencil size={15} className="text-amber-400" />
+                                    Editar
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  disabled={!canCreate || busy || !allowDup}
+                                  onPointerDown={(e) => {
+                                    if (!canCreate || busy || !allowDup) return
+                                    e.stopPropagation()
+                                    beginDrag(e, log, true)
+                                  }}
+                                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                >
+                                  <Copy size={15} className="text-sky-400" />
+                                  Duplicar
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!canDelete || busy || deletingLogId === log.id}
+                                  onClick={() => onDeleteLog(log)}
+                                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-40"
+                                >
+                                  <Trash2 size={15} />
+                                  Eliminar
+                                </button>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )

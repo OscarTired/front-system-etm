@@ -7,6 +7,7 @@ import type {
   CreateActivityLogDto,
   CreateActivityTypeDto,
   DayShift,
+  UpdateActivityLogDto,
   UpdateActivityTypeDto,
 } from "../types/activity-log.types"
 import type { ShiftSchedule } from "../types/shift-schedule.types"
@@ -53,6 +54,11 @@ export const activityLogService = {
   // siguen siendo "borrar y volver a crear" a propósito.
   async updateShift(id: string, shift: DayShift) {
     const response = await api.patch<ActivityLog>(`/activity-log/${id}`, { shift })
+    return response.data
+  },
+
+  async update(id: string, dto: UpdateActivityLogDto) {
+    const response = await api.patch<ActivityLog>(`/activity-log/${id}`, dto)
     return response.data
   },
 
