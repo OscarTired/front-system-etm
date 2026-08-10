@@ -51,6 +51,10 @@ type Props = {
   items?: KpiItem[]
   summary: Summary
   defaultExpanded?: boolean
+  /** Controlado: el parent puede poner el botón al lado del toggle. */
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
+  showCollapseButton?: boolean
 }
 
 export function KpiCarousel({
@@ -58,6 +62,9 @@ export function KpiCarousel({
   items,
   summary,
   defaultExpanded,
+  expanded: expandedProp,
+  onExpandedChange,
+  showCollapseButton = true,
 }: Props) {
 
   const {
@@ -65,19 +72,28 @@ export function KpiCarousel({
     ready,
   } = useResponsive()
 
+  const isControlled = expandedProp !== undefined
+
   // Desktop: cards abiertas al montar. Móvil: colapsadas (resumen).
   // defaultExpanded permite override explícito.
   const [
-    expanded,
-    setExpanded,
+    expandedInternal,
+    setExpandedInternal,
   ] = useState(false)
 
+  const expanded = isControlled ? expandedProp : expandedInternal
+
+  const setExpanded = (next: boolean) => {
+    if (!isControlled) setExpandedInternal(next)
+    onExpandedChange?.(next)
+  }
+
   useEffect(() => {
-    if (!ready) return
-    setExpanded(
+    if (!ready || isControlled) return
+    setExpandedInternal(
       defaultExpanded !== undefined ? defaultExpanded : !isMobile,
     )
-  }, [ready, isMobile, defaultExpanded])
+  }, [ready, isMobile, defaultExpanded, isControlled])
 
   const [
     selectedIndex,
@@ -215,6 +231,7 @@ export function KpiCarousel({
       <CollapsibleSummaryPanel
         expanded={expanded}
         onCollapse={() => setExpanded(false)}
+          showCollapseButton={showCollapseButton}
         collapsed={collapsedView}
       >
 

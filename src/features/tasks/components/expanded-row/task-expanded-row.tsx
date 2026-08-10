@@ -14,6 +14,7 @@ import {
   EntityExpandedToggle,
   EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
+import { CollapseIndicatorsButton } from "@/shared/ui/collapsible-summary-panel/collapsible-summary-panel"
 
 import {
   useResponsive,
@@ -42,7 +43,7 @@ type Props = {
 export function TaskExpandedRow({
   task,
 }: Props) {
-  const { isMobile } = useResponsive()
+  const { isMobile, ready } = useResponsive()
   const searchParams = useSearchParams()
 
   const urlTaskId = searchParams.get("taskId")
@@ -58,6 +59,18 @@ export function TaskExpandedRow({
     commentsDialogOpen,
     setCommentsDialogOpen,
   ] = useState(false)
+
+  // Indicadores del workflow (móvil: botón al lado del toggle).
+  const [
+    indicatorsExpanded,
+    setIndicatorsExpanded,
+  ] = useState(false)
+
+  useEffect(() => {
+    if (!ready) return
+    // Desktop: abiertos; móvil: colapsados hasta que el usuario expanda.
+    setIndicatorsExpanded(!isMobile)
+  }, [ready, isMobile])
 
   // Solo fetch al ver mensajes — no por cada fila de la lista.
   const commentsEnabled =
@@ -136,6 +149,15 @@ export function TaskExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
+            trailing={
+              isMobile &&
+              activeView === "workflow" &&
+              indicatorsExpanded ? (
+                <CollapseIndicatorsButton
+                  onClick={() => setIndicatorsExpanded(false)}
+                />
+              ) : undefined
+            }
             options={[
               {
                 value: "workflow",
@@ -165,6 +187,9 @@ export function TaskExpandedRow({
               content: (
                 <TaskProductionPanel
                   task={task}
+                  indicatorsExpanded={indicatorsExpanded}
+                  onIndicatorsExpandedChange={setIndicatorsExpanded}
+                  showCollapseButton={!isMobile}
                 />
               ),
             },

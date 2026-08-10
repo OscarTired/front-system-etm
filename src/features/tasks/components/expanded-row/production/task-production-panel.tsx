@@ -61,18 +61,34 @@ import {
 
 type Props = {
   task: Task
+  indicatorsExpanded?: boolean
+  onIndicatorsExpandedChange?: (expanded: boolean) => void
+  /** Móvil: el botón vive al lado del EntityExpandedToggle. */
+  showCollapseButton?: boolean
 }
 
 export function TaskProductionPanel({
   task,
+  indicatorsExpanded: indicatorsExpandedProp,
+  onIndicatorsExpandedChange,
+  showCollapseButton = true,
 }: Props) {
 
   const router = useRouter()
 
+  const isControlled = indicatorsExpandedProp !== undefined
+
   const [
-    expanded,
-    setExpanded,
+    expandedInternal,
+    setExpandedInternal,
   ] = useState(false)
+
+  const expanded = isControlled ? indicatorsExpandedProp! : expandedInternal
+
+  const setExpanded = (next: boolean) => {
+    if (!isControlled) setExpandedInternal(next)
+    onIndicatorsExpandedChange?.(next)
+  }
 
   const workflowView =
     createWorkflowView(
@@ -325,6 +341,7 @@ export function TaskProductionPanel({
         <CollapsibleSummaryPanel
           expanded={expanded}
           onCollapse={() => setExpanded(false)}
+          showCollapseButton={showCollapseButton}
           collapsed={
             <button
               type="button"

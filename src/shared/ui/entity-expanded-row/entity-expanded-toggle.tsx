@@ -1,6 +1,7 @@
 "use client"
 
 import type { LucideIcon } from "lucide-react"
+import type { ReactNode } from "react"
 
 import { useEffect, useRef, useState } from "react"
 
@@ -17,17 +18,17 @@ type Props<T extends string> = {
   value: T
   onChange: (value: T) => void
   options: EntityExpandedToggleOption<T>[]
+  /** Control al lado del grupo (ej. Ocultar indicadores), misma altura. */
+  trailing?: ReactNode
 }
 
-// Ancho mínimo cómodo para 3 botones con label completo visible —
-// por debajo de esto se pasa a modo compacto (solo íconos,
-// estirado a todo el ancho).
 const COMPACT_BREAKPOINT = 420
 
 export function EntityExpandedToggle<T extends string>({
   value,
   onChange,
   options,
+  trailing,
 }: Props<T>) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -52,11 +53,15 @@ export function EntityExpandedToggle<T extends string>({
   }, [])
 
   return (
-    <div ref={wrapperRef} className="flex w-full justify-end">
+    <div
+      ref={wrapperRef}
+      className="flex w-full min-w-0 items-center justify-end gap-1.5"
+    >
       <div
         className={cn(
-          "inline-flex items-center gap-1 rounded-lg bg-white/5 p-1 select-none",
-          fullWidth && "flex w-full",
+          "inline-flex min-w-0 items-center gap-1 rounded-lg bg-white/5 p-1 select-none",
+          fullWidth && !trailing && "flex w-full",
+          fullWidth && trailing && "min-w-0 flex-1",
         )}
       >
         {options.map(option => {
@@ -79,7 +84,6 @@ export function EntityExpandedToggle<T extends string>({
                   : "text-neutral-500 hover:text-neutral-300",
               )}
             >
-              {/* Contenedor reservado y rígido para el icono */}
               <span className="flex shrink-0 items-center justify-center">
                 <Icon
                   size={13}
@@ -94,7 +98,6 @@ export function EntityExpandedToggle<T extends string>({
                 </span>
               )}
 
-              {/* Contenedor rígido para el contador (solo se muestra si viene definido) */}
               {hasCount && (
                 <span className="flex shrink-0 items-center justify-center">
                   <span
@@ -113,6 +116,8 @@ export function EntityExpandedToggle<T extends string>({
           )
         })}
       </div>
+
+      {trailing}
     </div>
   )
 }
