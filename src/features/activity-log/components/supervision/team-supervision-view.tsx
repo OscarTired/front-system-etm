@@ -148,7 +148,7 @@ export function TeamSupervisionView({
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 scrollbar-none">
         {totalVisible === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-2xl bg-white/[0.02] text-sm text-neutral-500">
+          <div className="flex h-32 items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
             Nadie en este filtro
           </div>
         ) : (

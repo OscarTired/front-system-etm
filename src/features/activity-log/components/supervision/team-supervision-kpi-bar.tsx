@@ -83,8 +83,8 @@ export function TeamSupervisionKpiBar({
             }}
             className={cn(
               "flex flex-col items-start rounded-2xl px-3.5 py-3 text-left transition",
-              "bg-white/[0.03] hover:bg-white/[0.05]",
-              active && "bg-white/[0.08] ring-1 ring-white/10",
+              "bg-white/3 hover:bg-white/5",
+              active && "bg-white/8 ring-1 ring-white/10",
             )}
           >
             <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
