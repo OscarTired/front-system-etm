@@ -234,6 +234,7 @@ export function ShiftGroupSection({
                           (grid 0fr→1fr) y empujan la hora a la izquierda. */}
                       <div
                         data-activity-drag-ignore
+                        onPointerDown={e => e.stopPropagation()}
                         className="ml-auto flex shrink-0 items-center self-start"
                       >
                         <span className="tabular-nums text-xs text-neutral-500">

@@ -1,8 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
-import { Trash2, Pencil } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -11,12 +10,10 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
-import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
-import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
 import { cn } from "@/shared/utils/utils"
 
-import { useMyActivityLog, myActivityLogQueryKey } from "../../hooks/use-my-activity-log"
+import { useMyActivityLog } from "../../hooks/use-my-activity-log"
 import { useMyActivityLogRange } from "../../hooks/use-my-activity-log-range"
 import { useDeleteActivityLog } from "../../hooks/use-delete-activity-log"
 import { useMoveActivityLog } from "../../hooks/use-move-activity-log"
@@ -33,11 +30,11 @@ import type {
 import { useBitacoraViewStore } from "../../store/bitacora-view-store"
 import { getWeekRangeISO, getMonthRangeISO } from "../../utils/week-range"
 import { canDuplicateActivity } from "../../utils/duplicate-limit"
-import { activityLogService } from "../../services/activity-log.service"
 
 import { ShiftGroupSection } from "../shift-group-section"
 import { AutoActivitySection } from "../auto-activity-section"
 import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
+import { ActivityLogEditDialog } from "../dialogs/activity-log-edit-dialog"
 import { ActivityLogSkeleton } from "../skeletons/activity-log-skeleton"
 import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
 import { AgendaWeekView } from "../agenda/agenda-week-view"
@@ -52,7 +49,6 @@ type Props = {
 export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
-  const queryClient = useQueryClient()
   const [date, setDate] = useState<Date>(new Date())
   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
@@ -129,8 +125,6 @@ export function ActivityLogPageContent({
   const [activeSlot, setActiveSlot] = useState<ShiftSlotDefinition | null>(null)
   const [pendingDelete, setPendingDelete] = useState<ActivityLog | null>(null)
   const [editingLog, setEditingLog] = useState<ActivityLog | null>(null)
-  const [editNote, setEditNote] = useState("")
-  const [editSaving, setEditSaving] = useState(false)
 
   function handleOpenPicker(slot: ShiftSlotDefinition) {
     if (!canCreate) return
@@ -175,23 +169,6 @@ export function ActivityLogPageContent({
     if (log.id.startsWith("optimistic-")) return
     if (!canCreate) return
     setEditingLog(log)
-    setEditNote(log.note ?? "")
-  }
-
-  async function handleSaveEdit() {
-    if (!editingLog) return
-    setEditSaving(true)
-    try {
-      await activityLogService.update(editingLog.id, {
-        note: editNote.trim() ? editNote.trim() : null,
-      })
-      await queryClient.invalidateQueries({
-        queryKey: myActivityLogQueryKey(departmentQuery),
-      })
-      setEditingLog(null)
-    } finally {
-      setEditSaving(false)
-    }
   }
 
   const { getState, isOpen } = useShiftSchedule(
@@ -388,45 +365,14 @@ export function ActivityLogPageContent({
         onConfirm={handleConfirmDelete}
       />
 
-      <FormDialog
+      <ActivityLogEditDialog
+        log={editingLog}
         open={!!editingLog}
-        title="Editar actividad"
-        icon={Pencil}
-        canSave={!editSaving}
-        saving={editSaving}
-        saveLabel="Guardar"
-        onClose={() => {
-          if (editSaving) return
-          setEditingLog(null)
+        department={departmentQuery}
+        onOpenChange={open => {
+          if (!open) setEditingLog(null)
         }}
-        onSave={() => {
-          void handleSaveEdit()
-        }}
-      >
-        {editingLog && (
-          <div className="flex flex-col gap-3 p-1">
-            <p className="text-sm text-neutral-400">
-              {editingLog.activityType.label}
-              {editingLog.project && (
-                <span className="text-cyan-400">
-                  {" "}
-                  · {editingLog.project.projectCode}
-                </span>
-              )}
-            </p>
-            <FormField label="Nota">
-              <textarea
-                value={editNote}
-                onChange={e => setEditNote(e.target.value)}
-                rows={3}
-                maxLength={500}
-                placeholder="Nota opcional"
-                className="w-full resize-none rounded-xl bg-white/5 px-3 py-2 text-sm text-neutral-200 outline-none focus:border-white/20"
-              />
-            </FormField>
-          </div>
-        )}
-      </FormDialog>
+      />
 
     </div>
   )
