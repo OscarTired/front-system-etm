@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
-import { Trash2, Image as ImageIcon, Plus } from "lucide-react"
+import { Trash2, Image as ImageIcon, Plus, Copy, Pencil } from "lucide-react"
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
 import { cn } from "@/shared/utils/utils"
@@ -26,6 +26,11 @@ type Props = {
   referenceNow?: Date
   /** Estado desde GET /activity-log/shifts (preferido sobre referenceNow). */
   slotState?: (shift: DayShift) => SlotState
+  /** true mientras el server no confirmó (optimistic / mutation in flight). */
+  isLogBusy?: (logId: string) => boolean
+  /** false si ya se alcanzó el tope de duplicados idénticos en la franja. */
+  canDuplicateLog?: (log: ActivityLog) => boolean
+  onEditLog?: (log: ActivityLog) => void
 }
 
 const DISTINCT_SHIFT_COLORS = [
@@ -51,6 +56,9 @@ export function ShiftGroupSection({
   canDelete,
   referenceNow,
   slotState,
+  isLogBusy,
+  canDuplicateLog,
+  onEditLog,
 }: Props) {
   const now = referenceNow ?? new Date()
 
@@ -156,25 +164,27 @@ export function ShiftGroupSection({
                   const LogIcon = getActivityIcon(log.activityType.icon)
                   const isManual = log.source === "MANUAL"
                   const isDraggingThis = draggingLogId === log.id
+                  const busy =
+                    isLogBusy?.(log.id) ?? log.id.startsWith("optimistic-")
+                  const allowDup = canDuplicateLog?.(log) ?? true
+                  const actionsEnabled = isManual && !busy
 
                   return (
                     <div
                       key={log.id}
                       onPointerDown={(e) => {
-                        // Las automáticas nunca se arrastran, ni con
-                        // Ctrl — las genera el sistema solo, no tiene
-                        // sentido mover ni duplicar algo que la
-                        // persona no registró a mano.
-                        if (!isManual || !canCreate) return
+                        // Las automáticas nunca se arrastran.
+                        // Optimistic / mutation in flight: tampoco.
+                        if (!actionsEnabled || !canCreate) return
                         if ((e.target as HTMLElement).closest("[data-activity-drag-ignore]")) return
-                        // Ctrl/Cmd sobre una manual = duplicar en vez
-                        // de mover (el original queda intacto).
+                        // Ctrl/Cmd = duplicar (mismo path que icono Copy).
                         beginDrag(e, log, e.ctrlKey || e.metaKey)
                       }}
                       className={cn(
                         "group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
-                        isManual && canCreate && "cursor-grab touch-none active:cursor-grabbing",
-                        isDraggingThis && "opacity-40",
+                        actionsEnabled && canCreate && "cursor-grab touch-none active:cursor-grabbing",
+                        (isDraggingThis || busy) && "opacity-40",
+                        busy && "pointer-events-none",
                       )}
                     >
                       <div
@@ -215,7 +225,7 @@ export function ShiftGroupSection({
                         )}
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <span className="text-xs text-neutral-500">
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                             hour: "2-digit",
@@ -223,11 +233,47 @@ export function ShiftGroupSection({
                           })}
                         </span>
 
+                        {isManual && (
+                          <>
+                            <button
+                              type="button"
+                              data-activity-drag-ignore
+                              disabled={!canCreate || busy || !onEditLog}
+                              title="Editar"
+                              aria-label="Editar entrada"
+                              onClick={() => onEditLog?.(log)}
+                              className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-amber-500/10 hover:text-amber-400 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:opacity-35 tablet:opacity-0 tablet:group-hover:opacity-100"
+                            >
+                              <Pencil size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              data-activity-drag-ignore
+                              disabled={!canCreate || busy || !allowDup}
+                              title={
+                                !allowDup
+                                  ? "Límite de duplicados en esta franja"
+                                  : "Duplicar en otra franja (arrastrar)"
+                              }
+                              aria-label="Duplicar en otra franja"
+                              onPointerDown={(e) => {
+                                if (!canCreate || busy || !allowDup) return
+                                e.stopPropagation()
+                                beginDrag(e, log, true)
+                              }}
+                              className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-sky-500/10 hover:text-sky-400 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:opacity-35 tablet:opacity-0 tablet:group-hover:opacity-100"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          </>
+                        )}
+
                         <button
                           type="button"
                           data-activity-drag-ignore
                           onClick={() => onDeleteLog(log)}
-                          disabled={!canDelete || deletingLogId === log.id}
+                          disabled={!canDelete || busy || deletingLogId === log.id}
                           aria-label="Eliminar entrada"
                           className="rounded-md p-1 text-neutral-600 opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400 focus-visible:opacity-100 disabled:opacity-35 disabled:cursor-not-allowed tablet:opacity-0 tablet:group-hover:opacity-100"
                         >
