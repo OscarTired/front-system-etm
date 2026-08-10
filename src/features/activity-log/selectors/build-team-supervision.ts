@@ -1,5 +1,10 @@
+import type { EntityIcon } from "@/shared/constants/entity-icons"
 import type { User } from "@/features/users/types/user.types"
-import type { ActivityLog, DayShift } from "../types/activity-log.types"
+import type {
+  ActivityLog,
+  ActivityLogUserRef,
+  DayShift,
+} from "../types/activity-log.types"
 import type {
   ComplianceStatus,
   TeamSupervisionResult,
@@ -22,7 +27,6 @@ function resolveStatus(
   total: number,
 ): ComplianceStatus {
   if (total === 0) return "missing"
-  // Solo automáticos = parcial (no hay registro manual del turno)
   if (manual === 0 && auto > 0) return "partial"
   return "ok"
 }
@@ -33,26 +37,74 @@ const STATUS_RANK: Record<ComplianceStatus, number> = {
   ok: 2,
 }
 
+/** Stub mínimo desde el user embebido en el log (getAll). */
+function userFromLogRef(ref: ActivityLogUserRef): User {
+  return {
+    id: ref.id,
+    name: ref.name,
+    color: ref.color ?? "#71717A",
+    icon: (ref.icon as EntityIcon) ?? "User",
+    username: null,
+    email: "",
+    active: true,
+    online: false,
+    lastSeenAt: null,
+    avatarUrl: null,
+    phone: null,
+    position: null,
+    deletedAt: null,
+    createdAt: "",
+    updatedAt: "",
+    roles: [],
+    level: null,
+    areas: [],
+  }
+}
+
 /**
- * Une directorio de usuarios activos + logs del periodo.
- * Puro: sin hooks, sin I/O — testeable y reutilizable.
+ * Une directorio + usuarios inferidos de los logs.
+ *
+ * Importante: si `/users/directory` viene vacío o filtra de más,
+ * igual aparecen quienes tienen entradas (log.user / userId).
+ * Sin esto: 22 entradas + cobertura 0/0 + "Nadie en este filtro".
  */
 export function buildTeamSupervision(
   users: User[],
   logs: ActivityLog[],
 ): TeamSupervisionResult {
-  const activeUsers = users.filter(u => u.active && !u.deletedAt)
+  const byId = new Map<string, User>()
+
+  for (const u of users) {
+    // deletedAt nulo/undefined OK; active explícitamente false se excluye
+    // del ranking de "debería llenar", pero si tiene logs se rehidrata abajo.
+    if (u.deletedAt) continue
+    if (u.active === false) continue
+    byId.set(u.id, u)
+  }
 
   const logsByUser = new Map<string, ActivityLog[]>()
   for (const log of logs) {
-    const id = log.userId ?? log.user?.id
+    const id = log.userId || log.user?.id
     if (!id) continue
+
     const list = logsByUser.get(id)
     if (list) list.push(log)
     else logsByUser.set(id, [log])
+
+    if (!byId.has(id) && log.user) {
+      byId.set(id, userFromLogRef(log.user))
+    } else if (!byId.has(id)) {
+      // Log sin user poblado: fila mínima para no perder la cobertura
+      byId.set(id, userFromLogRef({
+        id,
+        name: "Usuario",
+        color: "#71717A",
+        icon: "User",
+      }))
+    }
   }
 
-  const rows: TeamUserCompliance[] = activeUsers.map(user => {
+  const rows: TeamUserCompliance[] = [...byId.values()].map(user => {
     const userLogs = logsByUser.get(user.id) ?? []
     let manual = 0
     let auto = 0

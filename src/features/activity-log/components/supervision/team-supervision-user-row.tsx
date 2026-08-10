@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react"
 
-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { ENTITY_ICONS, type EntityIcon } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
 
 import type { TeamUserCompliance } from "../../types/team-supervision.types"
@@ -20,10 +20,47 @@ type Props = {
   onToggle: () => void
 }
 
-const STATUS_LABEL: Record<TeamUserCompliance["status"], string> = {
-  ok: "OK",
-  partial: "Parcial",
-  missing: "Sin registro",
+const STATUS_META: Record<
+  TeamUserCompliance["status"],
+  { label: string; className: string }
+> = {
+  ok: {
+    label: "OK",
+    className: "text-emerald-400 bg-emerald-500/10",
+  },
+  partial: {
+    label: "Parcial",
+    className: "text-amber-400 bg-amber-500/10",
+  },
+  missing: {
+    label: "Sin registro",
+    className: "text-rose-400 bg-rose-500/10",
+  },
+}
+
+function UserAvatar({
+  name,
+  color,
+  icon,
+}: {
+  name: string
+  color: string
+  icon?: EntityIcon
+}) {
+  const Icon = icon ? ENTITY_ICONS[icon] : undefined
+  const initial = name.trim().charAt(0).toUpperCase() || "?"
+
+  return (
+    <div
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+      style={{
+        backgroundColor: `${color}28`,
+        color,
+      }}
+    >
+      {Icon ? <Icon size={15} /> : initial}
+    </div>
+  )
 }
 
 function MiniLog({ log }: { log: ActivityLog }) {
@@ -67,53 +104,62 @@ function MiniLog({ log }: { log: ActivityLog }) {
 export function TeamSupervisionUserRow({ row, expanded, onToggle }: Props) {
   const { user, status, total, manual, auto, lastLoggedAt, shiftsFilled } =
     row
+  const meta = STATUS_META[status]
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/6 bg-white/2">
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl bg-white/[0.03] transition-colors",
+        expanded && "bg-white/[0.045]",
+      )}
+    >
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-white/4"
+        className="flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-white/[0.03]"
       >
-        <DynamicBadge
-          label={user.name}
-          color={user.color}
-          icon={user.icon}
-          width="field"
-        />
+        <UserAvatar name={user.name} color={user.color} icon={user.icon} />
 
+        {/* Nombre + meta */}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="truncate text-sm font-semibold text-neutral-100">
+              {user.name}
+            </span>
             <span
               className={cn(
-                "rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase",
-                status === "ok" && "bg-emerald-500/15 text-emerald-400",
-                status === "partial" && "bg-amber-500/15 text-amber-400",
-                status === "missing" && "bg-rose-500/15 text-rose-400",
+                "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase",
+                meta.className,
               )}
             >
-              {STATUS_LABEL[status]}
-            </span>
-            <span className="text-xs text-neutral-400 tabular-nums">
-              {total} {total === 1 ? "entrada" : "entradas"}
-              {total > 0 ? ` · ${manual}m / ${auto}a` : null}
+              {meta.label}
             </span>
           </div>
 
-          {lastLoggedAt ? (
-            <p className="mt-0.5 text-[11px] text-neutral-500">
-              Última{" "}
-              {new Date(lastLoggedAt).toLocaleTimeString("es-PE", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-          ) : (
-            <p className="mt-0.5 text-[11px] text-neutral-600">Sin actividad</p>
-          )}
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-neutral-500">
+            {total > 0 ? (
+              <span className="tabular-nums">
+                {total} {total === 1 ? "entrada" : "entradas"}
+                {" · "}
+                {manual}m / {auto}a
+              </span>
+            ) : (
+              <span>Sin actividad</span>
+            )}
+            {lastLoggedAt ? (
+              <span className="tabular-nums text-neutral-600">
+                · Última{" "}
+                {new Date(lastLoggedAt).toLocaleTimeString("es-PE", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <div className="hidden items-center gap-1 sm:flex">
+        {/* Dots de turno */}
+        <div className="hidden items-center gap-1.5 sm:flex">
           {SHIFT_GROUPS.flatMap(g => g.slots).map(slot => {
             const filled = shiftsFilled.includes(slot.shift)
             return (
@@ -121,8 +167,8 @@ export function TeamSupervisionUserRow({ row, expanded, onToggle }: Props) {
                 key={slot.shift}
                 title={slot.hours}
                 className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  filled ? "bg-cyan-400" : "bg-white/15",
+                  "size-1.5 rounded-full",
+                  filled ? "bg-cyan-400" : "bg-white/12",
                 )}
               />
             )
@@ -132,14 +178,14 @@ export function TeamSupervisionUserRow({ row, expanded, onToggle }: Props) {
         <ChevronDown
           size={16}
           className={cn(
-            "shrink-0 text-neutral-500 transition-transform",
-            expanded && "rotate-180",
+            "shrink-0 text-neutral-600 transition-transform",
+            expanded && "rotate-180 text-neutral-400",
           )}
         />
       </button>
 
       {expanded ? (
-        <div className="space-y-2 border-t border-white/6 px-3 py-3">
+        <div className="space-y-1.5 px-3.5 pb-3">
           {row.logs.length === 0 ? (
             <p className="py-2 text-center text-xs text-neutral-600">
               Sin entradas en este periodo
