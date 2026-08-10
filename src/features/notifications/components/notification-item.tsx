@@ -15,6 +15,10 @@ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workf
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
 import type { Notification } from "../types/notification.types"
+import {
+  getNotificationActionLabel,
+  isMentionNotification,
+} from "../utils/notification-action-label"
 
 type Props = {
   notification: Notification
@@ -52,8 +56,8 @@ export function NotificationItem({
 
   const { actor, task, project, workflowStep } = notification
 
-  const isMention =
-    notification.type === "MENTION"
+  const isMention = isMentionNotification(notification.type)
+  const actionLabel = getNotificationActionLabel(notification.type)
 
   // Un comentario de proyecto no tiene `task` — el contexto se arma
   // directo desde `project` en ese caso.
@@ -104,9 +108,7 @@ export function NotificationItem({
           </span>
 
           <span className="block text-sm text-neutral-400">
-            {isMention
-              ? "te mencionó"
-              : "comentó"}
+            {actionLabel}
           </span>
 
           <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2 py-1.5">
@@ -217,9 +219,7 @@ export function NotificationItem({
             </span>
 
             <span className="block text-sm text-neutral-400">
-              {isMention
-                ? "te mencionó"
-                : "comentó"}
+              {actionLabel}
             </span>
 
           </div>

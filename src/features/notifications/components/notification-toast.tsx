@@ -6,6 +6,10 @@ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 
 import type { Notification } from "../types/notification.types"
+import {
+  getNotificationActionLabel,
+  isMentionNotification,
+} from "../utils/notification-action-label"
 
 type Props = {
   notification: Notification
@@ -18,7 +22,8 @@ export function NotificationToast({
 }: Props) {
   const { actor, task, project, workflowStep } = notification
 
-  const isMention = notification.type === "MENTION"
+  const isMention = isMentionNotification(notification.type)
+  const actionLabel = getNotificationActionLabel(notification.type)
 
   const contextLabel =
     task
@@ -75,7 +80,7 @@ export function NotificationToast({
             </span>
 
             <span className="ml-1 text-neutral-500">
-              {isMention ? "te mencionó" : "comentó"}
+              {actionLabel}
             </span>
           </p>
 

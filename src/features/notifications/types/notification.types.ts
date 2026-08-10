@@ -1,6 +1,16 @@
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 
-export type NotificationType = "MENTION" | "COMMENT"
+// Debe reflejar el enum NotificationType del backend (prisma schema).
+// Antes solo tenía MENTION | COMMENT — las de convocatoria (TASK_*)
+// ya existían en el server y llegaban por realtime/API, pero el
+// front las tipaba mal y las UI las trataban como "comentó".
+export type NotificationType =
+  | "MENTION"
+  | "COMMENT"
+  | "TASK_ASSIGNED"
+  | "TASK_SUMMONED"
+  | "TASK_INVITE_ACCEPTED"
+  | "TASK_INVITE_DECLINED"
 
 export type WorkflowStatusValue =
   | "QUEUE"
@@ -42,7 +52,9 @@ export interface Notification {
   taskId: string | null
   projectId: string | null
   workflowStepId: string | null
-  commentId: string
+  // Nullable: TASK_ASSIGNED / TASK_SUMMONED / respuestas de invite
+  // no nacen de un comentario.
+  commentId: string | null
   messageSnippet: string
 
   route: NotificationRoute
