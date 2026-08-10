@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, type ReactNode } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
@@ -29,9 +29,9 @@ function DesktopTopBar() {
 const CURVE_RADIUS = 28
 const CURVE_ROUNDED = `${CURVE_RADIUS}px 0px 0px ${CURVE_RADIUS}px`
 const CURVE_SQUARE = "0px 0px 0px 0px"
-const TRANSITION_TIMING = "300ms cubic-bezier(.22,1,.36,1)"
+const TRANSITION_TIMING = "300ms ease-out"
 const DRAWER_WIDTH_PX = 248
-const PANEL_TRANSITION = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)"
+const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
 
 /** Margen de flechas respecto al slot de contenido (chrome ya va en pt/pb). */
 const CONTENT_ARROW_INSET = 10
@@ -94,15 +94,18 @@ function DesktopShell({ children }: Props) {
  */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const searchKey = searchParams.toString()
   const mode = useMobileNavStore(s => s.mode)
   const closeDrawer = useMobileNavStore(s => s.closeDrawer)
 
   const isOpen = mode === "open"
   const immersive = isImmersiveRoute(pathname)
 
+  // Pathname O query (procesos ?code=): cierra al navegar, sin pasarse de fase.
   useEffect(() => {
     closeDrawer()
-  }, [pathname, closeDrawer])
+  }, [pathname, searchKey, closeDrawer])
 
   useEffect(() => {
     if (!isOpen) return
@@ -126,14 +129,18 @@ function CompactShell({ children }: Props) {
       <div
         className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
         style={{
+          // Solo 0 o DRAWER_WIDTH — sin valores intermedios en JS que
+          // puedan dejar el panel “pasado” del cierre tras un reflow
+          // (row expandido / cambio de ruta a mitad de la transición).
           transform: isOpen
             ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
-            : "translate3d(0, 0, 0)",
+            : "translate3d(0px, 0, 0)",
           borderRadius: isOpen ? CURVE_ROUNDED : CURVE_SQUARE,
-          transition: PANEL_TRANSITION,
-          willChange: "transform",
-        }
-        }
+          transition: isOpen
+            ? PANEL_TRANSITION
+            : PANEL_TRANSITION,
+          willChange: isOpen ? "transform" : "auto",
+        }}
       >
         <TopBar />
 

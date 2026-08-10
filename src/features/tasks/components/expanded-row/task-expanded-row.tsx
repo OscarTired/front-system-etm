@@ -43,7 +43,7 @@ type Props = {
 export function TaskExpandedRow({
   task,
 }: Props) {
-  const { isMobile, ready } = useResponsive()
+  const { isMobile } = useResponsive()
   const searchParams = useSearchParams()
 
   const urlTaskId = searchParams.get("taskId")
@@ -60,17 +60,11 @@ export function TaskExpandedRow({
     setCommentsDialogOpen,
   ] = useState(false)
 
-  // Indicadores del workflow (móvil: botón al lado del toggle).
+  // Ruta / indicadores: abiertos al expandir la tarea; el usuario decide cerrar.
   const [
     indicatorsExpanded,
     setIndicatorsExpanded,
-  ] = useState(false)
-
-  useEffect(() => {
-    if (!ready) return
-    // Desktop: abiertos; móvil: colapsados hasta que el usuario expanda.
-    setIndicatorsExpanded(!isMobile)
-  }, [ready, isMobile])
+  ] = useState(true)
 
   // Solo fetch al ver mensajes — no por cada fila de la lista.
   const commentsEnabled =

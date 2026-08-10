@@ -96,6 +96,8 @@ export function AppSidebar({
     event: React.TransitionEvent<HTMLElement>,
   ) => {
     if (isDrawer) return
+    // Solo el aside, solo width — evita double-fire por transform/children
+    // (reflows de rows expandidos disparan transitionend en hijos).
     if (event.target !== event.currentTarget) return
     if (event.propertyName !== "width") return
 
@@ -122,7 +124,7 @@ export function AppSidebar({
           // Desktop sigue con transición CSS propia. Drawer ya no
           // anima nada — está siempre ahí, estático; lo que se ve/
           // oculta es el contenido de arriba deslizándose por encima.
-          !isDrawer && "transition-[width,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+          !isDrawer && "transition-[width] duration-300 ease-out",
           isDrawer && !isVisible && "pointer-events-none",
           isFullyHidden && "pointer-events-none",
         )}
@@ -131,13 +133,31 @@ export function AppSidebar({
         <div 
           className={cn(
             "pt-6 pb-6 flex h-full flex-col overflow-hidden",
-            "transition-all duration-200 ease-out",
+            "transition-opacity duration-200 ease-out",
             collapsed ? "opacity-95" : "opacity-100"
           )} 
-          style={{ 
-            width: isDrawer ? undefined : (collapsed ? SIDEBAR_ASIDE_COLLAPSED_WIDTH : SIDEBAR_ASIDE_OPEN_WIDTH),
-            minWidth: SIDEBAR_ASIDE_COLLAPSED_WIDTH 
-          }}
+          style={
+            isDrawer
+              ? undefined
+              : {
+                  // Mientras cierra (width→0), no forzar minWidth: evita que el
+                  // contenido “se pase” del borde de cierre.
+                  width:
+                    visualState === "hidden" ||
+                    visualState === "moving-out" ||
+                    visualState === "curve-closing"
+                      ? SIDEBAR_ASIDE_OPEN_WIDTH
+                      : collapsed
+                        ? SIDEBAR_ASIDE_COLLAPSED_WIDTH
+                        : SIDEBAR_ASIDE_OPEN_WIDTH,
+                  minWidth:
+                    visualState === "hidden" ||
+                    visualState === "moving-out" ||
+                    visualState === "curve-closing"
+                      ? 0
+                      : SIDEBAR_ASIDE_COLLAPSED_WIDTH,
+                }
+          }
         >
           <SidebarHeader
             collapsed={collapsed}

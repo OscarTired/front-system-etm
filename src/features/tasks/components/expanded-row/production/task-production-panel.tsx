@@ -81,7 +81,7 @@ export function TaskProductionPanel({
   const [
     expandedInternal,
     setExpandedInternal,
-  ] = useState(false)
+  ] = useState(true)
 
   const expanded = isControlled ? indicatorsExpandedProp! : expandedInternal
 
