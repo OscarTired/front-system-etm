@@ -34,6 +34,8 @@ type Props = {
   onEditLog?: (log: ActivityLog) => void
   /** Click en Duplicar: copia inmediata en la misma franja (sin drag). */
   onDuplicateLog?: (log: ActivityLog) => void
+  /** Mismos nodos de fila; solo pulse / sin datos. */
+  loading?: boolean
 }
 
 const DISTINCT_SHIFT_COLORS = [
@@ -63,6 +65,7 @@ export function ShiftGroupSection({
   canDuplicateLog,
   onEditLog,
   onDuplicateLog,
+  loading = false,
 }: Props) {
   const now = referenceNow ?? new Date()
   const [menuOpenLogId, setMenuOpenLogId] = useState<string | null>(null)
@@ -140,7 +143,7 @@ export function ShiftGroupSection({
                 </div>
 
                 {/* Botón "+" rápido en la cabecera si la franja está activa y ya contiene registros */}
-                {state !== "upcoming" && logs.length > 0 && (
+                {!loading && state !== "upcoming" && logs.length > 0 && (
                   <button
                     type="button"
                     disabled={!canCreate}
@@ -165,7 +168,26 @@ export function ShiftGroupSection({
                     : "duration-0",
                 )}
               >
-                {logs.map((log) => {
+                {(loading ? ([null] as (typeof logs[number] | null)[]) : logs).map((log, rowIndex) => {
+                  const isPlaceholder = log == null
+                  if (isPlaceholder) {
+                    return (
+                      <div
+                        key={`ph-${slot.shift}-${rowIndex}`}
+                        className="group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5 animate-pulse"
+                      >
+                        <div className="size-8 shrink-0 rounded-full bg-white/10" />
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="h-3.5 w-28 max-w-full rounded bg-white/12" />
+                          <div className="h-3 w-40 max-w-full rounded bg-white/8" />
+                        </div>
+                        <div className="ml-auto h-3 w-10 shrink-0 self-start rounded bg-white/8" />
+                      </div>
+                    )
+                  }
+
+                  // log garantizado a partir de aquí
+
                   const LogIcon = getActivityIcon(log.activityType.icon)
                   const isManual = log.source === "MANUAL"
                   const isDraggingThis = draggingLogId === log.id
@@ -407,7 +429,7 @@ export function ShiftGroupSection({
                   )
                 })}
 
-                {logs.length === 0 && state !== "upcoming" && (
+                {!loading && logs.length === 0 && state !== "upcoming" && (
                   <button
                     type="button"
                     disabled={!canCreate}
@@ -427,7 +449,7 @@ export function ShiftGroupSection({
                   </button>
                 )}
 
-                {logs.length === 0 && state === "upcoming" && (
+                {!loading && logs.length === 0 && state === "upcoming" && (
                   <p className="py-2 text-center text-xs text-neutral-600">
                     Todavía no llega esta franja
                   </p>

@@ -15,9 +15,10 @@ import {
 import { getActivityIcon } from "../../constants/activity-icons"
 
 type Props = {
-  row: TeamUserCompliance
-  expanded: boolean
-  onToggle: () => void
+  row?: TeamUserCompliance
+  expanded?: boolean
+  onToggle?: () => void
+  loading?: boolean
 }
 
 const STATUS_META: Record<
@@ -101,7 +102,32 @@ function MiniLog({ log }: { log: ActivityLog }) {
   )
 }
 
-export function TeamSupervisionUserRow({ row, expanded, onToggle }: Props) {
+export function TeamSupervisionUserRow({
+  row,
+  expanded = false,
+  onToggle,
+  loading = false,
+}: Props) {
+  if (loading || !row) {
+    return (
+      <div className="overflow-hidden rounded-2xl bg-white/3 animate-pulse">
+        <div className="flex w-full items-center gap-3 px-3.5 py-3">
+          <div className="size-9 shrink-0 rounded-full bg-white/10" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-3.5 w-28 rounded bg-white/12" />
+            <div className="h-3 w-40 rounded bg-white/8" />
+          </div>
+          <div className="hidden items-center gap-1.5 sm:flex">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span key={i} className="size-1.5 rounded-full bg-white/12" />
+            ))}
+          </div>
+          <div className="size-4 shrink-0 rounded bg-white/10" />
+        </div>
+      </div>
+    )
+  }
+
   const { user, status, total, manual, auto, lastLoggedAt, shiftsFilled } =
     row
   const meta = STATUS_META[status]
@@ -109,14 +135,14 @@ export function TeamSupervisionUserRow({ row, expanded, onToggle }: Props) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl bg-white/[0.03] transition-colors",
-        expanded && "bg-white/[0.045]",
+        "overflow-hidden rounded-2xl bg-white/3 transition-colors",
+        expanded && "bg-white/4.5",
       )}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-white/[0.03]"
+        className="flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-white/3"
       >
         <UserAvatar name={user.name} color={user.color} icon={user.icon} />
 

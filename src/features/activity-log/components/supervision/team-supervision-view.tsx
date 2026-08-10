@@ -13,7 +13,6 @@ import type {
 } from "../../types/team-supervision.types"
 import { buildTeamSupervision } from "../../selectors/build-team-supervision"
 import { TeamSupervisionKpiBar } from "./team-supervision-kpi-bar"
-import { TeamSupervisionSkeleton } from "../skeletons/team-supervision-skeleton"
 import { TeamSupervisionUserRow } from "./team-supervision-user-row"
 
 type Props = {
@@ -51,7 +50,6 @@ const SECTIONS: SectionDef[] = [
   },
 ]
 
-/** Dentro de cada sección: más entradas primero, luego más MANUAL, luego nombre. */
 function sortWithinSection(a: TeamUserCompliance, b: TeamUserCompliance) {
   if (b.total !== a.total) return b.total - a.total
   if (b.manual !== a.manual) return b.manual - a.manual
@@ -81,6 +79,18 @@ function SectionHeader({
       </span>
     </div>
   )
+}
+
+const EMPTY_KPIS = {
+  teamSize: 0,
+  withLogs: 0,
+  missing: 0,
+  partial: 0,
+  ok: 0,
+  coveragePct: 0,
+  totalEntries: 0,
+  manualEntries: 0,
+  autoEntries: 0,
 }
 
 export function TeamSupervisionView({
@@ -134,23 +144,28 @@ export function TeamSupervisionView({
   const totalVisible =
     grouped.ok.length + grouped.partial.length + grouped.missing.length
 
-  if (loading) {
-    return <TeamSupervisionSkeleton />
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-
       <div className="w-full min-w-0 shrink-0">
         <TeamSupervisionKpiBar
-          kpis={result.kpis}
+          kpis={loading ? EMPTY_KPIS : result.kpis}
           filter={statusFilter}
           onFilterChange={setStatusFilter}
+          loading={loading}
         />
       </div>
 
       <div className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto pb-4 scrollbar-none">
-        {totalVisible === 0 ? (
+        {loading ? (
+          <section className="space-y-1.5">
+            <SectionHeader section={SECTIONS[0]} count={0} />
+            <div className="space-y-1.5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <TeamSupervisionUserRow key={i} loading />
+              ))}
+            </div>
+          </section>
+        ) : totalVisible === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
             Nadie en este filtro
           </div>

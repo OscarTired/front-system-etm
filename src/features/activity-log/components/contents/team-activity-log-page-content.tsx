@@ -20,7 +20,6 @@ import {
 import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import { useTeamBitacoraViewStore } from "../../store/team-bitacora-view-store"
-import { TeamActivityLogSkeleton } from "../skeletons/team-activity-log-skeleton"
 import { TeamBitacoraViewToggle } from "../toggles/team-bitacora-view-toggle"
 import { TeamSupervisionView } from "../supervision/team-supervision-view"
 
@@ -64,7 +63,31 @@ function groupLogsByShift(logs: Log[]) {
   return buckets
 }
 
-function ActivityLogCard({ log }: { log: Log }) {
+function ActivityLogCard({
+  log,
+  loading = false,
+}: {
+  log?: Log
+  loading?: boolean
+}) {
+  if (loading || !log) {
+    return (
+      <div className="w-full rounded-2xl bg-white/3 p-4 animate-pulse">
+        <div className="flex items-start gap-4">
+          <div className="size-10 shrink-0 rounded-full bg-white/10" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="h-3.5 w-28 rounded bg-white/12" />
+              <div className="h-3 w-24 rounded bg-white/8" />
+            </div>
+            <div className="h-3.5 w-36 rounded bg-white/10" />
+            <div className="h-3 w-48 rounded bg-white/8" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const Icon = getActivityIcon(log.activityType.icon)
   const effectiveShift =
     log.shift ?? getCurrentShift(new Date(log.loggedAt))
@@ -316,7 +339,20 @@ export function TeamActivityLogPageContent() {
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-none">
           <div className="flex w-full flex-col gap-6 pb-4">
             {loading ? (
-              <TeamActivityLogSkeleton />
+              <div className="flex w-full flex-col gap-8">
+                {Array.from({ length: 2 }).map((_, s) => (
+                  <section key={s} className="flex w-full flex-col gap-3">
+                    <div className="flex items-center justify-between pb-2 animate-pulse">
+                      <div className="h-8 w-36 rounded-lg bg-white/10" />
+                      <div className="h-6 w-20 rounded-lg bg-white/8" />
+                    </div>
+                    <div className="flex w-full flex-col gap-3">
+                      <ActivityLogCard loading />
+                      <ActivityLogCard loading />
+                    </div>
+                  </section>
+                ))}
+              </div>
             ) : logs.length === 0 ? (
               <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
                 Sin entradas para este filtro

@@ -36,7 +36,6 @@ import { ShiftGroupSection } from "../shift-group-section"
 import { AutoActivitySection } from "../auto-activity-section"
 import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
 import { ActivityLogEditDialog } from "../dialogs/activity-log-edit-dialog"
-import { ActivityLogSkeleton } from "../skeletons/activity-log-skeleton"
 import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
 import { AgendaWeekView } from "../agenda/agenda-week-view"
 import { AgendaMonthView } from "../agenda/agenda-month-view"
@@ -326,50 +325,48 @@ export function ActivityLogPageContent({
       {viewMode === "day" && (
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
           <div className="flex w-full flex-col gap-3 pb-4">
-            {loading ? (
-              <ActivityLogSkeleton />
-            ) : (
-              <>
-                {departmentQuery === "PRODUCCION" &&
-                  department !== "REGISTROS" && (
-                    <AutoActivitySection
-                      logs={logs.filter(log => log.source === "AUTO")}
-                    />
-                  )}
+            {!loading &&
+              departmentQuery === "PRODUCCION" &&
+              department !== "REGISTROS" && (
+                <AutoActivitySection
+                  logs={logs.filter(log => log.source === "AUTO")}
+                />
+              )}
 
-                {SHIFT_GROUPS.map(group => {
-                  const logsBySlot: Record<string, typeof logs> = {}
+            {SHIFT_GROUPS.map(group => {
+              const logsBySlot: Record<string, typeof logs> = {}
 
-                  for (const slot of group.slots) {
-                    logsBySlot[slot.shift] = logs.filter(
-                      log => log.shift === slot.shift,
-                    )
-                  }
-
-                  return (
-                    <ShiftGroupSection
-                      key={group.key}
-                      group={group}
-                      logsBySlot={logsBySlot}
-                      onLogClick={handleOpenPicker}
-                      onDeleteLog={handleDeleteLog}
-                      beginDrag={beginDrag}
-                      registerSlot={registerSlot}
-                      draggingLogId={draggingLogId}
-                      hoverShift={hoverShift}
-                      deletingLogId={pendingDelete?.id ?? null}
-                      canCreate={canCreate}
-                      canDelete={canDelete}
-                      slotState={getState}
-                      isLogBusy={isLogBusy}
-                      canDuplicateLog={canDuplicateLog}
-                      onEditLog={handleEditLog}
-                      onDuplicateLog={handleDuplicateLog}
-                    />
+              if (!loading) {
+                for (const slot of group.slots) {
+                  logsBySlot[slot.shift] = logs.filter(
+                    log => log.shift === slot.shift,
                   )
-                })}
-              </>
-            )}
+                }
+              }
+
+              return (
+                <ShiftGroupSection
+                  key={group.key}
+                  group={group}
+                  logsBySlot={logsBySlot}
+                  loading={loading}
+                  onLogClick={handleOpenPicker}
+                  onDeleteLog={handleDeleteLog}
+                  beginDrag={beginDrag}
+                  registerSlot={registerSlot}
+                  draggingLogId={draggingLogId}
+                  hoverShift={hoverShift}
+                  deletingLogId={pendingDelete?.id ?? null}
+                  canCreate={canCreate}
+                  canDelete={canDelete}
+                  slotState={getState}
+                  isLogBusy={isLogBusy}
+                  canDuplicateLog={canDuplicateLog}
+                  onEditLog={handleEditLog}
+                  onDuplicateLog={handleDuplicateLog}
+                />
+              )
+            })}
           </div>
         </div>
       )}
