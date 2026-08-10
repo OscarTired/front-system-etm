@@ -8,6 +8,7 @@ import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { Popover, PopoverContent } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
@@ -125,10 +126,15 @@ export default function AssignmentPage() {
         </div>
       )}
 
-      {/* Contenido: ocupa TODO el espacio restante */}
-      <section
+      {/* Contenido: ocupa TODO el espacio restante.
+          Antes era un <section> con overflow-y-auto nativo — scroll
+          sin estilizar (barra del navegador cruda) mientras el resto
+          de la app (piece-list.tsx, etc.) usa el componente ScrollArea
+          compartido, con su propio scrollbar temático + fade en los
+          bordes. Se cambia a ScrollArea por consistencia visual. */}
+      <ScrollArea
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto",
+          "min-h-0 flex-1",
           !isMobile &&
             state.summonTarget &&
             state.selectedStepIds.size > 0 &&
@@ -158,7 +164,7 @@ export default function AssignmentPage() {
             ))}
           </div>
         )}
-      </section>
+      </ScrollArea>
 
       {isMobile ? (
         // Mismo mecanismo que ya usa toda la app para bottom sheets

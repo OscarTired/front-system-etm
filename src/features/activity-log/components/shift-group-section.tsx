@@ -15,7 +15,7 @@ type Props = {
   logsBySlot: Record<string, ActivityLog[]>
   onLogClick: (slot: ShiftSlotDefinition) => void
   onDeleteLog: (log: ActivityLog) => void
-  beginDrag: (e: ReactPointerEvent<HTMLElement>, log: ActivityLog) => void
+  beginDrag: (e: ReactPointerEvent<HTMLElement>, log: ActivityLog, isDuplicate?: boolean) => void
   registerSlot: (shift: DayShift, el: HTMLElement | null) => void
   draggingLogId: string | null
   hoverShift: DayShift | null
@@ -152,9 +152,15 @@ export function ShiftGroupSection({
                     <div
                       key={log.id}
                       onPointerDown={(e) => {
+                        // Las automáticas nunca se arrastran, ni con
+                        // Ctrl — las genera el sistema solo, no tiene
+                        // sentido mover ni duplicar algo que la
+                        // persona no registró a mano.
                         if (!isManual || !canCreate) return
                         if ((e.target as HTMLElement).closest("[data-activity-drag-ignore]")) return
-                        beginDrag(e, log)
+                        // Ctrl/Cmd sobre una manual = duplicar en vez
+                        // de mover (el original queda intacto).
+                        beginDrag(e, log, e.ctrlKey || e.metaKey)
                       }}
                       className={cn(
                         "group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",

@@ -12,7 +12,14 @@ import { getActivityIcon } from "../constants/activity-icons"
 import type { ActivityLog, DayShift } from "../types/activity-log.types"
 
 type Props = {
-  onDrop: (logId: string, shift: DayShift) => void
+  // Tercer parámetro: true si el gesto se inició con Ctrl/Cmd
+  // presionado — en ese caso el caller debe DUPLICAR el log en la
+  // franja destino en vez de moverlo (el original queda intacto).
+  // Solo aplica a actividades MANUALES: las automáticas nunca se
+  // pueden arrastrar ni duplicar, con o sin Ctrl — las genera el
+  // sistema solo, moverlas/duplicarlas a mano no tiene sentido y
+  // podría corromper ese registro automático.
+  onDrop: (logId: string, shift: DayShift, isDuplicate: boolean) => void
   // El caller decide qué franjas aceptan drop (ej. no "upcoming") —
   // este hook no sabe nada de franjas horarias/estado de slot.
   isShiftAvailable: (shift: DayShift) => boolean
@@ -43,6 +50,12 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
   const [draggingLog, setDraggingLog] = useState<ActivityLog | null>(null)
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 })
   const [hoverShift, setHoverShift] = useState<DayShift | null>(null)
+  // Se fija al empezar el gesto (con Ctrl/Cmd) y no cambia durante el
+  // drag — igual que draggingLog, se guarda también en un ref para
+  // que endDrag (que corre en un listener de window, con closure
+  // potencialmente viejo) siempre lea el valor correcto.
+  const [isDuplicateMode, setIsDuplicateMode] = useState(false)
+  const isDuplicateModeRef = useRef(false)
 
   const draggingLogRef = useRef(draggingLog)
   draggingLogRef.current = draggingLog
@@ -113,7 +126,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
   }, [])
 
-  const beginDrag = useCallback((e: ReactPointerEvent<HTMLElement>, log: ActivityLog) => {
+  const beginDrag = useCallback((e: ReactPointerEvent<HTMLElement>, log: ActivityLog, isDuplicate = false) => {
 
     // Solo botón principal — evita que un click derecho o el botón
     // central disparen un drag por accidente.
@@ -129,29 +142,36 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
       // Fallback defensivo si el navegador rechaza el capture.
     }
 
-    updateCachedRects(log.shift)
+    // Duplicar SÍ acepta soltar en la misma franja de origen (crea
+    // una segunda copia ahí) — mover a la misma franja sigue sin
+    // tener sentido.
+    updateCachedRects(isDuplicate ? null : log.shift)
     setDraggingLog(log)
     setPointerPos({ x: e.clientX, y: e.clientY })
     setHoverShift(null)
+    isDuplicateModeRef.current = isDuplicate
+    setIsDuplicateMode(isDuplicate)
 
   }, [updateCachedRects])
 
   const endDrag = useCallback((x: number, y: number, shouldDrop: boolean) => {
 
     const log = draggingLogRef.current
+    const isDuplicate = isDuplicateModeRef.current
 
     if (shouldDrop && log) {
 
       const targetShift = findShiftAt(x, y)
 
-      if (targetShift && targetShift !== log.shift) {
-        onDropRef.current(log.id, targetShift)
+      if (targetShift && (isDuplicate || targetShift !== log.shift)) {
+        onDropRef.current(log.id, targetShift, isDuplicate)
       }
 
     }
 
     setDraggingLog(null)
     setHoverShift(null)
+    setIsDuplicateMode(false)
     cachedSlotRects.current = []
 
   }, [findShiftAt])
@@ -240,6 +260,12 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
           {draggingLog.activityType.label}
         </span>
 
+        {isDuplicateMode && (
+          <span className="shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
+            Copiar
+          </span>
+        )}
+
       </div>
 
     </div>
@@ -251,6 +277,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     registerSlot,
     draggingLogId: draggingLog?.id ?? null,
     hoverShift,
+    isDuplicateMode,
     overlay,
   }
 

@@ -17,6 +17,7 @@ import { useMyActivityLog } from "../../hooks/use-my-activity-log"
 import { useMyActivityLogRange } from "../../hooks/use-my-activity-log-range"
 import { useDeleteActivityLog } from "../../hooks/use-delete-activity-log"
 import { useMoveActivityLog } from "../../hooks/use-move-activity-log"
+import { useCreateActivityLog } from "../../hooks/use-create-activity-log"
 import { useActivityDrag } from "../../hooks/use-activity-drag"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
@@ -82,6 +83,13 @@ export function ActivityLogPageContent({
 
   const { deleteLog } = useDeleteActivityLog(departmentQuery)
   const { moveLog } = useMoveActivityLog(departmentQuery)
+  // Solo necesita el/los tipo(s) de las actividades que efectivamente
+  // se van a duplicar — se toman al vuelo de los logs ya cargados
+  // (ver handleMoveLog), no hace falta la lista completa de tipos acá.
+  const { createLog } = useCreateActivityLog(
+    useMemo(() => logs.map(l => l.activityType), [logs]),
+    departmentQuery,
+  )
 
   const { markedDates } = useActivityLogMarkedDates({
     scope: "me",
@@ -120,8 +128,24 @@ export function ActivityLogPageContent({
     setPickerOpen(true)
   }
 
-  function handleMoveLog(id: string, shift: ShiftSlotDefinition["shift"]) {
+  function handleMoveLog(id: string, shift: ShiftSlotDefinition["shift"], isDuplicate: boolean) {
     if (!canCreate) return
+
+    if (isDuplicate) {
+      // Ctrl/Cmd+arrastrar sobre una actividad MANUAL: crear una
+      // copia en la franja destino, dejando el original intacto.
+      const source = logs.find(l => l.id === id)
+      if (!source) return
+      createLog({
+        activityTypeId: source.activityType.id,
+        projectId: source.project?.id ?? undefined,
+        taskId: source.task?.id ?? undefined,
+        note: source.note ?? undefined,
+        shift,
+      }).catch(() => {})
+      return
+    }
+
     moveLog({ id, shift }).catch(() => {})
   }
 

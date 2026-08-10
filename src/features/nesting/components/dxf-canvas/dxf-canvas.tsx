@@ -7,6 +7,7 @@ import type { CanvasTool } from "./types/types"
 
 import { CanvasToolbar } from "./components/canvas-toolbar"
 import { CanvasContextMenu } from "./components/canvas-context-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { drawScene } from "./utils/draw/draw"
 import { buildToolpath, computeLayerList, piecesToEntities } from "./utils/entities"
 import { fmtMm } from "./utils/geometry-utils"
@@ -1354,10 +1355,20 @@ export function DxfCanvas({
       {/* Panel de mediciones con altura segura sobre la barra inferior */}
       {measure.measurements.length > 0 && (
         <div
-          className="absolute bottom-14 left-3 z-30 flex max-h-[40%] w-[min(18rem,calc(100%-1.5rem))] flex-col gap-1.5 overflow-y-auto rounded-2xl bg-[#141416]/95 p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md themed-scrollbar-y sm:p-3"
+          className="absolute bottom-14 left-3 z-30 flex max-h-[40%] w-[min(15rem,calc(100%-1.5rem))] flex-col gap-1.5 rounded-2xl bg-[#141416]/95 p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md sm:p-3"
           title="Mediciones activas"
         >
-          <div className="flex items-center justify-between gap-2 px-0.5 pb-0.5">
+          {/*
+            Antes el título + contador + botón "borrar todas" vivían
+            DENTRO del mismo div con overflow-y-auto que la lista de
+            mediciones — se desplazaban junto con la lista al scrollear
+            en vez de quedar fijos arriba. Ahora la cabecera queda
+            afuera (shrink-0) y solo la lista entra en un ScrollArea
+            real (no un overflow-y-auto + clase de scrollbar copiada a
+            mano — mismo componente que usa el resto de la app, para
+            no tener 2 formas distintas de lograr lo mismo).
+          */}
+          <div className="flex shrink-0 items-center justify-between gap-2 px-0.5 pb-0.5">
             <span className="hidden min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-neutral-400 xs:inline sm:inline">
               Mediciones
             </span>
@@ -1378,6 +1389,7 @@ export function DxfCanvas({
               </button>
             </div>
           </div>
+          <ScrollArea className="min-h-0 flex-1" contentClassName="pr-1">
           <div className="flex flex-col gap-1 pt-0.5">
             {measure.measurements.map((m) => (
               <div
@@ -1400,6 +1412,7 @@ export function DxfCanvas({
               </div>
             ))}
           </div>
+          </ScrollArea>
         </div>
       )}
     </div>

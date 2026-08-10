@@ -175,7 +175,7 @@ export function DiagnosticsDialog({
                 las columnas mantengan un tamaño legible y el usuario
                 deslice a los costados en vez de perder contenido. */}
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-left text-xs">
+              <table className="w-full min-w-188 border-collapse text-left text-xs">
               <thead className="sticky top-0 z-10 bg-[#161618] text-[10px] uppercase tracking-wider text-neutral-400 shadow-sm">
                 <tr>
                   <th className="px-4 py-3 font-medium">Nombre del archivo</th>
