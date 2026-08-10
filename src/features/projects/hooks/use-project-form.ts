@@ -88,23 +88,13 @@ export function useProjectForm(
 
     )
 
-  useEffect(()=>{
-
-    setForm(
-
-      project
-
-        ? mapProjectToForm(
-            project,
-          )
-
-        : initialForm,
-
-    )
-
-  },[
-    project,
-  ])
+  // Solo re-mapear al cambiar de proyecto (id). Si dependemos del
+  // objeto entero, un refetch/stale cache pisa la fecha que el usuario
+  // acaba de guardar o editar.
+  useEffect(() => {
+    setForm(project ? mapProjectToForm(project) : initialForm)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo project.id
+  }, [project?.id])
 
   const update=(
     data:Partial<ProjectFormValue>,

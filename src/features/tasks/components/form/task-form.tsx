@@ -1,8 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { useProjects } from "@/features/projects/hooks/use-projects"
 
 import { WizardProgress } from "@/shared/ui/dialogs/form-dialog/wizard-progress"
 
@@ -38,21 +36,7 @@ export function TaskForm({
 }: Props) {
 
   const { isMobile } = useResponsive()
-  
-  // Obtenemos los proyectos directamente aquí para que el formulario sea reactivo al cambio
-  const { projects = [] } = useProjects()
 
-  // Sincroniza la fecha de entrega automáticamente cada vez que cambie el proyecto seleccionado
-  useEffect(() => {
-    if (!form.projectId) return
-
-    const selectedProject = projects.find((p) => p.id === form.projectId)
-
-    if (selectedProject?.deliveryDate) {
-      const formattedDate = selectedProject.deliveryDate.split("T")[0]
-      update({ deliveryDate: formattedDate })
-    }
-  }, [form.projectId, projects, update])
 
   if (!isMobile) {
 

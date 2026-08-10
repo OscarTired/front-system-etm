@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
@@ -64,6 +65,7 @@ export function ProjectMobileCard({
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
 
+  const { isMobile } = useResponsive()
   const searchParams = useSearchParams()
   const isTarget = searchParams.get("projectId") === project.id
 
@@ -71,8 +73,13 @@ export function ProjectMobileCard({
     if (!expanded) {
       setShowFields(false)
       setShowPipeline(false)
+      return
     }
-  }, [expanded])
+    // Desktop: al expandir el row se abre el detalle de una (sin ⋮)
+    if (!isMobile) {
+      setShowPipeline(true)
+    }
+  }, [expanded, isMobile])
 
   useEffect(() => {
     if (expanded && isTarget) {
@@ -203,13 +210,6 @@ export function ProjectMobileCard({
               />
             </button>
 
-            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
-              <span className="text-xs font-medium text-neutral-500">ID</span>
-              <span className="font-semibold tracking-wide text-neutral-300">
-                {String(project.sequence).padStart(3, "0")}
-              </span>
-            </div>
-
             <ProjectClientCell project={project} triggerVariant="row" rowLabel="Cliente" />
             <ProjectStageCell project={project} triggerVariant="row" rowLabel="Etapa" />
             <ProjectStatusCell project={project} triggerVariant="row" rowLabel="Estado" />
@@ -307,12 +307,15 @@ export function ProjectMobileCard({
         )}
 
         <div className="flex items-center justify-start gap-1">
-          <IconAction
-            icon={MoreHorizontal}
-            onClick={() =>
-              setShowPipeline(current => !current)
-            }
-          />
+          {/* Móvil: ⋮ abre el detalle. Desktop: se abre solo al expandir el row. */}
+          {isMobile && (
+            <IconAction
+              icon={MoreHorizontal}
+              onClick={() =>
+                setShowPipeline(current => !current)
+              }
+            />
+          )}
 
           <ProjectRowActions project={project} />
         </div>

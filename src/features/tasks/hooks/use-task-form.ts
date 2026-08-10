@@ -38,11 +38,18 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
     thicknessId: initialTask?.thickness?.id || "",
     colorId: initialTask?.color?.id || null,
     plRt: initialTask?.plRt || null,
-    deliveryDate: initialTask?.deliveryDate || "",
+    // DatePicker/parseISODate solo aceptan "YYYY-MM-DD"
+    deliveryDate: initialTask?.deliveryDate
+      ? initialTask.deliveryDate.slice(0, 10)
+      : "",
   })
 
   // Sincronización reactiva del proyecto y su fecha de entrega por defecto
   const activeProjectId = initialProjectId || form.projectId
+
+  // Seed fecha desde proyecto solo en create / cambio de proyecto.
+  // En edit conservamos la fecha de la tarea (ya normalizada arriba).
+  const prevProjectIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!activeProjectId || projects.length === 0) return
@@ -51,13 +58,30 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
     if (!selectedProject?.deliveryDate) return
 
     const formattedDate = selectedProject.deliveryDate.split("T")[0]
+    const prev = prevProjectIdRef.current
+    prevProjectIdRef.current = activeProjectId
 
-    setForm((prev) => ({
-      ...prev,
-      projectId: activeProjectId,
-      // Solo sobreescribimos la fecha automáticamente si es una tarea nueva (no al editar)
-      deliveryDate: !initialTask && !prev.deliveryDate ? formattedDate : prev.deliveryDate,
-    }))
+    setForm((prevForm) => {
+      const next = { ...prevForm, projectId: activeProjectId }
+
+      if (initialTask) {
+        // Edición: nunca pisar la fecha de la tarea
+        return next
+      }
+
+      if (prev === null) {
+        // Primer mount create: seed solo si aún no hay fecha
+        if (!prevForm.deliveryDate) next.deliveryDate = formattedDate
+        return next
+      }
+
+      if (prev !== activeProjectId) {
+        // Usuario cambió de proyecto → fecha del nuevo proyecto
+        next.deliveryDate = formattedDate
+      }
+
+      return next
+    })
   }, [activeProjectId, projects, initialTask])
 
   // Sugerencia automática de Lote: al elegir/cambiar de proyecto en

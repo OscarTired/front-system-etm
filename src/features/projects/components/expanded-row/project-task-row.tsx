@@ -274,9 +274,7 @@ export function ProjectTaskRow({
           task.project.id,
         )
 
-        router.push(
-          `/tasks?taskId=${task.id}`,
-        )
+        router.push(`/tasks?taskId=${encodeURIComponent(task.id)}`)
       },
       [
         router,

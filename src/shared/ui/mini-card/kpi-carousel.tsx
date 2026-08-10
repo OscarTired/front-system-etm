@@ -2,6 +2,7 @@
 
 import {
   useState,
+  useEffect,
 } from "react"
 
 import {
@@ -56,17 +57,27 @@ export function KpiCarousel({
   cards,
   items,
   summary,
-  defaultExpanded = false,
+  defaultExpanded,
 }: Props) {
 
   const {
     isMobile,
+    ready,
   } = useResponsive()
 
+  // Desktop: cards abiertas al montar. Móvil: colapsadas (resumen).
+  // defaultExpanded permite override explícito.
   const [
     expanded,
     setExpanded,
-  ] = useState(defaultExpanded)
+  ] = useState(false)
+
+  useEffect(() => {
+    if (!ready) return
+    setExpanded(
+      defaultExpanded !== undefined ? defaultExpanded : !isMobile,
+    )
+  }, [ready, isMobile, defaultExpanded])
 
   const [
     selectedIndex,

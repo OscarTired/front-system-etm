@@ -26,6 +26,7 @@ type SortStore = {
 export const useSortStore = create<SortStore>()(
   persist(
     set => ({
+      // Default: correlativo (code)
       taskSortMode: "code",
       projectSortMode: "code",
 
@@ -41,9 +42,10 @@ export const useSortStore = create<SortStore>()(
     }),
     {
       name: "prod-erp-sort",
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version) => {
-        if (version < 2) {
+        // v3: forzar correlativo como default de listas
+        if (version < 3) {
           return {
             ...persistedState,
             taskSortMode: "code",

@@ -88,8 +88,8 @@ export function ProjectSortButton() {
       <PopoverTrigger asChild>
         <ProjectSortTrigger
           label={
-            current?.label.toUpperCase() ??
-            "SECUENCIA"
+            current?.label ??
+            "CORRELATIVO"
           }
           active={open}
         />

@@ -94,8 +94,8 @@ export function TaskSortButton() {
       <PopoverTrigger asChild>
         <TaskSortTrigger
           label={
-            current?.label.toUpperCase() ??
-            "MANUAL"
+            current?.label ??
+            "CORRELATIVO"
           }
           active={open}
         />
