@@ -11,6 +11,7 @@ import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
 
 import { useMyActivityLog } from "../../hooks/use-my-activity-log"
@@ -46,9 +47,20 @@ type Props = {
   department?: ViewTab
 }
 
+/**
+ * Layout alineado a TaskPageContent:
+ * - root: flex h-full min-h-0 flex-col
+ * - toolbar: shrink-0
+ * - cuerpo: min-h-0 flex-1 + scroll propio (día) o agenda con min-height dvh
+ *
+ * Responsive unificado con `isCompact` (no `tablet:` para cambiar de
+ * árbol): phone landscape no salta a grilla de escritorio.
+ */
 export function ActivityLogPageContent({
   department = "PRODUCCION",
 }: Props = {}) {
+  const { isCompact } = useResponsive()
+
   const [date, setDate] = useState<Date>(new Date())
   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
@@ -86,9 +98,6 @@ export function ActivityLogPageContent({
 
   const { deleteLog } = useDeleteActivityLog(departmentQuery)
   const { moveLog } = useMoveActivityLog(departmentQuery)
-  // Solo necesita el/los tipo(s) de las actividades que efectivamente
-  // se van a duplicar — se toman al vuelo de los logs ya cargados
-  // (ver handleMoveLog), no hace falta la lista completa de tipos acá.
   const { createLog } = useCreateActivityLog(
     useMemo(() => logs.map(l => l.activityType), [logs]),
     departmentQuery,
@@ -132,7 +141,11 @@ export function ActivityLogPageContent({
     setPickerOpen(true)
   }
 
-  function handleMoveLog(id: string, shift: ShiftSlotDefinition["shift"], isDuplicate: boolean) {
+  function handleMoveLog(
+    id: string,
+    shift: ShiftSlotDefinition["shift"],
+    isDuplicate: boolean,
+  ) {
     if (!canCreate) return
     if (id.startsWith("optimistic-")) return
 
@@ -154,7 +167,6 @@ export function ActivityLogPageContent({
     moveLog({ id, shift }).catch(() => {})
   }
 
-  /** Duplicar con un click: misma franja, sin drag. */
   function handleDuplicateLog(log: ActivityLog) {
     if (!log.shift) return
     handleMoveLog(log.id, log.shift, true)
@@ -219,10 +231,22 @@ export function ActivityLogPageContent({
   const entryCount = isRangeView ? rangeLogs.length : logs.length
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden transition-all duration-200">
-      <div className="shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
-        <div className="flex flex-col gap-3 tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center">
-          <div className="flex w-full items-center justify-center gap-2 tablet:justify-self-start tablet:justify-start">
+    <div className="relative flex h-full min-h-0 w-full flex-col gap-3">
+      {/* Toolbar — compact: columna; laptop+: grid 3 cols (como tasks toolbar) */}
+      <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl desktop:p-4">
+        <div
+          className={cn(
+            "flex flex-col gap-3",
+            !isCompact &&
+              "desktop:grid desktop:grid-cols-[1fr_auto_1fr] desktop:items-center",
+          )}
+        >
+          <div
+            className={cn(
+              "flex w-full items-center justify-center gap-2",
+              !isCompact && "desktop:justify-self-start desktop:justify-start",
+            )}
+          >
             <BitacoraViewToggle />
 
             <button
@@ -240,7 +264,12 @@ export function ActivityLogPageContent({
             </button>
           </div>
 
-          <div className="flex w-full justify-center tablet:justify-self-center">
+          <div
+            className={cn(
+              "flex w-full justify-center",
+              !isCompact && "desktop:justify-self-center",
+            )}
+          >
             <DateNavigator
               value={date}
               onChange={handleDateChange}
@@ -251,24 +280,28 @@ export function ActivityLogPageContent({
             />
           </div>
 
-          <div className="flex w-full justify-center tablet:w-auto tablet:justify-self-end">
+          <div
+            className={cn(
+              "flex w-full justify-center",
+              !isCompact && "desktop:w-auto desktop:justify-self-end",
+            )}
+          >
             <div className="flex items-center gap-2">
               <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
                 {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
               </div>
 
-              {departmentQuery === "PRODUCCION" && (
-                <div className="hidden tablet:block">
-                  <TaskAreaPanelTrigger />
-                </div>
+              {departmentQuery === "PRODUCCION" && !isCompact && (
+                <TaskAreaPanelTrigger />
               )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Cuerpo — mismo patrón que TaskPageContent (scroll en el hijo) */}
       {isAgenda && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <AgendaWeekView
             anchorDate={date}
             logs={rangeLogs}
@@ -280,7 +313,7 @@ export function ActivityLogPageContent({
       )}
 
       {isMonth && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <AgendaMonthView
             anchorDate={date}
             logs={rangeLogs}
@@ -291,54 +324,52 @@ export function ActivityLogPageContent({
       )}
 
       {viewMode === "day" && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
-            <div className="flex w-full flex-col gap-3 pb-4">
-              {loading ? (
-                <ActivityLogSkeleton />
-              ) : (
-                <>
-                  {departmentQuery === "PRODUCCION" &&
-                    department !== "REGISTROS" && (
-                      <AutoActivitySection
-                        logs={logs.filter(log => log.source === "AUTO")}
-                      />
-                    )}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+          <div className="flex w-full flex-col gap-3 pb-4">
+            {loading ? (
+              <ActivityLogSkeleton />
+            ) : (
+              <>
+                {departmentQuery === "PRODUCCION" &&
+                  department !== "REGISTROS" && (
+                    <AutoActivitySection
+                      logs={logs.filter(log => log.source === "AUTO")}
+                    />
+                  )}
 
-                  {SHIFT_GROUPS.map(group => {
-                    const logsBySlot: Record<string, typeof logs> = {}
+                {SHIFT_GROUPS.map(group => {
+                  const logsBySlot: Record<string, typeof logs> = {}
 
-                    for (const slot of group.slots) {
-                      logsBySlot[slot.shift] = logs.filter(
-                        log => log.shift === slot.shift,
-                      )
-                    }
-
-                    return (
-                      <ShiftGroupSection
-                        key={group.key}
-                        group={group}
-                        logsBySlot={logsBySlot}
-                        onLogClick={handleOpenPicker}
-                        onDeleteLog={handleDeleteLog}
-                        beginDrag={beginDrag}
-                        registerSlot={registerSlot}
-                        draggingLogId={draggingLogId}
-                        hoverShift={hoverShift}
-                        deletingLogId={pendingDelete?.id ?? null}
-                        canCreate={canCreate}
-                        canDelete={canDelete}
-                        slotState={getState}
-                        isLogBusy={isLogBusy}
-                        canDuplicateLog={canDuplicateLog}
-                        onEditLog={handleEditLog}
-                      onDuplicateLog={handleDuplicateLog}
-                      />
+                  for (const slot of group.slots) {
+                    logsBySlot[slot.shift] = logs.filter(
+                      log => log.shift === slot.shift,
                     )
-                  })}
-                </>
-              )}
-            </div>
+                  }
+
+                  return (
+                    <ShiftGroupSection
+                      key={group.key}
+                      group={group}
+                      logsBySlot={logsBySlot}
+                      onLogClick={handleOpenPicker}
+                      onDeleteLog={handleDeleteLog}
+                      beginDrag={beginDrag}
+                      registerSlot={registerSlot}
+                      draggingLogId={draggingLogId}
+                      hoverShift={hoverShift}
+                      deletingLogId={pendingDelete?.id ?? null}
+                      canCreate={canCreate}
+                      canDelete={canDelete}
+                      slotState={getState}
+                      isLogBusy={isLogBusy}
+                      canDuplicateLog={canDuplicateLog}
+                      onEditLog={handleEditLog}
+                      onDuplicateLog={handleDuplicateLog}
+                    />
+                  )
+                })}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -380,7 +411,6 @@ export function ActivityLogPageContent({
           if (!open) setEditingLog(null)
         }}
       />
-
     </div>
   )
 }

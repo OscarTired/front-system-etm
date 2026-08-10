@@ -5,7 +5,10 @@ import type { ActivityLog } from "../../types/activity-log.types"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {
-  log: ActivityLog
+  /** Obligatorio salvo en estado loading. */
+  log?: ActivityLog
+  /** Mismo layout del chip; solo pulse + slots vacíos. */
+  loading?: boolean
   compact?: boolean
   onClick?: () => void
   className?: string
@@ -20,17 +23,61 @@ function formatTime(iso: string): string {
 
 export function ActivityLogChip({
   log,
+  loading = false,
   compact = false,
   onClick,
   className,
 }: Props) {
-  const Icon = getActivityIcon(log.activityType?.icon)
-  const color = log.activityType?.color ?? "#22d3ee"
-  const label = log.activityType?.label ?? "Actividad"
-  const subtitle = log.project
+  const Icon = log ? getActivityIcon(log.activityType?.icon) : null
+  const color = log?.activityType?.color ?? "#22d3ee"
+  const label = log?.activityType?.label ?? "Actividad"
+  const subtitle = log?.project
     ? log.project.name
-    : log.note?.trim() || null
+    : log?.note?.trim() || null
 
+  const shellClass = cn(
+    "group relative flex w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
+    "border-0 outline-none ring-0 shadow-none",
+    "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+    !loading && "transition-all duration-200 hover:brightness-110 active:scale-[0.99]",
+    loading && "pointer-events-none animate-pulse",
+    !compact && "md:flex-col md:items-stretch md:gap-0",
+    className,
+  )
+
+  // ——— Loading: mismo shell, mismos slots, sin datos ———
+  if (loading || !log) {
+    return (
+      <div
+        className={shellClass}
+        style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+        aria-hidden
+      >
+        <div
+          className={cn(
+            "flex w-full min-w-0 items-center gap-2",
+            !compact && "md:justify-between",
+          )}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="size-7 shrink-0 rounded-lg bg-white/10 md:size-6" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="h-3 w-2/5 rounded bg-white/12" />
+              <div className="h-2.5 w-3/5 rounded bg-white/8 md:hidden" />
+            </div>
+          </div>
+          <div className="h-2.5 w-8 shrink-0 rounded bg-white/8 md:hidden" />
+        </div>
+        {!compact && (
+          <div className="mt-2 hidden w-full border-t border-white/5 pt-1.5 md:block">
+            <div className="h-2.5 w-12 rounded bg-white/8" />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ——— Datos reales ———
   return (
     <button
       type="button"
@@ -40,15 +87,7 @@ export function ActivityLogChip({
         backgroundColor: `${color}14`,
         color,
       }}
-      className={cn(
-        "group relative flex w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
-        "border-0 outline-none ring-0 shadow-none",
-        "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-        "transition-all duration-200 hover:brightness-110 active:scale-[0.99]",
-        // Desktop no-compact: columna con detalle debajo
-        !compact && "md:flex-col md:items-stretch md:gap-0",
-        className,
-      )}
+      className={shellClass}
     >
       <div
         className={cn(
@@ -64,7 +103,9 @@ export function ActivityLogChip({
               boxShadow: `inset 0 0 0 1px ${color}35`,
             }}
           >
-            <Icon size={15} strokeWidth={2.5} className="block shrink-0" />
+            {Icon && (
+              <Icon size={15} strokeWidth={2.5} className="block shrink-0" />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -83,7 +124,6 @@ export function ActivityLogChip({
                 </span>
               )}
             </div>
-            {/* Móvil: subtítulo bajo el nombre */}
             {subtitle && (
               <p className="mt-0.5 truncate text-[10px] font-medium text-neutral-400 md:hidden">
                 {subtitle}
@@ -97,7 +137,6 @@ export function ActivityLogChip({
         </span>
       </div>
 
-      {/* Desktop: detalle debajo si no es compact */}
       {!compact && (
         <div className="mt-2 hidden w-full flex-col gap-1 border-t border-white/5 pt-1.5 md:flex">
           <span className="text-[10px] tabular-nums text-neutral-500">

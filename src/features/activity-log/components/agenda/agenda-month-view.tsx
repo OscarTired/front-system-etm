@@ -10,7 +10,7 @@ import { getActivityIcon } from "../../constants/activity-icons"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { getMonthGrid } from "../../utils/week-range"
 
-/** Placeholder de contenido — sin layout propio. */
+/** Placeholder de contenido — formato agenda (Pulse). */
 function Pulse({ className }: { className?: string }) {
   return (
     <span
@@ -112,13 +112,17 @@ function MobileDayDots({ logs }: { logs: ActivityLog[] }) {
   )
 }
 
+/**
+ * Usa `isCompact` (mobile + tablet, incl. phone landscape), no solo
+ * `isMobile`. Así al rotar no salta de dots → cards de escritorio.
+ */
 export function AgendaMonthView({
   anchorDate,
   logs,
   loading,
   onSelectDay,
 }: Props) {
-  const { isMobile } = useResponsive()
+  const { isCompact } = useResponsive()
   const cells = useMemo(() => getMonthGrid(anchorDate), [anchorDate])
   const byDay = useMemo(() => groupLogsByDay(logs), [logs])
 
@@ -128,9 +132,10 @@ export function AgendaMonthView({
   const viewYear = anchorDate.getFullYear()
 
   return (
-    // h-full + min-h-0: el padre (flex-1) define el alto; este lo llena
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
-      {/* Cabecera fija */}
+    <div
+      className="flex w-full flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl"
+      style={{ minHeight: "calc(100dvh - 14rem)" }}
+    >
       <div className="grid shrink-0 grid-cols-7 border-b border-white/5">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
@@ -147,10 +152,6 @@ export function AgendaMonthView({
         ))}
       </div>
 
-      {/*
-        Cuerpo: flex-1 + min-h-0 para tomar el alto restante.
-        grid-rows-6 con 1fr implícito → cada semana se reparte el espacio.
-      */}
       <div
         className="grid min-h-0 flex-1"
         style={{ gridTemplateRows: "repeat(6, minmax(4.5rem, 1fr))" }}
@@ -181,7 +182,7 @@ export function AgendaMonthView({
                   onClick={() => onSelectDay?.(day)}
                   className={cn(
                     "relative flex min-h-0 flex-col overflow-hidden border-r border-white/5 text-left transition-colors last:border-r-0",
-                    isMobile
+                    isCompact
                       ? "items-center justify-start gap-0.5 p-1"
                       : "items-stretch gap-1 p-1.5",
                     isWeekend && "bg-white/2",
@@ -189,7 +190,6 @@ export function AgendaMonthView({
                     isToday && "bg-amber-500/10",
                     !isFuture && inMonth && "hover:bg-white/6",
                     isFuture && "cursor-default",
-                    // Fuera de mes / futuro: solo atenuar el texto, no toda la celda
                   )}
                 >
                   {loading ? (
@@ -197,22 +197,24 @@ export function AgendaMonthView({
                       <Pulse
                         className={cn(
                           "shrink-0 rounded-full",
-                          isMobile ? "size-7" : "size-6",
+                          isCompact ? "size-7" : "size-6",
                         )}
                       />
-                      {!isMobile && (
+                      {!isCompact && (
                         <div className="flex min-h-0 flex-1 flex-col">
                           <Pulse className="h-9 w-full rounded-md" />
                         </div>
                       )}
-                      {isMobile && <Pulse className="mt-0.5 h-1.5 w-6 rounded-full" />}
+                      {isCompact && (
+                        <Pulse className="mt-0.5 h-1.5 w-6 rounded-full" />
+                      )}
                     </>
                   ) : (
                     <>
                       <span
                         className={cn(
                           "flex shrink-0 items-center justify-center rounded-full font-semibold tabular-nums",
-                          isMobile ? "size-7 text-xs" : "size-6 text-[11px]",
+                          isCompact ? "size-7 text-xs" : "size-6 text-[11px]",
                           isToday
                             ? "bg-amber-400 text-black"
                             : isAnchor
@@ -229,9 +231,11 @@ export function AgendaMonthView({
                         {day.getDate()}
                       </span>
 
-                      {isMobile && hasLogs && <MobileDayDots logs={dayLogs} />}
+                      {isCompact && hasLogs && (
+                        <MobileDayDots logs={dayLogs} />
+                      )}
 
-                      {!isMobile && hasLogs && (
+                      {!isCompact && hasLogs && (
                         <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden scrollbar-none">
                           {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
                             <MonthEventCard key={log.id} log={log} />
