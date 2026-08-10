@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { cn } from "@/shared/utils/utils"
+
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { IconAction } from "@/shared/ui/actions/icon-action"
@@ -14,9 +16,10 @@ import type { Task } from "../../types/task.types"
 
 type TaskRowActionsProps = {
   task: Task
+  className?: string
 }
 
-export function TaskRowActions({ task }: TaskRowActionsProps) {
+export function TaskRowActions({ task, className }: TaskRowActionsProps) {
   const { remove } = useTasks()
   const { has } = usePermissions()
 
@@ -41,7 +44,7 @@ export function TaskRowActions({ task }: TaskRowActionsProps) {
 
   return (
     <>
-      <div className="ml-3 flex items-center gap-6">
+      <div className={cn("flex items-center gap-1", className)}>
         <IconAction
           icon={Pencil}
           disabled={!canUpdate}

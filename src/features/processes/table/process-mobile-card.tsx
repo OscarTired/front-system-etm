@@ -63,17 +63,15 @@ export function ProcessMobileCard({
   const priority = processAccess.priority(processTask)
   const operator = processAccess.operator(processTask)
 
-  // Sin operario: al expandir, abrir campos de una (UserSelect visible).
-  // Con operario: se mantiene colapsado hasta que el usuario abra.
+  // Al expandir: campos de una (móvil y desktop), igual que tasks/projects.
+  // Sin operario el UserSelect queda a la vista de inmediato.
   useEffect(() => {
     if (!expanded) {
       setShowFields(false)
       return
     }
-    if (!operator) {
-      setShowFields(true)
-    }
-  }, [expanded, operator])
+    setShowFields(true)
+  }, [expanded])
   const statusLabel = workflowAccess.statusLabel(processTask)
 
   const stepId = workflowAccess.stepId(processTask)
@@ -194,8 +192,8 @@ export function ProcessMobileCard({
             </div>
           </div>
 
-          {/* Fecha: solo desktop / tablet */}
-          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
+          {/* Fecha entrega — visible en desktop en el row */}
+          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(task.deliveryDate)}
           </span>
         </div>

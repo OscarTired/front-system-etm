@@ -126,31 +126,82 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
   }, [])
 
+  // Distancia mínima (px) antes de activar el drag. Click / tap sin
+  // mover el puntero = no overlay, no captura, gesto normal.
+  const DRAG_THRESHOLD_PX = 8
+
   const beginDrag = useCallback((e: ReactPointerEvent<HTMLElement>, log: ActivityLog, isDuplicate = false) => {
 
     // Solo botón principal — evita que un click derecho o el botón
     // central disparen un drag por accidente.
     if (e.button !== 0) return
 
-    // Evita que el navegador interprete el toque como scroll nativo
-    // antes de que llegue el primer pointermove.
-    e.preventDefault()
+    // Si ya hay un drag activo, no apilar gestos.
+    if (draggingLogRef.current) return
 
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId)
-    } catch {
-      // Fallback defensivo si el navegador rechaza el capture.
+    const startX = e.clientX
+    const startY = e.clientY
+    const pointerId = e.pointerId
+    const target = e.currentTarget
+    let activated = false
+
+    function activate(clientX: number, clientY: number) {
+      if (activated) return
+      activated = true
+
+      // A partir de aquí sí bloqueamos el gesto nativo y capturamos.
+      try {
+        target.setPointerCapture(pointerId)
+      } catch {
+        // Fallback defensivo si el navegador rechaza el capture.
+      }
+
+      // Duplicar SÍ acepta soltar en la misma franja de origen (crea
+      // una segunda copia ahí) — mover a la misma franja sigue sin
+      // tener sentido.
+      updateCachedRects(isDuplicate ? null : log.shift)
+      setDraggingLog(log)
+      setPointerPos({ x: clientX, y: clientY })
+      setHoverShift(null)
+      isDuplicateModeRef.current = isDuplicate
+      setIsDuplicateMode(isDuplicate)
     }
 
-    // Duplicar SÍ acepta soltar en la misma franja de origen (crea
-    // una segunda copia ahí) — mover a la misma franja sigue sin
-    // tener sentido.
-    updateCachedRects(isDuplicate ? null : log.shift)
-    setDraggingLog(log)
-    setPointerPos({ x: e.clientX, y: e.clientY })
-    setHoverShift(null)
-    isDuplicateModeRef.current = isDuplicate
-    setIsDuplicateMode(isDuplicate)
+    function onMove(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return
+      if (activated) return
+
+      const dx = ev.clientX - startX
+      const dy = ev.clientY - startY
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return
+
+      // Umbral cruzado: el drag empieza aquí, no en el pointerdown.
+      ev.preventDefault()
+      activate(ev.clientX, ev.clientY)
+    }
+
+    function onUp(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return
+      cleanup()
+      // Sin activate = click/tap puro; no hay nada que cancelar.
+    }
+
+    function onCancel(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return
+      cleanup()
+    }
+
+    function cleanup() {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      window.removeEventListener("pointercancel", onCancel)
+    }
+
+    // Listeners temporales solo mientras esperamos el umbral.
+    // Una vez activated, el efecto de draggingLog toma el control.
+    window.addEventListener("pointermove", onMove, { passive: false })
+    window.addEventListener("pointerup", onUp)
+    window.addEventListener("pointercancel", onCancel)
 
   }, [updateCachedRects])
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
-import { ChevronDown, MoreHorizontal } from "lucide-react"
+import { ChevronDown, Plus } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
@@ -27,6 +27,9 @@ import { ProjectRowActions } from "../components/actions/project-row-actions"
 import { ProjectExpandedRow } from "../components/expanded-row/project-expanded-row"
 import { IconAction } from "@/shared/ui/actions/icon-action"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
+import { TaskDialog } from "@/features/tasks/components/dialog/task-dialog"
+import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
 /** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
 function formatCodeBadge(code: string) {
@@ -64,8 +67,11 @@ export function ProjectMobileCard({
 }: Props) {
   const [showFields, setShowFields] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
+  const [newTaskOpen, setNewTaskOpen] = useState(false)
 
   const { isMobile } = useResponsive()
+  const { has } = usePermissions()
+  const canCreateTask = has(PermissionCode.TASK_CREATE)
   const searchParams = useSearchParams()
   const isTarget = searchParams.get("projectId") === project.id
 
@@ -75,11 +81,9 @@ export function ProjectMobileCard({
       setShowPipeline(false)
       return
     }
-    // Desktop: al expandir el row se abre el detalle de una (sin ⋮)
-    if (!isMobile) {
-      setShowPipeline(true)
-    }
-  }, [expanded, isMobile])
+    // Móvil y desktop: al expandir el row se abre el detalle de una
+    setShowPipeline(true)
+  }, [expanded])
 
   useEffect(() => {
     if (expanded && isTarget) {
@@ -89,6 +93,8 @@ export function ProjectMobileCard({
   }, [expanded, isTarget])
 
   const isDimmed = isProjectCompleted(project)
+  // Móvil expandido: acciones en el row; burbuja de conteo cede el sitio
+  const actionsOnRow = isMobile && expanded
 
   return (
     <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
@@ -98,9 +104,8 @@ export function ProjectMobileCard({
         <button
           type="button"
           onClick={onToggle}
-          className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-2 text-left"
+          className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-1 text-left"
         >
-          {/* Código YY-NNN */}
           <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
@@ -116,7 +121,6 @@ export function ProjectMobileCard({
               {project.name}
             </p>
 
-            {/* Datos compactos en la Fila principal (CON NOMBRE del PM) */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -135,7 +139,6 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Etapa */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -154,7 +157,6 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* Estado */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
@@ -173,29 +175,59 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* PM: Nombre visible también en móvil dentro del row principal */}
               <span className="min-w-0 truncate text-neutral-400">
                 {project.pm.name}
               </span>
             </div>
           </div>
 
-          {/* Solo el número de conteo de tareas en el row principal */}
-          <span
-            title={
-              (project.taskCount ?? 0) === 1
-                ? "1 tarea"
-                : `${project.taskCount ?? 0} tareas`
-            }
-            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
-          >
-            {project.taskCount ?? 0}
+          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
+            {formatDate(project.deliveryDate)}
           </span>
 
+          {/* Burbuja de tareas: solo colapsado (móvil) o siempre en desktop del row */}
+          {!actionsOnRow && (
+            <span
+              title={
+                (project.taskCount ?? 0) === 1
+                  ? "1 tarea"
+                  : `${project.taskCount ?? 0} tareas`
+              }
+              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
+            >
+              {project.taskCount ?? 0}
+            </span>
+          )}
+        </button>
+
+        {/* Móvil expandido: lápiz / borrar + nueva tarea en el row */}
+        {actionsOnRow && (
+          <div
+            className="flex shrink-0 items-center gap-0.5 pr-0.5"
+            onClick={e => e.stopPropagation()}
+          >
+            <ProjectRowActions project={project} className="gap-0.5" />
+            <IconAction
+              icon={Plus}
+              disabled={!canCreateTask}
+              onClick={() => {
+                if (!canCreateTask) return
+                setNewTaskOpen(true)
+              }}
+            />
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className="shrink-0 p-2"
+          aria-label={expanded ? "Colapsar" : "Expandir"}
+        >
           <ChevronDown
             size={16}
             className={cn(
-              "shrink-0 text-neutral-500 transition-transform duration-200",
+              "text-neutral-500 transition-transform duration-200",
               expanded && "rotate-180",
             )}
           />
@@ -228,7 +260,6 @@ export function ProjectMobileCard({
             onClick={() => setShowFields(true)}
             className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
           >
-            {/* Datos colapsados ADENTRO (CON ICONO/INICIAL DE PM en lugar de nombre) */}
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
               <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
                 {String(project.sequence).padStart(3, "0")}
@@ -280,7 +311,6 @@ export function ProjectMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              {/* PM solo icono/inicial en móvil adentro del panel colapsado */}
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   {project.pm.icon ? (
@@ -301,7 +331,6 @@ export function ProjectMobileCard({
               </span>
             </span>
 
-            {/* Fecha en el panel colapsado (opcional si la necesitas visible al estar expandido) */}
             <span className="flex shrink-0 items-center gap-1.5 md:hidden">
               <span className="text-xs text-neutral-500">
                 {formatDate(project.deliveryDate)}
@@ -315,24 +344,26 @@ export function ProjectMobileCard({
           </button>
         )}
 
-        <div className="flex items-center justify-start gap-1">
-          {/* Móvil: ⋮ abre el detalle. Desktop: se abre solo al expandir el row. */}
-          {isMobile && (
-            <IconAction
-              icon={MoreHorizontal}
-              onClick={() =>
-                setShowPipeline(current => !current)
-              }
-            />
-          )}
-
-          <ProjectRowActions project={project} />
-        </div>
+        {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
+        {!isMobile && (
+          <div className="flex items-center justify-start gap-1">
+            <ProjectRowActions project={project} />
+          </div>
+        )}
 
         <CollapsibleHeightSection open={showPipeline}>
           <ProjectExpandedRow project={project} tasks={tasks} />
         </CollapsibleHeightSection>
       </CollapsibleHeightSection>
+
+      {newTaskOpen && (
+        <TaskDialog
+          open
+          projectId={project.id}
+          promptOpenAfterCreate
+          onClose={() => setNewTaskOpen(false)}
+        />
+      )}
     </div>
   )
 }

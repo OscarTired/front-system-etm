@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ChevronDown, MoreHorizontal } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
@@ -21,7 +21,6 @@ import { taskAccess } from "../access/task-access"
 import { TaskPriorityCell } from "../components/cells/task-priority-cell"
 import { TaskRowActions } from "../components/actions/task-row-actions"
 import { TaskExpandedRow } from "../components/expanded-row/task-expanded-row"
-import { IconAction } from "@/shared/ui/actions/icon-action"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
 
 /** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
@@ -70,11 +69,9 @@ export function TaskMobileCard({
       setShowPipeline(false)
       return
     }
-    // Desktop: al expandir el row se abre el detalle de una (sin ⋮)
-    if (!isMobile) {
-      setShowPipeline(true)
-    }
-  }, [expanded, isMobile])
+    // Móvil y desktop: al expandir el row se abre el detalle de una
+    setShowPipeline(true)
+  }, [expanded])
 
   useEffect(() => {
     if (expanded && isTarget) {
@@ -182,19 +179,36 @@ export function TaskMobileCard({
             </div>
           </div>
 
-          {/* Fecha: solo desktop / tablet */}
-          <span className="hidden shrink-0 text-xs text-neutral-500 md:inline">
+          {/* Fecha entrega — visible en desktop en el row */}
+          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(task.deliveryDate)}
           </span>
+        </div>
 
+        {isMobile && expanded && (
+          <div
+            className="flex shrink-0 items-center gap-0.5 pr-0.5"
+            onClick={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <TaskRowActions task={task} className="gap-0.5" />
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className="shrink-0 p-2"
+          aria-label={expanded ? "Colapsar" : "Expandir"}
+        >
           <ChevronDown
             size={16}
             className={cn(
-              "shrink-0 text-neutral-500 transition-transform duration-200",
+              "text-neutral-500 transition-transform duration-200",
               expanded && "rotate-180",
             )}
           />
-        </div>
+        </button>
       </div>
 
       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
@@ -322,18 +336,12 @@ export function TaskMobileCard({
           </button>
         )}
 
-        <div className="flex items-center justify-start gap-1">
-          {/* Móvil: ⋮ abre el detalle. Desktop: se abre solo al expandir el row. */}
-          {isMobile && (
-            <IconAction
-              icon={MoreHorizontal}
-              onClick={() =>
-                setShowPipeline(current => !current)
-              }
-            />
-          )}
-          <TaskRowActions task={task} />
-        </div>
+        {/* Desktop: acciones en el panel. Móvil: van en el row al expandir. */}
+        {!isMobile && (
+          <div className="flex items-center justify-start gap-1">
+            <TaskRowActions task={task} />
+          </div>
+        )}
 
         <CollapsibleHeightSection open={showPipeline}>
           <TaskExpandedRow task={task} />

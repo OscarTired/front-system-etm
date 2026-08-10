@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { cn } from "@/shared/utils/utils"
+
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { IconAction } from "@/shared/ui/actions/icon-action"
@@ -15,11 +17,12 @@ import type { Project } from "../../types/project.types"
 
 type ProjectRowActionsProps = {
   project: Project
+  className?: string
 }
 
 const ACTIVE_STATUSES = ["PROGRESS", "PAUSED"] as const
 
-export function ProjectRowActions({ project }: ProjectRowActionsProps) {
+export function ProjectRowActions({ project, className }: ProjectRowActionsProps) {
   const { remove } = useProjects()
   const { has } = usePermissions()
   const { tasks } = useTasks()
@@ -58,7 +61,7 @@ export function ProjectRowActions({ project }: ProjectRowActionsProps) {
 
   return (
     <>
-      <div className="ml-3 flex items-center gap-6">
+      <div className={cn("flex items-center gap-1", className)}>
         <IconAction
           icon={Pencil}
           disabled={!canUpdate}

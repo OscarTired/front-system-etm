@@ -142,20 +142,6 @@ export function ShiftGroupSection({
                   )}
                 </div>
 
-                {/* Botón "+" rápido en la cabecera si la franja está activa y ya contiene registros */}
-                {!loading && state !== "upcoming" && logs.length > 0 && (
-                  <button
-                    type="button"
-                    disabled={!canCreate}
-                    onClick={() => onLogClick(slot)}
-                    title="Agregar otra actividad"
-                    aria-label="Agregar otra actividad"
-                    className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Plus size={14} />
-                    <span>Agregar</span>
-                  </button>
-                )}
               </div>
 
               {/* Lista de registros */}
@@ -199,21 +185,44 @@ export function ShiftGroupSection({
                   return (
                     <div
                       key={log.id}
-                      onPointerDown={(e) => {
-                        // Las automáticas nunca se arrastran.
-                        // Optimistic / mutation in flight: tampoco.
-                        if (!actionsEnabled || !canCreate) return
-                        if ((e.target as HTMLElement).closest("[data-activity-drag-ignore]")) return
-                        // Ctrl/Cmd = duplicar (mismo path que icono Copy).
-                        beginDrag(e, log, e.ctrlKey || e.metaKey)
-                      }}
-                      className={cn(
-                        "group flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
-                        actionsEnabled && canCreate && "cursor-grab touch-none active:cursor-grabbing",
-                        (isDraggingThis || busy) && "opacity-40",
-                        busy && "pointer-events-none",
-                      )}
+                      className="group/log flex items-stretch gap-1.5"
                     >
+                      {/* + a la izquierda: misma altura que la card, solo en hover (desktop) */}
+                      {!loading && state !== "upcoming" && canCreate && (
+                        <button
+                          type="button"
+                          data-activity-drag-ignore
+                          onClick={() => onLogClick(slot)}
+                          title="Agregar debajo"
+                          aria-label="Agregar otra actividad debajo"
+                          className={cn(
+                            "flex w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl",
+                            "bg-white/5 text-neutral-400 transition-all duration-150",
+                            "opacity-0 group-hover/log:w-9 group-hover/log:opacity-100",
+                            "hover:bg-white/10 hover:text-white",
+                            "focus-visible:w-9 focus-visible:opacity-100",
+                          )}
+                        >
+                          <Plus size={16} strokeWidth={2.25} />
+                        </button>
+                      )}
+
+                      <div
+                        onPointerDown={(e) => {
+                          // Las automáticas nunca se arrastran.
+                          // Optimistic / mutation in flight: tampoco.
+                          if (!actionsEnabled || !canCreate) return
+                          if ((e.target as HTMLElement).closest("[data-activity-drag-ignore]")) return
+                          // Ctrl/Cmd = duplicar (mismo path que icono Copy).
+                          beginDrag(e, log, e.ctrlKey || e.metaKey)
+                        }}
+                        className={cn(
+                          "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
+                          actionsEnabled && canCreate && "cursor-grab active:cursor-grabbing",
+                          (isDraggingThis || busy) && "opacity-40",
+                          busy && "pointer-events-none",
+                        )}
+                      >
                       <div
                         className="flex size-8 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor: `${log.activityType.color}22`, color: log.activityType.color }}
@@ -425,6 +434,7 @@ export function ShiftGroupSection({
                           </div>
                         )}
                       </div>
+                    </div>
                     </div>
                   )
                 })}

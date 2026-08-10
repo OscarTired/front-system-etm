@@ -127,11 +127,7 @@ export function ProjectTasksList({
 
       <div className="flex flex-col gap-2">
 
-        <ProjectTaskPlaceholder
-          onClick={() =>
-            setOpenTaskDialog(true)
-          }
-        />
+        {/* Nueva tarea: el + vive en el row del project (mobile). */}
 
         {completedTasks.length > 0 && (
 
