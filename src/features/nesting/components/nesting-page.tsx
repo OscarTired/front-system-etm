@@ -73,7 +73,32 @@ function Pulse({ className }: { className?: string }) {
   )
 }
 
-/** Pulse en el mismo hueco del canvas mientras !sessionReady. */
+/** Panel izquierdo en boot: mismas proporciones que NestingPanel. */
+function NestingPanelLoading() {
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-3" aria-busy>
+      <div className="flex gap-2">
+        <Pulse className="h-8 flex-1 rounded-lg" />
+        <Pulse className="h-8 flex-1 rounded-lg bg-white/6" />
+        <Pulse className="h-8 flex-1 rounded-lg bg-white/6" />
+      </div>
+      <Pulse className="h-9 w-full rounded-lg bg-white/6" />
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        {[1, 0.9, 0.8, 0.7, 0.6, 0.5].map((op, i) => (
+          <span
+            key={i}
+            className="block h-12 w-full animate-pulse rounded-xl bg-white/10"
+            style={{ opacity: op }}
+            aria-hidden
+          />
+        ))}
+      </div>
+      <Pulse className="h-10 w-full rounded-md bg-white/8" />
+    </div>
+  )
+}
+
+/** Canvas en boot: plancha fantasma en el mismo slot. */
 function NestingCanvasLoading() {
   return (
     <div
@@ -711,11 +736,13 @@ export function NestingPage() {
       {!isCompact && (
         <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
-            {panel}
+            {project.sessionReady ? panel : <NestingPanelLoading />}
           </aside>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
             <div className="w-full shrink-0">
-              {project.sheetGroups.length > 0 ? (
+              {!project.sessionReady ? (
+                <Pulse className="h-9 w-full max-w-md rounded-xl bg-white/6" />
+              ) : project.sheetGroups.length > 0 ? (
                 <SheetTabs
                   items={sheetTabItems}
                   activeIndex={activeGroupIndex}
@@ -791,7 +818,9 @@ export function NestingPage() {
         <div className="absolute inset-0">
           <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1">
             <div className="min-w-0 flex-1">
-              {project.sheetGroups.length > 0 ? (
+              {!project.sessionReady ? (
+                <Pulse className="h-9 w-full rounded-xl bg-white/6" />
+              ) : project.sheetGroups.length > 0 ? (
                 <SheetTabs
                   items={sheetTabItems}
                   activeIndex={activeGroupIndex}

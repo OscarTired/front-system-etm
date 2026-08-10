@@ -1,13 +1,7 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
-
-const NestingWorkspace = dynamic(
-  () =>
-    import("@/features/nesting/components/nesting-page").then((m) => m.NestingPage),
-  { ssr: false },
-)
+import { NestingPage } from "@/features/nesting/components/nesting-page"
 
 export default function NestingRoute() {
   usePageTitle("Nesting")
@@ -28,7 +22,7 @@ export default function NestingRoute() {
       </header>
 
       <section className="flex min-h-0 w-full flex-1 flex-col">
-        <NestingWorkspace />
+        <NestingPage />
       </section>
     </main>
   )
