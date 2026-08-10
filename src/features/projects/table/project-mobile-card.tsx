@@ -180,21 +180,16 @@ export function ProjectMobileCard({
             </div>
           </div>
 
-          {/* Fecha + conteo de tareas (taskCount del API) */}
-          <span className="hidden shrink-0 items-center gap-1.5 md:inline-flex">
-            <span className="text-xs text-neutral-500">
-              {formatDate(project.deliveryDate)}
-            </span>
-            <span
-              title={
-                (project.taskCount ?? 0) === 1
-                  ? "1 tarea"
-                  : `${project.taskCount ?? 0} tareas`
-              }
-              className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-cyan-300 ring-1 ring-cyan-500/25"
-            >
-              {project.taskCount ?? 0}
-            </span>
+          {/* Solo el número de conteo de tareas en el row principal */}
+          <span
+            title={
+              (project.taskCount ?? 0) === 1
+                ? "1 tarea"
+                : `${project.taskCount ?? 0} tareas`
+            }
+            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
+          >
+            {project.taskCount ?? 0}
           </span>
 
           <ChevronDown
@@ -306,20 +301,10 @@ export function ProjectMobileCard({
               </span>
             </span>
 
-            {/* Fecha + conteo de tareas (taskCount del API) */}
+            {/* Fecha en el panel colapsado (opcional si la necesitas visible al estar expandido) */}
             <span className="flex shrink-0 items-center gap-1.5 md:hidden">
               <span className="text-xs text-neutral-500">
                 {formatDate(project.deliveryDate)}
-              </span>
-              <span
-                title={
-                  (project.taskCount ?? 0) === 1
-                    ? "1 tarea"
-                    : `${project.taskCount ?? 0} tareas`
-                }
-                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-cyan-300 ring-1 ring-cyan-500/25"
-              >
-                {project.taskCount ?? 0}
               </span>
             </span>
 
