@@ -5,11 +5,7 @@ import { Trash2, Image as ImageIcon, Plus, Copy, Pencil, MoreHorizontal } from "
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
 import { cn } from "@/shared/utils/utils"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover"
+import * as Dialog from "@radix-ui/react-dialog"
 import { CommentImageDialog } from "@/features/comments/components/comment-image-dialog"
 
 import type { ShiftGroupDefinition, ShiftSlotDefinition } from "../constants/shift-definitions"
@@ -69,6 +65,7 @@ export function ShiftGroupSection({
   onDuplicateLog,
 }: Props) {
   const now = referenceNow ?? new Date()
+  const [menuOpenLogId, setMenuOpenLogId] = useState<string | null>(null)
 
   function resolveState(slot: ShiftSlotDefinition): SlotState {
     if (slotState) return slotState(slot.shift)
@@ -309,59 +306,100 @@ export function ShiftGroupSection({
                           </div>
                         </div>
 
-                        {/* Móvil: ⋮ → Popover (en mobile el shared Popover es bottom sheet) */}
+                        {/* Móvil: ⋮ → bottom sheet (Dialog local; cierra al tocar el overlay) */}
                         {isManual && (
                           <div className="tablet:hidden">
-                            <Popover>
-                              <PopoverTrigger asChild>
+                            <Dialog.Root
+                              open={menuOpenLogId === log.id}
+                              onOpenChange={(open) =>
+                                setMenuOpenLogId(open ? log.id : null)
+                              }
+                            >
+                              <Dialog.Trigger asChild>
                                 <button
                                   type="button"
                                   disabled={busy}
                                   aria-label="Más acciones"
+                                  onPointerDown={(e) => e.stopPropagation()}
                                   className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/8 hover:text-neutral-300 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <MoreHorizontal size={16} />
                                 </button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                align="end"
-                                className="w-52 p-1.5"
-                              >
-                                {onEditLog && (
-                                  <button
-                                    type="button"
-                                    disabled={busy}
-                                    onClick={() => onEditLog(log)}
-                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
-                                  >
-                                    <Pencil size={15} className="text-amber-400" />
-                                    Editar
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  disabled={!canCreate || busy || !allowDup || !onDuplicateLog}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (!canCreate || busy || !allowDup || !onDuplicateLog) return
-                                    onDuplicateLog(log)
+                              </Dialog.Trigger>
+                              <Dialog.Portal>
+                                <Dialog.Overlay
+                                  className={cn(
+                                    "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
+                                    "data-[state=open]:animate-in data-[state=closed]:animate-out",
+                                    "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+                                    "data-[state=closed]:duration-200 data-[state=open]:duration-200",
+                                  )}
+                                  onClick={() => setMenuOpenLogId(null)}
+                                  onPointerDown={(e) => {
+                                    e.preventDefault()
+                                    setMenuOpenLogId(null)
                                   }}
-                                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                />
+                                <Dialog.Content
+                                  onOpenAutoFocus={(e) => e.preventDefault()}
+                                  onCloseAutoFocus={(e) => e.preventDefault()}
+                                  onPointerDownOutside={() => setMenuOpenLogId(null)}
+                                  onInteractOutside={() => setMenuOpenLogId(null)}
+                                  className={cn(
+                                    "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col overflow-hidden",
+                                    "rounded-t-3xl bg-popover shadow-2xl outline-none",
+                                    "data-[state=open]:animate-in data-[state=closed]:animate-out",
+                                    "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+                                    "data-[state=closed]:duration-250 data-[state=open]:duration-300",
+                                  )}
                                 >
-                                  <Copy size={15} className="text-sky-400" />
-                                  Duplicar
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={!canDelete || busy || deletingLogId === log.id}
-                                  onClick={() => onDeleteLog(log)}
-                                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-40"
-                                >
-                                  <Trash2 size={15} />
-                                  Eliminar
-                                </button>
-                              </PopoverContent>
-                            </Popover>
+                                  <Dialog.Title className="sr-only">Más acciones</Dialog.Title>
+                                  <div className="flex w-full shrink-0 justify-center pb-1 pt-2.5">
+                                    <div className="h-1.5 w-9 rounded-full bg-white/15" />
+                                  </div>
+                                  <div className="flex flex-col gap-0.5 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                                    {onEditLog && (
+                                      <button
+                                        type="button"
+                                        disabled={busy}
+                                        onClick={() => {
+                                          onEditLog(log)
+                                          setMenuOpenLogId(null)
+                                        }}
+                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                      >
+                                        <Pencil size={15} className="text-amber-400" />
+                                        Editar
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={!canCreate || busy || !allowDup || !onDuplicateLog}
+                                      onClick={() => {
+                                        onDuplicateLog?.(log)
+                                        setMenuOpenLogId(null)
+                                      }}
+                                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                    >
+                                      <Copy size={15} className="text-sky-400" />
+                                      Duplicar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={!canDelete || busy || deletingLogId === log.id}
+                                      onClick={() => {
+                                        onDeleteLog(log)
+                                        setMenuOpenLogId(null)
+                                      }}
+                                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-40"
+                                    >
+                                      <Trash2 size={15} />
+                                      Eliminar
+                                    </button>
+                                  </div>
+                                </Dialog.Content>
+                              </Dialog.Portal>
+                            </Dialog.Root>
                           </div>
                         )}
                       </div>
