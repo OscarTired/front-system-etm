@@ -8,7 +8,6 @@ import { getWeekDays } from "../../utils/week-range"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { ActivityLogChip } from "../actions/activity-log-chip"
-import { AgendaWeekSkeleton } from "./agenda-week-skeleton"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {
@@ -41,10 +40,6 @@ export function AgendaWeekView({
   const todayISO = toISODateString(new Date())
   const anchorISO = toISODateString(anchorDate)
 
-  if (loading) {
-    return <AgendaWeekSkeleton />
-  }
-
   return (
     <>
       {/* ========== DESKTOP / TABLET ========== */}
@@ -54,7 +49,8 @@ export function AgendaWeekView({
             className="grid h-full min-h-full min-w-210 w-full bg-[#0c0c0e]"
             style={{
               gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
-              gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(0, 1fr))`,
+              // minmax(auto,1fr): la fila crece con las cards; no las aplasta
+              gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(5.5rem, 1fr))`,
             }}
           >
             {/* Esquina superior izquierda */}
@@ -166,28 +162,41 @@ export function AgendaWeekView({
                       <div
                         key={`${group.key}-${iso}`}
                         className={cn(
-                          "min-h-0 bg-[#0c0c0e] p-2 transition-colors duration-150 flex flex-col justify-center",
+                          "min-h-0 overflow-y-auto overflow-x-hidden bg-[#0c0c0e] p-2 transition-colors duration-150",
+                          "flex flex-col",
+                          cellLogs.length === 0 ? "justify-center" : "justify-start",
                           !isLast && "border-b border-white/5",
                           isWeekend && "bg-white/2",
-                          isToday && "bg-amber-500/2",
+                          isToday && "bg-amber-500/4",
                         )}
                       >
-                        <div className="flex flex-col justify-center gap-1.5 h-full">
-                          {cellLogs.length === 0 ? (
+                        <div
+                          className={cn(
+                            "flex min-h-0 flex-col gap-1.5",
+                            cellLogs.length === 0 && "h-full justify-center",
+                          )}
+                        >
+                          {loading || cellLogs.length === 0 ? (
                             <div className="flex items-center justify-center">
-                              <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
+                              <span
+                                className={cn(
+                                  "h-1.5 w-1.5 rounded-full bg-white/10",
+                                  loading && "animate-pulse bg-white/20",
+                                )}
+                              />
                             </div>
                           ) : (
                             cellLogs.map(log => (
                               <ActivityLogChip
                                 key={log.id}
                                 log={log}
+                                compact
                                 onClick={
                                   onLogClick
                                     ? () => onLogClick(log)
                                     : undefined
                                 }
-                                className="w-full shrink-0 border-0 shadow-none outline-none ring-0 transition-transform hover:scale-[1.02]"
+                                className="w-full shrink-0 border-0 shadow-none outline-none ring-0"
                               />
                             ))
                           )}

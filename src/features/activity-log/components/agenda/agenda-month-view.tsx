@@ -9,7 +9,16 @@ import { cn } from "@/shared/utils/utils"
 import { getActivityIcon } from "../../constants/activity-icons"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { getMonthGrid } from "../../utils/week-range"
-import { AgendaMonthSkeleton } from "./agenda-month-skeleton"
+
+/** Placeholder de contenido — sin layout propio. */
+function Pulse({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn("block animate-pulse rounded bg-white/10", className)}
+      aria-hidden
+    />
+  )
+}
 
 type Props = {
   anchorDate: Date
@@ -19,7 +28,7 @@ type Props = {
 }
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-const MAX_EVENTS_DESKTOP = 3
+const MAX_EVENTS_DESKTOP = 1
 const MAX_DOTS_MOBILE = 4
 
 function groupLogsByDay(logs: ActivityLog[]): Map<string, ActivityLog[]> {
@@ -55,14 +64,14 @@ function MonthEventCard({ log }: { log: ActivityLog }) {
 
   return (
     <div
-      className="flex min-w-0 items-start gap-1.5 rounded-md px-1.5 py-1"
+      className="flex min-h-9 min-w-0 shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1"
       style={{ backgroundColor: `${color}18` }}
       title={`${formatTime(log.loggedAt)} ${log.activityType.label}${
         subtitle ? ` — ${subtitle}` : ""
       }`}
     >
       <div
-        className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full"
+        className="flex size-4 shrink-0 items-center justify-center rounded-full"
         style={{ backgroundColor: `${color}33`, color }}
       >
         <Icon size={10} />
@@ -73,9 +82,7 @@ function MonthEventCard({ log }: { log: ActivityLog }) {
           {log.activityType.label}
         </p>
         {subtitle && (
-          <p className="mt-0.5 truncate text-[9px] text-neutral-500">
-            {subtitle}
-          </p>
+          <p className="truncate text-[9px] text-neutral-500">{subtitle}</p>
         )}
       </div>
     </div>
@@ -120,10 +127,6 @@ export function AgendaMonthView({
   const viewMonth = anchorDate.getMonth()
   const viewYear = anchorDate.getFullYear()
 
-  if (loading) {
-    return <AgendaMonthSkeleton />
-  }
-
   return (
     // h-full + min-h-0: el padre (flex-1) define el alto; este lo llena
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
@@ -137,7 +140,7 @@ export function AgendaMonthView({
               i >= 5 && "bg-white/2",
             )}
           >
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 tablet:text-[11px]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 tablet:text-[11px]">
               {label}
             </span>
           </div>
@@ -150,7 +153,7 @@ export function AgendaMonthView({
       */}
       <div
         className="grid min-h-0 flex-1"
-        style={{ gridTemplateRows: "repeat(6, minmax(0, 1fr))" }}
+        style={{ gridTemplateRows: "repeat(6, minmax(4.5rem, 1fr))" }}
       >
         {Array.from({ length: 6 }).map((_, week) => (
           <div
@@ -181,43 +184,66 @@ export function AgendaMonthView({
                     isMobile
                       ? "items-center justify-start gap-0.5 p-1"
                       : "items-stretch gap-1 p-1.5",
-                    isWeekend && "bg-white/1.5",
-                    !inMonth && "opacity-35",
-                    isAnchor && "bg-white/4",
+                    isWeekend && "bg-white/2",
+                    isAnchor && "bg-white/6",
                     isToday && "bg-amber-500/10",
-                    !isFuture && "hover:bg-white/6",
-                    isFuture && "cursor-default opacity-40",
+                    !isFuture && inMonth && "hover:bg-white/6",
+                    isFuture && "cursor-default",
+                    // Fuera de mes / futuro: solo atenuar el texto, no toda la celda
                   )}
                 >
-                  <span
-                    className={cn(
-                      "flex shrink-0 items-center justify-center rounded-full font-semibold",
-                      isMobile ? "size-7 text-xs" : "size-6 text-[11px]",
-                      isToday
-                        ? "bg-amber-400 text-black"
-                        : isAnchor
-                          ? "bg-white/12 text-white"
-                          : hasLogs
-                            ? "text-neutral-200"
-                            : "text-neutral-500",
-                    )}
-                  >
-                    {day.getDate()}
-                  </span>
-
-                  {isMobile && hasLogs && <MobileDayDots logs={dayLogs} />}
-
-                  {!isMobile && hasLogs && (
-                    <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
-                      {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
-                        <MonthEventCard key={log.id} log={log} />
-                      ))}
-                      {dayLogs.length > MAX_EVENTS_DESKTOP && (
-                        <span className="px-1 pt-0.5 text-center text-[10px] font-medium text-neutral-500">
-                          +{dayLogs.length - MAX_EVENTS_DESKTOP} más
-                        </span>
+                  {loading ? (
+                    <>
+                      <Pulse
+                        className={cn(
+                          "shrink-0 rounded-full",
+                          isMobile ? "size-7" : "size-6",
+                        )}
+                      />
+                      {!isMobile && (
+                        <div className="flex min-h-0 flex-1 flex-col">
+                          <Pulse className="h-9 w-full rounded-md" />
+                        </div>
                       )}
-                    </div>
+                      {isMobile && <Pulse className="mt-0.5 h-1.5 w-6 rounded-full" />}
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className={cn(
+                          "flex shrink-0 items-center justify-center rounded-full font-semibold tabular-nums",
+                          isMobile ? "size-7 text-xs" : "size-6 text-[11px]",
+                          isToday
+                            ? "bg-amber-400 text-black"
+                            : isAnchor
+                              ? "bg-white/15 text-white"
+                              : !inMonth
+                                ? "text-neutral-600"
+                                : isFuture
+                                  ? "text-neutral-600"
+                                  : hasLogs
+                                    ? "text-neutral-200"
+                                    : "text-neutral-300",
+                        )}
+                      >
+                        {day.getDate()}
+                      </span>
+
+                      {isMobile && hasLogs && <MobileDayDots logs={dayLogs} />}
+
+                      {!isMobile && hasLogs && (
+                        <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden scrollbar-none">
+                          {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
+                            <MonthEventCard key={log.id} log={log} />
+                          ))}
+                          {dayLogs.length > MAX_EVENTS_DESKTOP && (
+                            <span className="shrink-0 px-1 pt-0.5 text-center text-[10px] font-medium text-neutral-500">
+                              +{dayLogs.length - MAX_EVENTS_DESKTOP} más
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
                 </button>
               )
