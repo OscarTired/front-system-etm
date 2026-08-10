@@ -47,7 +47,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
+import { Spinner } from "@/shared/ui/spinner/spinner"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 import { NestingPanel, type NestingPanelView } from "./nesting-panel"
@@ -62,51 +62,20 @@ const DxfCanvas = dynamic(
  *  Navegar a otra ruta y volver no debe volver a molestar. */
 let sessionToastShownThisRuntime = false
 
-/** Placeholder de contenido — sin layout propio. Mismo patrón que AgendaMonthView. */
-function Pulse({ className }: { className?: string }) {
+/**
+ * Único tramo con demora real: la hidratación de sesión
+ * (project.sessionReady). No amerita skeleton — es rápido y no tiene
+ * una forma final "predecible" que imitar (el canvas puede terminar
+ * vacío o con piezas). Reusa el Spinner del sistema de diseño en vez
+ * de reinventar el spin a mano con bordes/animate-spin.
+ */
+function WorkspaceSpinner() {
   return (
-    <span
-      className={cn("block animate-pulse rounded bg-white/10", className)}
-      aria-hidden
-    />
-  )
-}
-
-function SheetTabsSkeleton() {
-  return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <Pulse key={i} className="h-9 w-24 shrink-0 rounded-xl" />
-      ))}
-    </div>
-  )
-}
-
-/** Piezas "flotando" en el sheet, imitando el resultado final del nest. */
-function CanvasSkeleton() {
-  return (
-    <div className="relative h-full w-full overflow-hidden">
-      <Pulse className="absolute left-[8%] top-[14%] h-16 w-24 rounded-lg" />
-      <Pulse className="absolute left-[42%] top-[52%] h-20 w-20 rounded-full" />
-      <Pulse className="absolute left-[64%] top-[18%] h-14 w-28 rounded-lg" />
-      <Pulse className="absolute left-[22%] top-[62%] h-10 w-32 rounded-lg" />
-      <Pulse className="absolute left-[70%] top-[64%] h-16 w-16 rounded-lg" />
-    </div>
-  )
-}
-
-function PieceListSkeleton() {
-  return (
-    <div className="flex flex-col gap-2 px-3 pb-3 pt-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-2 rounded-lg bg-white/3 p-2">
-          <Pulse className="size-8 shrink-0 rounded-md" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <Pulse className="h-3 w-3/4 rounded" />
-            <Pulse className="h-2.5 w-1/2 rounded" />
-          </div>
-        </div>
-      ))}
+    <div className="flex h-full flex-col items-center justify-center gap-3 text-neutral-400">
+      <Spinner className="size-8" />
+      <span className="text-xs font-medium tracking-wide text-neutral-500">
+        Cargando…
+      </span>
     </div>
   )
 }
@@ -259,12 +228,6 @@ export function NestingPage() {
   // interno de isMobilePanelOpen — no hace falta sincronizarlo con un
   // efecto (era exactamente el caso de "You Might Not Need an Effect").
 
-  // Equivalente al prop `loading` de AgendaMonthView, pero acá no hay
-  // padre externo pasándolo: la propia página consume useNestingProject()
-  // y esa es la fuente de la señal. Se deja como variable local con el
-  // mismo nombre/semántica para que el resto del JSX luzca igual.
-  const loading = !project.sessionReady
-
   const activeGroup = project.sheetGroups[activeGroupIndex] ?? null
 
   const canvasPieces = useCanvasPieces(activeGroup, positionOverrides, angleOverrides)
@@ -351,19 +314,32 @@ export function NestingPage() {
    * La separación del input NO interviene aquí: es constraint del motor
    * al nestear. Así cambiar "separación" no pinta rojo hasta un nest
    * que deje piezas realmente superpuestas.
+   *
+   * collidingPieceIndices (para pintar en rojo) y collisionPairs (para
+   * listar en el panel con nombres) partían del MISMO doble loop sobre
+   * canvasPieces con piecesCollide, calculado dos veces por separado.
+   * Se fusionan en un único recorrido: mismo resultado, sin iterar
+   * O(n²) dos veces por render.
    */
-  const collidingPieceIndices = useMemo(() => {
+  const { collidingPieceIndices, collisionPairs } = useMemo(() => {
     const set = new Set<number>()
+    const pairs: { a: number; b: number; nameA: string; nameB: string }[] = []
     for (let i = 0; i < canvasPieces.length; i++) {
       for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (piecesCollide(canvasPieces[i], canvasPieces[j], 0)) {
-          set.add(i)
-          set.add(j)
-        }
+        if (!piecesCollide(canvasPieces[i], canvasPieces[j], 0)) continue
+        set.add(i)
+        set.add(j)
+        const idA = canvasPieces[i]?.pieceId
+        const idB = canvasPieces[j]?.pieceId
+        const nameA =
+          (idA && project.rows.find((r) => r.id === idA)?.fileName) || `Pieza ${i + 1}`
+        const nameB =
+          (idB && project.rows.find((r) => r.id === idB)?.fileName) || `Pieza ${j + 1}`
+        pairs.push({ a: i, b: j, nameA, nameB })
       }
     }
-    return Array.from(set)
-  }, [canvasPieces])
+    return { collidingPieceIndices: Array.from(set), collisionPairs: pairs }
+  }, [canvasPieces, project.rows])
 
   const handleToggleLayer = useCallback((key: string) => {
     setHiddenLayerKeys((prev) => {
@@ -435,23 +411,6 @@ export function NestingPage() {
     for (const r of project.rows) m[r.id] = r.fileName
     return m
   }, [project.rows])
-
-  const collisionPairs = useMemo(() => {
-    const pairs: { a: number; b: number; nameA: string; nameB: string }[] = []
-    for (let i = 0; i < canvasPieces.length; i++) {
-      for (let j = i + 1; j < canvasPieces.length; j++) {
-        if (!piecesCollide(canvasPieces[i], canvasPieces[j], 0)) continue
-        const idA = canvasPieces[i]?.pieceId
-        const idB = canvasPieces[j]?.pieceId
-        const nameA =
-          (idA && project.rows.find((r) => r.id === idA)?.fileName) || `Pieza ${i + 1}`
-        const nameB =
-          (idB && project.rows.find((r) => r.id === idB)?.fileName) || `Pieza ${j + 1}`
-        pairs.push({ a: i, b: j, nameA, nameB })
-      }
-    }
-    return pairs
-  }, [canvasPieces, project.rows, separationMm])
 
   const handleSelectPiece = useCallback((index: number | null, additive: boolean) => {
     if (index === null) {
@@ -581,7 +540,7 @@ export function NestingPage() {
       ) : (
         <div className="flex flex-col gap-2">
           <div
-            className="relative w-full overflow-hidden rounded-md border border-white/10 bg-neutral-900 px-3 py-2 text-center text-sm text-white"
+            className="relative w-full overflow-hidden rounded-md bg-neutral-900 px-3 py-2 text-center text-sm text-white"
             role="progressbar"
             aria-valuenow={Math.round(project.progress * 100)}
             aria-valuemin={0}
@@ -605,7 +564,7 @@ export function NestingPage() {
           <Button
             size="default"
             variant="outline"
-            className="w-full border-red-500/40 text-red-300 hover:bg-red-500/15 hover:text-red-200"
+            className="w-full text-red-300 hover:bg-red-500/15 hover:text-red-200"
             onClick={project.onCancel}
           >
             Cancelar nest
@@ -623,11 +582,7 @@ export function NestingPage() {
       activePanel={activePanel}
       onActivePanelChange={setActivePanel}
       footer={nestFooter}
-      pieces={
-        loading
-          ? <PieceListSkeleton />
-          : <PieceList ref={pieceListRef} {...pieceListProps} />
-      }
+      pieces={<PieceList ref={pieceListRef} {...pieceListProps} />}
       projectMaterial={
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
@@ -760,13 +715,13 @@ export function NestingPage() {
                     setSelectedPieceIndices([])
                   }}
                 />
-              ) : loading ? (
-                <SheetTabsSkeleton />
               ) : null}
             </div>
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
               <div className="absolute inset-px overflow-hidden rounded-4xl">
-                {!loading && dxfCanvasPieces.length > 0 ? (
+                {!project.sessionReady ? (
+                  <WorkspaceSpinner />
+                ) : dxfCanvasPieces.length > 0 ? (
                   <DxfCanvas
                     pieces={dxfCanvasPieces}
                     sheetSize={sheetSize}
@@ -783,8 +738,6 @@ export function NestingPage() {
                     onDeleteSelected={() => handleDeleteSelected()}
                     sheetKey={activeGroupIndex}
                   />
-                ) : loading ? (
-                  <CanvasSkeleton />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-neutral-400">
                     Importa una pieza o presiona Nestear
@@ -838,8 +791,6 @@ export function NestingPage() {
                     setSelectedPieceIndices([])
                   }}
                 />
-              ) : loading ? (
-                <SheetTabsSkeleton />
               ) : (
                 <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500 ring-1 ring-white/6">
                   Sin planchas
@@ -859,7 +810,9 @@ export function NestingPage() {
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
           <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
             <div className="absolute inset-px overflow-hidden rounded-4xl">
-              {project.sessionReady && dxfCanvasPieces.length > 0 ? (
+              {!project.sessionReady ? (
+                <WorkspaceSpinner />
+              ) : dxfCanvasPieces.length > 0 ? (
                 <DxfCanvas
                   pieces={dxfCanvasPieces}
                   sheetSize={sheetSize}
@@ -876,8 +829,6 @@ export function NestingPage() {
                   onDeleteSelected={() => handleDeleteSelected()}
                   sheetKey={activeGroupIndex}
                 />
-              ) : !project.sessionReady ? (
-                <CanvasSkeleton />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
                   <p>Importa una pieza o presiona Nestear</p>
@@ -915,7 +866,7 @@ export function NestingPage() {
       />
 
       <Dialog open={pendingDelete} onOpenChange={(open) => !open && setPendingDelete(false)}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border-white/10 bg-neutral-900 p-5 text-white shadow-2xl sm:max-w-md">
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl bg-neutral-900 p-5 text-white shadow-2xl sm:max-w-md">
           <DialogHeader>
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
               <Trash2 size={20} />
@@ -928,7 +879,7 @@ export function NestingPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-5 flex flex-col gap-2">
-            <Button variant="outline" className="border-white/15" onClick={confirmDeleteFromSheet}>
+            <Button variant="outline" className="border-none" onClick={confirmDeleteFromSheet}>
               Solo de esta plancha
             </Button>
             <Button className="bg-red-600 hover:bg-red-500" onClick={confirmDeleteFromProject}>

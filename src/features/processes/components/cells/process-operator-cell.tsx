@@ -121,7 +121,7 @@ export function ProcessOperatorCell({
         workflowAccess.operator(processTask)??undefined
       }
       items={operators}
-      placeholder="Operario"
+      placeholder="Asignar operario"
       disabled={!isEditable}
       triggerVariant={triggerVariant}
       rowLabel={rowLabel}

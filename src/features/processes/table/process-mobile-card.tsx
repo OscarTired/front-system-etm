@@ -264,7 +264,7 @@ export function ProcessMobileCard({
             <ProcessOperatorCell
               processTask={processTask}
               triggerVariant="row"
-              rowLabel="Operario"
+              rowLabel="Asignar operario"
             />
           </div>
         ) : (
