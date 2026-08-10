@@ -230,10 +230,11 @@ export function ShiftGroupSection({
                         )}
                       </div>
 
-                      {/* Hora + acciones pegadas a la derecha */}
+                      {/* Hora a la derecha; al hover los iconos expanden
+                          (grid 0fr→1fr) y empujan la hora a la izquierda. */}
                       <div
                         data-activity-drag-ignore
-                        className="ml-auto flex shrink-0 items-center gap-1 self-start"
+                        className="ml-auto flex shrink-0 items-center self-start"
                       >
                         <span className="tabular-nums text-xs text-neutral-500">
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
@@ -242,59 +243,66 @@ export function ShiftGroupSection({
                           })}
                         </span>
 
-                        {/* Desktop: iconos en hover (slide-in) */}
+                        {/* Desktop: reserva ancho solo en hover */}
                         <div
                           className={cn(
-                            "hidden items-center gap-0.5 tablet:flex",
-                            "translate-x-1 opacity-0 transition-all duration-150",
-                            "group-hover:translate-x-0 group-hover:opacity-100",
-                            "group-focus-within:translate-x-0 group-focus-within:opacity-100",
+                            "hidden tablet:grid",
+                            "transition-[grid-template-columns] duration-150 ease-out",
+                            "grid-cols-[0fr] group-hover:grid-cols-[1fr] group-focus-within:grid-cols-[1fr]",
                           )}
                         >
-                          {isManual && onEditLog && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              title="Editar"
-                              aria-label="Editar entrada"
-                              onClick={() => onEditLog(log)}
-                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                          )}
-                          {isManual && (
-                            <button
-                              type="button"
-                              disabled={!canCreate || busy || !allowDup}
-                              title={
-                                !allowDup
-                                  ? "Límite de duplicados en esta franja"
-                                  : "Duplicar en otra franja (arrastrar)"
-                              }
-                              aria-label="Duplicar en otra franja"
-                              onPointerDown={(e) => {
-                                if (!canCreate || busy || !allowDup) return
-                                e.stopPropagation()
-                                beginDrag(e, log, true)
-                              }}
-                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
-                            >
-                              <Copy size={14} />
-                            </button>
-                          )}
-                          {(isManual || canDelete) && (
-                            <button
-                              type="button"
-                              disabled={!canDelete || busy || deletingLogId === log.id}
-                              title="Eliminar"
-                              aria-label="Eliminar entrada"
-                              onClick={() => onDeleteLog(log)}
-                              className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
+                          <div className="min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-0.5 pl-1">
+                              {isManual && onEditLog && (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  title="Editar"
+                                  aria-label="Editar entrada"
+                                  onClick={() => onEditLog(log)}
+                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                              )}
+                              {isManual && (
+                                <button
+                                  type="button"
+                                  disabled={!canCreate || busy || !allowDup}
+                                  title={
+                                    !allowDup
+                                      ? "Límite de duplicados en esta franja"
+                                      : "Duplicar en otra franja (arrastrar)"
+                                  }
+                                  aria-label="Duplicar en otra franja"
+                                  onPointerDown={(e) => {
+                                    if (!canCreate || busy || !allowDup) return
+                                    e.stopPropagation()
+                                    beginDrag(e, log, true)
+                                  }}
+                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                >
+                                  <Copy size={14} />
+                                </button>
+                              )}
+                              {(isManual || canDelete) && (
+                                <button
+                                  type="button"
+                                  disabled={
+                                    !canDelete ||
+                                    busy ||
+                                    deletingLogId === log.id
+                                  }
+                                  title="Eliminar"
+                                  aria-label="Eliminar entrada"
+                                  onClick={() => onDeleteLog(log)}
+                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
                         {/* Móvil: ⋮ → Popover (en mobile el shared Popover es bottom sheet) */}
