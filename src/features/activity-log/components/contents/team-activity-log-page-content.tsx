@@ -9,7 +9,6 @@ import type { User } from "@/features/users/types/user.types"
 import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
-
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
 import { getActivityIcon } from "../../constants/activity-icons"
@@ -20,7 +19,10 @@ import {
 } from "../../constants/shift-definitions"
 import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
+import { useTeamBitacoraViewStore } from "../../store/team-bitacora-view-store"
 import { TeamActivityLogSkeleton } from "../skeletons/team-activity-log-skeleton"
+import { TeamBitacoraViewToggle } from "../toggles/team-bitacora-view-toggle"
+import { TeamSupervisionView } from "../supervision/team-supervision-view"
 
 function startOfDayISO(date: string) {
   return new Date(`${date}T00:00:00`).toISOString()
@@ -134,7 +136,7 @@ function ShiftBucketedLogs({ logs }: { logs: Log[] }) {
           <div key={bucket.key} className="flex w-full flex-col gap-2">
             <div className="flex items-center gap-2 px-1">
               <BucketIcon size={13} className="text-neutral-500" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <span className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
                 {bucket.label}
               </span>
             </div>
@@ -168,6 +170,9 @@ export function TeamActivityLogPageContent() {
   const [date, setDate] = useState<Date | null>(new Date())
   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
 
+  const viewMode = useTeamBitacoraViewStore(s => s.viewMode)
+  const isSupervision = viewMode === "supervision"
+
   const filters = useMemo(
     () => ({
       userId: selectedUser?.id,
@@ -177,7 +182,19 @@ export function TeamActivityLogPageContent() {
     [selectedUser, date],
   )
 
-  const { logs, loading } = useTeamActivityLog(filters)
+  // Supervisión necesita todos los logs del día (cobertura del equipo),
+  // aunque el toolbar tenga un usuario seleccionado.
+  const supervisionFilters = useMemo(
+    () => ({
+      from: date ? startOfDayISO(toISODateString(date)) : undefined,
+      to: date ? endOfDayISO(toISODateString(date)) : undefined,
+    }),
+    [date],
+  )
+
+  const { logs, loading } = useTeamActivityLog(
+    isSupervision ? supervisionFilters : filters,
+  )
 
   const { markedDates } = useActivityLogMarkedDates({
     scope: "team",
@@ -231,9 +248,8 @@ export function TeamActivityLogPageContent() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
-      {/* Toolbar */}
+      {/* Toolbar — mismo layout + toggle */}
       <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
-        {/* Mobile */}
         <div className="flex flex-col items-center gap-3 tablet:hidden">
           <div className="w-full max-w-56">
             <UserSelect
@@ -253,10 +269,12 @@ export function TeamActivityLogPageContent() {
             onViewMonthChange={handleViewMonthChange}
           />
 
-          <EntryCountBadge count={logs.length} />
+          <div className="flex flex-col items-center gap-2">
+            <TeamBitacoraViewToggle />
+            <EntryCountBadge count={logs.length} />
+          </div>
         </div>
 
-        {/* Desktop */}
         <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
           <div className="justify-self-start">
             <div className="w-56">
@@ -280,53 +298,62 @@ export function TeamActivityLogPageContent() {
             />
           </div>
 
-          <div className="justify-self-end">
+          <div className="flex items-center gap-2 justify-self-end">
+            <TeamBitacoraViewToggle />
             <EntryCountBadge count={logs.length} />
           </div>
         </div>
       </div>
 
-      {/* Lista — scroll normal, sin absolute/h-0 */}
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
-        <div className="flex w-full flex-col gap-6 pb-4">
-          {loading ? (
-            <TeamActivityLogSkeleton />
-          ) : logs.length === 0 ? (
-            <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
-              Sin entradas para este filtro
-            </div>
-          ) : selectedUser ? (
-            <ShiftBucketedLogs logs={logs} />
-          ) : (
-            <div className="flex w-full flex-col gap-8">
-              {groupedLogs.map(group => (
-                <section
-                  key={group.user?.id ?? "unknown"}
-                  className="flex w-full flex-col gap-3"
-                >
-                  <div className="flex items-center justify-between border-b border-white/8 pb-2">
-                    <div className="flex items-center gap-3">
-                      <DynamicBadge
-                        label={group.user?.name ?? "Sin usuario"}
-                        color={group.user?.color ?? "#71717A"}
-                        icon={group.user?.icon}
-                        width="field"
-                      />
+      {isSupervision ? (
+        <TeamSupervisionView
+          users={users as User[]}
+          logs={logs}
+          loading={loading}
+          focusUserId={selectedUser?.id}
+        />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-none">
+          <div className="flex w-full flex-col gap-6 pb-4">
+            {loading ? (
+              <TeamActivityLogSkeleton />
+            ) : logs.length === 0 ? (
+              <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
+                Sin entradas para este filtro
+              </div>
+            ) : selectedUser ? (
+              <ShiftBucketedLogs logs={logs} />
+            ) : (
+              <div className="flex w-full flex-col gap-8">
+                {groupedLogs.map(group => (
+                  <section
+                    key={group.user?.id ?? "unknown"}
+                    className="flex w-full flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between pb-2">
+                      <div className="flex items-center gap-3">
+                        <DynamicBadge
+                          label={group.user?.name ?? "Sin usuario"}
+                          color={group.user?.color ?? "#71717A"}
+                          icon={group.user?.icon}
+                          width="field"
+                        />
+                      </div>
+
+                      <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
+                        {group.logs.length}{" "}
+                        {group.logs.length === 1 ? "actividad" : "actividades"}
+                      </div>
                     </div>
 
-                    <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
-                      {group.logs.length}{" "}
-                      {group.logs.length === 1 ? "actividad" : "actividades"}
-                    </div>
-                  </div>
-
-                  <ShiftBucketedLogs logs={group.logs} />
-                </section>
-              ))}
-            </div>
-          )}
+                    <ShiftBucketedLogs logs={group.logs} />
+                  </section>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
