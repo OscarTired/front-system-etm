@@ -36,6 +36,8 @@ type Props = {
   /** false si ya se alcanzó el tope de duplicados idénticos en la franja. */
   canDuplicateLog?: (log: ActivityLog) => boolean
   onEditLog?: (log: ActivityLog) => void
+  /** Click en Duplicar: copia inmediata en la misma franja (sin drag). */
+  onDuplicateLog?: (log: ActivityLog) => void
 }
 
 const DISTINCT_SHIFT_COLORS = [
@@ -64,6 +66,7 @@ export function ShiftGroupSection({
   isLogBusy,
   canDuplicateLog,
   onEditLog,
+  onDuplicateLog,
 }: Props) {
   const now = referenceNow ?? new Date()
 
@@ -266,20 +269,20 @@ export function ShiftGroupSection({
                                   <Pencil size={14} />
                                 </button>
                               )}
-                              {isManual && (
+                              {isManual && onDuplicateLog && (
                                 <button
                                   type="button"
                                   disabled={!canCreate || busy || !allowDup}
                                   title={
                                     !allowDup
                                       ? "Límite de duplicados en esta franja"
-                                      : "Duplicar en otra franja (arrastrar)"
+                                      : "Duplicar en esta franja"
                                   }
-                                  aria-label="Duplicar en otra franja"
-                                  onPointerDown={(e) => {
-                                    if (!canCreate || busy || !allowDup) return
+                                  aria-label="Duplicar en esta franja"
+                                  onClick={(e) => {
                                     e.stopPropagation()
-                                    beginDrag(e, log, true)
+                                    if (!canCreate || busy || !allowDup) return
+                                    onDuplicateLog(log)
                                   }}
                                   className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
@@ -337,11 +340,11 @@ export function ShiftGroupSection({
                                 )}
                                 <button
                                   type="button"
-                                  disabled={!canCreate || busy || !allowDup}
-                                  onPointerDown={(e) => {
-                                    if (!canCreate || busy || !allowDup) return
+                                  disabled={!canCreate || busy || !allowDup || !onDuplicateLog}
+                                  onClick={(e) => {
                                     e.stopPropagation()
-                                    beginDrag(e, log, true)
+                                    if (!canCreate || busy || !allowDup || !onDuplicateLog) return
+                                    onDuplicateLog(log)
                                   }}
                                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
                                 >

@@ -154,6 +154,12 @@ export function ActivityLogPageContent({
     moveLog({ id, shift }).catch(() => {})
   }
 
+  /** Duplicar con un click: misma franja, sin drag. */
+  function handleDuplicateLog(log: ActivityLog) {
+    if (!log.shift) return
+    handleMoveLog(log.id, log.shift, true)
+  }
+
   function isLogBusy(logId: string) {
     if (logId.startsWith("optimistic-")) return true
     if (pendingDelete?.id === logId) return true
@@ -326,6 +332,7 @@ export function ActivityLogPageContent({
                         isLogBusy={isLogBusy}
                         canDuplicateLog={canDuplicateLog}
                         onEditLog={handleEditLog}
+                      onDuplicateLog={handleDuplicateLog}
                       />
                     )
                   })}
