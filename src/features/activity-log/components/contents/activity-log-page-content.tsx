@@ -21,7 +21,8 @@ import { useCreateActivityLog } from "../../hooks/use-create-activity-log"
 import { useActivityDrag } from "../../hooks/use-activity-drag"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
-import { SHIFT_GROUPS, getSlotState } from "../../constants/shift-definitions"
+import { SHIFT_GROUPS } from "../../constants/shift-definitions"
+import { useShiftSchedule } from "../../hooks/use-shift-schedule"
 import type {
   ActivityDepartment,
   ActivityLog,
@@ -149,12 +150,13 @@ export function ActivityLogPageContent({
     moveLog({ id, shift }).catch(() => {})
   }
 
+  const { getState, isOpen } = useShiftSchedule(
+    isToday ? undefined : dateISO,
+  )
+
   function isShiftAvailable(shift: ShiftSlotDefinition["shift"]) {
     if (!isToday) return false
-    const slot = SHIFT_GROUPS.flatMap(group => group.slots).find(
-      s => s.shift === shift,
-    )
-    return !!slot && getSlotState(slot, new Date()) !== "upcoming"
+    return isOpen(shift)
   }
 
   const { beginDrag, registerSlot, draggingLogId, hoverShift, overlay } =
@@ -162,20 +164,6 @@ export function ActivityLogPageContent({
       onDrop: handleMoveLog,
       isShiftAvailable,
     })
-
-  const referenceNow = useMemo(
-    () =>
-      isToday
-        ? new Date()
-        : new Date(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
-            23,
-            59,
-          ),
-    [isToday, date],
-  )
 
   function handleDeleteLog(log: ActivityLog) {
     if (!canDelete) return
@@ -313,7 +301,7 @@ export function ActivityLogPageContent({
                         deletingLogId={null}
                         canCreate={canCreate}
                         canDelete={canDelete}
-                        referenceNow={referenceNow}
+                        slotState={getState}
                       />
                     )
                   })}

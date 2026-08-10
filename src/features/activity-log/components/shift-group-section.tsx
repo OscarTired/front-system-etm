@@ -9,6 +9,7 @@ import { CommentImageDialog } from "@/features/comments/components/comment-image
 
 import type { ShiftGroupDefinition, ShiftSlotDefinition } from "../constants/shift-definitions"
 import type { ActivityLog, DayShift } from "../types/activity-log.types"
+import type { SlotState } from "../types/shift-schedule.types"
 
 type Props = {
   group: ShiftGroupDefinition
@@ -23,6 +24,8 @@ type Props = {
   canCreate: boolean
   canDelete: boolean
   referenceNow?: Date
+  /** Estado desde GET /activity-log/shifts (preferido sobre referenceNow). */
+  slotState?: (shift: DayShift) => SlotState
 }
 
 const DISTINCT_SHIFT_COLORS = [
@@ -47,8 +50,14 @@ export function ShiftGroupSection({
   canCreate,
   canDelete,
   referenceNow,
+  slotState,
 }: Props) {
   const now = referenceNow ?? new Date()
+
+  function resolveState(slot: ShiftSlotDefinition): SlotState {
+    if (slotState) return slotState(slot.shift)
+    return getSlotState(slot, now)
+  }
 
   // Un solo dialog compartido por todo el grupo — CommentImageDialog
   // es genérico (solo necesita una URL), no depende de comentarios.
@@ -68,7 +77,7 @@ export function ShiftGroupSection({
   }, [registerSlot])
 
   const groupUpcoming = group.slots.every(
-    (slot) => getSlotState(slot, now) === "upcoming",
+    (slot) => resolveState(slot) === "upcoming",
   )
 
   // Asignamos un color distintivo basado en el índice o nombre del grupo para que coincida con la agenda
@@ -92,7 +101,7 @@ export function ShiftGroupSection({
 
       <div className="mt-3 flex flex-col gap-4">
         {group.slots.map((slot) => {
-          const state = getSlotState(slot, now)
+          const state = resolveState(slot)
           const logs = logsBySlot[slot.shift] ?? []
 
           return (

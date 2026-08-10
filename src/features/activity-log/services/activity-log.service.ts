@@ -9,6 +9,7 @@ import type {
   DayShift,
   UpdateActivityTypeDto,
 } from "../types/activity-log.types"
+import type { ShiftSchedule } from "../types/shift-schedule.types"
 
 export const activityLogService = {
 
@@ -106,6 +107,19 @@ export const activityLogService = {
     signal?: AbortSignal,
   ) {
     const response = await api.get<ActivityLog[]>("/activity-log", { params: filters, signal })
+    return response.data
+  },
+
+
+  /**
+   * Estado de franjas (Lima) — candados de UI.
+   * date: YYYY-MM-DD opcional; sin date = hoy Lima en el server.
+   */
+  async getShiftSchedule(date?: string, signal?: AbortSignal) {
+    const response = await api.get<ShiftSchedule>("/activity-log/shifts", {
+      signal,
+      params: date ? { date } : undefined,
+    })
     return response.data
   },
 
