@@ -1,5 +1,7 @@
 "use client"
 
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+
 import { useMemo, useState } from "react"
 import { Pencil, Power, Trash2 } from "lucide-react"
 
@@ -150,7 +152,7 @@ export function ActivityTypesPageContent() {
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+      <AppListScroll>
         <div className="flex flex-col gap-6">
           {loading ? (
             <ActivityTypesSkeleton />
@@ -214,7 +216,7 @@ export function ActivityTypesPageContent() {
             </>
           )}
         </div>
-      </div>
+      </AppListScroll>
 
       <ActivityTypeFormDialog
         open={canManage && formOpen}

@@ -102,18 +102,6 @@ export function AppSidebar({
     if (event.propertyName !== "width") return
 
     notifyContentTransitionEnd()
-
-    // Forzar reflow del área de contenido: al terminar width→0/open,
-    // las alturas "auto" de rows expandidos se recalculan y desaparece
-    // la franja vacía residual del scroll.
-    const scroller = document.querySelector<HTMLElement>("[data-desktop-scroll]")
-    if (scroller) {
-      const top = scroller.scrollTop
-      scroller.style.overflow = "hidden"
-      void scroller.offsetHeight
-      scroller.style.overflow = ""
-      scroller.scrollTop = top
-    }
   }
 
   return (

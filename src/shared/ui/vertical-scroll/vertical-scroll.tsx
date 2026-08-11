@@ -197,7 +197,7 @@ export function VerticalScroll({
           maskSize: "100% 100%",
         }}
         className={cn(
-          "hide-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain",
+          "hide-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-auto overscroll-x-contain",
           className,
         )}
       >

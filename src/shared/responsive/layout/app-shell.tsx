@@ -11,7 +11,6 @@ import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-sto
 import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
-import { PullToRefresh } from "../mobile/pull-to-refresh"
 
 type Props = {
   children: ReactNode
@@ -33,9 +32,9 @@ const DRAWER_WIDTH_PX = 248
 const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
 
 /**
- * Modelo B — el shell NO scrollea.
- * Una sola fuente de scroll vive en la página (VerticalScroll en la lista).
- * El shell solo aporta chrome + slot con altura acotada (min-h-0 / overflow-hidden).
+ * Shell = chrome + slot de altura.
+ * No scrollea. No pull-to-refresh.
+ * El scroll de listas vive en AppListScroll (página).
  */
 function DesktopShell({ children }: Props) {
   const visualState = useSidebarStore(state => state.visualState)
@@ -67,7 +66,6 @@ function DesktopShell({ children }: Props) {
         }}
       >
         <DesktopTopBar />
-        {/* Slot de página: sin overflow-y. La lista scrollea adentro. */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
@@ -76,13 +74,6 @@ function DesktopShell({ children }: Props) {
   )
 }
 
-/**
- * Mobile shell.
- *
- * - Drawer: translate3d del panel (GPU).
- * - Immersive: slot fijo top-14 / bottom-20.
- * - Resto: PTR + slot sin scroll propio. VerticalScroll vive en la página.
- */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -137,16 +128,10 @@ function CompactShell({ children }: Props) {
             {children}
           </div>
         ) : (
-          <div className="absolute inset-0 z-10 flex min-h-0 flex-col pt-14 pb-20">
-            {/*
-              PTR envuelve el slot. El scroller real es VerticalScroll
-              dentro de la página ([data-vertical-scroll-container]).
-            */}
-            <PullToRefresh>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {children}
-              </div>
-            </PullToRefresh>
+          <div className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden pt-14 pb-20">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              {children}
+            </div>
           </div>
         )}
 

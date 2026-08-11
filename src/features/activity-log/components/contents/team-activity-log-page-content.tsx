@@ -1,5 +1,7 @@
 "use client"
 
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+
 import { useCallback, useMemo, useState } from "react"
 
 import { UserSelect } from "@/features/users/components/user-select"
@@ -336,7 +338,7 @@ export function TeamActivityLogPageContent() {
           focusUserId={selectedUser?.id}
         />
       ) : (
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-none">
+        <AppListScroll>
           <div className="flex w-full flex-col gap-6 pb-4">
             {loading ? (
               <div className="flex w-full flex-col gap-8">
@@ -388,7 +390,7 @@ export function TeamActivityLogPageContent() {
               </div>
             )}
           </div>
-        </div>
+        </AppListScroll>
       )}
     </div>
   )

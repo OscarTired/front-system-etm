@@ -1,5 +1,7 @@
 "use client"
 
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+
 import { useCallback, useMemo, useState } from "react"
 import { Trash2 } from "lucide-react"
 
@@ -323,7 +325,7 @@ export function ActivityLogPageContent({
       )}
 
       {viewMode === "day" && (
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+        <AppListScroll>
           <div className="flex w-full flex-col gap-3 pb-4">
             {!loading &&
               departmentQuery === "PRODUCCION" &&
@@ -368,7 +370,7 @@ export function ActivityLogPageContent({
               )
             })}
           </div>
-        </div>
+        </AppListScroll>
       )}
 
       <ActivityPickerDialog

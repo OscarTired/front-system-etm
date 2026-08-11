@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { usePathname } from "next/navigation"
 
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
@@ -43,7 +42,6 @@ export function ProcessPageContent({
   initialShowHistory = false,
 }: Props) {
 
-  const pathname = usePathname()
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] =
     useState(initialShowHistory)
@@ -134,13 +132,7 @@ export function ProcessPageContent({
         />
       </div>
 
-      <VerticalScroll
-        resetKey={pathname}
-        containerClassName="min-h-0 flex-1"
-        className="overflow-x-hidden"
-        arrowTopOffset={10}
-        arrowBottomOffset={10}
-      >
+      <AppListScroll>
         <EntityExpandProvider>
           <ProcessTableCard
             processDefinition={processDefinition}
@@ -154,7 +146,7 @@ export function ProcessPageContent({
             onResolvingChange={setResolvingFocus}
           />
         </EntityExpandProvider>
-      </VerticalScroll>
+      </AppListScroll>
 
       {showResolvingOverlay && (
         <div
