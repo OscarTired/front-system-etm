@@ -96,16 +96,7 @@ export function CommentTimeline({
             Ver más →
           </button>
         </div>
-        {/*
-          Techo explícito acá: max-h-32 (~2 CommentItem + gap-1.5).
-          Antes esto era min-h-0 flex-1, que asume que algún ancestro
-          resuelve una altura fija para repartir — pero toda la
-          cadena de padres (TaskCommentsPanel, EntityExpandedSection,
-          etc.) usa min-h-* (piso, no techo), así que el panel crecía
-          sin límite con cada mensaje nuevo en vez de scrollear.
-          Ajustar max-h-32 si CommentItem cambia de alto (ej: texto
-          de 2 líneas más seguido) — ver CommentList/CommentItem.
-        */}
+
         <ScrollArea className="max-h-32 px-3 pb-3">
           {loading?(
             <div className="flex h-full items-center justify-center">
