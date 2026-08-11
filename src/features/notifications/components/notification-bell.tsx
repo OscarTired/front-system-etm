@@ -168,49 +168,57 @@ export function NotificationBell({
         </button>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <ScrollArea className={cn("h-full min-h-44", !isTopbar && "max-h-96")}>
+      <div className="min-h-0 shrink-0">
+        {/*
+          Altura fija = mismo footprint vacío / loading / con items.
+          El listado scrollea adentro; el popover no crece.
+        */}
+        <ScrollArea className="h-52 w-full">
           <div className="px-2 pb-2">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-              <Spinner size={20} className="text-neutral-400" />
-              <p className="text-xs text-neutral-500">Cargando notificaciones...</p>
-            </div>
-          ) : visibleNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-              <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
-                <Bell size={18} />
+            {loading ? (
+              <div className="flex h-48 flex-col items-center justify-center gap-2 text-center">
+                <Spinner size={20} className="text-neutral-400" />
+                <p className="text-xs text-neutral-500">
+                  Cargando notificaciones...
+                </p>
               </div>
-              <p className="text-xs text-neutral-400 font-medium">No tienes notificaciones pendientes</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {visibleNotifications.map(notification => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  isHistorical={notification.route.history}
-                  onClick={handleSelect}
-                  onMarkRead={markAsRead}
-                  isSelecting={selectingId === notification.id}
-                  isConfirming={confirmingId === notification.id}
-                  onConfirm={n => proceedToNotification(n, true)}
-                  onCancelConfirm={() => setConfirmingId(null)}
-                />
-              ))}
+            ) : visibleNotifications.length === 0 ? (
+              <div className="flex h-48 flex-col items-center justify-center gap-2 text-center">
+                <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
+                  <Bell size={18} />
+                </div>
+                <p className="text-xs font-medium text-neutral-400">
+                  No tienes notificaciones pendientes
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {visibleNotifications.map(notification => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    isHistorical={notification.route.history}
+                    onClick={handleSelect}
+                    onMarkRead={markAsRead}
+                    isSelecting={selectingId === notification.id}
+                    isConfirming={confirmingId === notification.id}
+                    onConfirm={n => proceedToNotification(n, true)}
+                    onCancelConfirm={() => setConfirmingId(null)}
+                  />
+                ))}
 
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => loadMore()}
-                  disabled={loadingMore}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
-                >
-                  {loadingMore ? <Spinner size={12} /> : "Cargar más"}
-                </button>
-              )}
-            </div>
-          )}
+                {hasMore && (
+                  <button
+                    type="button"
+                    onClick={() => loadMore()}
+                    disabled={loadingMore}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
+                  >
+                    {loadingMore ? <Spinner size={12} /> : "Cargar más"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -252,7 +260,7 @@ export function NotificationBell({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
             >
               <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
@@ -268,7 +276,7 @@ export function NotificationBell({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-40 flex flex-col w-full min-w-90 max-w-lg p-0 border-none bg-[#171717] text-white shadow-xl select-none"
+            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-white shadow-xl select-none"
           >
             <div className="flex shrink-0 items-center px-3.5 pt-3">
               <span className="text-sm font-semibold text-neutral-200">
