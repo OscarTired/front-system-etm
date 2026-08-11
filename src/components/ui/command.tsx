@@ -6,7 +6,7 @@ import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import {
   Dialog,
@@ -112,17 +112,14 @@ export const CommandList = React.forwardRef<
     ref
   ) => {
     return (
-      <VerticalScroll
-        containerClassName="relative overflow-hidden rounded-xl"
-        className={cn("hide-scrollbar outline-none", className)}
-        style={style}
-        arrowTopOffset={4}
-        arrowBottomOffset={4}
-        arrowAlign="center"
-        arrowClassName="bg-[#18181b]/80 backdrop-blur-xl text-neutral-200"
-      >
-        <CommandPrimitive.List ref={ref} {...props} />
-      </VerticalScroll>
+      <ScrollArea className={cn("relative overflow-hidden rounded-xl", className)}>
+        <CommandPrimitive.List
+          ref={ref}
+          className="outline-none"
+          style={style}
+          {...props}
+        />
+      </ScrollArea>
     )
   }
 )

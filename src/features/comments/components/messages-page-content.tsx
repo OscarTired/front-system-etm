@@ -117,8 +117,6 @@ export function MessagesPageContent() {
 
       <AppListScroll
         className="overflow-x-hidden px-3 py-2"
-        arrowTopOffset={12}
-        arrowBottomOffset={12}
       >
         {loading ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">

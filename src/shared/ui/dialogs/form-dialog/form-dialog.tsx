@@ -17,7 +17,7 @@ import {
   FormDialogFooter,
 } from "./form-dialog-footer"
 
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Props = {
   open: boolean
@@ -29,10 +29,6 @@ type Props = {
   savingLabel?: string
   cancelLabel?: string
   onCancelClick?: () => void
-  // Contenido fijo entre el header y el área scrolleable — no se
-  // va con el scroll. Pensado para cosas como un indicador de
-  // progreso de wizard (ver TaskDialog en mobile); opcional, no
-  // afecta a ningún consumidor que no lo use.
   subHeader?: React.ReactNode
   children: React.ReactNode
   onClose: () => void
@@ -96,14 +92,13 @@ export function FormDialog({
 
         )}
 
-        <VerticalScroll
-          containerClassName="flex min-h-0 flex-1 flex-col"
-          className="px-5 py-4"
-        >
+        <ScrollArea className="flex min-h-0 flex-1 flex-col">
 
-          {children}
+          <div className="px-5 py-4">
+            {children}
+          </div>
 
-        </VerticalScroll>
+        </ScrollArea>
 
         <div className="px-5 py-4">
 

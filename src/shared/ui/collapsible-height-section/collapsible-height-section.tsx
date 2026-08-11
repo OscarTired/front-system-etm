@@ -18,9 +18,11 @@ type Props = {
  * Collapse por grid 0fr/1fr (patrón CSS estándar).
  *
  * No anima height en px: esa medición se vuelve stale si el shell
- * cambia de ancho a mitad de animación. El “hueco” al cerrar el menú
- * con scroll abajo no se arregla aquí — se arregla clampeando scrollTop
- * en VerticalScroll / data-desktop-scroll cuando el contenido encoge.
+ * cambia de ancho a mitad de animación. El ajuste de scrollTop
+ * cuando el contenido encoge (ej. al cerrar una sección con el
+ * scroll abajo del todo) lo maneja el navegador solo, nativo — no
+ * hace falta (ni conviene) clampearlo a mano; eso fue justo lo que
+ * rompía el rebote nativo en ScrollArea/vertical-scroll antes.
  */
 export function CollapsibleHeightSection({
   open,

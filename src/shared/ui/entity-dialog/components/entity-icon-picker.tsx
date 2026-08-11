@@ -11,7 +11,7 @@ import {
 import type {
   EntityEditorProps,
 } from "../entity-dialog.types"
-import { VerticalScroll } from "../../vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Props =
   EntityEditorProps & {
@@ -71,9 +71,9 @@ export function EntityIconPicker({
 
       <div className="relative">
 
-        <VerticalScroll className="max-h-[40vh] px-4 py-4 tablet:max-h-64">
+        <ScrollArea className="max-h-[40vh] tablet:max-h-64">
 
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2 px-4 py-4">
 
             {sortedIcons.map(item => {
 
@@ -134,7 +134,7 @@ export function EntityIconPicker({
 
           </div>
 
-        </VerticalScroll>
+        </ScrollArea>
 
       </div>
 

@@ -13,7 +13,7 @@ import { cn } from "@/shared/utils/utils"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { useAuthStore } from "@/features/auth/store/auth-store"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import type { ProcessCounts } from "../hooks/use-sidebar-counts"
 
@@ -58,15 +58,13 @@ export function SidebarNavigation({
   let globalItemIndex = 0
 
   return (
-    <VerticalScroll
-      containerClassName="min-h-0 flex-1 w-full"
-      className={cn(
-        "overflow-x-hidden scrollbar-gutter-stable w-full",
-        isDrawer ? "px-2 py-4" : "px-3 py-3",
-      )}
-      arrowAlign="center"
-      arrowClassName="bg-[#18181b]/5 backdrop-blur-md"
-    >
+    <ScrollArea className="min-h-0 w-full flex-1">
+      <div
+        className={cn(
+          "w-full",
+          isDrawer ? "px-2 py-4" : "px-3 py-3",
+        )}
+      >
       {!isDrawer && (
         <>
           <div
@@ -168,6 +166,7 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
-    </VerticalScroll>
+      </div>
+    </ScrollArea>
   )
 }

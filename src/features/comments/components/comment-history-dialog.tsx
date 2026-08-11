@@ -22,7 +22,7 @@ import { CommentComposer } from "./comment-composer"
 import { CommentList } from "./comment-list"
 import { EmptyComments } from "./empty-comments"
 import type { Comment, CommentTarget } from "../types/comment.types"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Props = {
   target: CommentTarget
@@ -147,12 +147,8 @@ export function CommentHistoryDialog({
             </div>
           </div>
 
-          <VerticalScroll
-            className="px-5 py-4"
-            containerClassName="min-h-0 flex-1"
-            arrowTopOffset={12}
-            arrowBottomOffset={12}
-          >
+          <ScrollArea className="min-h-0 flex-1">
+          <div className="px-5 py-4">
             {loading ? (
               <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
                 <Spinner size={18} />
@@ -170,7 +166,8 @@ export function CommentHistoryDialog({
                 onReply={readOnly ? undefined : setReplyingTo}
               />
             )}
-          </VerticalScroll>
+          </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 

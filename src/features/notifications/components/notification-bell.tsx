@@ -30,7 +30,7 @@ import { NotificationHistoryDialog } from "./notification-history-dialog"
 import { resolveNotificationHref } from "../utils/resolve-notification-href"
 
 import type { Notification } from "../types/notification.types"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Props = {
   collapsed?: boolean
@@ -169,7 +169,8 @@ export function NotificationBell({
       </div>
 
       <div className="flex-1 min-h-0">
-        <VerticalScroll className="px-2 pb-2 h-full" style={{ minHeight: 180, maxHeight: isTopbar ? undefined : 384 }}>
+        <ScrollArea className="h-full" style={{ minHeight: 180, maxHeight: isTopbar ? undefined : 384 }}>
+          <div className="px-2 pb-2">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
               <Spinner size={20} className="text-neutral-400" />
@@ -210,7 +211,8 @@ export function NotificationBell({
               )}
             </div>
           )}
-        </VerticalScroll>
+          </div>
+        </ScrollArea>
       </div>
 
       <div className="shrink-0 p-2 select-none">

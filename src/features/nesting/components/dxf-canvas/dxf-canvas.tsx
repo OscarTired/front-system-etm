@@ -1389,8 +1389,8 @@ export function DxfCanvas({
               </button>
             </div>
           </div>
-          <ScrollArea className="min-h-0 flex-1" contentClassName="pr-1">
-          <div className="flex flex-col gap-1 pt-0.5">
+          <ScrollArea className="min-h-0 flex-1">
+          <div className="flex flex-col gap-1 pt-0.5 pr-1">
             {measure.measurements.map((m) => (
               <div
                 key={m.id}
