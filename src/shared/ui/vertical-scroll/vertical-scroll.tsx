@@ -85,7 +85,14 @@ export function VerticalScroll({
     if (!el) return
 
     const { scrollTop, clientHeight, scrollHeight } = el
-    const maxScroll = scrollHeight - clientHeight
+    const maxScroll = Math.max(0, scrollHeight - clientHeight)
+
+    // Origen del "hueco" al colapsar / cerrar sidebar:
+    // el contenido baja de altura y scrollTop queda más allá del máximo.
+    // Clamp aquí (ResizeObserver ya observa el content) — no en el shell.
+    if (scrollTop > maxScroll) {
+      el.scrollTop = maxScroll
+    }
 
     // Sin overflow real → ambas off
     if (maxScroll <= SCROLL_EDGE_PX) {
@@ -94,8 +101,9 @@ export function VerticalScroll({
       return
     }
 
-    setCanScrollUp(scrollTop > SCROLL_EDGE_PX)
-    setCanScrollDown(scrollTop < maxScroll - SCROLL_EDGE_PX)
+    const top = el.scrollTop
+    setCanScrollUp(top > SCROLL_EDGE_PX)
+    setCanScrollDown(top < maxScroll - SCROLL_EDGE_PX)
   }, [])
 
   const scheduleUpdate = useCallback(() => {

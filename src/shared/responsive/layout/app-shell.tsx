@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
@@ -12,6 +12,7 @@ import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-route
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
+import { useClampScroll } from "@/shared/ui/vertical-scroll/use-clamp-scroll"
 import { PullToRefresh } from "../mobile/pull-to-refresh"
 
 type Props = {
@@ -38,9 +39,13 @@ const CONTENT_ARROW_INSET = 10
 
 function DesktopShell({ children }: Props) {
   const pathname = usePathname()
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Origen del hueco: scrollTop > maxScroll cuando el contenido encoge.
+  useClampScroll(scrollRef)
 
   useEffect(() => {
-    const el = document.querySelector<HTMLElement>("[data-desktop-scroll]")
+    const el = scrollRef.current
     if (el) el.scrollTop = 0
   }, [pathname])
 
@@ -58,16 +63,6 @@ function DesktopShell({ children }: Props) {
     if (event.target !== event.currentTarget) return
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
-      // Reflow del scroll: tras cambiar el ancho del shell, alturas
-      // residuales (rows expandidos) dejan franja vacía hasta un reflow.
-      const scroller = document.querySelector<HTMLElement>("[data-desktop-scroll]")
-      if (scroller) {
-        const top = scroller.scrollTop
-        scroller.style.overflow = "hidden"
-        void scroller.offsetHeight
-        scroller.style.overflow = ""
-        scroller.scrollTop = top
-      }
     }
   }
 
@@ -80,22 +75,15 @@ function DesktopShell({ children }: Props) {
         style={{
           borderRadius,
           transition: `border-radius ${TRANSITION_TIMING}`,
-          // Contención: al animar el width del sidebar el main no debe
-          // dejar pintar hijos fuera ni generar franja del fondo #1d1c1c.
-          contain: "layout paint",
-          maxWidth: "100%",
         }}
       >
         <DesktopTopBar />
         <div
+          ref={scrollRef}
           className="hide-scrollbar min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
           data-desktop-scroll
-          style={{ maxWidth: "100%" }}
         >
-          {/* max-w-full: rows expandidos / tablas min-width no empujan el shell */}
-          <div className="mx-auto w-full max-w-full min-w-0">
-            {children}
-          </div>
+          {children}
         </div>
       </main>
     </div>
@@ -145,23 +133,7 @@ function CompactShell({ children }: Props) {
       </div>
 
       <div
-        data-mobile-panel
-        onTransitionEnd={(e) => {
-          if (e.target !== e.currentTarget) return
-          if (e.propertyName !== "transform") return
-          // Reflow VerticalScroll interno tras cerrar/abrir drawer
-          const root = e.currentTarget
-          const scroller = root.querySelector<HTMLElement>("[data-scroll-container], .overflow-y-auto")
-          if (scroller) {
-            const top = scroller.scrollTop
-            scroller.style.overflow = "hidden"
-            void scroller.offsetHeight
-            scroller.style.overflow = ""
-            scroller.scrollTop = top
-          }
-          window.dispatchEvent(new Event("resize"))
-        }}
-        className="absolute inset-0 z-10 overflow-hidden bg-[#050505] [contain:layout_paint]"
+        className="absolute inset-0 z-10 overflow-hidden bg-[#050505] contain-[layout_paint]"
         style={{
           // Solo 0 o DRAWER_WIDTH — sin valores intermedios en JS que
           // puedan dejar el panel “pasado” del cierre tras un reflow
