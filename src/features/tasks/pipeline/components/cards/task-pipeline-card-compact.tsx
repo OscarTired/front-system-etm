@@ -43,7 +43,7 @@ export function TaskPipelineCardCompact({
 
     <div
       className={cn(
-        "flex h-12 items-center gap-2.5 rounded-xl bg-white/6 pl-3 transition hover:bg-white/10",
+        "flex h-12 min-w-0 w-full items-center gap-2.5 rounded-xl bg-white/6 pl-3 transition hover:bg-white/10",
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >

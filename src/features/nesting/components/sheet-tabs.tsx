@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { useMemo } from "react"
 import { cn } from "@/shared/utils/utils"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
@@ -191,7 +193,8 @@ export function SheetTabs({
                   <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
                     {thicknessLabel(group.thicknessMm)} · {group.members.length} {groupWord} de plancha
                   </div>
-                  <div className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
+                  <ScrollArea className="max-h-64 min-w-0 w-full">
+                    <div className="flex min-w-0 w-full flex-col gap-0.5">
                     {group.members.map(({ index, item }) => {
                       const isActive = index === activeIndex
                       return (
@@ -219,6 +222,7 @@ export function SheetTabs({
                       )
                     })}
                   </div>
+                  </ScrollArea>
                 </PopoverContent>
               </Popover>
             )

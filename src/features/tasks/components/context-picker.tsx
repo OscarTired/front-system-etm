@@ -400,7 +400,7 @@ export function ContextPicker({
           </div>
 
           <CommandList
-            className="max-h-80 overflow-y-auto"
+            className="max-h-80 min-w-0 w-full"
           >
 
             <CommandEmpty>

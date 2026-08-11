@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { useState } from "react"
 import {
   ChevronRight,
@@ -323,7 +325,8 @@ export function PropertiesPanel({
                 <AlertTriangle className="h-3 w-3" />
                 Colisiones en plancha ({collisionPairs.length})
               </span>
-              <ul className="flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+              <ScrollArea className="max-h-40 min-w-0 w-full">
+              <ul className="flex min-w-0 w-full flex-col gap-0.5">
                 {collisionPairs.map((p) => (
                   <li key={`${p.a}-${p.b}`}>
                     <button
@@ -338,6 +341,7 @@ export function PropertiesPanel({
                   </li>
                 ))}
               </ul>
+              </ScrollArea>
             </div>
           )}
         </div>

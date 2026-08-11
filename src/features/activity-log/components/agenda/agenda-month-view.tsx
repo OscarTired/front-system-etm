@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { useMemo } from "react"
 
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
@@ -236,7 +238,8 @@ export function AgendaMonthView({
                       )}
 
                       {!isCompact && hasLogs && (
-                        <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden scrollbar-none">
+                        <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
+                        <div className="flex min-w-0 w-full flex-col gap-0.5">
                           {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
                             <MonthEventCard key={log.id} log={log} />
                           ))}
@@ -246,6 +249,7 @@ export function AgendaMonthView({
                             </span>
                           )}
                         </div>
+                        </ScrollArea>
                       )}
                     </>
                   )}

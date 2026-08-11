@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { useMemo } from "react"
 
 import { SHIFT_GROUPS } from "../../constants/shift-definitions"
@@ -98,7 +100,8 @@ export function AgendaWeekView({
           })}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col divide-y divide-white/5 overflow-y-auto scrollbar-none">
+        <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
+        <div className="flex min-w-0 w-full flex-col divide-y divide-white/5">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
             const iconColorClass =
@@ -153,6 +156,7 @@ export function AgendaWeekView({
             )
           })}
         </div>
+        </ScrollArea>
       </div>
     )
   }
@@ -162,7 +166,7 @@ export function AgendaWeekView({
       className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl"
       style={{ minHeight: "calc(100dvh - 12rem)" }}
     >
-      <div className="min-h-0 flex-1 overflow-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
         <div
           className="grid h-full min-h-full w-full bg-[#0c0c0e]"
           style={{
@@ -275,7 +279,7 @@ export function AgendaWeekView({
                     <div
                       key={`${group.key}-${iso}`}
                       className={cn(
-                        "flex min-h-0 flex-col overflow-y-auto overflow-x-hidden bg-[#0c0c0e] p-2 transition-colors duration-150",
+                        "flex min-h-0 min-w-0 flex-col overflow-hidden bg-[#0c0c0e] p-2 transition-colors duration-150",
                         empty ? "justify-center" : "justify-start",
                         !isLast && "border-b border-white/5",
                         isWeekend && "bg-white/2",
@@ -325,7 +329,7 @@ export function AgendaWeekView({
             )
           })}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   )
 }

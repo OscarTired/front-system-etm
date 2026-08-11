@@ -210,7 +210,7 @@ export function RoleSelect({
           </div>
 
           <CommandList
-            className="max-h-64 overflow-y-auto"
+            className="max-h-64 min-w-0 w-full"
           >
 
             <CommandEmpty>

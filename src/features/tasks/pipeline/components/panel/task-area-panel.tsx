@@ -92,7 +92,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
           )}
         </SheetHeader>
 
-        <ScrollArea className={cn("min-h-0 flex-1 p-4", state.summonTarget && "pb-24")}>
+        <ScrollArea className={cn("min-h-0 min-w-0 w-full flex-1 p-4", state.summonTarget && "pb-24")}>
           {state.loading ? (
             <div className="flex h-24 items-center justify-center text-sm text-neutral-500">Cargando…</div>
           ) : state.areas.length === 0 ? (
@@ -100,7 +100,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
               Selecciona al menos un área con el botón de arriba para ver sus tareas acá.
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex min-w-0 w-full flex-col gap-6">
               {state.currentUserId && (
                 <PendingInvitesSection tasks={state.allTasks} currentUserId={state.currentUserId} />
               )}

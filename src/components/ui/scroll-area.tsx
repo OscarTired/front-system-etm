@@ -8,13 +8,12 @@ import { cn } from "@/lib/utils"
 /**
  * Scroll vertical del design system — @radix-ui/react-scroll-area.
  *
- * Contrato de altura (obligatorio para que el thumb trackee):
- * - Padre acota alto: min-h-0 + (flex-1 | h-full | max-h-*)
- * - Root es overflow-hidden y llena ese alto
- * - Viewport es size-full y scrollea por dentro
- *
- * type default "scroll": barra visible al scrollear (desktop + touch).
- * No uses overflow-y-auto manual en features; usá este componente.
+ * Contrato:
+ * - El PADRE acota alto y ancho (min-h-0, flex-1 | h-full | max-h-*, min-w-0, w-full | max-w-*).
+ * - Este Root llena ese hueco.
+ * - Los HIJOS se adaptan: min-w-0 w-full + truncate en texto flexible.
+ * - type="scroll": thumb visible al scrollear.
+ * - Features no usan overflow-y-auto manual para listas/paneles.
  */
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
@@ -24,12 +23,15 @@ const ScrollArea = React.forwardRef<
     ref={ref}
     type={type}
     data-slot="scroll-area"
-    className={cn("relative h-full min-h-0 overflow-hidden", className)}
+    className={cn(
+      "relative h-full min-h-0 w-full min-w-0 overflow-hidden",
+      className,
+    )}
     {...props}
   >
     <ScrollAreaPrimitive.Viewport
       data-slot="scroll-area-viewport"
-      className="h-full max-h-full w-full rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="h-full max-h-full w-full max-w-full min-w-0 rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       {children}
     </ScrollAreaPrimitive.Viewport>

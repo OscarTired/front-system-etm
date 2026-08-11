@@ -37,7 +37,7 @@ export function MentionSuggestions({ users, onSelect }: Props) {
 
       <Command className="bg-transparent">
 
-        <CommandList className="max-h-64 overflow-y-auto">
+        <CommandList className="max-h-64 min-w-0 w-full">
 
           <CommandGroup>
 

@@ -152,7 +152,7 @@ export function RoleMultiSelect({
 
           </div>
 
-          <CommandList className="max-h-64 overflow-y-auto">
+          <CommandList className="max-h-64 min-w-0 w-full">
 
             <CommandEmpty>
               Sin resultados

@@ -93,7 +93,7 @@ export function SummonOperatorButton({ processCode, active, selectedOperatorId, 
 
         <Command>
 
-          <CommandList className="max-h-64 overflow-y-auto">
+          <CommandList className="max-h-64 min-w-0 w-full">
 
             <CommandEmpty>
               No hay operarios en esta área todavía.

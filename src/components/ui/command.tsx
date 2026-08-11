@@ -112,10 +112,12 @@ export const CommandList = React.forwardRef<
     ref
   ) => {
     return (
-      <ScrollArea className={cn("relative overflow-hidden rounded-xl", className)}>
+      <ScrollArea
+        className={cn("relative min-h-0 w-full min-w-0 rounded-xl", className)}
+      >
         <CommandPrimitive.List
           ref={ref}
-          className="outline-none"
+          className="min-w-0 w-full outline-none"
           style={style}
           {...props}
         />
