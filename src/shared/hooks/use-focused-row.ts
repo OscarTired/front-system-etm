@@ -1,8 +1,6 @@
 "use client"
 
-import {
-  useEffect,
-} from "react"
+import { useEffect } from "react"
 
 type Props = {
   focusedId?: string
@@ -11,10 +9,10 @@ type Props = {
 }
 
 /** Quiet period after the last layout change before we consider height final. */
-const LAYOUT_SETTLE_MS = 120
+const LAYOUT_SETTLE_MS = 150
 
 /** If the row never appears (filtered / bad id), stop waiting. */
-const FIND_TIMEOUT_MS = 4000
+const FIND_TIMEOUT_MS = 2500
 
 function isScrollable(el: HTMLElement): boolean {
   const { overflowY } = window.getComputedStyle(el)
@@ -29,8 +27,8 @@ function isScrollable(el: HTMLElement): boolean {
 }
 
 /**
- * Nearest ancestor that actually scrolls. Lists live inside
- * `overflow-y-auto` panes — never assume `window`.
+ * Nearest ancestor that actually scrolls (lista VerticalScroll / pane).
+ * Never assume window.
  */
 function getScrollParent(el: HTMLElement): HTMLElement | null {
   let parent = el.parentElement
@@ -41,15 +39,7 @@ function getScrollParent(el: HTMLElement): HTMLElement | null {
   return null
 }
 
-/**
- * Center `el` inside its scroll parent (or the viewport).
- * `behavior: "auto"` while layout is still changing; `"smooth"` only
- * for the final settle so we don't stack competing smooth scrolls.
- */
-function centerInScrollParent(
-  el: HTMLElement,
-  behavior: ScrollBehavior,
-) {
+function centerInScrollParent(el: HTMLElement, behavior: ScrollBehavior) {
   const parent = getScrollParent(el)
 
   if (!parent) {
@@ -70,14 +60,13 @@ function centerInScrollParent(
 }
 
 /**
- * Keep the focused row centered while its expanded content grows,
- * then do one smooth center when height stops changing.
- *
- * Driven by ResizeObserver (real layout), not a fixed animation delay.
+ * Center while expanded content grows; one smooth settle when height stabilizes.
+ * Throttled to 1 scroll per frame — avoids trave on mobile when pipeline mounts.
  */
 function trackUntilSettled(el: HTMLElement): () => void {
   let settleTimer: number | null = null
   let rafId = 0
+  let pendingCenter = false
   let lastHeight = -1
   let disposed = false
 
@@ -87,41 +76,38 @@ function trackUntilSettled(el: HTMLElement): () => void {
   }
 
   const scheduleSettle = () => {
-    if (settleTimer !== null) {
-      window.clearTimeout(settleTimer)
-    }
-    // Layout went quiet → height is final for this open cycle.
+    if (settleTimer !== null) window.clearTimeout(settleTimer)
     settleTimer = window.setTimeout(() => {
       settleTimer = null
+      // Un solo smooth al final (antes había dos seguidos → jank).
       centerNow("smooth")
-      // One more frame after paint of the smooth target's start.
-      rafId = window.requestAnimationFrame(() => {
-        centerNow("smooth")
-      })
     }, LAYOUT_SETTLE_MS)
   }
 
   const onLayout = () => {
     if (disposed) return
     const height = el.getBoundingClientRect().height
-    // Skip no-ops (observer can fire without size change).
     if (height === lastHeight) {
       scheduleSettle()
       return
     }
     lastHeight = height
-    // Instant track while KPIs / pipeline / comments mount.
-    centerNow("auto")
+    // Máx. un center("auto") por frame mientras monta el expandido.
+    if (!pendingCenter) {
+      pendingCenter = true
+      rafId = window.requestAnimationFrame(() => {
+        pendingCenter = false
+        centerNow("auto")
+      })
+    }
     scheduleSettle()
   }
 
-  // Initial center (collapsed or already expanded).
   centerNow("auto")
   scheduleSettle()
 
   const ro = new ResizeObserver(() => {
-    // rAF: read layout after the browser applies the new size.
-    rafId = window.requestAnimationFrame(onLayout)
+    onLayout()
   })
   ro.observe(el)
 
@@ -133,63 +119,71 @@ function trackUntilSettled(el: HTMLElement): () => void {
   }
 }
 
+/**
+ * Encuentra el row sin MutationObserver de todo document.body
+ * (en mobile procesos el attr a veces llega 1 tick después del mount;
+ * el observer global era la causa principal del trave).
+ */
+function waitForRow(
+  selector: string,
+  onFound: (el: HTMLElement) => void,
+  timeoutMs: number,
+): () => void {
+  const existing = document.querySelector<HTMLElement>(selector)
+  if (existing) {
+    onFound(existing)
+    return () => {}
+  }
+
+  let cancelled = false
+  let raf = 0
+  const start = performance.now()
+
+  const tick = () => {
+    if (cancelled) return
+    const el = document.querySelector<HTMLElement>(selector)
+    if (el) {
+      onFound(el)
+      return
+    }
+    if (performance.now() - start >= timeoutMs) return
+    raf = window.requestAnimationFrame(tick)
+  }
+
+  raf = window.requestAnimationFrame(tick)
+
+  return () => {
+    cancelled = true
+    window.cancelAnimationFrame(raf)
+  }
+}
+
 export function useFocusedRow({
   focusedId,
   setExpandedRowId,
   focusToken,
 }: Props) {
-
   useEffect(() => {
-
-    if (!focusedId) {
-      return
-    }
+    if (!focusedId) return
 
     setExpandedRowId(focusedId)
 
     const selector = `[data-expanded-row-id="${CSS.escape(focusedId)}"]`
 
     let stopTracking: (() => void) | null = null
-    let findTimeout = 0
-    let mutation: MutationObserver | null = null
 
-    const attach = (el: HTMLElement) => {
-      mutation?.disconnect()
-      mutation = null
-      stopTracking?.()
-      stopTracking = trackUntilSettled(el)
-    }
-
-    const existing = document.querySelector<HTMLElement>(selector)
-    if (existing) {
-      attach(existing)
-    } else {
-      // Row not in DOM yet (expand / filter / data loading).
-      mutation = new MutationObserver(() => {
-        const el = document.querySelector<HTMLElement>(selector)
-        if (el) attach(el)
-      })
-      mutation.observe(document.body, {
-        childList: true,
-        subtree: true,
-      })
-    }
-
-    findTimeout = window.setTimeout(() => {
-      mutation?.disconnect()
-      mutation = null
-    }, FIND_TIMEOUT_MS)
+    const stopWait = waitForRow(
+      selector,
+      el => {
+        stopTracking?.()
+        stopTracking = trackUntilSettled(el)
+      },
+      FIND_TIMEOUT_MS,
+    )
 
     return () => {
-      mutation?.disconnect()
+      stopWait()
       stopTracking?.()
-      window.clearTimeout(findTimeout)
     }
-
-  }, [
-    focusedId,
-    setExpandedRowId,
-    focusToken,
-  ])
-
+  }, [focusedId, setExpandedRowId, focusToken])
 }

@@ -84,9 +84,13 @@ export function ProcessTableCard({
     s => s.taskSortMode,
   )
 
+  // Mobile expande vía mobileExpandedKey; desktop vía expand store.
+  // useFocusedRow solo necesita setExpandedRowId en desktop; en mobile
+  // un no-op evita trabajo de store inútil mientras el scroll sigue
+  // encontrando [data-expanded-row-id] en TaskProcessColumn.
   useFocusedRow({
     focusedId: focusedTaskId,
-    setExpandedRowId: expand.setExpandedRowId,
+    setExpandedRowId: isMobile ? () => {} : expand.setExpandedRowId,
     focusToken,
   })
 

@@ -137,6 +137,7 @@ function ColumnContent({
               return (
                 <div
                   key={key}
+                  data-expanded-row-id={task.id}
                   className={cn(
                     "flex h-12 shrink-0 items-center justify-end rounded-xl bg-white/4 px-3 transition-opacity duration-300",
                     isRowDimmed ? "opacity-10 pointer-events-none" : "opacity-50"
@@ -185,6 +186,7 @@ function ColumnContent({
               return (
                 <div
                   key={key}
+                  data-expanded-row-id={task.id}
                   className={cn(
                     "transition-opacity duration-300",
                     isRowDimmed && "opacity-20 pointer-events-none"
@@ -202,8 +204,9 @@ function ColumnContent({
               step.status === "REVIEWED"
 
             return (
-              <div
-                key={key}
+                <div
+                  key={key}
+                  data-expanded-row-id={task.id}
                 role={selectionMode ? "button" : undefined}
                 tabIndex={selectionMode ? (isLocked ? -1 : 0) : undefined}
                 aria-disabled={selectionMode ? isLocked : undefined}
