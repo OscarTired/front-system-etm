@@ -22,30 +22,44 @@ const PopoverModeContext = React.createContext<boolean>(false)
 const PopoverCloseContext = React.createContext<() => void>(() => {})
 const PopoverOpenContext = React.createContext<boolean>(false)
 
-function useVisualViewportHeight() {
-  const [height, setHeight] = React.useState<number | null>(null)
+/**
+ * Métricas del visual viewport (teclado móvil).
+ * - height: área visible real
+ * - keyboardInset: px bajo el visual viewport (teclado / chrome)
+ * Anclar el sheet con bottom = keyboardInset, no solo maxHeight.
+ */
+function useVisualViewportMetrics() {
+  const [metrics, setMetrics] = React.useState<{
+    height: number
+    keyboardInset: number
+  } | null>(null)
 
   React.useEffect(() => {
     const viewport = window.visualViewport
+    if (!viewport) return
 
-    if (!viewport) {
-      return
+    const update = () => {
+      const height = viewport.height
+      const keyboardInset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop,
+      )
+      setMetrics({ height, keyboardInset })
     }
 
-    const update = () => setHeight(viewport.height)
-
     update()
-
     viewport.addEventListener("resize", update)
     viewport.addEventListener("scroll", update)
+    window.addEventListener("resize", update)
 
     return () => {
       viewport.removeEventListener("resize", update)
       viewport.removeEventListener("scroll", update)
+      window.removeEventListener("resize", update)
     }
   }, [])
 
-  return height
+  return metrics
 }
 
 type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
@@ -340,7 +354,7 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
-  const visualViewportHeight = useVisualViewportHeight()
+  const visualViewport = useVisualViewportMetrics()
 
   if (isSheet) {
     const transitionStyle: string = isDragging
@@ -387,9 +401,13 @@ export function PopoverContent({
             ...style,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: transitionStyle,
-            maxHeight: visualViewportHeight
-              ? `${visualViewportHeight * 0.85}px`
-              : undefined,
+            // Sobre el teclado: bottom = inset del visual viewport
+            bottom: visualViewport
+              ? `${visualViewport.keyboardInset}px`
+              : 0,
+            maxHeight: visualViewport
+              ? `${visualViewport.height * 0.85}px`
+              : "85dvh",
           }}
         >
           <VisuallyHidden asChild>

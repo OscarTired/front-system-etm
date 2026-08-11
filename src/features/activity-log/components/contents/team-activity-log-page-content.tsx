@@ -178,7 +178,24 @@ function ShiftBucketedLogs({ logs }: { logs: Log[] }) {
   )
 }
 
-function EntryCountBadge({ count }: { count: number }) {
+function EntryCountBadge({
+  count,
+  compact = false,
+}: {
+  count: number
+  compact?: boolean
+}) {
+  if (compact) {
+    return (
+      <div
+        className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 px-2 text-xs font-semibold tabular-nums text-neutral-300"
+        title={`${count} ${count === 1 ? "entrada" : "entradas"}`}
+      >
+        {count}
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
       {count} {count === 1 ? "entrada" : "entradas"}
@@ -274,29 +291,32 @@ export function TeamActivityLogPageContent() {
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
       {/* Toolbar — mismo layout + toggle */}
-      <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-3 shadow-lg backdrop-blur-xl tablet:p-4">
-        <div className="flex flex-col items-center gap-3 tablet:hidden">
-          <div className="w-full max-w-56">
-            <UserSelect
-              value={selectedUser}
-              items={users as User[]}
-              placeholder="Todo el equipo"
-              onChange={handleUserChange}
-            />
-          </div>
-
-          <DateNavigator
-            value={date}
-            onChange={handleDateChange}
-            placeholder="Fecha"
-            maxDate={new Date()}
-            markedDates={markedDates}
-            onViewMonthChange={handleViewMonthChange}
+      <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
+        <div className="flex flex-col gap-2 tablet:hidden">
+          <UserSelect
+            value={selectedUser}
+            items={users as User[]}
+            placeholder="Todo el equipo"
+            onChange={handleUserChange}
           />
 
-          <div className="flex flex-col items-center gap-2">
-            <TeamBitacoraViewToggle />
-            <EntryCountBadge count={logs.length} />
+          <div className="flex items-center gap-1.5">
+            <div className="shrink-0">
+              <TeamBitacoraViewToggle />
+            </div>
+
+            <div className="min-w-0 flex-1 flex justify-center">
+              <DateNavigator
+                value={date}
+                onChange={handleDateChange}
+                placeholder="Fecha"
+                maxDate={new Date()}
+                markedDates={markedDates}
+                onViewMonthChange={handleViewMonthChange}
+              />
+            </div>
+
+            <EntryCountBadge count={logs.length} compact />
           </div>
         </div>
 
