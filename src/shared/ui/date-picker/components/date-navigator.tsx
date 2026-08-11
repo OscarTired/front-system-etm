@@ -16,14 +16,22 @@ type Props = {
   maxDate?: Date
   className?: string
   markedDates?: Record<string, DayMarker[]>
-  /** Mes visible en el popover → para pedir marked-dates del mes correcto */
   onViewMonthChange?: (month: Date) => void
+  /** Flechas + visor del día + icono (toolbar móvil) */
+  iconOnly?: boolean
 }
 
 function addDays(date: Date, amount: number) {
   const next = new Date(date)
   next.setDate(next.getDate() + amount)
   return next
+}
+
+function formatDayViewer(date: Date) {
+  return date.toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "2-digit",
+  })
 }
 
 export function DateNavigator({
@@ -35,6 +43,7 @@ export function DateNavigator({
   className,
   markedDates,
   onViewMonthChange,
+  iconOnly = false,
 }: Props) {
   const current = value ?? new Date()
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -49,17 +58,30 @@ export function DateNavigator({
     onChange(addDays(current, amount))
   }
 
+  const arrowClass = iconOnly
+    ? "flex h-8 w-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+    : "flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-0.5", className)}>
       <button
         type="button"
         onClick={() => goTo(-1)}
         disabled={atMin || arrowsDisabled}
         aria-label="Día anterior"
-        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+        className={arrowClass}
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft size={iconOnly ? 15 : 16} />
       </button>
+
+      {iconOnly && (
+        <span
+          className="min-w-11 shrink-0 text-center text-xs font-semibold tabular-nums tracking-wide text-neutral-200"
+          aria-live="polite"
+        >
+          {formatDayViewer(current)}
+        </span>
+      )}
 
       <DatePicker
         value={value}
@@ -70,6 +92,7 @@ export function DateNavigator({
         markedDates={markedDates}
         onOpenChange={setPickerOpen}
         onViewMonthChange={onViewMonthChange}
+        iconOnly={iconOnly}
       />
 
       <button
@@ -77,9 +100,9 @@ export function DateNavigator({
         onClick={() => goTo(1)}
         disabled={atMax || arrowsDisabled}
         aria-label="Día siguiente"
-        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+        className={arrowClass}
       >
-        <ChevronRight size={16} />
+        <ChevronRight size={iconOnly ? 15 : 16} />
       </button>
     </div>
   )

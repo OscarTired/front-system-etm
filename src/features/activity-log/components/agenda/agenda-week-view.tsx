@@ -50,10 +50,7 @@ export function AgendaWeekView({
 
   if (isCompact) {
     return (
-      <div
-        className="flex w-full flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e]"
-        style={{ minHeight: "calc(100dvh - 14rem)" }}
-      >
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e]">
         <div
           className={cn(
             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
@@ -100,7 +97,7 @@ export function AgendaWeekView({
           })}
         </div>
 
-        <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
+        <ScrollArea className="h-full min-h-0 min-w-0 w-full flex-1">
         <div className="flex min-w-0 w-full flex-col divide-y divide-white/5">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
@@ -162,11 +159,8 @@ export function AgendaWeekView({
   }
 
   return (
-    <div
-      className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl"
-      style={{ minHeight: "calc(100dvh - 12rem)" }}
-    >
-      <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
+      <ScrollArea className="h-full min-h-0 min-w-0 w-full flex-1">
         <div
           className="grid h-full min-h-full w-full bg-[#0c0c0e]"
           style={{

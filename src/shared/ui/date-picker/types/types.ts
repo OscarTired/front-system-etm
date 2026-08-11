@@ -20,6 +20,8 @@ export interface DatePickerProps {
   onOpenChange?: (open: boolean) => void
   /** Mes visible en el calendario del popover */
   onViewMonthChange?: (month: Date) => void
+  /** Solo botón con icono de calendario (sin input de texto) */
+  iconOnly?: boolean
 }
 
 export interface CalendarDay {

@@ -254,6 +254,22 @@ export function TeamActivityLogPageContent() {
     setViewMonth(month)
   }, [])
 
+  const isToday = (() => {
+    if (!date) return false
+    const now = new Date()
+    return (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate()
+    )
+  })()
+
+  function goToToday() {
+    const today = new Date()
+    setDate(today)
+    setViewMonth(today)
+  }
+
   const groupedLogs = useMemo(() => {
     if (selectedUser) return []
 
@@ -301,8 +317,20 @@ export function TeamActivityLogPageContent() {
           />
 
           <div className="flex items-center gap-1.5">
-            <div className="shrink-0">
-              <TeamBitacoraViewToggle />
+            <div className="flex shrink-0 items-center gap-1">
+              <TeamBitacoraViewToggle compact />
+              <button
+                type="button"
+                onClick={goToToday}
+                disabled={isToday}
+                className={
+                  isToday
+                    ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
+                    : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+                }
+              >
+                Hoy
+              </button>
             </div>
 
             <div className="min-w-0 flex-1 flex justify-center">
@@ -313,6 +341,7 @@ export function TeamActivityLogPageContent() {
                 maxDate={new Date()}
                 markedDates={markedDates}
                 onViewMonthChange={handleViewMonthChange}
+                iconOnly
               />
             </div>
 
@@ -321,15 +350,21 @@ export function TeamActivityLogPageContent() {
         </div>
 
         <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
-          <div className="justify-self-start">
-            <div className="w-56">
-              <UserSelect
-                value={selectedUser}
-                items={users as User[]}
-                placeholder="Todo el equipo"
-                onChange={handleUserChange}
-              />
-            </div>
+          {/* Mismo orden que Prod/Ing: vista | fecha | filtro + contador */}
+          <div className="flex items-center gap-2 justify-self-start">
+            <TeamBitacoraViewToggle />
+            <button
+              type="button"
+              onClick={goToToday}
+              disabled={isToday}
+              className={
+                isToday
+                  ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
+                  : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+              }
+            >
+              Hoy
+            </button>
           </div>
 
           <div className="justify-self-center">
@@ -344,7 +379,14 @@ export function TeamActivityLogPageContent() {
           </div>
 
           <div className="flex items-center gap-2 justify-self-end">
-            <TeamBitacoraViewToggle />
+            <div className="w-56">
+              <UserSelect
+                value={selectedUser}
+                items={users as User[]}
+                placeholder="Todo el equipo"
+                onChange={handleUserChange}
+              />
+            </div>
             <EntryCountBadge count={logs.length} />
           </div>
         </div>

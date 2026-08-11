@@ -244,7 +244,7 @@ export function ActivityLogPageContent({
           /* Móvil: una franja — vista + hoy + fecha + contador numérico */
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 shrink">
-              <BitacoraViewToggle />
+              <BitacoraViewToggle compact />
             </div>
 
             <button
@@ -269,6 +269,7 @@ export function ActivityLogPageContent({
                 maxDate={new Date()}
                 markedDates={markedDates}
                 onViewMonthChange={handleViewMonthChange}
+                iconOnly
               />
             </div>
 
@@ -325,7 +326,7 @@ export function ActivityLogPageContent({
 
       {/* Cuerpo — mismo patrón que TaskPageContent (scroll en el hijo) */}
       {isAgenda && (
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AgendaWeekView
             anchorDate={date}
             logs={rangeLogs}
@@ -337,7 +338,7 @@ export function ActivityLogPageContent({
       )}
 
       {isMonth && (
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AgendaMonthView
             anchorDate={date}
             logs={rangeLogs}

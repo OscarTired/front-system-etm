@@ -1,5 +1,6 @@
 "use client"
 
+import { Calendar } from "lucide-react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { useCallback, useRef, useState, useMemo, useEffect } from "react"
 import { DateCalendar } from "./date-calendar"
@@ -40,6 +41,7 @@ export function DatePicker({
   markedDates,
   onOpenChange: onOpenChangeProp,
   onViewMonthChange,
+  iconOnly = false,
 }: DatePickerProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const { isMobile } = useResponsive()
@@ -108,24 +110,48 @@ export function DatePicker({
     [handleInputKeyDown, handleOpenChange],
   )
 
+  const dateLabel =
+    value
+      ? value.toLocaleDateString("es-PE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : (placeholder ?? "Fecha")
+
   return (
     <Popover open={open} onOpenChange={disabled ? undefined : handleOpenChange}>
       <PopoverTrigger asChild>
-        <div className={className}>
-          <DateInput
-            ref={inputRef}
-            value={inputValue}
-            placeholder={placeholder}
+        {iconOnly ? (
+          <button
+            type="button"
             disabled={disabled}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            onKeyDown={handleKeyDownWithEscape}
-            onFocus={handleInputFocus}
-            onClick={() => {
-              if (!isMobile) handleOpenChange(true)
-            }}
-          />
-        </div>
+            aria-label={dateLabel}
+            title={dateLabel}
+            className={
+              className ??
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-40"
+            }
+          >
+            <Calendar size={16} />
+          </button>
+        ) : (
+          <div className={className}>
+            <DateInput
+              ref={inputRef}
+              value={inputValue}
+              placeholder={placeholder}
+              disabled={disabled}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDownWithEscape}
+              onFocus={handleInputFocus}
+              onClick={() => {
+                if (!isMobile) handleOpenChange(true)
+              }}
+            />
+          </div>
+        )}
       </PopoverTrigger>
 
       <PopoverContent
@@ -136,7 +162,7 @@ export function DatePicker({
         floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
         className="mx-auto flex w-full max-w-xs flex-col items-center justify-center gap-3 p-4"
       >
-        {isMobile && (
+        {isMobile && !iconOnly && (
           <div className="flex w-full justify-center">
             <div className="w-full max-w-70">
               <DateInput

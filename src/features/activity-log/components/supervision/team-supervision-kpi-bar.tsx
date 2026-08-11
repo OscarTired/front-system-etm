@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/shared/utils/utils"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import type {
   TeamSupervisionKpis,
   TeamSupervisionStatusFilter,
@@ -16,6 +17,7 @@ type Props = {
 type Card = {
   key: string
   label: string
+  shortLabel: string
   value: string
   hint?: string
   filter: TeamSupervisionStatusFilter
@@ -40,12 +42,14 @@ export function TeamSupervisionKpiBar({
   onFilterChange,
   loading = false,
 }: Props) {
+  const { isCompact } = useResponsive()
   const data = loading ? EMPTY_KPIS : kpis
 
   const cards: Card[] = [
     {
       key: "coverage",
       label: "Cobertura",
+      shortLabel: "Cob.",
       value: `${data.coveragePct}%`,
       hint: `${data.withLogs}/${data.teamSize}`,
       filter: "all",
@@ -59,6 +63,7 @@ export function TeamSupervisionKpiBar({
     {
       key: "missing",
       label: "Sin registro",
+      shortLabel: "Sin",
       value: String(data.missing),
       filter: "missing",
       tone: data.missing > 0 ? "danger" : "ok",
@@ -66,23 +71,32 @@ export function TeamSupervisionKpiBar({
     {
       key: "partial",
       label: "Parcial",
+      shortLabel: "Parc.",
       value: String(data.partial),
-      hint: "solo AUTO",
+      hint: isCompact ? undefined : "solo AUTO",
       filter: "partial",
       tone: data.partial > 0 ? "warn" : "neutral",
     },
     {
       key: "entries",
       label: "Entradas",
+      shortLabel: "Ent.",
       value: String(data.totalEntries),
-      hint: `${data.manualEntries} man · ${data.autoEntries} auto`,
+      hint: isCompact
+        ? undefined
+        : `${data.manualEntries} man · ${data.autoEntries} auto`,
       filter: "all",
       tone: "neutral",
     },
   ]
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-2 tablet:grid-cols-4">
+    <div
+      className={cn(
+        "grid min-w-0 gap-1.5",
+        isCompact ? "grid-cols-4" : "grid-cols-2 gap-2 tablet:grid-cols-4",
+      )}
+    >
       {cards.map(card => {
         const active = card.filter !== "all" && filter === card.filter
 
@@ -91,6 +105,11 @@ export function TeamSupervisionKpiBar({
             key={card.key}
             type="button"
             disabled={loading}
+            title={
+              card.hint
+                ? `${card.label}: ${card.value} (${card.hint})`
+                : `${card.label}: ${card.value}`
+            }
             onClick={() => {
               if (loading) return
               if (card.filter === "all") {
@@ -100,25 +119,41 @@ export function TeamSupervisionKpiBar({
               onFilterChange(filter === card.filter ? "all" : card.filter)
             }}
             className={cn(
-              "flex min-w-0 flex-col items-start rounded-2xl px-3.5 py-3 text-left transition",
+              "flex min-w-0 flex-col text-left transition",
+              isCompact
+                ? "items-center rounded-xl px-1.5 py-2"
+                : "items-start rounded-2xl px-3.5 py-3",
               "bg-white/5 hover:bg-white/8",
-              active && "bg-white/1 ring-0",
+              active && "bg-white/10 ring-1 ring-white/15",
               loading && "pointer-events-none animate-pulse",
             )}
           >
-            <span className="text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
-              {card.label}
+            <span
+              className={cn(
+                "font-semibold tracking-wider text-neutral-500 uppercase",
+                isCompact ? "text-[8px]" : "text-[10px]",
+              )}
+            >
+              {isCompact ? card.shortLabel : card.label}
             </span>
             {loading ? (
               <>
-                <span className="mt-1 h-7 w-12 rounded bg-white/10" />
-                <span className="mt-1 h-3 w-16 rounded bg-white/8" />
+                <span
+                  className={cn(
+                    "mt-1 rounded bg-white/10",
+                    isCompact ? "h-5 w-8" : "h-7 w-12",
+                  )}
+                />
+                {!isCompact && (
+                  <span className="mt-1 h-3 w-16 rounded bg-white/8" />
+                )}
               </>
             ) : (
               <>
                 <span
                   className={cn(
-                    "mt-1 text-2xl font-bold tabular-nums tracking-tight",
+                    "font-bold tabular-nums tracking-tight",
+                    isCompact ? "mt-0.5 text-base" : "mt-1 text-2xl",
                     card.tone === "danger" && "text-rose-400",
                     card.tone === "warn" && "text-amber-400",
                     card.tone === "ok" && "text-emerald-400",
@@ -128,7 +163,12 @@ export function TeamSupervisionKpiBar({
                   {card.value}
                 </span>
                 {card.hint ? (
-                  <span className="mt-0.5 text-[11px] text-neutral-500">
+                  <span
+                    className={cn(
+                      "text-neutral-500",
+                      isCompact ? "mt-0 text-[9px]" : "mt-0.5 text-[11px]",
+                    )}
+                  >
                     {card.hint}
                   </span>
                 ) : null}
