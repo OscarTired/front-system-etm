@@ -40,16 +40,12 @@ export const metadata: Metadata = {
     "ETM SAC Production System",
 }
 
-// Explícito en vez de confiar en el default implícito de Next —
-// sin esto, según versión/navegador, el mobile puede aplicar el
-// clásico delay de ~300ms en cada tap (esperando ver si es un
-// doble-tap para hacer zoom), sintiéndose como que "todo responde
-// lento" en toda la app.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  interactiveWidget: "resizes-content",
 }
 
 export default function RootLayout({
@@ -78,14 +74,6 @@ export default function RootLayout({
 
               </div>
 
-              {/* Adentro de ResponsiveProvider a propósito — antes
-                  estaba afuera de TODOS los providers (hermano de
-                  QueryProvider), así que cualquier cosa que sonner
-                  renderice dentro de un toast (ej. NotificationToast,
-                  que usa DynamicBadge, que usa useResponsive() por su
-                  cuenta) explotaba con "useResponsive debe usarse
-                  dentro de un ResponsiveProvider" — el toast vivía
-                  fuera del árbol de React que provee ese contexto. */}
               <Sonner />
 
             </ResponsiveProvider>

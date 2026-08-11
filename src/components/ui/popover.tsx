@@ -22,30 +22,56 @@ const PopoverModeContext = React.createContext<boolean>(false)
 const PopoverCloseContext = React.createContext<() => void>(() => {})
 const PopoverOpenContext = React.createContext<boolean>(false)
 
-function useVisualViewportHeight() {
-  const [height, setHeight] = React.useState<number | null>(null)
+/**
+ * Rectángulo del visual viewport en coords de layout (position:fixed).
+ *
+ * En móvil el teclado no “empuja” el layout: achica el visual viewport.
+ * Un sheet con `bottom: 0` queda bajo el teclado. La solución de raíz es
+ * dibujar el sheet DENTRO del rectángulo visible (top/left/width/height
+ * del visualViewport), no calcular insets sobre el layout viewport.
+ */
+function useVisualViewportFrame() {
+  const [frame, setFrame] = React.useState<{
+    top: number
+    left: number
+    width: number
+    height: number
+  } | null>(null)
 
   React.useEffect(() => {
-    const viewport = window.visualViewport
+    const vv = window.visualViewport
 
-    if (!viewport) {
-      return
+    const update = () => {
+      if (!vv) {
+        setFrame({
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        })
+        return
+      }
+      setFrame({
+        top: vv.offsetTop,
+        left: vv.offsetLeft,
+        width: vv.width,
+        height: vv.height,
+      })
     }
 
-    const update = () => setHeight(viewport.height)
-
     update()
-
-    viewport.addEventListener("resize", update)
-    viewport.addEventListener("scroll", update)
+    vv?.addEventListener("resize", update)
+    vv?.addEventListener("scroll", update)
+    window.addEventListener("resize", update)
 
     return () => {
-      viewport.removeEventListener("resize", update)
-      viewport.removeEventListener("scroll", update)
+      vv?.removeEventListener("resize", update)
+      vv?.removeEventListener("scroll", update)
+      window.removeEventListener("resize", update)
     }
   }, [])
 
-  return height
+  return frame
 }
 
 type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
@@ -340,7 +366,7 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
-  const visualViewportHeight = useVisualViewportHeight()
+  const vvFrame = useVisualViewportFrame()
 
   if (isSheet) {
     const transitionStyle: string = isDragging
@@ -376,7 +402,7 @@ export function PopoverContent({
           onInteractOutside={onInteractOutside}
           {...dragHandleProps}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] flex-col overflow-hidden",
+            "fixed z-40 flex flex-col overflow-hidden",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
             !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
@@ -385,11 +411,17 @@ export function PopoverContent({
           )}
           style={{
             ...style,
+            // Frame = área visible real (arriba del teclado).
+            // justify via marginTop auto equivalent: anclar al fondo del frame.
+            top: vvFrame ? vvFrame.top + vvFrame.height * 0.15 : undefined,
+            left: vvFrame ? vvFrame.left : 0,
+            width: vvFrame ? vvFrame.width : "100%",
+            height: vvFrame ? vvFrame.height * 0.85 : "85dvh",
+            bottom: "auto",
+            right: "auto",
+            maxHeight: undefined,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: transitionStyle,
-            maxHeight: visualViewportHeight
-              ? `${visualViewportHeight * 0.85}px`
-              : undefined,
           }}
         >
           <VisuallyHidden asChild>
