@@ -31,7 +31,7 @@ const ScrollArea = React.forwardRef<
   >
     <ScrollAreaPrimitive.Viewport
       data-slot="scroll-area-viewport"
-      className="h-full max-h-full w-full max-w-full min-w-0 rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&>div]:!block [&>div]:min-w-0"
+      className="h-full max-h-full w-full max-w-full min-w-0 rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&>div]:block! [&>div]:min-w-0"
     >
       {children}
     </ScrollAreaPrimitive.Viewport>
