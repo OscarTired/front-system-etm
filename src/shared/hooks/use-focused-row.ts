@@ -27,7 +27,7 @@ function isScrollable(el: HTMLElement): boolean {
 }
 
 /**
- * Nearest ancestor that actually scrolls (lista VerticalScroll / pane).
+ * Nearest ancestor that actually scrolls (AppListScroll / EntityTable / pane).
  * Never assume window.
  */
 function getScrollParent(el: HTMLElement): HTMLElement | null {

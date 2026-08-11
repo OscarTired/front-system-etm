@@ -1,5 +1,5 @@
 /**
- * Rutas mobile "immersive": el shell no usa VerticalScroll y deja un
+ * Rutas mobile "immersive": el shell no scrollea y deja un
  * slot con altura real (absolute top-14 / bottom-20) para tools a
  * pantalla completa (canvas, editores, etc.).
  *
