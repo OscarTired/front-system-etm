@@ -121,7 +121,7 @@ export function TaskMobileCard({
             {/* Datos compactos en la Fila principal (CON NOMBRE de la prioridad) */}
             <div
               className={cn(
-                "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
+                "mt-0.5 flex min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
                 expanded
                   ? "max-h-0 opacity-0"
                   : "max-h-5 opacity-100",
@@ -131,7 +131,7 @@ export function TaskMobileCard({
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: task.project.client.color }}
               />
-              <span className="shrink-0 truncate text-neutral-400">
+              <span className="min-w-0 truncate text-neutral-400">
                 {task.project.client.name}
               </span>
 
@@ -173,8 +173,30 @@ export function TaskMobileCard({
 
               <span className="shrink-0 text-neutral-600">·</span>
 
-              <span className="min-w-0 truncate text-neutral-400">
-                {task.priority.name}
+              {/* Prioridad: icono en móvil, nombre truncado en desktop */}
+              <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+                <span className="md:hidden">
+                  {task.priority.icon ? (
+                    <EntityIconBadge
+                      icon={task.priority.icon}
+                      color={task.priority.color ?? "#a3a3a3"}
+                      size={12}
+                    />
+                  ) : (
+                    <span
+                      className="text-[10px] font-semibold"
+                      style={{ color: task.priority.color ?? "#a3a3a3" }}
+                    >
+                      {task.priority.name.charAt(0)}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className="hidden min-w-0 truncate md:inline"
+                  style={{ color: task.priority.color ?? undefined }}
+                >
+                  {task.priority.name}
+                </span>
               </span>
             </div>
           </div>

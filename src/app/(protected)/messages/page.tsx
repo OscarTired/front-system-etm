@@ -3,6 +3,10 @@
 import { MessagesPageContent } from "@/features/comments/components/messages-page-content"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
+/**
+ * Ruta sugerida: src/app/(protected)/messages/page.tsx
+ * (ajusta el path al app router de tu repo)
+ */
 export default function MessagesPage() {
   usePageTitle("Mensajes")
 
@@ -15,7 +19,7 @@ export default function MessagesPage() {
           </h1>
           <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
           <p className="min-w-0 truncate text-sm text-neutral-500">
-            Menciones, respuestas y actividad
+            Solo los mensajes que tú escribiste
           </p>
         </div>
       </header>
