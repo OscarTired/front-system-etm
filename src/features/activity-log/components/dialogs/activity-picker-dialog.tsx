@@ -472,11 +472,12 @@ export function ActivityPickerDialog({
 
               </div>
 
+              {/* Sin capture: igual que comment-composer — el SO
+                  ofrece Cámara / Galería / Archivos en móvil. */}
               <input
                 ref={photoInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handlePhotoChange}
                 className="hidden"
               />
