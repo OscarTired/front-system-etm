@@ -156,11 +156,36 @@ export function TaskMobileCard({
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col items-start">
-            <p className="max-w-full truncate text-sm font-semibold text-white">
-              {task.reference}
-            </p>
+            {/* md+: referencia · solo iconos (16px). Mobile: solo referencia */}
+            <div className="flex min-w-0 max-w-full items-center gap-1.5">
+              <p className="max-w-full truncate text-sm font-semibold leading-none text-white">
+                {task.reference}
+              </p>
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={stage.label}
+              >
+                <EntityIconBadge
+                  icon={stage.icon}
+                  color={stage.color}
+                  size={16}
+                />
+              </span>
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={status.label}
+              >
+                <EntityIconBadge
+                  icon={status.icon}
+                  color={status.color}
+                  size={16}
+                />
+              </span>
+            </div>
 
-            {/* Datos compactos en la Fila principal (CON NOMBRE de la prioridad) */}
+            {/* Mobile: cliente · iconos · prioridad | md+: cliente · prioridad (cliente y PM/prioridad se quedan abajo) */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -177,45 +202,24 @@ export function TaskMobileCard({
                 {task.project.client.name}
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={stage.icon}
-                    color={stage.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: stage.color }}
-                >
-                  {stage.label}
-                </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={stage.icon}
+                  color={stage.color}
+                  size={12}
+                />
+              </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={status.icon}
+                  color={status.color}
+                  size={12}
+                />
               </span>
 
               <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={status.icon}
-                    color={status.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: status.color }}
-                >
-                  {status.label}
-                </span>
-              </span>
-
-              <span className="shrink-0 text-neutral-600">·</span>
-
-              {/* Prioridad: icono en móvil, nombre truncado en desktop */}
               <span className="flex min-w-0 items-center gap-1 overflow-hidden">
                 <span className="md:hidden">
                   {task.priority.icon ? (

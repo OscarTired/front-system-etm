@@ -100,21 +100,46 @@ export function ProcessMobileCard({
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col items-start">
-            {isMobile ? (
-              <span className="max-w-full truncate text-sm font-semibold text-white">
-                {task.reference}
-              </span>
-            ) : (
-              <Link
-                href={`/tasks?taskId=${task.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="max-w-full truncate text-sm font-semibold text-white transition-colors hover:text-cyan-300"
+            {/* md+: referencia · solo iconos prio/estado (16px). Mobile: solo nombre */}
+            <div className="flex min-w-0 max-w-full items-center gap-1.5">
+              {isMobile ? (
+                <span className="max-w-full truncate text-sm font-semibold leading-none text-white">
+                  {task.reference}
+                </span>
+              ) : (
+                <Link
+                  href={`/tasks?taskId=${task.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="max-w-full truncate text-sm font-semibold leading-none text-white transition-colors hover:text-cyan-300"
+                >
+                  {task.reference}
+                </Link>
+              )}
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={priority.name}
               >
-                {task.reference}
-              </Link>
-            )}
+                <EntityIconBadge
+                  icon={priority.icon}
+                  color={priority.color}
+                  size={16}
+                />
+              </span>
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={statusLabel.label}
+              >
+                <EntityIconBadge
+                  icon={statusLabel.icon}
+                  color={statusLabel.color}
+                  size={16}
+                />
+              </span>
+            </div>
 
-            {/* Datos compactos debajo del nombre — se desvanecen al expandir */}
+            {/* Mobile: cliente · iconos prio/estado · operario | md+: cliente · operario */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -131,44 +156,24 @@ export function ProcessMobileCard({
                 {project.client.name}
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={priority.icon}
-                    color={priority.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: priority.color }}
-                >
-                  {priority.name}
-                </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={priority.icon}
+                  color={priority.color}
+                  size={12}
+                />
+              </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={statusLabel.icon}
+                  color={statusLabel.color}
+                  size={12}
+                />
               </span>
 
               <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={statusLabel.icon}
-                    color={statusLabel.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: statusLabel.color }}
-                >
-                  {statusLabel.label}
-                </span>
-              </span>
-
-              <span className="shrink-0 text-neutral-600">·</span>
-
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge

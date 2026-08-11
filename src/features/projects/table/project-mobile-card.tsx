@@ -115,10 +115,36 @@ export function ProjectMobileCard({
           </span>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {project.name}
-            </p>
+            {/* md+: Nombre · solo iconos etapa/estado (16px, centrados). Mobile: solo nombre */}
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="truncate text-sm font-semibold leading-none text-white">
+                {project.name}
+              </p>
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={project.stage.name}
+              >
+                <EntityIconBadge
+                  icon={project.stage.icon}
+                  color={project.stage.color}
+                  size={16}
+                />
+              </span>
+              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
+                title={project.status.name}
+              >
+                <EntityIconBadge
+                  icon={project.status.icon}
+                  color={project.status.color}
+                  size={16}
+                />
+              </span>
+            </div>
 
+            {/* Mobile: cliente · iconos etapa/estado · PM | md+: cliente · PM */}
             <div
               className={cn(
                 "mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs transition-all duration-200",
@@ -135,44 +161,24 @@ export function ProjectMobileCard({
                 {project.client.name}
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={project.stage.icon}
-                    color={project.stage.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: project.stage.color }}
-                >
-                  {project.stage.name}
-                </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={project.stage.icon}
+                  color={project.stage.color}
+                  size={12}
+                />
+              </span>
+              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={project.status.icon}
+                  color={project.status.color}
+                  size={12}
+                />
               </span>
 
               <span className="shrink-0 text-neutral-600">·</span>
-
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="md:hidden">
-                  <EntityIconBadge
-                    icon={project.status.icon}
-                    color={project.status.color}
-                    size={12}
-                  />
-                </span>
-                <span
-                  className="hidden truncate md:inline"
-                  style={{ color: project.status.color }}
-                >
-                  {project.status.name}
-                </span>
-              </span>
-
-              <span className="shrink-0 text-neutral-600">·</span>
-
               <span className="min-w-0 truncate text-neutral-400">
                 {project.pm.name}
               </span>
