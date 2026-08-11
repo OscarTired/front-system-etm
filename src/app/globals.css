@@ -519,3 +519,8 @@ input:focus-visible {
     0 18px 40px rgb(0 0 0 / 0.38),
     0 0 0 1px rgb(255 255 255 / 0.04);
 }
+
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 0;
+}
