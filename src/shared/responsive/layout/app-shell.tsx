@@ -118,18 +118,27 @@ function CompactShell({ children }: Props) {
           willChange: isOpen ? "transform" : "auto",
         }}
       >
+        {/*
+          Instagram-style chrome:
+          - contenido a pantalla completa (scroll debajo del header y bottom nav)
+          - TopBar / BottomNav flotantes con blur (z-20)
+          - el padding para no tapar el final de la lista vive en AppListScroll
+            (pt/pb mobile), no recortando el slot aquí
+        */}
         <TopBar />
 
         {immersive ? (
           <div
             data-immersive-slot
-            className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden"
+            className="absolute inset-0 z-10 overflow-hidden"
           >
             {children}
           </div>
         ) : (
-          <div className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden pt-14 pb-20">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden">
+            {/* pt en el page root (hijo): toolbar queda bajo TopBar;
+                el scroll sigue full-bleed y pasa detrás del chrome. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden max-md:[&>*]:pt-14">
               {children}
             </div>
           </div>

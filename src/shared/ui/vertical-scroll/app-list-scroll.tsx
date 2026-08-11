@@ -47,7 +47,21 @@ export function AppListScroll({
       className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
       <ScrollArea className="h-full min-h-0 flex-1">
-        <div className={cn(className)}>{children}</div>
+        {/*
+          Mobile: padding para que el primer/último ítem queden legibles
+          bajo TopBar (h-14) y BottomNav (~5rem), pero el scroll pasa
+          DETRÁS del chrome con blur — no se recorta el viewport.
+        */}
+        <div
+          className={cn(
+            // Solo bottom: el top lo da el shell al page root (toolbar
+            // + lista). Así no hay doble pt bajo EntityToolbar.
+            "max-md:pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))]",
+            className,
+          )}
+        >
+          {children}
+        </div>
       </ScrollArea>
     </div>
   )

@@ -64,13 +64,7 @@ import type {
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  // Slot sobre el que se tocó "+ Registrar" — solo para mostrar
-  // contexto y el aviso de abajo. Lo que realmente queda guardado
-  // como franja lo decide el servidor a partir de la hora real al
-  // momento de guardar (ver activity-log.service.ts), no este valor.
   activeSlot?: ShiftSlotDefinition | null
-  // Bitácora de Producción (default) o de Ingeniería — decide qué
-  // tipos de actividad se listan acá.
   department?: ActivityDepartment
 }
 
@@ -79,18 +73,11 @@ const EMPTY_CONTEXT: ContextPickerValue = {
   taskId: "",
 }
 
-// Bitácora de Producción: una entrada = un tipo de actividad, sin
-// excepción (así se factura/reporta hoy). Bitácora de Ingeniería:
-// sí se puede registrar más de un tipo a la vez (ej. "Diseño
-// Mecánico" + "CAM" en la misma franja), pero con tope — más de 3
-// ya es ruido y probablemente un toque accidental.
 const MAX_SELECTION_BY_DEPARTMENT: Record<ActivityDepartment, number> = {
   PRODUCCION: 1,
   INGENIERIA: 3,
 }
 
-// Convierte un File a data URI (base64) — mismo mecanismo que usa
-// CommentComposer para adjuntar fotos.
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -131,24 +118,16 @@ export function ActivityPickerDialog({
     setContext,
   ] = useState<ContextPickerValue>(EMPTY_CONTEXT)
 
-  // Sólo se muestra el mensaje rojo después de un intento de
-  // guardar fallido — igual que el form de Task, no molesta con
-  // rojo mientras la persona todavía está eligiendo tipo/proyecto.
   const [
     submitAttempted,
     setSubmitAttempted,
   ] = useState(false)
 
-  // Estado para alternar la visibilidad de la caja de detalle
-  // (nota + foto juntas) en móviles
   const [
     showDetail,
     setShowDetail,
   ] = useState(false)
 
-  // Foto adjunta opcional (detalle) — mismo patrón que CommentComposer:
-  // se guarda el File para la preview local y se convierte a base64
-  // recién al enviar.
   const [
     photo,
     setPhoto,
@@ -161,17 +140,11 @@ export function ActivityPickerDialog({
 
   const photoInputRef = useRef<HTMLInputElement>(null)
 
-  // Popover de "Otros" tipos de actividad (los que no son `pinned`)
   const [
     otherTypesOpen,
     setOtherTypesOpen,
   ] = useState(false)
 
-  // 100% data-driven: qué va fijo y qué va dentro de "Otros" lo
-  // decide el campo `pinned` de cada tipo (administrable desde la
-  // pantalla de Tipos de Actividad) — nada de códigos hardcodeados
-  // acá, así que un tipo nuevo cae automáticamente en "Otros" salvo
-  // que se lo marque como fijo desde el admin.
   const primaryTypes = types.filter(type => type.pinned)
   const otherTypes = types.filter(type => !type.pinned)
 
@@ -179,13 +152,9 @@ export function ActivityPickerDialog({
     type => selectedTypeIds.includes(type.id),
   )
 
-  // Solo se usa para el ícono/color del botón "Otros" cuando hay
-  // exactamente uno elegido de ahí — con más de uno se muestra un
-  // contador en vez de un ícono puntual (ver botón más abajo).
   const selectedOtherType =
     selectedOtherTypes.length === 1 ? selectedOtherTypes[0] : undefined
 
-  // Genera/limpia la preview local de la foto
   useEffect(() => {
     if (!photo) {
       setPhotoPreviewUrl(null)
@@ -233,20 +202,14 @@ export function ActivityPickerDialog({
 
     setSelectedTypeIds(prev => {
 
-      // Deseleccionar siempre está permitido, en cualquier departamento.
       if (prev.includes(typeId)) {
         return prev.filter(id => id !== typeId)
       }
 
-      // Producción: comportamiento tipo radio-button — elegir un tipo
-      // nuevo reemplaza al anterior, nunca conviven dos a la vez.
       if (maxSelection === 1) {
         return [typeId]
       }
 
-      // Ingeniería: multiselección hasta el tope. Si ya se llegó al
-      // tope, el tap no hace nada (los botones no elegidos además
-      // quedan deshabilitados visualmente, ver más abajo).
       if (prev.length >= maxSelection) {
         return prev
       }
@@ -260,7 +223,6 @@ export function ActivityPickerDialog({
   function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     setPhoto(file ?? null)
-    // Permite volver a elegir el mismo archivo si lo saca y lo vuelve a poner
     event.target.value = ""
   }
 
@@ -285,10 +247,6 @@ export function ActivityPickerDialog({
           projectId: context.projectId,
           taskId:
             context.taskId || undefined,
-          // La franja que la persona tocó a mano — se respeta tal cual
-          // aunque ya haya pasado (se olvidó y lo registra tarde). Sin
-          // esto, el backend recalculaba la franja por la hora real y
-          // el registro terminaba en la franja equivocada.
           shift: activeSlot?.shift,
           note:
             note.trim() || undefined,
@@ -296,8 +254,6 @@ export function ActivityPickerDialog({
         }),
       ),
     ).catch(() => {
-      // El rollback (si falla de verdad)
-      // ya lo maneja useCreateActivityLog, por cada mutación.
     })
 
     handleClose()
@@ -343,8 +299,6 @@ export function ActivityPickerDialog({
 
                   projectId: next.projectId,
 
-                  // Si cambia el proyecto, la tarea elegida antes
-                  // ya no aplica.
                   taskId:
                     next.projectId === context.projectId
                       ? context.taskId
@@ -361,10 +315,6 @@ export function ActivityPickerDialog({
 
             <ContextPicker
               mode="tasks"
-              // Sin proyecto elegido todavía, taskProjectId queda
-              // undefined y el picker simplemente lista tareas de
-              // todos los proyectos — elegir una tarea acá también
-              // completa el proyecto solo (ver selectTask).
               taskProjectId={context.projectId || undefined}
               value={context}
               onChange={next =>
@@ -379,9 +329,7 @@ export function ActivityPickerDialog({
 
         </div>
 
-        {/* 3. Detalle (nota + foto, igual que CommentComposer: viven
-            dentro de la misma caja, la cámara está adentro del
-            input, no es un botón aparte) */}
+        {/* 3. Detalle (nota + foto) */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-neutral-400">Detalle</span>
@@ -414,10 +362,6 @@ export function ActivityPickerDialog({
             )}
           >
 
-            {/* Misma caja para nota y foto — igual que
-                comment-composer.tsx: la foto aparece al costado del
-                textarea, y el botón de cámara vive en el pie de esta
-                misma caja. */}
             <div className="flex flex-col gap-2 rounded-xl bg-white/4 p-2.5">
 
               <div className="flex min-h-0 flex-1 gap-3">
@@ -472,8 +416,6 @@ export function ActivityPickerDialog({
 
               </div>
 
-              {/* Sin capture: igual que comment-composer — el SO
-                  ofrece Cámara / Galería / Archivos en móvil. */}
               <input
                 ref={photoInputRef}
                 type="file"
@@ -489,10 +431,6 @@ export function ActivityPickerDialog({
         </div>
 
         {/* 4. Iconos / Tipos de Actividad */}
-
-        {/* Solo tiene sentido mostrar el contador cuando el
-            departamento permite multiselección (Ingeniería) — en
-            Producción siempre es 1, aclarar "1/1" no aporta nada. */}
         {maxSelection > 1 && (
           <div className="mb-1 flex items-center justify-between px-0.5">
             <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
@@ -521,11 +459,6 @@ export function ActivityPickerDialog({
             const isSelected =
               selectedTypeIds.includes(type.id)
 
-            // Deshabilitado solo cuando: ya se llegó al tope, el tipo
-            // no es el que está seleccionado (a ese siempre se lo
-            // puede destildar), y estamos en modo multiselección
-            // (en Producción el click reemplaza, así que nunca se
-            // deshabilita nada ahí).
             const isDisabled =
               maxSelection > 1 &&
               !isSelected &&
@@ -577,7 +510,7 @@ export function ActivityPickerDialog({
 
           })}
 
-          {/* Botón "Otros" con popover para el resto de los tipos (los que no son pinned) */}
+          {/* Botón "Otros" con popover adaptado para BottomSheet */}
           {otherTypes.length > 0 && (
 
             <Popover open={otherTypesOpen} onOpenChange={setOtherTypesOpen}>
@@ -633,21 +566,15 @@ export function ActivityPickerDialog({
 
               </PopoverTrigger>
 
-              {/* align="end" en vez de "center": el botón vive en la
-                  última columna de la grilla (borde derecho del
-                  dialog) — centrado se salía del dialog en desktop.
-                  Alineado al borde derecho del trigger, y
-                  avoidCollisions (default del componente) lo
-                  reacomoda solo si ni así entra en pantalla. */}
               <PopoverContent
                 side="top"
-                align="end"
+                align="center"
                 sideOffset={8}
-                className="w-64"
+                className="w-full max-w-lg p-4"
               >
 
-                <div className="grid grid-cols-3 gap-2">
-                  {otherTypes.map(type => {
+                <div className="grid grid-cols-3 gap-2.5 w-full">
+                  {otherTypes.map((type, index) => {
                     const Icon = getActivityIcon(type.icon)
                     const isSelected = selectedTypeIds.includes(type.id)
 
@@ -656,6 +583,11 @@ export function ActivityPickerDialog({
                       !isSelected &&
                       selectedTypeIds.length >= maxSelection
 
+                    // Si es el 7mo ítem (el único elemento en la última fila de 3 columnas),
+                    // le asignamos col-start-2 para forzarlo exactamente al centro.
+                    const isSoleLastItem =
+                      index === otherTypes.length - 1 && otherTypes.length % 3 === 1
+
                     return (
                       <button
                         key={type.id}
@@ -663,16 +595,17 @@ export function ActivityPickerDialog({
                         disabled={isDisabled}
                         onClick={() => handleSelectType(type.id)}
                         className={cn(
-                          "relative flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition-colors",
+                          "relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 text-center transition-colors w-full",
                           isSelected
                             ? "bg-white/12"
                             : isDisabled
                               ? "cursor-not-allowed bg-white/4 opacity-40"
                               : "bg-white/4 hover:bg-white/8",
+                          isSoleLastItem && "col-start-2"
                         )}
                       >
                         {isSelected && (
-                          <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-black">
+                          <span className="absolute right-1.5 top-1.5 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-black">
                             ✓
                           </span>
                         )}
