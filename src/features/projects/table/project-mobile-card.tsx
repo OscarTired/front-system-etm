@@ -30,12 +30,8 @@ import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
 import { TaskDialog } from "@/features/tasks/components/dialog/task-dialog"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 
-/** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
-function formatCodeBadge(code: string) {
-  const match = code.match(/^(\d{2}-\d{3})/)
-  return match ? match[1] : code
-}
 
 function EntityIconBadge({
   icon,
@@ -113,7 +109,7 @@ export function ProjectMobileCard({
               color: project.client.color,
             }}
           >
-            {formatCodeBadge(project.projectCode)}
+            {displayProjectCode(project.projectCode)}
           </span>
 
           <div className="min-w-0 flex-1">

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   MessageSquare,
+  Reply,
   Search,
 } from "lucide-react"
 
@@ -87,8 +88,11 @@ export function MessagesPageContent() {
         "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180",
       )}
     >
-      {/* Header — oculto en móvil (el top bar ya muestra "Mensajes") */}
-      <div className="hidden shrink-0 px-5 py-4 tablet:block">
+      {/* Header — oculto en móvil (el top bar ya muestra "Mensajes")
+          y en desktop (ahí el título ya lo muestra page.tsx, con el
+          mismo texto — mostrar los dos a la vez duplicaba el
+          título). Solo vive en el rango intermedio (tablet). */}
+      <div className="hidden shrink-0 px-5 py-4 tablet:block desktop:hidden">
         <div className="flex items-start gap-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
             <MessageSquare size={18} strokeWidth={2.4} />
@@ -198,6 +202,18 @@ export function MessagesPageContent() {
                     onClick={() => openComment(c)}
                     className="group flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-white/5"
                   >
+
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-white/8 text-xs font-semibold text-white shadow-inner">
+                      {c.user.avatarUrl ? (
+                        <img
+                          src={c.user.avatarUrl}
+                          alt={c.user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        c.user.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
@@ -257,18 +273,23 @@ export function MessagesPageContent() {
                         </span>
                       </div>
 
+                      {c.parent && (
+                        <div className="mt-1 flex items-start gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
+                          <Reply
+                            size={11}
+                            className="mt-0.5 shrink-0 -scale-x-100"
+                          />
+                          <span className="min-w-0 flex-1 truncate">
+                            {c.parent.deletedAt
+                              ? "Comentario eliminado"
+                              : `${c.parent.user.name}: ${c.parent.message || "📷 Foto"}`}
+                          </span>
+                        </div>
+                      )}
+
                       <p className="mt-1.5 line-clamp-2 text-sm text-neutral-400">
                         {c.message || (c.imageUrl ? "Imagen" : "—")}
                       </p>
-
-                      {c.parent && (
-                        <p className="mt-1 line-clamp-1 text-xs text-neutral-600">
-                          Respondiendo a:{" "}
-                          {c.parent.deletedAt
-                            ? "(eliminado)"
-                            : c.parent.message}
-                        </p>
-                      )}
 
                       <p className="mt-1 text-[11px] text-neutral-600">
                         {formatCommentDate(c.createdAt)}

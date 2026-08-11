@@ -169,13 +169,19 @@ export function TaskDialog({
 
   const projectLocked=!!projectId
 
-  const routeLocked =
+  const routeStarted =
     !!task &&
     task.workflowSteps.some(
       step =>
         step.status !== "PENDING" &&
         step.status !== "QUEUE",
     )
+
+  // Producción iniciada: no quitar procesos de la ruta original; sí agregar.
+  const lockedRouteCodes =
+    routeStarted && task ? [...task.route] : []
+
+  const routeLocked = false
 
   const errors=
     validateTask(
@@ -378,6 +384,7 @@ export function TaskDialog({
           update={update}
           projectLocked={projectLocked}
           routeLocked={routeLocked}
+          lockedRouteCodes={lockedRouteCodes}
           step={step}
           errors={visibleErrors}
         />

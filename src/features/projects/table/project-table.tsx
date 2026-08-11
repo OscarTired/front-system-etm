@@ -9,6 +9,7 @@ import type { Project } from "../types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
+import { useExpandRow } from "@/shared/hooks/use-expand-row"
 
 import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
 import { useRowDragReorder } from "@/shared/dnd/use-row-drag-reorder"
@@ -55,8 +56,14 @@ export function ProjectTable({
 
   const isManualMode = projectSortMode === "manual"
 
+  const setExpandedRowId = useExpandRow({
+    focusedId: focusedProjectId,
+    setExpandedRowId: expand.setExpandedRowId,
+  })
+
   useFocusedRow({
     focusedId: focusedProjectId,
+    expandedRowId: expand.expandedRowId,
     setExpandedRowId: expand.setExpandedRowId,
     focusToken,
   })
@@ -149,7 +156,7 @@ export function ProjectTable({
               tasks={tasks}
               expanded={expand.expandedRowId === project.id}
               onToggle={() =>
-                expand.setExpandedRowId(
+                setExpandedRowId(
                   expand.expandedRowId === project.id
                     ? null
                     : project.id,

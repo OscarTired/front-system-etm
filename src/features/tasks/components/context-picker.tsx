@@ -52,6 +52,10 @@ import {
   useTasks,
 } from "@/features/tasks/hooks/use-tasks"
 
+import { 
+  displayProjectCode,
+ } from "@/features/projects/utils/display-project-code"
+
 export type ContextPickerValue = {
   projectId: string
   taskId: string
@@ -145,12 +149,12 @@ export function ContextPicker({
         : placeholder
       : mode === "projects"
         ? selectedProject
-          ? `${selectedProject.projectCode} · ${selectedProject.name}`
+          ? `${displayProjectCode(selectedProject.projectCode)} · ${selectedProject.name}`
           : placeholder
         : selectedTask
           ? `#${String(selectedTask.taskNumber).padStart(3, "0")} · ${selectedTask.reference}`
           : selectedProject
-            ? `${selectedProject.projectCode} · ${selectedProject.name}`
+            ? `${displayProjectCode(selectedProject.projectCode)} · ${selectedProject.name}`
             : placeholder
 
   const search =
@@ -415,7 +419,7 @@ export function ContextPicker({
 
                   <SelectOption
                     key={project.id}
-                    label={`${project.projectCode} · ${project.name}`}
+                    label={`${displayProjectCode(project.projectCode)} · ${project.name}`}
                     icon="project"
                     color={
                       project.client?.color ?? "#64748B"
@@ -450,7 +454,7 @@ export function ContextPicker({
 
                   <SelectOption
                     key={task.id}
-                    label={`#${String(task.taskNumber).padStart(3, "0")} · ${task.reference} — ${task.project.projectCode}`}
+                    label={`#${String(task.taskNumber).padStart(3, "0")} · ${task.reference} — ${displayProjectCode(task.project.projectCode)}`}
                     icon="clipboard"
                     color={task.project.client.color}
                     selected={task.id === value.taskId}

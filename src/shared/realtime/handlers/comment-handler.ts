@@ -1,4 +1,6 @@
 import type { Comment } from "@/features/comments/types/comment.types"
+import { myCommentsQueryKey } from "@/features/comments/hooks/use-my-comments"
+import { useAuthStore } from "@/features/auth/store/auth-store"
 
 import { getQueryClient } from "@/lib/query-client"
 
@@ -11,7 +13,6 @@ type CommentLocation = {
 }
 
 function resolveQueryKey(location: CommentLocation) {
-
   if (location.workflowStepId) {
     return ["comments", "workflowStep", location.workflowStepId] as const
   }
@@ -21,80 +22,94 @@ function resolveQueryKey(location: CommentLocation) {
   }
 
   return ["comments", "task", location.taskId] as const
+}
 
+/**
+ * "Mensajes" es una vista enriquecida (route, task, project).
+ * El payload realtime del hilo no trae ese shape → invalidar, no setQueryData.
+ */
+function invalidateMyCommentsIfRelevant(
+  authorId: string | undefined | null,
+) {
+  const me = useAuthStore.getState().user?.id
+  if (!me) return
+
+  // Sin autor (p.ej. DELETE mínimo): invalidar por si era mío.
+  if (!authorId || authorId === me) {
+    getQueryClient().invalidateQueries({ queryKey: myCommentsQueryKey })
+  }
 }
 
 export function commentHandler(
   event: RealtimeEvent,
 ) {
-
   const queryClient = getQueryClient()
 
   switch (event.action) {
-
     case "CREATED": {
-
       const comment = event.payload as Comment
       const queryKey = resolveQueryKey(comment)
 
       queryClient.setQueryData<Comment[]>(
         queryKey,
         current => {
-
           if ((current ?? []).some(c => c.id === comment.id)) {
             return current
           }
-
           return [comment, ...(current ?? [])]
-
         },
       )
 
+      invalidateMyCommentsIfRelevant(
+        comment.userId ?? comment.user?.id,
+      )
       return
-
     }
 
     case "UPDATED": {
-
       const comment = event.payload as Comment
       const queryKey = resolveQueryKey(comment)
 
       queryClient.setQueryData<Comment[]>(
         queryKey,
-        current => (current ?? []).map(c => {
-
-          if (c.id === comment.id) {
-            return comment
-          }
-
-          if (c.parent?.id === comment.id) {
-            return {
-              ...c,
-              parent: {
-                id: comment.id,
-                message: comment.message,
-                deletedAt: null,
-                user: {
-                  id: comment.user.id,
-                  name: comment.user.name,
-                },
-              },
+        current =>
+          (current ?? []).map(c => {
+            if (c.id === comment.id) {
+              return comment
             }
-          }
 
-          return c
+            if (c.parent?.id === comment.id) {
+              return {
+                ...c,
+                parent: {
+                  id: comment.id,
+                  message: comment.message,
+                  deletedAt: null,
+                  user: {
+                    id: comment.user.id,
+                    name: comment.user.name,
+                  },
+                },
+              }
+            }
 
-        }),
+            return c
+          }),
       )
 
+      invalidateMyCommentsIfRelevant(
+        comment.userId ?? comment.user?.id,
+      )
       return
-
     }
 
     case "DELETED": {
-
       const payload = event.payload as
-        | CommentLocation & { id: string }
+        | (CommentLocation & {
+            id: string
+            userId?: string
+            user?: { id: string }
+          })
         | undefined
 
       if (!payload) {
@@ -121,10 +136,10 @@ export function commentHandler(
             ),
       )
 
+      invalidateMyCommentsIfRelevant(
+        payload.userId ?? payload.user?.id,
+      )
       return
-
     }
-
   }
-
 }

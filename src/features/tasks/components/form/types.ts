@@ -30,6 +30,7 @@ export type TaskFormSectionProps = {
   projectLocked?: boolean
 
   routeLocked?: boolean
+  lockedRouteCodes?: import("@/features/tasks/types/task.types").ProcessCode[]
 
   errors?: TaskFormErrors
 }

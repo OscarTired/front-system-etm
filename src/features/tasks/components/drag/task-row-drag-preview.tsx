@@ -5,6 +5,7 @@ import type { Task } from "../../types/task.types"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 
 import { taskAccess } from "../../access/task-access"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 
 type Props={
   task:Task
@@ -43,7 +44,7 @@ export function TaskRowDragPreview({
         </h3>
 
         <div className="text-sm text-neutral-400">
-          {task.project.projectCode}
+          {displayProjectCode(task.project.projectCode)}
           {" • "}
           L{task.lotNumber}
           {" • "}

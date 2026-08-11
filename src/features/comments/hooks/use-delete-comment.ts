@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { commentsService } from "../services/comments.service"
 import { commentsQueryKey } from "../utils/comment-target"
+import { myCommentsQueryKey } from "./use-my-comments"
 import type { Comment, CommentTarget } from "../types/comment.types"
 
 export function useDeleteComment(target: CommentTarget) {
@@ -59,6 +60,8 @@ export function useDeleteComment(target: CommentTarget) {
         current =>
           (current ?? []).filter(c => c.id !== context?.commentId),
       )
+
+      void queryClient.invalidateQueries({ queryKey: myCommentsQueryKey })
 
     },
 

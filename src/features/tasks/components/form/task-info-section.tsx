@@ -52,6 +52,7 @@ export function TaskInfoSection({
   update,
 
   routeLocked,
+  lockedRouteCodes = [],
 
   errors,
 
@@ -169,7 +170,7 @@ export function TaskInfoSection({
 
           <ProcessRoutePicker
             value={form.route}
-            disabled={routeLocked}
+            lockedCodes={lockedRouteCodes}
             onChange={route =>
               update({
                 route,
@@ -177,10 +178,10 @@ export function TaskInfoSection({
             }
           />
 
-          {routeLocked && (
+          {(lockedRouteCodes?.length ?? 0) > 0 && (
 
             <p className="mt-2 text-xs text-neutral-500">
-              La ruta está bloqueada una vez iniciada la producción.
+              Podés agregar procesos. No se pueden quitar los que ya estaban en la ruta una vez iniciada la producción.
             </p>
 
           )}

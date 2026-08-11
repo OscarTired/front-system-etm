@@ -31,6 +31,7 @@ export function TaskForm({
   update,
   projectLocked,
   routeLocked,
+  lockedRouteCodes,
   errors,
   step = 0,
 }: Props) {
@@ -55,6 +56,7 @@ export function TaskForm({
           form={form}
           update={update}
           routeLocked={routeLocked}
+          lockedRouteCodes={lockedRouteCodes}
           errors={errors}
         />
 
@@ -91,6 +93,7 @@ export function TaskForm({
           form={form}
           update={update}
           routeLocked={routeLocked}
+          lockedRouteCodes={lockedRouteCodes}
           errors={errors}
         />
 

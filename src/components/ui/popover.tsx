@@ -22,19 +22,35 @@ const PopoverModeContext = React.createContext<boolean>(false)
 const PopoverCloseContext = React.createContext<() => void>(() => {})
 const PopoverOpenContext = React.createContext<boolean>(false)
 
+function useVisualViewportHeight() {
+  const [height, setHeight] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    const viewport = window.visualViewport
+
+    if (!viewport) {
+      return
+    }
+
+    const update = () => setHeight(viewport.height)
+
+    update()
+
+    viewport.addEventListener("resize", update)
+    viewport.addEventListener("scroll", update)
+
+    return () => {
+      viewport.removeEventListener("resize", update)
+      viewport.removeEventListener("scroll", update)
+    }
+  }, [])
+
+  return height
+}
+
 type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
   forceFloating?: boolean
-  /**
-   * Por default, CUALQUIER <Dialog> que se abra en la app dispara
-   * "close-all-popovers" y cierra este popover — pensado para que un
-   * diálogo modal nunca quede superpuesto con un popover abierto
-   * detrás. Para popovers que son navegación persistente (ej. el
-   * selector de plancha/grupo), eso es contraproducente: el usuario
-   * quiere poder ir cambiando de plancha sin que la lista se cierre
-   * sola. `ignoreGlobalClose` opta afuera de ese cierre global para
-   * ESTE popover puntual, sin tocar el comportamiento default de
-   * todos los demás.
-   */
+
   ignoreGlobalClose?: boolean
 }
 
@@ -324,6 +340,7 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
+  const visualViewportHeight = useVisualViewportHeight()
 
   if (isSheet) {
     const transitionStyle: string = isDragging
@@ -370,6 +387,9 @@ export function PopoverContent({
             ...style,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: transitionStyle,
+            maxHeight: visualViewportHeight
+              ? `${visualViewportHeight * 0.85}px`
+              : undefined,
           }}
         >
           <VisuallyHidden asChild>

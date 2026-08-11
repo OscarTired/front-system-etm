@@ -6,6 +6,7 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 
 import { commentsService } from "../services/comments.service"
 import { commentsQueryKey } from "../utils/comment-target"
+import { myCommentsQueryKey } from "./use-my-comments"
 import type { Comment, CommentTarget, CreateCommentDto } from "../types/comment.types"
 
 export function useCreateComment(target:CommentTarget){
@@ -115,6 +116,9 @@ export function useCreateComment(target:CommentTarget){
             c.id === context?.optimisticId ? created : c,
           ),
       )
+
+      // Vista "Mensajes" es enriquecida: invalidar, no patch optimista.
+      void queryClient.invalidateQueries({ queryKey: myCommentsQueryKey })
 
     },
 

@@ -28,6 +28,8 @@ import {
 type Props = {
   value: ProcessCode[]
   onChange: (value: ProcessCode[]) => void
+  /** Procesos que no se pueden quitar (ruta ya iniciada). Sí se pueden agregar nuevos. */
+  lockedCodes?: ProcessCode[]
   disabled?: boolean
 }
 
@@ -39,6 +41,7 @@ const PROCESS_ENTRIES =
 type ProcessChipProps = {
   processCode: ProcessCode
   active: boolean
+  locked: boolean
   disabled: boolean
   onToggle: (code: ProcessCode) => void
 }
@@ -47,6 +50,7 @@ const ProcessChip =
   memo(function ProcessChip({
     processCode,
     active,
+    locked,
     disabled,
     onToggle,
   }: ProcessChipProps) {
@@ -57,17 +61,24 @@ const ProcessChip =
     const Icon =
       ENTITY_ICONS[process.icon]
 
+    const cannotToggle = disabled || (locked && active)
+
     return (
 
       <div
         role="button"
-        tabIndex={disabled ? -1 : 0}
+        tabIndex={cannotToggle ? -1 : 0}
+        title={
+          locked && active
+            ? "No se puede quitar: la producción ya inició"
+            : undefined
+        }
         onClick={() => {
-          if (!disabled) onToggle(processCode)
+          if (!cannotToggle) onToggle(processCode)
         }}
         onKeyDown={event => {
 
-          if (disabled) return
+          if (cannotToggle) return
 
           if (
             event.key === "Enter" ||
@@ -79,7 +90,7 @@ const ProcessChip =
 
         }}
         className={
-          disabled
+          cannotToggle
             ? "cursor-not-allowed opacity-50"
             : "cursor-pointer"
         }
@@ -103,14 +114,19 @@ const ProcessChip =
 export function ProcessRoutePicker({
   value,
   onChange,
+  lockedCodes = [],
   disabled = false,
 }: Props) {
+
+  const lockedSet = new Set(lockedCodes)
 
   const toggle = (code: ProcessCode) => {
 
     if (disabled) return
 
     const exists = value.includes(code)
+
+    if (exists && lockedSet.has(code)) return
 
     const next =
       exists
@@ -141,6 +157,7 @@ export function ProcessRoutePicker({
               key={processCode}
               processCode={processCode}
               active={value.includes(processCode)}
+              locked={lockedSet.has(processCode)}
               disabled={disabled}
               onToggle={toggle}
             />

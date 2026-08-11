@@ -133,7 +133,7 @@ export function ProcessPageContent({
       </div>
 
       <AppListScroll>
-        <EntityExpandProvider>
+        <EntityExpandProvider key={processCode}>
           <ProcessTableCard
             processDefinition={processDefinition}
             processTasks={processTasks}

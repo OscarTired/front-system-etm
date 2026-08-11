@@ -717,7 +717,7 @@ export function NestingPage() {
                 />
               ) : null}
             </div>
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-[#0a0a0c]">
               <div className="absolute inset-px overflow-hidden rounded-4xl">
                 {!project.sessionReady ? (
                   <WorkspaceSpinner />
@@ -792,7 +792,7 @@ export function NestingPage() {
                   }}
                 />
               ) : (
-                <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500 ring-1 ring-white/6">
+                <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500">
                   Sin planchas
                 </div>
               )}
@@ -800,7 +800,7 @@ export function NestingPage() {
             <button
               type="button"
               aria-label="Abrir panel"
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200 ring-1 ring-white/10"
+              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200"
               onClick={() => setIsMobilePanelOpen(true)}
             >
               <SlidersHorizontal size={16} strokeWidth={2.2} />
@@ -808,7 +808,7 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-[#0a0a0c] ring-1 ring-inset ring-white/8">
+          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-[#0a0a0c]">
             <div className="absolute inset-px overflow-hidden rounded-4xl">
               {!project.sessionReady ? (
                 <WorkspaceSpinner />
@@ -834,7 +834,7 @@ export function NestingPage() {
                   <p>Importa una pieza o presiona Nestear</p>
                   <button
                     type="button"
-                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white ring-1 ring-white/15"
+                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white"
                     onClick={() => setIsMobilePanelOpen(true)}
                   >
                     Abrir panel

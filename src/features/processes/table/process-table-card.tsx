@@ -1,8 +1,12 @@
 "use client"
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+
 import { useEffect, useMemo, useState } from "react"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
+import { useExpandRow } from "@/shared/hooks/use-expand-row"
+import { clearEntityFocusParams } from "@/shared/hooks/clear-entity-focus-params"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
@@ -59,6 +63,10 @@ export function ProcessTableCard({
   onResolvingChange,
 }: Props) {
 
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
   const { isMobile } = useResponsive()
 
   const expand = useEntityExpand()
@@ -88,8 +96,14 @@ export function ProcessTableCard({
   // useFocusedRow solo necesita setExpandedRowId en desktop; en mobile
   // un no-op evita trabajo de store inútil mientras el scroll sigue
   // encontrando [data-expanded-row-id] en TaskProcessColumn.
+  const setExpandedRowId = useExpandRow({
+    focusedId: focusedTaskId,
+    setExpandedRowId: expand.setExpandedRowId,
+  })
+
   useFocusedRow({
     focusedId: focusedTaskId,
+    expandedRowId: expand.expandedRowId,
     setExpandedRowId: isMobile ? () => {} : expand.setExpandedRowId,
     focusToken,
   })
@@ -204,11 +218,14 @@ export function ProcessTableCard({
         processCode={processDefinition.code}
         tasks={tasks}
         expandedKey={mobileExpandedKey}
-        onToggleCard={(key) =>
-          setMobileExpandedKey(current =>
-            current === key ? null : key,
-          )
-        }
+        onToggleCard={(key) => {
+          const next = mobileExpandedKey === key ? null : key
+          const nextTaskId = next?.split(":")[0]
+          if (focusedTaskId && nextTaskId !== focusedTaskId) {
+            clearEntityFocusParams(router, pathname, searchParams)
+          }
+          setMobileExpandedKey(next)
+        }}
         activeOverlayKey={activeOverlayKey}
         onOverlayOpenChange={handleOverlayOpenChange}
         contentOnly
@@ -234,7 +251,7 @@ export function ProcessTableCard({
               processTask={processTask}
               expanded={expand.expandedRowId === id}
               onToggle={() =>
-                expand.setExpandedRowId(
+                setExpandedRowId(
                   expand.expandedRowId === id
                     ? null
                     : id,

@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 type Props = {
   focusedId?: string
+  /** Row expandido actual (para no cerrar un expand manual al limpiar la URL). */
+  expandedRowId?: string | null
   setExpandedRowId: (id: string | null) => void
   focusToken?: string
 }
@@ -79,7 +81,6 @@ function trackUntilSettled(el: HTMLElement): () => void {
     if (settleTimer !== null) window.clearTimeout(settleTimer)
     settleTimer = window.setTimeout(() => {
       settleTimer = null
-      // Un solo smooth al final (antes había dos seguidos → jank).
       centerNow("smooth")
     }, LAYOUT_SETTLE_MS)
   }
@@ -92,7 +93,6 @@ function trackUntilSettled(el: HTMLElement): () => void {
       return
     }
     lastHeight = height
-    // Máx. un center("auto") por frame mientras monta el expandido.
     if (!pendingCenter) {
       pendingCenter = true
       rafId = window.requestAnimationFrame(() => {
@@ -119,11 +119,6 @@ function trackUntilSettled(el: HTMLElement): () => void {
   }
 }
 
-/**
- * Encuentra el row sin MutationObserver de todo document.body
- * (en mobile procesos el attr a veces llega 1 tick después del mount;
- * el observer global era la causa principal del trave).
- */
 function waitForRow(
   selector: string,
   onFound: (el: HTMLElement) => void,
@@ -158,14 +153,39 @@ function waitForRow(
   }
 }
 
+/**
+ * Foco programático desde la URL (`taskId` / `projectId`).
+ *
+ * - Solo reacciona a cambios de `focusedId` / `focusToken` (no a expands manuales).
+ * - Si la URL pierde el id y el row abierto sigue siendo el del deep-link → se cierra.
+ * - Si el usuario ya abrió otro row → no se toca su expand.
+ *
+ * La liberación del deep-link (borrar params) la hace quien expande manualmente
+ * vía `useExpandRow` / `clearEntityFocusParams`.
+ */
 export function useFocusedRow({
   focusedId,
+  expandedRowId = null,
   setExpandedRowId,
   focusToken,
 }: Props) {
-  useEffect(() => {
-    if (!focusedId) return
+  const prevFocusedIdRef = useRef<string | undefined>(undefined)
+  const expandedRowIdRef = useRef<string | null>(expandedRowId)
+  expandedRowIdRef.current = expandedRowId
 
+  useEffect(() => {
+    if (!focusedId) {
+      const prev = prevFocusedIdRef.current
+      prevFocusedIdRef.current = undefined
+
+      // Sidebar / URL limpia: cerrar solo si aún está el row del deep-link.
+      if (prev && expandedRowIdRef.current === prev) {
+        setExpandedRowId(null)
+      }
+      return
+    }
+
+    prevFocusedIdRef.current = focusedId
     setExpandedRowId(focusedId)
 
     const selector = `[data-expanded-row-id="${CSS.escape(focusedId)}"]`
@@ -185,5 +205,7 @@ export function useFocusedRow({
       stopWait()
       stopTracking?.()
     }
+    // expandedRowId deliberadamente fuera: un expand manual no debe
+    // re-disparar scroll/expand hacia el id de la URL.
   }, [focusedId, setExpandedRowId, focusToken])
 }

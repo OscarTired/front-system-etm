@@ -8,6 +8,7 @@ import {
 import type { Task } from "../types/task.types"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
+import { useExpandRow } from "@/shared/hooks/use-expand-row"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
 
 import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
@@ -56,8 +57,14 @@ export function TaskTable({
 
   const isManualMode = taskSortMode === "manual"
 
+  const setExpandedRowId = useExpandRow({
+    focusedId: focusedTaskId,
+    setExpandedRowId: expand.setExpandedRowId,
+  })
+
   useFocusedRow({
     focusedId: focusedTaskId,
+    expandedRowId: expand.expandedRowId,
     setExpandedRowId: expand.setExpandedRowId,
     focusToken,
   })
@@ -169,7 +176,7 @@ export function TaskTable({
               task={task}
               expanded={expand.expandedRowId === task.id}
               onToggle={() =>
-                expand.setExpandedRowId(
+                setExpandedRowId(
                   expand.expandedRowId === task.id
                     ? null
                     : task.id,

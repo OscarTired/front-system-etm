@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { ChevronDown, MessageSquare } from "lucide-react"
@@ -313,19 +312,6 @@ export function TaskMobileCard({
               />
             </button>
 
-                        {/* Proyecto: solo desktop. En móvil el chip del row (long-press) abre el proyecto. */}
-            {!isMobile && (
-              <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
-                <span className="text-xs font-medium text-neutral-500">Proyecto</span>
-                <Link
-                  href={`/projects?projectId=${task.project.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="font-semibold tracking-wide text-neutral-300 underline-offset-2 hover:underline"
-                >
-                  {task.project.projectCode}
-                </Link>
-              </div>
-            )}
 
             <TaskPriorityCell task={task} triggerVariant="row" rowLabel="Prioridad" />
           </div>

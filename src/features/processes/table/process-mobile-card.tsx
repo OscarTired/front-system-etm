@@ -251,25 +251,7 @@ export function ProcessMobileCard({
                 className="shrink-0 rotate-180 text-neutral-500"
               />
             </button>
-
-            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
-              <span className="text-xs font-medium text-neutral-500">Proyecto</span>
-              {isMobile ? (
-                <span className="font-semibold tracking-wide text-neutral-300">
-                  {project.projectCode}
-                </span>
-              ) : (
-                <Link
-                  href={`/projects?projectId=${project.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="font-semibold tracking-wide text-neutral-300 transition-colors hover:text-cyan-300"
-                >
-                  {project.projectCode}
-                </Link>
-              )}
-            </div>
-
-            <ProcessOperatorCell
+<ProcessOperatorCell
               processTask={processTask}
               triggerVariant="row"
               rowLabel="Asignar operario"
