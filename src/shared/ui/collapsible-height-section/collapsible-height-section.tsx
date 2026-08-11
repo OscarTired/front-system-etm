@@ -14,6 +14,12 @@ type Props = {
   unmountOnExit?: boolean
 }
 
+/**
+ * Collapse por grid-template-rows (1fr ↔ 0fr).
+ * overflow-hidden en el grid + en el slot evita que, al reflowear el
+ * shell (cerrar sidebar / cambiar ancho), el contenido “se pase” del
+ * colapso y deje una franja vacía o recorte raro.
+ */
 export function CollapsibleHeightSection({
   open,
   children,
@@ -39,14 +45,16 @@ export function CollapsibleHeightSection({
   return (
     <div
       className={cn(
-        "grid transition-[grid-template-rows] duration-300 ease-out",
+        // overflow-hidden en el grid: sin esto, en reflows de ancho del
+        // AppShell el 1fr puede pintar fuera un frame y dejar franja vacía.
+        "grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out",
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
       )}
     >
-      <div className="overflow-hidden min-h-0">
+      <div className="min-h-0 overflow-hidden">
         <div
           className={cn(
-            "transition-opacity duration-200 ease-out",
+            "max-w-full transition-opacity duration-200 ease-out",
             open ? "opacity-100 delay-75" : "opacity-0",
             className,
           )}

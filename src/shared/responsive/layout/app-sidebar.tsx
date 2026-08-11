@@ -111,8 +111,13 @@ export function AppSidebar({
         onTransitionEnd={handleTransitionEnd}
         style={
           isDrawer
-            ? { contain: "layout style" }
-            : { width, contain: "layout style" }
+            ? { contain: "layout style paint" }
+            : {
+                width,
+                // layout+paint: al width→0 no deja residual visible
+                // del menú ni “franja” del fondo del shell.
+                contain: "layout style paint",
+              }
         }
         className={cn(
           !isDrawer && "shrink-0",
@@ -120,7 +125,9 @@ export function AppSidebar({
           "h-full",
           "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
           "overflow-hidden",
-          "will-change-[width,transform]",
+          visualState === "moving-out" || visualState === "moving-in"
+            ? "will-change-[width]"
+            : "will-change-auto",
           // Desktop sigue con transición CSS propia. Drawer ya no
           // anima nada — está siempre ahí, estático; lo que se ve/
           // oculta es el contenido de arriba deslizándose por encima.

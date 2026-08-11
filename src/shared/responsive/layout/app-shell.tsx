@@ -66,18 +66,26 @@ function DesktopShell({ children }: Props) {
       <AppSidebar />
       <main
         onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505] will-change-[border-radius]"
+        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505]"
         style={{
           borderRadius,
           transition: `border-radius ${TRANSITION_TIMING}`,
+          // Contención: al animar el width del sidebar el main no debe
+          // dejar pintar hijos fuera ni generar franja del fondo #1d1c1c.
+          contain: "layout paint",
+          maxWidth: "100%",
         }}
       >
         <DesktopTopBar />
         <div
-          className="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+          className="hide-scrollbar min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
           data-desktop-scroll
+          style={{ maxWidth: "100%" }}
         >
-          {children}
+          {/* max-w-full: rows expandidos / tablas min-width no empujan el shell */}
+          <div className="mx-auto w-full max-w-full min-w-0">
+            {children}
+          </div>
         </div>
       </main>
     </div>
@@ -127,7 +135,7 @@ function CompactShell({ children }: Props) {
       </div>
 
       <div
-        className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
+        className="absolute inset-0 z-10 overflow-hidden bg-[#050505] [contain:layout_paint]"
         style={{
           // Solo 0 o DRAWER_WIDTH — sin valores intermedios en JS que
           // puedan dejar el panel “pasado” del cierre tras un reflow
