@@ -3,15 +3,14 @@
 import { useQuery } from "@tanstack/react-query"
 import { activityLogService } from "../services/activity-log.service"
 import type { ActivityDepartment } from "../types/activity-log.types"
-import { endOfDayISO, startOfDayISO } from "../utils/week-range"
 
 export function useMyActivityLogRange(
   department: ActivityDepartment | undefined,
   fromISO: string,
   toISO: string,
-  userId?: string,
+  _userId?: string,
 ) {
-  const enabled = Boolean(fromISO && toISO && userId)
+  const enabled = Boolean(fromISO && toISO)
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -21,16 +20,14 @@ export function useMyActivityLogRange(
       department ?? null,
       fromISO,
       toISO,
-      userId,
     ],
     enabled,
     queryFn: ({ signal }) =>
-      activityLogService.getAll(
+      activityLogService.getMyRange(
         {
-          userId,
+          from: fromISO,
+          to: toISO,
           department,
-          from: startOfDayISO(fromISO),
-          to: endOfDayISO(toISO),
         },
         signal,
       ),

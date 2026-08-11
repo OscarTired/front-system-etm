@@ -48,10 +48,6 @@ export const activityLogService = {
     await api.delete(`/activity-log/${id}`)
   },
 
-  // Mueve una entrada a otra franja — usado por el drag & drop de
-  // ShiftGroupSection. Único campo editable hoy (ver
-  // UpdateActivityLogDto en el backend): activityType/project/note
-  // siguen siendo "borrar y volver a crear" a propósito.
   async updateShift(id: string, shift: DayShift) {
     const response = await api.patch<ActivityLog>(`/activity-log/${id}`, { shift })
     return response.data
@@ -74,9 +70,21 @@ export const activityLogService = {
   },
 
   /**
-   * Días con registros del usuario autenticado.
+   * Rango del usuario autenticado (agenda / mes).
    * Backend fija userId desde el JWT — no se manda userId.
+   * Solo ACTIVITY_LOG_READ.
    */
+  async getMyRange(
+    params: { from: string; to: string; department?: ActivityDepartment },
+    signal?: AbortSignal,
+  ) {
+    const response = await api.get<ActivityLog[]>("/activity-log/me", {
+      signal,
+      params,
+    })
+    return response.data
+  },
+
   async getMyMarkedDates(
     params: { from: string; to: string; department?: ActivityDepartment },
     signal?: AbortSignal,
@@ -88,10 +96,6 @@ export const activityLogService = {
     return response.data
   },
 
-  /**
-   * Días con registros (equipo / filtro opcional).
-   * Requiere ACTIVITY_LOG_READ_ANY.
-   */
   async getMarkedDates(
     params: {
       from: string
@@ -116,11 +120,6 @@ export const activityLogService = {
     return response.data
   },
 
-
-  /**
-   * Estado de franjas (Lima) — candados de UI.
-   * date: YYYY-MM-DD opcional; sin date = hoy Lima en el server.
-   */
   async getShiftSchedule(date?: string, signal?: AbortSignal) {
     const response = await api.get<ShiftSchedule>("/activity-log/shifts", {
       signal,
