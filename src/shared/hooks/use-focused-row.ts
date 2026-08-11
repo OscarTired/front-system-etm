@@ -4,16 +4,13 @@ import { useEffect, useRef } from "react"
 
 type Props = {
   focusedId?: string
-  /** Row expandido actual (para no cerrar un expand manual al limpiar la URL). */
+  /** Row expandido actual — si diverge del deep-link, se corta el scroll programático. */
   expandedRowId?: string | null
   setExpandedRowId: (id: string | null) => void
   focusToken?: string
 }
 
-/** Quiet period after the last layout change before we consider height final. */
 const LAYOUT_SETTLE_MS = 150
-
-/** If the row never appears (filtered / bad id), stop waiting. */
 const FIND_TIMEOUT_MS = 2500
 
 function isScrollable(el: HTMLElement): boolean {
@@ -28,10 +25,6 @@ function isScrollable(el: HTMLElement): boolean {
   return el.scrollHeight > el.clientHeight + 1
 }
 
-/**
- * Nearest ancestor that actually scrolls (AppListScroll / EntityTable / pane).
- * Never assume window.
- */
 function getScrollParent(el: HTMLElement): HTMLElement | null {
   let parent = el.parentElement
   while (parent) {
@@ -62,10 +55,14 @@ function centerInScrollParent(el: HTMLElement, behavior: ScrollBehavior) {
 }
 
 /**
- * Center while expanded content grows; one smooth settle when height stabilizes.
- * Throttled to 1 scroll per frame — avoids trave on mobile when pipeline mounts.
+ * Centra mientras crece el expandido del deep-link.
+ * `isActive` debe ser false en cuanto el usuario abre otro row
+ * (si no, el ResizeObserver del colapso vuelve a scrollear al foco viejo).
  */
-function trackUntilSettled(el: HTMLElement): () => void {
+function trackUntilSettled(
+  el: HTMLElement,
+  isActive: () => boolean,
+): () => void {
   let settleTimer: number | null = null
   let rafId = 0
   let pendingCenter = false
@@ -73,7 +70,7 @@ function trackUntilSettled(el: HTMLElement): () => void {
   let disposed = false
 
   const centerNow = (behavior: ScrollBehavior) => {
-    if (disposed) return
+    if (disposed || !isActive()) return
     centerInScrollParent(el, behavior)
   }
 
@@ -86,7 +83,7 @@ function trackUntilSettled(el: HTMLElement): () => void {
   }
 
   const onLayout = () => {
-    if (disposed) return
+    if (disposed || !isActive()) return
     const height = el.getBoundingClientRect().height
     if (height === lastHeight) {
       scheduleSettle()
@@ -123,6 +120,7 @@ function waitForRow(
   selector: string,
   onFound: (el: HTMLElement) => void,
   timeoutMs: number,
+  isActive: () => boolean,
 ): () => void {
   const existing = document.querySelector<HTMLElement>(selector)
   if (existing) {
@@ -135,7 +133,7 @@ function waitForRow(
   const start = performance.now()
 
   const tick = () => {
-    if (cancelled) return
+    if (cancelled || !isActive()) return
     const el = document.querySelector<HTMLElement>(selector)
     if (el) {
       onFound(el)
@@ -154,14 +152,13 @@ function waitForRow(
 }
 
 /**
- * Foco programático desde la URL (`taskId` / `projectId`).
+ * Foco programático desde la URL.
  *
- * - Solo reacciona a cambios de `focusedId` / `focusToken` (no a expands manuales).
- * - Si la URL pierde el id y el row abierto sigue siendo el del deep-link → se cierra.
- * - Si el usuario ya abrió otro row → no se toca su expand.
- *
- * La liberación del deep-link (borrar params) la hace quien expande manualmente
- * vía `useExpandRow` / `clearEntityFocusParams`.
+ * Contrato:
+ * - Entra deep-link → expand + scroll una vez (mientras el expand sea ese id).
+ * - Usuario abre otro row / cierra el foco → se corta el tracking al instante
+ *   (no se re-centra al colapsar el row de la URL).
+ * - Limpiar params de la URL es responsabilidad de `useExpandRow`.
  */
 export function useFocusedRow({
   focusedId,
@@ -173,15 +170,40 @@ export function useFocusedRow({
   const expandedRowIdRef = useRef<string | null>(expandedRowId)
   expandedRowIdRef.current = expandedRowId
 
+  const stopTrackingRef = useRef<(() => void) | null>(null)
+
+  const stopTracking = () => {
+    stopTrackingRef.current?.()
+    stopTrackingRef.current = null
+  }
+
+  // Usuario tomó el control: cortar scroll YA (antes de que el RO del colapso dispare).
+  useEffect(() => {
+    if (!focusedId) return
+    if (expandedRowId != null && expandedRowId !== focusedId) {
+      stopTracking()
+    }
+  }, [expandedRowId, focusedId])
+
   useEffect(() => {
     if (!focusedId) {
+      stopTracking()
+
       const prev = prevFocusedIdRef.current
       prevFocusedIdRef.current = undefined
 
-      // Sidebar / URL limpia: cerrar solo si aún está el row del deep-link.
       if (prev && expandedRowIdRef.current === prev) {
         setExpandedRowId(null)
       }
+      return
+    }
+
+    // URL aún tiene foco pero el usuario ya expandió otro → no forzar ni scrollear.
+    if (
+      expandedRowIdRef.current != null &&
+      expandedRowIdRef.current !== focusedId
+    ) {
+      stopTracking()
       return
     }
 
@@ -189,23 +211,34 @@ export function useFocusedRow({
     setExpandedRowId(focusedId)
 
     const selector = `[data-expanded-row-id="${CSS.escape(focusedId)}"]`
+    const isActive = () => {
+      // Activo solo mientras el deep-link sigue y el expand es ese id (o aún null en el primer tick).
+      const expanded = expandedRowIdRef.current
+      return (
+        prevFocusedIdRef.current === focusedId &&
+        (expanded == null || expanded === focusedId)
+      )
+    }
 
-    let stopTracking: (() => void) | null = null
+    stopTracking()
 
     const stopWait = waitForRow(
       selector,
       el => {
-        stopTracking?.()
-        stopTracking = trackUntilSettled(el)
+        if (!isActive()) return
+        stopTracking()
+        stopTrackingRef.current = trackUntilSettled(el, isActive)
       },
       FIND_TIMEOUT_MS,
+      isActive,
     )
 
-    return () => {
+    stopTrackingRef.current = () => {
       stopWait()
-      stopTracking?.()
     }
-    // expandedRowId deliberadamente fuera: un expand manual no debe
-    // re-disparar scroll/expand hacia el id de la URL.
+
+    return () => {
+      stopTracking()
+    }
   }, [focusedId, setExpandedRowId, focusToken])
 }
