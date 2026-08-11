@@ -43,7 +43,9 @@ export function Command({
   return (
     <CommandPrimitive
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl text-white",
+        // h-full min-h-0: dentro del sheet IG, llena el alto y deja
+        // que CommandList scrollee (no empuja el sheet fuera del VV)
+        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl text-white",
         className
       )}
       {...props}
@@ -113,7 +115,7 @@ export const CommandList = React.forwardRef<
   ) => {
     return (
       <ScrollArea
-        className={cn("relative min-h-0 w-full min-w-0 rounded-xl", className)}
+        className={cn("relative min-h-0 w-full min-w-0 flex-1 rounded-xl", className)}
       >
         <CommandPrimitive.List
           ref={ref}

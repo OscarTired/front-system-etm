@@ -49,74 +49,88 @@ export function PopoverContent({
   const { containerRef, size } = useSmoothResize()
   const vvFrame = useVisualViewportFrame()
 
+
   if (isSheet) {
     const transitionStyle: string = isDragging
       ? "none"
       : dismissing
         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}, height 300ms cubic-bezier(0.2,0,0,1)`
+        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
+
+    /**
+     * Instagram pattern:
+     * - bottom = keyboardInset  → sheet sentado sobre el teclado
+     * - height = casi todo el VV → lista siempre visible
+     * - body flex column + min-h-0 → el scroll vive DENTRO, no empuja el sheet
+     * - sin height de ResizeObserver (rompía iOS midiendo solo el input)
+     */
+    const sheetMaxH = Math.max(
+      200,
+      vvFrame.height * (vvFrame.keyboardOpen ? 0.98 : SHEET_CONFIG.MAX_HEIGHT_RATIO),
+    )
 
     return (
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
+            "fixed z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:duration-250 data-[state=open]:duration-200"
+            "data-[state=closed]:duration-250 data-[state=open]:duration-200",
           )}
+          style={{
+            top: vvFrame.top,
+            left: vvFrame.left,
+            width: vvFrame.width || "100%",
+            height: vvFrame.height || "100%",
+          }}
         />
 
         <DialogPrimitive.Content
           data-slot="popover-sheet"
           data-drag-scroll-ignore
-          onOpenAutoFocus={(event) => {
-            if (onOpenAutoFocus) {
-              onOpenAutoFocus(event)
-            } else {
-              event.preventDefault()
-            }
+          data-keyboard-open={vvFrame.keyboardOpen ? "true" : "false"}
+          onOpenAutoFocus={event => {
+            if (onOpenAutoFocus) onOpenAutoFocus(event)
+            else event.preventDefault()
           }}
-          onCloseAutoFocus={(event) => {
+          onCloseAutoFocus={event => {
             onCloseAutoFocus?.(event)
           }}
           onPointerDownOutside={onPointerDownOutside}
           onInteractOutside={onInteractOutside}
           {...dragHandleProps}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden",
+            // flex-col es el contrato IG: handle | body scrolleable
+            "fixed z-40 flex flex-col overflow-hidden",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
-            !dismissing && "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            !dismissing && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            !dismissing && "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
-            !dismissing && "data-[state=closed]:duration-250 data-[state=open]:duration-300"
+            !dismissing &&
+              "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            !dismissing &&
+              "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            !dismissing &&
+              "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
+            !dismissing &&
+              "data-[state=closed]:duration-250 data-[state=open]:duration-300",
           )}
           style={{
             ...style,
-            // Anclado al borde inferior del *visual* viewport.
-            // Cuando abre el teclado, vv.height baja y bottom sube:
-            // el sheet se queda siempre visible encima del teclado.
             top: "auto",
             right: "auto",
-            left: vvFrame ? vvFrame.left : 0,
-            width: vvFrame ? vvFrame.width : "100%",
-            bottom: vvFrame
-              ? Math.max(
-                  0,
-                  window.innerHeight - (vvFrame.top + vvFrame.height),
-                )
-              : 0,
-            // Tope = casi todo el área visible (no el layout completo).
-            maxHeight: vvFrame
-              ? Math.max(160, vvFrame.height * SHEET_CONFIG.MAX_HEIGHT_RATIO)
-              : "85dvh",
-            height: "auto",
+            left: vvFrame.left || 0,
+            width: vvFrame.width ? vvFrame.width : "100%",
+            // IG: el sheet “se sienta” arriba del teclado
+            bottom: vvFrame.keyboardInset,
+            maxHeight: sheetMaxH,
+            // Con teclado: ocupar el VV (lista + input visibles).
+            // Sin teclado: auto, acotado por maxHeight.
+            height: vvFrame.keyboardOpen ? sheetMaxH : "auto",
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: isDragging
               ? "none"
               : dismissing
                 ? transitionStyle
-                : `max-height 200ms cubic-bezier(0.2,0,0,1), bottom 200ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+                : `bottom 160ms cubic-bezier(0.2,0,0,1), height 160ms cubic-bezier(0.2,0,0,1), max-height 160ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
           }}
         >
           <VisuallyHidden asChild>
@@ -129,54 +143,22 @@ export function PopoverContent({
 
           <div
             ref={containerRef}
-            onWheel={(event) => {
-              const element = event.currentTarget
-              const isScrollable = element.scrollHeight > element.clientHeight
-              if (isScrollable) {
-                event.stopPropagation()
-              }
+            onWheel={event => {
+              const el = event.currentTarget
+              if (el.scrollHeight > el.clientHeight) event.stopPropagation()
             }}
-            style={(() => {
-              // Handle (~36px) + safe padding; el resto es área scrolleable.
-              const handlePx = 36
-              const safePad =
-                SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX
-              const vvCap = vvFrame
-                ? Math.max(
-                    120,
-                    vvFrame.height * SHEET_CONFIG.MAX_HEIGHT_RATIO -
-                      handlePx,
-                  )
-                : undefined
-              // Contenido medido, pero NUNCA más alto que el viewport
-              // visible: si no, el teclado recorta y el scroll interno
-              // no recibe altura acotada (overflow del padre).
-              const measured = size.height
-              const heightPx =
-                measured != null && vvCap != null
-                  ? Math.min(measured, vvCap)
-                  : measured != null
-                    ? measured
-                    : undefined
-              return {
-                paddingBottom: `calc(env(safe-area-inset-bottom) + ${safePad}px)`,
-                height: heightPx != null ? `${heightPx}px` : "auto",
-                maxHeight: vvCap != null ? `${vvCap}px` : undefined,
-                // content-box: RO mide content-box; el padding no debe
-                // comerse la altura del listado.
-                boxSizing: "content-box" as const,
-              }
-            })()}
+            style={{
+              paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
+            }}
             className={cn(
-              "flex min-h-0 w-full flex-col gap-2.5 overflow-hidden transition-[height,max-height] duration-200 ease-[cubic-bezier(0.2,0,0,1)]",
+              // min-h-0 + flex-1: el hijo (Command) puede scrollear
+              "flex min-h-0 w-full flex-1 flex-col overflow-hidden",
               "px-4 pt-1 text-sm",
-              className
+              className,
             )}
             {...props}
           >
-            <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain">
-              {children}
-            </div>
+            {children}
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

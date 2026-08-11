@@ -7,45 +7,85 @@ export type VisualViewportFrame = {
   left: number
   width: number
   height: number
+  /** px desde el borde inferior del layout hasta el borde inferior del VV ≈ teclado */
+  keyboardInset: number
+  keyboardOpen: boolean
+}
+
+const KEYBOARD_THRESHOLD_PX = 50
+
+function measure(): VisualViewportFrame {
+  if (typeof window === "undefined") {
+    return {
+      top: 0,
+      left: 0,
+      width: 0,
+      height: 0,
+      keyboardInset: 0,
+      keyboardOpen: false,
+    }
+  }
+
+  const vv = window.visualViewport
+  const layoutH = window.innerHeight
+  const layoutW = window.innerWidth
+
+  if (!vv) {
+    return {
+      top: 0,
+      left: 0,
+      width: layoutW,
+      height: layoutH,
+      keyboardInset: 0,
+      keyboardOpen: false,
+    }
+  }
+
+  const keyboardInset = Math.max(
+    0,
+    Math.round(layoutH - vv.height - vv.offsetTop),
+  )
+
+  return {
+    top: vv.offsetTop,
+    left: vv.offsetLeft,
+    width: vv.width,
+    height: vv.height,
+    keyboardInset,
+    keyboardOpen: keyboardInset >= KEYBOARD_THRESHOLD_PX,
+  }
 }
 
 /**
- * Rectángulo del visual viewport en coords de layout (`position: fixed`).
- * El teclado móvil achica este rectángulo; el sheet se ancla a su borde inferior.
+ * Patrón Instagram:
+ * el sheet se ancla con `bottom: keyboardInset` y su alto útil es
+ * `height` del visualViewport (la zona libre sobre el teclado).
  */
-export function useVisualViewportFrame() {
-  const [frame, setFrame] = React.useState<VisualViewportFrame | null>(null)
+export function useVisualViewportFrame(): VisualViewportFrame {
+  const [frame, setFrame] = React.useState<VisualViewportFrame>(measure)
 
   React.useEffect(() => {
-    const vv = window.visualViewport
-
-    const update = () => {
-      if (!vv) {
-        setFrame({
-          top: 0,
-          left: 0,
-          width: window.innerWidth,
-          height: window.innerHeight,
-        })
-        return
-      }
-      setFrame({
-        top: vv.offsetTop,
-        left: vv.offsetLeft,
-        width: vv.width,
-        height: vv.height,
-      })
+    let raf = 0
+    const tick = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => setFrame(measure()))
     }
 
-    update()
-    vv?.addEventListener("resize", update)
-    vv?.addEventListener("scroll", update)
-    window.addEventListener("resize", update)
+    tick()
+    const vv = window.visualViewport
+    vv?.addEventListener("resize", tick)
+    vv?.addEventListener("scroll", tick)
+    window.addEventListener("resize", tick)
+    window.addEventListener("focusin", tick)
+    window.addEventListener("focusout", tick)
 
     return () => {
-      vv?.removeEventListener("resize", update)
-      vv?.removeEventListener("scroll", update)
-      window.removeEventListener("resize", update)
+      cancelAnimationFrame(raf)
+      vv?.removeEventListener("resize", tick)
+      vv?.removeEventListener("scroll", tick)
+      window.removeEventListener("resize", tick)
+      window.removeEventListener("focusin", tick)
+      window.removeEventListener("focusout", tick)
     }
   }, [])
 
