@@ -7,6 +7,7 @@ import { ChevronDown, MessageSquare } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   ENTITY_ICONS,
   type EntityIcon,
@@ -21,12 +22,6 @@ import { processAccess } from "../access/process-access"
 import { ProcessOperatorCell } from "../components/cells/process-operator-cell"
 import { ProcessRowActions } from "../components/actions/process-row-actions"
 import { ProcessExpandedRow } from "../components/expanded-row/process-expanded-row"
-
-/** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
-function formatCodeBadge(code: string) {
-  const match = code.match(/^(\d{2}-\d{3})/)
-  return match ? match[1] : code
-}
 
 function EntityIconBadge({
   icon,
@@ -101,7 +96,7 @@ export function ProcessMobileCard({
               color: project.client.color,
             }}
           >
-            {formatCodeBadge(project.projectCode)}
+            {displayProjectCode(project.projectCode)}
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col items-start">
@@ -192,20 +187,30 @@ export function ProcessMobileCard({
             </div>
           </div>
 
-          {/* Fecha entrega — visible en desktop en el row */}
+          {/* Mensajes del proceso — siempre visible, antes de la fecha */}
+          <span
+            title={
+              (processTask.workflowStep?.commentCount ?? 0) === 1
+                ? "1 mensaje del proceso"
+                : `${processTask.workflowStep?.commentCount ?? 0} mensajes del proceso`
+            }
+            className={cn(
+              "inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
+              (processTask.workflowStep?.commentCount ?? 0) > 0
+                ? "bg-sky-500/15 text-sky-300"
+                : "bg-white/5 text-neutral-600",
+            )}
+          >
+            <MessageSquare size={10} strokeWidth={2.5} />
+            {(processTask.workflowStep?.commentCount ?? 0) > 0
+              ? processTask.workflowStep?.commentCount
+              : null}
+          </span>
+
+          {/* Fecha entrega — después de mensajes */}
           <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(task.deliveryDate)}
           </span>
-
-          {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
-            <span
-              title={`${processTask.workflowStep?.commentCount} mensajes del proceso`}
-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
-            >
-              <MessageSquare size={10} strokeWidth={2.5} />
-              {processTask.workflowStep?.commentCount}
-            </span>
-          )}
         </div>
 
         {stepId && processCode && (

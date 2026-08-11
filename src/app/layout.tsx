@@ -45,7 +45,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  interactiveWidget: "resizes-content",
+  // overlays-content (default): el teclado NO redimensiona el layout.
+  // El sheet se ancla con visualViewport (popover-content). Así no
+  // hay doble conteo teclado (layout shrink + bottom offset).
+  interactiveWidget: "overlays-content",
 }
 
 export default function RootLayout({

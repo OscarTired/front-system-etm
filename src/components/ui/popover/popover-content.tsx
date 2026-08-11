@@ -93,6 +93,9 @@ export function PopoverContent({
           )}
           style={{
             ...style,
+            // Anclado al borde inferior del *visual* viewport.
+            // Cuando abre el teclado, vv.height baja y bottom sube:
+            // el sheet se queda siempre visible encima del teclado.
             top: "auto",
             right: "auto",
             left: vvFrame ? vvFrame.left : 0,
@@ -100,11 +103,12 @@ export function PopoverContent({
             bottom: vvFrame
               ? Math.max(
                   0,
-                  window.innerHeight - vvFrame.top - vvFrame.height,
+                  window.innerHeight - (vvFrame.top + vvFrame.height),
                 )
               : 0,
+            // Tope = casi todo el área visible (no el layout completo).
             maxHeight: vvFrame
-              ? vvFrame.height * SHEET_CONFIG.MAX_HEIGHT_RATIO
+              ? Math.max(160, vvFrame.height * SHEET_CONFIG.MAX_HEIGHT_RATIO)
               : "85dvh",
             height: "auto",
             transform: dragY ? `translateY(${dragY}px)` : undefined,
@@ -112,7 +116,7 @@ export function PopoverContent({
               ? "none"
               : dismissing
                 ? transitionStyle
-                : `max-height 300ms cubic-bezier(0.2,0,0,1), bottom 300ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+                : `max-height 200ms cubic-bezier(0.2,0,0,1), bottom 200ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
           }}
         >
           <VisuallyHidden asChild>
@@ -132,29 +136,45 @@ export function PopoverContent({
                 event.stopPropagation()
               }
             }}
-            style={{
-              paddingBottom: `calc(env(safe-area-inset-bottom) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
-              height: size.height ? `${size.height}px` : "auto",
-              // El preflight de Tailwind fuerza box-sizing:border-box
-              // globalmente — con eso, "height" incluye el padding
-              // DENTRO de la medida. Pero ResizeObserver (contentRect)
-              // siempre mide en content-box, por spec, sin importar el
-              // box-sizing del elemento. Sin este override, el height
-              // que se setea (medido en content-box) se interpretaba
-              // como border-box, así que el padding-bottom (14px +
-              // safe-area) se comía espacio que el contenido real
-              // necesitaba — dejando un hueco al fondo del sheet
-              // donde se veía el overlay oscuro de atrás.
-              boxSizing: "content-box",
-            }}
+            style={(() => {
+              // Handle (~36px) + safe padding; el resto es área scrolleable.
+              const handlePx = 36
+              const safePad =
+                SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX
+              const vvCap = vvFrame
+                ? Math.max(
+                    120,
+                    vvFrame.height * SHEET_CONFIG.MAX_HEIGHT_RATIO -
+                      handlePx,
+                  )
+                : undefined
+              // Contenido medido, pero NUNCA más alto que el viewport
+              // visible: si no, el teclado recorta y el scroll interno
+              // no recibe altura acotada (overflow del padre).
+              const measured = size.height
+              const heightPx =
+                measured != null && vvCap != null
+                  ? Math.min(measured, vvCap)
+                  : measured != null
+                    ? measured
+                    : undefined
+              return {
+                paddingBottom: `calc(env(safe-area-inset-bottom) + ${safePad}px)`,
+                height: heightPx != null ? `${heightPx}px` : "auto",
+                maxHeight: vvCap != null ? `${vvCap}px` : undefined,
+                // content-box: RO mide content-box; el padding no debe
+                // comerse la altura del listado.
+                boxSizing: "content-box" as const,
+              }
+            })()}
             className={cn(
-              "flex w-full flex-col gap-2.5 overflow-hidden transition-[height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+              "flex min-h-0 w-full flex-col gap-2.5 overflow-hidden transition-[height,max-height] duration-200 ease-[cubic-bezier(0.2,0,0,1)]",
               "px-4 pt-1 text-sm",
               className
             )}
             {...props}
           >
-            <div className="flex flex-col gap-2.5 w-full overflow-y-auto overscroll-contain">
+            <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain">
               {children}
             </div>
           </div>

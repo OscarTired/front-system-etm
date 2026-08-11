@@ -8,6 +8,7 @@ import { ChevronDown, MessageSquare } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   ENTITY_ICONS,
   type EntityIcon,
@@ -24,12 +25,6 @@ import { TaskExpandedRow } from "../components/expanded-row/task-expanded-row"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
 import { useSortStore } from "@/shared/sorting/store/sort-store"
 import { useLongPress } from "@/features/tasks/pipeline/hooks/use-long-press"
-
-/** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
-function formatCodeBadge(code: string) {
-  const match = code.match(/^(\d{2}-\d{3})/)
-  return match ? match[1] : code
-}
 
 function EntityIconBadge({
   icon,
@@ -157,7 +152,7 @@ export function TaskMobileCard({
               color: task.project.client.color,
             }}
           >
-            {formatCodeBadge(task.project.projectCode)}
+            {displayProjectCode(task.project.projectCode)}
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col items-start">

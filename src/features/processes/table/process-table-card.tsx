@@ -91,6 +91,9 @@ export function ProcessTableCard({
   const taskSortMode = useSortStore(
     s => s.taskSortMode,
   )
+  const taskSortDirection = useSortStore(
+    s => s.taskSortDirection,
+  )
 
   // Mobile expande vía mobileExpandedKey; desktop vía expand store.
   // useFocusedRow solo necesita setExpandedRowId en desktop; en mobile
@@ -123,12 +126,10 @@ export function ProcessTableCard({
   )
 
   const orderedTasks = useMemo(
-    () => createTaskView({
-      base: visibleTasks,
-      mode: taskSortMode,
+    () => createTaskView({ base: visibleTasks, mode: taskSortMode, direction: taskSortDirection,
       getTask: processTask => processTask.task,
-    }),
-    [visibleTasks, taskSortMode],
+     }),
+    [visibleTasks, taskSortMode, taskSortDirection],
   )
 
   const completedTasks = useMemo(

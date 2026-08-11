@@ -53,6 +53,9 @@ export function ProjectTable({
   const projectSortMode = useSortStore(
     s => s.projectSortMode,
   )
+  const projectSortDirection = useSortStore(
+    s => s.projectSortDirection,
+  )
 
   const isManualMode = projectSortMode === "manual"
 
@@ -83,8 +86,9 @@ export function ProjectTable({
     () => createProjectView({
       base: visibleProjects,
       mode: projectSortMode,
+      direction: projectSortDirection,
     }),
-    [visibleProjects, projectSortMode],
+    [visibleProjects, projectSortMode, projectSortDirection],
   )
 
   const completed = sortedProjects.filter(

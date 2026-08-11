@@ -48,13 +48,17 @@ export function usePipelineTasks({
   const taskSortMode = useSortStore(
     s => s.taskSortMode,
   )
+  const taskSortDirection = useSortStore(
+    s => s.taskSortDirection,
+  )
 
   const sorted = useMemo(
     () => createTaskView({
       base: visible,
       mode: taskSortMode,
+      direction: taskSortDirection,
     }),
-    [visible, taskSortMode],
+    [visible, taskSortMode, taskSortDirection],
   )
 
   const boardTasks = useMemo(() => {

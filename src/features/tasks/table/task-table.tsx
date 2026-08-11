@@ -54,6 +54,9 @@ export function TaskTable({
   const taskSortMode = useSortStore(
     s => s.taskSortMode,
   )
+  const taskSortDirection = useSortStore(
+    s => s.taskSortDirection,
+  )
 
   const isManualMode = taskSortMode === "manual"
 
@@ -84,8 +87,9 @@ export function TaskTable({
     () => createTaskView({
       base: visibleTasks,
       mode: taskSortMode,
+      direction: taskSortDirection,
     }),
-    [visibleTasks, taskSortMode],
+    [visibleTasks, taskSortMode, taskSortDirection],
   )
 
   const completed = sortedTasks.filter(

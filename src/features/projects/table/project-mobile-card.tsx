@@ -185,8 +185,8 @@ export function ProjectMobileCard({
               <span
                 title={
                   (project.taskCount ?? 0) === 1
-                    ? "1 tarea"
-                    : `${project.taskCount ?? 0} tareas`
+                    ? "1 tarea activa"
+                    : `${project.taskCount ?? 0} tareas activas`
                 }
                 className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
               >

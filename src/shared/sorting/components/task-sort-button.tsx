@@ -1,37 +1,25 @@
 "use client"
 
-import {
-  useState,
-} from "react"
+import { useState } from "react"
+import { ArrowDownAZ, ArrowUpAZ } from "lucide-react"
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
 import {
   Command,
   CommandGroup,
   CommandList,
 } from "@/components/ui/command"
-
-import {
-  SelectOption,
-} from "@/shared/ui/select-option/select-option"
-
-import type {
-  EntityIcon,
-} from "@/shared/constants/entity-icons"
-
+import { SelectOption } from "@/shared/ui/select-option/select-option"
+import type { EntityIcon } from "@/shared/constants/entity-icons"
 import {
   useSortStore,
   type TaskSortMode,
 } from "../store/sort-store"
-
-import {
-  TaskSortTrigger,
-} from "./task-sort-trigger"
+import { TaskSortTrigger } from "./task-sort-trigger"
 
 const SORT_OPTIONS: {
   value: TaskSortMode
@@ -74,31 +62,22 @@ const SORT_OPTIONS: {
 export function TaskSortButton() {
   const [open, setOpen] = useState(false)
 
-  const taskSortMode = useSortStore(
-    state => state.taskSortMode,
-  )
+  const taskSortMode = useSortStore(s => s.taskSortMode)
+  const setTaskSortMode = useSortStore(s => s.setTaskSortMode)
+  const taskSortDirection = useSortStore(s => s.taskSortDirection)
+  const toggleTaskSortDirection = useSortStore(s => s.toggleTaskSortDirection)
 
-  const setTaskSortMode = useSortStore(
-    state => state.setTaskSortMode,
-  )
-
-  const current = SORT_OPTIONS.find(
-    option => option.value === taskSortMode,
-  )
+  const current = SORT_OPTIONS.find(o => o.value === taskSortMode)
+  const dirLabel = taskSortDirection === "asc" ? "ASC" : "DESC"
+  const triggerLabel =
+    taskSortMode === "manual"
+      ? (current?.label ?? "MANUAL")
+      : `${(current?.label ?? "PRIORIDAD").toUpperCase()} · ${dirLabel}`
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <TaskSortTrigger
-          label={
-            current?.label ??
-            "CORRELATIVO"
-          }
-          active={open}
-        />
+        <TaskSortTrigger label={triggerLabel} active={open} />
       </PopoverTrigger>
 
       <PopoverContent
@@ -107,37 +86,46 @@ export function TaskSortButton() {
         floatingClassName="w-64"
         className="p-2"
       >
-        <Command
-          className="bg-transparent"
-        >
-          <CommandList
-            className="max-h-80 overflow-y-auto"
-          >
+        <Command className="bg-transparent">
+          <CommandList className="max-h-80 overflow-y-auto">
             <CommandGroup>
-              {SORT_OPTIONS.map(
-                option => (
-                  <SelectOption
-                    key={option.value}
-                    label={option.label}
-                    icon={option.icon}
-                    color={option.color}
-                    selected={
-                      option.value ===
-                      taskSortMode
-                    }
-                    disableCheckAnimation
-                    onSelect={() => {
-                      setTaskSortMode(
-                        option.value,
-                      )
-                      setOpen(false)
-                    }}
-                  />
-                ),
-              )}
+              {SORT_OPTIONS.map(option => (
+                <SelectOption
+                  key={option.value}
+                  label={option.label}
+                  icon={option.icon}
+                  color={option.color}
+                  selected={option.value === taskSortMode}
+                  disableCheckAnimation
+                  onSelect={() => {
+                    setTaskSortMode(option.value)
+                    setOpen(false)
+                  }}
+                />
+              ))}
             </CommandGroup>
           </CommandList>
         </Command>
+
+        {taskSortMode !== "manual" && (
+          <button
+            type="button"
+            onClick={() => toggleTaskSortDirection()}
+            className="mt-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs text-neutral-300 transition hover:bg-white/5"
+          >
+            <span className="flex items-center gap-2">
+              {taskSortDirection === "asc" ? (
+                <ArrowUpAZ className="size-3.5 text-cyan-400" />
+              ) : (
+                <ArrowDownAZ className="size-3.5 text-cyan-400" />
+              )}
+              Dirección
+            </span>
+            <span className="font-semibold tabular-nums text-cyan-300">
+              {dirLabel}
+            </span>
+          </button>
+        )}
       </PopoverContent>
     </Popover>
   )
