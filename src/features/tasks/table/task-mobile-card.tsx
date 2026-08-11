@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { ChevronDown, MessageSquare } from "lucide-react"
 
@@ -22,6 +23,7 @@ import { TaskPriorityCell } from "../components/cells/task-priority-cell"
 import { TaskRowActions } from "../components/actions/task-row-actions"
 import { TaskExpandedRow } from "../components/expanded-row/task-expanded-row"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
+import { useLongPress } from "@/features/tasks/pipeline/hooks/use-long-press"
 
 /** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
 function formatCodeBadge(code: string) {
@@ -59,7 +61,18 @@ export function TaskMobileCard({
   const [showPipeline, setShowPipeline] = useState(false)
 
   const { isMobile } = useResponsive()
+  const router = useRouter()
   const searchParams = useSearchParams()
+
+  const goToProject = useCallback(() => {
+    router.push(`/projects?projectId=${task.project.id}`)
+  }, [router, task.project.id])
+
+  const { bind: projectChipLongPress, pressed: projectChipPressed } = useLongPress({
+    onLongPress: goToProject,
+    threshold: 320,
+  })
+
 
   const isTarget = searchParams.get("taskId") === task.id
 
@@ -102,9 +115,42 @@ export function TaskMobileCard({
           }}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-3 pr-2 text-left"
         >
-          {/* Código del proyecto YY-NNN — más grande solo en desktop */}
+          {/* Chip código: desktop click → proyecto; móvil long-press → proyecto */}
           <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+            role="link"
+            tabIndex={0}
+            title={
+              isMobile
+                ? "Mantén pulsado para abrir el proyecto"
+                : "Abrir proyecto"
+            }
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isMobile) goToProject()
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                e.stopPropagation()
+                if (!isMobile) goToProject()
+              }
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            {...(isMobile
+              ? {
+                  onTouchStart: (e: React.TouchEvent) => {
+                    e.stopPropagation()
+                    projectChipLongPress.onTouchStart(e)
+                  },
+                  onTouchMove: projectChipLongPress.onTouchMove,
+                  onTouchEnd: projectChipLongPress.onTouchEnd,
+                }
+              : {})}
+            className={cn(
+              "shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide transition-opacity md:px-2 md:py-1 md:text-[11px]",
+              isMobile ? "cursor-default" : "cursor-pointer hover:opacity-80",
+              projectChipPressed && "opacity-60 scale-95",
+            )}
             style={{
               backgroundColor: `${task.project.client.color}15`,
               color: task.project.client.color,
@@ -267,22 +313,19 @@ export function TaskMobileCard({
               />
             </button>
 
-            <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
-              <span className="text-xs font-medium text-neutral-500">Proyecto</span>
-              {isMobile ? (
-                <span className="font-semibold tracking-wide text-neutral-300">
-                  {task.project.projectCode}
-                </span>
-              ) : (
+                        {/* Proyecto: solo desktop. En móvil el chip del row (long-press) abre el proyecto. */}
+            {!isMobile && (
+              <div className="flex items-center gap-2 rounded-lg bg-white/3 px-3 py-2 text-sm">
+                <span className="text-xs font-medium text-neutral-500">Proyecto</span>
                 <Link
                   href={`/projects?projectId=${task.project.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="font-semibold tracking-wide text-neutral-300 transition-colors hover:text-cyan-300"
+                  className="font-semibold tracking-wide text-neutral-300 underline-offset-2 hover:underline"
                 >
                   {task.project.projectCode}
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
 
             <TaskPriorityCell task={task} triggerVariant="row" rowLabel="Prioridad" />
           </div>

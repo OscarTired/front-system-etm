@@ -58,6 +58,16 @@ function DesktopShell({ children }: Props) {
     if (event.target !== event.currentTarget) return
     if (event.propertyName === "border-radius") {
       notifyClipTransitionEnd()
+      // Reflow del scroll: tras cambiar el ancho del shell, alturas
+      // residuales (rows expandidos) dejan franja vacía hasta un reflow.
+      const scroller = document.querySelector<HTMLElement>("[data-desktop-scroll]")
+      if (scroller) {
+        const top = scroller.scrollTop
+        scroller.style.overflow = "hidden"
+        void scroller.offsetHeight
+        scroller.style.overflow = ""
+        scroller.scrollTop = top
+      }
     }
   }
 
@@ -135,6 +145,22 @@ function CompactShell({ children }: Props) {
       </div>
 
       <div
+        data-mobile-panel
+        onTransitionEnd={(e) => {
+          if (e.target !== e.currentTarget) return
+          if (e.propertyName !== "transform") return
+          // Reflow VerticalScroll interno tras cerrar/abrir drawer
+          const root = e.currentTarget
+          const scroller = root.querySelector<HTMLElement>("[data-scroll-container], .overflow-y-auto")
+          if (scroller) {
+            const top = scroller.scrollTop
+            scroller.style.overflow = "hidden"
+            void scroller.offsetHeight
+            scroller.style.overflow = ""
+            scroller.scrollTop = top
+          }
+          window.dispatchEvent(new Event("resize"))
+        }}
         className="absolute inset-0 z-10 overflow-hidden bg-[#050505] [contain:layout_paint]"
         style={{
           // Solo 0 o DRAWER_WIDTH — sin valores intermedios en JS que

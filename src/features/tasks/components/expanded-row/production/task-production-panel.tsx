@@ -52,8 +52,8 @@ import {
 } from "@/shared/utils/badge-colors"
 
 import {
-  HorizontalScroll,
-} from "@/shared/ui/horizontal-scroll/horizontal-scroll"
+  cn,
+} from "@/shared/utils/utils"
 
 import {
   TaskRouteViewer,
@@ -190,56 +190,50 @@ export function TaskProductionPanel({
   )
 
   const stepper = (
+    <div className="w-full overflow-x-auto overflow-y-visible overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-max items-center justify-center px-3 pb-1 pt-3">
+        {task.route.map((code, index) => {
+          const definition = PROCESS_DEFINITIONS[code]
+          const ProcessIcon = ENTITY_ICONS[definition.icon]
 
-    <div className="w-full h-16 flex items-center justify-center">
-      <HorizontalScroll>
-        <div className="flex w-full items-center justify-center min-w-max px-2 mx-auto">
-          {task.route.map((code, index) => {
+          const step = task.workflowSteps.find(
+            s => s.processCode === code,
+          )
 
-            const definition = PROCESS_DEFINITIONS[code]
-            const ProcessIcon = ENTITY_ICONS[definition.icon]
+          const isActive = currentStep?.processCode === code
+          const isDone =
+            step?.status === "COMPLETED" ||
+            step?.status === "REVIEWED"
+          const isLast = index === task.route.length - 1
+          const colors = getBadgeColors(definition.color, "subtle")
 
-            const step = task.workflowSteps.find(
-              s => s.processCode === code,
-            )
+          const commentCount = step?.commentCount ?? 0
+          const hasComments = commentCount > 0
+          const operator = step?.operator ?? null
+          const hasInvite = !operator && Boolean(step?.invitedOperatorId)
 
-            const isActive = currentStep?.processCode === code
-
-            const isDone =
-              step?.status === "COMPLETED" ||
-              step?.status === "REVIEWED"
-
-            const isLast = index === task.route.length - 1
-
-            const colors = getBadgeColors(definition.color, "subtle")
-
-            return (
-
-              <div
-                key={code}
-                data-active={isActive}
-                className="flex items-center shrink-0"
+          return (
+            <div
+              key={code}
+              data-active={isActive}
+              className="flex shrink-0 items-center"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem(
+                    "process-origin-task-id",
+                    task.id,
+                  )
+                  router.push(
+                    `/processes?code=${code}&taskId=${task.id}`,
+                  )
+                }}
+                className="flex flex-col items-center gap-1.5 active:scale-95"
               >
-
-                <button
-                  type="button"
-                  onClick={() => {
-
-                    sessionStorage.setItem(
-                      "process-origin-task-id",
-                      task.id,
-                    )
-
-                    router.push(
-                      `/processes?code=${code}&taskId=${task.id}`,
-                    )
-
-                  }}
-                  className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
-                >
-
+                <div className="relative size-10 shrink-0 overflow-visible">
                   <div
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
+                    className="flex size-10 items-center justify-center rounded-full"
                     style={
                       isActive || isDone
                         ? {
@@ -253,7 +247,6 @@ export function TaskProductionPanel({
                           }
                     }
                   >
-
                     {isDone ? (
                       <Check size={16} style={{ color: colors.text }} />
                     ) : (
@@ -262,49 +255,103 @@ export function TaskProductionPanel({
                         style={{ color: isActive ? colors.text : "#737373" }}
                       />
                     )}
-
                   </div>
 
-                  <span
-                    className="text-[10px] font-bold"
-                    style={{
-                      color:
-                        isActive || isDone
-                          ? colors.text
-                          : "#525252",
-                    }}
-                  >
-                    {definition.code}
-                  </span>
+                  {/* Mensajes del proceso — globo tipo SidebarRow */}
+                  {hasComments && (
+                    <span
+                      title={
+                        commentCount === 1
+                          ? "1 mensaje"
+                          : `${commentCount} mensajes`
+                      }
+                      className={cn(
+                        "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
+                        "flex h-4 min-w-4 items-center justify-center",
+                        "rounded-full bg-sky-500 px-1 text-[9px] font-bold leading-none text-white",
+                        "shadow-md ring-2 ring-[#101012]",
+                      )}
+                    >
+                      {commentCount > 99 ? "99+" : commentCount}
+                    </span>
+                  )}
 
-                </button>
-
-                {!isLast && (
-
-                  <div className="mx-2 h-0.5 w-6 shrink-0 overflow-hidden rounded-full bg-white/8 self-start mt-5">
-
-                    <div
-                      className="h-full rounded-full transition-all duration-200"
+                  {/* Operador: esquina opuesta si ya hay contador de mensajes */}
+                  {operator && (
+                    <span
+                      title={operator.name}
+                      className={cn(
+                        "pointer-events-none absolute z-10",
+                        "flex h-4 min-w-4 items-center justify-center overflow-hidden",
+                        "rounded-full text-[9px] font-bold leading-none text-white",
+                        "shadow-md ring-2 ring-[#101012]",
+                        hasComments
+                          ? "-bottom-1 -left-1.5"
+                          : "-right-1.5 -top-1.5",
+                      )}
                       style={{
-                        width: isDone ? "100%" : "0%",
-                        backgroundColor: colors.text,
+                        backgroundColor: operator.color || "#404040",
                       }}
-                    />
+                    >
+                      {operator.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={operator.avatarUrl}
+                          alt={operator.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        operator.name.charAt(0).toUpperCase()
+                      )}
+                    </span>
+                  )}
 
-                  </div>
+                  {hasInvite && (
+                    <span
+                      title="Convocatoria pendiente"
+                      className={cn(
+                        "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
+                        "flex h-4 min-w-4 items-center justify-center",
+                        "rounded-full bg-amber-500 text-[9px] font-bold text-white",
+                        "shadow-md ring-2 ring-[#101012]",
+                      )}
+                    >
+                      ?
+                    </span>
+                  )}
+                </div>
 
-                )}
+                <span
+                  className="text-[10px] font-bold"
+                  style={{
+                    color:
+                      isActive || isDone
+                        ? colors.text
+                        : "#525252",
+                  }}
+                >
+                  {definition.code}
+                </span>
+              </button>
 
-              </div>
-
-            )
-
-          })}
-        </div>
-      </HorizontalScroll>
+              {!isLast && (
+                <div className="mx-2 mt-5 h-0.5 w-6 shrink-0 self-start overflow-hidden rounded-full bg-white/8">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: isDone ? "100%" : "0%",
+                      backgroundColor: colors.text,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
-
   )
+
 
   return (
 
