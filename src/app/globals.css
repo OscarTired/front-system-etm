@@ -520,7 +520,27 @@ input:focus-visible {
     0 0 0 1px rgb(255 255 255 / 0.04);
 }
 
-[data-radix-scroll-area-viewport] > div {
-  display: block !important;
-  min-width: 0;
+.native-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.native-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.native-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.native-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.native-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
 }

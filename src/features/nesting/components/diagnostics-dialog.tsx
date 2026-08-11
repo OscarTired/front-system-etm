@@ -167,7 +167,11 @@ export function DiagnosticsDialog({
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-hidden bg-neutral-950/40">
-          <ScrollArea className="h-[min(480px,55vh)]">
+          {/* min(30rem, 55vh): tope fijo en pantallas grandes (no
+              queremos un diálogo gigante), pero se achica solo en
+              pantallas chicas (55% del alto visible) para que no se
+              corte contra los bordes. */}
+          <ScrollArea className="h-[min(30rem,55vh)]">
             {/* ScrollArea por default bloquea scroll horizontal
                 (overflow-x-hidden) — para que la tabla no se apriete
                 hasta cortar columnas en mobile, se le da su propio

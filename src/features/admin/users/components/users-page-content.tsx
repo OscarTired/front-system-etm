@@ -305,7 +305,7 @@ export function UsersPageContent() {
                     <div className="mt-1 flex items-center gap-2">
                       <span
                         className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: selectedRole.color || "#71717a" }}
+                        style={{ backgroundColor: selectedRole.color || "var(--muted-foreground)" }}
                       />
                       <span className="truncate text-sm font-medium text-white">
                         {selectedRole.name}
@@ -402,7 +402,7 @@ export function UsersPageContent() {
                       <div className="mt-0.5 flex items-center gap-2">
                         <span
                           className="size-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: selectedRole.color || "#71717a" }}
+                          style={{ backgroundColor: selectedRole.color || "var(--muted-foreground)" }}
                         />
                         <span className="truncate text-xs font-medium text-neutral-300">
                           {selectedRole.name}
@@ -472,7 +472,7 @@ export function UsersPageContent() {
                           <div className="flex items-center gap-2">
                             <span
                               className="size-2.5 shrink-0 rounded-full"
-                              style={{ backgroundColor: formData.color || "#71717a" }}
+                              style={{ backgroundColor: formData.color || "var(--muted-foreground)" }}
                             />
                             <span className="truncate text-sm font-medium text-white">
                               {isCreating

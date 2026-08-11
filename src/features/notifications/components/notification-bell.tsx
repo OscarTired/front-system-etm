@@ -169,7 +169,7 @@ export function NotificationBell({
       </div>
 
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full" style={{ minHeight: 180, maxHeight: isTopbar ? undefined : 384 }}>
+        <ScrollArea className={cn("h-full min-h-44", !isTopbar && "max-h-96")}>
           <div className="px-2 pb-2">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">

@@ -71,6 +71,9 @@ export function EntityIconPicker({
 
       <div className="relative">
 
+        {/* 40vh en mobile: evita que la grilla de íconos tape toda
+            la pantalla en un teléfono. De tablet en adelante ya hay
+            espacio de sobra, así que pasa a un tope fijo normal. */}
         <ScrollArea className="max-h-[40vh] tablet:max-h-64">
 
           <div className="flex flex-wrap justify-center gap-2 px-4 py-4">
