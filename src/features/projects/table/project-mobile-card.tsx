@@ -27,6 +27,7 @@ import { ProjectRowActions } from "../components/actions/project-row-actions"
 import { ProjectExpandedRow } from "../components/expanded-row/project-expanded-row"
 import { IconAction } from "@/shared/ui/actions/icon-action"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
+import { useSortStore } from "@/shared/sorting/store/sort-store"
 import { TaskDialog } from "@/features/tasks/components/dialog/task-dialog"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -66,6 +67,7 @@ export function ProjectMobileCard({
   const [newTaskOpen, setNewTaskOpen] = useState(false)
 
   const { isMobile } = useResponsive()
+  const isManualMode = useSortStore(s => s.projectSortMode === "manual")
   const { has } = usePermissions()
   const canCreateTask = has(PermissionCode.TASK_CREATE)
   const searchParams = useSearchParams()
@@ -95,7 +97,7 @@ export function ProjectMobileCard({
   return (
     <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
-        <DragCell />
+        <DragCell hidden={!isManualMode} />
 
         <button
           type="button"

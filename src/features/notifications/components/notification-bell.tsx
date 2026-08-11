@@ -155,12 +155,12 @@ export function NotificationBell({
   }
 
   const panelBody = (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-end px-5 pb-2">
         <button
           type="button"
           onClick={() => markAllAsRead()}
-          disabled={visibleNotifications.length === 0}
+          disabled={loading || visibleNotifications.length === 0}
           className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
         >
           <Eraser size={13} />
@@ -168,76 +168,78 @@ export function NotificationBell({
         </button>
       </div>
 
-      <div className="min-h-0 shrink-0">
-        {/*
-          Altura fija = mismo footprint vacío / loading / con items.
-          El listado scrollea adentro; el popover no crece.
-        */}
-        <ScrollArea className="h-52 w-full">
-          <div className="px-2 pb-2">
-            {loading ? (
-              <div className="flex h-48 flex-col items-center justify-center gap-2 text-center">
-                <Spinner size={20} className="text-neutral-400" />
-                <p className="text-xs text-neutral-500">
-                  Cargando notificaciones...
-                </p>
-              </div>
-            ) : visibleNotifications.length === 0 ? (
-              <div className="flex h-48 flex-col items-center justify-center gap-2 text-center">
-                <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
-                  <Bell size={18} />
-                </div>
-                <p className="text-xs font-medium text-neutral-400">
-                  No tienes notificaciones pendientes
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {visibleNotifications.map(notification => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    isHistorical={notification.route.history}
-                    onClick={handleSelect}
-                    onMarkRead={markAsRead}
-                    isSelecting={selectingId === notification.id}
-                    isConfirming={confirmingId === notification.id}
-                    onConfirm={n => proceedToNotification(n, true)}
-                    onCancelConfirm={() => setConfirmingId(null)}
-                  />
-                ))}
+      {/*
+        Una sola caja de altura: la define el estado vacío (sizer).
+        Loading y lista se pintan en el mismo rectángulo (absolute inset-0).
+        Sin h-52 / max-h-96 / números mágicos.
+      */}
+      <div className="relative min-h-0 w-full flex-1">
+        <div
+          className="invisible flex flex-col items-center justify-center gap-2 px-2 py-14 text-center"
+          aria-hidden
+        >
+          <div className="size-10 shrink-0 rounded-full" />
+          <p className="text-xs font-medium">
+            No tienes notificaciones pendientes
+          </p>
+        </div>
 
-                {hasMore && (
-                  <button
-                    type="button"
-                    onClick={() => loadMore()}
-                    disabled={loadingMore}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
-                  >
-                    {loadingMore ? <Spinner size={12} /> : "Cargar más"}
-                  </button>
-                )}
+        <ScrollArea className="absolute inset-0 overscroll-contain px-2 pb-2">
+          {loading ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <Spinner size={20} className="text-neutral-400" />
+              <p className="text-xs text-neutral-500">
+                Cargando notificaciones...
+              </p>
+            </div>
+          ) : visibleNotifications.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
+                <Bell size={18} />
               </div>
-            )}
-          </div>
+              <p className="text-xs font-medium text-neutral-400">
+                No tienes notificaciones pendientes
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {visibleNotifications.map(notification => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  isHistorical={notification.route.history}
+                  onClick={handleSelect}
+                  onMarkRead={markAsRead}
+                  isSelecting={selectingId === notification.id}
+                  isConfirming={confirmingId === notification.id}
+                  onConfirm={n => proceedToNotification(n, true)}
+                  onCancelConfirm={() => setConfirmingId(null)}
+                />
+              ))}
+
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => loadMore()}
+                  disabled={loadingMore}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
+                >
+                  {loadingMore ? <Spinner size={12} /> : "Cargar más"}
+                </button>
+              )}
+            </div>
+          )}
         </ScrollArea>
       </div>
 
-      <div className="shrink-0 p-2 select-none">
-        {notifications.length === 0 ? (
-          // Sin ninguna notificación (ni siquiera leídas) no hay
-          // historial que mostrar — acá sí tiene sentido no dar acceso.
-          <div className="flex w-full items-center justify-center gap-1.5 py-1.5 text-center text-xs text-neutral-500">
-            <CheckCircle2 size={13} className="text-neutral-600 shrink-0" />
+      {/* Footer: misma altura siempre (una sola fila de acción) */}
+      <div className="flex h-10 shrink-0 items-center justify-center p-2 select-none">
+        {notifications.length === 0 && !loading ? (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
+            <CheckCircle2 size={13} className="shrink-0 text-neutral-600" />
             Estás al día
           </div>
         ) : (
-          // Antes esta rama dependía de `visibleNotifications.length`
-          // (solo no leídas): apenas se leían todas las notificaciones
-          // (ej. comentarios ya vistos), el botón desaparecía del
-          // todo y no había forma de volver a abrir el historial
-          // completo desde la campanita. El acceso a "Ver más" no
-          // debería depender de si hay pendientes sin leer.
           <button
             type="button"
             onClick={handleOpenHistory}
@@ -248,7 +250,7 @@ export function NotificationBell({
           </button>
         )}
       </div>
-    </>
+    </div>
   )
 
   return (
@@ -260,7 +262,7 @@ export function NotificationBell({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
             >
               <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
@@ -276,7 +278,7 @@ export function NotificationBell({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-white shadow-xl select-none"
+            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none bg-[#171717] text-white shadow-xl select-none"
           >
             <div className="flex shrink-0 items-center px-3.5 pt-3">
               <span className="text-sm font-semibold text-neutral-200">

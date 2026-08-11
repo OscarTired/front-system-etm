@@ -22,6 +22,7 @@ import { TaskPriorityCell } from "../components/cells/task-priority-cell"
 import { TaskRowActions } from "../components/actions/task-row-actions"
 import { TaskExpandedRow } from "../components/expanded-row/task-expanded-row"
 import { DragCell } from "@/shared/ui/entity-table-common/drag-cell"
+import { useSortStore } from "@/shared/sorting/store/sort-store"
 import { useLongPress } from "@/features/tasks/pipeline/hooks/use-long-press"
 
 /** Extrae YY-NNN del projectCode (quita -M / -E / -EM) */
@@ -60,6 +61,7 @@ export function TaskMobileCard({
   const [showPipeline, setShowPipeline] = useState(false)
 
   const { isMobile } = useResponsive()
+  const isManualMode = useSortStore(s => s.taskSortMode === "manual")
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -100,7 +102,7 @@ export function TaskMobileCard({
   return (
     <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
-        <DragCell />
+        <DragCell hidden={!isManualMode} />
 
         <div
           role="button"

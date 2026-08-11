@@ -1,73 +1,42 @@
 "use client"
 
-import{
-  GripVertical,
-}from"lucide-react"
+import { GripVertical } from "lucide-react"
 
-import{
-  useDndRow,
-}from"@/shared/ui/entity-table-common/dnd-row-context"
+import { cn } from "@/shared/utils/utils"
+import { useDndRow } from "@/shared/ui/entity-table-common/dnd-row-context"
 
-type Props={
-  hidden?:boolean
+type Props = {
+  /** true = no arrastre (correlativo / etc.): el handle se oculta con animación */
+  hidden?: boolean
 }
 
-export function DragCell({
-  hidden,
-}:Props){
+export function DragCell({ hidden = false }: Props) {
+  const handle = useDndRow()
 
-  const handle=
-    useDndRow()
-
-  return(
-
+  return (
     <button
-
       type="button"
-
-      onPointerDown={
-        hidden
-          ?undefined
-          :handle?.onPointerDown
-      }
-
+      tabIndex={hidden ? -1 : 0}
+      aria-hidden={hidden}
       disabled={hidden}
-
-      // Refuerzo por inline style: un inline style le gana a
-      // CUALQUIER regla de stylesheet (esté en capa o no), así que
-      // esto queda garantizado sin depender del orden de @layer en
-      // globals.css. La clase touch-none de abajo queda igual, ya
-      // no compite con nada ahora que la regla global vive en
-      // @layer base, pero el inline es la garantía real.
+      onPointerDown={hidden ? undefined : handle?.onPointerDown}
       style={{ touchAction: "none" }}
-
-      className="
-        flex
-        h-9
-        w-9
-        touch-none
-        items-center
-        justify-center
-        rounded-lg
-        text-neutral-500
-        transition
-        hover:bg-white/5
-        hover:text-neutral-200
-      "
-
+      className={cn(
+        "flex shrink-0 touch-none items-center justify-center overflow-hidden rounded-lg text-neutral-500",
+        "transition-[width,opacity,margin] duration-200 ease-out",
+        "hover:bg-white/5 hover:text-neutral-200",
+        hidden
+          ? "pointer-events-none h-9 w-0 opacity-0"
+          : "h-9 w-9 opacity-100",
+      )}
     >
-
       <GripVertical
         size={18}
-        className={
-          hidden
-            ?"opacity-0"
-            :"opacity-100"
-        }
+        className={cn(
+          "transition-opacity duration-200 ease-out",
+          hidden ? "opacity-0" : "opacity-100",
+        )}
       />
-
     </button>
-
   )
-
 }
