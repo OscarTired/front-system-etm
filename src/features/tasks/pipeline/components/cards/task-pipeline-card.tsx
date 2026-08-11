@@ -7,7 +7,7 @@ import {
 } from "react"
 
 import {
-  MessageCircle,
+  MessageSquare,
 } from "lucide-react"
 
 import {
@@ -178,6 +178,7 @@ export function TaskPipelineCard({
               <KanbanCardFromTask
                 task={task}
                 processCode={processCode}
+                hideCommentBadge
               />
             </div>
           ) : (
@@ -218,21 +219,28 @@ export function TaskPipelineCard({
               event.stopPropagation()
               setCommentsOpen(true)
             }}
+            title={
+              (processTask.workflowStep?.commentCount ?? 0) > 0
+                ? `${processTask.workflowStep?.commentCount} mensajes`
+                : "Mensajes"
+            }
             className={cn(
-              "animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-white/8 text-neutral-300 transition duration-200 ease-out hover:bg-white/15 hover:text-white",
-              // No se puede anidar este <button> DENTRO del que
-              // envuelve la card (HTML inválido, button-en-button)
-              // para que escale como una sola pieza — en vez de eso,
-              // se replica acá la misma condición de escala que ya
-              // tiene la card, para que se vean sincronizados aunque
-              // sean elementos hermanos.
+              "animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-2 transition duration-200 ease-out",
+              (processTask.workflowStep?.commentCount ?? 0) > 0
+                ? "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25"
+                : "bg-white/8 text-neutral-300 hover:bg-white/15 hover:text-white",
               longPressEnabled &&
                 pressed &&
                 !overlayOpen &&
                 "scale-[0.98]",
             )}
           >
-            <MessageCircle size={15} />
+            <MessageSquare size={15} />
+            {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
+              <span className="text-[10px] font-semibold tabular-nums">
+                {processTask.workflowStep?.commentCount}
+              </span>
+            )}
           </button>
 
         )}

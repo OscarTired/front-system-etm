@@ -23,7 +23,6 @@ import {
 } from "@/shared/ui/entity-expanded-row"
 
 import { ProjectTasksList } from "./project-tasks-list"
-import { ProjectCommentsPanel } from "../comments/project-comments-panel"
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 
 type Props = {
@@ -154,7 +153,8 @@ export function ProjectExpandedRow({
   const handleViewChange = (
     next: "tasks" | "comments" | "kpis",
   ) => {
-    if (isMobile && next === "comments") {
+    // Mensajes: siempre dialog (sin panel inline).
+    if (next === "comments") {
       setCommentsDialogOpen(true)
       return
     }
@@ -363,14 +363,8 @@ export function ProjectExpandedRow({
                 />
               ),
             },
-            {
-              value: "comments",
-              content: (
-                <ProjectCommentsPanel
-                  projectId={project.id}
-                />
-              ),
-            },
+            // Mensajes: CommentHistoryDialog
+
           ]}
         />
       </EntityExpandedContent>

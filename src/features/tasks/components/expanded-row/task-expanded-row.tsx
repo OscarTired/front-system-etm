@@ -14,7 +14,6 @@ import {
   EntityExpandedToggle,
   EntityExpandedSlider,
 } from "@/shared/ui/entity-expanded-row"
-import { CollapseIndicatorsButton } from "@/shared/ui/collapsible-summary-panel/collapsible-summary-panel"
 
 import {
   useResponsive,
@@ -28,10 +27,6 @@ import {
 import {
   TaskProductionPanel,
 } from "./production/task-production-panel"
-
-import {
-  TaskCommentsPanel,
-} from "./comments/task-comments-panel"
 
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
@@ -74,6 +69,8 @@ export function TaskExpandedRow({
     { scope: "task", taskId: task.id },
     commentsEnabled,
   )
+  // Solo comentarios de la TAREA (scope task). Los de proceso
+  // viven en workflowStep.commentCount — no mezclar.
   const totalComments = commentsEnabled
     ? comments.length
     : (task.commentCount ?? 0)
@@ -126,7 +123,8 @@ export function TaskExpandedRow({
   const handleViewChange = (
     next: "workflow" | "comments" | "kpis",
   ) => {
-    if (isMobile && next === "comments") {
+    // Mensajes: siempre dialog (sin panel inline summary/composer).
+    if (next === "comments") {
       setCommentsDialogOpen(true)
       return
     }
@@ -143,16 +141,7 @@ export function TaskExpandedRow({
           <EntityExpandedToggle
             value={activeView}
             onChange={handleViewChange}
-            trailing={
-              isMobile &&
-              activeView === "workflow" &&
-              indicatorsExpanded ? (
-                <CollapseIndicatorsButton
-                  onClick={() => setIndicatorsExpanded(false)}
-                />
-              ) : undefined
-            }
-            options={[
+options={[
               {
                 value: "workflow",
                 label: "Workflow",
@@ -183,7 +172,7 @@ export function TaskExpandedRow({
                   task={task}
                   indicatorsExpanded={indicatorsExpanded}
                   onIndicatorsExpandedChange={setIndicatorsExpanded}
-                  showCollapseButton={!isMobile}
+                  showCollapseButton
                 />
               ),
             },
@@ -195,14 +184,7 @@ export function TaskExpandedRow({
                 />
               ),
             },
-            {
-              value: "comments",
-              content: (
-                <TaskCommentsPanel
-                  taskId={task.id}
-                />
-              ),
-            },
+            // Mensajes: CommentHistoryDialog (no panel inline)
           ]}
         />
       </EntityExpandedContent>

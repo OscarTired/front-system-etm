@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
-import { ChevronDown, Plus } from "lucide-react"
+import { ChevronDown, Plus, MessageSquare } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
@@ -181,23 +181,41 @@ export function ProjectMobileCard({
             </div>
           </div>
 
+          {/* Orden: tareas → mensajes → fecha */}
+          {!actionsOnRow && (
+            <span className="flex shrink-0 items-center gap-1">
+              <span
+                title={
+                  (project.taskCount ?? 0) === 1
+                    ? "1 tarea"
+                    : `${project.taskCount ?? 0} tareas`
+                }
+                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
+              >
+                {project.taskCount ?? 0}
+              </span>
+              <span
+                title={
+                  (project.commentCount ?? 0) === 1
+                    ? "1 mensaje"
+                    : `${project.commentCount ?? 0} mensajes`
+                }
+                className={cn(
+                  "inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
+                  (project.commentCount ?? 0) > 0
+                    ? "bg-sky-500/15 text-sky-300"
+                    : "bg-white/5 text-neutral-600",
+                )}
+              >
+                <MessageSquare size={10} strokeWidth={2.5} />
+                {(project.commentCount ?? 0) > 0 ? project.commentCount : null}
+              </span>
+            </span>
+          )}
+
           <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(project.deliveryDate)}
           </span>
-
-          {/* Burbuja de tareas: solo colapsado (móvil) o siempre en desktop del row */}
-          {!actionsOnRow && (
-            <span
-              title={
-                (project.taskCount ?? 0) === 1
-                  ? "1 tarea"
-                  : `${project.taskCount ?? 0} tareas`
-              }
-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
-            >
-              {project.taskCount ?? 0}
-            </span>
-          )}
         </button>
 
         {/* Móvil expandido: lápiz / borrar + nueva tarea en el row */}

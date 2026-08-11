@@ -52,4 +52,10 @@ export const commentsApi={
   async markProjectCommentsAsRead(projectId:string){
     await api.patch(`/projects/${projectId}/comments/read`)
   },
+
+  /** Comentarios creados por el usuario autenticado (solo los míos). */
+  async getMyComments(signal?: AbortSignal) {
+    const response = await api.get<Comment[]>("/comments/mine", { signal })
+    return response.data
+  },
 }

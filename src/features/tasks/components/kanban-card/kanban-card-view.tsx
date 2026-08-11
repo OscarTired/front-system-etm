@@ -4,6 +4,8 @@ import {
   type EntityIcon,
 } from "@/shared/constants/entity-icons"
 
+import { MessageSquare } from "lucide-react"
+
 import {
   formatDate,
 } from "@/shared/utils/date-format"
@@ -54,6 +56,12 @@ type Props={
 
   taskNumber?:number
 
+  /** Comentarios del scope de la card (tarea o workflowStep). */
+  commentCount?: number
+
+  /** Ocultar badge junto a la fecha (p.ej. card expandida: el botón absolute lo cubre). */
+  hideCommentBadge?: boolean
+
   dragPreview?:boolean
 
 }
@@ -78,6 +86,8 @@ export function KanbanCardView({
   statusColor,
   statusIcon,
   taskNumber,
+  commentCount = 0,
+  hideCommentBadge = false,
   dragPreview=false,
 
 }:Props){
@@ -148,8 +158,19 @@ export function KanbanCardView({
 
           </div>
 
-          <span className="text-sm font-semibold text-neutral-400">
-            {formatDate(deliveryDate)}
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="text-sm font-semibold text-neutral-400">
+              {formatDate(deliveryDate)}
+            </span>
+            {!hideCommentBadge && commentCount > 0 && (
+              <span
+                title={commentCount === 1 ? "1 mensaje" : `${commentCount} mensajes`}
+                className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
+              >
+                <MessageSquare size={10} strokeWidth={2.5} />
+                {commentCount}
+              </span>
+            )}
           </span>
 
         </div>
@@ -223,6 +244,9 @@ export function KanbanCardView({
           />
 
         </div>
+
+        {/* Mensajes: el botón absolute del pipeline/process card.
+            No renderizar aquí — se superpone con bottom-3 right-3. */}
 
       </div>
 

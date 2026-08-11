@@ -1,5 +1,7 @@
 "use client"
 
+import { MessageSquare } from "lucide-react"
+
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 
 import { cn } from "@/shared/utils/utils"
@@ -61,6 +63,26 @@ export function TaskPipelineCardCompact({
         {task.reference}
 
       </span>
+
+      {(() => {
+        const n = processTask.workflowStep?.commentCount
+          ?? processTask.task.commentCount
+          ?? 0
+        return (
+          <span
+            title={n === 1 ? "1 mensaje" : `${n} mensajes`}
+            className={cn(
+              "inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
+              n > 0
+                ? "bg-sky-500/15 text-sky-300"
+                : "bg-white/5 text-neutral-600",
+            )}
+          >
+            <MessageSquare size={10} strokeWidth={2.5} />
+            {n > 0 ? n : null}
+          </span>
+        )
+      })()}
 
       <span
         className="flex h-5 shrink-0 items-center whitespace-nowrap rounded-md px-2 text-xs font-semibold leading-none"

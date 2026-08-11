@@ -21,6 +21,7 @@ export const commentsService = {
   updateComment: commentsApi.updateComment,
   deleteComment: commentsApi.deleteComment,
   getReadStatus: commentsApi.getReadStatus,
+  getMyComments: commentsApi.getMyComments,
   markCommentsAsRead(target: CommentTarget) {
     if (target.scope === "task") {
       return commentsApi.markTaskCommentsAsRead(target.taskId)

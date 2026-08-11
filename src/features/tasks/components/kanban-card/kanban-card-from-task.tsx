@@ -13,12 +13,14 @@ type Props={
   task:Task
   processCode?:ProcessCode
   dragPreview?:boolean
+  hideCommentBadge?: boolean
 }
 
 export function KanbanCardFromTask({
   task,
   processCode,
   dragPreview=false,
+  hideCommentBadge=false,
 }:Props){
 
   const stage=taskAccess.stageLabel(task)
@@ -28,16 +30,27 @@ export function KanbanCardFromTask({
   // se calcula por ESE step puntual, ya incluye "QUEUE" cuando
   // corresponde. Sin processCode (ej. ProjectTaskRow), se
   // mantiene el estado global de siempre.
+  const workflowStep = processCode
+    ? getWorkflowStep(task, processCode)
+    : null
+
   const status =
     processCode
       ? WORKFLOW_STATUS_DEFINITIONS[
-          getWorkflowStep(task, processCode)?.status ?? "QUEUE"
+          workflowStep?.status ?? "QUEUE"
         ]
       : taskAccess.statusLabel(task)
+
+  // Scope correcto: proceso → step; tarea → task.commentCount
+  const commentCount = processCode
+    ? (workflowStep?.commentCount ?? 0)
+    : (task.commentCount ?? 0)
 
   return(
     <KanbanCardView
       dragPreview={dragPreview}
+      commentCount={commentCount}
+      hideCommentBadge={hideCommentBadge}
       priorityName={task.priority.name}
       priorityColor={task.priority.color}
       deliveryDate={task.deliveryDate}

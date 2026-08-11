@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, MessageSquare } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
@@ -196,6 +196,16 @@ export function ProcessMobileCard({
           <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(task.deliveryDate)}
           </span>
+
+          {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
+            <span
+              title={`${processTask.workflowStep?.commentCount} mensajes del proceso`}
+              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
+            >
+              <MessageSquare size={10} strokeWidth={2.5} />
+              {processTask.workflowStep?.commentCount}
+            </span>
+          )}
         </div>
 
         {stepId && processCode && (

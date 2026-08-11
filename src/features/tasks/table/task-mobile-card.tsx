@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, MessageSquare } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
@@ -179,7 +179,26 @@ export function TaskMobileCard({
             </div>
           </div>
 
-          {/* Fecha entrega — visible en desktop en el row */}
+          {/* Mensajes solo colapsado: al expandir viven en el toggle Mensajes */}
+          {!expanded && (
+            <span
+              title={
+                (task.commentCount ?? 0) === 1
+                  ? "1 mensaje"
+                  : `${task.commentCount ?? 0} mensajes`
+              }
+              className={cn(
+                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
+                (task.commentCount ?? 0) > 0
+                  ? "bg-sky-500/15 text-sky-300"
+                  : "bg-white/5 text-neutral-600",
+              )}
+            >
+              <MessageSquare size={10} strokeWidth={2.5} />
+              {(task.commentCount ?? 0) > 0 ? task.commentCount : null}
+            </span>
+          )}
+
           <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
             {formatDate(task.deliveryDate)}
           </span>

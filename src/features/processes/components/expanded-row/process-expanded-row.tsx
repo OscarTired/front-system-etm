@@ -25,7 +25,7 @@ import { ProcessAssemblyCard } from "./cards/process-assembly-card"
 import { ProcessDispatchCard } from "./cards/process-dispatch-card"
 import { ProcessTimeCard } from "./cards/process-time-card"
 import { ProcessProgressCard } from "./cards/process-progress-card"
-import { ProcessCommentsPanel } from "./comments/process-comments-panel"
+import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 
 type Props = {
   processTask: ProcessTask
@@ -145,10 +145,17 @@ export function ProcessExpandedRow({
     />,
   ]
 
+  // Solo "kpis" es vista del slider; "comments" abre dialog y no cambia activeView.
+  type ProcessView = "kpis" | "comments"
   const [
     activeView,
     setActiveView,
-  ] = useState<"comments" | "kpis">("kpis")
+  ] = useState<ProcessView>("kpis")
+
+  const [
+    commentsDialogOpen,
+    setCommentsDialogOpen,
+  ] = useState(false)
 
   useEffect(() => {
     if (!isTarget) {
@@ -156,7 +163,8 @@ export function ProcessExpandedRow({
     }
 
     if (tabParam === "comments") {
-      setActiveView("comments")
+      setCommentsDialogOpen(true)
+      setActiveView("kpis")
       return
     }
 
@@ -170,7 +178,7 @@ export function ProcessExpandedRow({
 
   useEffect(() => {
 
-    if (activeView === "comments" && workflowStepId) {
+    if (commentsDialogOpen && workflowStepId) {
       setActiveTarget({ scope: "workflowStep", workflowStepId })
     }
 
@@ -178,7 +186,7 @@ export function ProcessExpandedRow({
       setActiveTarget(null)
     }
 
-  }, [activeView, workflowStepId, setActiveTarget])
+  }, [commentsDialogOpen, workflowStepId, setActiveTarget])
 
   const { percent, statusLabel, nextProcessLabel } = getProcessProgress(processTask)
 
@@ -219,22 +227,31 @@ export function ProcessExpandedRow({
     <EntityExpandedRow rowId={processTask.task.id}>
       <EntityExpandedContent>
         <div className="mb-2 flex items-center justify-end select-none">
-          <EntityExpandedToggle
+          <EntityExpandedToggle<ProcessView>
             value={activeView}
-            onChange={setActiveView}
+            onChange={(next) => {
+              if (next === "comments") {
+                setCommentsDialogOpen(true)
+                // No cambiar activeView: el slider sigue en KPIs
+                return
+              }
+              setActiveView(next)
+            }}
             options={[
               {
-                value: "kpis" as const,
+                value: "kpis",
                 label: "KPIs",
                 icon: Activity,
               },
               ...(workflowStepId
-                ? [{
-                    value: "comments" as const,
-                    label: "Mensajes",
-                    icon: MessageSquare,
-                    count: totalComments,
-                  }]
+                ? ([
+                    {
+                      value: "comments",
+                      label: "Mensajes",
+                      icon: MessageSquare,
+                      count: totalComments,
+                    },
+                  ] satisfies { value: ProcessView; label: string; icon: typeof MessageSquare; count: number }[])
                 : []),
             ]}
           />
@@ -261,19 +278,17 @@ export function ProcessExpandedRow({
                 />
               ),
             },
-            ...(workflowStepId
-              ? [{
-                  value: "comments" as const,
-                  content: (
-                    <ProcessCommentsPanel
-                      workflowStepId={workflowStepId}
-                    />
-                  ),
-                }]
-              : []),
           ]}
         />
       </EntityExpandedContent>
+
+      {workflowStepId ? (
+        <CommentHistoryDialog
+          target={{ scope: "workflowStep", workflowStepId }}
+          open={commentsDialogOpen}
+          onOpenChange={setCommentsDialogOpen}
+        />
+      ) : null}
     </EntityExpandedRow>
   )
 }

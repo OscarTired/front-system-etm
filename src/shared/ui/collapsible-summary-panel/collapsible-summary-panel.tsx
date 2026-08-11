@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronUp } from "lucide-react"
+import { X } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 
@@ -9,11 +9,10 @@ type Props = {
   onCollapse: () => void
   collapsed: React.ReactNode
   children: React.ReactNode
-  /** Si false, el caller renderiza el control (ej. al lado del EntityExpandedToggle). */
   showCollapseButton?: boolean
 }
 
-/** Mismo lenguaje visual que una opción de EntityExpandedToggle. */
+/** X estilo DialogClose — dentro del carousel expandido. */
 export function CollapseIndicatorsButton({
   onClick,
   className,
@@ -22,21 +21,17 @@ export function CollapseIndicatorsButton({
   className?: string
 }) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Ocultar indicadores"
       className={cn(
-        "inline-flex shrink-0 items-center rounded-lg bg-white/5 p-1 select-none",
+        "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white",
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold tracking-wide text-neutral-500 transition-colors hover:text-neutral-300"
-      >
-        <ChevronUp size={13} strokeWidth={2.5} className="shrink-0" />
-        <span className="whitespace-nowrap">Ocultar</span>
-      </button>
-    </div>
+      <X size={16} />
+    </button>
   )
 }
 
@@ -54,16 +49,11 @@ export function CollapsibleSummaryPanel({
           {collapsed}
         </div>
       ) : (
-        <div className="flex w-full min-w-0 flex-col animate-comment-in">
+        <div className="relative w-full min-w-0 animate-comment-in">
           {showCollapseButton && (
-            <div className="mb-2 flex w-full justify-end px-1">
-              <CollapseIndicatorsButton onClick={onCollapse} />
-            </div>
+            <CollapseIndicatorsButton onClick={onCollapse} />
           )}
-
-          <div className="w-full min-w-0">
-            {children}
-          </div>
+          <div className="w-full min-w-0">{children}</div>
         </div>
       )}
     </div>

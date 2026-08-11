@@ -18,7 +18,9 @@ type Props<T extends string> = {
   value: T
   onChange: (value: T) => void
   options: EntityExpandedToggleOption<T>[]
-  /** Control al lado del grupo (ej. Ocultar indicadores), misma altura. */
+  /** Control a la izquierda del grupo (ej. Ocultar indicadores). */
+  leading?: ReactNode
+  /** Control a la derecha del grupo. */
   trailing?: ReactNode
 }
 
@@ -28,6 +30,7 @@ export function EntityExpandedToggle<T extends string>({
   value,
   onChange,
   options,
+  leading,
   trailing,
 }: Props<T>) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -57,11 +60,12 @@ export function EntityExpandedToggle<T extends string>({
       ref={wrapperRef}
       className="flex w-full min-w-0 items-center justify-end gap-1.5"
     >
+      {leading}
       <div
         className={cn(
           "inline-flex min-w-0 items-center gap-1 rounded-lg bg-white/5 p-1 select-none",
-          fullWidth && !trailing && "flex w-full",
-          fullWidth && trailing && "min-w-0 flex-1",
+          fullWidth && !leading && !trailing && "flex w-full",
+          fullWidth && (leading || trailing) && "min-w-0 flex-1",
         )}
       >
         {options.map(option => {
