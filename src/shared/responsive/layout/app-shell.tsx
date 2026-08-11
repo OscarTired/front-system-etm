@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
@@ -11,8 +11,6 @@ import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-sto
 import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
-import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
-import { useClampScroll } from "@/shared/ui/vertical-scroll/use-clamp-scroll"
 import { PullToRefresh } from "../mobile/pull-to-refresh"
 
 type Props = {
@@ -34,21 +32,12 @@ const TRANSITION_TIMING = "300ms ease-out"
 const DRAWER_WIDTH_PX = 248
 const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
 
-/** Margen de flechas respecto al slot de contenido (chrome ya va en pt/pb). */
-const CONTENT_ARROW_INSET = 10
-
+/**
+ * Modelo B — el shell NO scrollea.
+ * Una sola fuente de scroll vive en la página (VerticalScroll en la lista).
+ * El shell solo aporta chrome + slot con altura acotada (min-h-0 / overflow-hidden).
+ */
 function DesktopShell({ children }: Props) {
-  const pathname = usePathname()
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Origen del hueco: scrollTop > maxScroll cuando el contenido encoge.
-  useClampScroll(scrollRef)
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (el) el.scrollTop = 0
-  }, [pathname])
-
   const visualState = useSidebarStore(state => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
     state => state.notifyClipTransitionEnd,
@@ -78,11 +67,8 @@ function DesktopShell({ children }: Props) {
         }}
       >
         <DesktopTopBar />
-        <div
-          ref={scrollRef}
-          className="hide-scrollbar min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
-          data-desktop-scroll
-        >
+        {/* Slot de página: sin overflow-y. La lista scrollea adentro. */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
       </main>
@@ -93,10 +79,9 @@ function DesktopShell({ children }: Props) {
 /**
  * Mobile shell.
  *
- * - Drawer reveal: solo translate3d del panel (GPU). Menú estático detrás.
- * - Rutas immersive: slot con altura real (top-14 / bottom-20).
- * - Resto: VerticalScroll + pull-to-refresh.
- *   Las flechas se anclan al slot de contenido (ya sin chrome), no al dvh.
+ * - Drawer: translate3d del panel (GPU).
+ * - Immersive: slot fijo top-14 / bottom-20.
+ * - Resto: PTR + slot sin scroll propio. VerticalScroll vive en la página.
  */
 function CompactShell({ children }: Props) {
   const pathname = usePathname()
@@ -108,7 +93,6 @@ function CompactShell({ children }: Props) {
   const isOpen = mode === "open"
   const immersive = isImmersiveRoute(pathname)
 
-  // Pathname O query (procesos ?code=): cierra al navegar, sin pasarse de fase.
   useEffect(() => {
     closeDrawer()
   }, [pathname, searchKey, closeDrawer])
@@ -133,18 +117,13 @@ function CompactShell({ children }: Props) {
       </div>
 
       <div
-        className="absolute inset-0 z-10 overflow-hidden bg-[#050505] contain-[layout_paint]"
+        className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
         style={{
-          // Solo 0 o DRAWER_WIDTH — sin valores intermedios en JS que
-          // puedan dejar el panel “pasado” del cierre tras un reflow
-          // (row expandido / cambio de ruta a mitad de la transición).
           transform: isOpen
             ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
             : "translate3d(0px, 0, 0)",
           borderRadius: isOpen ? CURVE_ROUNDED : CURVE_SQUARE,
-          transition: isOpen
-            ? PANEL_TRANSITION
-            : PANEL_TRANSITION,
+          transition: PANEL_TRANSITION,
           willChange: isOpen ? "transform" : "auto",
         }}
       >
@@ -159,16 +138,14 @@ function CompactShell({ children }: Props) {
           </div>
         ) : (
           <div className="absolute inset-0 z-10 flex min-h-0 flex-col pt-14 pb-20">
+            {/*
+              PTR envuelve el slot. El scroller real es VerticalScroll
+              dentro de la página ([data-vertical-scroll-container]).
+            */}
             <PullToRefresh>
-              <VerticalScroll
-                resetKey={pathname}
-                containerClassName="h-full min-h-0"
-                className="overflow-x-hidden"
-                arrowTopOffset={CONTENT_ARROW_INSET}
-                arrowBottomOffset={CONTENT_ARROW_INSET}
-              >
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 {children}
-              </VerticalScroll>
+              </div>
             </PullToRefresh>
           </div>
         )}

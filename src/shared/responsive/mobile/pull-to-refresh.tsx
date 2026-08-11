@@ -15,12 +15,14 @@ type Props = {
 }
 
 /**
- * Busca el contenedor de scroll en cada gesto (no cachea el nodo).
- * VerticalScroll se remonta con key={pathname}; si cacheáramos el nodo,
- * los listeners quedarían en un DOM desmontado tras la 1ª navegación.
+ * Modelo B: el scroller real es VerticalScroll de la página
+ * ([data-vertical-scroll-container]), no el shell.
+ * Se resuelve en cada gesto (no cachear nodo: resetKey remonta el VS).
  */
 function findScrollEl(root: HTMLElement | null): HTMLElement | null {
-  return root?.querySelector<HTMLElement>("[data-vertical-scroll-container]") ?? null
+  return (
+    root?.querySelector<HTMLElement>("[data-vertical-scroll-container]") ?? null
+  )
 }
 
 export function PullToRefresh({ children }: Props) {

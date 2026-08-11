@@ -190,7 +190,7 @@ export function TaskProductionPanel({
   )
 
   const stepper = (
-    <div className="w-full overflow-x-auto overflow-y-visible overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="w-full overflow-x-auto overflow-y-visible overscroll-x-contain [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
       <div className="flex min-w-max items-center justify-center px-3 pb-1 pt-3">
         {task.route.map((code, index) => {
           const definition = PROCESS_DEFINITIONS[code]

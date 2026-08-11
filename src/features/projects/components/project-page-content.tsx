@@ -1,6 +1,9 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { usePathname } from "next/navigation"
+
+import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
@@ -32,6 +35,7 @@ export function ProjectPageContent({
   focusToken,
   initialShowHistory = false,
 }: Props) {
+  const pathname = usePathname()
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] = useState(initialShowHistory)
 
@@ -67,7 +71,13 @@ export function ProjectPageContent({
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+      <VerticalScroll
+        resetKey={pathname}
+        containerClassName="min-h-0 flex-1"
+        className="overflow-x-hidden"
+        arrowTopOffset={10}
+        arrowBottomOffset={10}
+      >
         <EntityExpandProvider>
           <ProjectTable
             projects={projects}
@@ -80,7 +90,7 @@ export function ProjectPageContent({
             reorderProjects={reorderProjects}
           />
         </EntityExpandProvider>
-      </div>
+      </VerticalScroll>
     </div>
   )
 }

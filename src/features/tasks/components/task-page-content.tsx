@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
+import { VerticalScroll } from "@/shared/ui/vertical-scroll/vertical-scroll"
 
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
@@ -54,6 +56,7 @@ export function TaskPageContent({
   initialShowHistory = false,
 }: Props) {
   const { isMobile } = useResponsive()
+  const pathname = usePathname()
 
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] = useState(initialShowHistory)
@@ -134,7 +137,13 @@ export function TaskPageContent({
       </div>
 
       {view === "card" && (
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+        <VerticalScroll
+          resetKey={pathname}
+          containerClassName="min-h-0 flex-1"
+          className="overflow-x-hidden"
+          arrowTopOffset={10}
+          arrowBottomOffset={10}
+        >
           <EntityExpandProvider>
             <TaskTable
               tasks={tasks}
@@ -147,15 +156,11 @@ export function TaskPageContent({
               onHistoryRequired={() => setShowHistory(true)}
             />
           </EntityExpandProvider>
-        </div>
+        </VerticalScroll>
       )}
 
       {view === "kanban" && (
-        <div
-          className={cn(
-            isMobile ? "" : "min-h-0 flex-1 overflow-hidden",
-          )}
-        >
+        <div className="min-h-0 flex-1 overflow-hidden">
           <TaskPipelineBoard
             tasks={pipelineTasks}
             kpiTasks={pipelineKpiTasks}

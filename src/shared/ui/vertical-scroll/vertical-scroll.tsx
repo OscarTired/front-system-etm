@@ -14,23 +14,13 @@ type Props = {
   className?: string
   containerClassName?: string
   style?: React.CSSProperties
-  /**
-   * Offset de la flecha superior respecto al borde del **slot de contenido**
-   * (el wrapper de VerticalScroll), no del viewport completo.
-   * Si el shell ya aplica pt del top bar, usar un valor pequeño (8–12).
-   */
+
   arrowTopOffset?: number
-  /**
-   * Igual para la flecha inferior respecto al borde inferior del slot.
-   * Si el shell ya aplica pb del bottom nav, usar un valor pequeño (8–12).
-   */
+
   arrowBottomOffset?: number
   arrowAlign?: "center" | "right"
   arrowClassName?: string
-  /**
-   * Cuando cambia (ej. pathname), scrollTop = 0 sin desmontar el contenedor.
-   * Preferible a key={pathname} en el padre.
-   */
+
   resetKey?: string
 }
 
@@ -87,9 +77,6 @@ export function VerticalScroll({
     const { scrollTop, clientHeight, scrollHeight } = el
     const maxScroll = Math.max(0, scrollHeight - clientHeight)
 
-    // Origen del "hueco" al colapsar / cerrar sidebar:
-    // el contenido baja de altura y scrollTop queda más allá del máximo.
-    // Clamp aquí (ResizeObserver ya observa el content) — no en el shell.
     if (scrollTop > maxScroll) {
       el.scrollTop = maxScroll
     }
