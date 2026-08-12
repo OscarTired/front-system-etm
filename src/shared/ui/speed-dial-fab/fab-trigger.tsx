@@ -25,17 +25,11 @@ type Props = {
 /**
  * Único trigger de Filtro/Orden/Historial/Exportar/Crear.
  *
- * - Desktop (fila inline en el header): UNA pastilla ícono+label —
- *   el look de siempre, sin cambios visuales.
- * - Mobile (fila dentro del SpeedDialFab): se separa en pastilla de
- *   label (estado legible sin tocar nada) + botón circular de ícono
- *   (el tap target real) — mismo componente, sin duplicar markup
- *   en cada trigger ni depender de que SpeedDialFab le adivine el
- *   estilo a un <button> genérico.
+ * - Desktop (fila inline en el header): pastilla ícono + label.
+ * - Mobile (SpeedDialFab): solo círculo con ícono (sin leyenda).
+ *   `label` queda como aria-label / title para accesibilidad.
  *
- * `ref` siempre apunta al elemento clickeable real (el botón), así
- * que sigue funcionando como `PopoverTrigger asChild` en los casos
- * que abren un popover (Filtro, Orden, Exportar).
+ * `ref` apunta al botón clickeable (PopoverTrigger asChild ok).
  */
 export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
   (
@@ -66,27 +60,23 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
     }
 
     return (
-      <div className="flex items-center justify-end gap-2">
-        <span className="flex h-9 shrink-0 items-center whitespace-nowrap rounded-full bg-[#1a1a1a] px-4 text-xs font-semibold text-white shadow-lg select-none">
-          {label}
-        </span>
-
-        <button
-          ref={ref}
-          type="button"
-          className={cn(
-            "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95",
-            accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-white/20"),
-            className,
-          )}
-          {...props}
-        >
-          <Icon size={17} strokeWidth={2.2} />
-          {badge && (
-            <span className="absolute -top-1 -right-1">{badge}</span>
-          )}
-        </button>
-      </div>
+      <button
+        ref={ref}
+        type="button"
+        aria-label={label}
+        title={label}
+        className={cn(
+          "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95",
+          accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-white/20"),
+          className,
+        )}
+        {...props}
+      >
+        <Icon size={17} strokeWidth={2.2} />
+        {badge && (
+          <span className="absolute -top-1 -right-1">{badge}</span>
+        )}
+      </button>
     )
   },
 )
