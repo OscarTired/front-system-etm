@@ -107,8 +107,13 @@ export function ProcessTableCard({
   })
 
   const markSettled = useFocusSettleStore(s => s.markSettled)
+  const blurUntil = useFocusSettleStore(s => s.blurUntil)
+  const pendingToken = useFocusSettleStore(s => s.pendingToken)
   const settledToken = useFocusSettleStore(s => s.settledToken)
-  const isSettlingFocus = !!focusToken && settledToken !== focusToken
+  void blurUntil
+  void pendingToken
+  void settledToken
+  const isSettlingFocus = useFocusSettleStore(s => s.isSettling(focusToken))
 
   useFocusedRow({
     focusedId: focusedTaskId,
@@ -227,7 +232,7 @@ export function ProcessTableCard({
       <div
         className={cn(
           "transition-[filter] duration-200 ease-out",
-          isSettlingFocus && "blur-sm",
+          isSettlingFocus && "pointer-events-none blur-[3px] opacity-55",
         )}
       >
         <TaskProcessColumn
@@ -257,7 +262,7 @@ export function ProcessTableCard({
     <div
       className={cn(
         "flex flex-col gap-2 pb-2 transition-[filter] duration-200 ease-out",
-        isSettlingFocus && "blur-sm",
+        isSettlingFocus && "pointer-events-none blur-[3px] opacity-55",
       )}
     >
 

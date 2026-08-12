@@ -1,9 +1,11 @@
 "use client"
 
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+
 /**
  * Params de deep-link de entidad (tarea / proyecto / foco).
  * La URL es la fuente de verdad del foco programático.
- * Si el usuario toma el control (otro row, sidebar limpio), se borran.
+ * Si el usuario toma el control (otro row, colapsar, nav limpia), se borran.
  */
 const FOCUS_PARAM_KEYS = ["taskId", "projectId", "focus"] as const
 
@@ -28,6 +30,10 @@ export function clearEntityFocusParams(
       changed = true
     }
   }
+
+  // Siempre resetear settle al salir del deep-link (aunque la URL
+  // ya estuviera limpia en un edge case).
+  useFocusSettleStore.getState().reset()
 
   if (!changed) return
 

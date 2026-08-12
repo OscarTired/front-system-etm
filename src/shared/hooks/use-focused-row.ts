@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react"
 
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+
 type Props = {
   focusedId?: string
   /** Row expandido actual — si diverge del deep-link, se corta el scroll. */
@@ -170,6 +172,7 @@ export function useFocusedRow({
   useEffect(() => {
     if (!focusedId) {
       stopTracking()
+      useFocusSettleStore.getState().reset()
 
       const prev = prevFocusedIdRef.current
       prevFocusedIdRef.current = undefined
@@ -189,6 +192,10 @@ export function useFocusedRow({
     }
 
     prevFocusedIdRef.current = focusedId
+
+    if (focusToken) {
+      useFocusSettleStore.getState().begin(focusToken)
+    }
 
     // Todavía NO expandimos — el orden correcto es scroll primero,
     // con el row visible pero colapsado (existe en el DOM igual,
