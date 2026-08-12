@@ -9,11 +9,27 @@ import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
  */
 const FOCUS_PARAM_KEYS = ["taskId", "projectId", "focus"] as const
 
+/** Orígenes de navegación cross-feature (sessionStorage). */
+const ORIGIN_STORAGE_KEYS = [
+  "process-origin-task-id",
+  "task-origin-project-id",
+] as const
+
 type RouterLike = {
   replace: (
     href: string,
     options?: { scroll?: boolean },
   ) => void
+}
+
+function clearOriginButtons() {
+  if (typeof sessionStorage === "undefined") return
+  for (const key of ORIGIN_STORAGE_KEYS) {
+    sessionStorage.removeItem(key)
+  }
+  // Avisa a BackToTask / BackToProject para que se desmonten sin
+  // depender solo del click del propio botón.
+  window.dispatchEvent(new Event("entity-origin-cleared"))
 }
 
 export function clearEntityFocusParams(
@@ -31,9 +47,12 @@ export function clearEntityFocusParams(
     }
   }
 
-  // Siempre resetear settle al salir del deep-link (aunque la URL
-  // ya estuviera limpia en un edge case).
   useFocusSettleStore.getState().reset()
+
+  // URL consumida → no dejar residuos de "← Tarea" / "← Proyecto".
+  if (changed) {
+    clearOriginButtons()
+  }
 
   if (!changed) return
 
