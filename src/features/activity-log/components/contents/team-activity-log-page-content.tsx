@@ -458,9 +458,14 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
     </>
   )
 
+  // embedded: crecer con el contenido (scroll del hub). Sin overflow-hidden.
+  // standalone: este hijo es dueño del scroll.
+  if (embedded) {
+    return <div className="w-full">{body}</div>
+  }
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-      {embedded ? body : <AppListScroll>{body}</AppListScroll>}
+    <div className="relative flex min-h-0 w-full flex-1 flex-col">
+      <AppListScroll>{body}</AppListScroll>
     </div>
   )
 }

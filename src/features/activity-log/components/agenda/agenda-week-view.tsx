@@ -34,7 +34,7 @@ const DISTINCT_SHIFT_COLORS = [
 
 /**
  * Layout decidido por isCompact (phone landscape incluido).
- * Loading = mismos ActivityLogChip con loading; sin árboles skeleton.
+ * Loading = mismo vacío real (Sin registros / punto), sin inventar chips.
  */
 export function AgendaWeekView({
   anchorDate,
@@ -126,12 +126,7 @@ export function AgendaWeekView({
                   </span>
                 </div>
 
-                {loading ? (
-                  <div className="flex flex-col gap-1.5">
-                    <ActivityLogChip loading className="w-full border-0 shadow-none" />
-                    <ActivityLogChip loading className="w-full border-0 shadow-none" />
-                  </div>
-                ) : dayLogs.length > 0 ? (
+                {!loading && dayLogs.length > 0 ? (
                   <div className="flex flex-col gap-1.5">
                     {dayLogs.map(log => (
                       <ActivityLogChip
@@ -145,7 +140,12 @@ export function AgendaWeekView({
                     ))}
                   </div>
                 ) : (
-                  <p className="py-0.5 text-[11px] text-neutral-600">
+                  <p
+                    className={cn(
+                      "py-0.5 text-[11px] text-neutral-600",
+                      loading && "animate-pulse",
+                    )}
+                  >
                     Sin registros
                   </p>
                 )}
@@ -266,7 +266,7 @@ export function AgendaWeekView({
                   )
                   const isToday = iso === todayISO
                   const isWeekend = dayIndex >= 5
-                  const empty = !loading && cellLogs.length === 0
+                  const empty = loading || cellLogs.length === 0
 
                   return (
                     <div
@@ -279,26 +279,7 @@ export function AgendaWeekView({
                         isToday && "bg-amber-500/4",
                       )}
                     >
-                      {loading ? (
-                        <div className="flex min-h-0 flex-col gap-1.5">
-                          <ActivityLogChip
-                            loading
-                            compact
-                            className="w-full shrink-0 border-0 shadow-none"
-                          />
-                          {dayIndex % 2 === 0 && (
-                            <ActivityLogChip
-                              loading
-                              compact
-                              className="w-full shrink-0 border-0 shadow-none"
-                            />
-                          )}
-                        </div>
-                      ) : cellLogs.length === 0 ? (
-                        <div className="flex items-center justify-center">
-                          <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
-                        </div>
-                      ) : (
+                      {!loading && cellLogs.length > 0 ? (
                         <div className="flex min-h-0 flex-col gap-1.5">
                           {cellLogs.map(log => (
                             <ActivityLogChip
@@ -313,6 +294,15 @@ export function AgendaWeekView({
                               className="w-full shrink-0 border-0 shadow-none outline-none ring-0"
                             />
                           ))}
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            "flex items-center justify-center",
+                            loading && "animate-pulse",
+                          )}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
                         </div>
                       )}
                     </div>

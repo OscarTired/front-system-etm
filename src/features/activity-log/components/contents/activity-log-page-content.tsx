@@ -402,8 +402,16 @@ export function ActivityLogPageContent({
     </>
   )
 
+  // embedded: no acotar con flex-1/min-h-0 (impide expandir el scroll del hub).
+  // standalone: min-h-0 flex-1 + AppListScroll.
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col">
+    <div
+      className={
+        embedded
+          ? "relative w-full"
+          : "relative flex min-h-0 w-full flex-1 flex-col"
+      }
+    >
       {embedded ? body : <AppListScroll>{body}</AppListScroll>}
 
       <ActivityPickerDialog

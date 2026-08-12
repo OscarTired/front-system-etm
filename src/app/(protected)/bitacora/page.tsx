@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useState } from "react"
 import { Layers, Wrench, ShieldCheck } from "lucide-react"
 
@@ -22,6 +24,8 @@ interface TabConfig {
 }
 
 export default function BitacoraPage() {
+  const queryClient = useQueryClient()
+
   const userRoles = useAuthStore(state => state.user?.roles)
   const { has } = usePermissions()
 
@@ -147,7 +151,12 @@ export default function BitacoraPage() {
         Cuerpo con embedded → sin segundo scroller.
       */}
       <section className="flex min-h-0 w-full flex-1 flex-col">
-        <AppListScroll>
+        <AppListScroll
+          onRefresh={async () => {
+            // Prefijo compartido de bitácora (día, rango, equipo).
+            await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
+          }}
+        >
           <div className="mb-2 desktop:hidden">
             <TabsNav compact />
           </div>

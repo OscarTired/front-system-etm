@@ -142,6 +142,15 @@ export function ContextPicker({
         ? "Seleccionar tarea"
         : "Proyecto o tarea (opcional)"
 
+  function projectLabel(project: NonNullable<typeof selectedProject>) {
+    const code = displayProjectCode(project.projectCode)
+    const client = project.client?.name?.trim()
+    // Código · Cliente · Nombre (cliente visible en picker / bitácora)
+    return client
+      ? `${code} · ${client} · ${project.name}`
+      : `${code} · ${project.name}`
+  }
+
   const label =
     mode === "tasks"
       ? selectedTask
@@ -149,12 +158,12 @@ export function ContextPicker({
         : placeholder
       : mode === "projects"
         ? selectedProject
-          ? `${displayProjectCode(selectedProject.projectCode)} · ${selectedProject.name}`
+          ? projectLabel(selectedProject)
           : placeholder
         : selectedTask
           ? `#${String(selectedTask.taskNumber).padStart(3, "0")} · ${selectedTask.reference}`
           : selectedProject
-            ? `${displayProjectCode(selectedProject.projectCode)} · ${selectedProject.name}`
+            ? projectLabel(selectedProject)
             : placeholder
 
   const search =
@@ -419,7 +428,11 @@ export function ContextPicker({
 
                   <SelectOption
                     key={project.id}
-                    label={`${displayProjectCode(project.projectCode)} · ${project.name}`}
+                    label={
+                      project.client?.name
+                        ? `${displayProjectCode(project.projectCode)} · ${project.client.name} · ${project.name}`
+                        : `${displayProjectCode(project.projectCode)} · ${project.name}`
+                    }
                     icon="project"
                     color={
                       project.client?.color ?? "#64748B"

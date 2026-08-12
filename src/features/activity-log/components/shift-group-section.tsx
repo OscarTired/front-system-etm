@@ -179,9 +179,13 @@ export function ShiftGroupSection({
                           title="Agregar debajo"
                           aria-label="Agregar otra actividad debajo"
                           className={cn(
-                            "flex w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl",
+                            "flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
                             "bg-white/5 text-neutral-400 transition-all duration-150",
-                            "opacity-0 group-hover/log:w-9 group-hover/log:opacity-100",
+                            // Móvil: siempre visible (no hay hover).
+                            // Desktop: aparece al hover/focus del row.
+                            "w-9 opacity-100",
+                            "tablet:w-0 tablet:opacity-0",
+                            "tablet:group-hover/log:w-9 tablet:group-hover/log:opacity-100",
                             "hover:bg-white/10 hover:text-white",
                             "focus-visible:w-9 focus-visible:opacity-100",
                           )}

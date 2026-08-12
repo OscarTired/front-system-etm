@@ -17,7 +17,6 @@ import { useActivityTypes } from "../../hooks/use-activity-types"
 import { useActivityTypeMutations } from "../../hooks/use-activity-type-mutations"
 import { getActivityIcon } from "../../constants/activity-icons"
 import { ActivityTypeFormDialog } from "../dialogs/activity-type-form-dialog"
-import { ActivityTypesSkeleton } from "../skeletons/activity-types-skeleton"
 
 import type { ActivityType } from "../../types/activity-log.types"
 
@@ -81,6 +80,27 @@ function ActivityTypeRow({
   )
 }
 
+/** Mismo shell que ActivityTypeRow — sin árbol skeleton aparte. */
+function ActivityTypeRowPlaceholder({ opacity }: { opacity: number }) {
+  return (
+    <div
+      className="flex w-full animate-pulse items-center gap-3 rounded-xl bg-white/3 p-3"
+      style={{ opacity }}
+    >
+      <div className="size-9 shrink-0 rounded-full bg-white/10" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="h-4 w-36 max-w-[50%] rounded bg-white/12" />
+        <div className="h-3 w-28 max-w-[40%] rounded bg-white/6" />
+      </div>
+      <div className="flex gap-1">
+        <div className="size-8 rounded-lg bg-white/6" />
+        <div className="size-8 rounded-lg bg-white/6" />
+        <div className="size-8 rounded-lg bg-white/6" />
+      </div>
+    </div>
+  )
+}
+
 export function ActivityTypesPageContent() {
   const [search, setSearch] = useState("")
 
@@ -95,11 +115,7 @@ export function ActivityTypesPageContent() {
   const [editingType, setEditingType] = useState<ActivityType | null>(null)
   const [pendingDelete, setPendingDelete] = useState<ActivityType | null>(null)
 
-  // "Predeterminada" = seedeada por el sistema (tiene code, ver
-  // schema.prisma: code es nullable A PROPÓSITO justo para esto —
-  // solo los tipos con seed lo tienen, así que su sola presencia ya
-  // nos dice el origen sin necesitar un flag isDefault/isCustom
-  // aparte en el modelo).
+  // "Predeterminada" = seedeada por el sistema (tiene code).
   const { defaultTypes, customTypes } = useMemo(() => {
     const query = search.trim().toLowerCase()
 
@@ -155,7 +171,26 @@ export function ActivityTypesPageContent() {
 
         <div className="flex flex-col gap-6">
           {loading ? (
-            <ActivityTypesSkeleton />
+            <>
+              {/* Inline: mismas secciones/filas; el search real ya está arriba. */}
+              {(["Predeterminadas", "Personalizadas"] as const).map(title => (
+                <section key={title} className="flex flex-col gap-2">
+                  <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                    {title}
+                  </h2>
+                  <div className="flex flex-col gap-1.5">
+                    {Array.from({
+                      length: title === "Predeterminadas" ? 3 : 2,
+                    }).map((_, i) => (
+                      <ActivityTypeRowPlaceholder
+                        key={i}
+                        opacity={1 - i * 0.15}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </>
           ) : (
             <>
               <section className="flex flex-col gap-2">
