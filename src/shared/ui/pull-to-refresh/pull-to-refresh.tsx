@@ -10,32 +10,31 @@ import {
 } from "react"
 
 import { Spinner } from "@/shared/ui/spinner/spinner"
+import { TOP_BAR_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 import { cn } from "@/shared/utils/utils"
 
-/** Distancia de pull para armar el refresh. */
-const THRESHOLD_PX = 72
-/** Tope de arrastre (con resistencia). */
-const MAX_PULL_PX = 112
-/** Altura fija mientras refresca (estilo Material / Chrome). */
-const HOLD_PX = 52
-/** Tiempo mínimo visible del spinner antes de subir. */
+
+const THRESHOLD_PX = 64
+
+const MAX_PULL_PX = 120
+
+const HOLD_PX = 48
+
 const MIN_REFRESH_MS = 900
+
+const INDICATOR_GAP_PX = 10
 
 type Props = {
   children: ReactNode
   onRefresh: () => void | Promise<void>
-  /** Contenedor con overflow-y (AppListScroll / ScrollArea). */
   scrollRef: RefObject<HTMLElement | null>
 }
 
-/**
- * Pull-to-refresh estilo Google/Chrome:
- * 1. Jalar → el contenido baja con resistencia; aparece Spinner (escala/opacidad).
- * 2. Soltar pasado el umbral → se queda HOLD_PX, Spinner gira ≥ ~1s.
- * 3. Termina el fetch → el contenido sube y el Spinner desaparece.
- *
- * Solo activo con scrollTop === 0.
- */
+function damp(raw: number, max: number): number {
+  if (raw <= 0) return 0
+  return max * (1 - Math.exp(-raw / max))
+}
+
 export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const startY = useRef(0)
   const pulling = useRef(false)
@@ -78,9 +77,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         return
       }
 
-      // Resistencia no lineal (más duro cuanto más tiras).
-      const damped = Math.min(MAX_PULL_PX, dy * 0.42)
-      setPullOffset(damped)
+      setPullOffset(damp(dy, MAX_PULL_PX))
     },
     [refreshing, scrollRef, setPullOffset],
   )
@@ -93,10 +90,9 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
     try {
       await onRefresh()
     } finally {
-      const elapsed = Date.now() - started
-      const wait = Math.max(0, MIN_REFRESH_MS - elapsed)
+      const wait = Math.max(0, MIN_REFRESH_MS - (Date.now() - started))
       if (wait > 0) {
-        await new Promise(resolve => setTimeout(resolve, wait))
+        await new Promise(r => setTimeout(r, wait))
       }
       setRefreshing(false)
       setPullOffset(0)
@@ -106,7 +102,6 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const onTouchEnd = useCallback(() => {
     if (!pulling.current) return
     pulling.current = false
-
     if (refreshing) return
 
     if (offsetRef.current >= THRESHOLD_PX) {
@@ -117,8 +112,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   }, [refreshing, runRefresh, setPullOffset])
 
   const progress = Math.min(1, offset / THRESHOLD_PX)
-  const armed = offset >= THRESHOLD_PX
-  const showIndicator = offset > 6 || refreshing
+  const showIndicator = offset > 4 || refreshing
 
   return (
     <div
@@ -128,52 +122,44 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
     >
-      {/* Indicador fijo arriba — no empuja el layout; el translate del
-          contenido deja el hueco visual (patrón Chrome). */}
+
       <div
         className={cn(
-          "pointer-events-none absolute left-0 right-0 top-0 z-10 flex items-end justify-center",
-          "transition-opacity duration-150",
+          "pointer-events-none fixed left-0 right-0 z-50 flex justify-center",
+          "transition-opacity duration-200",
           showIndicator ? "opacity-100" : "opacity-0",
         )}
-        style={{ height: Math.max(offset, refreshing ? HOLD_PX : 0) }}
+        style={{
+          top: TOP_BAR_HEIGHT_PX + INDICATOR_GAP_PX,
+        }}
         aria-hidden
       >
         <div
           className={cn(
-            "mb-2 flex size-9 items-center justify-center rounded-full",
-            "bg-[#141414]/90 text-neutral-200 shadow-md ring-1 ring-white/10 backdrop-blur-md",
-            "transition-transform duration-150",
+            "flex size-9 items-center justify-center rounded-full",
+            "bg-[#141414]/95 text-neutral-200 shadow-lg ring-1 ring-white/12 backdrop-blur-md",
           )}
           style={{
-            // Durante el pull: crece con el progreso; al refrescar: 1.
             transform: refreshing
               ? "scale(1)"
-              : `scale(${0.55 + progress * 0.45})`,
-            opacity: refreshing ? 1 : 0.35 + progress * 0.65,
+              : `scale(${0.5 + progress * 0.5})`,
+            opacity: refreshing ? 1 : 0.25 + progress * 0.75,
+            transition: pulling.current
+              ? undefined
+              : "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease",
           }}
         >
-          <Spinner
-            size={16}
-            className={cn(
-              "text-neutral-200",
-              // Solo “activo” de verdad al refrescar o armado;
-              // en pull temprano se ve quieto/atenuado por opacity.
-              !refreshing && !armed && "opacity-70",
-            )}
-          />
+          <Spinner size={16} className="text-neutral-200" />
         </div>
       </div>
 
       <div
-        className={cn(
-          !pulling.current && "transition-transform duration-300 ease-out",
-        )}
         style={{
-          transform:
-            offset > 0 || refreshing
-              ? `translateY(${offset}px)`
-              : undefined,
+          transform: offset > 0 ? `translateY(${offset}px)` : undefined,
+          // Bounce de regreso: spring-ish, no linear 200ms.
+          transition: pulling.current
+            ? "none"
+            : "transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
         {children}
