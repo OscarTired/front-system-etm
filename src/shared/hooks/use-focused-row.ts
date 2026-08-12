@@ -8,6 +8,13 @@ type Props = {
   expandedRowId?: string | null
   setExpandedRowId: (id: string | null) => void
   focusToken?: string
+  /**
+   * Se llama una sola vez, después de scrollear + expandir + la
+   * corrección post-expand — ahí es seguro disparar cosas
+   * secundarias (ej. abrir el panel de mensajes), en vez de que
+   * salten apenas el row monta, a mitad del scroll.
+   */
+  onSettled?: () => void
 }
 
 const FIND_TIMEOUT_MS = 2500
@@ -56,21 +63,43 @@ function centerInScrollParent(el: HTMLElement) {
 }
 
 /**
- * Deep-link: lleva el row a vista y listo.
- * No hay ResizeObserver ni smooth en bucle (eso producía el rebote
- * al scrollear y abrir otro expandido).
+ * Secuencia deep-link, en orden: el row YA existe en el DOM
+ * (colapsado) porque `data-expanded-row-id` se pone sin importar el
+ * estado de expansión — así que primero centramos el scroll ahí
+ * (con el row todavía colapsado), DESPUÉS lo expandimos, y recién
+ * cuando la corrección post-expand corrió (altura ya estable),
+ * avisamos `onSettled` para que paneles secundarios (mensajes) se
+ * abran. Sin esto, todo pasaba a la vez: expandía, el panel de
+ * mensajes se abría de golpe, y el scroll llegaba después/durante.
  */
-function focusRowOnce(el: HTMLElement, isActive: () => boolean): () => void {
+function scrollExpandAndSettle(
+  el: HTMLElement,
+  isActive: () => boolean,
+  expand: () => void,
+  onSettled: (() => void) | undefined,
+): () => void {
   let disposed = false
   let timer: number | null = null
 
+  if (disposed || !isActive()) return () => {}
+
+  // 1. Scroll (row colapsado todavía).
+  centerInScrollParent(el)
+
+  // 2. Expandir.
+  expand()
+
+  // 3. Corrección post-expand (la altura cambió al expandir) y
+  //    recién ahí, "settled" — señal para abrir mensajes/etc.
   const run = () => {
     if (disposed || !isActive()) return
     centerInScrollParent(el)
   }
 
-  run()
-  timer = window.setTimeout(run, POST_EXPAND_MS)
+  timer = window.setTimeout(() => {
+    run()
+    if (!disposed && isActive()) onSettled?.()
+  }, POST_EXPAND_MS)
 
   return () => {
     disposed = true
@@ -83,6 +112,7 @@ function waitForRow(
   onFound: (el: HTMLElement) => void,
   timeoutMs: number,
   isActive: () => boolean,
+  onTimeout?: () => void,
 ): () => void {
   const root = document.body
   let cancelled = false
@@ -96,7 +126,10 @@ function waitForRow(
       onFound(el)
       return
     }
-    if (performance.now() - start >= timeoutMs) return
+    if (performance.now() - start >= timeoutMs) {
+      onTimeout?.()
+      return
+    }
     raf = window.requestAnimationFrame(tryFind)
   }
 
@@ -113,6 +146,7 @@ export function useFocusedRow({
   expandedRowId = null,
   setExpandedRowId,
   focusToken,
+  onSettled,
 }: Props) {
   const prevFocusedIdRef = useRef<string | undefined>(undefined)
   const expandedRowIdRef = useRef<string | null>(expandedRowId)
@@ -155,8 +189,10 @@ export function useFocusedRow({
     }
 
     prevFocusedIdRef.current = focusedId
-    setExpandedRowId(focusedId)
 
+    // Todavía NO expandimos — el orden correcto es scroll primero,
+    // con el row visible pero colapsado (existe en el DOM igual,
+    // `data-expanded-row-id` no depende de estar expandido).
     const selector = `[data-expanded-row-id="${CSS.escape(focusedId)}"]`
     const isActive = () => {
       const expanded = expandedRowIdRef.current
@@ -168,15 +204,29 @@ export function useFocusedRow({
 
     stopTracking()
 
+    const expand = () => setExpandedRowId(focusedId)
+
     const stopWait = waitForRow(
       selector,
       el => {
         if (!isActive()) return
         stopTracking()
-        stopTrackingRef.current = focusRowOnce(el, isActive)
+        stopTrackingRef.current = scrollExpandAndSettle(
+          el,
+          isActive,
+          expand,
+          onSettled,
+        )
       },
       FIND_TIMEOUT_MS,
       isActive,
+      () => {
+        // No lo encontramos a tiempo: mejor expandir igual (aunque
+        // no lleguemos a scrollear) que dejar el deep-link sin efecto.
+        if (!isActive()) return
+        expand()
+        onSettled?.()
+      },
     )
 
     stopTrackingRef.current = () => {
@@ -186,5 +236,5 @@ export function useFocusedRow({
     return () => {
       stopTracking()
     }
-  }, [focusedId, setExpandedRowId, focusToken])
+  }, [focusedId, setExpandedRowId, focusToken, onSettled])
 }

@@ -30,6 +30,7 @@ import {
 
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 import { useActiveCommentContextStore } from "@/features/comments/store/active-comment-context-store"
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
 
 type Props = {
   task: Task
@@ -75,12 +76,25 @@ export function TaskExpandedRow({
     ? comments.length
     : (task.commentCount ?? 0)
 
+  const urlFocusToken = searchParams.get("focus")
+  const settledToken = useFocusSettleStore(s => s.settledToken)
+  // Si no hay token en la URL (no vino de un deep-link), no hay nada
+  // que esperar — se abre directo, como antes.
+  const focusSettled = !urlFocusToken || settledToken === urlFocusToken
+
   useEffect(() => {
     if (!isTarget) {
       return
     }
 
     if (tabParam === "comments") {
+      // Recién cuando el scroll+expand terminaron — si no, el panel
+      // de mensajes saltaba a mitad del scroll, antes de que el
+      // usuario viera a qué tarea pertenece.
+      if (!focusSettled) {
+        return
+      }
+
       setActiveView("comments")
 
       if (isMobile) {
@@ -100,6 +114,7 @@ export function TaskExpandedRow({
     isTarget,
     tabParam,
     isMobile,
+    focusSettled,
   ])
 
   const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)

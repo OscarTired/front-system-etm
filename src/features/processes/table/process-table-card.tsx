@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
 import { useExpandRow } from "@/shared/hooks/use-expand-row"
 import { clearEntityFocusParams } from "@/shared/hooks/clear-entity-focus-params"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
@@ -104,11 +105,16 @@ export function ProcessTableCard({
     setExpandedRowId: expand.setExpandedRowId,
   })
 
+  const markSettled = useFocusSettleStore(s => s.markSettled)
+
   useFocusedRow({
     focusedId: focusedTaskId,
     expandedRowId: expand.expandedRowId,
     setExpandedRowId: isMobile ? () => {} : expand.setExpandedRowId,
     focusToken,
+    onSettled: () => {
+      if (focusToken) markSettled(focusToken)
+    },
   })
 
   const filteredTasks = useProcessSearch(processTasks, search)

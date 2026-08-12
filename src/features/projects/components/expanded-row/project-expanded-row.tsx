@@ -24,6 +24,7 @@ import {
 
 import { ProjectTasksList } from "./project-tasks-list"
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
 
 type Props = {
   project: Project
@@ -105,12 +106,20 @@ export function ProjectExpandedRow({
     project.id,
   ])
 
+  const urlFocusToken = searchParams.get("focus")
+  const settledToken = useFocusSettleStore(s => s.settledToken)
+  const focusSettled = !urlFocusToken || settledToken === urlFocusToken
+
   useEffect(() => {
     if (!isTarget) {
       return
     }
 
     if (tabParam === "comments") {
+      if (!focusSettled) {
+        return
+      }
+
       setActiveView("comments")
 
       if (isMobile) {
@@ -130,6 +139,7 @@ export function ProjectExpandedRow({
     isTarget,
     tabParam,
     isMobile,
+    focusSettled,
   ])
 
   const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)

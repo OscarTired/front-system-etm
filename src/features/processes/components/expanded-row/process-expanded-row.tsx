@@ -26,6 +26,7 @@ import { ProcessDispatchCard } from "./cards/process-dispatch-card"
 import { ProcessTimeCard } from "./cards/process-time-card"
 import { ProcessProgressCard } from "./cards/process-progress-card"
 import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
+import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
 
 type Props = {
   processTask: ProcessTask
@@ -157,12 +158,20 @@ export function ProcessExpandedRow({
     setCommentsDialogOpen,
   ] = useState(false)
 
+  const urlFocusToken = searchParams.get("focus")
+  const settledToken = useFocusSettleStore(s => s.settledToken)
+  const focusSettled = !urlFocusToken || settledToken === urlFocusToken
+
   useEffect(() => {
     if (!isTarget) {
       return
     }
 
     if (tabParam === "comments") {
+      if (!focusSettled) {
+        return
+      }
+
       setCommentsDialogOpen(true)
       setActiveView("kpis")
       return
@@ -172,6 +181,7 @@ export function ProcessExpandedRow({
   }, [
     isTarget,
     tabParam,
+    focusSettled,
   ])
 
   const setActiveTarget = useActiveCommentContextStore(s => s.setActiveTarget)
