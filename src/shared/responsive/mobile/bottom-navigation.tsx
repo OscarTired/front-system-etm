@@ -12,7 +12,7 @@ import { BOTTOM_NAV_ITEMS } from "@/shared/responsive/navigation/bottom-nav-item
  * Tab bar flotante (patrón Instagram):
  * - no recorta el contenido del shell
  * - el listado scrollea detrás con blur
- * - fade superior suaviza el cruce contenido ↔ nav
+ * - fade superior suaviza el cruce contenido ? nav
  */
 export function BottomNavigation() {
   const pathname = usePathname()
@@ -26,10 +26,7 @@ export function BottomNavigation() {
       }}
     >
       {/* Fade: el contenido se pierde en blur, no en un corte duro */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-[#050505] via-[#050505]/80 to-transparent"
-      />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-[#050505]/50 backdrop-blur-2xl" />
 
       <div className="pointer-events-auto relative px-3 pb-1">
         <nav className="flex items-stretch gap-1 rounded-full bg-white/8 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-white/10 backdrop-blur-xl">

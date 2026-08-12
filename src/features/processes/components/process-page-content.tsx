@@ -103,36 +103,36 @@ export function ProcessPageContent({
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <div className="shrink-0">
-        <EntityToolbar
-          left={
-            <AdaptiveActionBar
-              pinned={
-                <>
-                  <BackToTaskButton />
-                  <EntityToolbarSearch value={search} onChange={setSearch} />
-                </>
-              }
-              actions={[
-                <FilterBar key="filter" module="processes" />,
-                <HistoryToggleButton
-                  key="history"
-                  count={completedCount}
-                  active={showHistory}
-                  onClick={() => setShowHistory(v => !v)}
-                />,
-                <ExportMenu
-                  key="export"
-                  scopes={PRODUCTION_EXPORT_SCOPES}
-                  onExport={handleExport}
-                />,
-              ]}
-            />
-          }
-        />
-      </div>
-
       <AppListScroll>
+        <div className="mb-1">
+          <EntityToolbar
+            left={
+              <AdaptiveActionBar
+                pinned={
+                  <>
+                    <BackToTaskButton />
+                    <EntityToolbarSearch value={search} onChange={setSearch} />
+                  </>
+                }
+                actions={[
+                  <FilterBar key="filter" module="processes" />,
+                  <HistoryToggleButton
+                    key="history"
+                    count={completedCount}
+                    active={showHistory}
+                    onClick={() => setShowHistory(v => !v)}
+                  />,
+                  <ExportMenu
+                    key="export"
+                    scopes={PRODUCTION_EXPORT_SCOPES}
+                    onExport={handleExport}
+                  />,
+                ]}
+              />
+            }
+          />
+        </div>
+
         <EntityExpandProvider key={processCode}>
           <ProcessTableCard
             processDefinition={processDefinition}

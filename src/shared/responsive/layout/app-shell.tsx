@@ -130,15 +130,13 @@ function CompactShell({ children }: Props) {
         {immersive ? (
           <div
             data-immersive-slot
-            className="absolute inset-0 z-10 overflow-hidden"
+            className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden"
           >
             {children}
           </div>
         ) : (
           <div className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden">
-            {/* pt en el page root (hijo): toolbar queda bajo TopBar;
-                el scroll sigue full-bleed y pasa detrás del chrome. */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden max-md:[&>*]:pt-14">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {children}
             </div>
           </div>

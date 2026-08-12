@@ -35,12 +35,11 @@ export function TopBar() {
   return (
     <>
       <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
-        {/* Fade superior: el scroll se pierde bajo el chrome, no se corta */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b from-[#050505] via-[#050505]/75 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[4.5rem] bg-[#050505]/55 backdrop-blur-2xl"
         />
-        {/* Botón de menú */}
+{/* Botón de menú */}
         <button
           type="button"
           onClick={toggleDrawer}

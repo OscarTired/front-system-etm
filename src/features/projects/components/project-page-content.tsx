@@ -47,29 +47,29 @@ export function ProjectPageContent({
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <div className="shrink-0">
-        <EntityToolbar
-          left={
-            <AdaptiveActionBar
-              pinned={
-                <EntityToolbarSearch value={search} onChange={setSearch} />
-              }
-              actions={[
-                <FilterBar key="filter" module="projects" />,
-                <ProjectSortButton key="sort" />,
-                <HistoryToggleButton
-                  key="history"
-                  count={completedCount}
-                  active={showHistory}
-                  onClick={() => setShowHistory(v => !v)}
-                />,
-              ]}
-            />
-          }
-        />
-      </div>
-
       <AppListScroll>
+        <div className="mb-1">
+          <EntityToolbar
+            left={
+              <AdaptiveActionBar
+                pinned={
+                  <EntityToolbarSearch value={search} onChange={setSearch} />
+                }
+                actions={[
+                  <FilterBar key="filter" module="projects" />,
+                  <ProjectSortButton key="sort" />,
+                  <HistoryToggleButton
+                    key="history"
+                    count={completedCount}
+                    active={showHistory}
+                    onClick={() => setShowHistory(v => !v)}
+                  />,
+                ]}
+              />
+            }
+          />
+        </div>
+
         <EntityExpandProvider>
           <ProjectTable
             projects={projects}

@@ -99,43 +99,42 @@ export function TaskPageContent({
         !isMobile && view === "kanban" ? "overflow-hidden" : "",
       )}
     >
-      <div className="shrink-0">
-        <EntityToolbar
-          left={
-            <AdaptiveActionBar
-              pinned={
-                <>
-                  <BackToProjectButton />
-                  <EntityToolbarSearch value={search} onChange={setSearch} />
-                </>
-              }
-              actions={[
-                <FilterBar key="filter" module="tasks" />,
-                <TaskSortButton key="sort" />,
-                <HistoryToggleButton
-                  key="history"
-                  count={completedCount}
-                  active={showHistory}
-                  onClick={() => setShowHistory(v => !v)}
-                />,
-                <ExportMenu
-                  key="export"
-                  scopes={REPORT_EXPORT_SCOPES}
-                  onExport={handleExport}
-                />,
-              ]}
-              right={
-                !isMobile && (
-                  <TaskViewToggle value={view} onChange={setView} />
-                )
-              }
-            />
-          }
-        />
-      </div>
-
       {view === "card" && (
         <AppListScroll>
+          <div className="mb-1">
+            <EntityToolbar
+              left={
+                <AdaptiveActionBar
+                  pinned={
+                    <>
+                      <BackToProjectButton />
+                      <EntityToolbarSearch value={search} onChange={setSearch} />
+                    </>
+                  }
+                  actions={[
+                    <FilterBar key="filter" module="tasks" />,
+                    <TaskSortButton key="sort" />,
+                    <HistoryToggleButton
+                      key="history"
+                      count={completedCount}
+                      active={showHistory}
+                      onClick={() => setShowHistory(v => !v)}
+                    />,
+                    <ExportMenu
+                      key="export"
+                      scopes={REPORT_EXPORT_SCOPES}
+                      onExport={handleExport}
+                    />,
+                  ]}
+                  right={
+                    !isMobile && (
+                      <TaskViewToggle value={view} onChange={setView} />
+                    )
+                  }
+                />
+              }
+            />
+          </div>
           <EntityExpandProvider>
             <TaskTable
               tasks={tasks}
