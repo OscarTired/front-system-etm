@@ -137,7 +137,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         <div
           className={cn(
             "flex size-9 items-center justify-center rounded-full",
-            "bg-[#141414]/95 text-neutral-200 shadow-lg ring-1 ring-white/12 backdrop-blur-md",
+            "bg-[#141414]/95 text-neutral-200 shadow-lg backdrop-blur-md",
           )}
           style={{
             transform: refreshing
