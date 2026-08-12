@@ -26,10 +26,18 @@ export function useExpandRow({
 
   return useCallback(
     (nextId: string | null) => {
+      // Local primero, SIEMPRE — setExpandedRowId es sincrónico
+      // dentro de este mismo handler; el router no lo es. Si
+      // limpiamos la URL antes, puede haber un render intermedio
+      // donde focusedId ya se fue pero expandedRowId todavía apunta
+      // al row viejo — ahí useFocusedRow lo ve como "se cerró" y lo
+      // colapsa a la fuerza, produciendo el rebote al abrir otro
+      // row mientras hay un deep-link activo.
+      setExpandedRowId(nextId)
+
       if (focusedId && nextId !== focusedId) {
         clearEntityFocusParams(router, pathname, searchParams)
       }
-      setExpandedRowId(nextId)
     },
     [focusedId, setExpandedRowId, router, pathname, searchParams],
   )
