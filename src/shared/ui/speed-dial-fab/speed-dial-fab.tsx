@@ -19,14 +19,22 @@ type Props = {
   className?: string
 }
 
+function isInsideSheetOrPopover(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      '[data-slot="popover-content"],[data-slot="popover-sheet"],[data-slot="dialog-overlay"],[data-radix-dialog-overlay]',
+    ),
+  )
+}
+
 /**
  * FAB mobile (filtro / orden / historial / export / crear).
  *
- * - Portal body, z-30 (sheet z-40 encima).
- * - Acciones siempre montadas (Popover no se desmonta al colapsar el dial).
- * - No cerrar el dial en pointerdown de la acción: eso corre antes del
- *   click del trigger y el Popover nunca abre.
- * - Al aparecer un sheet, colapsamos el dial (MutationObserver).
+ * - Portal body, z-30 (sheet z-40 encima del dial).
+ * - Acciones siempre montadas (Popover no se desmonta).
+ * - El dial / FAB no se cierra por interactuar con un bottomsheet.
+ * - Solo se oculta el chrome con drawer o pull-to-refresh.
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [dialOpen, setDialOpen] = useState(false)
@@ -45,25 +53,6 @@ export function SpeedDialFab({ actions, className }: Props) {
     if (chromeHidden) setDialOpen(false)
   }, [chromeHidden])
 
-  // Sheet montado → colapsar dial (sin tocar el árbol del Popover)
-  useEffect(() => {
-    const collapseIfSheetOpen = () => {
-      const sheet = document.querySelector(
-        '[data-slot="popover-sheet"][data-state="open"]',
-      )
-      if (sheet) setDialOpen(false)
-    }
-
-    const obs = new MutationObserver(collapseIfSheetOpen)
-    obs.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["data-state"],
-    })
-    return () => obs.disconnect()
-  }, [])
-
   useEffect(() => {
     if (!dialOpen) return
 
@@ -74,25 +63,13 @@ export function SpeedDialFab({ actions, className }: Props) {
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement
       if (rootRef.current?.contains(target)) return
-      if (
-        target.closest(
-          '[data-slot="popover-content"],[data-slot="popover-sheet"]',
-        )
-      ) {
-        return
-      }
+      // Tocar el sheet / overlay no colapsa el FAB
+      if (isInsideSheetOrPopover(target)) return
       setDialOpen(false)
     }
 
     const onScroll = (e: Event) => {
-      const target = e.target as HTMLElement | null
-      if (
-        target?.closest?.(
-          '[data-slot="popover-content"],[data-slot="popover-sheet"]',
-        )
-      ) {
-        return
-      }
+      if (isInsideSheetOrPopover(e.target)) return
       setDialOpen(false)
     }
 
