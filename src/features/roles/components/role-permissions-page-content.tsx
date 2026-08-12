@@ -35,6 +35,7 @@ import type { User } from "@/features/users/types/user.types"
 
 import { PrimaryAction } from "@/shared/ui/actions/primary-action"
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
@@ -213,11 +214,11 @@ export function RolePermissionsPageContent() {
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full flex-col max-md:pt-14",
+        "flex h-full min-h-0 w-full flex-col",
         isMobile ? "" : "overflow-hidden",
       )}
     >
-      <div className="shrink-0">
+      <div className="mb-1 shrink-0">
         <EntityToolbar
           left={
             <div className="flex flex-wrap items-center gap-2 py-1">
@@ -236,49 +237,51 @@ export function RolePermissionsPageContent() {
       >
         {/* PANEL IZQUIERDO: ROLES o USUARIOS */}
         {showLeftPanel && isMobile && (
-          <div className="space-y-3 pb-28">
-            {mode === "roles" ? (
-              <>
-                {loadingRoles && <RoleMobileSkeleton />}
+          <AppListScroll>
+            <div className="space-y-3 pb-4">
+              {mode === "roles" ? (
+                <>
+                  {loadingRoles && <RoleMobileSkeleton />}
 
-                {!loadingRoles && filteredRoles.length === 0 && (
-                  <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
-                    {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
-                  </div>
-                )}
+                  {!loadingRoles && filteredRoles.length === 0 && (
+                    <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                      {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
+                    </div>
+                  )}
 
-                {!loadingRoles &&
-                  filteredRoles.map((role, index) => (
-                    <RoleMobileCard
-                      key={role.id}
-                      role={role}
-                      index={index}
-                      onSelect={() => setSelectedRole(role)}
-                    />
-                  ))}
-              </>
-            ) : (
-              <>
-                {loadingUsers && <RoleMobileSkeleton />}
+                  {!loadingRoles &&
+                    filteredRoles.map((role, index) => (
+                      <RoleMobileCard
+                        key={role.id}
+                        role={role}
+                        index={index}
+                        onSelect={() => setSelectedRole(role)}
+                      />
+                    ))}
+                </>
+              ) : (
+                <>
+                  {loadingUsers && <RoleMobileSkeleton />}
 
-                {!loadingUsers && filteredUsers.length === 0 && (
-                  <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
-                    {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
-                  </div>
-                )}
+                  {!loadingUsers && filteredUsers.length === 0 && (
+                    <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                      {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
+                    </div>
+                  )}
 
-                {!loadingUsers &&
-                  filteredUsers.map((user, index) => (
-                    <UserMobileCard
-                      key={user.id}
-                      user={user}
-                      index={index}
-                      onSelect={() => setSelectedUser(user)}
-                    />
-                  ))}
-              </>
-            )}
-          </div>
+                  {!loadingUsers &&
+                    filteredUsers.map((user, index) => (
+                      <UserMobileCard
+                        key={user.id}
+                        user={user}
+                        index={index}
+                        onSelect={() => setSelectedUser(user)}
+                      />
+                    ))}
+                </>
+              )}
+            </div>
+          </AppListScroll>
         )}
 
         {showLeftPanel && !isMobile && (
@@ -369,7 +372,7 @@ export function RolePermissionsPageContent() {
                       <div className="flex min-w-0 items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: selectedColor || "#71717a" }}
+                          style={{ backgroundColor: selectedColor || "var(--muted-foreground)" }}
                         />
                         <span className="truncate text-sm font-medium text-white">
                           {selectedName}
@@ -399,11 +402,11 @@ export function RolePermissionsPageContent() {
               />
             </header>
 
-            <div className="min-h-0 min-w-0 flex-1 p-1.5">
+            <AppListScroll className="p-1.5">
               {hasSelection && permissionsLoading && <RolePermissionsSkeleton />}
 
               {hasSelection && !permissionsLoading && (
-                <div className="flex flex-col gap-4 pb-28">
+                <div className="flex flex-col gap-4 pb-4">
                   {grouped.map(([groupKey, groupPermissions]) => (
                     <PermissionGroup
                       key={groupKey}
@@ -420,7 +423,7 @@ export function RolePermissionsPageContent() {
                   ))}
                 </div>
               )}
-            </div>
+            </AppListScroll>
           </div>
         )}
 
@@ -451,7 +454,7 @@ export function RolePermissionsPageContent() {
                       <div className="flex min-w-0 items-center gap-2">
                         <span
                           className="size-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: selectedColor || "#71717a" }}
+                          style={{ backgroundColor: selectedColor || "var(--muted-foreground)" }}
                         />
                         <span className="truncate text-sm font-medium text-white">
                           {selectedName}

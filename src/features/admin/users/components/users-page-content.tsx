@@ -11,6 +11,7 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { PrimaryAction } from "@/shared/ui/actions/primary-action"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { EntityToolbar } from "@/shared/ui/entity-toolbar/entity-toolbar"
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 import { EntityToolbarSearch } from "@/shared/ui/entity-toolbar/entity-toolbar-search"
 import { cn } from "@/shared/utils/utils"
 import { ENTITY_ICONS, type EntityIcon } from "@/shared/constants/entity-icons"
@@ -245,11 +246,11 @@ export function UsersPageContent() {
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full flex-col max-md:pt-14",
+        "flex h-full min-h-0 w-full flex-col",
         isMobile ? "" : "overflow-hidden",
       )}
     >
-      <div className="shrink-0">
+      <div className="mb-1 shrink-0">
         <EntityToolbar
           left={
             <div className="flex flex-wrap items-center gap-2 py-1">
@@ -268,24 +269,26 @@ export function UsersPageContent() {
         {isMobile && (
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             {!selectedRole && (
-              <div className="space-y-3 pb-28">
-                {loadingRoles ? (
-                  <RoleMobileSkeleton />
-                ) : filteredRoles.length === 0 ? (
-                  <div className="rounded-2xl bg-[#101012] px-4 py-8 text-center text-sm text-neutral-500">
-                    {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
-                  </div>
-                ) : (
-                  filteredRoles.map((role, index) => (
-                    <RoleMobileCard
-                      key={role.id}
-                      role={role}
-                      index={index}
-                      onSelect={() => handleSelectRole(role)}
-                    />
-                  ))
-                )}
-              </div>
+              <AppListScroll>
+                <div className="space-y-3 pb-4">
+                  {loadingRoles ? (
+                    <RoleMobileSkeleton />
+                  ) : filteredRoles.length === 0 ? (
+                    <div className="rounded-2xl bg-[#101012] px-4 py-8 text-center text-sm text-neutral-500">
+                      {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
+                    </div>
+                  ) : (
+                    filteredRoles.map((role, index) => (
+                      <RoleMobileCard
+                        key={role.id}
+                        role={role}
+                        index={index}
+                        onSelect={() => handleSelectRole(role)}
+                      />
+                    ))
+                  )}
+                </div>
+              </AppListScroll>
             )}
 
             {selectedRole && (
@@ -323,8 +326,8 @@ export function UsersPageContent() {
                   )}
                 </header>
 
-                <div className="min-h-0 flex-1 p-1.5">
-                  <div className="space-y-3 pb-28">
+                <AppListScroll className="p-1.5">
+                  <div className="space-y-3 pb-4">
                     {loading ? (
                       <UserMobileSkeleton />
                     ) : filteredUsersInRole.length === 0 ? (
@@ -347,7 +350,7 @@ export function UsersPageContent() {
                       ))
                     )}
                   </div>
-                </div>
+                </AppListScroll>
               </>
             )}
           </div>

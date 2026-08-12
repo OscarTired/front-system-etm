@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { Popover, PopoverContent } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
@@ -29,7 +29,7 @@ export default function AssignmentPage() {
   const { state, actions } = panel
 
   return (
-    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-14 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Header desktop */}
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -126,15 +126,9 @@ export default function AssignmentPage() {
         </div>
       )}
 
-      {/* Contenido: ocupa TODO el espacio restante.
-          Antes era un <section> con overflow-y-auto nativo — scroll
-          sin estilizar (barra del navegador cruda) mientras el resto
-          de la app (piece-list.tsx, etc.) usa el componente ScrollArea
-          compartido, con su propio scrollbar temático + fade en los
-          bordes. Se cambia a ScrollArea por consistencia visual. */}
-      <ScrollArea
+      {/* Contenido: ocupa TODO el espacio restante. */}
+      <AppListScroll
         className={cn(
-          "min-h-0 flex-1",
           !isMobile &&
             state.summonTarget &&
             state.selectedStepIds.size > 0 &&
@@ -164,7 +158,7 @@ export default function AssignmentPage() {
             ))}
           </div>
         )}
-      </ScrollArea>
+      </AppListScroll>
 
       {isMobile ? (
         // Mismo mecanismo que ya usa toda la app para bottom sheets

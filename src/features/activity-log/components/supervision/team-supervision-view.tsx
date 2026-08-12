@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 
 import type { User } from "@/features/users/types/user.types"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/shared/utils/utils"
 
 import type { ActivityLog } from "../../types/activity-log.types"
@@ -146,7 +145,7 @@ export function TeamSupervisionView({
     grouped.ok.length + grouped.partial.length + grouped.missing.length
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <div className="w-full min-w-0 shrink-0">
         <TeamSupervisionKpiBar
           kpis={loading ? EMPTY_KPIS : result.kpis}
@@ -156,8 +155,7 @@ export function TeamSupervisionView({
         />
       </div>
 
-      <ScrollArea className="min-h-0 min-w-0 w-full flex-1 pb-4">
-      <div className="min-w-0 w-full space-y-5">
+      <div className="min-w-0 w-full space-y-5 pb-4">
         {loading ? (
           <section className="space-y-1.5">
             <SectionHeader section={SECTIONS[0]} count={0} />
@@ -198,7 +196,6 @@ export function TeamSupervisionView({
           })
         )}
       </div>
-      </ScrollArea>
     </div>
   )
 }

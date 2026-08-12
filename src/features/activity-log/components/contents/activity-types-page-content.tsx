@@ -143,7 +143,7 @@ export function ActivityTypesPageContent() {
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
       <AppListScroll>
-        <div className="shrink-0">
+        <div className="mb-1 shrink-0">
           <EntityToolbar
             left={
               <div className="flex flex-wrap items-center gap-2 py-1">

@@ -231,28 +231,64 @@ export function ActivityLogPageContent({
 
   const entryCount = isRangeView ? rangeLogs.length : logs.length
 
-  return (
-    <div className="relative flex h-full min-h-0 w-full flex-col gap-3 max-md:pt-14">
-      {/* Toolbar — compact: columna; laptop+: grid 3 cols (como tasks toolbar) */}
-      <div
-        className={cn(
-          "w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 shadow-lg backdrop-blur-xl",
-          isCompact ? "p-2" : "p-3 desktop:p-4",
-        )}
-      >
-        {isCompact ? (
-          /* Móvil: una franja — vista + hoy + fecha + contador numérico */
-          <div className="flex items-center gap-1.5">
-            <div className="min-w-0 shrink">
-              <BitacoraViewToggle compact />
-            </div>
+  const toolbar = (
+    <div
+      className={cn(
+        "w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 shadow-lg backdrop-blur-xl",
+        isCompact ? "p-2" : "p-3 desktop:p-4",
+      )}
+    >
+      {isCompact ? (
+        /* Móvil: una franja — vista + hoy + fecha + contador numérico */
+        <div className="flex items-center gap-1.5">
+          <div className="min-w-0 shrink">
+            <BitacoraViewToggle compact />
+          </div>
+
+          <button
+            type="button"
+            onClick={goToToday}
+            disabled={isToday}
+            className={cn(
+              "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-all",
+              isToday
+                ? "cursor-default bg-amber-400/15 text-amber-400/50"
+                : "bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200",
+            )}
+          >
+            Hoy
+          </button>
+
+          <div className="min-w-0 flex-1 flex justify-center">
+            <DateNavigator
+              value={date}
+              onChange={handleDateChange}
+              placeholder="Fecha"
+              maxDate={new Date()}
+              markedDates={markedDates}
+              onViewMonthChange={handleViewMonthChange}
+              iconOnly
+            />
+          </div>
+
+          <div
+            className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 px-2 text-xs font-semibold tabular-nums text-neutral-300"
+            title={`${entryCount} ${entryCount === 1 ? "entrada" : "entradas"}`}
+          >
+            {entryCount}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center justify-self-start gap-2">
+            <BitacoraViewToggle />
 
             <button
               type="button"
               onClick={goToToday}
               disabled={isToday}
               className={cn(
-                "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-all",
+                "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold transition-all",
                 isToday
                   ? "cursor-default bg-amber-400/15 text-amber-400/50"
                   : "bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200",
@@ -260,73 +296,39 @@ export function ActivityLogPageContent({
             >
               Hoy
             </button>
-
-            <div className="min-w-0 flex-1 flex justify-center">
-              <DateNavigator
-                value={date}
-                onChange={handleDateChange}
-                placeholder="Fecha"
-                maxDate={new Date()}
-                markedDates={markedDates}
-                onViewMonthChange={handleViewMonthChange}
-                iconOnly
-              />
-            </div>
-
-            <div
-              className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 px-2 text-xs font-semibold tabular-nums text-neutral-300"
-              title={`${entryCount} ${entryCount === 1 ? "entrada" : "entradas"}`}
-            >
-              {entryCount}
-            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <div className="flex items-center justify-self-start gap-2">
-              <BitacoraViewToggle />
 
-              <button
-                type="button"
-                onClick={goToToday}
-                disabled={isToday}
-                className={cn(
-                  "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold transition-all",
-                  isToday
-                    ? "cursor-default bg-amber-400/15 text-amber-400/50"
-                    : "bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200",
-                )}
-              >
-                Hoy
-              </button>
-            </div>
-
-            <div className="justify-self-center">
-              <DateNavigator
-                value={date}
-                onChange={handleDateChange}
-                placeholder="Fecha"
-                maxDate={new Date()}
-                markedDates={markedDates}
-                onViewMonthChange={handleViewMonthChange}
-              />
-            </div>
-
-            <div className="flex items-center justify-self-end gap-2">
-              <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
-                {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
-              </div>
-
-              {departmentQuery === "PRODUCCION" && (
-                <TaskAreaPanelTrigger />
-              )}
-            </div>
+          <div className="justify-self-center">
+            <DateNavigator
+              value={date}
+              onChange={handleDateChange}
+              placeholder="Fecha"
+              maxDate={new Date()}
+              markedDates={markedDates}
+              onViewMonthChange={handleViewMonthChange}
+            />
           </div>
-        )}
-      </div>
 
-      {/* Cuerpo — mismo patrón que TaskPageContent (scroll en el hijo) */}
-      {isAgenda && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex items-center justify-self-end gap-2">
+            <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
+              {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
+            </div>
+
+            {departmentQuery === "PRODUCCION" && (
+              <TaskAreaPanelTrigger />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col">
+      <AppListScroll>
+        <div className="mb-1">{toolbar}</div>
+
+        {isAgenda && (
           <AgendaWeekView
             anchorDate={date}
             logs={rangeLogs}
@@ -334,22 +336,18 @@ export function ActivityLogPageContent({
             onSelectDay={handleSelectDay}
             onLogClick={handleAgendaLogClick}
           />
-        </div>
-      )}
+        )}
 
-      {isMonth && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {isMonth && (
           <AgendaMonthView
             anchorDate={date}
             logs={rangeLogs}
             loading={rangeLoading}
             onSelectDay={handleSelectDay}
           />
-        </div>
-      )}
+        )}
 
-      {viewMode === "day" && (
-        <AppListScroll className="max-md:pt-0">
+        {viewMode === "day" && (
           <div className="flex w-full flex-col gap-3 pb-4">
             {!loading &&
               departmentQuery === "PRODUCCION" &&
@@ -394,8 +392,8 @@ export function ActivityLogPageContent({
               )
             })}
           </div>
-        </AppListScroll>
-      )}
+        )}
+      </AppListScroll>
 
       <ActivityPickerDialog
         open={canCreate && pickerOpen}

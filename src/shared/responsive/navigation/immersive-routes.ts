@@ -1,11 +1,8 @@
-/**
- * Rutas mobile "immersive": el shell no scrollea y deja un
- * slot con altura real (absolute top-14 / bottom-20) para tools a
- * pantalla completa (canvas, editores, etc.).
- *
- * Para agregar otra: sumar el prefix acá. El page de esa ruta debe
- * llenar el slot con `absolute inset-0` (ver nesting/page.tsx).
- */
+import {
+  TOP_BAR_HEIGHT_PX,
+  BOTTOM_NAV_HEIGHT_PX,
+} from "@/shared/responsive/layout/chrome-constants"
+
 export const IMMERSIVE_ROUTE_PREFIXES = ["/nesting"] as const
 
 export function isImmersiveRoute(pathname: string): boolean {
@@ -14,7 +11,7 @@ export function isImmersiveRoute(pathname: string): boolean {
   )
 }
 
-/** Alturas del chrome mobile (top bar + bottom nav). Útil si un page
- *  necesita calc() fuera del slot immersive. */
-export const MOBILE_TOP_BAR_PX = 56 // 3.5rem = top-14
-export const MOBILE_BOTTOM_NAV_PX = 80 // ~ bottom-20
+// Re-exportadas para no romper a quien ya las importaba desde acá —
+// la fuente real ahora vive en chrome-constants.ts.
+export { TOP_BAR_HEIGHT_PX as MOBILE_TOP_BAR_PX }
+export { BOTTOM_NAV_HEIGHT_PX as MOBILE_BOTTOM_NAV_PX }

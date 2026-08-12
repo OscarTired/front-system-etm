@@ -9,6 +9,7 @@ import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
+import { TOP_BAR_HEIGHT_PX, BOTTOM_NAV_HEIGHT_PX } from "./chrome-constants"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 
@@ -31,11 +32,6 @@ const TRANSITION_TIMING = "300ms ease-out"
 const DRAWER_WIDTH_PX = 248
 const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
 
-/**
- * Shell = chrome + slot de altura.
- * No scrollea. No pull-to-refresh.
- * El scroll de listas vive en AppListScroll (página).
- */
 function DesktopShell({ children }: Props) {
   const visualState = useSidebarStore(state => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
@@ -118,27 +114,23 @@ function CompactShell({ children }: Props) {
           willChange: isOpen ? "transform" : "auto",
         }}
       >
-        {/*
-          Instagram-style chrome:
-          - contenido a pantalla completa (scroll debajo del header y bottom nav)
-          - TopBar / BottomNav flotantes con blur (z-20)
-          - el padding para no tapar el final de la lista vive en AppListScroll
-            (pt/pb mobile), no recortando el slot aquí
-        */}
+
         <TopBar />
 
         {immersive ? (
           <div
             data-immersive-slot
-            className="absolute inset-x-0 top-14 bottom-20 z-10 overflow-hidden"
+            className="absolute inset-x-0 z-10 overflow-hidden"
+            style={{
+              top: TOP_BAR_HEIGHT_PX,
+              bottom: BOTTOM_NAV_HEIGHT_PX,
+            }}
           >
             {children}
           </div>
         ) : (
           <div className="absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              {children}
-            </div>
+            {children}
           </div>
         )}
 

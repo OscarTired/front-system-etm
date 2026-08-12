@@ -304,70 +304,34 @@ export function TeamActivityLogPageContent() {
     }
   }
 
-  return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden max-md:pt-14">
-      {/* Toolbar — mismo layout + toggle */}
-      <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
-        <div className="flex flex-col gap-2 tablet:hidden">
-          <UserSelect
-            value={selectedUser}
-            items={users as User[]}
-            placeholder="Todo el equipo"
-            onChange={handleUserChange}
-          />
+  const toolbar = (
+    <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
+      <div className="flex flex-col gap-2 tablet:hidden">
+        <UserSelect
+          value={selectedUser}
+          items={users as User[]}
+          placeholder="Todo el equipo"
+          onChange={handleUserChange}
+        />
 
-          <div className="flex items-center gap-1.5">
-            <div className="flex shrink-0 items-center gap-1">
-              <TeamBitacoraViewToggle compact />
-              <button
-                type="button"
-                onClick={goToToday}
-                disabled={isToday}
-                className={
-                  isToday
-                    ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
-                    : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
-                }
-              >
-                Hoy
-              </button>
-            </div>
-
-            <div className="min-w-0 flex-1 flex justify-center">
-              <DateNavigator
-                value={date}
-                onChange={handleDateChange}
-                placeholder="Fecha"
-                maxDate={new Date()}
-                markedDates={markedDates}
-                onViewMonthChange={handleViewMonthChange}
-                iconOnly
-              />
-            </div>
-
-            <EntryCountBadge count={logs.length} compact />
-          </div>
-        </div>
-
-        <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
-          {/* Mismo orden que Prod/Ing: vista | fecha | filtro + contador */}
-          <div className="flex items-center gap-2 justify-self-start">
-            <TeamBitacoraViewToggle />
+        <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1">
+            <TeamBitacoraViewToggle compact />
             <button
               type="button"
               onClick={goToToday}
               disabled={isToday}
               className={
                 isToday
-                  ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
-                  : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+                  ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
+                  : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
               }
             >
               Hoy
             </button>
           </div>
 
-          <div className="justify-self-center">
+          <div className="min-w-0 flex-1 flex justify-center">
             <DateNavigator
               value={date}
               onChange={handleDateChange}
@@ -375,32 +339,71 @@ export function TeamActivityLogPageContent() {
               maxDate={new Date()}
               markedDates={markedDates}
               onViewMonthChange={handleViewMonthChange}
+              iconOnly
             />
           </div>
 
-          <div className="flex items-center gap-2 justify-self-end">
-            <div className="w-56">
-              <UserSelect
-                value={selectedUser}
-                items={users as User[]}
-                placeholder="Todo el equipo"
-                onChange={handleUserChange}
-              />
-            </div>
-            <EntryCountBadge count={logs.length} />
-          </div>
+          <EntryCountBadge count={logs.length} compact />
         </div>
       </div>
 
-      {isSupervision ? (
-        <TeamSupervisionView
-          users={users as User[]}
-          logs={logs}
-          loading={loading}
-          focusUserId={selectedUser?.id}
-        />
-      ) : (
-        <AppListScroll className="max-md:pt-0">
+      <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
+        {/* Mismo orden que Prod/Ing: vista | fecha | filtro + contador */}
+        <div className="flex items-center gap-2 justify-self-start">
+          <TeamBitacoraViewToggle />
+          <button
+            type="button"
+            onClick={goToToday}
+            disabled={isToday}
+            className={
+              isToday
+                ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
+                : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+            }
+          >
+            Hoy
+          </button>
+        </div>
+
+        <div className="justify-self-center">
+          <DateNavigator
+            value={date}
+            onChange={handleDateChange}
+            placeholder="Fecha"
+            maxDate={new Date()}
+            markedDates={markedDates}
+            onViewMonthChange={handleViewMonthChange}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 justify-self-end">
+          <div className="w-56">
+            <UserSelect
+              value={selectedUser}
+              items={users as User[]}
+              placeholder="Todo el equipo"
+              onChange={handleUserChange}
+            />
+          </div>
+          <EntryCountBadge count={logs.length} />
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <AppListScroll>
+        <div className="mb-1">{toolbar}</div>
+
+        {isSupervision ? (
+          <TeamSupervisionView
+            users={users as User[]}
+            logs={logs}
+            loading={loading}
+            focusUserId={selectedUser?.id}
+          />
+        ) : (
           <div className="flex w-full flex-col gap-6 pb-4">
             {loading ? (
               <div className="flex w-full flex-col gap-8">
@@ -452,8 +455,8 @@ export function TeamActivityLogPageContent() {
               </div>
             )}
           </div>
-        </AppListScroll>
-      )}
+        )}
+      </AppListScroll>
     </div>
   )
 }

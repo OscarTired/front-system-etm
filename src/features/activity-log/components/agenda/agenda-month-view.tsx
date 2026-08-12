@@ -134,7 +134,7 @@ export function AgendaMonthView({
   const viewYear = anchorDate.getFullYear()
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
+    <div className="flex w-full flex-col rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
       <div className="grid shrink-0 grid-cols-7 border-b border-white/5">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
@@ -151,7 +151,6 @@ export function AgendaMonthView({
         ))}
       </div>
 
-      <ScrollArea className="h-full min-h-0 min-w-0 w-full flex-1">
       <div
         className="grid min-h-0 w-full"
         style={{ gridTemplateRows: "repeat(6, minmax(3.25rem, auto))", minHeight: "100%" }}
@@ -257,7 +256,6 @@ export function AgendaMonthView({
           </div>
         ))}
       </div>
-      </ScrollArea>
     </div>
   )
 }
