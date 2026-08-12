@@ -8,10 +8,8 @@ import {
   PaintBucket,
   Package,
   Truck,
-  Users,
   NotebookPen,
   ListChecks,
-  ShieldCheck,
   Boxes,
   MessageSquare,
 } from "lucide-react"
@@ -116,16 +114,15 @@ export const NAVIGATION = [
     title: "Administración",
     items: [
       {
-        label: "Usuarios",
-        href: "/admin/users",
-        icon: Users,
-        permission: PermissionCode.USER_READ,
-      },
-      {
-        label: "Roles y Permisos",
-        href: "/admin/roles",
-        icon: ShieldCheck,
-        permission: PermissionCode.ROLE_MANAGE,
+        // Antes: Usuarios + Roles/Permisos (misma data, dos shells).
+        // Ahora un solo hub: lista roles/usuarios, permisos y edición de persona.
+        label: "Acceso",
+        href: "/admin/access",
+        icon: UserCog,
+        permissions: [
+          PermissionCode.USER_READ,
+          PermissionCode.ROLE_MANAGE,
+        ],
       },
       {
         label: "Actividades",

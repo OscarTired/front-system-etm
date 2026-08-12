@@ -97,12 +97,21 @@ export function SidebarNavigation({
       )}
 
       {NAVIGATION.map((section) => {
-        const items = section.items.filter(
-          item =>
-            (!("permission" in item) || has(item.permission)) &&
-            (!("roles" in item) ||
-              currentRoles.some(code => (item.roles as readonly string[]).includes(code))),
-        )
+        const items = section.items.filter(item => {
+          const byPermission =
+            !("permission" in item) || has(item.permission as never)
+          const byPermissions =
+            !("permissions" in item) ||
+            (item.permissions as readonly string[]).some(code =>
+              has(code as never),
+            )
+          const byRoles =
+            !("roles" in item) ||
+            currentRoles.some(code =>
+              (item.roles as readonly string[]).includes(code),
+            )
+          return byPermission && byPermissions && byRoles
+        })
 
         if (items.length === 0) {
           return null

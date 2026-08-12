@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Pencil, Save } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 import { usePermissionCatalog } from "../hooks/use-permission-catalog"
 import { useRolePermissions } from "../hooks/use-role-permissions"
@@ -17,6 +18,9 @@ import {
 import { RolePermissionsSkeleton } from "./role-permissions-skeleton"
 import { PermissionGroup } from "./permissions/permission-group"
 import { PermissionsModeTabs, type PermissionsMode } from "./permissions-mode-tabs"
+import { UserDialog } from "@/features/admin/users/components/dialog/user-dialog"
+import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import {
   RoleDesktopRow,
   RoleDesktopRowSkeleton,
@@ -46,7 +50,14 @@ import type { Role } from "../types/role.types"
 export function RolePermissionsPageContent() {
   const { isMobile } = useResponsive()
   const [search, setSearch] = useState("")
-  const [mode, setMode] = useState<PermissionsMode>("roles")
+  const searchParams = useSearchParams()
+  const { has } = usePermissions()
+  const canEditUser = has(PermissionCode.USER_UPDATE)
+
+  const [mode, setMode] = useState<PermissionsMode>(() =>
+    searchParams.get("tab") === "usuarios" ? "usuarios" : "roles",
+  )
+  const [editUserOpen, setEditUserOpen] = useState(false)
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -405,6 +416,17 @@ export function RolePermissionsPageContent() {
                 )}
               </div>
 
+              {mode === "usuarios" && selectedUser && canEditUser && (
+                <button
+                  type="button"
+                  onClick={() => setEditUserOpen(true)}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                  aria-label="Editar usuario"
+                  title="Editar usuario"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
               <PrimaryAction
                 label={saveLabel}
                 icon={Save}
@@ -484,6 +506,17 @@ export function RolePermissionsPageContent() {
                     )}
                   </div>
 
+              {mode === "usuarios" && selectedUser && canEditUser && (
+                <button
+                  type="button"
+                  onClick={() => setEditUserOpen(true)}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                  aria-label="Editar usuario"
+                  title="Editar usuario"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
                   <PrimaryAction
                     label={saveLabel}
                     icon={Save}
@@ -524,6 +557,14 @@ export function RolePermissionsPageContent() {
           </section>
         )}
       </div>
+
+      {editUserOpen && selectedUser && (
+        <UserDialog
+          open={editUserOpen}
+          user={selectedUser}
+          onClose={() => setEditUserOpen(false)}
+        />
+      )}
     </div>
   )
 }

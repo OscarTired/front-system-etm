@@ -1,36 +1,13 @@
 "use client"
 
-import { UserActions } from "@/features/admin/users/components/actions/user-actions"
-import { UsersPageContent } from "@/features/admin/users/components/users-page-content"
-import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
-export default function UsersPage() {
-  usePageTitle("Usuarios")
-
-  return (
-    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
-      <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <h1 className="shrink-0 text-2xl font-bold tracking-widest">
-            USUARIOS
-          </h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
-          <p className="min-w-0 truncate text-sm text-neutral-500">
-            Gestión de usuarios
-          </p>
-        </div>
-        <div className="shrink-0">
-          <UserActions />
-        </div>
-      </header>
-
-      <div className="mb-1 shrink-0 desktop:hidden">
-        <UserActions />
-      </div>
-
-      <section className="flex min-h-0 w-full flex-1 flex-col">
-        <UsersPageContent />
-      </section>
-    </main>
-  )
+/** @deprecated → /admin/access (modo usuarios) */
+export default function UsersRedirectPage() {
+  const router = useRouter()
+  useEffect(() => {
+    router.replace("/admin/access?tab=usuarios")
+  }, [router])
+  return null
 }
