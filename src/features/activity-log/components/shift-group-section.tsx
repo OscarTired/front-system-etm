@@ -432,7 +432,7 @@ export function ShiftGroupSection({
                     disabled={loading || !canCreate}
                     onClick={() => onLogClick(slot)}
                     className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-xl border border-dashed py-3 text-sm font-medium transition-colors",
+                      "flex items-center justify-center gap-1.5 rounded-xl min-h-14.5 border border-dashed py-3 text-sm font-medium transition-colors",
                       loading && "animate-pulse pointer-events-none",
                       canCreate && !loading
                         ? "hover:bg-white/4 hover:text-neutral-300"
