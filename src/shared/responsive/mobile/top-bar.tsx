@@ -35,9 +35,25 @@ export function TopBar() {
   return (
     <>
       <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
+        {/* Blur progresivo — mismo criterio que BottomNavigation:
+            el efecto arranca en 0% abajo de esta zona y llega a
+            100% recién cerca del borde superior de la pantalla, en
+            vez de una caja plana aplicada de golpe. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[4.5rem] bg-[#050505]/55 backdrop-blur-2xl"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-16 backdrop-blur-xl"
+          style={{
+            maskImage: "linear-gradient(to bottom, black 40%, transparent)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 40%, transparent)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-16 bg-[#050505]/65"
+          style={{
+            maskImage: "linear-gradient(to bottom, black 30%, transparent)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent)",
+          }}
         />
 {/* Botón de menú */}
         <button

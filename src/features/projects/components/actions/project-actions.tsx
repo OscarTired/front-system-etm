@@ -9,6 +9,10 @@ import {
 } from "lucide-react"
 
 import {
+  FAB_SECOND_RIGHT_OFFSET_PX,
+} from "@/shared/ui/speed-dial-fab/fab-layout"
+
+import {
   PermissionCode,
 } from "@/shared/core/enums/permission-code.enum"
 
@@ -72,8 +76,9 @@ export function ProjectActions(){
           disabled={!canCreate}
           onClick={handleOpen}
           aria-label="Nuevo proyecto"
+          style={{ right: FAB_SECOND_RIGHT_OFFSET_PX }}
           className={cn(
-            "fixed bottom-20 right-[4.25rem] z-50 flex size-12 items-center justify-center rounded-full transition duration-200",
+            "fixed bottom-22 z-50 flex size-12 items-center justify-center rounded-full transition duration-200",
             canCreate
               ? [
                   "bg-white text-black",

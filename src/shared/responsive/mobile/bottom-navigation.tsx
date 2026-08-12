@@ -25,8 +25,29 @@ export function BottomNavigation() {
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      {/* Fade: el contenido se pierde en blur, no en un corte duro */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-[#050505]/50 backdrop-blur-2xl" />
+      {/* Blur progresivo (mismo patrón que iOS/Instagram): el
+          backdrop-blur y el oscurecido arrancan en 0% arriba del
+          todo y llegan a 100% recién cerca de la nav — antes esto
+          era una caja plana (blur al 100% desde su borde de
+          arriba), por eso se veía como un corte duro en vez de un
+          desvanecimiento. mask-image hace que el EFECTO del blur en
+          sí se desvanezca, no solo el color de fondo. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 backdrop-blur-xl"
+        style={{
+          maskImage: "linear-gradient(to top, black 40%, transparent)",
+          WebkitMaskImage: "linear-gradient(to top, black 40%, transparent)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[#050505]/60"
+        style={{
+          maskImage: "linear-gradient(to top, black 30%, transparent)",
+          WebkitMaskImage: "linear-gradient(to top, black 30%, transparent)",
+        }}
+      />
 
       <div className="pointer-events-auto relative px-3 pb-1">
         <nav className="flex items-stretch gap-1 rounded-full bg-white/8 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-white/10 backdrop-blur-xl">

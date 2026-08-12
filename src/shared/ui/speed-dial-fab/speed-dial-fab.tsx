@@ -5,6 +5,7 @@ import { SlidersHorizontal, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/shared/utils/utils"
+import { FAB_RIGHT_OFFSET_PX } from "./fab-layout"
 
 type Props = {
   actions: ReactNode[]
@@ -29,9 +30,10 @@ export function SpeedDialFab({ actions, className }: Props) {
   return (
     <div
       className={cn(
-        "pointer-events-none fixed bottom-[5.5rem] right-4 z-[60] flex flex-col items-end gap-2",
+        "pointer-events-none fixed bottom-22 z-[60] flex flex-col items-end gap-2",
         className,
       )}
+      style={{ right: FAB_RIGHT_OFFSET_PX }}
     >
       <AnimatePresence>
         {open && (
@@ -47,9 +49,10 @@ export function SpeedDialFab({ actions, className }: Props) {
               <div
                 key={i}
                 className="
-                  flex items-center justify-end
+                  flex h-11 items-center justify-end
+                  [&_button]:flex [&_button]:h-11 [&_button]:items-center
                   [&_button]:rounded-full [&_button]:bg-[#1a1a1a]/90
-                  [&_button]:px-3.5 [&_button]:py-2.5
+                  [&_button]:px-3.5
                   [&_button]:text-xs [&_button]:font-semibold
                   [&_button]:text-white [&_button]:shadow-lg
                   [&_button]:ring-1 [&_button]:ring-white/10
