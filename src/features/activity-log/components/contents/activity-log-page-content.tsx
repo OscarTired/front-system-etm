@@ -46,6 +46,8 @@ type ViewTab = ActivityDepartment | "REGISTROS"
 
 type Props = {
   department?: ViewTab
+  /** true = el padre ya aporta AppListScroll (hub /bitacora) */
+  embedded?: boolean
 }
 
 /**
@@ -59,6 +61,7 @@ type Props = {
  */
 export function ActivityLogPageContent({
   department = "PRODUCCION",
+  embedded = false,
 }: Props = {}) {
   const { isCompact } = useResponsive()
 
@@ -323,9 +326,8 @@ export function ActivityLogPageContent({
     </div>
   )
 
-  return (
-    <div className="relative flex h-full min-h-0 w-full flex-col">
-      <AppListScroll>
+  const body = (
+    <>
         <div className="mb-1">{toolbar}</div>
 
         {isAgenda && (
@@ -393,7 +395,12 @@ export function ActivityLogPageContent({
             })}
           </div>
         )}
-      </AppListScroll>
+    </>
+  )
+
+  return (
+    <div className="relative flex h-full min-h-0 w-full flex-col">
+      {embedded ? body : <AppListScroll>{body}</AppListScroll>}
 
       <ActivityPickerDialog
         open={canCreate && pickerOpen}
