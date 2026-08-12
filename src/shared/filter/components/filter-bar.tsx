@@ -37,11 +37,28 @@ type Props={
    * resto de los ítems (Historial, Exportar, etc.) siempre
    * muestran su texto, sin importar su estado. */
   alwaysExpanded?:boolean
+  /**
+   * false = no renderiza el botón "+ FILTRO"/popover para agregar.
+   * Para usar al lado de la lupa (EntityToolbar), donde el punto de
+   * entrada para AGREGAR un filtro vive en el FAB (`showAddButton`
+   * default ahí) — acá solo se muestran los chips ya elegidos.
+   * Default: true.
+   */
+  showAddButton?:boolean
+  /**
+   * false = no renderiza los chips activos. Para usar DENTRO del
+   * FAB, donde el botón de agregar ya vive en su propia fila y los
+   * chips elegidos se muestran aparte, al lado de la lupa — así no
+   * se duplican. Default: true.
+   */
+  showChips?:boolean
 }
 
 export function FilterBar({
   module,
   alwaysExpanded=false,
+  showAddButton=true,
+  showChips=true,
 }:Props){
 
   const {
@@ -77,6 +94,8 @@ export function FilterBar({
   return(
 
     <div className="flex items-center gap-2">
+
+      {showAddButton && (
 
       <Popover
         open={open}
@@ -135,7 +154,9 @@ export function FilterBar({
 
       </Popover>
 
-      {chips.length>0 && (
+      )}
+
+      {showChips && chips.length>0 && (
 
         <div className="flex items-center gap-2">
 

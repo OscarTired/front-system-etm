@@ -60,14 +60,17 @@ export function ProjectPageContent({
                   <>
                     <EntityToolbarSearch value={search} onChange={setSearch} />
                     {isMobile && (
-                      <FilterBar module="projects" alwaysExpanded />
+                      <FilterBar module="projects" showAddButton={false} />
                     )}
                   </>
                 }
                 actions={[
-                  ...(!isMobile
-                    ? [<FilterBar key="filter" module="projects" />]
-                    : []),
+                  <FilterBar
+                    key="filter"
+                    module="projects"
+                    alwaysExpanded={isMobile}
+                    showChips={!isMobile}
+                  />,
                   <ProjectSortButton key="sort" />,
                   <HistoryToggleButton
                     key="history"

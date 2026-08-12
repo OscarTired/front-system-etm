@@ -116,14 +116,17 @@ export function ProcessPageContent({
                     <BackToTaskButton />
                     <EntityToolbarSearch value={search} onChange={setSearch} />
                     {isMobile && (
-                      <FilterBar module="processes" alwaysExpanded />
+                      <FilterBar module="processes" showAddButton={false} />
                     )}
                   </>
                 }
                 actions={[
-                  ...(!isMobile
-                    ? [<FilterBar key="filter" module="processes" />]
-                    : []),
+                  <FilterBar
+                    key="filter"
+                    module="processes"
+                    alwaysExpanded={isMobile}
+                    showChips={!isMobile}
+                  />,
                   <HistoryToggleButton
                     key="history"
                     count={completedCount}

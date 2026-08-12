@@ -112,14 +112,17 @@ export function TaskPageContent({
                       <BackToProjectButton />
                       <EntityToolbarSearch value={search} onChange={setSearch} />
                       {isMobile && (
-                        <FilterBar module="tasks" alwaysExpanded />
+                        <FilterBar module="tasks" showAddButton={false} />
                       )}
                     </>
                   }
                   actions={[
-                    ...(!isMobile
-                      ? [<FilterBar key="filter" module="tasks" />]
-                      : []),
+                    <FilterBar
+                      key="filter"
+                      module="tasks"
+                      alwaysExpanded={isMobile}
+                      showChips={!isMobile}
+                    />,
                     <TaskSortButton key="sort" />,
                     <HistoryToggleButton
                       key="history"
