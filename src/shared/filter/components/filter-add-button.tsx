@@ -77,7 +77,7 @@ export const FilterAddButton=
             )}
           >
 
-            + FILTRO
+            + FILTROS
 
           </span>
 

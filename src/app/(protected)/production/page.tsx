@@ -29,7 +29,7 @@ export default function AssignmentPage() {
   const { state, actions } = panel
 
   return (
-    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-14 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Header desktop */}
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">

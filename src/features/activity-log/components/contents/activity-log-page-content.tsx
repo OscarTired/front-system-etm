@@ -232,7 +232,7 @@ export function ActivityLogPageContent({
   const entryCount = isRangeView ? rangeLogs.length : logs.length
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col gap-3">
+    <div className="relative flex h-full min-h-0 w-full flex-col gap-3 max-md:pt-14">
       {/* Toolbar — compact: columna; laptop+: grid 3 cols (como tasks toolbar) */}
       <div
         className={cn(
@@ -349,7 +349,7 @@ export function ActivityLogPageContent({
       )}
 
       {viewMode === "day" && (
-        <AppListScroll>
+        <AppListScroll className="max-md:pt-0">
           <div className="flex w-full flex-col gap-3 pb-4">
             {!loading &&
               departmentQuery === "PRODUCCION" &&

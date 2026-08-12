@@ -305,7 +305,7 @@ export function TeamActivityLogPageContent() {
   }
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden max-md:pt-14">
       {/* Toolbar — mismo layout + toggle */}
       <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
         <div className="flex flex-col gap-2 tablet:hidden">
@@ -400,7 +400,7 @@ export function TeamActivityLogPageContent() {
           focusUserId={selectedUser?.id}
         />
       ) : (
-        <AppListScroll>
+        <AppListScroll className="max-md:pt-0">
           <div className="flex w-full flex-col gap-6 pb-4">
             {loading ? (
               <div className="flex w-full flex-col gap-8">

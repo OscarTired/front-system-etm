@@ -142,17 +142,17 @@ export function ActivityTypesPageContent() {
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <div className="shrink-0">
-        <EntityToolbar
-          left={
-            <div className="flex flex-wrap items-center gap-2 py-1">
-              <EntityToolbarSearch value={search} onChange={setSearch} />
-            </div>
-          }
-        />
-      </div>
-
       <AppListScroll>
+        <div className="shrink-0">
+          <EntityToolbar
+            left={
+              <div className="flex flex-wrap items-center gap-2 py-1">
+                <EntityToolbarSearch value={search} onChange={setSearch} />
+              </div>
+            }
+          />
+        </div>
+
         <div className="flex flex-col gap-6">
           {loading ? (
             <ActivityTypesSkeleton />

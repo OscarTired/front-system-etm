@@ -14,7 +14,7 @@ export function EntityToolbar({ left, right, className }: Props) {
   return (
     <div
       className={cn(
-        "flex min-h-15 items-center justify-between py-1",
+        "flex min-h-10 items-center justify-between py-1 tablet:min-h-15",
         className,
       )}
     >
