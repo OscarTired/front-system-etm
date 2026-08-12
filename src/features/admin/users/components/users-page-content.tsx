@@ -243,6 +243,25 @@ export function UsersPageContent() {
   const selectedFormRoles = roles.filter(r => formData.roleIds.includes(r.id))
   const showRightPanel = isCreating || !!selectedUserId
 
+  // Antes vivía como hermano fijo antes de AppListScroll: en mobile
+  // el slot de contenido es absolute inset-0 (detrás del TopBar
+  // flotante), y solo AppListScroll compensa con paddingTop
+  // (TOP_BAR_HEIGHT_PX) — por eso quedaba tapado en reposo. Ahora se
+  // manda como primer hijo de cada AppListScroll (mismo patrón que
+  // Proyectos/Tareas/Procesos/Bitácora), y para desktop se sigue
+  // mostrando afuera, ya que ahí no hay TopBar flotante.
+  const searchToolbar = (
+    <div className="mb-1 shrink-0">
+      <EntityToolbar
+        left={
+          <div className="flex flex-wrap items-center gap-2 py-1">
+            <EntityToolbarSearch value={search} onChange={setSearch} />
+          </div>
+        }
+      />
+    </div>
+  )
+
   return (
     <div
       className={cn(
@@ -250,15 +269,7 @@ export function UsersPageContent() {
         isMobile ? "" : "overflow-hidden",
       )}
     >
-      <div className="mb-1 shrink-0">
-        <EntityToolbar
-          left={
-            <div className="flex flex-wrap items-center gap-2 py-1">
-              <EntityToolbarSearch value={search} onChange={setSearch} />
-            </div>
-          }
-        />
-      </div>
+      {!isMobile && searchToolbar}
 
       <div
         className={cn(
@@ -270,6 +281,7 @@ export function UsersPageContent() {
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             {!selectedRole && (
               <AppListScroll>
+                {searchToolbar}
                 <div className="space-y-3 pb-4">
                   {loadingRoles ? (
                     <RoleMobileSkeleton />
@@ -292,8 +304,8 @@ export function UsersPageContent() {
             )}
 
             {selectedRole && (
-              <>
-                <header className="flex shrink-0 items-center gap-3">
+              <AppListScroll className="p-1.5">
+                <div className="mb-1 flex shrink-0 items-center gap-3">
                   <button
                     type="button"
                     onClick={handleBackToRoles}
@@ -324,34 +336,34 @@ export function UsersPageContent() {
                       <Plus size={16} />
                     </button>
                   )}
-                </header>
+                </div>
 
-                <AppListScroll className="p-1.5">
-                  <div className="space-y-3 pb-4">
-                    {loading ? (
-                      <UserMobileSkeleton />
-                    ) : filteredUsersInRole.length === 0 ? (
-                      <p className="px-3 py-6 text-center text-sm text-neutral-500">
-                        {search
-                          ? "Ningún usuario coincide con la búsqueda."
-                          : "Este rol todavía no tiene usuarios."}
-                      </p>
-                    ) : (
-                      filteredUsersInRole.map((u, i) => (
-                        <UserMobileCard
-                          key={u.id}
-                          user={u}
-                          index={i}
-                          expanded={selectedUserId === u.id}
-                          onToggle={() =>
-                            setSelectedUserId(curr => (curr === u.id ? null : u.id))
-                          }
-                        />
-                      ))
-                    )}
-                  </div>
-                </AppListScroll>
-              </>
+                {searchToolbar}
+
+                <div className="space-y-3 pb-4">
+                  {loading ? (
+                    <UserMobileSkeleton />
+                  ) : filteredUsersInRole.length === 0 ? (
+                    <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                      {search
+                        ? "Ningún usuario coincide con la búsqueda."
+                        : "Este rol todavía no tiene usuarios."}
+                    </p>
+                  ) : (
+                    filteredUsersInRole.map((u, i) => (
+                      <UserMobileCard
+                        key={u.id}
+                        user={u}
+                        index={i}
+                        expanded={selectedUserId === u.id}
+                        onToggle={() =>
+                          setSelectedUserId(curr => (curr === u.id ? null : u.id))
+                        }
+                      />
+                    ))
+                  )}
+                </div>
+              </AppListScroll>
             )}
           </div>
         )}

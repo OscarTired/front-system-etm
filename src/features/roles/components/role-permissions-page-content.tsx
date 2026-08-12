@@ -211,6 +211,26 @@ export function RolePermissionsPageContent() {
   const showLeftPanel = !isMobile || !hasSelection
   const showPermissionsPanel = !isMobile || hasSelection
 
+  // Antes vivía como hermano fijo antes de AppListScroll: en mobile
+  // el slot de contenido es absolute inset-0 (detrás del TopBar
+  // flotante), y solo AppListScroll compensa con paddingTop
+  // (TOP_BAR_HEIGHT_PX) — por eso quedaba tapado en reposo, igual que
+  // en Usuarios. Ahora se manda como primer hijo de cada
+  // AppListScroll; para desktop se sigue mostrando afuera, ya que ahí
+  // no hay TopBar flotante.
+  const searchToolbar = (
+    <div className="mb-1 shrink-0">
+      <EntityToolbar
+        left={
+          <div className="flex flex-wrap items-center gap-2 py-1">
+            <EntityToolbarSearch value={search} onChange={setSearch} />
+          </div>
+        }
+        right={<PermissionsModeTabs mode={mode} onChange={handleModeChange} />}
+      />
+    </div>
+  )
+
   return (
     <div
       className={cn(
@@ -218,16 +238,7 @@ export function RolePermissionsPageContent() {
         isMobile ? "" : "overflow-hidden",
       )}
     >
-      <div className="mb-1 shrink-0">
-        <EntityToolbar
-          left={
-            <div className="flex flex-wrap items-center gap-2 py-1">
-              <EntityToolbarSearch value={search} onChange={setSearch} />
-            </div>
-          }
-          right={<PermissionsModeTabs mode={mode} onChange={handleModeChange} />}
-        />
-      </div>
+      {!isMobile && searchToolbar}
 
       <div
         className={cn(
@@ -238,6 +249,7 @@ export function RolePermissionsPageContent() {
         {/* PANEL IZQUIERDO: ROLES o USUARIOS */}
         {showLeftPanel && isMobile && (
           <AppListScroll>
+            {searchToolbar}
             <div className="space-y-3 pb-4">
               {mode === "roles" ? (
                 <>
@@ -346,8 +358,8 @@ export function RolePermissionsPageContent() {
 
         {/* PANEL PERMISOS */}
         {showPermissionsPanel && isMobile && (
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-            <header className="flex shrink-0 items-start justify-between gap-4">
+          <AppListScroll className="p-1.5">
+            <header className="mb-1 flex shrink-0 items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 {hasSelection && (
                   <button
@@ -402,29 +414,27 @@ export function RolePermissionsPageContent() {
               />
             </header>
 
-            <AppListScroll className="p-1.5">
-              {hasSelection && permissionsLoading && <RolePermissionsSkeleton />}
+            {hasSelection && permissionsLoading && <RolePermissionsSkeleton />}
 
-              {hasSelection && !permissionsLoading && (
-                <div className="flex flex-col gap-4 pb-4">
-                  {grouped.map(([groupKey, groupPermissions]) => (
-                    <PermissionGroup
-                      key={groupKey}
-                      title={getPermissionGroupLabel(groupKey)}
-                      permissions={groupPermissions}
-                      checkedIds={checkedIds}
-                      onToggle={handleToggle}
-                      onToggleAll={handleToggleAll}
-                      overriddenIds={overriddenIds}
-                      getLabel={(permission) =>
-                        getPermissionActionLabel(permission.code, groupKey)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </AppListScroll>
-          </div>
+            {hasSelection && !permissionsLoading && (
+              <div className="flex flex-col gap-4 pb-4">
+                {grouped.map(([groupKey, groupPermissions]) => (
+                  <PermissionGroup
+                    key={groupKey}
+                    title={getPermissionGroupLabel(groupKey)}
+                    permissions={groupPermissions}
+                    checkedIds={checkedIds}
+                    onToggle={handleToggle}
+                    onToggleAll={handleToggleAll}
+                    overriddenIds={overriddenIds}
+                    getLabel={(permission) =>
+                      getPermissionActionLabel(permission.code, groupKey)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </AppListScroll>
         )}
 
         {showPermissionsPanel && !isMobile && (

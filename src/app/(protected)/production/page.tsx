@@ -67,66 +67,16 @@ export default function AssignmentPage() {
         </div>
       </header>
 
-      {/* Header móvil */}
-      <div className="mb-1 flex shrink-0 items-center justify-between gap-2 desktop:hidden">
-        <HistoryToggleButton
-          count={state.completedCount}
-          active={state.showHistory}
-          onClick={() => actions.setShowHistory(v => !v)}
-        />
+      {/* Contenido: ocupa TODO el espacio restante.
 
-        {state.canChooseAreas && (
-          <button
-            type="button"
-            onClick={() => actions.setConfigOpen(v => !v)}
-            aria-label="Elegir áreas"
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-              state.configOpen
-                ? "bg-white/15 text-white"
-                : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white",
-            )}
-          >
-            <Settings2 size={16} />
-          </button>
-        )}
-      </div>
-
-      {/* Selector de áreas (supervisor) */}
-      {state.canChooseAreas && state.configOpen && (
-        <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
-          {state.allAreas.map(code => {
-            const definition = PROCESS_DEFINITIONS[code]
-            const Icon = ENTITY_ICONS[definition.icon]
-            const selected = state.supervisorAreas.includes(code)
-
-            return (
-              <button
-                key={code}
-                type="button"
-                onClick={() =>
-                  actions.setSupervisorAreas(
-                    selected
-                      ? state.supervisorAreas.filter(c => c !== code)
-                      : [...state.supervisorAreas, code],
-                  )
-                }
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
-                  selected
-                    ? "bg-white/15 text-white shadow-sm"
-                    : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200",
-                )}
-              >
-                <Icon size={14} style={{ color: definition.color }} />
-                <span>{definition.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Contenido: ocupa TODO el espacio restante. */}
+          El header móvil (toggle de historial + selector de áreas)
+          antes vivía afuera de AppListScroll, a la altura y=0 del
+          slot de contenido (absolute inset-0) — en mobile eso cae
+          exactamente detrás del TopBar flotante (h-14) y quedaba
+          tapado en reposo, sin necesidad de scrollear. Ahora es el
+          primer hijo del ScrollArea, igual que el toolbar de
+          Bitácora/Proyectos/Tareas, así hereda el paddingTop:
+          TOP_BAR_HEIGHT_PX real. */}
       <AppListScroll
         className={cn(
           !isMobile &&
@@ -135,6 +85,65 @@ export default function AssignmentPage() {
             "pb-24",
         )}
       >
+        {/* Header móvil */}
+        <div className="mb-1 flex shrink-0 items-center justify-between gap-2 desktop:hidden">
+          <HistoryToggleButton
+            count={state.completedCount}
+            active={state.showHistory}
+            onClick={() => actions.setShowHistory(v => !v)}
+          />
+
+          {state.canChooseAreas && (
+            <button
+              type="button"
+              onClick={() => actions.setConfigOpen(v => !v)}
+              aria-label="Elegir áreas"
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                state.configOpen
+                  ? "bg-white/15 text-white"
+                  : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white",
+              )}
+            >
+              <Settings2 size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* Selector de áreas (supervisor) */}
+        {state.canChooseAreas && state.configOpen && (
+          <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
+            {state.allAreas.map(code => {
+              const definition = PROCESS_DEFINITIONS[code]
+              const Icon = ENTITY_ICONS[definition.icon]
+              const selected = state.supervisorAreas.includes(code)
+
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() =>
+                    actions.setSupervisorAreas(
+                      selected
+                        ? state.supervisorAreas.filter(c => c !== code)
+                        : [...state.supervisorAreas, code],
+                    )
+                  }
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
+                    selected
+                      ? "bg-white/15 text-white shadow-sm"
+                      : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200",
+                  )}
+                >
+                  <Icon size={14} style={{ color: definition.color }} />
+                  <span>{definition.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {state.loading ? (
           <div className="flex h-24 items-center justify-center text-sm text-neutral-500">
             Cargando…
