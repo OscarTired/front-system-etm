@@ -1,25 +1,24 @@
 "use client"
+
 import { ExternalLink } from "lucide-react"
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
 type Props = {
   imageUrl: string | null
   onClose: () => void
 }
-// Antes la foto se mostraba directo adentro del mensaje — en un
-// panel chico (como "Últimos comentarios") eso rompía el layout
-// entero, empujando todo lo demás. Ahora el mensaje solo muestra un
-// ícono/indicador de que hay una foto adjunta; recién al tocarlo se
-// abre esto, mostrándola a tamaño completo — con un botón aparte
-// para ir a la URL directo, en vez de hacerlo de una.
-export function CommentImageDialog({
-  imageUrl,
-  onClose,
-}: Props) {
+
+/**
+ * Vista de foto adjunta — mismo patrón de diálogo con header
+ * que el resto de la app (no imagen suelta a pantalla completa).
+ */
+export function CommentImageDialog({ imageUrl, onClose }: Props) {
   return (
     <Dialog
       open={!!imageUrl}
@@ -27,25 +26,30 @@ export function CommentImageDialog({
         if (!open) onClose()
       }}
     >
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent
+        size="large"
+        className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
+      >
+        <DialogHeader className="shrink-0 border-b border-white/5 px-5 py-4">
           <DialogTitle>Foto adjunta</DialogTitle>
         </DialogHeader>
+
         {imageUrl && (
-          <div className="flex flex-col gap-3 px-5 pb-5">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
-              alt="Foto adjunta al comentario"
-              className="max-h-[70vh] w-full rounded-xl object-contain"
+              alt="Foto adjunta"
+              className="mx-auto max-h-[min(70dvh,32rem)] w-full rounded-xl object-contain bg-black/40"
             />
             <a
               href={imageUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
             >
               <ExternalLink size={15} />
-              Abrir en una pestaña nueva
+              Abrir original
             </a>
           </div>
         )}

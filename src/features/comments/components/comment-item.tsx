@@ -214,17 +214,19 @@ export function CommentItem({
         )}
 
         {comment.imageUrl && (
-
           <button
             type="button"
-            onClick={()=>setImageDialogOpen(true)}
+            onClick={() => setImageDialogOpen(true)}
             disabled={isDeleting}
-            className="mt-2 flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-white/8 bg-black/30 text-left transition hover:border-white/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <ImageIcon size={13} />
-            Ver foto adjunta
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={comment.imageUrl}
+              alt="Foto adjunta"
+              className="aspect-[4/5] max-h-64 w-full object-cover"
+            />
           </button>
-
         )}
       </div>
 

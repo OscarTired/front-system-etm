@@ -367,26 +367,22 @@ export function ActivityPickerDialog({
               <div className="flex min-h-0 flex-1 gap-3">
 
                 {photoPreviewUrl && (
-
                   <div className="relative shrink-0">
-
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={photoPreviewUrl}
                       alt="Foto adjunta"
-                      className="h-16 w-16 rounded-lg object-cover"
+                      className="size-14 rounded-xl object-cover ring-1 ring-white/10"
                     />
-
                     <button
                       type="button"
                       onClick={() => setPhoto(null)}
-                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                      aria-label="Quitar foto"
+                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-neutral-900 text-neutral-200 ring-1 ring-white/15 hover:bg-neutral-800"
                     >
-                      <X size={12} />
+                      <X size={11} />
                     </button>
-
                   </div>
-
                 )}
 
                 <textarea

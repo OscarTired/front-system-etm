@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  Image as ImageIcon,
   MessageSquare,
   Reply,
   Search,
@@ -287,13 +288,35 @@ export function MessagesPageContent() {
                         </div>
                       )}
 
-                      <p className="mt-1.5 line-clamp-2 text-sm text-neutral-400">
-                        {c.message || (c.imageUrl ? "Imagen" : "—")}
-                      </p>
-
-                      <p className="mt-1 text-[11px] text-neutral-600">
-                        {formatCommentDate(c.createdAt)}
-                      </p>
+                      <div className="mt-2 flex gap-2.5">
+                        {c.imageUrl && (
+                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-black/40 ring-1 ring-white/8">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={c.imageUrl}
+                              alt=""
+                              className="size-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          {c.message ? (
+                            <p className="line-clamp-2 text-sm leading-5 text-neutral-300">
+                              {c.message}
+                            </p>
+                          ) : c.imageUrl ? (
+                            <p className="flex items-center gap-1 text-xs text-neutral-500">
+                              <ImageIcon size={12} />
+                              Foto
+                            </p>
+                          ) : (
+                            <p className="text-sm text-neutral-600">—</p>
+                          )}
+                          <p className="mt-1 text-[11px] text-neutral-600">
+                            {formatCommentDate(c.createdAt)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </button>
                 </li>
