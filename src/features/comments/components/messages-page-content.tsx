@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -45,6 +47,8 @@ function scopeBadge(c: MyCommentItem): string {
  * como NotificationItem (contexto, proceso/tarea, histórico).
  */
 export function MessagesPageContent() {
+  const queryClient = useQueryClient()
+
   const router = useRouter()
   const { comments, loading, error } = useMyComments(true)
   const [search, setSearch] = useState("")
@@ -91,7 +95,10 @@ export function MessagesPageContent() {
         "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180 tablet:overflow-hidden tablet:rounded-2xl tablet:bg-white/2",
       )}
     >
-      <AppListScroll className="overflow-x-hidden">
+      <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["comments", "mine"] })
+        }} className="overflow-x-hidden">
         {/* Header solo tablet (móvil = TopBar, desktop = page.tsx). */}
         <div className="mb-2 hidden shrink-0 px-2 py-2 tablet:block desktop:hidden">
           <div className="flex items-start gap-3">

@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { useCallback, useMemo, useState } from "react"
@@ -63,6 +65,8 @@ export function ActivityLogPageContent({
   department = "PRODUCCION",
   embedded = false,
 }: Props = {}) {
+  const queryClient = useQueryClient()
+
   const { isCompact } = useResponsive()
 
   const [date, setDate] = useState<Date>(new Date())
@@ -412,7 +416,15 @@ export function ActivityLogPageContent({
           : "relative flex min-h-0 w-full flex-1 flex-col"
       }
     >
-      {embedded ? body : <AppListScroll>{body}</AppListScroll>}
+      {embedded ? body : (
+        <AppListScroll
+          onRefresh={async () => {
+            await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
+          }}
+        >
+          {body}
+        </AppListScroll>
+      )}
 
       <ActivityPickerDialog
         open={canCreate && pickerOpen}

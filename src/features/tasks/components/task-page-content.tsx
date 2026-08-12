@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useState } from "react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
@@ -56,6 +58,8 @@ export function TaskPageContent({
   focusToken,
   initialShowHistory = false,
 }: Props) {
+  const queryClient = useQueryClient()
+
   const { isMobile } = useResponsive()
 
   const [search, setSearch] = useState("")
@@ -102,7 +106,11 @@ export function TaskPageContent({
       )}
     >
       {view === "card" && (
-        <AppListScroll>
+        <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["tasks"] })
+        }}
+      >
           <div className="mb-1">
             <EntityToolbar
               left={

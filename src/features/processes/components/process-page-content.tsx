@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useState } from "react"
 
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
@@ -42,6 +44,8 @@ export function ProcessPageContent({
   focusToken,
   initialShowHistory = false,
 }: Props) {
+  const queryClient = useQueryClient()
+
 
   const { isMobile } = useResponsive()
 
@@ -106,7 +110,11 @@ export function ProcessPageContent({
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <AppListScroll>
+      <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["tasks"] })
+        }}
+      >
         <div className="mb-1">
           <EntityToolbar
             left={

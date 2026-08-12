@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { Settings2 } from "lucide-react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
@@ -21,6 +23,7 @@ import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
 
 export default function AssignmentPage() {
+  const queryClient = useQueryClient()
   usePageTitle("Asignación")
 
   const { isMobile } = useResponsive()
@@ -84,6 +87,9 @@ export default function AssignmentPage() {
             state.selectedStepIds.size > 0 &&
             "pb-24",
         )}
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["tasks"] })
+        }}
       >
         {/* Header móvil */}
         <div className="mb-1 flex shrink-0 items-center justify-between gap-2 desktop:hidden">

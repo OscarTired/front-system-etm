@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useMemo, useState } from "react"
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react"
 
@@ -79,6 +81,8 @@ const areSetsEqual = (a: string[], b: string[]) => {
 }
 
 export function UsersPageContent() {
+  const queryClient = useQueryClient()
+
   const { isMobile } = useResponsive()
   const { users, loading } = useUsers()
   const { roles, loading: loadingRoles } = useRoles()
@@ -280,7 +284,11 @@ export function UsersPageContent() {
         {isMobile && (
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             {!selectedRole && (
-              <AppListScroll>
+              <AppListScroll
+                onRefresh={async () => {
+                  await queryClient.invalidateQueries({ queryKey: ["users"] })
+                }}
+              >
                 {searchToolbar}
                 <div className="space-y-3 pb-4">
                   {loadingRoles ? (
@@ -304,7 +312,12 @@ export function UsersPageContent() {
             )}
 
             {selectedRole && (
-              <AppListScroll className="p-1.5">
+              <AppListScroll
+                className="p-1.5"
+                onRefresh={async () => {
+                  await queryClient.invalidateQueries({ queryKey: ["users"] })
+                }}
+              >
                 <div className="mb-1 flex shrink-0 items-center gap-3">
                   <button
                     type="button"

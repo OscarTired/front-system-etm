@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { useMemo, useState } from "react"
@@ -102,6 +104,8 @@ function ActivityTypeRowPlaceholder({ opacity }: { opacity: number }) {
 }
 
 export function ActivityTypesPageContent() {
+  const queryClient = useQueryClient()
+
   const [search, setSearch] = useState("")
 
   // true: trae también los desactivados, para poder reactivarlos.
@@ -158,7 +162,11 @@ export function ActivityTypesPageContent() {
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <AppListScroll>
+      <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["activity-types"] })
+        }}
+      >
         <div className="mb-1 shrink-0">
           <EntityToolbar
             left={

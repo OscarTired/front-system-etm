@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { useCallback, useMemo, useState } from "react"
@@ -204,6 +206,8 @@ function EntryCountBadge({
 }
 
 export function TeamActivityLogPageContent({ embedded = false }: { embedded?: boolean } = {}) {
+  const queryClient = useQueryClient()
+
   usePageTitle("Bitácora de Equipo")
 
   const { users } = useUsersDirectory()
@@ -465,7 +469,11 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
   }
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
-      <AppListScroll>{body}</AppListScroll>
+      <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
+        }}
+      >{body}</AppListScroll>
     </div>
   )
 }

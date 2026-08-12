@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useMemo, useState } from "react"
 import { ArrowLeft, Pencil, Save } from "lucide-react"
 import { useSearchParams } from "next/navigation"
@@ -48,6 +50,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Role } from "../types/role.types"
 
 export function RolePermissionsPageContent() {
+  const queryClient = useQueryClient()
+
   const { isMobile } = useResponsive()
   const [search, setSearch] = useState("")
   const searchParams = useSearchParams()
@@ -259,7 +263,11 @@ export function RolePermissionsPageContent() {
       >
         {/* PANEL IZQUIERDO: ROLES o USUARIOS */}
         {showLeftPanel && isMobile && (
-          <AppListScroll>
+          <AppListScroll
+            onRefresh={async () => {
+              await queryClient.invalidateQueries({ queryKey: ["roles"] })
+            }}
+          >
             {searchToolbar}
             <div className="space-y-3 pb-4">
               {mode === "roles" ? (
@@ -369,7 +377,12 @@ export function RolePermissionsPageContent() {
 
         {/* PANEL PERMISOS */}
         {showPermissionsPanel && isMobile && (
-          <AppListScroll className="p-1.5">
+          <AppListScroll
+            className="p-1.5"
+            onRefresh={async () => {
+              await queryClient.invalidateQueries({ queryKey: ["roles"] })
+            }}
+          >
             <header className="mb-1 flex shrink-0 items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 {hasSelection && (

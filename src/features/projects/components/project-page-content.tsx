@@ -1,5 +1,7 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
+
 import { useMemo, useState } from "react"
 
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
@@ -36,6 +38,8 @@ export function ProjectPageContent({
   focusToken,
   initialShowHistory = false,
 }: Props) {
+  const queryClient = useQueryClient()
+
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] = useState(initialShowHistory)
 
@@ -51,7 +55,11 @@ export function ProjectPageContent({
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col">
-      <AppListScroll>
+      <AppListScroll
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["projects"] })
+        }}
+      >
         <div className="mb-1">
           <EntityToolbar
             left={
