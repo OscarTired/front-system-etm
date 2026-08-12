@@ -68,18 +68,15 @@ export function TaskPipelineCardCompact({
         const n = processTask.workflowStep?.commentCount
           ?? processTask.task.commentCount
           ?? 0
+        // Solo si hay mensajes (mismo criterio que kanban / process-mobile-card).
+        if (n <= 0) return null
         return (
           <span
             title={n === 1 ? "1 mensaje" : `${n} mensajes`}
-            className={cn(
-              "inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
-              n > 0
-                ? "bg-sky-500/15 text-sky-300"
-                : "bg-white/5 text-neutral-600",
-            )}
+            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
           >
             <MessageSquare size={10} strokeWidth={2.5} />
-            {n > 0 ? n : null}
+            {n}
           </span>
         )
       })()}

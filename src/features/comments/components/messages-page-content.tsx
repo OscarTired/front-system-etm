@@ -85,44 +85,42 @@ export function MessagesPageContent() {
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/2",
-        "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180",
+        "flex min-h-0 flex-1 flex-col",
+        // Tablet: card centrada. Móvil/desktop: llena el section (sin
+        // segundo título bajo el TopBar).
+        "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180 tablet:overflow-hidden tablet:rounded-2xl tablet:bg-white/2",
       )}
     >
-      {/* Header — oculto en móvil (el top bar ya muestra "Mensajes")
-          y en desktop (ahí el título ya lo muestra page.tsx, con el
-          mismo texto — mostrar los dos a la vez duplicaba el
-          título). Solo vive en el rango intermedio (tablet). */}
-      <div className="hidden shrink-0 px-5 py-4 tablet:block desktop:hidden">
-        <div className="flex items-start gap-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-            <MessageSquare size={18} strokeWidth={2.4} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold text-neutral-100">Mensajes</h2>
-            <p className="text-xs text-neutral-500">
-              Solo los que tú escribiste
-            </p>
+      <AppListScroll className="overflow-x-hidden">
+        {/* Header solo tablet (móvil = TopBar, desktop = page.tsx). */}
+        <div className="mb-2 hidden shrink-0 px-2 py-2 tablet:block desktop:hidden">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <MessageSquare size={18} strokeWidth={2.4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-neutral-100">Mensajes</h2>
+              <p className="text-xs text-neutral-500">
+                Solo los que tú escribiste
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="shrink-0 px-5 py-3">
-        <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-          <Search size={15} className="shrink-0 text-neutral-500" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar en mis mensajes..."
-            className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
-          />
+        {/* Search dentro del scroller → recibe paddingTop del TopBar. */}
+        <div className="mb-2 shrink-0 px-1 py-1">
+          <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
+            <Search size={15} className="shrink-0 text-neutral-500" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar en mis mensajes..."
+              className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+            />
+          </div>
         </div>
-      </div>
 
-      <AppListScroll
-        className="overflow-x-hidden px-3 py-2"
-      >
+        <div className="px-1 py-1">
         {loading ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
             <Spinner size={18} />
@@ -324,6 +322,7 @@ export function MessagesPageContent() {
             })}
           </ul>
         )}
+        </div>
       </AppListScroll>
     </div>
   )
