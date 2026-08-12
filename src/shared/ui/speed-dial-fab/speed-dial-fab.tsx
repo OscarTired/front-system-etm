@@ -20,15 +20,13 @@ type Props = {
 }
 
 /**
- * Único FAB mobile (filtro / orden / historial / export / crear).
+ * FAB mobile (filtro / orden / historial / export / crear).
  *
- * Reglas (no negociables):
- * 1. Portal a `document.body` → fixed al viewport, no al panel del drawer/PTR.
- * 2. z-30 → el bottomsheet (z-40) siempre queda encima.
- * 3. Las acciones del dial permanecen montadas aunque el dial esté cerrado.
- *    Los Popover viven en esas acciones: desmontarlas cierra el sheet.
- * 4. Se desvanece con el drawer abierto o pull-to-refresh activo
- *    (chrome del viewport que no viaja con el contenido).
+ * - Portal body, z-30 (sheet z-40 encima).
+ * - Acciones siempre montadas (Popover no se desmonta al colapsar el dial).
+ * - No cerrar el dial en pointerdown de la acción: eso corre antes del
+ *   click del trigger y el Popover nunca abre.
+ * - Al aparecer un sheet, colapsamos el dial (MutationObserver).
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [dialOpen, setDialOpen] = useState(false)
@@ -46,6 +44,25 @@ export function SpeedDialFab({ actions, className }: Props) {
   useEffect(() => {
     if (chromeHidden) setDialOpen(false)
   }, [chromeHidden])
+
+  // Sheet montado → colapsar dial (sin tocar el árbol del Popover)
+  useEffect(() => {
+    const collapseIfSheetOpen = () => {
+      const sheet = document.querySelector(
+        '[data-slot="popover-sheet"][data-state="open"]',
+      )
+      if (sheet) setDialOpen(false)
+    }
+
+    const obs = new MutationObserver(collapseIfSheetOpen)
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-state"],
+    })
+    return () => obs.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!dialOpen) return
@@ -124,10 +141,6 @@ export function SpeedDialFab({ actions, className }: Props) {
             : "pointer-events-none absolute bottom-14 right-0",
         )}
         aria-hidden={!dialOpen}
-        onPointerDown={() => {
-          // Colapsa el dial; los triggers (Popover) siguen montados.
-          queueMicrotask(() => setDialOpen(false))
-        }}
       >
         {actions.map((action, i) => (
           <div key={i} className="flex items-center justify-end">
