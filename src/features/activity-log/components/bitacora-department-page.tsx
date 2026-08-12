@@ -11,10 +11,11 @@ import type { BitacoraDepartmentConfig } from "../constants/bitacora-departments
 
 type Props = {
   config: BitacoraDepartmentConfig
-  headerAction?: React.ReactNode
+  /** true = el hub ya aporta AppListScroll */
+  embedded?: boolean
 }
 
-export function BitacoraDepartmentPage({ config }: Props) {
+export function BitacoraDepartmentPage({ config, embedded = false }: Props) {
   usePageTitle(config.pageTitle)
 
   const router = useRouter()
@@ -36,8 +37,9 @@ export function BitacoraDepartmentPage({ config }: Props) {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col">
-      <ActivityLogPageContent department={config.department} />
-    </div>
+    <ActivityLogPageContent
+      department={config.department}
+      embedded={embedded}
+    />
   )
 }
