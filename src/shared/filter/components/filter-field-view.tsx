@@ -51,9 +51,11 @@ export function FilterFieldView({
       className="bg-transparent"
     >
 
-      <CommandInput
+      <div className="sticky top-0 z-20 bg-popover pb-2">
+        <CommandInput
         placeholder="Buscar filtro..."
       />
+      </div>
 
       <CommandList
         className="max-h-80 overflow-y-auto"

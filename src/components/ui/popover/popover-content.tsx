@@ -58,16 +58,18 @@ export function PopoverContent({
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
     /**
-     * Instagram pattern:
-     * - bottom = keyboardInset  → sheet sentado sobre el teclado
-     * - height = casi todo el VV → lista siempre visible
-     * - body flex column + min-h-0 → el scroll vive DENTRO, no empuja el sheet
-     * - sin height de ResizeObserver (rompía iOS midiendo solo el input)
+     * Bottomsheet + teclado (mismo criterio que ContextPicker en activity):
+     * - bottom = keyboardInset → sentado sobre el teclado
+     * - con teclado: height = casi todo el visualViewport (NUNCA auto:
+     *   auto + focus del buscador colapsa el sheet en iOS/Android)
+     * - sin teclado: auto acotado por maxHeight (hug content)
      */
     const sheetMaxH = Math.max(
       200,
       vvFrame.height * (vvFrame.keyboardOpen ? 0.98 : SHEET_CONFIG.MAX_HEIGHT_RATIO),
     )
+    // Altura mínima con teclado para que el buscador no quede fuera
+    const sheetHeight = vvFrame.keyboardOpen ? sheetMaxH : undefined
 
     return (
       <DialogPrimitive.Portal>
@@ -119,12 +121,12 @@ export function PopoverContent({
             right: "auto",
             left: vvFrame.left || 0,
             width: vvFrame.width ? vvFrame.width : "100%",
-            // IG: el sheet “se sienta” arriba del teclado
             bottom: vvFrame.keyboardInset,
             maxHeight: sheetMaxH,
-            // Con teclado: ocupar el VV (lista + input visibles).
-            // Sin teclado: auto, acotado por maxHeight.
-            height: vvFrame.keyboardOpen ? sheetMaxH : "auto",
+            // Con teclado: altura fija al VV (evita colapso al buscar).
+            // Sin teclado: auto (hug), tope maxHeight.
+            height: sheetHeight ?? "auto",
+            minHeight: vvFrame.keyboardOpen ? Math.min(sheetMaxH, 280) : undefined,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: isDragging
               ? "none"
@@ -151,9 +153,9 @@ export function PopoverContent({
               paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
             }}
             className={cn(
-              // min-h-0 + flex-1: el hijo (Command) puede scrollear
-              "flex min-h-0 w-full flex-1 flex-col overflow-hidden",
+              "flex min-h-0 w-full flex-1 flex-col",
               "px-4 pt-1 text-sm",
+              vvFrame.keyboardOpen ? "overflow-y-auto" : "overflow-hidden",
               className,
             )}
             {...props}
