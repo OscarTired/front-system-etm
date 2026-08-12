@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { cn } from "@/shared/utils/utils"
 import { FAB_RIGHT_OFFSET_PX } from "./fab-layout"
 import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
+import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 
 type Props = {
   actions: ReactNode[]
@@ -28,13 +29,16 @@ export function SpeedDialFab({ actions, className }: Props) {
   const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const ptrActive = usePullToRefreshStore(s => s.active)
+  const drawerOpen = useMobileNavStore(s => s.mode === "open")
+  /** Chrome fixed al viewport: no viaja con el panel. Se oculta con el drawer/PTR. */
+  const chromeHidden = ptrActive || drawerOpen
 
   useEffect(() => {
     setMounted(true)
   }, [])
   useEffect(() => {
-    if (ptrActive) setOpen(false)
-  }, [ptrActive])
+    if (chromeHidden) setOpen(false)
+  }, [chromeHidden])
 
 
   useEffect(() => {
@@ -88,16 +92,16 @@ export function SpeedDialFab({ actions, className }: Props) {
       data-slot="speed-dial-fab"
       className={cn(
         "pointer-events-none fixed bottom-22 z-60 flex flex-col items-end gap-2",
-        "transition-opacity duration-200 ease-out",
-        ptrActive ? "opacity-0" : "opacity-100",
+        // Misma duración que PANEL_TRANSITION del CompactShell (280ms)
+        "transition-opacity duration-[280ms] ease-out",
+        chromeHidden ? "opacity-0" : "opacity-100",
         className,
       )}
       style={{
         right: FAB_RIGHT_OFFSET_PX,
-        // Evita clics fantasma mientras está invisible por PTR
-        pointerEvents: ptrActive ? "none" : undefined,
+        pointerEvents: chromeHidden ? "none" : undefined,
       }}
-      aria-hidden={ptrActive}
+      aria-hidden={chromeHidden}
     >
       <AnimatePresence>
         {open && (

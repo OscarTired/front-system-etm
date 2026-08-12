@@ -29,13 +29,24 @@ export const useMobileNavStore = create<MobileNavState>()((set) => ({
 
   mode: "closed",
 
-  openDrawer: () => set({ mode: "open" }),
+  openDrawer: () => {
+    // FAB/sheets viven en portal (body): no se mueven con el panel.
+    // Cerrar overlays al abrir el menú evita chrome “plantado”.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("close-all-popovers"))
+    }
+    set({ mode: "open" })
+  },
 
   closeDrawer: () => set({ mode: "closed" }),
 
   toggleDrawer: () =>
-    set(state => ({
-      mode: state.mode === "open" ? "closed" : "open",
-    })),
+    set(state => {
+      const next = state.mode === "open" ? "closed" : "open"
+      if (next === "open" && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("close-all-popovers"))
+      }
+      return { mode: next }
+    }),
 
 }))

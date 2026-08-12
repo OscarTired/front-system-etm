@@ -102,7 +102,7 @@ export function PopoverContent({
           {...dragHandleProps}
           className={cn(
             // flex-col es el contrato IG: handle | body scrolleable
-            "fixed z-40 flex flex-col overflow-hidden",
+            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing &&
               "data-[state=open]:animate-in data-[state=closed]:animate-out",
