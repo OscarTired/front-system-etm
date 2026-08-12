@@ -7,6 +7,7 @@ import { X } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { useVisualViewportFrame } from "@/components/ui/popover/use-visual-viewport-frame"
 
 type DialogProps =
   React.ComponentProps<
@@ -142,19 +143,52 @@ export function DialogContent({
   children,
   showCloseButton = true,
   size = "default",
+  style,
   ...props
 }: DialogContentProps) {
 
   const { isMobile } = useResponsive()
+  const vv = useVisualViewportFrame()
 
   const isFullscreenMobile =
     size === "large" && isMobile
+
+  // Large + mobile: frame = visualViewport (mismo patrón que bottomsheet).
+  // Con teclado no se usa h-dvh completo — evita contenido bajo el teclado.
+  const frameStyle: React.CSSProperties | undefined = isFullscreenMobile
+    ? {
+        top: vv.top || 0,
+        left: vv.left || 0,
+        width: vv.width || "100%",
+        height: vv.height || "100%",
+        maxWidth: "none",
+        maxHeight: vv.height || "100%",
+        transform: "none",
+        borderRadius: 0,
+        transition:
+          "height 160ms cubic-bezier(0.2,0,0,1), top 160ms cubic-bezier(0.2,0,0,1)",
+      }
+    : undefined
 
   return (
 
     <DialogPortal>
 
-      <DialogOverlay />
+      <DialogOverlay
+        className={isFullscreenMobile ? "inset-auto" : undefined}
+        style={
+          isFullscreenMobile
+            ? {
+                top: vv.top || 0,
+                left: vv.left || 0,
+                width: vv.width || "100%",
+                height: vv.height || "100%",
+                right: "auto",
+                bottom: "auto",
+              }
+            : undefined
+        }
+      />
 
       <DialogPrimitive.Content
         onWheel={event=>
@@ -163,6 +197,9 @@ export function DialogContent({
         onOpenAutoFocus={event => {
           event.preventDefault()
         }}
+        data-keyboard-open={
+          isFullscreenMobile && vv.keyboardOpen ? "true" : undefined
+        }
         className={cn(
           "fixed",
           "left-1/2",
@@ -189,11 +226,8 @@ export function DialogContent({
           // (ej. w-180 max-w-180) o cualquier otro consumidor,
           // sin que cada uno tenga que saber de responsive.
           isFullscreenMobile && [
-            "inset-0",
             "left-0",
             "top-0",
-            "w-screen",
-            "h-dvh",
             "max-w-none",
             "max-h-none",
             "translate-x-0",
@@ -202,6 +236,10 @@ export function DialogContent({
             "border-0",
           ],
         )}
+        style={{
+          ...style,
+          ...frameStyle,
+        }}
       >
 
         {children}
