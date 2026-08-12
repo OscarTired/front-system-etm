@@ -105,7 +105,7 @@ export function ProjectCreateDialAction(){
         label="NUEVO PROYECTO"
         disabled={!canCreate}
         onClick={handleOpen}
-        accentClassName="bg-emerald-400 text-black"
+        accentClassName="bg-cyan-600 text-black"
         className={!canCreate ? "cursor-not-allowed opacity-40" : undefined}
       />
 
