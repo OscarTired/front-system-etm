@@ -18,8 +18,9 @@ type Props = {
 
 /**
  * Única superficie de scroll de listas.
- * Motor: ScrollArea nativo (overflow del dispositivo + theme CSS).
- * Shell mobile: TopBar/BottomNav overlay → padding de compensación aquí.
+ * Motor: ScrollArea nativo.
+ * Padding mobile: TOP_BAR_HEIGHT_PX / BOTTOM_NAV_HEIGHT_PX
+ * (misma fuente que TopBar / BottomNav — no pt-14/pb-20 a mano).
  */
 export function AppListScroll({ children, resetKey, className }: Props) {
   const pathname = usePathname()
@@ -28,15 +29,12 @@ export function AppListScroll({ children, resetKey, className }: Props) {
   const { isMobile } = useResponsive()
 
   useEffect(() => {
-    // El scroller ES el ScrollArea (div nativo), no un viewport Radix.
+    // Scroller = el propio ScrollArea (div nativo), no viewport Radix.
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }, [key])
 
   return (
-    <ScrollArea
-      ref={scrollRef}
-      className="h-full min-h-0 min-w-0 flex-1"
-    >
+    <ScrollArea ref={scrollRef} className="h-full min-h-0 min-w-0 flex-1">
       <div
         className={className}
         style={

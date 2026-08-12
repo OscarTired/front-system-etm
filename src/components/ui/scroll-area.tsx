@@ -4,30 +4,34 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const ScrollArea = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentPropsWithoutRef<"div"> & {
-    /** vertical (default) | horizontal | both */
-    orientation?: "vertical" | "horizontal" | "both"
-  }
->(({ className, orientation = "vertical", children, ...props }, ref) => (
-  <div
-    ref={ref}
-    data-slot="scroll-area"
-    className={cn(
-      "native-scrollbar min-h-0 min-w-0",
+type Props = React.ComponentPropsWithoutRef<"div"> & {
+  orientation?: "vertical" | "horizontal" | "both"
+  /** false = thumb oculto (default pages). true = .native-scrollbar */
+  showScrollbar?: boolean
+}
 
-      "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-      orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
-      orientation === "horizontal" && "overflow-x-auto overflow-y-hidden",
-      orientation === "both" && "overflow-auto",
-      className,
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-))
+const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
+  (
+    { className, orientation = "vertical", showScrollbar = false, ...props },
+    ref,
+  ) => (
+    <div
+      ref={ref}
+      data-slot="scroll-area"
+      className={cn(
+        "min-h-0 min-w-0 overscroll-y-contain overscroll-x-contain",
+        orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
+        orientation === "horizontal" && "overflow-x-auto overflow-y-hidden",
+        orientation === "both" && "overflow-auto",
+        showScrollbar
+          ? "native-scrollbar"
+          : "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+      {...props}
+    />
+  ),
+)
 ScrollArea.displayName = "ScrollArea"
 
 export { ScrollArea }
