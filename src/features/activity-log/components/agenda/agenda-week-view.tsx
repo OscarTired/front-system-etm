@@ -1,6 +1,6 @@
 "use client"
 
-import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { useMemo } from "react"
 
@@ -50,7 +50,7 @@ export function AgendaWeekView({
 
   if (isCompact) {
     return (
-      <div className="flex w-full flex-col rounded-2xl border-0 bg-[#0c0c0e]">
+      <div className="flex h-full min-h-0 w-full flex-col rounded-2xl border-0 bg-[#0c0c0e]">
         <div
           className={cn(
             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
@@ -98,7 +98,7 @@ export function AgendaWeekView({
         </div>
 
 
-        <div className="flex min-w-0 w-full flex-col divide-y divide-white/5">
+        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-white/5">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
             const iconColorClass =
@@ -159,7 +159,7 @@ export function AgendaWeekView({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
-      <AppListScroll>
+      <ScrollArea orientation="both" className="h-full min-h-0 min-w-0 flex-1">
         <div
           className="grid h-full min-h-full w-full bg-[#0c0c0e]"
           style={{
@@ -322,7 +322,7 @@ export function AgendaWeekView({
             )
           })}
         </div>
-      </AppListScroll>
+      </ScrollArea>
     </div>
   )
 }

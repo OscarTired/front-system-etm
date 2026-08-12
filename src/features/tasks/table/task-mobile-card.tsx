@@ -247,23 +247,18 @@ export function TaskMobileCard({
             </div>
           </div>
 
-          {/* Mensajes solo colapsado: al expandir viven en el toggle Mensajes */}
-          {!expanded && (
+          {/* Mensajes solo colapsado y solo si hay */}
+          {!expanded && (task.commentCount ?? 0) > 0 && (
             <span
               title={
-                (task.commentCount ?? 0) === 1
+                task.commentCount === 1
                   ? "1 mensaje"
-                  : `${task.commentCount ?? 0} mensajes`
+                  : `${task.commentCount} mensajes`
               }
-              className={cn(
-                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
-                (task.commentCount ?? 0) > 0
-                  ? "bg-sky-500/15 text-sky-300"
-                  : "bg-white/5 text-neutral-600",
-              )}
+              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
             >
               <MessageSquare size={10} strokeWidth={2.5} />
-              {(task.commentCount ?? 0) > 0 ? task.commentCount : null}
+              {task.commentCount}
             </span>
           )}
 

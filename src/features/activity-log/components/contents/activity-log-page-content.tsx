@@ -331,22 +331,26 @@ export function ActivityLogPageContent({
         <div className="mb-1">{toolbar}</div>
 
         {isAgenda && (
-          <AgendaWeekView
-            anchorDate={date}
-            logs={rangeLogs}
-            loading={rangeLoading}
-            onSelectDay={handleSelectDay}
-            onLogClick={handleAgendaLogClick}
-          />
+          <div className="flex min-h-0 flex-1 flex-col">
+            <AgendaWeekView
+              anchorDate={date}
+              logs={rangeLogs}
+              loading={rangeLoading}
+              onSelectDay={handleSelectDay}
+              onLogClick={handleAgendaLogClick}
+            />
+          </div>
         )}
 
         {isMonth && (
-          <AgendaMonthView
-            anchorDate={date}
-            logs={rangeLogs}
-            loading={rangeLoading}
-            onSelectDay={handleSelectDay}
-          />
+          <div className="flex min-h-0 flex-1 flex-col">
+            <AgendaMonthView
+              anchorDate={date}
+              logs={rangeLogs}
+              loading={rangeLoading}
+              onSelectDay={handleSelectDay}
+            />
+          </div>
         )}
 
         {viewMode === "day" && (

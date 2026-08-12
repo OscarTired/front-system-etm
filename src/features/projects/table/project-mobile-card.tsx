@@ -185,35 +185,36 @@ export function ProjectMobileCard({
             </div>
           </div>
 
-          {/* Orden: tareas → mensajes → fecha */}
-          {!actionsOnRow && (
+          {/* Solo si hay cantidad — cero no se muestra (menos ruido visual) */}
+          {!actionsOnRow &&
+            ((project.taskCount ?? 0) > 0 ||
+              (project.commentCount ?? 0) > 0) && (
             <span className="flex shrink-0 items-center gap-1">
-              <span
-                title={
-                  (project.taskCount ?? 0) === 1
-                    ? "1 tarea activa"
-                    : `${project.taskCount ?? 0} tareas activas`
-                }
-                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
-              >
-                {project.taskCount ?? 0}
-              </span>
-              <span
-                title={
-                  (project.commentCount ?? 0) === 1
-                    ? "1 mensaje"
-                    : `${project.commentCount ?? 0} mensajes`
-                }
-                className={cn(
-                  "inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums",
-                  (project.commentCount ?? 0) > 0
-                    ? "bg-sky-500/15 text-sky-300"
-                    : "bg-white/5 text-neutral-600",
-                )}
-              >
-                <MessageSquare size={10} strokeWidth={2.5} />
-                {(project.commentCount ?? 0) > 0 ? project.commentCount : null}
-              </span>
+              {(project.taskCount ?? 0) > 0 && (
+                <span
+                  title={
+                    project.taskCount === 1
+                      ? "1 tarea activa"
+                      : `${project.taskCount} tareas activas`
+                  }
+                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
+                >
+                  {project.taskCount}
+                </span>
+              )}
+              {(project.commentCount ?? 0) > 0 && (
+                <span
+                  title={
+                    project.commentCount === 1
+                      ? "1 mensaje"
+                      : `${project.commentCount} mensajes`
+                  }
+                  className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
+                >
+                  <MessageSquare size={10} strokeWidth={2.5} />
+                  {project.commentCount}
+                </span>
+              )}
             </span>
           )}
 

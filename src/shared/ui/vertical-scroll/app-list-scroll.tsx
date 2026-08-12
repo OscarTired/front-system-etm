@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 
+import { cn } from "@/shared/utils/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import {
@@ -21,6 +22,16 @@ type Props = {
  * Motor: ScrollArea nativo.
  * Padding mobile: TOP_BAR_HEIGHT_PX / BOTTOM_NAV_HEIGHT_PX
  * (misma fuente que TopBar / BottomNav — no pt-14/pb-20 a mano).
+ *
+ * Contrato de altura: el wrapper interno es SIEMPRE `flex min-h-full
+ * flex-col` (min-h-full resuelve contra el propio ScrollArea, que sí
+ * tiene altura real vía h-full/flex-1). Esto es lo que permite que
+ * un hijo puntual (ej. una vista de agenda/mes) pida `flex-1` y
+ * ocupe el espacio restante entre el toolbar y el padding inferior,
+ * en vez de que cada vista reinvente su propio hack de altura
+ * (minHeight: "100%" sin contexto, divs sin altura, etc). Listas
+ * simples (día, roles, usuarios) no se ven afectadas: sin flex-1,
+ * un hijo de flex-col se apila igual que en flujo normal.
  */
 export function AppListScroll({ children, resetKey, className }: Props) {
   const pathname = usePathname()
@@ -36,7 +47,7 @@ export function AppListScroll({ children, resetKey, className }: Props) {
   return (
     <ScrollArea ref={scrollRef} className="h-full min-h-0 min-w-0 flex-1">
       <div
-        className={className}
+        className={cn("flex min-h-full flex-col", className)}
         style={
           isMobile
             ? {

@@ -4,14 +4,15 @@ import { useEffect, useRef } from "react"
 
 type Props = {
   focusedId?: string
-  /** Row expandido actual — si diverge del deep-link, se corta el scroll programático. */
+  /** Row expandido actual — si diverge del deep-link, se corta el scroll. */
   expandedRowId?: string | null
   setExpandedRowId: (id: string | null) => void
   focusToken?: string
 }
 
-const LAYOUT_SETTLE_MS = 150
 const FIND_TIMEOUT_MS = 2500
+/** Una sola corrección tras el expand (altura ya estable). Sin smooth. */
+const POST_EXPAND_MS = 220
 
 function isScrollable(el: HTMLElement): boolean {
   const { overflowY } = window.getComputedStyle(el)
@@ -34,85 +35,46 @@ function getScrollParent(el: HTMLElement): HTMLElement | null {
   return null
 }
 
-function centerInScrollParent(el: HTMLElement, behavior: ScrollBehavior) {
+/** Posiciona sin animación — evita rebote al abrir otro row. */
+function centerInScrollParent(el: HTMLElement) {
   const parent = getScrollParent(el)
 
   if (!parent) {
-    el.scrollIntoView({ behavior, block: "center" })
+    el.scrollIntoView({ behavior: "auto", block: "center" })
     return
   }
 
   const parentRect = parent.getBoundingClientRect()
   const elRect = el.getBoundingClientRect()
-
   const elMid =
     elRect.top - parentRect.top + parent.scrollTop + elRect.height / 2
   const target = elMid - parent.clientHeight / 2
   const max = Math.max(0, parent.scrollHeight - parent.clientHeight)
   const top = Math.max(0, Math.min(target, max))
 
-  parent.scrollTo({ top, behavior })
+  parent.scrollTo({ top, behavior: "auto" })
 }
 
 /**
- * Centra mientras crece el expandido del deep-link.
- * `isActive` debe ser false en cuanto el usuario abre otro row
- * (si no, el ResizeObserver del colapso vuelve a scrollear al foco viejo).
+ * Deep-link: lleva el row a vista y listo.
+ * No hay ResizeObserver ni smooth en bucle (eso producía el rebote
+ * al scrollear y abrir otro expandido).
  */
-function trackUntilSettled(
-  el: HTMLElement,
-  isActive: () => boolean,
-): () => void {
-  let settleTimer: number | null = null
-  let rafId = 0
-  let pendingCenter = false
-  let lastHeight = -1
+function focusRowOnce(el: HTMLElement, isActive: () => boolean): () => void {
   let disposed = false
+  let timer: number | null = null
 
-  const centerNow = (behavior: ScrollBehavior) => {
+  const run = () => {
     if (disposed || !isActive()) return
-    centerInScrollParent(el, behavior)
+    centerInScrollParent(el)
   }
 
-  const scheduleSettle = () => {
-    if (settleTimer !== null) window.clearTimeout(settleTimer)
-    settleTimer = window.setTimeout(() => {
-      settleTimer = null
-      centerNow("smooth")
-    }, LAYOUT_SETTLE_MS)
-  }
-
-  const onLayout = () => {
-    if (disposed || !isActive()) return
-    const height = el.getBoundingClientRect().height
-    if (height === lastHeight) {
-      scheduleSettle()
-      return
-    }
-    lastHeight = height
-    if (!pendingCenter) {
-      pendingCenter = true
-      rafId = window.requestAnimationFrame(() => {
-        pendingCenter = false
-        centerNow("auto")
-      })
-    }
-    scheduleSettle()
-  }
-
-  centerNow("auto")
-  scheduleSettle()
-
-  const ro = new ResizeObserver(() => {
-    onLayout()
-  })
-  ro.observe(el)
+  run()
+  timer = window.setTimeout(run, POST_EXPAND_MS)
 
   return () => {
     disposed = true
-    ro.disconnect()
-    if (settleTimer !== null) window.clearTimeout(settleTimer)
-    window.cancelAnimationFrame(rafId)
+    if (timer !== null) window.clearTimeout(timer)
   }
 }
 
@@ -122,28 +84,23 @@ function waitForRow(
   timeoutMs: number,
   isActive: () => boolean,
 ): () => void {
-  const existing = document.querySelector<HTMLElement>(selector)
-  if (existing) {
-    onFound(existing)
-    return () => {}
-  }
-
+  const root = document.body
   let cancelled = false
   let raf = 0
   const start = performance.now()
 
-  const tick = () => {
+  const tryFind = () => {
     if (cancelled || !isActive()) return
-    const el = document.querySelector<HTMLElement>(selector)
+    const el = root.querySelector<HTMLElement>(selector)
     if (el) {
       onFound(el)
       return
     }
     if (performance.now() - start >= timeoutMs) return
-    raf = window.requestAnimationFrame(tick)
+    raf = window.requestAnimationFrame(tryFind)
   }
 
-  raf = window.requestAnimationFrame(tick)
+  raf = window.requestAnimationFrame(tryFind)
 
   return () => {
     cancelled = true
@@ -151,15 +108,6 @@ function waitForRow(
   }
 }
 
-/**
- * Foco programático desde la URL.
- *
- * Contrato:
- * - Entra deep-link → expand + scroll una vez (mientras el expand sea ese id).
- * - Usuario abre otro row / cierra el foco → se corta el tracking al instante
- *   (no se re-centra al colapsar el row de la URL).
- * - Limpiar params de la URL es responsabilidad de `useExpandRow`.
- */
 export function useFocusedRow({
   focusedId,
   expandedRowId = null,
@@ -177,7 +125,7 @@ export function useFocusedRow({
     stopTrackingRef.current = null
   }
 
-  // Usuario tomó el control: cortar scroll YA (antes de que el RO del colapso dispare).
+  // Usuario expandió otro row: cortar ya.
   useEffect(() => {
     if (!focusedId) return
     if (expandedRowId != null && expandedRowId !== focusedId) {
@@ -198,7 +146,6 @@ export function useFocusedRow({
       return
     }
 
-    // URL aún tiene foco pero el usuario ya expandió otro → no forzar ni scrollear.
     if (
       expandedRowIdRef.current != null &&
       expandedRowIdRef.current !== focusedId
@@ -212,7 +159,6 @@ export function useFocusedRow({
 
     const selector = `[data-expanded-row-id="${CSS.escape(focusedId)}"]`
     const isActive = () => {
-      // Activo solo mientras el deep-link sigue y el expand es ese id (o aún null en el primer tick).
       const expanded = expandedRowIdRef.current
       return (
         prevFocusedIdRef.current === focusedId &&
@@ -227,7 +173,7 @@ export function useFocusedRow({
       el => {
         if (!isActive()) return
         stopTracking()
-        stopTrackingRef.current = trackUntilSettled(el, isActive)
+        stopTrackingRef.current = focusRowOnce(el, isActive)
       },
       FIND_TIMEOUT_MS,
       isActive,
