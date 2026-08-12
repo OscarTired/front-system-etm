@@ -84,11 +84,9 @@ export function FilterValueView({
 
       </div>
 
-      <div className="sticky top-0 z-20 bg-popover pb-2">
-        <CommandInput
+      <CommandInput
         placeholder="Buscar..."
       />
-      </div>
 
       <CommandList
         className="max-h-80 overflow-y-auto"

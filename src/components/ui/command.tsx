@@ -85,7 +85,8 @@ export function CommandInput({
   ...props
 }: CommandInputProps) {
   return (
-    <div className="flex items-center gap-2 px-3 py-3">
+    // sticky: en bottomsheet el body scrollea; el buscador no se va con el teclado
+    <div className="sticky top-0 z-20 flex shrink-0 items-center gap-2 bg-popover px-3 py-3">
       <Search
         size={15}
         className="text-neutral-500"
