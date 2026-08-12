@@ -11,6 +11,8 @@ import { HistoryToggleButton } from "@/shared/history/components/history-toggle-
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { Popover, PopoverContent } from "@/components/ui/popover"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+import { SpeedDialFab } from "@/shared/ui/speed-dial-fab/speed-dial-fab"
+import { FabTrigger } from "@/shared/ui/speed-dial-fab/fab-trigger"
 
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
@@ -91,30 +93,30 @@ export default function AssignmentPage() {
           await queryClient.invalidateQueries({ queryKey: ["tasks"] })
         }}
       >
-        {/* Header móvil */}
-        <div className="mb-1 flex shrink-0 items-center justify-between gap-2 desktop:hidden">
-          <HistoryToggleButton
-            count={state.completedCount}
-            active={state.showHistory}
-            onClick={() => actions.setShowHistory(v => !v)}
+        {/* Acciones móvil → FAB (historial + áreas). Desktop: header. */}
+        {isMobile && (
+          <SpeedDialFab
+            actions={[
+              <HistoryToggleButton
+                key="history"
+                count={state.completedCount}
+                active={state.showHistory}
+                onClick={() => actions.setShowHistory(v => !v)}
+              />,
+              ...(state.canChooseAreas
+                ? [
+                    <FabTrigger
+                      key="areas"
+                      icon={Settings2}
+                      label="ÁREAS"
+                      active={state.configOpen}
+                      onClick={() => actions.setConfigOpen(v => !v)}
+                    />,
+                  ]
+                : []),
+            ]}
           />
-
-          {state.canChooseAreas && (
-            <button
-              type="button"
-              onClick={() => actions.setConfigOpen(v => !v)}
-              aria-label="Elegir áreas"
-              className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                state.configOpen
-                  ? "bg-white/15 text-white"
-                  : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white",
-              )}
-            >
-              <Settings2 size={16} />
-            </button>
-          )}
-        </div>
+        )}
 
         {/* Selector de áreas (supervisor) */}
         {state.canChooseAreas && state.configOpen && (
