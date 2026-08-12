@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { Layers, Wrench, ShieldCheck } from "lucide-react"
+
 import { BitacoraDepartmentPage } from "@/features/activity-log/components/bitacora-department-page"
 import { TeamActivityLogPageContent } from "@/features/activity-log/components/contents/team-activity-log-page-content"
 import { BITACORA_DEPARTMENTS } from "@/features/activity-log/constants/bitacora-departments"
@@ -8,7 +10,7 @@ import type { ActivityDepartment } from "@/features/activity-log/types/activity-
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
-import { Layers, Wrench, ShieldCheck } from "lucide-react"
+import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 type ViewMode = ActivityDepartment | "TEAM"
 
@@ -72,8 +74,57 @@ export default function BitacoraPage() {
     )
   }
 
+  function TabsNav({ compact }: { compact: boolean }) {
+    return (
+      <nav
+        className={
+          compact
+            ? "flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+            : "flex items-center gap-1 rounded-xl bg-neutral-900 p-1"
+        }
+      >
+        {tabs.map(tab => {
+          const IconComponent = tab.icon
+          const isActive = activeView === tab.id
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveView(tab.id)}
+              title={tab.label}
+              className={
+                compact
+                  ? `flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? "bg-neutral-800 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`
+                  : `flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? "bg-neutral-800 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`
+              }
+            >
+              <IconComponent className="h-4 w-4 shrink-0" />
+              <span
+                className={
+                  compact ? "max-[420px]:hidden truncate" : "truncate"
+                }
+              >
+                {tab.label}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+    )
+  }
+
   return (
     <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+      {/* Desktop: chrome de página en flujo del shell (no overlay) */}
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
@@ -84,66 +135,39 @@ export default function BitacoraPage() {
             Control y registro de actividades
           </p>
         </div>
-
         <div className="shrink-0">
-          <nav className="flex items-center gap-1 rounded-xl bg-neutral-900 p-1">
-            {tabs.map(tab => {
-              const IconComponent = tab.icon
-              const isActive = activeView === tab.id
-
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveView(tab.id)}
-                  title={tab.label}
-                  className={`flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    isActive
-                      ? "bg-neutral-800 text-white shadow-sm"
-                      : "text-neutral-400 hover:text-white"
-                  }`}
-                >
-                  <IconComponent className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              )
-            })}
-          </nav>
+          <TabsNav compact={false} />
         </div>
       </header>
 
-      <div className="mb-1 flex shrink-0 flex-col gap-2 pt-2 desktop:hidden">
-        <nav className="flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
-          {tabs.map(tab => {
-            const IconComponent = tab.icon
-            const isActive = activeView === tab.id
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveView(tab.id)}
-                title={tab.label}
-                className={`flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                  isActive
-                    ? "bg-neutral-800 text-white shadow-sm"
-                    : "text-neutral-400 hover:text-white"
-                }`}
-              >
-                <IconComponent className="h-4 w-4 shrink-0" />
-                <span className="max-[420px]:hidden truncate">{tab.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-      </div>
-
+      {/*
+        Contrato único (igual que tareas):
+        un AppListScroll por superficie de lista.
+        Tabs mobile DENTRO → mismo paddingTop del TopBar overlay.
+        Cuerpo con embedded → sin segundo scroller.
+      */}
       <section className="flex min-h-0 w-full flex-1 flex-col">
-        {activeView === "PRODUCCION" && (
-          <BitacoraDepartmentPage config={BITACORA_DEPARTMENTS.PRODUCCION} />
-        )}
-        {activeView === "INGENIERIA" && (
-          <BitacoraDepartmentPage config={BITACORA_DEPARTMENTS.INGENIERIA} />
-        )}
-        {activeView === "TEAM" && <TeamActivityLogPageContent />}
+        <AppListScroll>
+          <div className="mb-2 desktop:hidden">
+            <TabsNav compact />
+          </div>
+
+          {activeView === "PRODUCCION" && (
+            <BitacoraDepartmentPage
+              config={BITACORA_DEPARTMENTS.PRODUCCION}
+              embedded
+            />
+          )}
+          {activeView === "INGENIERIA" && (
+            <BitacoraDepartmentPage
+              config={BITACORA_DEPARTMENTS.INGENIERIA}
+              embedded
+            />
+          )}
+          {activeView === "TEAM" && (
+            <TeamActivityLogPageContent embedded />
+          )}
+        </AppListScroll>
       </section>
     </main>
   )
