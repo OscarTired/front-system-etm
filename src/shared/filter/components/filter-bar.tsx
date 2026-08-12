@@ -110,6 +110,7 @@ export function FilterBar({
               chips.length>0
             }
             active={open}
+            hasActiveFilters={chips.length>0}
             onClick={()=>{}}
           />
 
