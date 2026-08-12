@@ -31,10 +31,6 @@ export default function TasksPage() {
         </div>
       </header>
 
-      <div className="mb-1 shrink-0 desktop:hidden">
-        <TaskActions />
-      </div>
-
       <section className="flex min-h-0 w-full flex-1 flex-col">
         <TaskPageContent
           focusedTaskId={taskId}

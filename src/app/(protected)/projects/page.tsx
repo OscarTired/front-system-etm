@@ -31,10 +31,6 @@ export default function ProjectsPage() {
         </div>
       </header>
 
-      <div className="mb-1 shrink-0 desktop:hidden">
-        <ProjectActions />
-      </div>
-
       <section className="flex min-h-0 w-full flex-1 flex-col">
         <ProjectPageContent
           focusedProjectId={projectId}

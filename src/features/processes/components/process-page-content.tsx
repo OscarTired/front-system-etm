@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 
@@ -41,6 +42,8 @@ export function ProcessPageContent({
   focusToken,
   initialShowHistory = false,
 }: Props) {
+
+  const { isMobile } = useResponsive()
 
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] =
@@ -115,7 +118,7 @@ export function ProcessPageContent({
                   </>
                 }
                 actions={[
-                  <FilterBar key="filter" module="processes" />,
+                  <FilterBar key="filter" module="processes" alwaysExpanded={isMobile} />,
                   <HistoryToggleButton
                     key="history"
                     count={completedCount}

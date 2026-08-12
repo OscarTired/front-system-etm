@@ -9,20 +9,12 @@ import {
 } from "lucide-react"
 
 import {
-  FAB_SECOND_RIGHT_OFFSET_PX,
-} from "@/shared/ui/speed-dial-fab/fab-layout"
-
-import {
   PermissionCode,
 } from "@/shared/core/enums/permission-code.enum"
 
 import {
   usePermissions,
 } from "@/features/permissions/hooks/use-permissions"
-
-import {
-  useResponsive,
-} from "@/shared/responsive/hooks/use-responsive"
 
 import {
   cn,
@@ -36,24 +28,13 @@ import {
   TaskDialog,
 } from "../dialog/task-dialog"
 
-export function TaskActions(){
+function useCreateTaskDialog(){
 
-  const[
-    open,
-    setOpen,
-  ]=useState(false)
+  const [open, setOpen] = useState(false)
 
-  const { isMobile } = useResponsive()
+  const { has } = usePermissions()
 
-  const{
-    has,
-  }=
-    usePermissions()
-
-  const canCreate=
-    has(
-      PermissionCode.TASK_CREATE,
-    )
+  const canCreate = has(PermissionCode.TASK_CREATE)
 
   function handleOpen(){
 
@@ -65,68 +46,79 @@ export function TaskActions(){
 
   }
 
-  return(
+  const dialog = open && (
+
+    <TaskDialog
+      open={open}
+      promptOpenAfterCreate
+      onClose={() => setOpen(false)}
+    />
+
+  )
+
+  return { canCreate, handleOpen, dialog }
+
+}
+
+/**
+ * Desktop: botón normal en el header (PrimaryAction). En mobile no
+ * renderiza nada — ahí "Nueva tarea" vive DENTRO del FAB (ver
+ * TaskCreateDialAction más abajo), no como un botón flotante
+ * separado.
+ */
+export function TaskActions(){
+
+  const { canCreate, handleOpen, dialog } = useCreateTaskDialog()
+
+  return (
 
     <>
 
-      {isMobile ? (
+      <PrimaryAction
+        label="Nueva tarea"
+        icon={Plus}
+        disabled={!canCreate}
+        onClick={handleOpen}
+      />
 
-        <button
-          type="button"
-          disabled={!canCreate}
-          onClick={handleOpen}
-          aria-label="Nueva tarea"
-          style={{ right: FAB_SECOND_RIGHT_OFFSET_PX }}
-          className={cn(
-            "fixed bottom-22 z-50 flex size-12 items-center justify-center rounded-full transition duration-200",
-            canCreate
-              ? [
-                  "bg-white text-black",
-                  "hover:scale-105 hover:bg-neutral-100 active:scale-95",
-                  "shadow-[0_12px_32px_rgba(0,0,0,0.55),0_4px_10px_rgba(255,255,255,0.08)]",
-                ].join(" ")
-              : "cursor-not-allowed bg-white/10 text-white/35 shadow-none",
-          )}
-        >
+      {dialog}
 
-          <Plus
-            size={20}
-            strokeWidth={2.5}
-          />
+    </>
 
-        </button>
+  )
 
-      ) : (
+}
 
-        <PrimaryAction
+/**
+ * Pensado para ir DENTRO del array `actions` de AdaptiveActionBar
+ * (mobile) — un ítem más del mismo FAB de Filtro/Orden/Historial/
+ * Exportar, con el mismo look de pastilla (SpeedDialFab se encarga
+ * del estilo vía [&_button]). El bloqueo por permisos vive en este
+ * botón puntual, no en el FAB entero.
+ */
+export function TaskCreateDialAction(){
 
-          label="Nueva tarea"
+  const { canCreate, handleOpen, dialog } = useCreateTaskDialog()
 
-          icon={Plus}
+  return (
 
-          disabled={!canCreate}
+    <>
 
-          onClick={handleOpen}
+      <button
+        type="button"
+        disabled={!canCreate}
+        onClick={handleOpen}
+        aria-label="Nueva tarea"
+        className={cn(
+          "flex items-center gap-2",
+          !canCreate && "cursor-not-allowed opacity-40",
+        )}
+      >
+        <Plus size={14} strokeWidth={2.4} />
+        NUEVA TAREA
+      </button>
 
-        />
-
-      )}
-
-      {open&&(
-
-        <TaskDialog
-
-          open={open}
-
-          promptOpenAfterCreate
-
-          onClose={()=>
-            setOpen(false)
-          }
-
-        />
-
-      )}
+      {dialog}
 
     </>
 

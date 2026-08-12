@@ -32,10 +32,16 @@ import {
 
 type Props={
   module:FilterModule
+  /** Fuerza el texto "+ FILTRO" visible sin depender de si hay
+   * chips activos — para usar dentro del FAB de mobile, donde el
+   * resto de los ítems (Historial, Exportar, etc.) siempre
+   * muestran su texto, sin importar su estado. */
+  alwaysExpanded?:boolean
 }
 
 export function FilterBar({
   module,
+  alwaysExpanded=false,
 }:Props){
 
   const {
@@ -81,6 +87,7 @@ export function FilterBar({
 
           <FilterAddButton
             expanded={
+              alwaysExpanded ||
               chips.length>0
             }
             active={open}

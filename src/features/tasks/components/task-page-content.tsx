@@ -35,6 +35,8 @@ import { TaskSortButton } from "@/shared/sorting/components/task-sort-button"
 
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
+import { TaskCreateDialAction } from "@/features/tasks/components/actions/task-actions"
+
 import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
 import { useTasks } from "@/features/tasks/hooks/use-tasks"
@@ -112,7 +114,7 @@ export function TaskPageContent({
                     </>
                   }
                   actions={[
-                    <FilterBar key="filter" module="tasks" />,
+                    <FilterBar key="filter" module="tasks" alwaysExpanded={isMobile} />,
                     <TaskSortButton key="sort" />,
                     <HistoryToggleButton
                       key="history"
@@ -125,6 +127,7 @@ export function TaskPageContent({
                       scopes={REPORT_EXPORT_SCOPES}
                       onExport={handleExport}
                     />,
+                    ...(isMobile ? [<TaskCreateDialAction key="create" />] : []),
                   ]}
                   right={
                     !isMobile && (

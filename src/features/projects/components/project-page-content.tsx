@@ -5,6 +5,8 @@ import { useMemo, useState } from "react"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { ProjectCreateDialAction } from "@/features/projects/components/actions/project-actions"
 
 import { EntityExpandProvider } from "@/shared/ui/entity-table/features/expansion"
 
@@ -37,6 +39,8 @@ export function ProjectPageContent({
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] = useState(initialShowHistory)
 
+  const { isMobile } = useResponsive()
+
   const { projects, loading, reorderProjects } = useProjects()
   const { tasks } = useTasks()
 
@@ -56,7 +60,7 @@ export function ProjectPageContent({
                   <EntityToolbarSearch value={search} onChange={setSearch} />
                 }
                 actions={[
-                  <FilterBar key="filter" module="projects" />,
+                  <FilterBar key="filter" module="projects" alwaysExpanded={isMobile} />,
                   <ProjectSortButton key="sort" />,
                   <HistoryToggleButton
                     key="history"
@@ -64,6 +68,7 @@ export function ProjectPageContent({
                     active={showHistory}
                     onClick={() => setShowHistory(v => !v)}
                   />,
+                  ...(isMobile ? [<ProjectCreateDialAction key="create" />] : []),
                 ]}
               />
             }
