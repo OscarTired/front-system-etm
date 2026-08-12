@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import { Trash2 } from "lucide-react"
 
 import {
@@ -29,11 +30,17 @@ type Props = {
   onRemove: () => void
 }
 
+/** ms para “mantener pulsado = quitar” en mobile */
+const LONG_PRESS_MS = 420
+
 /**
  * Chip de filtro activo.
  *
- * Desktop: X en el badge (hover) + edición en popover.
- * Mobile: sin X — tap abre sheet; "Quitar filtro" con área táctil grande.
+ * Mobile:
+ *  - tap → abre sheet (cambiar valor)
+ *  - long-press → quita el filtro (un gesto, sin sheet)
+ * Desktop:
+ *  - X en el badge / menú
  */
 export function FilterChipPopover({
   chip,
@@ -44,16 +51,64 @@ export function FilterChipPopover({
   onRemove,
 }: Props) {
   const { isMobile } = useResponsive()
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFired = useRef(false)
+
+  function clearLongPress() {
+    if (longPressTimer.current != null) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
 
   function handleRemove() {
     onRemove()
     onOpenChange(false)
   }
 
+  function onPointerDown() {
+    if (!isMobile) return
+    longPressFired.current = false
+    clearLongPress()
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true
+      handleRemove()
+      // feedback táctil si el device lo soporta
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(12)
+      }
+    }, LONG_PRESS_MS)
+  }
+
+  function onPointerUpOrCancel() {
+    clearLongPress()
+  }
+
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover
+      open={open}
+      onOpenChange={next => {
+        // Si el long-press ya quitó el filtro, no abrir el sheet
+        if (next && longPressFired.current) {
+          longPressFired.current = false
+          return
+        }
+        onOpenChange(next)
+      }}
+    >
       <PopoverTrigger asChild>
-        <button type="button">
+        <button
+          type="button"
+          title={isMobile ? "Mantén pulsado para quitar" : undefined}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUpOrCancel}
+          onPointerLeave={onPointerUpOrCancel}
+          onPointerCancel={onPointerUpOrCancel}
+          onContextMenu={e => {
+            // Evita menú nativo; el long-press ya quita
+            if (isMobile) e.preventDefault()
+          }}
+        >
           <DynamicBadge
             compact
             showChevron
