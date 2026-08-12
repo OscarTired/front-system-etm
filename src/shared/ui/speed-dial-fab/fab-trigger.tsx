@@ -67,7 +67,7 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
 
     return (
       <div className="flex items-center justify-end gap-2">
-        <span className="flex h-9 shrink-0 items-center whitespace-nowrap rounded-full bg-[#1a1a1a] px-4 text-xs font-semibold text-white shadow-lg ring-1 ring-white/10 select-none">
+        <span className="flex h-9 shrink-0 items-center whitespace-nowrap rounded-full bg-[#1a1a1a] px-4 text-xs font-semibold text-white shadow-lg select-none">
           {label}
         </span>
 
@@ -75,7 +75,7 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
           ref={ref}
           type="button"
           className={cn(
-            "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-1 ring-white/10 transition active:scale-95",
+            "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95",
             accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-white/20"),
             className,
           )}
