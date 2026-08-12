@@ -17,12 +17,12 @@ import {
 } from "@/features/permissions/hooks/use-permissions"
 
 import {
-  cn,
-} from "@/shared/utils/utils"
-
-import {
   PrimaryAction,
 } from "@/shared/ui/actions/primary-action"
+
+import {
+  FabTrigger,
+} from "@/shared/ui/speed-dial-fab/fab-trigger"
 
 import {
   TaskDialog,
@@ -104,19 +104,14 @@ export function TaskCreateDialAction(){
 
     <>
 
-      <button
-        type="button"
+      <FabTrigger
+        icon={Plus}
+        label="NUEVA TAREA"
         disabled={!canCreate}
         onClick={handleOpen}
-        aria-label="Nueva tarea"
-        className={cn(
-          "flex items-center gap-2",
-          !canCreate && "cursor-not-allowed opacity-40",
-        )}
-      >
-        <Plus size={14} strokeWidth={2.4} />
-        NUEVA TAREA
-      </button>
+        accentClassName="bg-emerald-400 text-black"
+        className={!canCreate ? "cursor-not-allowed opacity-40" : undefined}
+      />
 
       {dialog}
 

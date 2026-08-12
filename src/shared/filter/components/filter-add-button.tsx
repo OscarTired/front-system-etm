@@ -12,6 +12,14 @@ import {
   cn,
 } from "@/shared/utils/utils"
 
+import {
+  useResponsive,
+} from "@/shared/responsive/hooks/use-responsive"
+
+import {
+  FabTrigger,
+} from "@/shared/ui/speed-dial-fab/fab-trigger"
+
 type Props={
   expanded?:boolean
   active?:boolean
@@ -30,7 +38,27 @@ export const FilterAddButton=
         ...props
       },
       ref
-    )=>(
+    )=>{
+
+      const { isMobile } = useResponsive()
+
+      // Mobile (fila del FAB): mismo look pastilla+círculo que el
+      // resto de las acciones — sin la animación de expandir/
+      // colapsar, que solo tiene sentido en el header de escritorio.
+      if (isMobile) {
+        return (
+          <FabTrigger
+            ref={ref}
+            icon={Funnel}
+            label="FILTROS"
+            active={active}
+            className={className}
+            {...props}
+          />
+        )
+      }
+
+      return (
 
       <button
         ref={ref}
@@ -85,7 +113,8 @@ export const FilterAddButton=
 
       </button>
 
-    )
+      )
+    }
   )
 
 FilterAddButton.displayName=

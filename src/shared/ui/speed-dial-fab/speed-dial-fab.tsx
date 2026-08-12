@@ -12,7 +12,12 @@ type Props = {
   className?: string
 }
 
-/** FAB de filtro/orden/historial. z-[60]. No scrollea. */
+/**
+ * FAB de filtro/orden/historial/exportar/crear. z-[60]. No scrollea.
+ * Cada `action` es autosuficiente (usa FabTrigger) — este componente
+ * solo pone la fila (alineación + gap) y la animación de apertura,
+ * nunca le adivina estilo al contenido vía selectores CSS.
+ */
 export function SpeedDialFab({ actions, className }: Props) {
   const [open, setOpen] = useState(false)
 
@@ -46,19 +51,7 @@ export function SpeedDialFab({ actions, className }: Props) {
             className="pointer-events-auto flex flex-col items-end gap-2"
           >
             {actions.map((action, i) => (
-              <div
-                key={i}
-                className="
-                  flex h-11 items-center justify-end
-                  [&_button]:flex [&_button]:h-11 [&_button]:items-center
-                  [&_button]:rounded-full [&_button]:bg-[#1a1a1a]/90
-                  [&_button]:px-3.5
-                  [&_button]:text-xs [&_button]:font-semibold
-                  [&_button]:text-white [&_button]:shadow-lg
-                  [&_button]:ring-1 [&_button]:ring-white/10
-                  [&_button]:backdrop-blur-xl
-                "
-              >
+              <div key={i} className="flex items-center justify-end">
                 {action}
               </div>
             ))}

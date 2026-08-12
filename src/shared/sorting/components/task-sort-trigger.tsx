@@ -1,64 +1,19 @@
 "use client"
 
-import {
-  forwardRef,
-} from "react"
+import { forwardRef } from "react"
+import { ArrowUpDown } from "lucide-react"
 
-import {
-  ArrowUpDown,
-} from "lucide-react"
+import { FabTrigger } from "@/shared/ui/speed-dial-fab/fab-trigger"
 
-import {
-  cn,
-} from "@/shared/utils/utils"
-
-type Props={
-  label:string
-  active?:boolean
+type Props = {
+  label: string
+  active?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-export const TaskSortTrigger=
-  forwardRef<
-    HTMLButtonElement,
-    Props
-  >(
-    (
-      {
-        label,
-        active=false,
-        className,
-        ...props
-      },
-      ref
-    )=>(
+export const TaskSortTrigger = forwardRef<HTMLButtonElement, Props>(
+  ({ label, active = false, ...props }, ref) => (
+    <FabTrigger ref={ref} icon={ArrowUpDown} label={label} active={active} {...props} />
+  ),
+)
 
-      <button
-        ref={ref}
-        type="button"
-        className={cn(
-          "flex h-8 items-center gap-2 rounded-xl px-2 select-none text-white transition-colors hover:bg-[#101012]",
-          active && "bg-[#101012]",
-          className
-        )}
-        {...props}
-      >
-
-        <ArrowUpDown
-          size={14}
-          strokeWidth={2}
-          className="shrink-0"
-        />
-
-        <span className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.08em]">
-
-          {label}
-
-        </span>
-
-      </button>
-
-    )
-  )
-
-TaskSortTrigger.displayName=
-  "TaskSortTrigger"
+TaskSortTrigger.displayName = "TaskSortTrigger"

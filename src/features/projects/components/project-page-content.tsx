@@ -57,10 +57,17 @@ export function ProjectPageContent({
             left={
               <AdaptiveActionBar
                 pinned={
-                  <EntityToolbarSearch value={search} onChange={setSearch} />
+                  <>
+                    <EntityToolbarSearch value={search} onChange={setSearch} />
+                    {isMobile && (
+                      <FilterBar module="projects" alwaysExpanded />
+                    )}
+                  </>
                 }
                 actions={[
-                  <FilterBar key="filter" module="projects" alwaysExpanded={isMobile} />,
+                  ...(!isMobile
+                    ? [<FilterBar key="filter" module="projects" />]
+                    : []),
                   <ProjectSortButton key="sort" />,
                   <HistoryToggleButton
                     key="history"
