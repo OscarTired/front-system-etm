@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { SlidersHorizontal, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
@@ -13,14 +14,22 @@ type Props = {
 }
 
 /**
- * FAB de filtro/orden/historial/exportar/crear. z-[60]. No scrollea.
- * Cada `action` es autosuficiente (usa FabTrigger) — este componente
- * solo pone la fila (alineación + gap) y la animación de apertura,
- * nunca le adivina estilo al contenido vía selectores CSS.
+ * FAB de filtro/orden/historial/exportar/crear. z-[60].
+ *
+ * Portal a document.body: `position: fixed` debe ser respecto al
+ * viewport. Si el FAB vive bajo un ancestro con `transform` (p. ej.
+ * el translateY del pull-to-refresh), el fixed se ancla a ese
+ * ancestro y el botón “viaja” con el gesto. El portal evita eso
+ * sin pelear el layout de cada page.
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -29,29 +38,28 @@ export function SpeedDialFab({ actions, className }: Props) {
       if (e.key === "Escape") setOpen(false)
     }
 
-    // Cualquier tap fuera del widget (hamburguesa, un card de la
-    // lista, el bottom nav, lo que sea) lo cierra. pointerdown (no
-    // click) para que se sienta inmediato, igual que un popover.
-    // Excepción: los popovers que abren Filtro/Orden/Exportar se
-    // portalean fuera de este contenedor (van a document.body), así
-    // que sin esta excepción, elegir una opción ahí adentro se
-    // vería como "click afuera" y cerraría el dial de golpe.
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement
       if (containerRef.current?.contains(target)) return
-      if (target.closest('[data-slot="popover-content"],[data-slot="popover-sheet"]')) return
+      if (
+        target.closest(
+          '[data-slot="popover-content"],[data-slot="popover-sheet"]',
+        )
+      ) {
+        return
+      }
       setOpen(false)
     }
 
-    // scroll no hace bubbling, pero SÍ se recibe en fase de captura
-    // en cualquier ancestro (incluido window) — así cierra el dial
-    // sea cual sea el contenedor que scrollee (la lista, un panel
-    // interno, etc), sin tener que conocerlo. Misma excepción de
-    // popover que en pointerdown: scrollear las opciones de un
-    // popover abierto no debe cerrar el dial que lo disparó.
     const onScroll = (e: Event) => {
       const target = e.target as HTMLElement | null
-      if (target?.closest?.('[data-slot="popover-content"],[data-slot="popover-sheet"]')) return
+      if (
+        target?.closest?.(
+          '[data-slot="popover-content"],[data-slot="popover-sheet"]',
+        )
+      ) {
+        return
+      }
       setOpen(false)
     }
 
@@ -66,11 +74,12 @@ export function SpeedDialFab({ actions, className }: Props) {
     }
   }, [open])
 
-  if (actions.length === 0) return null
+  if (actions.length === 0 || !mounted) return null
 
-  return (
+  return createPortal(
     <div
       ref={containerRef}
+      data-slot="speed-dial-fab"
       className={cn(
         "pointer-events-none fixed bottom-22 z-60 flex flex-col items-end gap-2",
         className,
@@ -113,6 +122,7 @@ export function SpeedDialFab({ actions, className }: Props) {
           <SlidersHorizontal size={18} strokeWidth={2.4} />
         )}
       </button>
-    </div>
+    </div>,
+    document.body,
   )
 }
