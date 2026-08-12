@@ -203,7 +203,7 @@ function EntryCountBadge({
   )
 }
 
-export function TeamActivityLogPageContent() {
+export function TeamActivityLogPageContent({ embedded = false }: { embedded?: boolean } = {}) {
   usePageTitle("Bitácora de Equipo")
 
   const { users } = useUsersDirectory()
@@ -391,9 +391,8 @@ export function TeamActivityLogPageContent() {
     </div>
   )
 
-  return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <AppListScroll>
+  const body = (
+    <>
         <div className="mb-1">{toolbar}</div>
 
         {isSupervision ? (
@@ -456,7 +455,12 @@ export function TeamActivityLogPageContent() {
             )}
           </div>
         )}
-      </AppListScroll>
+    </>
+  )
+
+  return (
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+      {embedded ? body : <AppListScroll>{body}</AppListScroll>}
     </div>
   )
 }
