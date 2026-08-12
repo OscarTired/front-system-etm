@@ -14,6 +14,10 @@ import {
   isWorkflowCompleted,
 } from "@/features/workflow/selectors/is-completed"
 
+import {
+  matchesGroupedFilters,
+} from "./matches-grouped-filters"
+
 type Params={
   tasks:Task[]
   filters:FilterChip[]
@@ -30,7 +34,7 @@ export function filterTasks({
 
   return tasks.filter(task=>
 
-    filters.every(filter=>{
+    matchesGroupedFilters(filters, filter=>{
 
       switch(filter.field){
 

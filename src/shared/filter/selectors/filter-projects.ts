@@ -6,6 +6,10 @@ import type {
   Project,
 } from "@/features/projects/types/project.types"
 
+import {
+  matchesGroupedFilters,
+} from "./matches-grouped-filters"
+
 type Params={
   projects:Project[]
   filters:FilterChip[]
@@ -22,7 +26,7 @@ export function filterProjects({
 
   return projects.filter(project=>
 
-    filters.every(filter=>{
+    matchesGroupedFilters(filters, filter=>{
 
       switch(filter.field){
 

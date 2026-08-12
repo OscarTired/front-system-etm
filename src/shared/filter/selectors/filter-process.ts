@@ -6,6 +6,10 @@ import type {
   ProcessTask,
 } from "@/features/processes/types/process.types"
 
+import {
+  matchesGroupedFilters,
+} from "./matches-grouped-filters"
+
 type Params = {
 
   processTasks: ProcessTask[]
@@ -33,56 +37,54 @@ export function filterProcess({
   return processTasks.filter(
     processTask =>
 
-      filters.every(
-        filter => {
+      matchesGroupedFilters(filters, filter => {
 
-          switch (
-            filter.field
-          ) {
+        switch (
+          filter.field
+        ) {
 
-            case "status":
+          case "status":
 
-              return (
-                processTask.workflowStep?.status ===
-                filter.value
-              )
+            return (
+              processTask.workflowStep?.status ===
+              filter.value
+            )
 
-            case "stage":
+          case "stage":
 
-              return (
-                processTask.workflowStep?.processCode ===
-                filter.value
-              )
+            return (
+              processTask.workflowStep?.processCode ===
+              filter.value
+            )
 
-            case "priority":
+          case "priority":
 
-              return (
-                processTask.task.priority.id ===
-                filter.value
-              )
+            return (
+              processTask.task.priority.id ===
+              filter.value
+            )
 
-            case "client":
+          case "client":
 
-              return (
-                processTask.task.project.client.id ===
-                filter.value
-              )
+            return (
+              processTask.task.project.client.id ===
+              filter.value
+            )
 
-            case "operator":
+          case "operator":
 
-              return (
-                processTask.workflowStep?.operator?.id ===
-                filter.value
-              )
+            return (
+              processTask.workflowStep?.operator?.id ===
+              filter.value
+            )
 
-            default:
+          default:
 
-              return true
+            return true
 
-          }
+        }
 
-        },
-      ),
+      }),
 
   )
 

@@ -46,6 +46,7 @@ export function EntityToolbarSearch({
       ) {
         if (!value) {
           setOpen(false)
+          inputRef.current?.blur()
         }
       }
     }
@@ -62,6 +63,12 @@ export function EntityToolbarSearch({
     if (open) {
       onChange("")
       setOpen(false)
+      // El botón hace preventDefault en mousedown (para no perder el
+      // focus a mitad del click), pero eso también bloquea el blur
+      // por defecto del navegador — sin este blur explícito, el
+      // input se queda con foco real y en mobile el teclado no se
+      // cierra aunque la fila visualmente se colapse.
+      inputRef.current?.blur()
       return
     }
 

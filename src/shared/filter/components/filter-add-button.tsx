@@ -40,7 +40,7 @@ export const FilterAddButton=
   >(
     (
       {
-        expanded=false,
+        expanded:_expanded,
         active=false,
         hasActiveFilters=false,
         className,
@@ -77,53 +77,19 @@ export const FilterAddButton=
         ref={ref}
         type="button"
         className={cn(
-          "flex",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white select-none transition-all duration-200",
+          active
+            ? "bg-[#101012]"
+            : "hover:bg-[#101012]",
           className
         )}
         {...props}
       >
 
-        <div
-          className={cn(
-            "flex items-center overflow-hidden transition-all duration-200 ease-out",
-            expanded
-              ? "w-24"
-              : "w-8"
-          )}
-        >
-
-          <span
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl select-none transition-all duration-200",
-              hasActiveFilters
-                ? "bg-emerald-500/90 text-black shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-                : active
-                  ? "bg-[#101012] text-white"
-                  : "!expanded && hover:bg-[#101012] text-white"
-            )}
-          >
-
-            <Funnel
-              size={14}
-              strokeWidth={2}
-            />
-
-          </span>
-
-          <span
-            className={cn(
-              "overflow-hidden whitespace-nowrap text-xs font-semibold select-none uppercase tracking-[0.08em] text-white transition-all duration-200",
-              expanded
-                ? "w-full opacity-100"
-                : "w-0 opacity-0"
-            )}
-          >
-
-            + FILTROS
-
-          </span>
-
-        </div>
+        <Funnel
+          size={14}
+          strokeWidth={2}
+        />
 
       </button>
 
