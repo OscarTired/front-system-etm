@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type ReactNode,
@@ -12,6 +13,7 @@ import {
 import { Spinner } from "@/shared/ui/spinner/spinner"
 import { TOP_BAR_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 import { cn } from "@/shared/utils/utils"
+import { usePullToRefreshStore } from "./pull-to-refresh-store"
 
 
 const THRESHOLD_PX = 64
@@ -110,6 +112,16 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
       setPullOffset(0)
     }
   }, [refreshing, runRefresh, setPullOffset])
+
+  const setPtrActive = usePullToRefreshStore(s => s.setActive)
+
+  useEffect(() => {
+    const active = offset > 4 || refreshing
+    setPtrActive(active)
+    return () => {
+      setPtrActive(false)
+    }
+  }, [offset, refreshing, setPtrActive])
 
   const progress = Math.min(1, offset / THRESHOLD_PX)
   const showIndicator = offset > 4 || refreshing

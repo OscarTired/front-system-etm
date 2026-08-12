@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/shared/utils/utils"
 import { FAB_RIGHT_OFFSET_PX } from "./fab-layout"
+import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
 
 type Props = {
   actions: ReactNode[]
@@ -26,10 +27,15 @@ export function SpeedDialFab({ actions, className }: Props) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const ptrActive = usePullToRefreshStore(s => s.active)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+  useEffect(() => {
+    if (ptrActive) setOpen(false)
+  }, [ptrActive])
+
 
   useEffect(() => {
     if (!open) return
@@ -82,9 +88,16 @@ export function SpeedDialFab({ actions, className }: Props) {
       data-slot="speed-dial-fab"
       className={cn(
         "pointer-events-none fixed bottom-22 z-60 flex flex-col items-end gap-2",
+        "transition-opacity duration-200 ease-out",
+        ptrActive ? "opacity-0" : "opacity-100",
         className,
       )}
-      style={{ right: FAB_RIGHT_OFFSET_PX }}
+      style={{
+        right: FAB_RIGHT_OFFSET_PX,
+        // Evita clics fantasma mientras está invisible por PTR
+        pointerEvents: ptrActive ? "none" : undefined,
+      }}
+      aria-hidden={ptrActive}
     >
       <AnimatePresence>
         {open && (
