@@ -8,6 +8,8 @@ import {
 import type { Project } from "../types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
 
+import { cn } from "@/shared/utils/utils"
+
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
 import { useExpandRow } from "@/shared/hooks/use-expand-row"
 import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
@@ -66,6 +68,8 @@ export function ProjectTable({
   })
 
   const markSettled = useFocusSettleStore(s => s.markSettled)
+  const settledToken = useFocusSettleStore(s => s.settledToken)
+  const isSettlingFocus = !!focusToken && settledToken !== focusToken
 
   useFocusedRow({
     focusedId: focusedProjectId,
@@ -158,7 +162,12 @@ export function ProjectTable({
 
   return (
     <>
-      <div className="flex flex-col gap-2 pb-2">
+      <div
+        className={cn(
+          "flex flex-col gap-2 pb-2 transition-[filter] duration-200 ease-out",
+          isSettlingFocus && "blur-sm",
+        )}
+      >
         {displayedProjects.map(project => {
           const card = (
             <ProjectMobileCard

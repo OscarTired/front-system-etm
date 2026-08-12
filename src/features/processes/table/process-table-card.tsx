@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
 import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+import { cn } from "@/shared/utils/utils"
 import { useExpandRow } from "@/shared/hooks/use-expand-row"
 import { clearEntityFocusParams } from "@/shared/hooks/clear-entity-focus-params"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
@@ -106,6 +107,8 @@ export function ProcessTableCard({
   })
 
   const markSettled = useFocusSettleStore(s => s.markSettled)
+  const settledToken = useFocusSettleStore(s => s.settledToken)
+  const isSettlingFocus = !!focusToken && settledToken !== focusToken
 
   useFocusedRow({
     focusedId: focusedTaskId,
@@ -221,22 +224,29 @@ export function ProcessTableCard({
 
     return (
 
-      <TaskProcessColumn
-        processCode={processDefinition.code}
-        tasks={tasks}
-        expandedKey={mobileExpandedKey}
-        onToggleCard={(key) => {
-          const next = mobileExpandedKey === key ? null : key
-          const nextTaskId = next?.split(":")[0]
-          if (focusedTaskId && nextTaskId !== focusedTaskId) {
-            clearEntityFocusParams(router, pathname, searchParams)
-          }
-          setMobileExpandedKey(next)
-        }}
-        activeOverlayKey={activeOverlayKey}
-        onOverlayOpenChange={handleOverlayOpenChange}
-        contentOnly
-      />
+      <div
+        className={cn(
+          "transition-[filter] duration-200 ease-out",
+          isSettlingFocus && "blur-sm",
+        )}
+      >
+        <TaskProcessColumn
+          processCode={processDefinition.code}
+          tasks={tasks}
+          expandedKey={mobileExpandedKey}
+          onToggleCard={(key) => {
+            const next = mobileExpandedKey === key ? null : key
+            const nextTaskId = next?.split(":")[0]
+            if (focusedTaskId && nextTaskId !== focusedTaskId) {
+              clearEntityFocusParams(router, pathname, searchParams)
+            }
+            setMobileExpandedKey(next)
+          }}
+          activeOverlayKey={activeOverlayKey}
+          onOverlayOpenChange={handleOverlayOpenChange}
+          contentOnly
+        />
+      </div>
 
     )
 
@@ -244,7 +254,12 @@ export function ProcessTableCard({
 
   return (
 
-    <div className="flex flex-col gap-2 pb-2">
+    <div
+      className={cn(
+        "flex flex-col gap-2 pb-2 transition-[filter] duration-200 ease-out",
+        isSettlingFocus && "blur-sm",
+      )}
+    >
 
       {displayedTasks.map(processTask => {
 
