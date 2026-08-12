@@ -16,13 +16,16 @@ type Props = {
 }
 
 /**
- * FAB de filtro/orden/historial/exportar/crear. z-[60].
+ * FAB de filtro/orden/historial/exportar/crear.
  *
- * Portal a document.body: `position: fixed` debe ser respecto al
- * viewport. Si el FAB vive bajo un ancestro con `transform` (p. ej.
- * el translateY del pull-to-refresh), el fixed se ancla a ese
- * ancestro y el botón “viaja” con el gesto. El portal evita eso
- * sin pelear el layout de cada page.
+ * Portal a document.body (fixed respecto al viewport; no hereda el
+ * translateY del pull-to-refresh ni el del drawer).
+ *
+ * Capa: z-30 — por debajo de sheets/dialogs (z-40+). Si el dial
+ * quedara a z-60, las acciones del speed-dial taparían el bottomsheet
+ * que ellas mismas abren.
+ *
+ * Al elegir una acción del dial se cierra el menú; el sheet queda solo.
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [open, setOpen] = useState(false)
@@ -91,9 +94,9 @@ export function SpeedDialFab({ actions, className }: Props) {
       ref={containerRef}
       data-slot="speed-dial-fab"
       className={cn(
-        "pointer-events-none fixed bottom-22 z-60 flex flex-col items-end gap-2",
+        "pointer-events-none fixed bottom-22 z-30 flex flex-col items-end gap-2",
         // Misma duración que PANEL_TRANSITION del CompactShell (280ms)
-        "transition-opacity duration-[280ms] ease-out",
+        "transition-opacity duration-280 ease-out",
         chromeHidden ? "opacity-0" : "opacity-100",
         className,
       )}
@@ -112,6 +115,11 @@ export function SpeedDialFab({ actions, className }: Props) {
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 420, damping: 28 }}
             className="pointer-events-auto flex flex-col items-end gap-2"
+            onPointerDown={() => {
+              // Cierra el dial al elegir una acción. El Popover/sheet
+              // que abre el trigger sigue su curso (z-40 > z-30).
+              setOpen(false)
+            }}
           >
             {actions.map((action, i) => (
               <div key={i} className="flex items-center justify-end">
