@@ -30,7 +30,7 @@ export function SpeedDialFab({ actions, className }: Props) {
   return (
     <div
       className={cn(
-        "pointer-events-none fixed bottom-22 z-[60] flex flex-col items-end gap-2",
+        "pointer-events-none fixed bottom-22 z-60 flex flex-col items-end gap-2",
         className,
       )}
       style={{ right: FAB_RIGHT_OFFSET_PX }}
