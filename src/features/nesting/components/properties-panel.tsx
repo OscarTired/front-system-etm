@@ -122,7 +122,7 @@ export function PropertiesPanel({
           className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-foreground/5"
         >
           <div className="flex items-center gap-2">
-            <Info className="h-3.5 w-3.5 text-cyan-400" />
+            <Info className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pieza seleccionada</span>
           </div>
 
@@ -226,7 +226,7 @@ export function PropertiesPanel({
                       type="number"
                       step={key === "angle" ? 1 : 0.1}
                       disabled={locked}
-                      className="h-7 rounded-md border-none bg-background/50 px-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30 disabled:opacity-40 text-center"
+                      className="h-7 rounded-md border-none bg-background/50 px-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 text-center"
                       value={Number.isFinite(val) ? val : 0}
                       onChange={(e) => {
                         const n = parseFloat(e.target.value)
@@ -293,7 +293,7 @@ export function PropertiesPanel({
           className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-foreground/5"
         >
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+            <BarChart3 className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Plancha activa</span>
           </div>
 

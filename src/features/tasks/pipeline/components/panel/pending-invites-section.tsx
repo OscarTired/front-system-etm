@@ -102,7 +102,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
                   disabled={accepting}
                   onClick={() => acceptInvite(invite.stepId)}
                   aria-label="Aceptar"
-                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:opacity-40"
+                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/32 dark:bg-emerald-500/25 disabled:opacity-40"
                 >
                   <Check size={15} />
                 </button>

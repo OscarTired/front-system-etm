@@ -279,7 +279,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       {/* Cabecera con título, contador y acciones globales */}
       <div className="mb-2 flex shrink-0 items-center justify-between px-3">
         <div className="flex items-center gap-2">
-          <Layers className="h-3.5 w-3.5 text-cyan-400" />
+          <Layers className="h-3.5 w-3.5 text-primary" />
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Piezas</h2>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-foreground/5 text-muted-foreground font-medium">
             {rows.length}

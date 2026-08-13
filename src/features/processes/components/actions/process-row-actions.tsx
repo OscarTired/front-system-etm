@@ -129,7 +129,7 @@ export function ProcessRowActions({
   if (status === "REVIEWED") {
     return (
       <div className="flex w-full items-center justify-center">
-        <div className="flex h-8 w-full items-center justify-center rounded-lg bg-emerald-500/5 px-4 text-xs font-semibold uppercase text-emerald-300">
+        <div className="flex h-8 w-full items-center justify-center rounded-lg bg-emerald-500/20 dark:bg-emerald-500/5 px-4 text-xs font-semibold uppercase text-emerald-300">
           Revisado
         </div>
       </div>

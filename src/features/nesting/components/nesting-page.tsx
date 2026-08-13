@@ -547,7 +547,7 @@ export function NestingPage() {
             aria-valuemax={100}
           >
             <div
-              className="pointer-events-none absolute bottom-0 left-0 top-0 bg-cyan-500/25 transition-all duration-150"
+              className="pointer-events-none absolute bottom-0 left-0 top-0 bg-primary/25 transition-all duration-150"
               style={{ width: `${Math.round(project.progress * 100)}%` }}
             />
             <span className="relative z-10 flex items-center justify-center gap-2 tabular-nums">

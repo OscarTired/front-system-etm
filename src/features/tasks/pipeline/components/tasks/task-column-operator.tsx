@@ -233,7 +233,7 @@ function ActiveOperatorsPopover({
 
           {workingCount > 0 && (
 
-            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-400">
+            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/22 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-400">
               <Zap size={10} />
               {workingCount}
             </span>

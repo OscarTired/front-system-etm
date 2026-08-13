@@ -42,7 +42,7 @@ const AUTO_KIND: Record<string, AutoKind> = {
     icon: CheckCircle2,
     verb: "Completado",
     iconClass: "text-emerald-400",
-    badgeClass: "bg-emerald-500/15 text-emerald-400",
+    badgeClass: "bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-400",
   },
 
 }

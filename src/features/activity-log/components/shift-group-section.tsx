@@ -150,7 +150,7 @@ export function ShiftGroupSection({
                 className={cn(
                   "flex flex-col gap-2 rounded-xl p-1.5 -m-1.5 transition-all",
                   hoverShift === slot.shift
-                    ? "duration-150 bg-emerald-500/6 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
+                    ? "duration-150 bg-emerald-500/20 dark:bg-emerald-500/6 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
                     : "duration-0",
                 )}
               >

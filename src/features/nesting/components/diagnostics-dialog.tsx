@@ -89,7 +89,7 @@ export function DiagnosticsDialog({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <DialogTitle className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                <ShieldCheck className="h-4 w-4 text-primary" />
                 Diagnóstico de piezas y materiales
               </DialogTitle>
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -133,7 +133,7 @@ export function DiagnosticsDialog({
                 placeholder="Buscar archivo por nombre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl bg-foreground/5 pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-neutral-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full rounded-xl bg-foreground/5 pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-neutral-500 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
             </div>
 

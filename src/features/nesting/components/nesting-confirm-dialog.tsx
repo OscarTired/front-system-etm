@@ -81,7 +81,7 @@ export function NestingConfirmDialog({
             className={
               destructive
                 ? "bg-red-600 text-foreground hover:bg-red-500"
-                : "bg-cyan-600 text-foreground hover:bg-cyan-500"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
             }
             onClick={() => {
               onConfirm()

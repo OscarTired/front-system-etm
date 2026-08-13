@@ -31,7 +31,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
           onClick={() => setIsExpanded((prev) => !prev)}
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-foreground/5"
         >
-          <Layers className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+          <Layers className="h-3.5 w-3.5 shrink-0 text-primary" />
           <span className="truncate text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Capas ({layers.length})
           </span>
@@ -46,7 +46,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
           <button
             type="button"
             onClick={onShowAll}
-            className="shrink-0 rounded-lg px-2 py-1.5 text-[10px] text-cyan-400 hover:bg-foreground/5 hover:text-cyan-300"
+            className="shrink-0 rounded-lg px-2 py-1.5 text-[10px] text-primary hover:bg-foreground/5 hover:text-primary"
           >
             Mostrar todas
           </button>
