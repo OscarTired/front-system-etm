@@ -1,0 +1,1063 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index ca40b1b..928912c 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -102,11 +102,11 @@
+   --surface-elevated: oklch(0.995 0.002 260);
+   --chrome: oklch(0.975 0.003 260 / 0.92);
+   --overlay: oklch(0.2 0.01 260 / 0.45);
+-  /* Chips de dominio + fin gradiente mini-card (tokens, sin hardcode JS). */
++  /* Chips/KPI: glass oscuro siempre (light y dark). Mas alpha = mas color. */
+   --chip-surface-rgb: 16 16 18;
+-  --chip-bg-alpha: 0.32;
+-  --chip-bg-alpha-hover: 0.42;
+-  --chip-bg-alpha-active: 0.52;
++  --chip-bg-alpha: 0.42;
++  --chip-bg-alpha-hover: 0.52;
++  --chip-bg-alpha-active: 0.62;
+   --chip-text-tint: 0.84;
+   --process-card-end: oklch(0.12 0.005 260);
+ }
+@@ -155,9 +155,9 @@ html, body {
+   --chrome: oklch(0.12 0.005 260 / 0.85);
+   --overlay: oklch(0.05 0 0 / 0.55);
+   --chip-surface-rgb: 16 16 18;
+-  --chip-bg-alpha: 0.32;
+-  --chip-bg-alpha-hover: 0.42;
+-  --chip-bg-alpha-active: 0.52;
++  --chip-bg-alpha: 0.42;
++  --chip-bg-alpha-hover: 0.52;
++  --chip-bg-alpha-active: 0.62;
+   --chip-text-tint: 0.84;
+   --process-card-end: oklch(0.12 0.005 260);
+ }
+@@ -570,4 +570,4 @@ input:focus-visible {
+ 
+ .native-scrollbar::-webkit-scrollbar-thumb:hover {
+   background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/activity-log/components/agenda/agenda-week-view.tsx b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+index 3fff8de..232a996 100644
+--- a/src/features/activity-log/components/agenda/agenda-week-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+@@ -24,8 +24,8 @@ type Props = {
+ const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+ 
+ const DISTINCT_SHIFT_COLORS = [
+-  "text-amber-400",
+-  "text-emerald-400",
++  "text-amber-800 dark:text-amber-400",
++  "text-emerald-700 dark:text-emerald-400",
+   "text-rose-400",
+   "text-violet-400",
+   "text-teal-400",
+@@ -76,7 +76,7 @@ export function AgendaWeekView({
+                 <span
+                   className={cn(
+                     "text-[9px] font-bold uppercase tracking-wider",
+-                    isToday ? "text-amber-400" : "text-muted-foreground",
++                    isToday ? "text-amber-800 dark:text-amber-400" : "text-muted-foreground",
+                   )}
+                 >
+                   {WEEKDAY_LABELS[i]}
+@@ -206,7 +206,7 @@ export function AgendaWeekView({
+                 <div
+                   className={cn(
+                     "text-[11px] font-bold uppercase tracking-widest",
+-                    isToday ? "text-amber-400" : "text-muted-foreground",
++                    isToday ? "text-amber-800 dark:text-amber-400" : "text-muted-foreground",
+                   )}
+                 >
+                   {WEEKDAY_LABELS[i]}
+diff --git a/src/features/activity-log/components/auto-activity-section.tsx b/src/features/activity-log/components/auto-activity-section.tsx
+index 50ad885..d1c310e 100644
+--- a/src/features/activity-log/components/auto-activity-section.tsx
++++ b/src/features/activity-log/components/auto-activity-section.tsx
+@@ -34,15 +34,15 @@ const AUTO_KIND: Record<string, AutoKind> = {
+   TASK_STARTED: {
+     icon: PlayCircle,
+     verb: "Inició",
+-    iconClass: "text-sky-400",
+-    badgeClass: "bg-sky-500/15 text-sky-400",
++    iconClass: "text-sky-700 dark:text-sky-400",
++    badgeClass: "bg-sky-500/15 text-sky-700 dark:text-sky-400",
+   },
+ 
+   TASK_COMPLETED: {
+     icon: CheckCircle2,
+     verb: "Completado",
+-    iconClass: "text-emerald-400",
+-    badgeClass: "bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-400",
++    iconClass: "text-emerald-700 dark:text-emerald-400",
++    badgeClass: "bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+   },
+ 
+ }
+@@ -158,4 +158,4 @@ export function AutoActivitySection({ logs }: Props) {
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx b/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
+index df66078..3a0601a 100644
+--- a/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
++++ b/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
+@@ -278,7 +278,7 @@ export function ActivityPickerDialog({
+ 
+         {activeSlot && activeSlot.shift !== getCurrentShift(new Date()) && (
+ 
+-          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
++          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-400">
+             Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — se
+             va a guardar igual en esta franja. Si quieres, detalla abajo
+             por qué se registra recién ahora.
+@@ -436,7 +436,7 @@ export function ActivityPickerDialog({
+               className={cn(
+                 "text-[11px] font-medium",
+                 selectedTypeIds.length >= maxSelection
+-                  ? "text-amber-400"
++                  ? "text-amber-800 dark:text-amber-400"
+                   : "text-muted-foreground",
+               )}
+             >
+@@ -630,4 +630,4 @@ export function ActivityPickerDialog({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/activity-log/components/shift-group-section.tsx b/src/features/activity-log/components/shift-group-section.tsx
+index 22a3eb8..58af894 100644
+--- a/src/features/activity-log/components/shift-group-section.tsx
++++ b/src/features/activity-log/components/shift-group-section.tsx
+@@ -39,8 +39,8 @@ type Props = {
+ }
+ 
+ const DISTINCT_SHIFT_COLORS = [
+-  "text-amber-400",
+-  "text-emerald-400",
++  "text-amber-800 dark:text-amber-400",
++  "text-emerald-700 dark:text-emerald-400",
+   "text-rose-400",
+   "text-violet-400",
+   "text-teal-400",
+@@ -279,7 +279,7 @@ export function ShiftGroupSection({
+                                   title="Editar"
+                                   aria-label="Editar entrada"
+                                   onClick={() => onEditLog(log)}
+-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
++                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-800 dark:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                 >
+                                   <Pencil size={14} />
+                                 </button>
+@@ -299,7 +299,7 @@ export function ShiftGroupSection({
+                                     if (!canCreate || busy || !allowDup) return
+                                     onDuplicateLog(log)
+                                   }}
+-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
++                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                 >
+                                   <Copy size={14} />
+                                 </button>
+@@ -386,7 +386,7 @@ export function ShiftGroupSection({
+                                         }}
+                                         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
+                                       >
+-                                        <Pencil size={15} className="text-amber-400" />
++                                        <Pencil size={15} className="text-amber-800 dark:text-amber-400" />
+                                         Editar
+                                       </button>
+                                     )}
+@@ -399,7 +399,7 @@ export function ShiftGroupSection({
+                                       }}
+                                       className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
+                                     >
+-                                      <Copy size={15} className="text-sky-400" />
++                                      <Copy size={15} className="text-sky-700 dark:text-sky-400" />
+                                       Duplicar
+                                     </button>
+                                     <button
+@@ -464,4 +464,4 @@ export function ShiftGroupSection({
+       />
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/activity-log/components/supervision/team-supervision-kpi-bar.tsx b/src/features/activity-log/components/supervision/team-supervision-kpi-bar.tsx
+index 5dce781..4bc7777 100644
+--- a/src/features/activity-log/components/supervision/team-supervision-kpi-bar.tsx
++++ b/src/features/activity-log/components/supervision/team-supervision-kpi-bar.tsx
+@@ -155,8 +155,8 @@ export function TeamSupervisionKpiBar({
+                     "font-bold tabular-nums tracking-tight",
+                     isCompact ? "mt-0.5 text-base" : "mt-1 text-2xl",
+                     card.tone === "danger" && "text-rose-400",
+-                    card.tone === "warn" && "text-amber-400",
+-                    card.tone === "ok" && "text-emerald-400",
++                    card.tone === "warn" && "text-amber-800 dark:text-amber-400",
++                    card.tone === "ok" && "text-emerald-700 dark:text-emerald-400",
+                     card.tone === "neutral" && "text-foreground",
+                   )}
+                 >
+diff --git a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+index 97eced8..232824d 100644
+--- a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
++++ b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+@@ -27,11 +27,11 @@ const STATUS_META: Record<
+ > = {
+   ok: {
+     label: "OK",
+-    className: "text-emerald-400 bg-emerald-500/22 dark:bg-emerald-500/10",
++    className: "text-emerald-700 dark:text-emerald-400 bg-emerald-500/22 dark:bg-emerald-500/10",
+   },
+   partial: {
+     label: "Parcial",
+-    className: "text-amber-400 bg-amber-500/10",
++    className: "text-amber-800 dark:text-amber-400 bg-amber-500/10",
+   },
+   missing: {
+     label: "Sin registro",
+diff --git a/src/features/activity-log/hooks/use-activity-drag.tsx b/src/features/activity-log/hooks/use-activity-drag.tsx
+index b972526..5ce922f 100644
+--- a/src/features/activity-log/hooks/use-activity-drag.tsx
++++ b/src/features/activity-log/hooks/use-activity-drag.tsx
+@@ -258,7 +258,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+         </span>
+ 
+         {isDuplicateMode && (
+-          <span className="shrink-0 rounded-md bg-emerald-500/30 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
++          <span className="shrink-0 rounded-md bg-emerald-500/30 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+             Copiar
+           </span>
+         )}
+@@ -278,4 +278,4 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+     overlay,
+   }
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/comments/components/comment-item.tsx b/src/features/comments/components/comment-item.tsx
+index 6f3c582..49e0847 100644
+--- a/src/features/comments/components/comment-item.tsx
++++ b/src/features/comments/components/comment-item.tsx
+@@ -163,7 +163,7 @@ export function CommentItem({
+                   <Check
+                     size={14}
+                     strokeWidth={2.5}
+-                    className="text-green-400"
++                    className="text-green-700 dark:text-green-400"
+                   />
+                 )}
+ 
+@@ -236,4 +236,4 @@ export function CommentItem({
+       />
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/comments/components/messages-page-content.tsx b/src/features/comments/components/messages-page-content.tsx
+index 483b2a4..0b4d542 100644
+--- a/src/features/comments/components/messages-page-content.tsx
++++ b/src/features/comments/components/messages-page-content.tsx
+@@ -257,8 +257,8 @@ export function MessagesPageContent() {
+                               className={cn(
+                                 "rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                 isHistorical
+-                                  ? "bg-amber-500/15 text-amber-300/90"
+-                                  : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-400/90",
++                                  ? "bg-amber-500/15 text-amber-800 dark:text-amber-300/90"
++                                  : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400/90",
+                               )}
+                             >
+                               {isHistorical ? "HISTÓRICO" : "ACTIVO"}
+@@ -333,4 +333,4 @@ export function MessagesPageContent() {
+       </AppListScroll>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/diagnostics-dialog.tsx b/src/features/nesting/components/diagnostics-dialog.tsx
+index 20e082e..bbc1c63 100644
+--- a/src/features/nesting/components/diagnostics-dialog.tsx
++++ b/src/features/nesting/components/diagnostics-dialog.tsx
+@@ -105,8 +105,8 @@ export function DiagnosticsDialog({
+               {activeConflictsCount > 0 && (
+                 <>
+                   <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5">
+-                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400 animate-pulse" />
+-                    <span className="text-xs font-medium text-amber-300">
++                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-800 dark:text-amber-400 animate-pulse" />
++                    <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                       {activeConflictsCount} conflicto{activeConflictsCount === 1 ? "" : "s"} activo{activeConflictsCount === 1 ? "" : "s"}
+                     </span>
+                   </div>
+@@ -114,7 +114,7 @@ export function DiagnosticsDialog({
+                     type="button"
+                     size="sm"
+                     variant="ghost"
+-                    className="h-8 px-3 text-xs gap-1.5 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 font-medium rounded-xl"
++                    className="h-8 px-3 text-xs gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 font-medium rounded-xl"
+                     onClick={handleForgiveAll}
+                   >
+                     <CheckCheck className="h-4 w-4" />
+@@ -210,12 +210,12 @@ export function DiagnosticsDialog({
+                       <td className="max-w-75 truncate px-4 py-3 font-medium text-foreground">
+                         <div className="flex items-center gap-2">
+                           {conflict && (
+-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
++                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400">
+                               <AlertTriangle className="h-3.5 w-3.5" />
+                             </span>
+                           )}
+                           {forgiven && (
+-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
++                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                               <Check className="h-3.5 w-3.5" />
+                             </span>
+                           )}
+@@ -238,7 +238,7 @@ export function DiagnosticsDialog({
+                       <td
+                         className={cn(
+                           "px-3 py-3 text-center",
+-                          dinBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
++                          dinBad ? "font-semibold text-amber-800 dark:text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
+                         )}
+                       >
+                         {row.material.dinNorm || "N/D"}
+@@ -246,7 +246,7 @@ export function DiagnosticsDialog({
+                       <td
+                         className={cn(
+                           "px-3 py-3 text-center",
+-                          alloyBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
++                          alloyBad ? "font-semibold text-amber-800 dark:text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
+                         )}
+                       >
+                         {row.material.alloy || "N/D"}
+@@ -259,7 +259,7 @@ export function DiagnosticsDialog({
+                               size="sm"
+                               variant="ghost"
+                               title="Aceptar / perdonar conflicto"
+-                              className="h-7 px-2.5 text-xs gap-1.5 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 transition-all font-medium rounded-lg"
++                              className="h-7 px-2.5 text-xs gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 transition-all font-medium rounded-lg"
+                               onClick={() => onForgive(row.id)}
+                             >
+                               <Check className="h-3.5 w-3.5" />
+@@ -267,7 +267,7 @@ export function DiagnosticsDialog({
+                             </Button>
+                           )}
+                           {forgiven && (
+-                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-400">
++                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                               <Check className="h-3 w-3" /> Aceptado
+                             </span>
+                           )}
+@@ -317,4 +317,4 @@ export function DiagnosticsDialog({
+       </DialogContent>
+     </Dialog>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx b/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
+index 6d9e73c..4701a65 100644
+--- a/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
++++ b/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
+@@ -406,7 +406,7 @@ export function CanvasToolbar({
+               onClick={() => onToggleTool(tool as Exclude<MeasureTool, "none">)}
+               className={`${mdBtn} ${
+                 activeTool === tool
+-                  ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300"
++                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
+                   : ""
+               }`}
+               title={TOOL_LABELS[tool]}
+@@ -420,7 +420,7 @@ export function CanvasToolbar({
+             onClick={onToggleSnap}
+             className={`${mdBtn} ${
+               snapEnabled
+-                ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 hover:text-amber-300"
++                ? "bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 hover:text-amber-800 dark:text-amber-300"
+                 : ""
+             }`}
+             title={snapEnabled ? "Snap activado" : "Snap desactivado"}
+@@ -436,7 +436,7 @@ export function CanvasToolbar({
+               }
+               className={`${mdBtn} ${
+                 transformMode === "geometric"
+-                  ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300"
++                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
+                   : ""
+               }`}
+               title={
+@@ -573,7 +573,7 @@ export function CanvasToolbar({
+                     }}
+                     className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                       simSpeed === s
+-                        ? "bg-cyan-500/20 font-semibold text-cyan-300"
++                        ? "bg-cyan-500/20 font-semibold text-cyan-700 dark:text-cyan-300"
+                         : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                     }`}
+                   >
+@@ -598,4 +598,4 @@ export function CanvasToolbar({
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/dxf-canvas/dxf-canvas.tsx b/src/features/nesting/components/dxf-canvas/dxf-canvas.tsx
+index e1df44f..1045bd1 100644
+--- a/src/features/nesting/components/dxf-canvas/dxf-canvas.tsx
++++ b/src/features/nesting/components/dxf-canvas/dxf-canvas.tsx
+@@ -1166,7 +1166,7 @@ export function DxfCanvas({
+               type="button"
+               onClick={() => setCanvasTool("rotate")}
+               className={`whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium hover:bg-foreground/10 hover:text-foreground ${
+-                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-300" : "text-muted-foreground"
++                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" : "text-muted-foreground"
+               }`}
+               title="Rotar libre arrastrando (Shift = pasos de 15°)"
+             >
+@@ -1301,7 +1301,7 @@ export function DxfCanvas({
+             <div className="absolute h-2 w-2 rounded-full border border-cyan-300 bg-cyan-400/30" />
+           </div>
+           {Math.abs(rotatePreviewDelta) > 0.05 && (
+-            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
++            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-700 dark:text-cyan-300">
+               {rotatePreviewDelta > 0 ? "+" : ""}
+               {rotatePreviewDelta.toFixed(1)}°
+             </div>
+@@ -1417,4 +1417,4 @@ export function DxfCanvas({
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/piece-list-row.tsx b/src/features/nesting/components/piece-list-row.tsx
+index d5cb3ee..591eb14 100644
+--- a/src/features/nesting/components/piece-list-row.tsx
++++ b/src/features/nesting/components/piece-list-row.tsx
+@@ -93,7 +93,7 @@ export function PieceListRow({
+             </span>
+           )}
+           {conflict && (
+-            <span className="shrink-0 text-amber-400" title="Conflicto de material — ver Diagnóstico">
++            <span className="shrink-0 text-amber-800 dark:text-amber-400" title="Conflicto de material — ver Diagnóstico">
+               <AlertTriangle className="h-3.5 w-3.5" />
+             </span>
+           )}
+@@ -132,4 +132,4 @@ export function PieceListRow({
+       </div>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/piece-list.tsx b/src/features/nesting/components/piece-list.tsx
+index c79b18f..2582db2 100644
+--- a/src/features/nesting/components/piece-list.tsx
++++ b/src/features/nesting/components/piece-list.tsx
+@@ -83,7 +83,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+   const [groupBy, setGroupBy] = useState<GroupByType>("none")
+   const [searchQuery, setSearchQuery] = useState("")
+-  
++
+   const [isDraggingOver, setIsDraggingOver] = useState(false)
+   const dragCounterRef = useRef(0)
+ 
+@@ -165,7 +165,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+         rejected.push(`${file.name} (solo .dxf, .geo, .pdf o .nps)`)
+         continue
+       }
+-      
++
+       const text = await file.text()
+       if (!text.trim()) continue
+ 
+@@ -174,7 +174,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+         rejected.push(`${file.name} (geometría inválida)`)
+         continue
+       }
+-      
++
+       newRows.push({
+         id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+         source: "cad",
+@@ -262,7 +262,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+   }, [rows, groupBy, searchQuery])
+ 
+   return (
+-    <div 
++    <div
+       className="flex h-full max-h-full min-h-0 w-full flex-col overflow-hidden relative"
+       onDragEnter={handleDragEnter}
+       onDragLeave={handleDragLeave}
+@@ -290,7 +290,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+             <Button
+               size="icon-sm"
+               variant="ghost"
+-              className={conflictIds.size > 0 ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-foreground"}
++              className={conflictIds.size > 0 ? "text-amber-800 dark:text-amber-400 hover:text-amber-800 dark:text-amber-300" : "text-muted-foreground hover:text-foreground"}
+               onClick={onOpenDiagnostics}
+               title={
+                 conflictIds.size > 0
+@@ -332,20 +332,20 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+       {rows.length > 0 && (
+         <div className="flex items-center gap-1.5 px-3 mb-2 shrink-0 overflow-x-auto hide-scrollbar">
+           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Agrupar:</span>
+-          <button 
+-            onClick={() => setGroupBy("none")} 
++          <button
++            onClick={() => setGroupBy("none")}
+             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "none" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+           >
+             Ninguno
+           </button>
+-          <button 
+-            onClick={() => setGroupBy("thickness")} 
++          <button
++            onClick={() => setGroupBy("thickness")}
+             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "thickness" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+           >
+             Espesor
+           </button>
+-          <button 
+-            onClick={() => setGroupBy("material")} 
++          <button
++            onClick={() => setGroupBy("material")}
+             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "material" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+           >
+             Material
+@@ -378,7 +378,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+ 
+       <div className="flex h-0 min-h-0 flex-1 flex-col w-full">
+         {rows.length === 0 ? (
+-          <div 
++          <div
+             onClick={() => fileInputRef.current?.click()}
+             className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border-2 border-dashed border-border rounded-xl m-3 hover:border-primary/40 transition-colors bg-foreground/5"
+           >
+@@ -392,7 +392,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+           </div>
+         ) : (
+           <ScrollArea className="h-full w-full">
+-            <div className="flex flex-col gap-3 w-full px-3 py-2 pr-4.5 box-border pb-3">  
++            <div className="flex flex-col gap-3 w-full px-3 py-2 pr-4.5 box-border pb-3">
+               {groupedEntries.map(({ groupKey, items }) => (
+                 <div key={groupKey ?? "default"} className="flex flex-col gap-2">
+                   {groupKey && (
+@@ -423,4 +423,4 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+       </div>
+     </div>
+   )
+-}))
+\ No newline at end of file
++}))
+diff --git a/src/features/nesting/components/properties-panel.tsx b/src/features/nesting/components/properties-panel.tsx
+index eb6732c..81799fb 100644
+--- a/src/features/nesting/components/properties-panel.tsx
++++ b/src/features/nesting/components/properties-panel.tsx
+@@ -137,7 +137,7 @@ export function PropertiesPanel({
+                 title={locked ? "Desbloquear" : "Bloquear posición"}
+                 className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors ${
+                   locked
+-                    ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
++                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25"
+                     : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                 }`}
+               >
+@@ -167,7 +167,7 @@ export function PropertiesPanel({
+             <StatRow label="Perímetro" value={`${perimeter.toFixed(0)} mm`} />
+             <StatRow label="Ángulo base" value={`${selectedPiece.angle}°`} />
+             {locked && (
+-              <div className="px-1 py-1 text-[10px] text-amber-400/90">
++              <div className="px-1 py-1 text-[10px] text-amber-800 dark:text-amber-400/90">
+                 Posición bloqueada — no se mueve al arrastrar.
+               </div>
+             )}
+@@ -355,4 +355,4 @@ export function PropertiesPanel({
+       Selecciona una pieza o nestear para ver propiedades.
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/nesting/components/sheet-tabs.tsx b/src/features/nesting/components/sheet-tabs.tsx
+index 67908db..5de454e 100644
+--- a/src/features/nesting/components/sheet-tabs.tsx
++++ b/src/features/nesting/components/sheet-tabs.tsx
+@@ -26,8 +26,8 @@ export interface SheetTabsProps {
+ }
+ 
+ function usageBadgeClass(pct: number) {
+-  if (pct >= 80) return "bg-emerald-500/20 text-emerald-300"
+-  if (pct >= 50) return "bg-amber-500/20 text-amber-300"
++  if (pct >= 80) return "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
++  if (pct >= 50) return "bg-amber-500/20 text-amber-800 dark:text-amber-300"
+   return "bg-red-500/20 text-red-300"
+ }
+ 
+@@ -231,4 +231,4 @@ export function SheetTabs({
+       </div>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/processes/components/actions/process-row-actions.tsx b/src/features/processes/components/actions/process-row-actions.tsx
+index 8e03586..25caebd 100644
+--- a/src/features/processes/components/actions/process-row-actions.tsx
++++ b/src/features/processes/components/actions/process-row-actions.tsx
+@@ -129,7 +129,7 @@ export function ProcessRowActions({
+   if (status === "REVIEWED") {
+     return (
+       <div className="flex w-full items-center justify-center">
+-        <div className="flex h-8 w-full items-center justify-center rounded-lg bg-emerald-500/20 dark:bg-emerald-500/5 px-4 text-xs font-semibold uppercase text-emerald-300">
++        <div className="flex h-8 w-full items-center justify-center rounded-lg bg-emerald-500/20 dark:bg-emerald-500/5 px-4 text-xs font-semibold uppercase text-emerald-800 dark:text-emerald-300">
+           Revisado
+         </div>
+       </div>
+@@ -189,4 +189,4 @@ export function ProcessRowActions({
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/processes/components/production-hub/production-process-card.tsx b/src/features/processes/components/production-hub/production-process-card.tsx
+index d23f5b0..7991ce0 100644
+--- a/src/features/processes/components/production-hub/production-process-card.tsx
++++ b/src/features/processes/components/production-hub/production-process-card.tsx
+@@ -48,7 +48,7 @@ export function ProductionProcessCard({
+     urgentCount === 0
+       ? "text-muted-foreground"
+       : urgentCount <= 2
+-        ? "text-amber-400"
++        ? "text-amber-800 dark:text-amber-400"
+         : "text-red-400"
+ 
+   function handleOpenTask(taskId: string) {
+@@ -163,4 +163,4 @@ export function ProductionProcessCard({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index aab26e2..9dcdd71 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -200,7 +200,7 @@ export function ProcessMobileCard({
+                   ? "1 mensaje del proceso"
+                   : `${processTask.workflowStep?.commentCount} mensajes del proceso`
+               }
+-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
++              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+             >
+               <MessageSquare size={10} strokeWidth={2.5} />
+               {processTask.workflowStep?.commentCount}
+@@ -352,4 +352,4 @@ export function ProcessMobileCard({
+       </CollapsibleHeightSection>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/profile/components/profile-preview-panel.tsx b/src/features/profile/components/profile-preview-panel.tsx
+index ef3dbb2..6e2c8bf 100644
+--- a/src/features/profile/components/profile-preview-panel.tsx
++++ b/src/features/profile/components/profile-preview-panel.tsx
+@@ -138,7 +138,7 @@ export function ProfilePreviewPanel({
+ 
+         </button>
+ 
+-        <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-400">
++        <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-700 dark:text-green-400">
+ 
+           <span className="h-2 w-2 rounded-full bg-green-400"/>
+ 
+@@ -281,4 +281,4 @@ function ProfileRow({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+index fc6e3d8..77101eb 100644
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -197,7 +197,7 @@ export function ProjectMobileCard({
+                       ? "1 tarea activa"
+                       : `${project.taskCount} tareas activas`
+                   }
+-                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
++                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-800 dark:text-green-300"
+                 >
+                   {project.taskCount}
+                 </span>
+@@ -209,7 +209,7 @@ export function ProjectMobileCard({
+                       ? "1 mensaje"
+                       : `${project.commentCount} mensajes`
+                   }
+-                  className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
++                  className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+                 >
+                   <MessageSquare size={10} strokeWidth={2.5} />
+                   {project.commentCount}
+diff --git a/src/features/roles/components/permissions/permission-group.tsx b/src/features/roles/components/permissions/permission-group.tsx
+index 1cc296b..4b5676e 100644
+--- a/src/features/roles/components/permissions/permission-group.tsx
++++ b/src/features/roles/components/permissions/permission-group.tsx
+@@ -49,7 +49,7 @@ export function PermissionGroup({
+           className={cn(
+             "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors",
+             allChecked
+-              ? "bg-green-500/15 text-green-400 hover:bg-green-500/20"
++              ? "bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/20"
+               : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-muted-foreground",
+           )}
+         >
+@@ -70,4 +70,4 @@ export function PermissionGroup({
+       </div>
+     </section>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/roles/components/permissions/permission-toggle.tsx b/src/features/roles/components/permissions/permission-toggle.tsx
+index 4c91f20..ef205ba 100644
+--- a/src/features/roles/components/permissions/permission-toggle.tsx
++++ b/src/features/roles/components/permissions/permission-toggle.tsx
+@@ -58,10 +58,10 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false
+       </span>
+ 
+       {overridden && (
+-        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
++        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
+           Excepción
+         </span>
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/roles/components/role-permissions-page-content.tsx b/src/features/roles/components/role-permissions-page-content.tsx
+index 0eecd61..8e2e04e 100644
+--- a/src/features/roles/components/role-permissions-page-content.tsx
++++ b/src/features/roles/components/role-permissions-page-content.tsx
+@@ -415,7 +415,7 @@ export function RolePermissionsPageContent() {
+                         </span>
+                       </div>
+                       {dirty && (
+-                        <span className="shrink-0 text-xs font-medium text-amber-400">
++                        <span className="shrink-0 text-xs font-medium text-amber-800 dark:text-amber-400">
+                           Cambios sin guardar
+                         </span>
+                       )}
+@@ -506,7 +506,7 @@ export function RolePermissionsPageContent() {
+                         </span>
+                       </div>
+                       {dirty && (
+-                        <span className="shrink-0 text-xs font-medium text-amber-400">
++                        <span className="shrink-0 text-xs font-medium text-amber-800 dark:text-amber-400">
+                           Cambios sin guardar
+                         </span>
+                       )}
+@@ -514,7 +514,7 @@ export function RolePermissionsPageContent() {
+                     {mode === "usuarios" && (
+                       <p className="mt-1 text-xs text-muted-foreground">
+                         Por encima de lo que ya otorgan sus roles. Lo marcado como{" "}
+-                        <span className="text-amber-400">Excepción</span> es distinto a su base.
++                        <span className="text-amber-800 dark:text-amber-400">Excepción</span> es distinto a su base.
+                       </p>
+                     )}
+                   </div>
+@@ -580,4 +580,4 @@ export function RolePermissionsPageContent() {
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx b/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
+index 43956b4..1d48a9f 100644
+--- a/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
++++ b/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
+@@ -41,7 +41,7 @@ const statusStyles: Record<
+ 
+   PAUSED: {
+     dot: "border-amber-400 bg-amber-400",
+-    text: "text-amber-300",
++    text: "text-amber-800 dark:text-amber-300",
+   },
+ 
+   COMPLETED: {
+@@ -90,4 +90,4 @@ export function TaskWorkflowStep({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/components/kanban-card/kanban-card-view.tsx b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+index f928ca1..5a9bac7 100644
+--- a/src/features/tasks/components/kanban-card/kanban-card-view.tsx
++++ b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+@@ -165,7 +165,7 @@ export function KanbanCardView({
+             {!hideCommentBadge && commentCount > 0 && (
+               <span
+                 title={commentCount === 1 ? "1 mensaje" : `${commentCount} mensajes`}
+-                className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
++                className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+               >
+                 <MessageSquare size={10} strokeWidth={2.5} />
+                 {commentCount}
+@@ -254,4 +254,4 @@ export function KanbanCardView({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+index 0724c4d..6ed6558 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -77,7 +77,7 @@ export function TaskPipelineCardCompact({
+         return (
+           <span
+             title={n === 1 ? "1 mensaje" : `${n} mensajes`}
+-            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
++            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+           >
+             <MessageSquare size={10} strokeWidth={2.5} />
+             {n}
+@@ -101,4 +101,4 @@ export function TaskPipelineCardCompact({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
+index 2e12e5a..4fa34a3 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
+@@ -227,7 +227,7 @@ export function TaskPipelineCard({
+             className={cn(
+               "animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-2 transition duration-200 ease-out",
+               (processTask.workflowStep?.commentCount ?? 0) > 0
+-                ? "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25"
++                ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 hover:bg-sky-500/25"
+                 : "bg-foreground/10 text-muted-foreground hover:bg-foreground/15 hover:text-foreground",
+               longPressEnabled &&
+                 pressed &&
+@@ -260,4 +260,4 @@ export function TaskPipelineCard({
+       )}
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/panel/area-task-section.tsx b/src/features/tasks/pipeline/components/panel/area-task-section.tsx
+index 053d325..f04dcd6 100644
+--- a/src/features/tasks/pipeline/components/panel/area-task-section.tsx
++++ b/src/features/tasks/pipeline/components/panel/area-task-section.tsx
+@@ -91,7 +91,7 @@ function OperatorTaskLists({ code, tasks, panel }: OperatorTaskListsProps) {
+     <>
+       {assigned.length > 0 && (
+         <>
+-          <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-emerald-400">Asignadas</p>
++          <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Asignadas</p>
+           <TaskProcessColumn
+             processCode={code}
+             tasks={assigned}
+@@ -130,4 +130,4 @@ function OperatorTaskLists({ code, tasks, panel }: OperatorTaskListsProps) {
+       )}
+     </>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/panel/pending-invites-section.tsx b/src/features/tasks/pipeline/components/panel/pending-invites-section.tsx
+index 1ef04d1..a82571c 100644
+--- a/src/features/tasks/pipeline/components/panel/pending-invites-section.tsx
++++ b/src/features/tasks/pipeline/components/panel/pending-invites-section.tsx
+@@ -51,7 +51,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
+ 
+     <div className="flex flex-col gap-2 rounded-2xl bg-sky-500/8 p-3 ring-1 ring-sky-500/20">
+ 
+-      <span className="px-1 text-xs font-bold uppercase tracking-wide text-sky-300">
++      <span className="px-1 text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+         Te convocaron · {invites.length}
+       </span>
+ 
+@@ -102,7 +102,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
+                   disabled={accepting}
+                   onClick={() => acceptInvite(invite.stepId)}
+                   aria-label="Aceptar"
+-                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/32 dark:bg-emerald-500/25 disabled:opacity-40"
++                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 transition-colors hover:bg-emerald-500/32 dark:bg-emerald-500/25 disabled:opacity-40"
+                 >
+                   <Check size={15} />
+                 </button>
+@@ -121,4 +121,4 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/panel/task-assignment-badge.tsx b/src/features/tasks/pipeline/components/panel/task-assignment-badge.tsx
+index 799bc84..fdfd24b 100644
+--- a/src/features/tasks/pipeline/components/panel/task-assignment-badge.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-assignment-badge.tsx
+@@ -36,9 +36,9 @@ export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
+     <div
+       className={cn(
+         "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-opacity",
+-        invited 
+-          ? "bg-sky-500/10 text-sky-300" 
+-          : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-300",
++        invited
++          ? "bg-sky-500/10 text-sky-700 dark:text-sky-300"
++          : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300",
+         unsummoning && "opacity-60 pointer-events-none"
+       )}
+     >
+@@ -58,18 +58,18 @@ export function TaskAssignmentBadge({ step, onUnsummon, unsummoning }: Props) {
+         aria-label="Deshacer convocatoria"
+         className={cn(
+           "flex size-4 shrink-0 items-center justify-center rounded-full transition-colors",
+-          invited 
+-            ? "hover:bg-sky-500/20 text-sky-400 hover:text-sky-200" 
+-            : "hover:bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-400 hover:text-emerald-200",
++          invited
++            ? "hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 hover:text-sky-200"
++            : "hover:bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:text-emerald-200",
+           "disabled:opacity-50"
+         )}
+       >
+         {unsummoning ? (
+-          <Spinner size={10} className={invited ? "text-sky-300" : "text-emerald-300"} />
++          <Spinner size={10} className={invited ? "text-sky-700 dark:text-sky-300" : "text-emerald-800 dark:text-emerald-300"} />
+         ) : (
+           <X size={12} strokeWidth={2.5} />
+         )}
+       </button>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+index 32802f3..4791017 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+@@ -233,7 +233,7 @@ function ActiveOperatorsPopover({
+ 
+           {workingCount > 0 && (
+ 
+-            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/22 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-400">
++            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/22 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400">
+               <Zap size={10} />
+               {workingCount}
+             </span>
+@@ -317,4 +317,4 @@ export function TaskColumnOperator({
+ 
+   return <ActiveOperatorsPopover entries={entries} />
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/workflow/workflow-numeric-field.tsx b/src/features/tasks/pipeline/components/workflow/workflow-numeric-field.tsx
+index 200f312..c0bee24 100644
+--- a/src/features/tasks/pipeline/components/workflow/workflow-numeric-field.tsx
++++ b/src/features/tasks/pipeline/components/workflow/workflow-numeric-field.tsx
+@@ -156,7 +156,7 @@ export function WorkflowNumericField({
+             isSaved
+               ? "bg-emerald-500 text-foreground"
+               : canSave
+-                ? "bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/36 dark:bg-emerald-500/30"
++                ? "bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/36 dark:bg-emerald-500/30"
+                 : "bg-foreground/5 text-muted-foreground/80",
+           )}
+         >
+@@ -174,4 +174,4 @@ export function WorkflowNumericField({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+index 04cffae..b040972 100644
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -257,7 +257,7 @@ export function TaskMobileCard({
+                   ? "1 mensaje"
+                   : `${task.commentCount} mensajes`
+               }
+-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
++              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+             >
+               <MessageSquare size={10} strokeWidth={2.5} />
+               {task.commentCount}
+@@ -417,4 +417,4 @@ export function TaskMobileCard({
+       </CollapsibleHeightSection>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/shared/ui/actions/workflow-action.tsx b/src/shared/ui/actions/workflow-action.tsx
+index 1bf7496..f25b0af 100644
+--- a/src/shared/ui/actions/workflow-action.tsx
++++ b/src/shared/ui/actions/workflow-action.tsx
+@@ -88,7 +88,7 @@ export function WorkflowAction({
+ 
+             icon:Pause,
+ 
+-            iconClass:"text-amber-300",
++            iconClass:"text-amber-800 dark:text-amber-300",
+ 
+           }
+ 
+@@ -98,7 +98,7 @@ export function WorkflowAction({
+ 
+               icon:Check,
+ 
+-              iconClass:"text-emerald-300",
++              iconClass:"text-emerald-800 dark:text-emerald-300",
+ 
+             }
+ 
+@@ -106,7 +106,7 @@ export function WorkflowAction({
+ 
+               icon:Search,
+ 
+-              iconClass:"text-sky-300",
++              iconClass:"text-sky-700 dark:text-sky-300",
+ 
+             }
+ 
+@@ -223,4 +223,4 @@ export function WorkflowAction({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
