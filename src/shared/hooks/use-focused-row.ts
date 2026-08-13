@@ -193,10 +193,6 @@ export function useFocusedRow({
 
     prevFocusedIdRef.current = focusedId
 
-    if (focusToken) {
-      useFocusSettleStore.getState().begin(focusToken)
-    }
-
     // Todavía NO expandimos — el orden correcto es scroll primero,
     // con el row visible pero colapsado (existe en el DOM igual,
     // `data-expanded-row-id` no depende de estar expandido).

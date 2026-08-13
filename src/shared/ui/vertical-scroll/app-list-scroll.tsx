@@ -22,7 +22,14 @@ type Props = {
 
 /**
  * Un scroller por superficie de lista.
- * Contenido: min-h-full (puede crecer → overflow real). No usar h-full aquí.
+ * Contenido: `h-full` (NO min-h-full) — le da al flex column una
+ * altura DEFINIDA, así flex-1 en un hijo puntual (ej. Agenda/Mes en
+ * Bitácora) tiene presupuesto real para repartir y puede llenar el
+ * espacio disponible. Con min-h-full esto no funciona: min-height
+ * no cuenta como altura definida para el algoritmo de flexbox, y
+ * el flex-1 del hijo no hace nada. Si el contenido total supera esa
+ * altura, igual desborda hacia el ScrollArea (que es quien de
+ * verdad scrollea) porque este div no tiene overflow propio.
  */
 export function AppListScroll({
   children,
@@ -41,7 +48,7 @@ export function AppListScroll({
 
   const content = (
     <div
-      className={cn("flex min-h-full flex-col", className)}
+      className={cn("flex h-full flex-col", className)}
       style={
         isMobile
           ? {

@@ -7,8 +7,6 @@ import {
 
 import type { Task } from "../types/task.types"
 
-import { cn } from "@/shared/utils/utils"
-
 import { useFocusedRow } from "@/shared/hooks/use-focused-row"
 import { useExpandRow } from "@/shared/hooks/use-expand-row"
 import { useHistoryHiddenFocus } from "@/shared/hooks/use-history-hidden-focus"
@@ -69,13 +67,6 @@ export function TaskTable({
   })
 
   const markSettled = useFocusSettleStore(s => s.markSettled)
-  const blurUntil = useFocusSettleStore(s => s.blurUntil)
-  const pendingToken = useFocusSettleStore(s => s.pendingToken)
-  const settledToken = useFocusSettleStore(s => s.settledToken)
-  void blurUntil
-  void pendingToken
-  void settledToken
-  const isSettlingFocus = useFocusSettleStore(s => s.isSettling(focusToken))
 
   useFocusedRow({
     focusedId: focusedTaskId,
@@ -185,12 +176,7 @@ export function TaskTable({
 
     <>
 
-      <div
-        className={cn(
-          "flex flex-col gap-2 pb-2 transition-[filter] duration-200 ease-out",
-          isSettlingFocus && "pointer-events-none blur-[3px] opacity-55",
-        )}
-      >
+      <div className="flex flex-col gap-2 pb-2">
 
         {displayedTasks.map(task => {
 
