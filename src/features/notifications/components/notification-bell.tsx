@@ -161,7 +161,7 @@ export function NotificationBell({
           type="button"
           onClick={() => markAllAsRead()}
           disabled={loading || visibleNotifications.length === 0}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
         >
           <Eraser size={13} />
           Limpiar

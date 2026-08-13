@@ -111,13 +111,13 @@ export function ProjectSortButton() {
           >
             <span className="flex items-center gap-2">
               {projectSortDirection === "asc" ? (
-                <ArrowUpAZ className="size-3.5 text-cyan-400" />
+                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
               ) : (
-                <ArrowDownAZ className="size-3.5 text-cyan-400" />
+                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
               )}
               Dirección
             </span>
-            <span className="font-semibold tabular-nums text-cyan-300">
+            <span className="font-semibold tabular-nums text-cyan-700 dark:text-cyan-300">
               {dirLabel}
             </span>
           </button>

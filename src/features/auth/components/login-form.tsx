@@ -51,9 +51,9 @@ export function LoginForm() {
   }
 
   const inputClass =
-    `h-11 ${SHORT}:h-10 w-full rounded-xl bg-[#111113] px-4 text-base text-foreground outline-none ` +
-    "placeholder:text-muted-foreground/80 transition-colors duration-200 " +
-    "focus:bg-[#1c1c20] " +
+    `h-11 ${SHORT}:h-10 w-full rounded-xl bg-muted px-4 text-base text-foreground outline-none ` +
+    "placeholder:text-muted-foreground transition-colors duration-200 " +
+    "focus:bg-background focus:ring-2 focus:ring-ring/30 " +
     "disabled:cursor-not-allowed disabled:opacity-60"
 
   return (
@@ -131,7 +131,7 @@ export function LoginForm() {
         className={`flex h-11 ${SHORT}:h-10 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors ${
           success
             ? "bg-emerald-500 text-foreground"
-            : "bg-white text-black hover:bg-neutral-200 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            : "bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
         }`}
       >
         {success ? (

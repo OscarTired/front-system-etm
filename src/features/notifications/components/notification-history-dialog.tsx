@@ -199,7 +199,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                     type="button"
                     onClick={() => markAllAsRead()}
                     title="Marcar todas como leídas"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-300"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-cyan-300"
                   >
                     <Eraser size={16} />
                   </button>

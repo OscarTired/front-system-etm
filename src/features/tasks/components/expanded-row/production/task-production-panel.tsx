@@ -169,7 +169,7 @@ export function TaskProductionPanel({
         </div>
 
         <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
-          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-400">{workflowView.progress}%</span>
+          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-cyan-400">{workflowView.progress}%</span>
         </span>
 
       </div>

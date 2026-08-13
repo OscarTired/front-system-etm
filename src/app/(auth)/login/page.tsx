@@ -32,7 +32,7 @@ export default function LoginPage() {
 
           {/* LEFT SIDE */}
 
-          <div className={`hidden border-r border-border bg-linear-to-br from-[#0A0A0A] to-[#050505] p-4 ${SHORT}:flex ${SHORT}:flex-col ${SHORT}:justify-center laptop:flex laptop:flex-col laptop:justify-between laptop:p-8`}>
+          <div className={`hidden bg-linear-to-br from-[#0A0A0A] to-[#050505] p-4 ${SHORT}:flex ${SHORT}:flex-col ${SHORT}:justify-center laptop:flex laptop:flex-col laptop:justify-between laptop:p-8`}>
 
             <div>
 
@@ -53,11 +53,11 @@ export default function LoginPage() {
 
               </div>
 
-              <p className={`text-base text-muted-foreground ${SHORT}:text-base laptop:text-xl`}>
+              <p className={`text-base text-white/75 ${SHORT}:text-base laptop:text-xl`}>
                 COMPANY S.A.C.
               </p>
 
-              <p className={`mt-1 text-xs text-muted-foreground ${SHORT}:mt-1 laptop:mt-4 laptop:text-sm`}>
+              <p className={`mt-1 text-xs text-white/50 ${SHORT}:mt-1 laptop:mt-4 laptop:text-sm`}>
                 Sistema de Producción
               </p>
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
             */}
             <div className="hidden space-y-3 laptop:block">
 
-              <p className="text-xs text-muted-foreground/80">
+              <p className="text-xs text-white/45">
                 Control de proyectos · tareas · procesos · producción
               </p>
 
