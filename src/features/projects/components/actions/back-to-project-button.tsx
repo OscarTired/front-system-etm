@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { useHydrated } from "@/shared/hooks/use-hydrated"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 
 const STORAGE_KEY = "task-origin-project-id"
 
@@ -34,6 +35,7 @@ export function BackToProjectButton() {
   const handleClick = () => {
     sessionStorage.removeItem(STORAGE_KEY)
     setProjectId(null)
+    useFocusNavStore.getState().start("Abriendo proyecto…")
     router.push(`/projects?projectId=${projectId}`)
   }
 

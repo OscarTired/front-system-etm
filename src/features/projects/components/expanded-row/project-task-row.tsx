@@ -9,6 +9,7 @@ import {
 import {
   useRouter,
 } from "next/navigation"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 
 import {
   ChevronRight,
@@ -274,6 +275,7 @@ export function ProjectTaskRow({
           task.project.id,
         )
 
+        useFocusNavStore.getState().start("Abriendo tarea…")
         router.push(`/tasks?taskId=${encodeURIComponent(task.id)}`)
       },
       [

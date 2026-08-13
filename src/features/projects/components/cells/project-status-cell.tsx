@@ -1,5 +1,7 @@
 "use client"
 
+import { toast } from "sonner"
+
 import {
   EntitySelect,
 } from "@/shared/ui/entity-select/entity-select"
@@ -84,6 +86,19 @@ export function ProjectStatusCell({
 
           return
 
+        }
+
+        const active =
+          project.taskCount ?? 0
+
+        if (
+          status.code === "COMPLETED" &&
+          active > 0
+        ) {
+          toast.error(
+            `No se puede completar: hay ${active} tarea${active === 1 ? "" : "s"} activa${active === 1 ? "" : "s"}`,
+          )
+          return
         }
 
         updateField(

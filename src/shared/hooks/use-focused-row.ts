@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 
 import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 
 type Props = {
   focusedId?: string
@@ -83,6 +84,11 @@ function scrollExpandAndSettle(
   let disposed = false
   let timer: number | null = null
 
+  const finish = () => {
+    useFocusNavStore.getState().end()
+    onSettled?.()
+  }
+
   if (disposed || !isActive()) return () => {}
 
   // 1. Scroll (row colapsado todavía).
@@ -100,7 +106,7 @@ function scrollExpandAndSettle(
 
   timer = window.setTimeout(() => {
     run()
-    if (!disposed && isActive()) onSettled?.()
+    if (!disposed && isActive()) finish()
   }, POST_EXPAND_MS)
 
   return () => {
@@ -228,6 +234,7 @@ export function useFocusedRow({
         // no lleguemos a scrollear) que dejar el deep-link sin efecto.
         if (!isActive()) return
         expand()
+        useFocusNavStore.getState().end()
         onSettled?.()
       },
     )

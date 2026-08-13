@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, type ReactNode } from "react"
+import { FocusNavOverlay } from "@/shared/focus/focus-nav-overlay"
 import { usePathname, useSearchParams } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
@@ -150,15 +151,23 @@ function CompactShell({ children }: Props) {
 }
 
 export function AppShell({ children }: Props) {
+
   const { isMobile, ready } = useResponsive()
 
   if (!ready) {
     return <div className="h-full bg-[#050505]" />
   }
 
-  if (isMobile) {
-    return <CompactShell>{children}</CompactShell>
-  }
+  const shell = isMobile ? (
+    <CompactShell>{children}</CompactShell>
+  ) : (
+    <DesktopShell>{children}</DesktopShell>
+  )
 
-  return <DesktopShell>{children}</DesktopShell>
+  return (
+    <>
+      {shell}
+      <FocusNavOverlay />
+    </>
+  )
 }

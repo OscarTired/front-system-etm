@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { useHydrated } from "@/shared/hooks/use-hydrated"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 
 const STORAGE_KEY = "process-origin-task-id"
 
@@ -35,6 +36,7 @@ export function BackToTaskButton() {
   const handleClick = () => {
     sessionStorage.removeItem(STORAGE_KEY)
     setTaskId(null)
+    useFocusNavStore.getState().start("Abriendo tarea…")
     router.push(`/tasks?taskId=${taskId}`)
   }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 import { useSearchParams } from "next/navigation"
 import { ChevronDown, MessageSquare } from "lucide-react"
 
@@ -61,6 +62,7 @@ export function TaskMobileCard({
   const searchParams = useSearchParams()
 
   const goToProject = useCallback(() => {
+    useFocusNavStore.getState().start("Abriendo proyecto…")
     router.push(`/projects?projectId=${task.project.id}`)
   }, [router, task.project.id])
 
