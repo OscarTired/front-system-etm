@@ -16,7 +16,7 @@ type Props = {
 }
 
 export function BitacoraDepartmentPage({ config, embedded = false }: Props) {
-  usePageTitle(config.pageTitle)
+  usePageTitle(config.pageTitle, { mobile: config.mobileTitle })
 
   const router = useRouter()
   const userRoles = useAuthStore(state => state.user?.roles)

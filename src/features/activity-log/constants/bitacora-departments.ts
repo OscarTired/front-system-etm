@@ -4,6 +4,8 @@ export type BitacoraDepartmentConfig = {
   department: ActivityDepartment
   // Título de pestaña (usePageTitle) — sentence case.
   pageTitle: string
+  /** Topbar móvil — el depto ya se ve en los tabs */
+  mobileTitle?: string
   // Encabezado visible en la página — el mock ya lo mostraba en
   // mayúsculas, se deja como string aparte en vez de transformar
   // pageTitle en runtime.
@@ -22,6 +24,7 @@ export const BITACORA_DEPARTMENTS: Record<ActivityDepartment, BitacoraDepartment
   PRODUCCION: {
     department: "PRODUCCION",
     pageTitle: "Bitácora de Producción",
+    mobileTitle: "Bitácora",
     heading: "BITÁCORA DE PRODUCCIÓN",
     subtitle: "Qué hiciste hoy",
     roles: ["PRODUCCION"],
@@ -29,6 +32,7 @@ export const BITACORA_DEPARTMENTS: Record<ActivityDepartment, BitacoraDepartment
   INGENIERIA: {
     department: "INGENIERIA",
     pageTitle: "Bitácora de Ingeniería",
+    mobileTitle: "Bitácora",
     heading: "BITÁCORA DE INGENIERÍA",
     subtitle: "Qué hiciste hoy",
     roles: ["INGENIERIA", "PROYECTOS"],

@@ -35,7 +35,7 @@ export function TopBar() {
 
   return (
     <>
-      <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3">
+      <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-1.5 px-2.5">
         {/* Blur progresivo — mismo criterio que BottomNavigation:
             el efecto arranca en 0% abajo de esta zona y llega a
             100% recién cerca del borde superior de la pantalla, en
@@ -61,14 +61,17 @@ export function TopBar() {
           type="button"
           onClick={toggleDrawer}
           aria-label="Abrir navegación"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 text-neutral-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 text-neutral-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900"
         >
           <Menu size={18} strokeWidth={2.2} />
         </button>
 
         {/* Título */}
         <div className="min-w-0 flex-1">
-          <div className="inline-flex max-w-full items-center rounded-full bg-neutral-900/80 px-3.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl">
+          <div
+            title={title}
+            className="inline-flex max-w-full items-center rounded-full bg-neutral-900/80 px-2.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl"
+          >
             <span className="truncate text-sm font-semibold text-neutral-100">
               {title}
             </span>
