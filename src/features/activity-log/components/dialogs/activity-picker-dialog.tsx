@@ -569,8 +569,8 @@ export function ActivityPickerDialog({
                 className="w-full max-w-lg p-4"
               >
 
-                <div className="grid grid-cols-3 gap-2.5 w-full">
-                  {otherTypes.map((type, index) => {
+                <div className="flex w-full flex-wrap justify-center gap-2.5">
+                  {otherTypes.map((type) => {
                     const Icon = getActivityIcon(type.icon)
                     const isSelected = selectedTypeIds.includes(type.id)
 
@@ -579,11 +579,6 @@ export function ActivityPickerDialog({
                       !isSelected &&
                       selectedTypeIds.length >= maxSelection
 
-                    // Si es el 7mo ítem (el único elemento en la última fila de 3 columnas),
-                    // le asignamos col-start-2 para forzarlo exactamente al centro.
-                    const isSoleLastItem =
-                      index === otherTypes.length - 1 && otherTypes.length % 3 === 1
-
                     return (
                       <button
                         key={type.id}
@@ -591,13 +586,12 @@ export function ActivityPickerDialog({
                         disabled={isDisabled}
                         onClick={() => handleSelectType(type.id)}
                         className={cn(
-                          "relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 text-center transition-colors w-full",
+                          "relative flex w-[calc((100%-1.25rem)/3)] flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 text-center transition-colors",
                           isSelected
                             ? "bg-white/12"
                             : isDisabled
                               ? "cursor-not-allowed bg-white/4 opacity-40"
                               : "bg-white/4 hover:bg-white/8",
-                          isSoleLastItem && "col-start-2"
                         )}
                       >
                         {isSelected && (

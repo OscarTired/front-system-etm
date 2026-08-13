@@ -181,7 +181,7 @@ export function TaskInfoSection({
           {(lockedRouteCodes?.length ?? 0) > 0 && (
 
             <p className="mt-2 text-xs text-neutral-500">
-              Podés agregar procesos. No se pueden quitar los que ya estaban en la ruta una vez iniciada la producción.
+              Puedes agregar procesos. No se pueden quitar los que ya estaban en la ruta una vez iniciada la producción.
             </p>
 
           )}
