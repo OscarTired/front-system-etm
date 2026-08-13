@@ -60,7 +60,7 @@ export function NotificationToast({
             <AtSign
               size={9}
               strokeWidth={3}
-              className="text-cyan-400"
+              className="text-primary"
             />
           ) : (
             <MessageSquare

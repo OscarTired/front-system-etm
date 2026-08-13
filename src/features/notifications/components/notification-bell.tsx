@@ -126,7 +126,7 @@ export function NotificationBell({
         >
           <Bell size={16} strokeWidth={2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-900 font-semibold text-foreground text-[10px]">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground text-[10px]">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -146,8 +146,8 @@ export function NotificationBell({
           collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-          collapsedBadgeColor="bg-cyan-900 text-foreground"
-          badgeColor="bg-cyan-900 text-foreground"
+          collapsedBadgeColor="bg-primary text-primary-foreground"
+          badgeColor="bg-primary text-primary-foreground"
           badgeAnimated={count > 0}
         />
       </button>
@@ -161,7 +161,7 @@ export function NotificationBell({
           type="button"
           onClick={() => markAllAsRead()}
           disabled={loading || visibleNotifications.length === 0}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-primary disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
         >
           <Eraser size={13} />
           Limpiar

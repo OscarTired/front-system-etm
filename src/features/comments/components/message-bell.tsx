@@ -238,7 +238,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                           {typeof isHistorical === "boolean" && (
                             <span
                               className={cn(
-                                isHistorical ? "text-muted-foreground" : "text-cyan-400",
+                                isHistorical ? "text-muted-foreground" : "text-primary",
                               )}
                             >
                               · {isHistorical ? "Histórico" : "Activo"}

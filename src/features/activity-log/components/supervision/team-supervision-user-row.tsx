@@ -93,7 +93,7 @@ function MiniLog({ log }: { log: ActivityLog }) {
           </span>
         </div>
         {log.project ? (
-          <p className="mt-0.5 truncate text-[11px] text-cyan-400/90">
+          <p className="mt-0.5 truncate text-[11px] text-primary/90">
             {log.project.projectCode} · {log.project.name}
           </p>
         ) : null}

@@ -110,7 +110,7 @@ export function ProcessMobileCard({
                 <Link
                   href={`/tasks?taskId=${task.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="max-w-full truncate text-sm font-semibold leading-none text-foreground transition-colors hover:text-cyan-300"
+                  className="max-w-full truncate text-sm font-semibold leading-none text-foreground transition-colors hover:text-primary"
                 >
                   {task.reference}
                 </Link>

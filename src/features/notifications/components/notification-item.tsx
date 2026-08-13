@@ -190,7 +190,7 @@ export function NotificationItem({
           )}
 
           {isSelecting ? (
-            <Spinner size={12} className="shrink-0 text-cyan-400" />
+            <Spinner size={12} className="shrink-0 text-primary" />
           ) : (
             !notification.read && (
               <span className="size-1.5 shrink-0 rounded-full bg-cyan-400" />
@@ -214,7 +214,7 @@ export function NotificationItem({
                 <span
                   className={cn(
                     "shrink-0 text-[10px] font-medium uppercase tracking-wide",
-                    isHistorical ? "text-muted-foreground" : "text-cyan-400",
+                    isHistorical ? "text-muted-foreground" : "text-primary",
                   )}
                 >
                   {isHistorical ? "Histórico" : "Activo"}

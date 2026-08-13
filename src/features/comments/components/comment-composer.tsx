@@ -173,7 +173,7 @@ export function CommentComposer({
 
       {isEditing && (
         <div className="mb-1.5 flex items-center justify-between rounded-lg bg-foreground/5 px-2.5 py-1.5">
-          <span className="text-xs font-medium text-cyan-300">Editando comentario</span>
+          <span className="text-xs font-medium text-primary">Editando comentario</span>
           <IconAction icon={X} onClick={handleCancel} />
         </div>
       )}
@@ -181,7 +181,7 @@ export function CommentComposer({
       {isReplying && replyingTo && (
         <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-2.5 py-1.5">
           <div className="min-w-0">
-            <span className="text-xs font-medium text-cyan-300">
+            <span className="text-xs font-medium text-primary">
               Respondiendo a {replyingTo.user.name}
             </span>
             <p className="truncate text-xs text-muted-foreground">

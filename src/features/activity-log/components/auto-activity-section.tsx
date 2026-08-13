@@ -131,7 +131,7 @@ export function AutoActivitySection({ logs }: Props) {
                 </p>
 
                 {log.project && (
-                  <p className="mt-0.5 truncate text-xs text-cyan-400">
+                  <p className="mt-0.5 truncate text-xs text-primary">
                     {log.project.projectCode} · {log.project.name}
                     {log.task && ` · #${String(log.task.taskNumber).padStart(3, "0")} ${log.task.reference}`}
                   </p>

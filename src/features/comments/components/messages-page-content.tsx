@@ -189,7 +189,7 @@ export function MessagesPageContent() {
                             <button
                               type="button"
                               onClick={() => openComment(c, true)}
-                              className="flex h-6 items-center rounded-md bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
+                              className="flex h-6 items-center rounded-md bg-cyan-500/15 px-2 text-xs font-semibold text-primary transition-colors hover:bg-cyan-500/25"
                             >
                               Ver igual
                             </button>

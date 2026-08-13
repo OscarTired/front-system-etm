@@ -209,8 +209,8 @@ export function SidebarPresence({
           collapsed={collapsed}
           active={open}
           count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
-          collapsedBadgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-          badgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+          collapsedBadgeColor="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+          badgeColor="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
           size="sm"
         />
       </button>

@@ -171,7 +171,7 @@ export function CommentItem({
                   <CheckCheck
                     size={14}
                     strokeWidth={2.5}
-                    className="text-cyan-400"
+                    className="text-primary"
                   />
                 )}
               </span>

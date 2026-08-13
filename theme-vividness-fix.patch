@@ -1,0 +1,391 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 8891bdb..a133120 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -77,7 +77,7 @@
+   --secondary: oklch(0.935 0.006 260);
+   --secondary-foreground: oklch(0.22 0.012 260);
+   --muted: oklch(0.93 0.006 260);
+-  --muted-foreground: oklch(0.32 0.016 260);
++  --muted-foreground: oklch(0.26 0.018 260);
+   --accent: oklch(0.93 0.012 230);
+   --accent-foreground: oklch(0.22 0.02 230);
+   --destructive: oklch(0.55 0.2 25);
+diff --git a/src/features/activity-log/components/auto-activity-section.tsx b/src/features/activity-log/components/auto-activity-section.tsx
+index 94f7078..2be2843 100644
+--- a/src/features/activity-log/components/auto-activity-section.tsx
++++ b/src/features/activity-log/components/auto-activity-section.tsx
+@@ -131,7 +131,7 @@ export function AutoActivitySection({ logs }: Props) {
+                 </p>
+ 
+                 {log.project && (
+-                  <p className="mt-0.5 truncate text-xs text-cyan-400">
++                  <p className="mt-0.5 truncate text-xs text-primary">
+                     {log.project.projectCode} · {log.project.name}
+                     {log.task && ` · #${String(log.task.taskNumber).padStart(3, "0")} ${log.task.reference}`}
+                   </p>
+diff --git a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+index aebc709..2aa92f3 100644
+--- a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+@@ -133,7 +133,7 @@ function ActivityLogCard({
+           </p>
+ 
+           {log.project && (
+-            <p className="mt-2 text-xs text-cyan-400">
++            <p className="mt-2 text-xs text-primary">
+               {log.project.projectCode} · {log.project.name}
+               {log.task &&
+                 ` · #${String(log.task.taskNumber).padStart(3, "0")} ${log.task.reference}`}
+diff --git a/src/features/activity-log/components/shift-group-section.tsx b/src/features/activity-log/components/shift-group-section.tsx
+index aced18a..c6dfd8e 100644
+--- a/src/features/activity-log/components/shift-group-section.tsx
++++ b/src/features/activity-log/components/shift-group-section.tsx
+@@ -223,7 +223,7 @@ export function ShiftGroupSection({
+                         </p>
+ 
+                         {log.project && (
+-                          <p className="mt-0.5 truncate text-xs text-cyan-400">
++                          <p className="mt-0.5 truncate text-xs text-primary">
+                             {log.project.projectCode} · {log.project.name}
+                             {log.task && ` · #${String(log.task.taskNumber).padStart(3, "0")} ${log.task.reference}`}
+                           </p>
+diff --git a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+index 05b2538..b135925 100644
+--- a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
++++ b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+@@ -93,7 +93,7 @@ function MiniLog({ log }: { log: ActivityLog }) {
+           </span>
+         </div>
+         {log.project ? (
+-          <p className="mt-0.5 truncate text-[11px] text-cyan-400/90">
++          <p className="mt-0.5 truncate text-[11px] text-primary/90">
+             {log.project.projectCode} · {log.project.name}
+           </p>
+         ) : null}
+diff --git a/src/features/comments/components/comment-composer.tsx b/src/features/comments/components/comment-composer.tsx
+index 3d44ebd..b5f6690 100644
+--- a/src/features/comments/components/comment-composer.tsx
++++ b/src/features/comments/components/comment-composer.tsx
+@@ -173,7 +173,7 @@ export function CommentComposer({
+ 
+       {isEditing && (
+         <div className="mb-1.5 flex items-center justify-between rounded-lg bg-foreground/5 px-2.5 py-1.5">
+-          <span className="text-xs font-medium text-cyan-300">Editando comentario</span>
++          <span className="text-xs font-medium text-primary">Editando comentario</span>
+           <IconAction icon={X} onClick={handleCancel} />
+         </div>
+       )}
+@@ -181,7 +181,7 @@ export function CommentComposer({
+       {isReplying && replyingTo && (
+         <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-2.5 py-1.5">
+           <div className="min-w-0">
+-            <span className="text-xs font-medium text-cyan-300">
++            <span className="text-xs font-medium text-primary">
+               Respondiendo a {replyingTo.user.name}
+             </span>
+             <p className="truncate text-xs text-muted-foreground">
+diff --git a/src/features/comments/components/comment-item.tsx b/src/features/comments/components/comment-item.tsx
+index 10bcd03..6f3c582 100644
+--- a/src/features/comments/components/comment-item.tsx
++++ b/src/features/comments/components/comment-item.tsx
+@@ -171,7 +171,7 @@ export function CommentItem({
+                   <CheckCheck
+                     size={14}
+                     strokeWidth={2.5}
+-                    className="text-cyan-400"
++                    className="text-primary"
+                   />
+                 )}
+               </span>
+diff --git a/src/features/comments/components/comment-timeline.tsx b/src/features/comments/components/comment-timeline.tsx
+index 6214856..4f8b475 100644
+--- a/src/features/comments/components/comment-timeline.tsx
++++ b/src/features/comments/components/comment-timeline.tsx
+@@ -91,7 +91,7 @@ export function CommentTimeline({
+                 true,
+               )
+             }
+-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-cyan-300"
++            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+           >
+             Ver más →
+           </button>
+diff --git a/src/features/comments/components/message-bell.tsx b/src/features/comments/components/message-bell.tsx
+index b76751c..b5395bf 100644
+--- a/src/features/comments/components/message-bell.tsx
++++ b/src/features/comments/components/message-bell.tsx
+@@ -238,7 +238,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
+                           {typeof isHistorical === "boolean" && (
+                             <span
+                               className={cn(
+-                                isHistorical ? "text-muted-foreground" : "text-cyan-400",
++                                isHistorical ? "text-muted-foreground" : "text-primary",
+                               )}
+                             >
+                               · {isHistorical ? "Histórico" : "Activo"}
+diff --git a/src/features/comments/components/messages-page-content.tsx b/src/features/comments/components/messages-page-content.tsx
+index b899f6d..19cd481 100644
+--- a/src/features/comments/components/messages-page-content.tsx
++++ b/src/features/comments/components/messages-page-content.tsx
+@@ -189,7 +189,7 @@ export function MessagesPageContent() {
+                             <button
+                               type="button"
+                               onClick={() => openComment(c, true)}
+-                              className="flex h-6 items-center rounded-md bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
++                              className="flex h-6 items-center rounded-md bg-cyan-500/15 px-2 text-xs font-semibold text-primary transition-colors hover:bg-cyan-500/25"
+                             >
+                               Ver igual
+                             </button>
+diff --git a/src/features/notifications/components/notification-bell.tsx b/src/features/notifications/components/notification-bell.tsx
+index 937af07..7763e51 100644
+--- a/src/features/notifications/components/notification-bell.tsx
++++ b/src/features/notifications/components/notification-bell.tsx
+@@ -126,7 +126,7 @@ export function NotificationBell({
+         >
+           <Bell size={16} strokeWidth={2} />
+           {count > 0 && (
+-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-900 font-semibold text-foreground text-[10px]">
++            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground text-[10px]">
+               {count > 9 ? "9+" : count}
+             </span>
+           )}
+@@ -146,8 +146,8 @@ export function NotificationBell({
+           collapsed={collapsed}
+           active={open}
+           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
+-          collapsedBadgeColor="bg-cyan-900 text-foreground"
+-          badgeColor="bg-cyan-900 text-foreground"
++          collapsedBadgeColor="bg-primary text-primary-foreground"
++          badgeColor="bg-primary text-primary-foreground"
+           badgeAnimated={count > 0}
+         />
+       </button>
+@@ -161,7 +161,7 @@ export function NotificationBell({
+           type="button"
+           onClick={() => markAllAsRead()}
+           disabled={loading || visibleNotifications.length === 0}
+-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
++          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-primary disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
+         >
+           <Eraser size={13} />
+           Limpiar
+diff --git a/src/features/notifications/components/notification-history-dialog.tsx b/src/features/notifications/components/notification-history-dialog.tsx
+index 9ae554c..9fb953d 100644
+--- a/src/features/notifications/components/notification-history-dialog.tsx
++++ b/src/features/notifications/components/notification-history-dialog.tsx
+@@ -199,7 +199,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
+                     type="button"
+                     onClick={() => markAllAsRead()}
+                     title="Marcar todas como leídas"
+-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-cyan-300"
++                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-700 dark:hover:text-primary"
+                   >
+                     <Eraser size={16} />
+                   </button>
+diff --git a/src/features/notifications/components/notification-item.tsx b/src/features/notifications/components/notification-item.tsx
+index f77a9c5..49d595b 100644
+--- a/src/features/notifications/components/notification-item.tsx
++++ b/src/features/notifications/components/notification-item.tsx
+@@ -190,7 +190,7 @@ export function NotificationItem({
+           )}
+ 
+           {isSelecting ? (
+-            <Spinner size={12} className="shrink-0 text-cyan-400" />
++            <Spinner size={12} className="shrink-0 text-primary" />
+           ) : (
+             !notification.read && (
+               <span className="size-1.5 shrink-0 rounded-full bg-cyan-400" />
+@@ -214,7 +214,7 @@ export function NotificationItem({
+                 <span
+                   className={cn(
+                     "shrink-0 text-[10px] font-medium uppercase tracking-wide",
+-                    isHistorical ? "text-muted-foreground" : "text-cyan-400",
++                    isHistorical ? "text-muted-foreground" : "text-primary",
+                   )}
+                 >
+                   {isHistorical ? "Histórico" : "Activo"}
+diff --git a/src/features/notifications/components/notification-toast.tsx b/src/features/notifications/components/notification-toast.tsx
+index 26ce391..7124f85 100644
+--- a/src/features/notifications/components/notification-toast.tsx
++++ b/src/features/notifications/components/notification-toast.tsx
+@@ -60,7 +60,7 @@ export function NotificationToast({
+             <AtSign
+               size={9}
+               strokeWidth={3}
+-              className="text-cyan-400"
++              className="text-primary"
+             />
+           ) : (
+             <MessageSquare
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index 9c9651c..aab26e2 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -110,7 +110,7 @@ export function ProcessMobileCard({
+                 <Link
+                   href={`/tasks?taskId=${task.id}`}
+                   onClick={(e) => e.stopPropagation()}
+-                  className="max-w-full truncate text-sm font-semibold leading-none text-foreground transition-colors hover:text-cyan-300"
++                  className="max-w-full truncate text-sm font-semibold leading-none text-foreground transition-colors hover:text-primary"
+                 >
+                   {task.reference}
+                 </Link>
+diff --git a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+index 3ed26bb..a992f97 100644
+--- a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
++++ b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+@@ -173,7 +173,7 @@ export function TaskProductionPanel({
+         </div>
+ 
+         <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
+-          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-cyan-400">{workflowView.progress}%</span>
++          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-primary">{workflowView.progress}%</span>
+         </span>
+ 
+       </div>
+diff --git a/src/shared/focus/focus-nav-overlay.tsx b/src/shared/focus/focus-nav-overlay.tsx
+index f261636..8444502 100644
+--- a/src/shared/focus/focus-nav-overlay.tsx
++++ b/src/shared/focus/focus-nav-overlay.tsx
+@@ -27,7 +27,7 @@ export function FocusNavOverlay() {
+       aria-busy="true"
+     >
+       <div className="flex flex-col items-center gap-3 rounded-2xl bg-chrome px-6 py-5 shadow-2xl">
+-        <Spinner size={22} className="text-cyan-400" />
++        <Spinner size={22} className="text-primary" />
+         <p className="text-sm font-medium text-foreground">
+           {label ?? "Dirigiendo…"}
+         </p>
+diff --git a/src/shared/responsive/layout/sidebar/sidebar-presence.tsx b/src/shared/responsive/layout/sidebar/sidebar-presence.tsx
+index 3655693..64593ba 100644
+--- a/src/shared/responsive/layout/sidebar/sidebar-presence.tsx
++++ b/src/shared/responsive/layout/sidebar/sidebar-presence.tsx
+@@ -209,8 +209,8 @@ export function SidebarPresence({
+           collapsed={collapsed}
+           active={open}
+           count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
+-          collapsedBadgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+-          badgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
++          collapsedBadgeColor="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
++          badgeColor="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+           size="sm"
+         />
+       </button>
+diff --git a/src/shared/sorting/components/project-sort-button.tsx b/src/shared/sorting/components/project-sort-button.tsx
+index 2c960d7..b2aeed0 100644
+--- a/src/shared/sorting/components/project-sort-button.tsx
++++ b/src/shared/sorting/components/project-sort-button.tsx
+@@ -111,13 +111,13 @@ export function ProjectSortButton() {
+           >
+             <span className="flex items-center gap-2">
+               {projectSortDirection === "asc" ? (
+-                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
++                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+               ) : (
+-                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
++                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+               )}
+               Dirección
+             </span>
+-            <span className="font-semibold tabular-nums text-cyan-700 dark:text-cyan-300">
++            <span className="font-semibold tabular-nums text-cyan-700 dark:text-primary">
+               {dirLabel}
+             </span>
+           </button>
+diff --git a/src/shared/sorting/components/task-sort-button.tsx b/src/shared/sorting/components/task-sort-button.tsx
+index c12b5bf..a04a29a 100644
+--- a/src/shared/sorting/components/task-sort-button.tsx
++++ b/src/shared/sorting/components/task-sort-button.tsx
+@@ -115,13 +115,13 @@ export function TaskSortButton() {
+           >
+             <span className="flex items-center gap-2">
+               {taskSortDirection === "asc" ? (
+-                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
++                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+               ) : (
+-                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-cyan-400" />
++                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+               )}
+               Dirección
+             </span>
+-            <span className="font-semibold tabular-nums text-cyan-700 dark:text-cyan-300">
++            <span className="font-semibold tabular-nums text-cyan-700 dark:text-primary">
+               {dirLabel}
+             </span>
+           </button>
+diff --git a/src/shared/utils/badge-colors.ts b/src/shared/utils/badge-colors.ts
+index 429b137..5c18d3f 100644
+--- a/src/shared/utils/badge-colors.ts
++++ b/src/shared/utils/badge-colors.ts
+@@ -133,26 +133,61 @@ export function getBadgeColors(
+       }
+ 
+     default: {
+-      // Subtle backgrounds: slightly stronger on light so chips don't look empty
+-      const bgAlpha = dark ? 0.14 : 0.24
+-      const bgHover = dark ? 0.2 : 0.32
+-      const bgActive = dark ? 0.28 : 0.40
++
++      if (!dark) {
++        // Light: NADA de alpha-transparencia. Mezclar un color
++        // semi-transparente con un fondo claro lo desatura sin
++        // importar qué % de alpha uses — es matemática, no un
++        // número que se pueda ajustar. En vez de eso, un color
++        // OPACO mezclado hacia blanco: se ve saturado por sí
++        // mismo, sin depender de qué haya detrás (por eso "PAUSADO"
++        // se veía vívido en dark y lavado en light con el mismo hex).
++        const bg = rgbString(tintTowardWhite(hex, 0.72))
++        const bgHover = rgbString(tintTowardWhite(hex, 0.60))
++        const bgActive = rgbString(tintTowardWhite(hex, 0.48))
++
++        return {
++          background: bg,
++          backgroundHover: bgHover,
++          backgroundActive: bgActive,
++          glow: rgba(hex, 0.18),
++          text: getSubtleText(hex, dark),
++          shadow: {
++            default: "none",
++            hover: `
++              0 0 0 1px ${rgba(hex, 0.25)},
++              0 4px 12px rgba(0,0,0,0.06)
++            `,
++            active: `
++              0 0 0 1px ${rgba(hex, 0.35)},
++              0 8px 20px rgba(0,0,0,0.1)
++            `,
++          },
++        }
++      }
++
++      // Dark: sigue exactamente igual — acá la transparencia sí
++      // funciona (mezclar con un fondo casi negro da un glow sutil
++      // correcto), no se tocó nada de este branch.
++      const bgAlpha = 0.14
++      const bgHover = 0.2
++      const bgActive = 0.28
+ 
+       return {
+         background: rgba(hex, bgAlpha),
+         backgroundHover: rgba(hex, bgHover),
+         backgroundActive: rgba(hex, bgActive),
+-        glow: rgba(hex, dark ? 0.1 : 0.12),
++        glow: rgba(hex, 0.1),
+         text: getSubtleText(hex, dark),
+         shadow: {
+           default: "none",
+           hover: `
+-            0 0 0 1px ${rgba(hex, dark ? 0.12 : 0.2)},
+-            0 4px 12px rgba(0,0,0,${dark ? 0.1 : 0.06})
++            0 0 0 1px ${rgba(hex, 0.12)},
++            0 4px 12px rgba(0,0,0,0.1)
+           `,
+           active: `
+-            0 0 0 1px ${rgba(hex, dark ? 0.18 : 0.28)},
+-            0 8px 20px rgba(0,0,0,${dark ? 0.18 : 0.1})
++            0 0 0 1px ${rgba(hex, 0.18)},
++            0 8px 20px rgba(0,0,0,0.18)
+           `,
+         },
+       }

@@ -91,7 +91,7 @@ export function CommentTimeline({
                 true,
               )
             }
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-cyan-300"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
             Ver más →
           </button>

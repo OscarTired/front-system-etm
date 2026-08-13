@@ -133,26 +133,61 @@ export function getBadgeColors(
       }
 
     default: {
-      // Subtle backgrounds: slightly stronger on light so chips don't look empty
-      const bgAlpha = dark ? 0.14 : 0.24
-      const bgHover = dark ? 0.2 : 0.32
-      const bgActive = dark ? 0.28 : 0.40
+
+      if (!dark) {
+        // Light: NADA de alpha-transparencia. Mezclar un color
+        // semi-transparente con un fondo claro lo desatura sin
+        // importar qué % de alpha uses — es matemática, no un
+        // número que se pueda ajustar. En vez de eso, un color
+        // OPACO mezclado hacia blanco: se ve saturado por sí
+        // mismo, sin depender de qué haya detrás (por eso "PAUSADO"
+        // se veía vívido en dark y lavado en light con el mismo hex).
+        const bg = rgbString(tintTowardWhite(hex, 0.72))
+        const bgHover = rgbString(tintTowardWhite(hex, 0.60))
+        const bgActive = rgbString(tintTowardWhite(hex, 0.48))
+
+        return {
+          background: bg,
+          backgroundHover: bgHover,
+          backgroundActive: bgActive,
+          glow: rgba(hex, 0.18),
+          text: getSubtleText(hex, dark),
+          shadow: {
+            default: "none",
+            hover: `
+              0 0 0 1px ${rgba(hex, 0.25)},
+              0 4px 12px rgba(0,0,0,0.06)
+            `,
+            active: `
+              0 0 0 1px ${rgba(hex, 0.35)},
+              0 8px 20px rgba(0,0,0,0.1)
+            `,
+          },
+        }
+      }
+
+      // Dark: sigue exactamente igual — acá la transparencia sí
+      // funciona (mezclar con un fondo casi negro da un glow sutil
+      // correcto), no se tocó nada de este branch.
+      const bgAlpha = 0.14
+      const bgHover = 0.2
+      const bgActive = 0.28
 
       return {
         background: rgba(hex, bgAlpha),
         backgroundHover: rgba(hex, bgHover),
         backgroundActive: rgba(hex, bgActive),
-        glow: rgba(hex, dark ? 0.1 : 0.12),
+        glow: rgba(hex, 0.1),
         text: getSubtleText(hex, dark),
         shadow: {
           default: "none",
           hover: `
-            0 0 0 1px ${rgba(hex, dark ? 0.12 : 0.2)},
-            0 4px 12px rgba(0,0,0,${dark ? 0.1 : 0.06})
+            0 0 0 1px ${rgba(hex, 0.12)},
+            0 4px 12px rgba(0,0,0,0.1)
           `,
           active: `
-            0 0 0 1px ${rgba(hex, dark ? 0.18 : 0.28)},
-            0 8px 20px rgba(0,0,0,${dark ? 0.18 : 0.1})
+            0 0 0 1px ${rgba(hex, 0.18)},
+            0 8px 20px rgba(0,0,0,0.18)
           `,
         },
       }
