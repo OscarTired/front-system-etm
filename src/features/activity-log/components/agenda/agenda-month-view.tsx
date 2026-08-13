@@ -133,8 +133,13 @@ export function AgendaMonthView({
   const viewMonth = anchorDate.getMonth()
   const viewYear = anchorDate.getFullYear()
 
+  /**
+   * Misma cadena que semana: root flex-1/h-full/min-h-0.
+   * Filas minmax(min-content, 1fr): llenan el alto libre y crecen
+   * si hay más eventos de los que caben en 1fr.
+   */
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
       <div className="grid shrink-0 grid-cols-7 border-b border-white/5">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
@@ -153,7 +158,7 @@ export function AgendaMonthView({
 
       <div
         className="grid min-h-0 w-full flex-1"
-        style={{ gridTemplateRows: "repeat(6, minmax(3.25rem, 1fr))" }}
+        style={{ gridTemplateRows: "repeat(6, minmax(min-content, 1fr))" }}
       >
         {Array.from({ length: 6 }).map((_, week) => (
           <div

@@ -50,7 +50,7 @@ export function AgendaWeekView({
 
   if (isCompact) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e]">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e]">
         <div
           className={cn(
             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
@@ -157,14 +157,20 @@ export function AgendaWeekView({
     )
   }
 
+  /**
+   * Cadena esperada: AppListScroll (flex h-full) → hijo flex-1 min-h-0
+   * → este root. Llena el alto disponible; si las filas piden más
+   * (min-content), crece y scrollea el ScrollArea.
+   */
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
       <ScrollArea orientation="both" className="h-full min-h-0 min-w-0 flex-1">
         <div
-          className="grid h-full min-h-full w-full bg-[#0c0c0e]"
+          className="grid h-full w-full bg-[#0c0c0e]"
           style={{
             gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
-            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(5.5rem, 1fr))`,
+            // min-content: crece con chips; 1fr: reparte el alto libre
+            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(min-content, 1fr))`,
           }}
         >
           <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-white/5 bg-[#0c0c0e] p-3">

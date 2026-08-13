@@ -117,9 +117,8 @@ export function PopoverContent({
           }}
           onPointerDownOutside={onPointerDownOutside}
           onInteractOutside={onInteractOutside}
-          {...dragHandleProps}
           className={cn(
-            // flex-col es el contrato IG: handle | body scrolleable
+            // flex-col: handle (drag) | body scrolleable — drag SOLO en handle
             "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing &&
@@ -168,7 +167,10 @@ export function PopoverContent({
             <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
           </VisuallyHidden>
 
-          <div className="flex w-full shrink-0 touch-none justify-center pb-1 pt-2.5">
+          <div
+            {...dragHandleProps}
+            className="flex w-full shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
+          >
             <div className="h-1.5 w-9 rounded-full bg-white/15" />
           </div>
 

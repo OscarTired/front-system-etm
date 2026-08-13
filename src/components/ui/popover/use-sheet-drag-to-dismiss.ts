@@ -4,26 +4,22 @@ import * as React from "react"
 
 import { SHEET_CONFIG } from "./sheet-config"
 
+/**
+ * Drag-to-dismiss solo desde el handle (no desde input/lista).
+ * Mientras el sheet está abierto, bloquea los ScrollArea de fondo
+ * para que iOS no mueva la lista detrás al focus/blur del buscador.
+ */
 export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   const [dragY, setDragY] = React.useState(0)
   const [dismissing, setDismissing] = React.useState(false)
+  const [isDragging, setIsDragging] = React.useState(false)
 
   const draggingRef = React.useRef(false)
   const hasCapturedRef = React.useRef(false)
   const startYRef = React.useRef(0)
   const startTimeRef = React.useRef(0)
+  const dragYRef = React.useRef(0)
   const timeoutRef = React.useRef<number | null>(null)
-  const lockedScrollRef = React.useRef<{
-    el: HTMLElement
-    prevOverflow: string
-  } | null>(null)
-
-  const releaseScrollLock = React.useCallback(() => {
-    const locked = lockedScrollRef.current
-    if (!locked) return
-    locked.el.style.overflow = locked.prevOverflow
-    lockedScrollRef.current = null
-  }, [])
 
   const clearPendingTimeout = React.useCallback(() => {
     if (timeoutRef.current != null) {
@@ -32,27 +28,45 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
     }
   }, [])
 
+  // Lock de scroll de fondo mientras el sheet vive (no solo al arrastrar).
+  React.useEffect(() => {
+    if (!isOpen) return
+
+    const locked: { el: HTMLElement; overflow: string; touchAction: string }[] =
+      []
+
+    document
+      .querySelectorAll<HTMLElement>('[data-slot="scroll-area"]')
+      .forEach(el => {
+        if (el.closest('[data-slot="popover-sheet"]')) return
+        locked.push({
+          el,
+          overflow: el.style.overflow,
+          touchAction: el.style.touchAction,
+        })
+        el.style.overflow = "hidden"
+        el.style.touchAction = "none"
+      })
+
+    const prevBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      locked.forEach(({ el, overflow, touchAction }) => {
+        el.style.overflow = overflow
+        el.style.touchAction = touchAction
+      })
+      document.body.style.overflow = prevBodyOverflow
+    }
+  }, [isOpen])
+
   function onPointerDown(event: React.PointerEvent) {
     if (event.button !== 0) return
-
-    // No arrancar el drag-to-dismiss si el toque empieza dentro de
-    // un campo editable — si no, posicionar el cursor o seleccionar
-    // texto en el buscador termina arrastrando el sheet entero (y
-    // setPointerCapture le roba el puntero al input, cortando la
-    // interacción de texto nativa a mitad de camino).
-    const target = event.target as HTMLElement
-    if (
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target.isContentEditable
-    ) {
-      return
-    }
-
     draggingRef.current = true
     hasCapturedRef.current = false
     startYRef.current = event.clientY
     startTimeRef.current = performance.now()
+    dragYRef.current = 0
   }
 
   function onPointerMove(event: React.PointerEvent) {
@@ -67,36 +81,14 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
         } catch {
           // noop
         }
-
-        // Recién acá se confirma que es un arrastre de verdad (no
-        // un tap). Si hay un input enfocado en otro lado del sheet
-        // (buscador con teclado abierto), sacarle el foco ya mismo
-        // — así el teclado empieza a cerrarse en sincronía con la
-        // animación del sheet, en vez de quedarse abierto todo el
-        // arrastre peleando contra el transform.
+        setIsDragging(true)
+        // Desenfocar buscador solo cuando el arrastre es real (desde handle)
         const active = document.activeElement
         if (active instanceof HTMLElement && active !== document.body) {
-          // El scrollbar que se ve pasar detrás del blur es del
-          // ScrollArea de la página (la lista de fondo) — nunca fue
-          // el body (ese siempre estuvo overflow-hidden). iOS
-          // intenta "revelar" el input al desenfocarlo moviendo ESE
-          // scroll. Lo bloqueamos mientras dura el arrastre y lo
-          // liberamos en onPointerUp/onPointerCancel — atado al
-          // gesto real, no a un tiempo adivinado.
-          const background = document.querySelector<HTMLElement>(
-            '[data-slot="scroll-area"]',
-          )
-          if (background && !lockedScrollRef.current) {
-            lockedScrollRef.current = {
-              el: background,
-              prevOverflow: background.style.overflow,
-            }
-            background.style.overflow = "hidden"
-          }
-
           active.blur()
         }
       }
+      dragYRef.current = delta
       setDragY(delta)
     }
   }
@@ -114,13 +106,14 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
     draggingRef.current = false
     hasCapturedRef.current = false
-    releaseScrollLock()
+    setIsDragging(false)
 
+    const currentY = dragYRef.current
     const elapsed = Math.max(performance.now() - startTimeRef.current, 1)
-    const velocity = dragY / elapsed
+    const velocity = currentY / elapsed
 
     if (
-      dragY > SHEET_CONFIG.DISMISS_THRESHOLD_PX ||
+      currentY > SHEET_CONFIG.DISMISS_THRESHOLD_PX ||
       velocity > SHEET_CONFIG.DISMISS_VELOCITY_THRESHOLD
     ) {
       setDismissing(true)
@@ -134,23 +127,25 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
     }
 
     setDragY(0)
+    dragYRef.current = 0
   }
 
   React.useEffect(() => {
     if (isOpen) {
       setDragY(0)
+      dragYRef.current = 0
       setDismissing(false)
+      setIsDragging(false)
       clearPendingTimeout()
     }
     return clearPendingTimeout
   }, [isOpen, clearPendingTimeout])
 
-  React.useEffect(() => releaseScrollLock, [releaseScrollLock])
-
   return {
     dragY,
-    isDragging: draggingRef.current,
+    isDragging,
     dismissing,
+    /** Solo para el handle bar — no en Content ni en el body. */
     dragHandleProps: {
       onPointerDown,
       onPointerMove,
