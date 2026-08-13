@@ -56,6 +56,18 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
         } catch {
           // noop
         }
+
+        // Recién acá se confirma que es un arrastre de verdad (no
+        // un tap). Si hay un input enfocado en otro lado del sheet
+        // (buscador con teclado abierto), sacarle el foco ya mismo
+        // — así el teclado empieza a cerrarse en sincronía con la
+        // animación del sheet, en vez de quedarse abierto todo el
+        // arrastre peleando contra el transform (eso era el cursor
+        // "colgado" + scrollbar suelto + lag).
+        const active = document.activeElement
+        if (active instanceof HTMLElement && active !== document.body) {
+          active.blur()
+        }
       }
       setDragY(delta)
     }
