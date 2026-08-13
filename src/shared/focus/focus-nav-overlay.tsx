@@ -26,7 +26,7 @@ export function FocusNavOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-[#050505]/55 backdrop-blur-md"
+      className="fixed inset-0 z-200 flex items-center justify-center bg-[#050505]/55 backdrop-blur-md"
       aria-live="polite"
       aria-busy="true"
     >
