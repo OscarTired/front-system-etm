@@ -47,6 +47,17 @@ export function PopoverContent({
 
   const { containerRef, size } = useSmoothResize()
 
+  // Foco real del input de búsqueda — señal 100% confiable (evento
+  // de JS normal, sin depender de visualViewport/window.innerHeight
+  // ni de qué tan bien un navegador puntual respete el teclado).
+  // Con foco: el sheet crece a la altura fija. Sin foco: se achica
+  // al contenido (con un tope), como un sheet normal en reposo.
+  const [isInputFocused, setIsInputFocused] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!isOpen) setIsInputFocused(false)
+  }, [isOpen])
+
 
   if (isSheet) {
     const transitionStyle: string = isDragging
@@ -56,14 +67,14 @@ export function PopoverContent({
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
     /**
-     * Altura FIJA (SHEET_CONFIG.FIXED_HEIGHT_RATIO), siempre — el
-     * layout de atrás no se mueve (overlays-content, ver
-     * app/layout.tsx) y el sheet tampoco se recalcula por su cuenta
-     * ni por el teclado ni por cuánto contenido tenga (buscar y
-     * tener 1 resultado no lo achica). Nada mide nada: un solo
-     * número, pensado para sobrar por encima de un teclado normal.
-     * Si el contenido no llena esa altura, el resto queda vacío —
-     * mejor eso que la lista saltando de tamaño en cada tecla.
+     * Altura dinámica según foco del buscador, no del teclado:
+     * - Sin foco (reposo): auto, acotado a MAX_HEIGHT_RATIO — hug
+     *   content, como cualquier sheet normal (4 opciones = sheet
+     *   chico).
+     * - Con foco: FIXED_HEIGHT_RATIO fijo — no se recalcula por
+     *   cuánto encuentre la búsqueda (1 resultado no lo achica).
+     * onFocusCapture/onBlurCapture detectan cualquier input/textarea
+     * de adentro sin que cada caller tenga que avisar nada a mano.
      */
     return (
       <DialogPrimitive.Portal>
@@ -79,6 +90,24 @@ export function PopoverContent({
         <DialogPrimitive.Content
           data-slot="popover-sheet"
           data-drag-scroll-ignore
+          onFocusCapture={event => {
+            const target = event.target
+            if (
+              target instanceof HTMLInputElement ||
+              target instanceof HTMLTextAreaElement
+            ) {
+              setIsInputFocused(true)
+            }
+          }}
+          onBlurCapture={event => {
+            const target = event.target
+            if (
+              target instanceof HTMLInputElement ||
+              target instanceof HTMLTextAreaElement
+            ) {
+              setIsInputFocused(false)
+            }
+          }}
           onOpenAutoFocus={event => {
             if (onOpenAutoFocus) onOpenAutoFocus(event)
             else event.preventDefault()
@@ -105,16 +134,25 @@ export function PopoverContent({
           style={{
             ...style,
             top: "auto",
-            // height vía inline style, no clase Tailwind dinámica
-            // (una clase armada con template string nunca se genera
-            // en build — no es texto literal para el scanner).
-            height: `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`,
+            // height/maxHeight vía inline style, no clase Tailwind
+            // dinámica (una clase armada con template string nunca
+            // se genera en build — no es texto literal para el
+            // scanner).
+            height: isInputFocused
+              ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
+              : "auto",
+            // maxHeight solo en reposo — si tamién estuviera puesto
+            // con foco, CSS toma el menor entre height y maxHeight,
+            // y la altura fija de arriba nunca se alcanzaría de verdad.
+            maxHeight: isInputFocused
+              ? undefined
+              : `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: isDragging
               ? "none"
               : dismissing
                 ? transitionStyle
-                : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+                : `height 200ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
           }}
         >
           <VisuallyHidden asChild>
