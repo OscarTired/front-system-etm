@@ -16,6 +16,8 @@ export function DragCell({ hidden = false }: Props) {
   return (
     <button
       type="button"
+      data-dnd-row-handle=""
+      data-drag-handle=""
       tabIndex={hidden ? -1 : 0}
       aria-hidden={hidden}
       disabled={hidden}

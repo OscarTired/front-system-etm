@@ -46,6 +46,16 @@ function isInsideSheetOrPopover(target: EventTarget | null) {
   )
 }
 
+/** Handle / card de drag: el gesto es del DnD, no del PTR. */
+function isDragGestureTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      "[data-drag-handle],[data-activity-drag],[data-dnd-row-handle]",
+    ),
+  )
+}
+
 export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const startY = useRef(0)
   const pulling = useRef(false)
@@ -61,6 +71,15 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const onTouchStart = useCallback(
     (e: TouchEvent) => {
       if (refreshing) return
+      // Drag de filas / activity tiene el gesto: no competir.
+      if (usePullToRefreshStore.getState().dragLocked) {
+        pulling.current = false
+        return
+      }
+      if (isDragGestureTarget(e.target)) {
+        pulling.current = false
+        return
+      }
       // El sheet se porta a document.body en el DOM, pero React
       // burbujea eventos de portales según el árbol de React, no el
       // DOM real — así que arrastrar DENTRO de un sheet abierto
@@ -86,6 +105,16 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const onTouchMove = useCallback(
     (e: TouchEvent) => {
       if (!pulling.current || refreshing) return
+      if (usePullToRefreshStore.getState().dragLocked) {
+        pulling.current = false
+        setPullOffset(0)
+        return
+      }
+      if (isDragGestureTarget(e.target)) {
+        pulling.current = false
+        setPullOffset(0)
+        return
+      }
       if (isInsideSheetOrPopover(e.target)) {
         pulling.current = false
         setPullOffset(0)

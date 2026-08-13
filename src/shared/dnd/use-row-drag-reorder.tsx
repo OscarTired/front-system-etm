@@ -9,6 +9,7 @@ import {
 } from "react"
 
 import { DndRowProvider } from "@/shared/ui/entity-table-common/dnd-row-context"
+import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
 
 type RowRect = {
   id: string
@@ -124,6 +125,7 @@ export function useRowDragReorder<T>({
 
     startPos.current = { x: e.clientX, y: e.clientY }
     setIsActuallyDragging(false)
+    usePullToRefreshStore.getState().setDragLocked(true)
 
     setDrag({
       item,
@@ -154,6 +156,7 @@ export function useRowDragReorder<T>({
 
     // Limpieza directa y síncrona de los estados de interacción del puntero.
     // La fluidez visual se confía enteramente a la persistencia del DOM y la inversión de transforms si fuera necesario.
+    usePullToRefreshStore.getState().setDragLocked(false)
     setDrag(null)
     setIsActuallyDragging(false)
     setInsertIndex(null)
