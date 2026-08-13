@@ -11,7 +11,6 @@ import {
   NotebookPen,
   ListChecks,
   Boxes,
-  MessageSquare,
 } from "lucide-react"
 
 import {
@@ -32,13 +31,6 @@ export const NAVIGATION = [
         label: "Tareas",
         href: "/tasks",
         icon: ClipboardList,
-        permission: PermissionCode.TASK_READ,
-      },
-      {
-        label: "Mensajes",
-        href: "/messages",
-        icon: MessageSquare,
-        // Menciones y respuestas — visible a quien lee proyectos/tareas
         permission: PermissionCode.TASK_READ,
       },
     ],

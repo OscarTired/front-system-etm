@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ProfileDialog } from "@/features/profile"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
+import { MessageBell } from "@/features/comments/components/message-bell"
 import { SidebarPresence } from "../../responsive/layout/sidebar/sidebar-presence"
 import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
@@ -78,6 +79,7 @@ export function TopBar() {
         <SidebarPresence variant="topbar" />
 
         {/* Notificaciones con contador explícito */}
+        <MessageBell variant="topbar" />
         <NotificationBell variant="topbar" />
 
         {/* Botón de perfil */}

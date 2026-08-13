@@ -6,6 +6,7 @@ export type OverlayId =
   | "profile"
   | "notifications"
   | "presence"
+  | "messages"
   | null
 
 type OverlayStore = {

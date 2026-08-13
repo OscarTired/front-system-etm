@@ -11,6 +11,7 @@ import { SidebarSection } from "./sidebar-section"
 
 import { cn } from "@/shared/utils/utils"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
+import { MessageBell } from "@/features/comments/components/message-bell"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -69,12 +70,23 @@ export function SidebarNavigation({
         <>
           <div
             className={cn(
-              collapsed ? "mb-3 flex justify-end" : "mb-3",
-              isMounting && "animate-gemini-in opacity-0"
+              "mb-1 w-full",
+              collapsed && "flex justify-center",
+              isMounting && "animate-gemini-in opacity-0",
             )}
             style={isMounting ? { animationDelay: "100ms" } : undefined}
           >
             <NotificationBell collapsed={collapsed} />
+          </div>
+          <div
+            className={cn(
+              "mb-3 w-full",
+              collapsed && "flex justify-center",
+              isMounting && "animate-gemini-in opacity-0",
+            )}
+            style={isMounting ? { animationDelay: "110ms" } : undefined}
+          >
+            <MessageBell collapsed={collapsed} />
           </div>
 
           <div

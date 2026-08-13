@@ -262,7 +262,7 @@ export function NotificationBell({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
             >
               <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
@@ -278,7 +278,7 @@ export function NotificationBell({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none bg-[#171717] text-white shadow-xl select-none"
+            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-white shadow-xl select-none"
           >
             <div className="flex shrink-0 items-center px-3.5 pt-3">
               <span className="text-sm font-semibold text-neutral-200">
