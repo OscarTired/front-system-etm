@@ -18,4 +18,12 @@ export const SHEET_CONFIG = {
    * teclado normal. Cero JS midiendo el teclado: un solo número.
    */
   FIXED_HEIGHT_RATIO: 0.9,
+  /**
+   * Handle bar (pt-2.5 + pb-1 + dot h-1.5) + padding del viewport
+   * scrolleable (pt-1 arriba, el bottom ya lo trae SAFE_AREA_BOTTOM_
+   * OFFSET_PX). Se suma al alto medido del contenido (que no incluye
+   * el padding de sus ancestros) para que el "hug" en reposo sea
+   * preciso, no un poco corto.
+   */
+  CHROME_OVERHEAD_PX: 24,
 } as const
