@@ -123,7 +123,7 @@ export function AppSidebar({
           !isDrawer && "shrink-0",
           isDrawer && "absolute left-0 top-0 h-full w-62",
           "h-full",
-          "isolate z-0 flex flex-col bg-[#1d1c1c] select-none",
+          "isolate z-0 flex flex-col bg-sidebar text-sidebar-foreground select-none",
           "overflow-hidden",
           visualState === "moving-out" || visualState === "moving-in"
             ? "will-change-[width]"

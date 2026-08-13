@@ -77,14 +77,14 @@ export function EntitySelectActionMenu({
         onCloseAutoFocus={(e) => {
           e.preventDefault()
         }}
-        className="z-50 min-w-32 rounded-xl bg-[#141416] p-1 shadow-2xl"
+        className="z-50 min-w-32 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-xl"
       >
         {onEdit && (
           <DropdownMenuItem
             onSelect={handleEdit}
-            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-foreground/10 hover:text-foreground focus:bg-foreground/10 focus:text-foreground"
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus:bg-foreground/10 focus:text-foreground"
           >
-            <Pencil size={13} className="text-zinc-400" />
+            <Pencil size={13} className="text-muted-foreground" />
             <span>Editar</span>
           </DropdownMenuItem>
         )}

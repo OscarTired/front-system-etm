@@ -24,7 +24,7 @@ export function SidebarRow({
   collapsed = false,
   active = false,
   count,
-  badgeColor = "bg-neutral-800 text-muted-foreground",
+  badgeColor = "bg-sidebar-accent text-muted-foreground",
   collapsedBadgeColor,
   badgeAnimated = false,
   isDrawer = false,

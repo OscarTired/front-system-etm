@@ -52,7 +52,7 @@ function DesktopShell({ children }: Props) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-foreground">
+    <div className="flex h-screen overflow-hidden bg-sidebar text-foreground">
       <AppSidebar />
       <main
         onTransitionEnd={handleTransitionEnd}
@@ -95,7 +95,7 @@ function CompactShell({ children }: Props) {
   }, [isOpen, closeDrawer])
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-foreground select-none">
+    <div className="relative h-dvh overflow-hidden bg-sidebar text-foreground select-none">
       <div
         className="absolute inset-y-0 left-0 z-0"
         style={{ width: DRAWER_WIDTH_PX }}

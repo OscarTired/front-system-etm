@@ -50,7 +50,7 @@ function UserRow({ user }: { user: PresenceUser }) {
     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 w-full min-w-0 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="relative h-6 w-6 shrink-0">
-          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-muted-foreground ring-1 ring-border">
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-sidebar-accent text-[10px] font-medium text-muted-foreground ring-1 ring-border">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -160,7 +160,7 @@ export function SidebarPresence({
     }
     return (
       <div ref={presenceRef} className="mx-1 my-1 px-1">
-        <div className="h-9 w-full rounded-xl bg-neutral-800/50 animate-pulse" />
+        <div className="h-9 w-full rounded-xl bg-sidebar-accent/50 animate-pulse" />
       </div>
     )
   }

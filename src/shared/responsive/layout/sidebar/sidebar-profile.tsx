@@ -220,7 +220,7 @@ export function SidebarProfile({
 
                 {avatar}
 
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0A0A0A]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-sidebar" />
 
                 <ProfileMentionBadge className="absolute -top-1 -right-1" />
 
@@ -382,7 +382,7 @@ export function SidebarProfile({
 
           ref={cardRef}
 
-          className="relative z-10 rounded-xl bg-[#090909] px-3 py-3 transition-colors duration-300"
+          className="relative z-10 rounded-xl bg-sidebar-accent px-3 py-3 transition-colors duration-300"
 
         >
 
@@ -394,7 +394,7 @@ export function SidebarProfile({
 
                 {avatar}
 
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0A0A0A]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-sidebar" />
 
               </div>
 

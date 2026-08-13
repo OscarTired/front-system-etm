@@ -241,7 +241,7 @@ export function ActivityLogPageContent({
   const toolbar = (
     <div
       className={cn(
-        "w-full shrink-0 rounded-2xl bg-card/80 shadow-lg backdrop-blur-xl",
+        "w-full shrink-0 rounded-2xl border border-border/60 bg-surface",
         isCompact ? "p-2" : "p-3 desktop:p-4",
       )}
     >
