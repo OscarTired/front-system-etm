@@ -45,7 +45,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  interactiveWidget: "resizes-content",
+  // El layout NUNCA se mueve/achica con el teclado — ni el shell ni
+  // nada que cuelgue de él (bottom nav, FAB, etc) tiene que saber
+  // que el teclado existe. El sheet resuelve el teclado por su
+  // cuenta con una altura fija (ver sheet-config.ts /
+  // popover-content.tsx), no dependiendo de que el layout cambie.
+  interactiveWidget: "overlays-content",
 }
 
 export default function RootLayout({
@@ -56,9 +61,9 @@ export default function RootLayout({
 
   return (
 
-    <html lang="es" className="dark h-dvh overflow-hidden">
+    <html lang="es" className="dark h-full overflow-hidden">
 
-      <body className={`${geist.className} h-dvh overflow-hidden`}>
+      <body className={`${geist.className} h-full overflow-hidden`}>
 
         <ApiClientProvider />
 
