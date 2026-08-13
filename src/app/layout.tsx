@@ -63,7 +63,21 @@ export default function RootLayout({
 
     <html lang="es" className="dark h-full overflow-hidden">
 
-      <body className={`${geist.className} h-full overflow-hidden`}>
+      <body
+        className={`${geist.className} h-full overflow-hidden`}
+        style={{
+          // position: fixed además de overflow-hidden — overflow-
+          // hidden solo no siempre alcanza en iOS Safari para evitar
+          // el rebote/scroll de la página (motor de rubber-band
+          // propio de Safari que a veces lo ignora). Con esto el
+          // fondo queda estructuralmente incapaz de moverse, así que
+          // no importa desde dónde salga un gesto (handle, input,
+          // lo que sea) — no hay nada que scrollear, sin usar
+          // timeouts ni bloquear/desbloquear nada a mano.
+          position: "fixed",
+          inset: 0,
+        }}
+      >
 
         <ApiClientProvider />
 
