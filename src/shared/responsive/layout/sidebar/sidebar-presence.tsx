@@ -50,7 +50,7 @@ function UserRow({ user }: { user: PresenceUser }) {
     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 w-full min-w-0 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="relative h-6 w-6 shrink-0">
-          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-sidebar-accent text-[10px] font-medium text-muted-foreground ring-1 ring-border">
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-sidebar-accent text-[10px] font-medium text-muted-foreground">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -64,7 +64,7 @@ function UserRow({ user }: { user: PresenceUser }) {
           <span
             aria-hidden="true"
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-[#171717]",
+              "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full",
               user.online ? "bg-emerald-500" : "bg-muted-foreground/40",
             )}
           />

@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 
 import { AvatarPicker } from "./avatar-picker"
 
-import { ThemeToggle } from "@/shared/theme"
 
 import { useProfile } from "../hooks/use-profile"
 
@@ -154,10 +153,7 @@ export function ProfileDialog({ open, onClose }: Props) {
           </div>
 
         </div>
-
-        <ThemeToggle />
-
-      </div>
+</div>
 
     </FormDialog>
 

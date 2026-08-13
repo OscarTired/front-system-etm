@@ -12,16 +12,19 @@ type Props = {
 
 /**
  * Toolbar de entidad.
- * - min-height, NO height fijo: si los chips hacen wrap al achicar,
- *   crece y empuja la lista (nunca se superpone).
- * - overflow visible solo en ejes que no recortan sombra; el flujo
- *   normal del documento reserva el espacio vertical.
+ * Padding vertical/horizontal reserva aire para sombras de chips
+ * (el scroller padre tiene overflow y si no hay padding, las corta).
+ * min-height + wrap: crece y empuja la lista, no se superpone.
  */
 export function EntityToolbar({ left, right, className }: Props) {
   return (
     <div
       className={cn(
-        "flex min-h-10 w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5 overflow-visible py-0.5 tablet:min-h-12",
+        "flex min-h-10 w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
+        // Aire para shadow-sm de DynamicBadge / botones (no clip por overflow del scroll)
+        "px-0.5 py-2",
+        "overflow-visible",
+        "tablet:min-h-12",
         className,
       )}
     >
@@ -37,10 +40,6 @@ export function EntityToolbar({ left, right, className }: Props) {
   )
 }
 
-/**
- * Primer hijo dentro de AppListScroll en mobile:
- * sticky bajo el TopBar + blur mientras el listado scrollea detrás.
- */
 export function EntityToolbarChrome({ children }: { children: ReactNode }) {
   return (
     <div

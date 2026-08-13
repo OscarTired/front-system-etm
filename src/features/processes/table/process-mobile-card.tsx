@@ -75,7 +75,7 @@ export function ProcessMobileCard({
   const isDimmed = workflowAccess.isCompleted(processTask)
 
   return (
-    <div className={cn("overflow-hidden rounded-xl bg-foreground/5 transition-opacity", isDimmed && "opacity-50")}>
+    <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <div
           role="button"

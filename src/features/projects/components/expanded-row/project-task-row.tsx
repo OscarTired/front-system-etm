@@ -336,15 +336,18 @@ export function ProjectTaskRow({
       {isMobile ? (
         expanded &&
         activeProcessCode ? (
-          <div key="expanded" className="animate-comment-in">
+          <div
+            key="expanded"
+            className={cn(!isDimmed && "animate-comment-in")}
+          >
             <div
               className={cn(
                 "overflow-hidden rounded-xl transition-all duration-200",
                 pressed &&
                   !overlayOpen &&
                   "scale-[0.98] shadow-lg",
-                isDimmed &&
-                  "opacity-50",
+                // Opacidad final de entrada — sin animar 0→1 (evita flash claro)
+                isDimmed && "opacity-50",
               )}
             >
               <KanbanCardFromTask
@@ -359,7 +362,8 @@ export function ProjectTaskRow({
           <div
             key="compact"
             className={cn(
-              "animate-comment-in",
+              // Completadas: opacas desde el primer frame (sin comment-in a opacity 1)
+              !isDimmed && "animate-comment-in",
               isDimmed && "opacity-50",
             )}
           >
