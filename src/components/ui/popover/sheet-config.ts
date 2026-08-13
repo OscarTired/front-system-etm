@@ -7,10 +7,15 @@ export const SHEET_CONFIG = {
   EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)",
   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
   /**
-   * Altura FIJA del sheet, siempre — nunca se recalcula por
-   * contenido (buscar y tener 1 resultado no lo achica) ni por el
-   * teclado (ya está pensada para sobrar por encima de un teclado
-   * normal). Cero JS midiendo nada: un solo número.
+   * En reposo (input de búsqueda sin foco): el sheet se achica al
+   * contenido, con este tope — como un sheet normal.
+   */
+  MAX_HEIGHT_RATIO: 0.85,
+  /**
+   * Con el input de búsqueda enfocado: altura FIJA, siempre — no se
+   * recalcula por cuánto contenido tenga (buscar y tener 1
+   * resultado no lo achica). Pensada para sobrar por encima de un
+   * teclado normal. Cero JS midiendo el teclado: un solo número.
    */
   FIXED_HEIGHT_RATIO: 0.9,
 } as const
