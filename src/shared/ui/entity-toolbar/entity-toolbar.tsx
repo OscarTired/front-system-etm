@@ -11,21 +11,21 @@ type Props = {
 }
 
 /**
- * Altura fija: los chips de filtro no deben empujar el listado
- * unos px al montarse (antes min-h + py crecía con el badge).
+ * Altura fija. overflow visible para no cortar sombras de chips internos
+ * (filtros, back, toggles).
  */
 export function EntityToolbar({ left, right, className }: Props) {
   return (
     <div
       className={cn(
-        "flex h-10 shrink-0 items-center justify-between tablet:h-15",
+        "flex h-10 shrink-0 items-center justify-between overflow-visible tablet:h-15",
         className,
       )}
     >
-      <div className="flex min-h-0 min-w-0 flex-1 items-center overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 items-center overflow-visible">
         {left}
       </div>
-      <div className="flex shrink-0 items-center">{right}</div>
+      <div className="flex shrink-0 items-center overflow-visible">{right}</div>
     </div>
   )
 }
@@ -41,6 +41,7 @@ export function EntityToolbarChrome({ children }: { children: ReactNode }) {
         max-md:sticky max-md:top-14 max-md:z-10
         max-md:bg-background/80 max-md:backdrop-blur-xl
         max-md:supports-backdrop-filter:bg-background/55
+        overflow-visible
       "
     >
       {children}

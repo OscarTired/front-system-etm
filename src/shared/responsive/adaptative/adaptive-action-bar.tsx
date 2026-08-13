@@ -18,7 +18,7 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
 
   if (!isMobile) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-wrap items-center gap-2 select-none">
+      <div className="flex h-full min-h-0 w-full flex-wrap items-center gap-2 overflow-visible select-none">
         {pinned}
         {actions.map((action, index) => (
           <div key={index} className="contents">
@@ -32,10 +32,10 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
 
   return (
     <>
-      {/* Misma altura que EntityToolbar: sin py extra que sume al chip */}
-      <div className="flex h-10 w-full items-center gap-2 select-none">
+      {/* py interno + -my: el scrollport no corta sombras verticales de chips */}
+      <div className="flex h-10 w-full items-center gap-2 overflow-visible select-none">
         {pinned && (
-          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto scrollbar-none">
+          <div className="-my-1.5 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1.5 scrollbar-none">
             {pinned}
           </div>
         )}

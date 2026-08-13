@@ -116,6 +116,8 @@ export function DynamicBadge({
         "group relative inline-flex min-w-0 select-none items-center rounded-lg text-xs font-semibold uppercase tracking-[0.06em]",
         compact ? "h-8" : "min-h-8 py-1.5",
         "transition duration-150 ease-out",
+        // Misma elevación que SidebarRow activo
+        "shadow-sm",
         "border-0 outline-none ring-0",
         "focus:border-0 focus:outline-none focus:ring-0",
         "focus-visible:border-0 focus-visible:outline-none focus-visible:ring-0",
@@ -125,8 +127,6 @@ export function DynamicBadge({
       style={{
         color: textColor,
         backgroundColor,
-        // Sin border / ring / box-shadow de contorno
-        boxShadow: "none",
       }}
       onMouseDown={event => {
         event.preventDefault()
