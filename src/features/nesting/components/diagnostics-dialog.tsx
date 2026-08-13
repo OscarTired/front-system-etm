@@ -105,8 +105,8 @@ export function DiagnosticsDialog({
               {activeConflictsCount > 0 && (
                 <>
                   <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5">
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400 animate-pulse" />
-                    <span className="text-xs font-medium text-amber-300">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-800 dark:text-amber-400 animate-pulse" />
+                    <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
                       {activeConflictsCount} conflicto{activeConflictsCount === 1 ? "" : "s"} activo{activeConflictsCount === 1 ? "" : "s"}
                     </span>
                   </div>
@@ -114,7 +114,7 @@ export function DiagnosticsDialog({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-8 px-3 text-xs gap-1.5 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 font-medium rounded-xl"
+                    className="h-8 px-3 text-xs gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 font-medium rounded-xl"
                     onClick={handleForgiveAll}
                   >
                     <CheckCheck className="h-4 w-4" />
@@ -210,12 +210,12 @@ export function DiagnosticsDialog({
                       <td className="max-w-75 truncate px-4 py-3 font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           {conflict && (
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400">
                               <AlertTriangle className="h-3.5 w-3.5" />
                             </span>
                           )}
                           {forgiven && (
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
                               <Check className="h-3.5 w-3.5" />
                             </span>
                           )}
@@ -238,7 +238,7 @@ export function DiagnosticsDialog({
                       <td
                         className={cn(
                           "px-3 py-3 text-center",
-                          dinBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
+                          dinBad ? "font-semibold text-amber-800 dark:text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
                         )}
                       >
                         {row.material.dinNorm || "N/D"}
@@ -246,7 +246,7 @@ export function DiagnosticsDialog({
                       <td
                         className={cn(
                           "px-3 py-3 text-center",
-                          alloyBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
+                          alloyBad ? "font-semibold text-amber-800 dark:text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
                         )}
                       >
                         {row.material.alloy || "N/D"}
@@ -259,7 +259,7 @@ export function DiagnosticsDialog({
                               size="sm"
                               variant="ghost"
                               title="Aceptar / perdonar conflicto"
-                              className="h-7 px-2.5 text-xs gap-1.5 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-300 transition-all font-medium rounded-lg"
+                              className="h-7 px-2.5 text-xs gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 transition-all font-medium rounded-lg"
                               onClick={() => onForgive(row.id)}
                             >
                               <Check className="h-3.5 w-3.5" />
@@ -267,7 +267,7 @@ export function DiagnosticsDialog({
                             </Button>
                           )}
                           {forgiven && (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
                               <Check className="h-3 w-3" /> Aceptado
                             </span>
                           )}

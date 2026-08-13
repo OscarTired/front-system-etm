@@ -137,7 +137,7 @@ export function PropertiesPanel({
                 title={locked ? "Desbloquear" : "Bloquear posición"}
                 className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors ${
                   locked
-                    ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25"
                     : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                 }`}
               >
@@ -167,7 +167,7 @@ export function PropertiesPanel({
             <StatRow label="Perímetro" value={`${perimeter.toFixed(0)} mm`} />
             <StatRow label="Ángulo base" value={`${selectedPiece.angle}°`} />
             {locked && (
-              <div className="px-1 py-1 text-[10px] text-amber-400/90">
+              <div className="px-1 py-1 text-[10px] text-amber-800 dark:text-amber-400/90">
                 Posición bloqueada — no se mueve al arrastrar.
               </div>
             )}

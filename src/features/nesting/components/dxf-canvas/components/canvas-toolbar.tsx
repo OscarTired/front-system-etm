@@ -406,7 +406,7 @@ export function CanvasToolbar({
               onClick={() => onToggleTool(tool as Exclude<MeasureTool, "none">)}
               className={`${mdBtn} ${
                 activeTool === tool
-                  ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300"
+                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
                   : ""
               }`}
               title={TOOL_LABELS[tool]}
@@ -420,7 +420,7 @@ export function CanvasToolbar({
             onClick={onToggleSnap}
             className={`${mdBtn} ${
               snapEnabled
-                ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/25 hover:text-amber-300"
+                ? "bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 hover:text-amber-800 dark:text-amber-300"
                 : ""
             }`}
             title={snapEnabled ? "Snap activado" : "Snap desactivado"}
@@ -436,7 +436,7 @@ export function CanvasToolbar({
               }
               className={`${mdBtn} ${
                 transformMode === "geometric"
-                  ? "bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-300"
+                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
                   : ""
               }`}
               title={
@@ -573,7 +573,7 @@ export function CanvasToolbar({
                     }}
                     className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
                       simSpeed === s
-                        ? "bg-cyan-500/20 font-semibold text-cyan-300"
+                        ? "bg-cyan-500/20 font-semibold text-cyan-700 dark:text-cyan-300"
                         : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     }`}
                   >

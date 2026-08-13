@@ -83,7 +83,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [groupBy, setGroupBy] = useState<GroupByType>("none")
   const [searchQuery, setSearchQuery] = useState("")
-  
+
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const dragCounterRef = useRef(0)
 
@@ -165,7 +165,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         rejected.push(`${file.name} (solo .dxf, .geo, .pdf o .nps)`)
         continue
       }
-      
+
       const text = await file.text()
       if (!text.trim()) continue
 
@@ -174,7 +174,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         rejected.push(`${file.name} (geometría inválida)`)
         continue
       }
-      
+
       newRows.push({
         id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         source: "cad",
@@ -262,7 +262,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   }, [rows, groupBy, searchQuery])
 
   return (
-    <div 
+    <div
       className="flex h-full max-h-full min-h-0 w-full flex-col overflow-hidden relative"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -290,7 +290,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             <Button
               size="icon-sm"
               variant="ghost"
-              className={conflictIds.size > 0 ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-foreground"}
+              className={conflictIds.size > 0 ? "text-amber-800 dark:text-amber-400 hover:text-amber-800 dark:text-amber-300" : "text-muted-foreground hover:text-foreground"}
               onClick={onOpenDiagnostics}
               title={
                 conflictIds.size > 0
@@ -332,20 +332,20 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       {rows.length > 0 && (
         <div className="flex items-center gap-1.5 px-3 mb-2 shrink-0 overflow-x-auto hide-scrollbar">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Agrupar:</span>
-          <button 
-            onClick={() => setGroupBy("none")} 
+          <button
+            onClick={() => setGroupBy("none")}
             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "none" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Ninguno
           </button>
-          <button 
-            onClick={() => setGroupBy("thickness")} 
+          <button
+            onClick={() => setGroupBy("thickness")}
             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "thickness" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Espesor
           </button>
-          <button 
-            onClick={() => setGroupBy("material")} 
+          <button
+            onClick={() => setGroupBy("material")}
             className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "material" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Material
@@ -378,7 +378,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
 
       <div className="flex h-0 min-h-0 flex-1 flex-col w-full">
         {rows.length === 0 ? (
-          <div 
+          <div
             onClick={() => fileInputRef.current?.click()}
             className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border-2 border-dashed border-border rounded-xl m-3 hover:border-primary/40 transition-colors bg-foreground/5"
           >
@@ -392,7 +392,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
           </div>
         ) : (
           <ScrollArea className="h-full w-full">
-            <div className="flex flex-col gap-3 w-full px-3 py-2 pr-4.5 box-border pb-3">  
+            <div className="flex flex-col gap-3 w-full px-3 py-2 pr-4.5 box-border pb-3">
               {groupedEntries.map(({ groupKey, items }) => (
                 <div key={groupKey ?? "default"} className="flex flex-col gap-2">
                   {groupKey && (

@@ -27,11 +27,11 @@ const STATUS_META: Record<
 > = {
   ok: {
     label: "OK",
-    className: "text-emerald-400 bg-emerald-500/22 dark:bg-emerald-500/10",
+    className: "text-emerald-700 dark:text-emerald-400 bg-emerald-500/22 dark:bg-emerald-500/10",
   },
   partial: {
     label: "Parcial",
-    className: "text-amber-400 bg-amber-500/10",
+    className: "text-amber-800 dark:text-amber-400 bg-amber-500/10",
   },
   missing: {
     label: "Sin registro",

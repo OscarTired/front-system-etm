@@ -169,6 +169,18 @@ function getSubtleText(hex: string) {
   return rgbString(tintTowardWhite(hex, tint))
 }
 
+/** Texto del chip por luminancia del fondo (no por tema). */
+function getChipText(
+  hex: string,
+  backgroundRgb: { r: number; g: number; b: number },
+) {
+  const bgLum = getLuminanceFromRgb(backgroundRgb)
+  if (bgLum < 0.45) {
+    return getSubtleText(hex)
+  }
+  return getReadableTextFor(hex, backgroundRgb)
+}
+
 export function getBadgeColors(
   hex: string,
   variant: BadgeVariant = "subtle",
@@ -194,12 +206,13 @@ export function getBadgeColors(
       const aHover = readCssNumber("--chip-bg-alpha-hover", 0.42)
       const aActive = readCssNumber("--chip-bg-alpha-active", 0.52)
 
+      const bg = blendOnChipSurface(hex, a)
       return {
-        background: rgbString(blendOnChipSurface(hex, a)),
+        background: rgbString(bg),
         backgroundHover: rgbString(blendOnChipSurface(hex, aHover)),
         backgroundActive: rgbString(blendOnChipSurface(hex, aActive)),
         glow: rgba(hex, 0.12),
-        text: getSubtleText(hex),
+        text: getChipText(hex, bg),
         shadow: {
           default: "none",
           hover: `

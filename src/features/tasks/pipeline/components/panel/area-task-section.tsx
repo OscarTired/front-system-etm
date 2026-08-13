@@ -91,7 +91,7 @@ function OperatorTaskLists({ code, tasks, panel }: OperatorTaskListsProps) {
     <>
       {assigned.length > 0 && (
         <>
-          <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-emerald-400">Asignadas</p>
+          <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Asignadas</p>
           <TaskProcessColumn
             processCode={code}
             tasks={assigned}

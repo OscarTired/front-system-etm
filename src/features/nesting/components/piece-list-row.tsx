@@ -93,7 +93,7 @@ export function PieceListRow({
             </span>
           )}
           {conflict && (
-            <span className="shrink-0 text-amber-400" title="Conflicto de material — ver Diagnóstico">
+            <span className="shrink-0 text-amber-800 dark:text-amber-400" title="Conflicto de material — ver Diagnóstico">
               <AlertTriangle className="h-3.5 w-3.5" />
             </span>
           )}

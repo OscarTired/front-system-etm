@@ -34,15 +34,15 @@ const AUTO_KIND: Record<string, AutoKind> = {
   TASK_STARTED: {
     icon: PlayCircle,
     verb: "Inició",
-    iconClass: "text-sky-400",
-    badgeClass: "bg-sky-500/15 text-sky-400",
+    iconClass: "text-sky-700 dark:text-sky-400",
+    badgeClass: "bg-sky-500/15 text-sky-700 dark:text-sky-400",
   },
 
   TASK_COMPLETED: {
     icon: CheckCircle2,
     verb: "Completado",
-    iconClass: "text-emerald-400",
-    badgeClass: "bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-400",
+    iconClass: "text-emerald-700 dark:text-emerald-400",
+    badgeClass: "bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
   },
 
 }

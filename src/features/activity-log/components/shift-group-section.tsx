@@ -39,8 +39,8 @@ type Props = {
 }
 
 const DISTINCT_SHIFT_COLORS = [
-  "text-amber-400",
-  "text-emerald-400",
+  "text-amber-800 dark:text-amber-400",
+  "text-emerald-700 dark:text-emerald-400",
   "text-rose-400",
   "text-violet-400",
   "text-teal-400",
@@ -279,7 +279,7 @@ export function ShiftGroupSection({
                                   title="Editar"
                                   aria-label="Editar entrada"
                                   onClick={() => onEditLog(log)}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-800 dark:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <Pencil size={14} />
                                 </button>
@@ -299,7 +299,7 @@ export function ShiftGroupSection({
                                     if (!canCreate || busy || !allowDup) return
                                     onDuplicateLog(log)
                                   }}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <Copy size={14} />
                                 </button>
@@ -386,7 +386,7 @@ export function ShiftGroupSection({
                                         }}
                                         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
                                       >
-                                        <Pencil size={15} className="text-amber-400" />
+                                        <Pencil size={15} className="text-amber-800 dark:text-amber-400" />
                                         Editar
                                       </button>
                                     )}
@@ -399,7 +399,7 @@ export function ShiftGroupSection({
                                       }}
                                       className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
                                     >
-                                      <Copy size={15} className="text-sky-400" />
+                                      <Copy size={15} className="text-sky-700 dark:text-sky-400" />
                                       Duplicar
                                     </button>
                                     <button

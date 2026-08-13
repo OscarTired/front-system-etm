@@ -163,7 +163,7 @@ export function CommentItem({
                   <Check
                     size={14}
                     strokeWidth={2.5}
-                    className="text-green-400"
+                    className="text-green-700 dark:text-green-400"
                   />
                 )}
 

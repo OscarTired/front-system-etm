@@ -24,8 +24,8 @@ type Props = {
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
 const DISTINCT_SHIFT_COLORS = [
-  "text-amber-400",
-  "text-emerald-400",
+  "text-amber-800 dark:text-amber-400",
+  "text-emerald-700 dark:text-emerald-400",
   "text-rose-400",
   "text-violet-400",
   "text-teal-400",
@@ -76,7 +76,7 @@ export function AgendaWeekView({
                 <span
                   className={cn(
                     "text-[9px] font-bold uppercase tracking-wider",
-                    isToday ? "text-amber-400" : "text-muted-foreground",
+                    isToday ? "text-amber-800 dark:text-amber-400" : "text-muted-foreground",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}
@@ -206,7 +206,7 @@ export function AgendaWeekView({
                 <div
                   className={cn(
                     "text-[11px] font-bold uppercase tracking-widest",
-                    isToday ? "text-amber-400" : "text-muted-foreground",
+                    isToday ? "text-amber-800 dark:text-amber-400" : "text-muted-foreground",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}

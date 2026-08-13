@@ -1166,7 +1166,7 @@ export function DxfCanvas({
               type="button"
               onClick={() => setCanvasTool("rotate")}
               className={`whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium hover:bg-foreground/10 hover:text-foreground ${
-                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-300" : "text-muted-foreground"
+                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" : "text-muted-foreground"
               }`}
               title="Rotar libre arrastrando (Shift = pasos de 15°)"
             >
@@ -1301,7 +1301,7 @@ export function DxfCanvas({
             <div className="absolute h-2 w-2 rounded-full border border-cyan-300 bg-cyan-400/30" />
           </div>
           {Math.abs(rotatePreviewDelta) > 0.05 && (
-            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
+            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-700 dark:text-cyan-300">
               {rotatePreviewDelta > 0 ? "+" : ""}
               {rotatePreviewDelta.toFixed(1)}°
             </div>

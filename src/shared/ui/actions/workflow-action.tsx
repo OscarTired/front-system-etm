@@ -88,7 +88,7 @@ export function WorkflowAction({
 
             icon:Pause,
 
-            iconClass:"text-amber-300",
+            iconClass:"text-amber-800 dark:text-amber-300",
 
           }
 
@@ -98,7 +98,7 @@ export function WorkflowAction({
 
               icon:Check,
 
-              iconClass:"text-emerald-300",
+              iconClass:"text-emerald-800 dark:text-emerald-300",
 
             }
 
@@ -106,7 +106,7 @@ export function WorkflowAction({
 
               icon:Search,
 
-              iconClass:"text-sky-300",
+              iconClass:"text-sky-700 dark:text-sky-300",
 
             }
 

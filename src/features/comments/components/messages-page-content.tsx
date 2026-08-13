@@ -257,8 +257,8 @@ export function MessagesPageContent() {
                               className={cn(
                                 "rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                                 isHistorical
-                                  ? "bg-amber-500/15 text-amber-300/90"
-                                  : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-400/90",
+                                  ? "bg-amber-500/15 text-amber-800 dark:text-amber-300/90"
+                                  : "bg-emerald-500/22 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400/90",
                               )}
                             >
                               {isHistorical ? "HISTÓRICO" : "ACTIVO"}

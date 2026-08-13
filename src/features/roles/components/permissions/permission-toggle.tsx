@@ -58,7 +58,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false 
       </span>
 
       {overridden && (
-        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
           Excepción
         </span>
       )}

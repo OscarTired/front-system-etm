@@ -197,7 +197,7 @@ export function ProjectMobileCard({
                       ? "1 tarea activa"
                       : `${project.taskCount} tareas activas`
                   }
-                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-300"
+                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-800 dark:text-green-300"
                 >
                   {project.taskCount}
                 </span>
@@ -209,7 +209,7 @@ export function ProjectMobileCard({
                       ? "1 mensaje"
                       : `${project.commentCount} mensajes`
                   }
-                  className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
+                  className="inline-flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
                 >
                   <MessageSquare size={10} strokeWidth={2.5} />
                   {project.commentCount}

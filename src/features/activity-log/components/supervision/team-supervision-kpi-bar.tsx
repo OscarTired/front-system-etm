@@ -155,8 +155,8 @@ export function TeamSupervisionKpiBar({
                     "font-bold tabular-nums tracking-tight",
                     isCompact ? "mt-0.5 text-base" : "mt-1 text-2xl",
                     card.tone === "danger" && "text-rose-400",
-                    card.tone === "warn" && "text-amber-400",
-                    card.tone === "ok" && "text-emerald-400",
+                    card.tone === "warn" && "text-amber-800 dark:text-amber-400",
+                    card.tone === "ok" && "text-emerald-700 dark:text-emerald-400",
                     card.tone === "neutral" && "text-foreground",
                   )}
                 >

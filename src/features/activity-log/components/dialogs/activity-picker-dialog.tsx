@@ -278,7 +278,7 @@ export function ActivityPickerDialog({
 
         {activeSlot && activeSlot.shift !== getCurrentShift(new Date()) && (
 
-          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-400">
             Ya pasó la hora de &ldquo;{activeSlot.label}&rdquo; — se
             va a guardar igual en esta franja. Si quieres, detalla abajo
             por qué se registra recién ahora.
@@ -436,7 +436,7 @@ export function ActivityPickerDialog({
               className={cn(
                 "text-[11px] font-medium",
                 selectedTypeIds.length >= maxSelection
-                  ? "text-amber-400"
+                  ? "text-amber-800 dark:text-amber-400"
                   : "text-muted-foreground",
               )}
             >

@@ -41,7 +41,7 @@ const statusStyles: Record<
 
   PAUSED: {
     dot: "border-amber-400 bg-amber-400",
-    text: "text-amber-300",
+    text: "text-amber-800 dark:text-amber-300",
   },
 
   COMPLETED: {

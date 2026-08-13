@@ -138,7 +138,7 @@ export function ProfilePreviewPanel({
 
         </button>
 
-        <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-400">
+        <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-700 dark:text-green-400">
 
           <span className="h-2 w-2 rounded-full bg-green-400"/>
 

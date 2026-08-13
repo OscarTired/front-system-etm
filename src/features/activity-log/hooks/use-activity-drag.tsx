@@ -258,7 +258,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
         </span>
 
         {isDuplicateMode && (
-          <span className="shrink-0 rounded-md bg-emerald-500/30 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
+          <span className="shrink-0 rounded-md bg-emerald-500/30 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
             Copiar
           </span>
         )}

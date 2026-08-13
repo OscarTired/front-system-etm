@@ -257,7 +257,7 @@ export function TaskMobileCard({
                   ? "1 mensaje"
                   : `${task.commentCount} mensajes`
               }
-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-300"
+              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
             >
               <MessageSquare size={10} strokeWidth={2.5} />
               {task.commentCount}

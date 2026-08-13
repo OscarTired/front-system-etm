@@ -156,7 +156,7 @@ export function WorkflowNumericField({
             isSaved
               ? "bg-emerald-500 text-foreground"
               : canSave
-                ? "bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/36 dark:bg-emerald-500/30"
+                ? "bg-emerald-500/30 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/36 dark:bg-emerald-500/30"
                 : "bg-foreground/5 text-muted-foreground/80",
           )}
         >

@@ -415,7 +415,7 @@ export function RolePermissionsPageContent() {
                         </span>
                       </div>
                       {dirty && (
-                        <span className="shrink-0 text-xs font-medium text-amber-400">
+                        <span className="shrink-0 text-xs font-medium text-amber-800 dark:text-amber-400">
                           Cambios sin guardar
                         </span>
                       )}
@@ -506,7 +506,7 @@ export function RolePermissionsPageContent() {
                         </span>
                       </div>
                       {dirty && (
-                        <span className="shrink-0 text-xs font-medium text-amber-400">
+                        <span className="shrink-0 text-xs font-medium text-amber-800 dark:text-amber-400">
                           Cambios sin guardar
                         </span>
                       )}
@@ -514,7 +514,7 @@ export function RolePermissionsPageContent() {
                     {mode === "usuarios" && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         Por encima de lo que ya otorgan sus roles. Lo marcado como{" "}
-                        <span className="text-amber-400">Excepción</span> es distinto a su base.
+                        <span className="text-amber-800 dark:text-amber-400">Excepción</span> es distinto a su base.
                       </p>
                     )}
                   </div>

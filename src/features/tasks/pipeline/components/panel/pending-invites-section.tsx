@@ -51,7 +51,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
 
     <div className="flex flex-col gap-2 rounded-2xl bg-sky-500/8 p-3 ring-1 ring-sky-500/20">
 
-      <span className="px-1 text-xs font-bold uppercase tracking-wide text-sky-300">
+      <span className="px-1 text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
         Te convocaron · {invites.length}
       </span>
 
@@ -102,7 +102,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
                   disabled={accepting}
                   onClick={() => acceptInvite(invite.stepId)}
                   aria-label="Aceptar"
-                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/32 dark:bg-emerald-500/25 disabled:opacity-40"
+                  className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/26 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 transition-colors hover:bg-emerald-500/32 dark:bg-emerald-500/25 disabled:opacity-40"
                 >
                   <Check size={15} />
                 </button>

@@ -48,7 +48,7 @@ export function ProductionProcessCard({
     urgentCount === 0
       ? "text-muted-foreground"
       : urgentCount <= 2
-        ? "text-amber-400"
+        ? "text-amber-800 dark:text-amber-400"
         : "text-red-400"
 
   function handleOpenTask(taskId: string) {
