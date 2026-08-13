@@ -61,7 +61,7 @@ export function SidebarRow({
         {collapsed && hasCount && (
           <span
             className={cn(
-              "absolute -top-1 -right-2 z-10 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none shadow-md ring-2 ring-[#171717] transition-all pointer-events-none",
+              "absolute -top-1 -right-2 z-10 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none transition-all pointer-events-none",
               collapsedBadgeColor || badgeColor,
               badgeAnimated && "animate-pulse"
             )}
