@@ -109,7 +109,7 @@ export function TaskCreateDialAction(){
         label="NUEVA TAREA"
         disabled={!canCreate}
         onClick={handleOpen}
-        accentClassName="bg-cyan-600 text-black"
+        accentClassName="bg-primary text-primary-foreground shadow-lg"
         className={!canCreate ? "cursor-not-allowed opacity-40" : undefined}
       />
 

@@ -134,7 +134,7 @@ export function SpeedDialFab({ actions, className }: Props) {
         className={cn(
           "pointer-events-auto flex size-12 items-center justify-center rounded-full transition duration-200",
           "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",
-          "shadow-[0_12px_32px_rgba(0,0,0,0.55)]",
+          "shadow-lg",
         )}
       >
         {dialOpen ? (

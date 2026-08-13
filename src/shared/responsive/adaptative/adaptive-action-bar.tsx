@@ -17,8 +17,10 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
   const { isMobile } = useResponsive()
 
   if (!isMobile) {
+    // flex-wrap + sin altura fija: al estrechar, baja de línea y
+    // EntityToolbar crece → la lista no queda debajo del chip.
     return (
-      <div className="flex h-full min-h-0 w-full flex-wrap items-center gap-2 overflow-visible select-none">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 overflow-visible select-none">
         {pinned}
         {actions.map((action, index) => (
           <div key={index} className="contents">
@@ -32,10 +34,9 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
 
   return (
     <>
-      {/* py interno + -my: el scrollport no corta sombras verticales de chips */}
-      <div className="flex h-10 w-full items-center gap-2 overflow-visible select-none">
+      <div className="flex min-h-10 w-full flex-wrap items-center gap-2 overflow-visible select-none">
         {pinned && (
-          <div className="-my-1.5 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1.5 scrollbar-none">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">
             {pinned}
           </div>
         )}

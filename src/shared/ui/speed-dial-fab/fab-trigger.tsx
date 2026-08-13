@@ -10,30 +10,26 @@ type Props = {
   icon: LucideIcon
   label: string
   active?: boolean
-  /**
-   * Badge (ej. contador de historial). El componente decide dónde
-   * ponerlo según el modo — el caller solo define su contenido/color.
-   */
   badge?: React.ReactNode
-  /**
-   * Acento del círculo en modo FAB (ej. "bg-emerald-400 text-black"
-   * para "Nueva tarea"). Sin esto, círculo neutro como el resto.
-   */
+  /** Acento del círculo FAB — clases de tema, no hex. */
   accentClassName?: string
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children">
 
 /**
- * Único trigger de Filtro/Orden/Historial/Exportar/Crear.
- *
- * - Desktop (fila inline en el header): pastilla ícono + label.
- * - Mobile (SpeedDialFab): solo círculo con ícono (sin leyenda).
- *   `label` queda como aria-label / title para accesibilidad.
- *
- * `ref` apunta al botón clickeable (PopoverTrigger asChild ok).
+ * - Desktop: pastilla ícono + label.
+ * - Mobile FAB: círculo neutro = bg-foreground / text-background (tema).
  */
 export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
   (
-    { icon: Icon, label, active = false, badge, accentClassName, className, ...props },
+    {
+      icon: Icon,
+      label,
+      active = false,
+      badge,
+      accentClassName,
+      className,
+      ...props
+    },
     ref,
   ) => {
     const { isMobile } = useResponsive()
@@ -66,8 +62,12 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
         aria-label={label}
         title={label}
         className={cn(
-          "relative flex size-11 shrink-0 items-center justify-center rounded-full text-foreground shadow-lg transition active:scale-95",
-          accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-foreground/20"),
+          "relative flex size-11 shrink-0 items-center justify-center rounded-full shadow-lg transition active:scale-95",
+          accentClassName ??
+            cn(
+              "bg-foreground text-background",
+              active && "bg-foreground/80",
+            ),
           className,
         )}
         {...props}

@@ -62,7 +62,7 @@ export const FilterAddButton=
             active={active}
             accentClassName={
               hasActiveFilters
-                ? "animate-history-bounce bg-emerald-500/90 text-black shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+                ? "animate-history-bounce bg-emerald-600 text-white shadow-lg dark:bg-emerald-500 dark:text-emerald-950"
                 : undefined
             }
             className={className}
