@@ -40,11 +40,11 @@ import {
 } from "@/components/ui/popover"
 
 const mdBtn =
-  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors duration-150 hover:bg-white/10 hover:text-white active:bg-white/15 disabled:pointer-events-none disabled:opacity-30"
+  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15 disabled:pointer-events-none disabled:opacity-30"
 const mdBtnRed =
-  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors duration-150 hover:bg-red-500/20 hover:text-red-300 active:bg-red-500/25 disabled:pointer-events-none disabled:opacity-30"
+  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-red-500/20 hover:text-red-300 active:bg-red-500/25 disabled:pointer-events-none disabled:opacity-30"
 const mdBtnActive = "bg-blue-500/20 text-blue-300 hover:bg-blue-500/25 hover:text-blue-300"
-const mdDivider = "mx-0.5 h-5 w-px shrink-0 bg-white/10"
+const mdDivider = "mx-0.5 h-5 w-px shrink-0 bg-foreground/10"
 
 export interface CanvasToolbarProps {
   showGrid: boolean
@@ -235,8 +235,8 @@ export function CanvasToolbar({
             transition-all duration-200 ease-out
             ${
               open
-                ? "bg-white/15 text-white ring-1 ring-white/20"
-                : "bg-[#1c1c1e]/92 text-neutral-300 hover:bg-[#1c1c1e] hover:text-white"
+                ? "bg-foreground/15 text-foreground ring-1 ring-white/20"
+                : "bg-[#1c1c1e]/92 text-muted-foreground hover:bg-[#1c1c1e] hover:text-foreground"
             }
           `}
           title={open ? "Cerrar herramientas" : "Herramientas"}
@@ -347,10 +347,10 @@ export function CanvasToolbar({
               <PopoverContent
                 side="bottom"
                 align="start"
-                floatingClassName="w-48 border-white/10"
-                className="p-1.5 text-neutral-100"
+                floatingClassName="w-48 border-border"
+                className="p-1.5 text-foreground"
               >
-                <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
+                <p className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                   Fondo
                 </p>
                 {(
@@ -373,10 +373,10 @@ export function CanvasToolbar({
                       }
                       setDisplayOpen(false)
                     }}
-                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-white/8 ${
+                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-foreground/10 ${
                       (showGrid ? gridStyle : "none") === style
-                        ? "bg-white/10 text-white"
-                        : "text-neutral-300"
+                        ? "bg-foreground/10 text-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     <Icon size={14} className="opacity-70" />
@@ -537,7 +537,7 @@ export function CanvasToolbar({
             step={0.001}
             value={simProgress}
             onChange={(e) => onSeek(Number(e.target.value))}
-            className="mx-2 h-1 w-32 sm:w-44 shrink-0 cursor-pointer appearance-none rounded-full bg-white/15 accent-cyan-400 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400"
+            className="mx-2 h-1 w-32 sm:w-44 shrink-0 cursor-pointer appearance-none rounded-full bg-foreground/15 accent-cyan-400 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400"
             title="Progreso de corte"
           />
 
@@ -545,7 +545,7 @@ export function CanvasToolbar({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex h-7 w-15 items-center justify-center gap-1 rounded-full bg-white/5 px-2.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex h-7 w-15 items-center justify-center gap-1 rounded-full bg-foreground/5 px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                 title="Velocidad de simulación"
               >
                 <span>{simSpeed}×</span>
@@ -560,7 +560,7 @@ export function CanvasToolbar({
               align="center"
               sideOffset={8}
               floatingClassName="w-24"
-              className="p-1 text-neutral-200"
+              className="p-1 text-foreground"
             >
               <div className="flex flex-col gap-0.5">
                 {SPEEDS.map((s) => (
@@ -574,7 +574,7 @@ export function CanvasToolbar({
                     className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
                       simSpeed === s
                         ? "bg-cyan-500/20 font-semibold text-cyan-300"
-                        : "text-neutral-300 hover:bg-white/8 hover:text-white"
+                        : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     }`}
                   >
                     <span>{s}×</span>

@@ -35,11 +35,11 @@ export function ProjectCompletedTasksCard({
           <CheckCircle2 size={14} className="text-emerald-400" />
         </div>
 
-        <span className="text-sm font-bold text-white">
+        <span className="text-sm font-bold text-foreground">
           {completedCount} finalizadas
         </span>
 
-        <span className="ml-auto shrink-0 text-xs text-neutral-500">
+        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
           {expanded ? "Ocultar" : "Ver más"}
         </span>
 
@@ -66,7 +66,7 @@ export function ProjectCompletedTasksCard({
 
       </div>
 
-      <p className="text-3xl font-bold text-white">
+      <p className="text-3xl font-bold text-foreground">
         {completedCount}
       </p>
 
@@ -74,7 +74,7 @@ export function ProjectCompletedTasksCard({
         Finalizadas
       </p>
 
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="mt-3 text-xs text-muted-foreground">
         {expanded
           ? "Ocultar historial"
           : "Ver historial"}

@@ -194,7 +194,7 @@ export function MobilePipelineCarousel({
         tabIndex={-1}
         className={cn(
           "absolute left-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 text-neutral-200 backdrop-blur-xl transition-opacity duration-200",
+          "bg-[#18181b]/80 text-foreground backdrop-blur-xl transition-opacity duration-200",
           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -208,7 +208,7 @@ export function MobilePipelineCarousel({
         tabIndex={-1}
         className={cn(
           "absolute right-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 text-neutral-200 backdrop-blur-xl transition-opacity duration-200",
+          "bg-[#18181b]/80 text-foreground backdrop-blur-xl transition-opacity duration-200",
           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -270,11 +270,11 @@ export function MobilePipelineCarousel({
                     />
                   )}
 
-                  <span className="truncate text-sm font-bold uppercase tracking-wide text-neutral-200">
+                  <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
                     {definition.label}
                   </span>
 
-                  <span className="shrink-0 text-xs font-semibold text-neutral-500">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">
                     {count}
                   </span>
 
@@ -285,7 +285,7 @@ export function MobilePipelineCarousel({
                     afuera del header propio de acá. */}
                 <div
                   data-drag-scroll-ignore
-                  className="border-b border-white/5 px-2 py-1"
+                  className="border-b border-border px-2 py-1"
                   style={{ cursor: "default" }}
                 >
 

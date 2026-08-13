@@ -24,7 +24,7 @@ export function SidebarRow({
   collapsed = false,
   active = false,
   count,
-  badgeColor = "bg-neutral-800 text-neutral-300",
+  badgeColor = "bg-neutral-800 text-muted-foreground",
   collapsedBadgeColor,
   badgeAnimated = false,
   isDrawer = false,
@@ -40,8 +40,8 @@ export function SidebarRow({
         "group relative flex w-full items-center rounded-xl font-medium transition-colors duration-200 select-none overflow-visible",
         size === "sm" ? "h-9 text-xs" : "h-10 text-xs font-semibold",
         active
-          ? "bg-white/10 text-white shadow-sm"
-          : "text-neutral-400 hover:bg-white/5 hover:text-neutral-200",
+          ? "bg-foreground/10 text-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
         collapsed ? "justify-center px-0" : "px-2.5",
         className
       )}
@@ -52,7 +52,7 @@ export function SidebarRow({
         <Icon
           className={cn(
             "size-4 shrink-0 transition-colors",
-            active ? "text-white" : "text-neutral-400 group-hover:text-neutral-200"
+            active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
           )}
           strokeWidth={2}
         />

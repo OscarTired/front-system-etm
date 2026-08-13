@@ -55,7 +55,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           className={[
             'w-full h-9 pl-3 rounded-xl text-sm font-medium text-center uppercase outline-none transition-colors',
             hideCalendarIcon ? 'pr-3' : 'pr-9',
-            'bg-white/6 text-neutral-200 placeholder:text-neutral-600',
+            'bg-foreground/5 text-foreground placeholder:text-muted-foreground/80',
             'border border-transparent',
             'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
             'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -70,7 +70,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             disabled={disabled}
             onMouseDown={(e) => e.preventDefault()}
             onClick={onCalendarClick}
-            className="absolute right-2 flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+            className="absolute right-2 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground transition-colors disabled:opacity-50"
             aria-label="Abrir calendario"
           >
             <CalendarIcon size={16} />

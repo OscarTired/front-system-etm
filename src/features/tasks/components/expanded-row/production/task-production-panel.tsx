@@ -168,13 +168,13 @@ export function TaskProductionPanel({
 
         </div>
 
-        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-neutral-500">
+        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
           {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-400">{workflowView.progress}%</span>
         </span>
 
       </div>
 
-      <div className="h-2 w-full min-w-0 overflow-hidden rounded-full bg-white/5">
+      <div className="h-2 w-full min-w-0 overflow-hidden rounded-full bg-foreground/5">
 
         <div
           className="h-full rounded-full bg-cyan-500 transition-all"
@@ -268,7 +268,7 @@ export function TaskProductionPanel({
                       className={cn(
                         "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
                         "flex h-4 min-w-4 items-center justify-center",
-                        "rounded-full bg-sky-500 px-1 text-[9px] font-bold leading-none text-white",
+                        "rounded-full bg-sky-500 px-1 text-[9px] font-bold leading-none text-foreground",
                         "shadow-md ring-2 ring-[#101012]",
                       )}
                     >
@@ -283,7 +283,7 @@ export function TaskProductionPanel({
                       className={cn(
                         "pointer-events-none absolute z-10",
                         "flex h-4 min-w-4 items-center justify-center overflow-hidden",
-                        "rounded-full text-[9px] font-bold leading-none text-white",
+                        "rounded-full text-[9px] font-bold leading-none text-foreground",
                         "shadow-md ring-2 ring-[#101012]",
                         hasComments
                           ? "-bottom-1 -left-1.5"
@@ -312,7 +312,7 @@ export function TaskProductionPanel({
                       className={cn(
                         "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
                         "flex h-4 min-w-4 items-center justify-center",
-                        "rounded-full bg-amber-500 text-[9px] font-bold text-white",
+                        "rounded-full bg-amber-500 text-[9px] font-bold text-foreground",
                         "shadow-md ring-2 ring-[#101012]",
                       )}
                     >
@@ -335,7 +335,7 @@ export function TaskProductionPanel({
               </button>
 
               {!isLast && (
-                <div className="mx-2 mt-5 h-0.5 w-6 shrink-0 self-start overflow-hidden rounded-full bg-white/8">
+                <div className="mx-2 mt-5 h-0.5 w-6 shrink-0 self-start overflow-hidden rounded-full bg-foreground/10">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -357,7 +357,7 @@ export function TaskProductionPanel({
 
     <>
 
-      <div className="hidden h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-white/2 p-4 xl:flex">
+      <div className="hidden h-full min-h-43.5 w-full flex-col justify-center rounded-xl bg-foreground/5 p-4 xl:flex">
 
         <div className="flex justify-center">
 
@@ -373,7 +373,7 @@ export function TaskProductionPanel({
 
         <div className="mt-3 flex justify-center">
 
-          <div className="w-full max-w-3xl rounded-xl bg-white/2 px-5 py-3.5">
+          <div className="w-full max-w-3xl rounded-xl bg-foreground/5 px-5 py-3.5">
 
             {progressContent}
 
@@ -399,7 +399,7 @@ export function TaskProductionPanel({
               }}
             >
 
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
 
                 {StatusIcon ? (
                   <StatusIcon size={20} style={{ color: summaryTextColor }} />
@@ -419,14 +419,14 @@ export function TaskProductionPanel({
               <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Listas</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Listas</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.completedSteps}/{workflowView.totalSteps}
                   </p>
                 </div>
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Avance</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Avance</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.progress}%
                   </p>
@@ -434,7 +434,7 @@ export function TaskProductionPanel({
 
               </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-neutral-400">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
                 <MoreHorizontal size={18} />
               </div>
 

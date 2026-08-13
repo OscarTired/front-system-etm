@@ -46,7 +46,7 @@ export function ProfileForm({ onClose }: Props) {
 
         <div className="space-y-1.5">
 
-          <label className="text-xs font-medium text-neutral-500">
+          <label className="text-xs font-medium text-muted-foreground">
             Nombre
           </label>
 
@@ -60,7 +60,7 @@ export function ProfileForm({ onClose }: Props) {
 
         <div className="space-y-1.5">
 
-          <label className="text-xs font-medium text-neutral-500">
+          <label className="text-xs font-medium text-muted-foreground">
             Correo
           </label>
 
@@ -74,7 +74,7 @@ export function ProfileForm({ onClose }: Props) {
 
         <div className="space-y-1.5">
 
-          <label className="text-xs font-medium text-neutral-500">
+          <label className="text-xs font-medium text-muted-foreground">
             Cargo
           </label>
 
@@ -88,7 +88,7 @@ export function ProfileForm({ onClose }: Props) {
 
         <div className="space-y-1.5">
 
-          <label className="text-xs font-medium text-neutral-500">
+          <label className="text-xs font-medium text-muted-foreground">
             Teléfono
           </label>
 
@@ -108,7 +108,7 @@ export function ProfileForm({ onClose }: Props) {
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="h-10 rounded-xl px-5 text-sm font-medium text-neutral-400 transition hover:bg-white/5 hover:text-white disabled:opacity-50"
+          className="h-10 rounded-xl px-5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
         >
 
           Cancelar

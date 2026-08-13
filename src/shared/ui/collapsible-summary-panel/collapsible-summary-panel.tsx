@@ -26,7 +26,7 @@ export function CollapseIndicatorsButton({
       onClick={onClick}
       aria-label="Ocultar indicadores"
       className={cn(
-        "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white",
+        "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground",
         className,
       )}
     >

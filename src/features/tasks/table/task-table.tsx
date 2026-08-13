@@ -154,14 +154,14 @@ export function TaskTable({
     renderDragLabel: task => (
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/50">
+          <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50">
             {String(task.taskNumber).padStart(3, "0")}
           </span>
-          <span className="text-[11px] font-medium tracking-wide text-white/50">
+          <span className="text-[11px] font-medium tracking-wide text-foreground/50">
             {task.project.projectCode}
           </span>
         </div>
-        <div className="mt-1 truncate text-sm font-semibold text-white">
+        <div className="mt-1 truncate text-sm font-semibold text-foreground">
           {task.reference}
         </div>
       </div>
@@ -217,7 +217,7 @@ export function TaskTable({
 
         {displayedTasks.length === 0 && (
 
-          <div className="flex h-24 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+          <div className="flex h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
             Sin tareas
           </div>
 

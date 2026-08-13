@@ -1091,7 +1091,7 @@ export function DxfCanvas({
           del canvas. Se fusionaron en un solo lugar. */}
       <div
         data-slot="canvas-status-bar"
-        className={`absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-[#101012]/95 py-1.5 text-xs text-neutral-400 shadow-lg backdrop-blur-sm ${
+        className={`absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-muted/95 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-sm ${
           isCompact ? "px-2.5" : "px-3"
         }`}
       >
@@ -1099,7 +1099,7 @@ export function DxfCanvas({
           <button
             type="button"
             onClick={() => setStatusActionsOpen((v) => !v)}
-            className="min-w-22 text-left text-neutral-200 hover:text-white"
+            className="min-w-22 text-left text-foreground hover:text-foreground"
             aria-expanded={statusActionsOpen}
             title={statusActionsOpen ? "Ocultar acciones" : "Ver acciones"}
           >
@@ -1108,11 +1108,11 @@ export function DxfCanvas({
               : `${selectedPieceIndices.length} piezas`}
           </button>
         ) : (
-          <span className="min-w-22 text-neutral-200">Sin selección</span>
+          <span className="min-w-22 text-foreground">Sin selección</span>
         )}
         {collidingPieceIndices.length > 0 && (
           <>
-            <span className="text-white/15">|</span>
+            <span className="text-foreground/15">|</span>
             <span className="text-red-400 font-medium">
               {collidingPieceIndices.length} colisión{collidingPieceIndices.length === 1 ? "" : "es"}
             </span>
@@ -1127,11 +1127,11 @@ export function DxfCanvas({
               statusActionsOpen ? "max-w-80 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
             }`}
           >
-            <span className="text-white/15">|</span>
+            <span className="text-foreground/15">|</span>
             <button
               type="button"
               onClick={() => onSelectPiece?.(null, false)}
-              className="rounded-full p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               title="Deseleccionar"
             >
               <CircleSlash size={13} />
@@ -1145,12 +1145,12 @@ export function DxfCanvas({
             >
               <Trash2 size={13} />
             </button>
-            <div className="mx-0.5 h-4 w-px shrink-0 bg-white/10" />
+            <div className="mx-0.5 h-4 w-px shrink-0 bg-foreground/10" />
             <button
               type="button"
               disabled={!onRotateSelected}
               onClick={() => onRotateSelected?.(selectedPieceIndices, rotationStep)}
-              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
             >
               +{rotationStep}°
             </button>
@@ -1158,15 +1158,15 @@ export function DxfCanvas({
               type="button"
               disabled={!onRotateSelected}
               onClick={() => onRotateSelected?.(selectedPieceIndices, -rotationStep)}
-              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+              className="whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
             >
               −{rotationStep}°
             </button>
             <button
               type="button"
               onClick={() => setCanvasTool("rotate")}
-              className={`whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium hover:bg-white/10 hover:text-white ${
-                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-300" : "text-neutral-300"
+              className={`whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-medium hover:bg-foreground/10 hover:text-foreground ${
+                canvasTool === "rotate" ? "bg-cyan-500/20 text-cyan-300" : "text-muted-foreground"
               }`}
               title="Rotar libre arrastrando (Shift = pasos de 15°)"
             >
@@ -1180,7 +1180,7 @@ export function DxfCanvas({
           <button
             type="button"
             onClick={() => setShowCanvasHelp((prev) => !prev)}
-            className="ml-1 rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            className="ml-1 rounded-full p-1 text-muted-foreground hover:bg-foreground/10 hover:text-foreground transition-colors"
             title="Ayuda de atajos"
           >
             <HelpCircle size={13} />
@@ -1190,16 +1190,16 @@ export function DxfCanvas({
             <div
               className={
                 isCompact
-                  ? "fixed inset-x-3 bottom-16 z-40 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md"
-                  : "absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-neutral-300 shadow-2xl backdrop-blur-md"
+                  ? "fixed inset-x-3 bottom-16 z-40 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-muted-foreground shadow-2xl backdrop-blur-md"
+                  : "absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-[#141416]/95 p-3 text-[11px] text-muted-foreground shadow-2xl backdrop-blur-md"
               }
             >
-              <div className="z-90 font-semibold text-white mb-1">Guía rápida de interacción:</div>
-              <ul className="space-y-1 text-neutral-400">
-                <li>• <strong className="text-neutral-200">V</strong>: Modo Selección</li>
-                <li>• <strong className="text-neutral-200">H o Espacio+Arrastrar</strong>: Panorámica</li>
-                <li>• <strong className="text-neutral-200">Arrastrar fondo</strong>: Selección por caja</li>
-                <li>• <strong className="text-neutral-200">Anticlick</strong>: Salir de herramienta actual</li>
+              <div className="z-90 font-semibold text-foreground mb-1">Guía rápida de interacción:</div>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• <strong className="text-foreground">V</strong>: Modo Selección</li>
+                <li>• <strong className="text-foreground">H o Espacio+Arrastrar</strong>: Panorámica</li>
+                <li>• <strong className="text-foreground">Arrastrar fondo</strong>: Selección por caja</li>
+                <li>• <strong className="text-foreground">Anticlick</strong>: Salir de herramienta actual</li>
               </ul>
             </div>
           )}
@@ -1209,7 +1209,7 @@ export function DxfCanvas({
       {/* Indicador modo interacción V/H superior — única fuente de verdad
           del modo activo (antes se repetía también en la barra de estado). */}
       <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
-        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-[#101012]/90 p-1 shadow-lg backdrop-blur-sm">
+        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-muted/90 p-1 shadow-lg backdrop-blur-sm">
           <button
             type="button"
             title="Seleccionar (V)"
@@ -1218,8 +1218,8 @@ export function DxfCanvas({
               isCompact ? "w-8 justify-center px-0" : "px-2.5"
             } ${
               canvasTool === "select"
-                ? "bg-white/15 text-white"
-                : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                ? "bg-foreground/15 text-foreground"
+                : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
             }`}
           >
             <MousePointer2 className="h-3.5 w-3.5" />
@@ -1233,8 +1233,8 @@ export function DxfCanvas({
               isCompact ? "w-8 justify-center px-0" : "px-2.5"
             } ${
               canvasTool === "pan"
-                ? "bg-white/15 text-white"
-                : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                ? "bg-foreground/15 text-foreground"
+                : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
             }`}
           >
             <Hand className="h-3.5 w-3.5" />
@@ -1301,7 +1301,7 @@ export function DxfCanvas({
             <div className="absolute h-2 w-2 rounded-full border border-cyan-300 bg-cyan-400/30" />
           </div>
           {Math.abs(rotatePreviewDelta) > 0.05 && (
-            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-[#101012]/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
+            <div className="absolute left-4 top-4 whitespace-nowrap rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300">
               {rotatePreviewDelta > 0 ? "+" : ""}
               {rotatePreviewDelta.toFixed(1)}°
             </div>
@@ -1310,18 +1310,18 @@ export function DxfCanvas({
       )}
 
       {canvasTool === "zoomWindow" && !boxSelectScreen && (
-        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
+        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-muted-foreground shadow-md">
           Arrastra un rectángulo para hacer zoom (Anticlick para salir)
         </div>
       )}
       {canvasTool === "rotate" && !rotatePivotScreen && (
-        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md">
+        <div className="pointer-events-none absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-muted-foreground shadow-md">
           Clic = pivot · arrastrar = ángulo (Shift = 15°) (Anticlick para salir)
         </div>
       )}
 
       {measure.activeTool !== "none" && (
-        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-neutral-400 shadow-md backdrop-blur-md transition-opacity duration-200">
+        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-[#1c1c1e]/90 px-3 py-1.5 text-[11px] text-muted-foreground shadow-md backdrop-blur-md transition-opacity duration-200">
           {measure.activeTool === "distance" &&
             (measure.pendingPoints.length === 0
               ? "Cota: clic en el primer punto (snap a arista/extremo)"
@@ -1369,20 +1369,20 @@ export function DxfCanvas({
             no tener 2 formas distintas de lograr lo mismo).
           */}
           <div className="flex shrink-0 items-center justify-between gap-2 px-0.5 pb-0.5">
-            <span className="hidden min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-neutral-400 xs:inline sm:inline">
+            <span className="hidden min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground xs:inline sm:inline">
               Mediciones
             </span>
-            <span className="inline text-neutral-400 sm:hidden" aria-hidden>
+            <span className="inline text-muted-foreground sm:hidden" aria-hidden>
               <Ruler size={14} />
             </span>
             <div className="flex items-center gap-1">
-              <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] tabular-nums text-neutral-500">
+              <span className="rounded-md bg-foreground/5 px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">
                 {measure.measurements.length}
               </span>
               <button
                 type="button"
                 onClick={measure.clearMeasurements}
-                className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                 title="Borrar todas"
               >
                 <Trash2 size={14} />
@@ -1394,7 +1394,7 @@ export function DxfCanvas({
             {measure.measurements.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 text-xs text-neutral-200 transition-colors hover:bg-white/10"
+                className="flex items-center justify-between gap-2 rounded-xl bg-foreground/5 px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-foreground/10"
               >
                 <span className="min-w-0 truncate font-medium">
                   {m.kind === "distance" && fmtMm(m.value)}
@@ -1405,7 +1405,7 @@ export function DxfCanvas({
                 <button
                   type="button"
                   onClick={() => measure.removeMeasurement(m.id)}
-                  className="shrink-0 rounded-lg p-1 text-neutral-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                  className="shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-red-500/20 hover:text-red-400"
                 >
                   <X size={14} />
                 </button>

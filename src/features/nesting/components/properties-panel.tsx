@@ -58,8 +58,8 @@ export interface PropertiesPanelProps {
 function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-xs last:border-0 px-1">
-      <span className="text-neutral-500">{label}</span>
-      <span className="max-w-[60%] truncate text-right font-medium text-neutral-200" title={value}>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="max-w-[60%] truncate text-right font-medium text-foreground" title={value}>
         {value}
       </span>
     </div>
@@ -108,7 +108,7 @@ export function PropertiesPanel({
         : selectedPiece.pieceId
 
     return (
-      <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
         <div
           role="button"
           tabIndex={0}
@@ -119,11 +119,11 @@ export function PropertiesPanel({
               setIsExpanded((prev) => !prev)
             }
           }}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-white/3"
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-foreground/5"
         >
           <div className="flex items-center gap-2">
             <Info className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Pieza seleccionada</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pieza seleccionada</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export function PropertiesPanel({
                 className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors ${
                   locked
                     ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                    : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white"
+                    : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                 }`}
               >
                 {locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
@@ -146,7 +146,7 @@ export function PropertiesPanel({
               </button>
             )}
             <ChevronRight
-              className={`h-4 w-4 text-neutral-500 transition-transform duration-200 ${
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
                 isExpanded ? "rotate-90" : ""
               }`}
             />
@@ -176,7 +176,7 @@ export function PropertiesPanel({
           {onOverrideChange && (
             <div className="flex flex-col rounded-lg bg-black/20 p-2.5 gap-2">
               <div className="flex items-center justify-between px-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Posición en plancha
                 </span>
                 <div className="flex items-center gap-1">
@@ -185,7 +185,7 @@ export function PropertiesPanel({
                       type="button"
                       onClick={onCopyOffsets}
                       title="Copiar offsets (ΔX ΔY Áng)"
-                      className="rounded-md p-1 text-neutral-500 hover:bg-white/10 hover:text-white"
+                      className="rounded-md p-1 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     >
                       <Copy className="h-3 w-3" />
                     </button>
@@ -196,7 +196,7 @@ export function PropertiesPanel({
                       disabled={!canPasteOffsets}
                       onClick={onPasteOffsets}
                       title="Pegar offsets"
-                      className="rounded-md p-1 text-neutral-500 hover:bg-white/10 hover:text-white disabled:opacity-30"
+                      className="rounded-md p-1 text-muted-foreground hover:bg-foreground/10 hover:text-foreground disabled:opacity-30"
                     >
                       <ClipboardPaste className="h-3 w-3" />
                     </button>
@@ -205,7 +205,7 @@ export function PropertiesPanel({
                     <button
                       type="button"
                       onClick={onResetOverrides}
-                      className="rounded-md px-1.5 py-0.5 text-[10px] text-neutral-400 hover:bg-white/10 hover:text-white"
+                      className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     >
                       Restablecer
                     </button>
@@ -221,12 +221,12 @@ export function PropertiesPanel({
                   ] as const
                 ).map(([key, val, label]) => (
                   <label key={key} className="flex flex-col gap-0.5">
-                    <span className="px-0.5 text-[9px] text-neutral-500">{label}</span>
+                    <span className="px-0.5 text-[9px] text-muted-foreground">{label}</span>
                     <input
                       type="number"
                       step={key === "angle" ? 1 : 0.1}
                       disabled={locked}
-                      className="h-7 rounded-md border-none bg-neutral-950/50 px-1.5 text-xs text-neutral-100 outline-none focus:ring-1 focus:ring-cyan-500/30 disabled:opacity-40 text-center"
+                      className="h-7 rounded-md border-none bg-background/50 px-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30 disabled:opacity-40 text-center"
                       value={Number.isFinite(val) ? val : 0}
                       onChange={(e) => {
                         const n = parseFloat(e.target.value)
@@ -279,7 +279,7 @@ export function PropertiesPanel({
 
   if (sheetStats) {
     return (
-      <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
         <div
           role="button"
           tabIndex={0}
@@ -290,15 +290,15 @@ export function PropertiesPanel({
               setIsExpanded((prev) => !prev)
             }
           }}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-white/3"
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-foreground/5"
         >
           <div className="flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Plancha activa</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Plancha activa</span>
           </div>
 
           <ChevronRight
-            className={`h-4 w-4 text-neutral-500 transition-transform duration-200 ${
+            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
               isExpanded ? "rotate-90" : ""
             }`}
           />
@@ -350,7 +350,7 @@ export function PropertiesPanel({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-xs text-neutral-500">
+    <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-xs text-muted-foreground">
       <Info className="h-5 w-5 opacity-40" />
       Selecciona una pieza o nestear para ver propiedades.
     </div>

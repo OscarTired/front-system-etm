@@ -14,7 +14,7 @@ export function CalendarGrid({ weeks, onSelectDay }: CalendarGridProps): React.J
         {WEEKDAY_LABELS.map((label, index) => (
           <div
             key={`${label}-${index}`}
-            className="flex items-center justify-center w-8 h-6 text-[11px] font-semibold text-neutral-600"
+            className="flex items-center justify-center w-8 h-6 text-[11px] font-semibold text-muted-foreground/80"
           >
             {label}
           </div>

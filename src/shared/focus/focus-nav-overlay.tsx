@@ -22,13 +22,13 @@ export function FocusNavOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-200 flex items-center justify-center bg-[#050505]/55 backdrop-blur-md"
+      className="fixed inset-0 z-200 flex items-center justify-center bg-background/55 backdrop-blur-md"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-neutral-900/90 px-6 py-5 shadow-2xl">
+      <div className="flex flex-col items-center gap-3 rounded-2xl bg-chrome px-6 py-5 shadow-2xl">
         <Spinner size={22} className="text-cyan-400" />
-        <p className="text-sm font-medium text-neutral-200">
+        <p className="text-sm font-medium text-foreground">
           {label ?? "Dirigiendo…"}
         </p>
       </div>

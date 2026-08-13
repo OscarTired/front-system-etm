@@ -169,22 +169,22 @@ export function CommentComposer({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white/2 p-2.5">
+    <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-foreground/5 p-2.5">
 
       {isEditing && (
-        <div className="mb-1.5 flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+        <div className="mb-1.5 flex items-center justify-between rounded-lg bg-foreground/5 px-2.5 py-1.5">
           <span className="text-xs font-medium text-cyan-300">Editando comentario</span>
           <IconAction icon={X} onClick={handleCancel} />
         </div>
       )}
 
       {isReplying && replyingTo && (
-        <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5">
+        <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-2.5 py-1.5">
           <div className="min-w-0">
             <span className="text-xs font-medium text-cyan-300">
               Respondiendo a {replyingTo.user.name}
             </span>
-            <p className="truncate text-xs text-neutral-500">
+            <p className="truncate text-xs text-muted-foreground">
               {replyingTo.message || "📷 Foto"}
             </p>
           </div>
@@ -216,13 +216,13 @@ export function CommentComposer({
                 <img
                   src={selectedImage}
                   alt="Foto adjunta"
-                  className="size-14 rounded-xl object-cover ring-1 ring-white/10"
+                  className="size-14 rounded-xl object-cover ring-1 ring-border"
                 />
                 <button
                   type="button"
                   onClick={handleRemoveImage}
                   aria-label="Quitar foto"
-                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-neutral-900 text-neutral-200 ring-1 ring-white/15 hover:bg-neutral-800"
+                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
                 >
                   <X size={11} />
                 </button>
@@ -240,7 +240,7 @@ export function CommentComposer({
                   ? "Escribe y usa @ para mencionar"
                   : "No tienes permisos para comentar"
               }
-              className="text-sm font-medium min-h-9 w-full flex-1 resize-none bg-transparent text-white outline-none placeholder:text-neutral-600"
+              className="text-sm font-medium min-h-9 w-full flex-1 resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground/80"
             />
 
           </div>

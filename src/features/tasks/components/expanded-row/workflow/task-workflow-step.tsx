@@ -25,18 +25,18 @@ const statusStyles: Record<
 > = {
 
   QUEUE: {
-    dot: "border-neutral-700 bg-neutral-900",
-    text: "text-neutral-600",
+    dot: "border-neutral-700 bg-popover",
+    text: "text-muted-foreground/80",
   },
 
   PENDING: {
     dot: "border-neutral-600 bg-neutral-800",
-    text: "text-neutral-500",
+    text: "text-muted-foreground",
   },
 
   PROGRESS: {
     dot: "border-cyan-400 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.45)]",
-    text: "text-white",
+    text: "text-foreground",
   },
 
   PAUSED: {
@@ -46,12 +46,12 @@ const statusStyles: Record<
 
   COMPLETED: {
     dot: "border-emerald-400 bg-emerald-400",
-    text: "text-neutral-300",
+    text: "text-muted-foreground",
   },
 
   REVIEWED: {
     dot: "border-emerald-500 bg-emerald-500",
-    text: "text-neutral-300",
+    text: "text-muted-foreground",
   },
 
 }

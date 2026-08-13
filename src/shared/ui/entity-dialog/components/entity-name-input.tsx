@@ -44,7 +44,7 @@ export const EntityNameInput=
             })
 
           }}
-          className="text-neutral-200 uppercase placeholder:text-neutral-600"
+          className="text-foreground uppercase placeholder:text-muted-foreground/80"
         />
 
       )

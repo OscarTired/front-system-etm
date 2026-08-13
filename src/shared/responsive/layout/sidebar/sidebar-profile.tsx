@@ -130,7 +130,7 @@ export function SidebarProfile({
 
   const avatar = (
 
-    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/3 text-sm font-semibold text-white shadow-inner">
+    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-foreground/5 text-sm font-semibold text-foreground shadow-inner">
 
       {user?.avatarUrl ? (
 
@@ -280,7 +280,7 @@ export function SidebarProfile({
 
             }}
 
-            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition hover:bg-white/5 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
 
             aria-label="Cerrar sesión"
 
@@ -330,7 +330,7 @@ export function SidebarProfile({
 
           className={cn(
 
-            "absolute inset-x-0 bottom-full z-0 overflow-hidden rounded-xl bg-[#171717]",
+            "absolute inset-x-0 bottom-full z-0 overflow-hidden rounded-xl bg-popover",
 
             "origin-bottom transition-[transform,opacity] duration-300 ease-out",
 
@@ -400,11 +400,11 @@ export function SidebarProfile({
 
               {user ? (
 
-                <p className="truncate text-sm font-semibold leading-tight text-white">{user.name}</p>
+                <p className="truncate text-sm font-semibold leading-tight text-foreground">{user.name}</p>
 
               ) : (
 
-                <div className="h-3 w-28 animate-pulse rounded bg-white/5" />
+                <div className="h-3 w-28 animate-pulse rounded bg-foreground/5" />
 
               )}
 
@@ -424,9 +424,9 @@ export function SidebarProfile({
 
                 canOpenProfile
 
-                  ? "text-neutral-400 hover:bg-white/5 hover:text-white"
+                  ? "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
 
-                  : "cursor-not-allowed text-neutral-700",
+                  : "cursor-not-allowed text-muted-foreground/70",
 
               )}
 
@@ -444,11 +444,11 @@ export function SidebarProfile({
 
             {user ? (
 
-              <p className="min-w-0 truncate text-xs text-neutral-500">{user.email}</p>
+              <p className="min-w-0 truncate text-xs text-muted-foreground">{user.email}</p>
 
             ) : (
 
-              <div className="h-2 w-20 animate-pulse rounded bg-white/5" />
+              <div className="h-2 w-20 animate-pulse rounded bg-foreground/5" />
 
             )}
 
@@ -464,7 +464,7 @@ export function SidebarProfile({
 
               }}
 
-              className="shrink-0 rounded-md px-2 py-1 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-white"
+              className="shrink-0 rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
 
             >
 

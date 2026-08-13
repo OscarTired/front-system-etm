@@ -42,7 +42,7 @@ export function ProductionProcessCard({
 
   const urgentColor =
     urgentCount === 0
-      ? "text-neutral-500"
+      ? "text-muted-foreground"
       : urgentCount <= 2
         ? "text-amber-400"
         : "text-red-400"
@@ -64,7 +64,7 @@ export function ProductionProcessCard({
         }}
       >
 
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
 
           {Icon && <Icon size={20} style={{ color: textColor }} />}
 
@@ -81,7 +81,7 @@ export function ProductionProcessCard({
 
           <div className="min-w-0 text-right">
 
-            <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+            <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Total
             </p>
 
@@ -94,11 +94,11 @@ export function ProductionProcessCard({
 
           </div>
 
-          <div className="h-8 w-px shrink-0 bg-white/10" />
+          <div className="h-8 w-px shrink-0 bg-foreground/10" />
 
           <div className="min-w-0 text-right">
 
-            <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+            <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Urgentes
             </p>
 
@@ -118,7 +118,7 @@ export function ProductionProcessCard({
         <ChevronDown
           size={18}
           className={cn(
-            "shrink-0 text-neutral-500 transition-transform duration-200",
+            "shrink-0 text-muted-foreground transition-transform duration-200",
             expanded && "rotate-180",
           )}
         />
@@ -127,11 +127,11 @@ export function ProductionProcessCard({
 
       {expanded && (
 
-        <div className="animate-comment-in flex flex-col gap-2 bg-white/2 p-2 pt-3">
+        <div className="animate-comment-in flex flex-col gap-2 bg-foreground/5 p-2 pt-3">
 
           {processTasks.length === 0 && (
 
-            <div className="flex h-12 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+            <div className="flex h-12 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
               Sin tareas en {definition.label}
             </div>
 

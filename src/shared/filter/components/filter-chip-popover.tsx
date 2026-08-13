@@ -130,7 +130,7 @@ export function FilterChipPopover({
         className="p-2"
       >
         <div className="mb-3 px-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-white/60">
+          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-foreground/60">
             {filterFieldLabels[chip.field]}
           </span>
         </div>

@@ -59,10 +59,10 @@ export function CommentList({ comments, onEdit, onDelete, onReply }: Props) {
                 <button
                   type="button"
                   onClick={() => toggleThread(comment.id)}
-                  className="group/btn flex items-center gap-2 self-start rounded-full bg-white/4 px-3 py-1.5 text-xs font-medium text-neutral-400 transition-all hover:bg-white/8 hover:text-neutral-200 active:scale-95"
+                  className="group/btn flex items-center gap-2 self-start rounded-full bg-foreground/5 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground active:scale-95"
                 >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/10">
-                    <CornerDownRight size={10} className="text-neutral-300" />
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-foreground/10">
+                    <CornerDownRight size={10} className="text-muted-foreground" />
                   </span>
                   {isExpanded
                     ? "Ocultar respuestas"

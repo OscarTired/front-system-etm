@@ -19,7 +19,7 @@ export function PrimaryAction({ label, icon: Icon, disabled = false, isLoading =
       onClick={onClick}
       className={cn(
         "inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold transition",
-        disabled ? "cursor-not-allowed bg-white/10 text-white/35" : "bg-white text-black hover:bg-neutral-200",
+        disabled ? "cursor-not-allowed bg-foreground/10 text-foreground/35" : "bg-white text-black hover:bg-neutral-200",
         isLoading && "opacity-80 cursor-wait"
       )}
     >

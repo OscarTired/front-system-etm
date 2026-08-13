@@ -128,7 +128,7 @@ export function ActivityLogEditDialog({
                     "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                     selected
                       ? "bg-transparent"
-                      : "bg-white/4 text-neutral-400 hover:bg-white/8 hover:text-neutral-200",
+                      : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                   )}
                   style={
                     selected
@@ -191,7 +191,7 @@ export function ActivityLogEditDialog({
             rows={3}
             maxLength={500}
             placeholder="Nota opcional"
-            className="w-full resize-none rounded-xl bg-white/5 px-3 py-2 text-sm text-neutral-200 outline-none"
+            className="w-full resize-none rounded-xl bg-foreground/5 px-3 py-2 text-sm text-foreground outline-none"
           />
         </FormField>
       </div>

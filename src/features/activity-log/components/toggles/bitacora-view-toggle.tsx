@@ -29,7 +29,7 @@ export function BitacoraViewToggle({ compact = false }: Props) {
   const onChange = useBitacoraViewStore(s => s.setViewMode)
 
   return (
-    <div className="inline-flex items-center rounded-lg bg-white/4 p-0.5">
+    <div className="inline-flex items-center rounded-lg bg-foreground/5 p-0.5">
       {OPTIONS.map(option => {
         const Icon = option.Icon
         const active = value === option.key
@@ -48,8 +48,8 @@ export function BitacoraViewToggle({ compact = false }: Props) {
                 ? "size-8"
                 : "gap-1.5 px-3 py-0.5 text-sm font-semibold",
               active
-                ? "bg-white/10 text-white"
-                : "text-neutral-500 hover:text-neutral-300",
+                ? "bg-foreground/10 text-foreground"
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
           >
             <Icon size={compact ? 15 : 14} />

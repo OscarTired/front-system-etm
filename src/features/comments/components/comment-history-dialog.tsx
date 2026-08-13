@@ -98,7 +98,7 @@ export function CommentHistoryDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           size="large"
-          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
+          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
@@ -109,7 +109,7 @@ export function CommentHistoryDialog({
               </div>
           
               <div className="min-w-0 flex-1">
-                <DialogTitle className="text-lg font-bold text-neutral-100">
+                <DialogTitle className="text-lg font-bold text-foreground">
                   Mensajes
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -121,7 +121,7 @@ export function CommentHistoryDialog({
 
           <div className="shrink-0 px-5 py-3">
             {readOnly ? (
-              <p className="rounded-lg bg-white/3 px-3 py-2.5 text-center text-xs text-neutral-500">
+              <p className="rounded-lg bg-foreground/5 px-3 py-2.5 text-center text-xs text-muted-foreground">
                 Esta tarea ya está finalizada — se puede ver el historial, pero no agregar mensajes nuevos.
               </p>
             ) : (
@@ -136,13 +136,13 @@ export function CommentHistoryDialog({
           </div>
 
           <div className="shrink-0 px-5 py-3">
-            <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-              <Search size={15} className="shrink-0 text-neutral-500" />
+            <div className="flex items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2">
+              <Search size={15} className="shrink-0 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar en mensajes..."
-                className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@ export function CommentHistoryDialog({
             {loading ? (
               <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
                 <Spinner size={18} />
-                <p className="text-sm text-neutral-500">Cargando...</p>
+                <p className="text-sm text-muted-foreground">Cargando...</p>
               </div>
             ) : filteredComments.length === 0 ? (
               <div className="flex min-h-65 flex-col items-center justify-center">

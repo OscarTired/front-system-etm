@@ -4,18 +4,18 @@
 function SkeletonProjectRow({ opacity }: { opacity: number }) {
   return (
     <div
-      className="flex w-full items-center gap-2.5 rounded-xl bg-white/2 px-3 py-3"
+      className="flex w-full items-center gap-2.5 rounded-xl bg-foreground/5 px-3 py-3"
       style={{ opacity }}
     >
-      <span className="h-4.5 w-9 shrink-0 rounded-md bg-white/10" />
+      <span className="h-4.5 w-9 shrink-0 rounded-md bg-foreground/10" />
 
       <div className="min-w-0 flex-1">
-        <span className="block h-5 w-2/3 rounded bg-white/10" />
-        <span className="mt-0.5 block h-4 w-1/3 rounded bg-white/6" />
+        <span className="block h-5 w-2/3 rounded bg-foreground/10" />
+        <span className="mt-0.5 block h-4 w-1/3 rounded bg-foreground/5" />
       </div>
 
-      <span className="h-3 w-12 shrink-0 rounded bg-white/6" />
-      <span className="size-4 shrink-0 rounded bg-white/6" />
+      <span className="h-3 w-12 shrink-0 rounded bg-foreground/5" />
+      <span className="size-4 shrink-0 rounded bg-foreground/5" />
     </div>
   )
 }

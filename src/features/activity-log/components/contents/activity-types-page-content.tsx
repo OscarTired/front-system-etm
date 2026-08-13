@@ -38,7 +38,7 @@ function ActivityTypeRow({
   const Icon = getActivityIcon(type.icon)
 
   return (
-    <div className="flex w-full items-center gap-3 rounded-xl bg-white/3 p-3">
+    <div className="flex w-full items-center gap-3 rounded-xl bg-foreground/5 p-3">
       <div
         className="flex size-9 shrink-0 items-center justify-center rounded-full"
         style={{ backgroundColor: `${type.color}22`, color: type.color }}
@@ -47,11 +47,11 @@ function ActivityTypeRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-neutral-200">
+        <p className="truncate text-sm font-medium text-foreground">
           {type.label}
         </p>
 
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-muted-foreground">
           {type.active ? "Activa" : "Desactivada"}
           {" · "}
           {type.pinned ? "Predeterminada" : "Dentro de \u201cOtros\u201d"}
@@ -86,18 +86,18 @@ function ActivityTypeRow({
 function ActivityTypeRowPlaceholder({ opacity }: { opacity: number }) {
   return (
     <div
-      className="flex w-full animate-pulse items-center gap-3 rounded-xl bg-white/3 p-3"
+      className="flex w-full animate-pulse items-center gap-3 rounded-xl bg-foreground/5 p-3"
       style={{ opacity }}
     >
-      <div className="size-9 shrink-0 rounded-full bg-white/10" />
+      <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="h-4 w-36 max-w-[50%] rounded bg-white/12" />
-        <div className="h-3 w-28 max-w-[40%] rounded bg-white/6" />
+        <div className="h-3 w-28 max-w-[40%] rounded bg-foreground/5" />
       </div>
       <div className="flex gap-1">
-        <div className="size-8 rounded-lg bg-white/6" />
-        <div className="size-8 rounded-lg bg-white/6" />
-        <div className="size-8 rounded-lg bg-white/6" />
+        <div className="size-8 rounded-lg bg-foreground/5" />
+        <div className="size-8 rounded-lg bg-foreground/5" />
+        <div className="size-8 rounded-lg bg-foreground/5" />
       </div>
     </div>
   )
@@ -183,7 +183,7 @@ export function ActivityTypesPageContent() {
               {/* Inline: mismas secciones/filas; el search real ya está arriba. */}
               {(["Predeterminadas", "Personalizadas"] as const).map(title => (
                 <section key={title} className="flex flex-col gap-2">
-                  <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                  <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {title}
                   </h2>
                   <div className="flex flex-col gap-1.5">
@@ -202,7 +202,7 @@ export function ActivityTypesPageContent() {
           ) : (
             <>
               <section className="flex flex-col gap-2">
-                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Predeterminadas
                 </h2>
 
@@ -218,7 +218,7 @@ export function ActivityTypesPageContent() {
                 ))}
 
                 {defaultTypes.length === 0 && (
-                  <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                  <div className="flex h-20 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
                     {search
                       ? "Ninguna coincide con la búsqueda"
                       : "Sin actividades predeterminadas"}
@@ -227,7 +227,7 @@ export function ActivityTypesPageContent() {
               </section>
 
               <section className="flex flex-col gap-2">
-                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Personalizadas
                 </h2>
 
@@ -243,7 +243,7 @@ export function ActivityTypesPageContent() {
                 ))}
 
                 {customTypes.length === 0 && (
-                  <div className="flex h-20 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                  <div className="flex h-20 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
                     {search
                       ? "Ninguna coincide con la búsqueda"
                       : "Sin actividades personalizadas todavía"}
@@ -252,7 +252,7 @@ export function ActivityTypesPageContent() {
               </section>
 
               {!hasResults && (
-                <div className="flex h-32 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+                <div className="flex h-32 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
                   Sin tipos de actividad todavía
                 </div>
               )}

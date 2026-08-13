@@ -93,7 +93,7 @@ export function SheetTabs({
         WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
         maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
       }}
-      className="w-full overflow-hidden rounded-lg bg-white/5"
+      className="w-full overflow-hidden rounded-lg bg-foreground/5"
     >
       <div
         ref={containerRef}
@@ -125,8 +125,8 @@ export function SheetTabs({
                   className={cn(
                     "flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors",
                     isActive
-                      ? "bg-white/10 text-neutral-100 shadow-sm"
-                      : "text-neutral-500 hover:text-neutral-300"
+                      ? "bg-foreground/10 text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-muted-foreground"
                   )}
                 >
                   <span className="whitespace-nowrap">{item.label}</span>
@@ -163,14 +163,14 @@ export function SheetTabs({
                     className={cn(
                       "flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors",
                       isGroupActive
-                        ? "bg-white/10 text-neutral-100 shadow-sm"
-                        : "text-neutral-500 hover:text-neutral-300"
+                        ? "bg-foreground/10 text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-muted-foreground"
                     )}
                   >
                     <Layers className="h-3.5 w-3.5 opacity-70" />
                     <span className="whitespace-nowrap">
                       {thicknessLabel(group.thicknessMm)}
-                      <span className="ml-1.5 text-neutral-400">
+                      <span className="ml-1.5 text-muted-foreground">
                         · {group.members.length} {groupWord}
                       </span>
                     </span>
@@ -187,10 +187,10 @@ export function SheetTabs({
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  floatingClassName="w-64 border-white/10 bg-[#141416]"
-                  className="p-1.5 text-neutral-100"
+                  floatingClassName="w-64 border-border bg-[#141416]"
+                  className="p-1.5 text-foreground"
                 >
-                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {thicknessLabel(group.thicknessMm)} · {group.members.length} {groupWord} de plancha
                   </div>
                   <ScrollArea className="max-h-64 min-w-0 w-full">
@@ -205,8 +205,8 @@ export function SheetTabs({
                           className={cn(
                             "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-colors",
                             isActive
-                              ? "bg-white/10 text-white"
-                              : "text-neutral-300 hover:bg-white/5 hover:text-white"
+                              ? "bg-foreground/10 text-foreground"
+                              : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                           )}
                         >
                           <span className="truncate font-medium">{item.label}</span>

@@ -60,10 +60,10 @@ export function NestingConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border-white/10 bg-neutral-900 p-5 text-white shadow-2xl sm:max-w-md">
+      <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border-border bg-popover p-5 text-foreground shadow-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-white">{title}</DialogTitle>
-          <DialogDescription className="pt-2 text-sm leading-relaxed text-neutral-400">
+          <DialogTitle className="text-lg font-bold text-foreground">{title}</DialogTitle>
+          <DialogDescription className="pt-2 text-sm leading-relaxed text-muted-foreground">
             {description}
           </DialogDescription>
         </DialogHeader>
@@ -71,7 +71,7 @@ export function NestingConfirmDialog({
           <Button
             type="button"
             variant="ghost"
-            className="text-neutral-300 hover:bg-white/5 hover:text-white"
+            className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
             onClick={() => onOpenChange(false)}
           >
             {cancelText}
@@ -80,8 +80,8 @@ export function NestingConfirmDialog({
             type="button"
             className={
               destructive
-                ? "bg-red-600 text-white hover:bg-red-500"
-                : "bg-cyan-600 text-white hover:bg-cyan-500"
+                ? "bg-red-600 text-foreground hover:bg-red-500"
+                : "bg-cyan-600 text-foreground hover:bg-cyan-500"
             }
             onClick={() => {
               onConfirm()

@@ -272,7 +272,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       {isDraggingOver && (
         <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-sm border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-2 p-4 text-center rounded-xl animate-in fade-in duration-150 pointer-events-none">
           <Import className="h-8 w-8 text-primary animate-bounce" />
-          <p className="text-xs font-semibold text-white">Suelta tus archivos CAD aquí</p>
+          <p className="text-xs font-semibold text-foreground">Suelta tus archivos CAD aquí</p>
         </div>
       )}
 
@@ -280,8 +280,8 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       <div className="mb-2 flex shrink-0 items-center justify-between px-3">
         <div className="flex items-center gap-2">
           <Layers className="h-3.5 w-3.5 text-cyan-400" />
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Piezas</h2>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-neutral-400 font-medium">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Piezas</h2>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-foreground/5 text-muted-foreground font-medium">
             {rows.length}
           </span>
         </div>
@@ -290,7 +290,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             <Button
               size="icon-sm"
               variant="ghost"
-              className={conflictIds.size > 0 ? "text-amber-400 hover:text-amber-300" : "text-neutral-400 hover:text-white"}
+              className={conflictIds.size > 0 ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-foreground"}
               onClick={onOpenDiagnostics}
               title={
                 conflictIds.size > 0
@@ -302,7 +302,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             </Button>
           )}
           {rows.length > 0 && (
-            <Button size="icon-sm" variant="ghost" className="text-neutral-400 hover:text-destructive" onClick={onClearAll} disabled={disabled} title="Eliminar todos">
+            <Button size="icon-sm" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={onClearAll} disabled={disabled} title="Eliminar todos">
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
@@ -314,15 +314,15 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
 
       {rows.length > 0 && (
         <div className="relative mb-2 shrink-0 px-3">
-          <Search className="pointer-events-none absolute left-5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" />
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 bg-white/5 pl-7 pr-7 text-xs border-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-8 bg-foreground/5 pl-7 pr-7 text-xs border-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white">
+            <button onClick={() => setSearchQuery("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               <X className="h-3.5 w-3.5" />
             </button>
           )}
@@ -331,22 +331,22 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
 
       {rows.length > 0 && (
         <div className="flex items-center gap-1.5 px-3 mb-2 shrink-0 overflow-x-auto hide-scrollbar">
-          <span className="text-[10px] text-neutral-500 uppercase tracking-wider">Agrupar:</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Agrupar:</span>
           <button 
             onClick={() => setGroupBy("none")} 
-            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "none" ? "bg-white/10 text-white font-medium" : "text-neutral-400 hover:text-white"}`}
+            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "none" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Ninguno
           </button>
           <button 
             onClick={() => setGroupBy("thickness")} 
-            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "thickness" ? "bg-white/10 text-white font-medium" : "text-neutral-400 hover:text-white"}`}
+            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "thickness" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Espesor
           </button>
           <button 
             onClick={() => setGroupBy("material")} 
-            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "material" ? "bg-white/10 text-white font-medium" : "text-neutral-400 hover:text-white"}`}
+            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${groupBy === "material" ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
           >
             Material
           </button>
@@ -380,14 +380,14 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         {rows.length === 0 ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border-2 border-dashed border-white/10 rounded-xl m-3 hover:border-white/25 transition-colors bg-white/2"
+            className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer border-2 border-dashed border-border rounded-xl m-3 hover:border-white/25 transition-colors bg-foreground/5"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
-              <Layers className="h-5 w-5 text-neutral-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground/5">
+              <Layers className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="space-y-0.5">
-              <p className="text-xs font-medium text-neutral-400">Arrastra archivos o haz clic</p>
-              <p className="text-[11px] text-neutral-500">Soporta DXF, GEO, PDF o NPS</p>
+              <p className="text-xs font-medium text-muted-foreground">Arrastra archivos o haz clic</p>
+              <p className="text-[11px] text-muted-foreground">Soporta DXF, GEO, PDF o NPS</p>
             </div>
           </div>
         ) : (
@@ -396,9 +396,9 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
               {groupedEntries.map(({ groupKey, items }) => (
                 <div key={groupKey ?? "default"} className="flex flex-col gap-2">
                   {groupKey && (
-                    <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider px-1 pt-1 flex items-center justify-between pb-1">
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pt-1 flex items-center justify-between pb-1">
                       <span>{groupKey}</span>
-                      <span className="text-[10px] text-neutral-500 font-normal">({items.length})</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">({items.length})</span>
                     </div>
                   )}
                   {items.map((row) => (

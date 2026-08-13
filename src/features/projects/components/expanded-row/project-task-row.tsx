@@ -429,10 +429,10 @@ export function ProjectTaskRow({
           className={cn(
             "absolute right-2 top-1/2 z-20 -translate-y-1/2",
             "flex h-8 w-8 items-center justify-center rounded-xl",
-            "bg-white/4",
-            "text-white/40",
+            "bg-foreground/5",
+            "text-foreground/40",
             "transition duration-200",
-            "hover:bg-white/[0.07] hover:text-white hover:scale-105",
+            "hover:bg-white/[0.07] hover:text-foreground hover:scale-105",
             "active:scale-95",
             "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",
             isMobile

@@ -42,7 +42,7 @@ export function BottomNavigation() {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[#050505]/60"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-background/60"
         style={{
           maskImage: "linear-gradient(to top, black 30%, transparent)",
           WebkitMaskImage: "linear-gradient(to top, black 30%, transparent)",
@@ -50,7 +50,7 @@ export function BottomNavigation() {
       />
 
       <div className="pointer-events-auto relative px-3 pb-1">
-        <nav className="flex items-stretch gap-1 rounded-full bg-white/8 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-white/10 backdrop-blur-xl">
+        <nav className="flex items-stretch gap-1 rounded-full bg-foreground/10 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-border backdrop-blur-xl">
           {BOTTOM_NAV_ITEMS.map(item => {
             const isActive =
               item.action.type === "link" &&
@@ -79,7 +79,7 @@ export function BottomNavigation() {
                 <div
                   className={cn(
                     "relative z-10 flex transform-gpu flex-col items-center gap-0.5 transition-colors duration-150",
-                    isActive ? "text-white" : "text-neutral-500",
+                    isActive ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
                   <div className="flex h-5 w-5 items-center justify-center">

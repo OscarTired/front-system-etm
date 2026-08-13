@@ -97,7 +97,7 @@ export function TaskMobileCard({
   const isDimmed = taskAccess.isCompleted(task)
 
   return (
-    <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
+    <div className={cn("overflow-hidden rounded-xl bg-foreground/5 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell hidden={!isManualMode} />
 
@@ -160,10 +160,10 @@ export function TaskMobileCard({
           <div className="flex min-w-0 flex-1 flex-col items-start">
             {/* md+: referencia · solo iconos (16px). Mobile: solo referencia */}
             <div className="flex min-w-0 max-w-full items-center gap-1.5">
-              <p className="max-w-full truncate text-sm font-semibold leading-none text-white">
+              <p className="max-w-full truncate text-sm font-semibold leading-none text-foreground">
                 {task.reference}
               </p>
-              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
                 className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={stage.label}
@@ -174,7 +174,7 @@ export function TaskMobileCard({
                   size={16}
                 />
               </span>
-              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
                 className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={status.label}
@@ -200,11 +200,11 @@ export function TaskMobileCard({
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: task.project.client.color }}
               />
-              <span className="min-w-0 truncate text-neutral-400">
+              <span className="min-w-0 truncate text-muted-foreground">
                 {task.project.client.name}
               </span>
 
-              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
               <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
                 <EntityIconBadge
                   icon={stage.icon}
@@ -212,7 +212,7 @@ export function TaskMobileCard({
                   size={12}
                 />
               </span>
-              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
               <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
                 <EntityIconBadge
                   icon={status.icon}
@@ -221,7 +221,7 @@ export function TaskMobileCard({
                 />
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
               <span className="flex min-w-0 items-center gap-1 overflow-hidden">
                 <span className="md:hidden">
                   {task.priority.icon ? (
@@ -264,7 +264,7 @@ export function TaskMobileCard({
             </span>
           )}
 
-          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
+          <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground md:inline">
             {formatDate(task.deliveryDate)}
           </span>
         </div>
@@ -288,7 +288,7 @@ export function TaskMobileCard({
           <ChevronDown
             size={16}
             className={cn(
-              "text-neutral-500 transition-transform duration-200",
+              "text-muted-foreground transition-transform duration-200",
               expanded && "rotate-180",
             )}
           />
@@ -301,12 +301,12 @@ export function TaskMobileCard({
             <button
               type="button"
               onClick={() => setShowFields(false)}
-              className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
+              className="flex w-full items-center justify-between rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-foreground/5"
             >
               Ocultar campos
               <ChevronDown
                 size={14}
-                className="shrink-0 rotate-180 text-neutral-500"
+                className="shrink-0 rotate-180 text-muted-foreground"
               />
             </button>
 
@@ -317,15 +317,15 @@ export function TaskMobileCard({
           <button
             type="button"
             onClick={() => setShowFields(true)}
-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
           >
             {/* Datos colapsados ADENTRO (CON ICONO/INICIAL DE PRIORIDAD en lugar de nombre) */}
-            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-              <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
+              <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
                 {String(task.taskNumber).padStart(3, "0")}
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span
                 className="size-1.5 shrink-0 rounded-full"
@@ -333,7 +333,7 @@ export function TaskMobileCard({
               />
               <span className="shrink-0 truncate">{task.project.client.name}</span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
@@ -351,7 +351,7 @@ export function TaskMobileCard({
                 </span>
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
@@ -369,7 +369,7 @@ export function TaskMobileCard({
                 </span>
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               {/* Prioridad solo icono/inicial en móvil adentro del panel colapsado */}
               <span className="flex shrink-0 items-center gap-1">
@@ -381,25 +381,25 @@ export function TaskMobileCard({
                       size={13}
                     />
                   ) : (
-                    <span className="text-[11px] font-medium text-neutral-400">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                       {task.priority.name.charAt(0)}
                     </span>
                   )}
                 </span>
-                <span className="hidden min-w-0 truncate text-neutral-400 md:inline">
+                <span className="hidden min-w-0 truncate text-muted-foreground md:inline">
                   {task.priority.name}
                 </span>
               </span>
             </span>
 
             {/* Fecha interna: solo móvil */}
-            <span className="shrink-0 text-xs text-neutral-500 md:hidden">
+            <span className="shrink-0 text-xs text-muted-foreground md:hidden">
               {formatDate(task.deliveryDate)}
             </span>
 
             <ChevronDown
               size={14}
-              className="shrink-0 text-neutral-500"
+              className="shrink-0 text-muted-foreground"
             />
           </button>
         )}

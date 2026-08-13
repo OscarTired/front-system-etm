@@ -63,7 +63,7 @@ export function EntityIconPicker({
 
     <div className="space-y-3">
 
-      <p className="text-center text-xs font-semibold text-neutral-400">
+      <p className="text-center text-xs font-semibold text-muted-foreground">
 
         Icono
 
@@ -116,10 +116,10 @@ export function EntityIconPicker({
                   className={cn(
                     "flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200",
                     !active && [
-                      "bg-white/5",
-                      "text-neutral-500",
-                      "hover:bg-white/8",
-                      "hover:text-neutral-300",
+                      "bg-foreground/5",
+                      "text-muted-foreground",
+                      "hover:bg-foreground/10",
+                      "hover:text-muted-foreground",
                     ]
                   )}
                 >

@@ -92,7 +92,7 @@ export function MessagesPageContent() {
         "flex min-h-0 flex-1 flex-col",
         // Tablet: card centrada. Móvil/desktop: llena el section (sin
         // segundo título bajo el TopBar).
-        "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180 tablet:overflow-hidden tablet:rounded-2xl tablet:bg-white/2",
+        "tablet:mx-auto tablet:h-[min(40rem,85dvh)] tablet:max-h-[85dvh] tablet:w-full tablet:max-w-180 tablet:overflow-hidden tablet:rounded-2xl tablet:bg-foreground/5",
       )}
     >
       <AppListScroll
@@ -106,8 +106,8 @@ export function MessagesPageContent() {
               <MessageSquare size={18} strokeWidth={2.4} />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold text-neutral-100">Mensajes</h2>
-              <p className="text-xs text-neutral-500">
+              <h2 className="text-lg font-bold text-foreground">Mensajes</h2>
+              <p className="text-xs text-muted-foreground">
                 Solo los que tú escribiste
               </p>
             </div>
@@ -116,13 +116,13 @@ export function MessagesPageContent() {
 
         {/* Search dentro del scroller → recibe paddingTop del TopBar. */}
         <div className="mb-2 shrink-0 px-1 py-1">
-          <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-            <Search size={15} className="shrink-0 text-neutral-500" />
+          <div className="flex items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2">
+            <Search size={15} className="shrink-0 text-muted-foreground" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar en mis mensajes..."
-              className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
             />
           </div>
         </div>
@@ -131,22 +131,22 @@ export function MessagesPageContent() {
         {loading ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
             <Spinner size={18} />
-            <p className="text-sm text-neutral-500">Cargando...</p>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
           </div>
         ) : error ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2 px-4 text-center">
-            <MessageSquare size={28} className="text-neutral-600" />
-            <p className="text-sm text-neutral-400">
+            <MessageSquare size={28} className="text-muted-foreground/80" />
+            <p className="text-sm text-muted-foreground">
               No se pudieron cargar tus mensajes
             </p>
-            <p className="max-w-sm text-xs text-neutral-600">
+            <p className="max-w-sm text-xs text-muted-foreground/80">
               Requiere GET /comments/mine enriquecido en el backend.
             </p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2 px-4 text-center">
-            <MessageSquare size={28} className="text-neutral-600" />
-            <p className="text-sm text-neutral-400">
+            <MessageSquare size={28} className="text-muted-foreground/80" />
+            <p className="text-sm text-muted-foreground">
               {search.trim()
                 ? "Sin resultados para esa búsqueda"
                 : "Aún no has escrito mensajes"}
@@ -167,13 +167,13 @@ export function MessagesPageContent() {
                   <li key={c.id}>
                     <div className="flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2.5">
                       <div className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-neutral-200">
+                        <span className="block truncate text-sm font-semibold text-foreground">
                           {c.task?.reference ??
                             c.project?.name ??
                             "Mensaje"}
                         </span>
-                        <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2 py-1.5">
-                          <span className="text-xs text-neutral-400">
+                        <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg bg-foreground/5 px-2 py-1.5">
+                          <span className="text-xs text-muted-foreground">
                             {c.task
                               ? "Esta tarea está en el historial"
                               : "Este elemento está en el historial"}
@@ -182,7 +182,7 @@ export function MessagesPageContent() {
                             <button
                               type="button"
                               onClick={() => setConfirmId(null)}
-                              className="flex h-6 items-center rounded-md px-2 text-xs font-medium text-neutral-500 transition-colors hover:bg-white/8 hover:text-neutral-200"
+                              className="flex h-6 items-center rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                             >
                               Cancelar
                             </button>
@@ -206,10 +206,10 @@ export function MessagesPageContent() {
                   <button
                     type="button"
                     onClick={() => openComment(c)}
-                    className="group flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-white/5"
+                    className="group flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-foreground/5"
                   >
 
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-white/8 text-xs font-semibold text-white shadow-inner">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-border text-xs font-semibold text-foreground shadow-inner">
                       {c.user.avatarUrl ? (
                         <img
                           src={c.user.avatarUrl}
@@ -224,18 +224,18 @@ export function MessagesPageContent() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           {c.task && (
-                            <span className="block truncate text-sm font-semibold text-neutral-200">
+                            <span className="block truncate text-sm font-semibold text-foreground">
                               #{String(c.task.taskNumber).padStart(3, "0")}{" "}
                               {c.task.reference}
                             </span>
                           )}
                           {!c.task && c.project && (
-                            <span className="block truncate text-sm font-semibold text-neutral-200">
+                            <span className="block truncate text-sm font-semibold text-foreground">
                               {c.project.projectCode} · {c.project.name}
                             </span>
                           )}
                           {!c.task && !c.project && (
-                            <span className="block truncate text-sm font-semibold text-neutral-200">
+                            <span className="block truncate text-sm font-semibold text-foreground">
                               Mensaje
                             </span>
                           )}
@@ -268,19 +268,19 @@ export function MessagesPageContent() {
                       </div>
 
                       {ctx && (
-                        <p className="mt-1 truncate text-xs text-neutral-500">
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
                           {ctx}
                         </p>
                       )}
 
                       <div className="mt-1 flex items-center gap-1">
-                        <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                        <span className="rounded-md bg-foreground/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                           {scopeBadge(c)}
                         </span>
                       </div>
 
                       {c.parent && (
-                        <div className="mt-1 flex items-start gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
+                        <div className="mt-1 flex items-start gap-1.5 rounded-md bg-foreground/5 px-2 py-1 text-xs text-muted-foreground">
                           <Reply
                             size={11}
                             className="mt-0.5 shrink-0 -scale-x-100"
@@ -295,7 +295,7 @@ export function MessagesPageContent() {
 
                       <div className="mt-2 flex gap-2.5">
                         {c.imageUrl && (
-                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-black/40 ring-1 ring-white/8">
+                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-black/40 ring-1 ring-border">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={c.imageUrl}
@@ -306,18 +306,18 @@ export function MessagesPageContent() {
                         )}
                         <div className="min-w-0 flex-1">
                           {c.message ? (
-                            <p className="line-clamp-2 text-sm leading-5 text-neutral-300">
+                            <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
                               {c.message}
                             </p>
                           ) : c.imageUrl ? (
-                            <p className="flex items-center gap-1 text-xs text-neutral-500">
+                            <p className="flex items-center gap-1 text-xs text-muted-foreground">
                               <ImageIcon size={12} />
                               Foto
                             </p>
                           ) : (
-                            <p className="text-sm text-neutral-600">—</p>
+                            <p className="text-sm text-muted-foreground/80">—</p>
                           )}
-                          <p className="mt-1 text-[11px] text-neutral-600">
+                          <p className="mt-1 text-[11px] text-muted-foreground/80">
                             {formatCommentDate(c.createdAt)}
                           </p>
                         </div>

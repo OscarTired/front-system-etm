@@ -120,13 +120,13 @@ export function WorkflowNumericField({
 
     <div className="space-y-1">
 
-      <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
 
       <div
         className={cn(
-          "flex h-11 items-center rounded-xl bg-white/3 px-3 transition-opacity",
+          "flex h-11 items-center rounded-xl bg-foreground/5 px-3 transition-opacity",
           saving && "opacity-70",
         )}
       >
@@ -144,7 +144,7 @@ export function WorkflowNumericField({
 
           }}
           placeholder="0"
-          className="w-8 min-w-0 border-0 bg-transparent p-0 text-sm font-bold text-neutral-100 outline-none placeholder:text-neutral-600 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="w-8 min-w-0 border-0 bg-transparent p-0 text-sm font-bold text-foreground outline-none placeholder:text-muted-foreground/80 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
 
         <button
@@ -154,10 +154,10 @@ export function WorkflowNumericField({
           className={cn(
             "ml-auto flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
             isSaved
-              ? "bg-emerald-500 text-white"
+              ? "bg-emerald-500 text-foreground"
               : canSave
                 ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
-                : "bg-white/5 text-neutral-600",
+                : "bg-foreground/5 text-muted-foreground/80",
           )}
         >
 

@@ -43,7 +43,7 @@ export function NotificationToast({
       className="flex w-full max-w-95 items-start gap-3 text-left"
     >
       <div className="relative shrink-0">
-        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-neutral-700 to-neutral-900 text-xs font-semibold text-neutral-200">
+        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-neutral-700 to-neutral-900 text-xs font-semibold text-foreground">
           {actor.avatarUrl ? (
             <img
               src={actor.avatarUrl}
@@ -66,7 +66,7 @@ export function NotificationToast({
             <MessageSquare
               size={9}
               strokeWidth={3}
-              className="text-neutral-300"
+              className="text-muted-foreground"
             />
           )}
         </span>
@@ -75,11 +75,11 @@ export function NotificationToast({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="truncate text-sm leading-5">
-            <span className="font-semibold text-neutral-100">
+            <span className="font-semibold text-foreground">
               {actor.name}
             </span>
 
-            <span className="ml-1 text-neutral-500">
+            <span className="ml-1 text-muted-foreground">
               {actionLabel}
             </span>
           </p>
@@ -98,18 +98,18 @@ export function NotificationToast({
         </div>
 
         {contextLabel && (
-          <p className="mt-1 truncate text-xs text-neutral-500">
+          <p className="mt-1 truncate text-xs text-muted-foreground">
             {contextLabel}
           </p>
         )}
 
         {workflowStep && (
-          <span className="mt-1 inline-flex text-[10px] font-medium uppercase tracking-wide text-neutral-500">
+          <span className="mt-1 inline-flex text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {workflowStep.processCode}
           </span>
         )}
 
-        <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-neutral-300">
+        <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-muted-foreground">
           {notification.messageSnippet}
         </p>
       </div>

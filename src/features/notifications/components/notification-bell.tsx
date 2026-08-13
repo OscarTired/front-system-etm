@@ -120,13 +120,13 @@ export function NotificationBell({
           aria-label="Notificaciones"
           onClick={() => handleOpenChange(!open)}
           className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
-            open && "bg-white/20 text-white",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+            open && "bg-foreground/20 text-foreground",
           )}
         >
           <Bell size={16} strokeWidth={2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-900 font-semibold text-white text-[10px]">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-900 font-semibold text-foreground text-[10px]">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -146,8 +146,8 @@ export function NotificationBell({
           collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-          collapsedBadgeColor="bg-cyan-900 text-white"
-          badgeColor="bg-cyan-900 text-white"
+          collapsedBadgeColor="bg-cyan-900 text-foreground"
+          badgeColor="bg-cyan-900 text-foreground"
           badgeAnimated={count > 0}
         />
       </button>
@@ -161,7 +161,7 @@ export function NotificationBell({
           type="button"
           onClick={() => markAllAsRead()}
           disabled={loading || visibleNotifications.length === 0}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-300 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
         >
           <Eraser size={13} />
           Limpiar
@@ -187,17 +187,17 @@ export function NotificationBell({
         <ScrollArea className="absolute inset-0 overscroll-contain px-2 pb-2">
           {loading ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <Spinner size={20} className="text-neutral-400" />
-              <p className="text-xs text-neutral-500">
+              <Spinner size={20} className="text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
                 Cargando notificaciones...
               </p>
             </div>
           ) : visibleNotifications.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-              <div className="flex size-10 items-center justify-center rounded-full bg-white/5 text-neutral-500">
+              <div className="flex size-10 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
                 <Bell size={18} />
               </div>
-              <p className="text-xs font-medium text-neutral-400">
+              <p className="text-xs font-medium text-muted-foreground">
                 No tienes notificaciones pendientes
               </p>
             </div>
@@ -222,7 +222,7 @@ export function NotificationBell({
                   type="button"
                   onClick={() => loadMore()}
                   disabled={loadingMore}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
                 >
                   {loadingMore ? <Spinner size={12} /> : "Cargar más"}
                 </button>
@@ -235,15 +235,15 @@ export function NotificationBell({
       {/* Footer: misma altura siempre (una sola fila de acción) */}
       <div className="flex h-10 shrink-0 items-center justify-center p-2 select-none">
         {notifications.length === 0 && !loading ? (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
-            <CheckCircle2 size={13} className="shrink-0 text-neutral-600" />
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <CheckCircle2 size={13} className="shrink-0 text-muted-foreground/80" />
             Estás al día
           </div>
         ) : (
           <button
             type="button"
             onClick={handleOpenHistory}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             <History size={13} />
             Ver más
@@ -262,7 +262,7 @@ export function NotificationBell({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
             >
               <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
@@ -278,10 +278,10 @@ export function NotificationBell({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-white shadow-xl select-none"
+            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-foreground shadow-xl select-none"
           >
             <div className="flex shrink-0 items-center px-3.5 pt-3">
-              <span className="text-sm font-semibold text-neutral-200">
+              <span className="text-sm font-semibold text-foreground">
                 Notificaciones
               </span>
             </div>

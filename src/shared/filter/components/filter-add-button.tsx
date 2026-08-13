@@ -77,10 +77,10 @@ export const FilterAddButton=
         ref={ref}
         type="button"
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white select-none transition-all duration-200",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-foreground select-none transition-all duration-200",
           active
-            ? "bg-[#101012]"
-            : "hover:bg-[#101012]",
+            ? "bg-muted"
+            : "hover:bg-muted",
           className
         )}
         {...props}

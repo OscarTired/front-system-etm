@@ -116,7 +116,7 @@ export function KpiCarousel({
       }}
     >
 
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
         <Icon size={20} style={{ color: textColor }} />
       </div>
 
@@ -133,7 +133,7 @@ export function KpiCarousel({
 
           <div key={value.label} className="min-w-0 text-right">
 
-            <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500 sm:text-xs">
+            <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground sm:text-xs">
               {value.label}
             </p>
 
@@ -150,7 +150,7 @@ export function KpiCarousel({
 
       </div>
 
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-neutral-400">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
         <MoreHorizontal size={18} />
       </div>
 
@@ -269,7 +269,7 @@ export function KpiCarousel({
                         activeItem.rows.map((row, rIdx) => (
                           <div key={rIdx} className="flex items-center gap-1.5 text-right">
                             {activeItem.rows!.length > 1 && (
-                              <span className="text-[10px] font-bold uppercase text-neutral-500">
+                              <span className="text-[10px] font-bold uppercase text-muted-foreground">
                                 {row.label}:
                               </span>
                             )}

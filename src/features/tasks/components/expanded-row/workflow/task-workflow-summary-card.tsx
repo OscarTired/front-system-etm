@@ -27,13 +27,13 @@ export function TaskWorkflowSummaryCard({
 
     <div className="rounded-2xl border border-white/6 bg-[#0D0D10] p-6">
 
-      <div className="mb-6 text-xs font-semibold tracking-[0.18em] text-neutral-500">
+      <div className="mb-6 text-xs font-semibold tracking-[0.18em] text-muted-foreground">
 
         PROCESO ACTUAL
 
       </div>
 
-      <div className="text-3xl font-bold text-white">
+      <div className="text-3xl font-bold text-foreground">
 
         {
 
@@ -47,7 +47,7 @@ export function TaskWorkflowSummaryCard({
 
       </div>
 
-      <div className="mt-2 text-sm font-medium text-neutral-400">
+      <div className="mt-2 text-sm font-medium text-muted-foreground">
 
         {
 
@@ -63,19 +63,19 @@ export function TaskWorkflowSummaryCard({
 
       <div className="mt-8">
 
-        <div className="mb-2 text-xs font-semibold tracking-[0.14em] text-neutral-500">
+        <div className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground">
 
           AVANCE
 
         </div>
 
-        <div className="text-4xl font-bold text-white">
+        <div className="text-4xl font-bold text-foreground">
 
           {workflowView.progress}%
 
         </div>
 
-        <div className="mt-2 text-sm text-neutral-400">
+        <div className="mt-2 text-sm text-muted-foreground">
 
           {workflowView.completedSteps}
           {" / "}

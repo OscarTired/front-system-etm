@@ -190,7 +190,7 @@ export function ProcessRoutePicker({
                     className={
                       isLast
                         ? "font-bold"
-                        : "font-medium text-neutral-500"
+                        : "font-medium text-muted-foreground"
                     }
                     style={
                       isLast
@@ -205,7 +205,7 @@ export function ProcessRoutePicker({
                   </span>
 
                   {!isLast && (
-                    <span className="text-neutral-700">→</span>
+                    <span className="text-muted-foreground/70">→</span>
                   )}
 
                 </Fragment>

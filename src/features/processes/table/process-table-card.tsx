@@ -274,7 +274,7 @@ export function ProcessTableCard({
 
       {displayedTasks.length === 0 && (
 
-        <div className="flex h-24 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+        <div className="flex h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
           Sin tareas en {processDefinition.label}
         </div>
 

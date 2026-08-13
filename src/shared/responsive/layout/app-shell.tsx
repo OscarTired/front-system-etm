@@ -52,11 +52,11 @@ function DesktopShell({ children }: Props) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-white">
+    <div className="flex h-screen overflow-hidden bg-[#1d1c1c] text-foreground">
       <AppSidebar />
       <main
         onTransitionEnd={handleTransitionEnd}
-        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#050505]"
+        className="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-background"
         style={{
           borderRadius,
           transition: `border-radius ${TRANSITION_TIMING}`,
@@ -95,7 +95,7 @@ function CompactShell({ children }: Props) {
   }, [isOpen, closeDrawer])
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-white select-none">
+    <div className="relative h-dvh overflow-hidden bg-[#1d1c1c] text-foreground select-none">
       <div
         className="absolute inset-y-0 left-0 z-0"
         style={{ width: DRAWER_WIDTH_PX }}
@@ -105,7 +105,7 @@ function CompactShell({ children }: Props) {
       </div>
 
       <div
-        className="absolute inset-0 z-10 overflow-hidden bg-[#050505]"
+        className="absolute inset-0 z-10 overflow-hidden bg-background"
         style={{
           transform: isOpen
             ? `translate3d(${DRAWER_WIDTH_PX}px, 0, 0)`
@@ -154,7 +154,7 @@ export function AppShell({ children }: Props) {
   const { isMobile, ready } = useResponsive()
 
   if (!ready) {
-    return <div className="h-full bg-[#050505]" />
+    return <div className="h-full bg-background" />
   }
 
   const shell = isMobile ? (

@@ -68,13 +68,13 @@ export function CanvasContextMenu({
           style={{ left: ctxMenu.x, top: ctxMenu.y }}
         />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-48 border-white/10 bg-[#141416] text-neutral-100">
+      <DropdownMenuContent className="min-w-48 border-border bg-[#141416] text-foreground">
         {/* Siempre primero: ajustar a plancha */}
         <DropdownMenuItem onClick={() => onFit()}>
           <Maximize2 className="mr-2 h-4 w-4 opacity-70" />
           Ajustar a plancha
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-white/10" />
+        <DropdownMenuSeparator className="bg-foreground/10" />
         {hasSelection ? (
           <>
             <DropdownMenuItem
@@ -97,7 +97,7 @@ export function CanvasContextMenu({
             >
               <RotateCw className="mr-2 h-4 w-4 opacity-70" />
               Rotar libre (arrastrar)
-              <span className="ml-auto text-[10px] text-neutral-500">Shift = 15°</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">Shift = 15°</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={selectedPieceIndices.length === 0}
@@ -127,7 +127,7 @@ export function CanvasContextMenu({
               <CircleSlash className="mr-2 h-4 w-4 opacity-70" />
               Quitar selección
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuSeparator className="bg-foreground/10" />
             <DropdownMenuItem
               variant="destructive"
               disabled={!onDeleteSelected || selectedPieceIndices.length === 0}
@@ -135,7 +135,7 @@ export function CanvasContextMenu({
             >
               <Trash2 className="mr-2 h-4 w-4 opacity-70" />
               Eliminar…
-              <span className="ml-auto text-[10px] text-neutral-500">Supr</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">Supr</span>
             </DropdownMenuItem>
           </>
         ) : (
@@ -143,12 +143,12 @@ export function CanvasContextMenu({
             <DropdownMenuItem onClick={() => onSetCanvasTool("select")}>
               <MousePointer2 className="mr-2 h-4 w-4 opacity-70" />
               Seleccionar
-              <span className="ml-auto text-[10px] text-neutral-500">V</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">V</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSetCanvasTool("pan")}>
               <Hand className="mr-2 h-4 w-4 opacity-70" />
               Pan
-              <span className="ml-auto text-[10px] text-neutral-500">H</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">H</span>
             </DropdownMenuItem>
             {onTransformModeChange && (
               <DropdownMenuItem

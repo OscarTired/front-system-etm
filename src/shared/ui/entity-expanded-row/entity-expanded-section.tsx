@@ -23,7 +23,7 @@ export function EntityExpandedSection({
 
     <section className="flex h-full w-0 min-w-full flex-col">
 
-      <div className="mb-2 text-xs font-semibold tracking-widest text-neutral-500">
+      <div className="mb-2 text-xs font-semibold tracking-widest text-muted-foreground">
 
         {title}
 

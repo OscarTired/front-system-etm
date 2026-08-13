@@ -214,7 +214,7 @@ export function ActivityTypeFormDialog({
 
         <div className="flex flex-col gap-2">
 
-          <span className="text-xs font-medium text-neutral-400">
+          <span className="text-xs font-medium text-muted-foreground">
             ¿Dónde aparece al registrar?
           </span>
 
@@ -226,8 +226,8 @@ export function ActivityTypeFormDialog({
               className={cn(
                 "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 pinned
-                  ? "bg-white/12 text-white"
-                  : "bg-white/4 text-neutral-400 hover:bg-white/8 hover:text-white",
+                  ? "bg-white/12 text-foreground"
+                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
               )}
             >
               <Pin size={15} />
@@ -240,8 +240,8 @@ export function ActivityTypeFormDialog({
               className={cn(
                 "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 !pinned
-                  ? "bg-white/12 text-white"
-                  : "bg-white/4 text-neutral-400 hover:bg-white/8 hover:text-white",
+                  ? "bg-white/12 text-foreground"
+                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
               )}
             >
               <MoreHorizontal size={15} />
@@ -250,7 +250,7 @@ export function ActivityTypeFormDialog({
 
           </div>
 
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted-foreground">
             {pinned
               ? "Va a salir como botón directo en la pantalla del picker."
               : "Va a salir agrupada dentro del botón \u201cOtros\u201d del picker."}

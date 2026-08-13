@@ -111,7 +111,7 @@ export function TaskSortButton() {
           <button
             type="button"
             onClick={() => toggleTaskSortDirection()}
-            className="mt-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs text-neutral-300 transition hover:bg-white/5"
+            className="mt-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs text-muted-foreground transition hover:bg-foreground/5"
           >
             <span className="flex items-center gap-2">
               {taskSortDirection === "asc" ? (

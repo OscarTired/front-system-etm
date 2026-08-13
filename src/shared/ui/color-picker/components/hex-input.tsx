@@ -18,11 +18,11 @@ export const HexInput = forwardRef<HTMLInputElement, HexInputProps>(
       <div
         className={[
           'flex items-center h-10 px-4 rounded-xl text-sm font-medium gap-0.5',
-          'bg-white/6 border border-transparent',
+          'bg-foreground/5 border border-transparent',
           'transition-colors',
         ].join(' ')}
       >
-        <span className="text-neutral-600 font-mono">#</span>
+        <span className="text-muted-foreground/80 font-mono">#</span>
         <input
           ref={ref}
           type="text"
@@ -35,7 +35,7 @@ export const HexInput = forwardRef<HTMLInputElement, HexInputProps>(
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           className={[
-            'w-full bg-transparent outline-none font-mono uppercase text-neutral-200',
+            'w-full bg-transparent outline-none font-mono uppercase text-foreground',
             'disabled:opacity-50 disabled:cursor-not-allowed',
           ].join(' ')}
         />

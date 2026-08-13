@@ -18,19 +18,19 @@ type Props = {
 // Permisos -- no hay nada que expandir en el lugar.
 export function RoleMobileCard({ role, index, onSelect }: Props) {
   return (
-    <article className="overflow-hidden rounded-xl bg-white/2">
+    <article className="overflow-hidden rounded-xl bg-foreground/5">
       <button
         type="button"
         onClick={onSelect}
         className="w-full text-left"
       >
         <header className="flex items-center justify-between gap-2.5 px-3 py-3">
-          <span className="text-xs font-semibold tracking-[0.12em] text-neutral-500">
+          <span className="text-xs font-semibold tracking-[0.12em] text-muted-foreground">
             ROL {String(index + 1).padStart(3, "0")}
           </span>
 
           {!role.active && (
-            <span className="text-xs font-medium text-neutral-500">
+            <span className="text-xs font-medium text-muted-foreground">
               Inactivo
             </span>
           )}

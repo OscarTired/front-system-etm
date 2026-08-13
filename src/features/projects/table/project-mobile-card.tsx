@@ -95,7 +95,7 @@ export function ProjectMobileCard({
   const actionsOnRow = isMobile && expanded
 
   return (
-    <div className={cn("overflow-hidden rounded-xl bg-white/2 transition-opacity", isDimmed && "opacity-50")}>
+    <div className={cn("overflow-hidden rounded-xl bg-foreground/5 transition-opacity", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell hidden={!isManualMode} />
 
@@ -117,10 +117,10 @@ export function ProjectMobileCard({
           <div className="min-w-0 flex-1">
             {/* md+: Nombre · solo iconos etapa/estado (16px, centrados). Mobile: solo nombre */}
             <div className="flex min-w-0 items-center gap-1.5">
-              <p className="truncate text-sm font-semibold leading-none text-white">
+              <p className="truncate text-sm font-semibold leading-none text-foreground">
                 {project.name}
               </p>
-              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
                 className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={project.stage.name}
@@ -131,7 +131,7 @@ export function ProjectMobileCard({
                   size={16}
                 />
               </span>
-              <span className="hidden shrink-0 self-center text-neutral-600 md:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
                 className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={project.status.name}
@@ -157,11 +157,11 @@ export function ProjectMobileCard({
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: project.client.color }}
               />
-              <span className="shrink-0 truncate text-neutral-400">
+              <span className="shrink-0 truncate text-muted-foreground">
                 {project.client.name}
               </span>
 
-              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
               <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
                 <EntityIconBadge
                   icon={project.stage.icon}
@@ -169,7 +169,7 @@ export function ProjectMobileCard({
                   size={12}
                 />
               </span>
-              <span className="shrink-0 text-neutral-600 md:hidden">·</span>
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
               <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
                 <EntityIconBadge
                   icon={project.status.icon}
@@ -178,8 +178,8 @@ export function ProjectMobileCard({
                 />
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
-              <span className="min-w-0 truncate text-neutral-400">
+              <span className="shrink-0 text-muted-foreground/80">·</span>
+              <span className="min-w-0 truncate text-muted-foreground">
                 {project.pm.name}
               </span>
             </div>
@@ -218,7 +218,7 @@ export function ProjectMobileCard({
             </span>
           )}
 
-          <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 md:inline">
+          <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground md:inline">
             {formatDate(project.deliveryDate)}
           </span>
         </button>
@@ -250,7 +250,7 @@ export function ProjectMobileCard({
           <ChevronDown
             size={16}
             className={cn(
-              "text-neutral-500 transition-transform duration-200",
+              "text-muted-foreground transition-transform duration-200",
               expanded && "rotate-180",
             )}
           />
@@ -263,12 +263,12 @@ export function ProjectMobileCard({
             <button
               type="button"
               onClick={() => setShowFields(false)}
-              className="flex w-full items-center justify-between rounded-lg bg-white/3 px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-white/5"
+              className="flex w-full items-center justify-between rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-foreground/5"
             >
               Ocultar campos
               <ChevronDown
                 size={14}
-                className="shrink-0 rotate-180 text-neutral-500"
+                className="shrink-0 rotate-180 text-muted-foreground"
               />
             </button>
 
@@ -281,14 +281,14 @@ export function ProjectMobileCard({
           <button
             type="button"
             onClick={() => setShowFields(true)}
-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-white/3 px-3 py-2.5 transition hover:bg-white/5"
+            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
           >
-            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-neutral-300">
-              <span className="shrink-0 rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-neutral-400">
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
+              <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
                 {String(project.sequence).padStart(3, "0")}
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span
                 className="size-1.5 shrink-0 rounded-full"
@@ -296,7 +296,7 @@ export function ProjectMobileCard({
               />
               <span className="shrink-0 truncate">{project.client.name}</span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
@@ -314,7 +314,7 @@ export function ProjectMobileCard({
                 </span>
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
@@ -332,7 +332,7 @@ export function ProjectMobileCard({
                 </span>
               </span>
 
-              <span className="shrink-0 text-neutral-600">·</span>
+              <span className="shrink-0 text-muted-foreground/80">·</span>
 
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
@@ -343,26 +343,26 @@ export function ProjectMobileCard({
                       size={13}
                     />
                   ) : (
-                    <span className="text-[11px] font-medium text-neutral-400">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                       {project.pm.name.charAt(0)}
                     </span>
                   )}
                 </span>
-                <span className="hidden min-w-0 truncate text-neutral-400 md:inline">
+                <span className="hidden min-w-0 truncate text-muted-foreground md:inline">
                   {project.pm.name}
                 </span>
               </span>
             </span>
 
             <span className="flex shrink-0 items-center gap-1.5 md:hidden">
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-muted-foreground">
                 {formatDate(project.deliveryDate)}
               </span>
             </span>
 
             <ChevronDown
               size={14}
-              className="shrink-0 text-neutral-500"
+              className="shrink-0 text-muted-foreground"
             />
           </button>
         )}

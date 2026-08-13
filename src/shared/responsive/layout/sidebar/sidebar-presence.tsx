@@ -50,7 +50,7 @@ function UserRow({ user }: { user: PresenceUser }) {
     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 w-full min-w-0 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="relative h-6 w-6 shrink-0">
-          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-neutral-300 ring-1 ring-white/10">
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-medium text-muted-foreground ring-1 ring-border">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -71,7 +71,7 @@ function UserRow({ user }: { user: PresenceUser }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-medium text-neutral-300">
+          <span className="block truncate text-xs font-medium text-muted-foreground">
             {user.name}
           </span>
         </div>
@@ -79,9 +79,9 @@ function UserRow({ user }: { user: PresenceUser }) {
 
       <div className="flex items-center gap-1.5 shrink-0 pl-2">
         {user.online ? (
-          <span className="text-[10px] text-neutral-500 font-mono">Activo</span>
+          <span className="text-[10px] text-muted-foreground font-mono">Activo</span>
         ) : user.lastSeenAt ? (
-          <span className="text-[10px] text-neutral-500 truncate max-w-27.5">
+          <span className="text-[10px] text-muted-foreground truncate max-w-27.5">
             Hace {formatNotificationDate(user.lastSeenAt)}
           </span>
         ) : null}
@@ -156,7 +156,7 @@ export function SidebarPresence({
 
   if (!currentUser) {
     if (isTopbar) {
-      return <div className="size-10 shrink-0 rounded-full bg-white/10 animate-pulse" />
+      return <div className="size-10 shrink-0 rounded-full bg-foreground/10 animate-pulse" />
     }
     return (
       <div ref={presenceRef} className="mx-1 my-1 px-1">
@@ -183,8 +183,8 @@ export function SidebarPresence({
           aria-label="Usuarios en línea"
           onClick={() => handleOpenChange(!open)}
           className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
-            open && "bg-white/20 text-white",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+            open && "bg-foreground/20 text-foreground",
           )}
         >
           <Users size={16} strokeWidth={2} />
@@ -219,14 +219,14 @@ export function SidebarPresence({
 
   const panelBody = (
     <Command className="bg-transparent flex flex-col h-full" shouldFilter={false}>
-      <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-[#171717] shrink-0">
-        <Search size={14} className="text-neutral-500 shrink-0" />
+      <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-popover shrink-0">
+        <Search size={14} className="text-muted-foreground shrink-0" />
         <Input
           ref={inputRef}
           value={query}
           onChange={event => setQuery(event.target.value)}
           placeholder="Buscar miembro..."
-          className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
+          className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
         />
       </div>
 
@@ -244,7 +244,7 @@ export function SidebarPresence({
               key={user.id}
               value={user.name}
               onSelect={() => {}}
-              className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-white pointer-events-none data-[selected=true]:bg-transparent"
+              className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-foreground pointer-events-none data-[selected=true]:bg-transparent"
             >
               <div className="w-full pointer-events-auto">
                 <UserRow user={user} />
@@ -263,10 +263,10 @@ export function SidebarPresence({
                 e.currentTarget.blur()
                 setExpanded(true)
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-neutral-400 bg-transparent"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-muted-foreground bg-transparent"
             >
               Ver todos
-              <span className="text-neutral-600">
+              <span className="text-muted-foreground/80">
                 ({allUsers.length})
               </span>
               <ChevronDown size={13} />
@@ -278,7 +278,7 @@ export function SidebarPresence({
                 e.currentTarget.blur()
                 setExpanded(false)
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white bg-white/5"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-foreground bg-foreground/5"
             >
               Mostrar menos
               <ChevronUp size={13} />
@@ -298,7 +298,7 @@ export function SidebarPresence({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl bg-[#171717] p-0 text-white shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-2xl"
             >
               <FormDialogHeader title="Usuarios en línea" icon={Users} />
               <div className="flex min-h-0 flex-1 flex-col p-2">
@@ -317,7 +317,7 @@ export function SidebarPresence({
             align="start"
             sideOffset={8}
             floatingClassName="w-72"
-            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-[#171717] text-white border-none select-none flex flex-col"
+            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-popover text-foreground border-none select-none flex flex-col"
           >
             {panelBody}
           </PopoverContent>

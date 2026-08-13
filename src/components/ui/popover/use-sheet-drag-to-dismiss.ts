@@ -6,6 +6,8 @@ import { SHEET_CONFIG } from "./sheet-config"
 
 /**
  * Drag-to-dismiss solo desde el handle (no desde input/lista).
+ * Mientras el sheet está abierto, bloquea los ScrollArea de fondo
+ * para que iOS no mueva la lista detrás al focus/blur del buscador.
  */
 export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   const [dragY, setDragY] = React.useState(0)
@@ -25,6 +27,38 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
       timeoutRef.current = null
     }
   }, [])
+
+  // Lock de scroll de fondo mientras el sheet vive (no solo al arrastrar).
+  React.useEffect(() => {
+    if (!isOpen) return
+
+    const locked: { el: HTMLElement; overflow: string; touchAction: string }[] =
+      []
+
+    document
+      .querySelectorAll<HTMLElement>('[data-slot="scroll-area"]')
+      .forEach(el => {
+        if (el.closest('[data-slot="popover-sheet"]')) return
+        locked.push({
+          el,
+          overflow: el.style.overflow,
+          touchAction: el.style.touchAction,
+        })
+        el.style.overflow = "hidden"
+        el.style.touchAction = "none"
+      })
+
+    const prevBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      locked.forEach(({ el, overflow, touchAction }) => {
+        el.style.overflow = overflow
+        el.style.touchAction = touchAction
+      })
+      document.body.style.overflow = prevBodyOverflow
+    }
+  }, [isOpen])
 
   function onPointerDown(event: React.PointerEvent) {
     if (event.button !== 0) return

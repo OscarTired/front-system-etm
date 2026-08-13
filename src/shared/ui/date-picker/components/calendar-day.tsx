@@ -19,8 +19,8 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
       className={[
         'relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium',
         'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15',
-        !isCurrentMonth ? 'text-neutral-700' : 'text-neutral-300',
-        !isDisabled && !isSelected ? 'hover:bg-white/8' : '',
+        !isCurrentMonth ? 'text-muted-foreground/70' : 'text-muted-foreground',
+        !isDisabled && !isSelected ? 'hover:bg-foreground/10' : '',
         isSelected
           ? 'bg-white text-neutral-900 hover:bg-white font-semibold'
           : '',

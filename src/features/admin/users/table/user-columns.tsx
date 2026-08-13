@@ -33,7 +33,7 @@ EntityColumn<User>[]{
       skeletonShape:"text",
       render:(_,context)=>(
 
-        <span className="font-semibold text-white">
+        <span className="font-semibold text-foreground">
 
           {String(context.rowIndex+1).padStart(3,"0")}
 
@@ -139,7 +139,7 @@ EntityColumn<User>[]{
       width:TABLE_WIDTHS.large,
       skeletonShape:"text",
       render:user=>(
-        <span className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-300">
+        <span className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
           <span
             aria-hidden="true"
             className={

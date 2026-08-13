@@ -33,10 +33,10 @@ export function EntitySaveButton({
       className={cn(
         "flex min-w-38 items-center justify-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition",
         saving
-          ? "cursor-not-allowed bg-white/10 text-neutral-400"
+          ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
           : !disabled
             ? "bg-white text-black hover:bg-neutral-200"
-            : "cursor-not-allowed bg-white/10 text-neutral-600",
+            : "cursor-not-allowed bg-foreground/10 text-muted-foreground/80",
         className
       )}
     >

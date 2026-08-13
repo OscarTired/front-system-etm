@@ -54,7 +54,7 @@ export function EntitySelectActionMenu({
           onClick={(e) => {
             e.stopPropagation()
           }}
-          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-white/10 focus-visible:outline-none"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-foreground/10 focus-visible:outline-none"
           style={{
             color: color ?? "rgba(255,255,255,0.5)",
           }}
@@ -82,7 +82,7 @@ export function EntitySelectActionMenu({
         {onEdit && (
           <DropdownMenuItem
             onSelect={handleEdit}
-            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white"
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-foreground/10 hover:text-foreground focus:bg-foreground/10 focus:text-foreground"
           >
             <Pencil size={13} className="text-zinc-400" />
             <span>Editar</span>
@@ -90,7 +90,7 @@ export function EntitySelectActionMenu({
         )}
 
         {onEdit && onDelete && (
-          <DropdownMenuSeparator className="my-1 h-px bg-white/10" />
+          <DropdownMenuSeparator className="my-1 h-px bg-foreground/10" />
         )}
 
         {onDelete && (

@@ -67,14 +67,14 @@ function SectionHeader({
     <div className="flex items-baseline justify-between gap-3 px-0.5 pt-1">
       <div className="flex min-w-0 items-center gap-2">
         <span className={cn("size-1.5 shrink-0 rounded-full", section.dot)} />
-        <span className="text-[11px] font-semibold tracking-wider text-neutral-400 uppercase">
+        <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
           {section.title}
         </span>
-        <span className="truncate text-[11px] text-neutral-600">
+        <span className="truncate text-[11px] text-muted-foreground/80">
           {section.subtitle}
         </span>
       </div>
-      <span className="shrink-0 text-[11px] tabular-nums text-neutral-600">
+      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/80">
         {count}
       </span>
     </div>
@@ -166,7 +166,7 @@ export function TeamSupervisionView({
             </div>
           </section>
         ) : totalVisible === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
+          <div className="flex h-32 items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
             Nadie en este filtro
           </div>
         ) : (

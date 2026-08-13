@@ -228,7 +228,7 @@ export function TaskPipelineCard({
               "animate-comment-in absolute bottom-3 right-3 z-10 flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-2 transition duration-200 ease-out",
               (processTask.workflowStep?.commentCount ?? 0) > 0
                 ? "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25"
-                : "bg-white/8 text-neutral-300 hover:bg-white/15 hover:text-white",
+                : "bg-foreground/10 text-muted-foreground hover:bg-foreground/15 hover:text-foreground",
               longPressEnabled &&
                 pressed &&
                 !overlayOpen &&

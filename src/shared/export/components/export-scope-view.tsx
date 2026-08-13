@@ -58,7 +58,7 @@ export function ExportScopeView({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1 text-white/60 transition-colors hover:text-white"
+          className="flex items-center gap-1 text-foreground/60 transition-colors hover:text-foreground"
         >
 
           <ChevronLeft

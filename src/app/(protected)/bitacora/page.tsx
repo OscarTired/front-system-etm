@@ -72,7 +72,7 @@ export default function BitacoraPage() {
 
   if (tabs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-10 text-neutral-400">
+      <div className="flex flex-col items-center justify-center p-10 text-muted-foreground">
         <p>No tienes permisos para visualizar ninguna bitácora.</p>
       </div>
     )
@@ -83,8 +83,8 @@ export default function BitacoraPage() {
       <nav
         className={
           compact
-            ? "flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-neutral-900 p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
-            : "flex items-center gap-1 rounded-xl bg-neutral-900 p-1"
+            ? "flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-popover p-1 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
+            : "flex items-center gap-1 rounded-xl bg-popover p-1"
         }
       >
         {tabs.map(tab => {
@@ -101,13 +101,13 @@ export default function BitacoraPage() {
                 compact
                   ? `flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-neutral-800 text-white shadow-sm"
-                        : "text-neutral-400 hover:text-white"
+                        ? "bg-neutral-800 text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`
                   : `flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-neutral-800 text-white shadow-sm"
-                        : "text-neutral-400 hover:text-white"
+                        ? "bg-neutral-800 text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`
               }
             >
@@ -127,7 +127,7 @@ export default function BitacoraPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+    <main className="flex h-full min-h-0 flex-col bg-background px-3 pt-0 pb-2 text-foreground select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Desktop: chrome de página en flujo del shell (no overlay) */}
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -135,7 +135,7 @@ export default function BitacoraPage() {
             BITÁCORA
           </h1>
           <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
-          <p className="min-w-0 truncate text-sm text-neutral-500">
+          <p className="min-w-0 truncate text-sm text-muted-foreground">
             Control y registro de actividades
           </p>
         </div>

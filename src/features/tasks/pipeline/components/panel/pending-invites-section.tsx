@@ -66,7 +66,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
 
             <div
               key={invite.stepId}
-              className="animate-comment-in flex items-center gap-3 rounded-xl bg-white/4 p-3"
+              className="animate-comment-in flex items-center gap-3 rounded-xl bg-foreground/5 p-3"
             >
 
               <div
@@ -77,10 +77,10 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-neutral-100">
+                <p className="truncate text-sm font-semibold text-foreground">
                   #{String(invite.taskNumber).padStart(3, "0")} {invite.reference}
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted-foreground">
                   {definition.label}
                 </p>
               </div>
@@ -92,7 +92,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
                   disabled={declining}
                   onClick={() => declineInvite(invite.stepId)}
                   aria-label="Rechazar"
-                  className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-neutral-400 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                  className="flex size-8 items-center justify-center rounded-lg bg-foreground/5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
                 >
                   <X size={15} />
                 </button>

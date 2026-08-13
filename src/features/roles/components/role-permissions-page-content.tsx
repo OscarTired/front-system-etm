@@ -275,7 +275,7 @@ export function RolePermissionsPageContent() {
                   {loadingRoles && <RoleMobileSkeleton />}
 
                   {!loadingRoles && filteredRoles.length === 0 && (
-                    <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                    <div className="rounded-2xl bg-foreground/5 px-4 py-8 text-center text-sm text-muted-foreground">
                       {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
                     </div>
                   )}
@@ -295,7 +295,7 @@ export function RolePermissionsPageContent() {
                   {loadingUsers && <RoleMobileSkeleton />}
 
                   {!loadingUsers && filteredUsers.length === 0 && (
-                    <div className="rounded-2xl bg-white/3 px-4 py-8 text-center text-sm text-neutral-500">
+                    <div className="rounded-2xl bg-foreground/5 px-4 py-8 text-center text-sm text-muted-foreground">
                       {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
                     </div>
                   )}
@@ -316,9 +316,9 @@ export function RolePermissionsPageContent() {
         )}
 
         {showLeftPanel && !isMobile && (
-          <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3">
+          <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5">
             <div className="shrink-0 px-4 py-3">
-              <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+              <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {mode === "roles" ? "Roles" : "Usuarios"}
               </p>
             </div>
@@ -333,7 +333,7 @@ export function RolePermissionsPageContent() {
                     {loadingRoles && <RoleDesktopRowSkeleton />}
 
                     {!loadingRoles && filteredRoles.length === 0 && (
-                      <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                      <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                         {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
                       </p>
                     )}
@@ -353,7 +353,7 @@ export function RolePermissionsPageContent() {
                     {loadingUsers && <RoleDesktopRowSkeleton />}
 
                     {!loadingUsers && filteredUsers.length === 0 && (
-                      <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                      <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                         {search ? "Ningún usuario coincide con la búsqueda." : "No hay usuarios todavía."}
                       </p>
                     )}
@@ -392,7 +392,7 @@ export function RolePermissionsPageContent() {
                       setSelectedRole(null)
                       setSelectedUser(null)
                     }}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                   >
                     <ArrowLeft size={16} />
                   </button>
@@ -400,7 +400,7 @@ export function RolePermissionsPageContent() {
 
                 {hasSelection && (
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
                     {/* Cambiado a flex-col o flex-wrap controlado para acomodar el estado */}
@@ -410,7 +410,7 @@ export function RolePermissionsPageContent() {
                           className="size-2.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selectedColor || "var(--muted-foreground)" }}
                         />
-                        <span className="truncate text-sm font-medium text-white">
+                        <span className="truncate text-sm font-medium text-foreground">
                           {selectedName}
                         </span>
                       </div>
@@ -421,7 +421,7 @@ export function RolePermissionsPageContent() {
                       )}
                     </div>
                     {mode === "usuarios" && (
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Por usuario
                       </p>
                     )}
@@ -433,7 +433,7 @@ export function RolePermissionsPageContent() {
                 <button
                   type="button"
                   onClick={() => setEditUserOpen(true)}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                   aria-label="Editar usuario"
                   title="Editar usuario"
                 >
@@ -473,14 +473,14 @@ export function RolePermissionsPageContent() {
         )}
 
         {showPermissionsPanel && !isMobile && (
-          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-foreground/5">
             {!hasSelection ? (
               <div className="flex h-full w-full items-center justify-center bg-transparent">
                 <div className="text-center">
-                  <p className="text-base font-medium text-neutral-300">
+                  <p className="text-base font-medium text-muted-foreground">
                     {mode === "roles" ? "Ningún rol seleccionado" : "Ningún usuario seleccionado"}
                   </p>
-                  <p className="mt-2 text-sm text-neutral-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {mode === "roles"
                       ? "Seleccione un rol"
                       : "Gestione las excepciones"}
@@ -491,7 +491,7 @@ export function RolePermissionsPageContent() {
               <>
                 <header className="flex shrink-0 items-start justify-between gap-4 px-5 py-4">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       {mode === "roles" ? "Permisos" : "Excepciones"}
                     </p>
                     {/* Cambiado a flex-wrap para que se mueva fluidamente o baje si falta espacio */}
@@ -501,7 +501,7 @@ export function RolePermissionsPageContent() {
                           className="size-2.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selectedColor || "var(--muted-foreground)" }}
                         />
-                        <span className="truncate text-sm font-medium text-white">
+                        <span className="truncate text-sm font-medium text-foreground">
                           {selectedName}
                         </span>
                       </div>
@@ -512,7 +512,7 @@ export function RolePermissionsPageContent() {
                       )}
                     </div>
                     {mode === "usuarios" && (
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Por encima de lo que ya otorgan sus roles. Lo marcado como{" "}
                         <span className="text-amber-400">Excepción</span> es distinto a su base.
                       </p>
@@ -523,7 +523,7 @@ export function RolePermissionsPageContent() {
                 <button
                   type="button"
                   onClick={() => setEditUserOpen(true)}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                   aria-label="Editar usuario"
                   title="Editar usuario"
                 >

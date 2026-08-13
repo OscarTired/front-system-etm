@@ -21,8 +21,8 @@ export function InputGroup({
         "w-full",
         "items-center",
         "rounded-xl",
-        "border border-white/10",
-        "bg-[#101012]",
+        "border border-border",
+        "bg-muted",
         "transition-colors",
         "focus-within:border-white/20",
         className

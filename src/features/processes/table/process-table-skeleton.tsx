@@ -13,17 +13,17 @@ function SkeletonProcessTaskRow({ opacity }: { opacity: number }) {
   return (
 
     <div
-      className="flex h-12 items-center gap-2.5 rounded-xl bg-white/2 px-3"
+      className="flex h-12 items-center gap-2.5 rounded-xl bg-foreground/5 px-3"
       style={{ opacity }}
     >
 
-      <span className="h-3.5 w-9 shrink-0 rounded bg-white/10" />
+      <span className="h-3.5 w-9 shrink-0 rounded bg-foreground/10" />
 
-      <span className="size-1.5 shrink-0 rounded-full bg-white/15" />
+      <span className="size-1.5 shrink-0 rounded-full bg-foreground/15" />
 
-      <span className="h-3.5 flex-1 rounded bg-white/8" />
+      <span className="h-3.5 flex-1 rounded bg-foreground/10" />
 
-      <span className="h-5 w-14 shrink-0 rounded-md bg-white/8" />
+      <span className="h-5 w-14 shrink-0 rounded-md bg-foreground/10" />
 
     </div>
 

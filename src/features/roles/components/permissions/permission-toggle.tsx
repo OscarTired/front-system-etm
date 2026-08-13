@@ -34,7 +34,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false 
       }}
       className={cn(
         "flex min-w-0 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors",
-        checked ? "bg-gray-500/10" : "hover:bg-white/4",
+        checked ? "bg-gray-500/10" : "hover:bg-foreground/5",
       )}
     >
       <span
@@ -42,7 +42,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false 
           "flex size-4.5 shrink-0 items-center justify-center rounded-md transition-colors",
           checked
             ? "bg-green-500"
-            : "bg-white/4",
+            : "bg-foreground/5",
         )}
       >
         {checked && <Check size={11} strokeWidth={3} className="text-black" />}
@@ -51,7 +51,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false 
       <span
         className={cn(
           "min-w-0 truncate text-sm transition-colors",
-          checked ? "text-neutral-100" : "text-neutral-400",
+          checked ? "text-foreground" : "text-muted-foreground",
         )}
       >
         {label}

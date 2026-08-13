@@ -100,9 +100,9 @@ export function ProfilePreviewPanel({
           className="group relative h-16 w-16 outline-none"
         >
 
-          <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-white/10">
+          <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-border">
 
-            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/3 text-xl font-semibold text-white shadow-inner">
+            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-foreground/5 text-xl font-semibold text-foreground shadow-inner">
 
               {user?.avatarUrl && !removingAvatar ? (
 
@@ -129,7 +129,7 @@ export function ProfilePreviewPanel({
 
               <Camera
                 size={18}
-                className="text-white"
+                className="text-foreground"
               />
 
             </div>
@@ -197,7 +197,7 @@ export function ProfilePreviewPanel({
         <button
           type="button"
           onClick={onEdit}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-white"
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
         >
 
           <span>
@@ -235,9 +235,9 @@ function ProfileRow({
 
   return (
 
-    <div className="flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-white/5">
+    <div className="flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-foreground/5">
 
-      <span className="shrink-0 text-neutral-500">
+      <span className="shrink-0 text-muted-foreground">
         {icon}
       </span>
 
@@ -245,8 +245,8 @@ function ProfileRow({
         className={cn(
           "min-w-0 flex-1 truncate text-xs",
           hasValue
-            ? "text-neutral-200"
-            : "text-neutral-500",
+            ? "text-foreground"
+            : "text-muted-foreground",
         )}
       >
         {hasValue
@@ -259,7 +259,7 @@ function ProfileRow({
         <button
           type="button"
           onClick={onCopy}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white/5 hover:text-white"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
           title="Copiar"
         >
 

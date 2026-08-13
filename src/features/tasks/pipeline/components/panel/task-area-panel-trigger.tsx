@@ -34,7 +34,7 @@ export function TaskAreaPanelTrigger() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mis tareas"
-        className="flex h-9 w-40 max-w-full items-center gap-2 rounded-lg bg-white/5 px-3 text-sm font-semibold text-neutral-200 transition-colors hover:bg-white/10"
+        className="flex h-9 w-40 max-w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 text-sm font-semibold text-foreground transition-colors hover:bg-foreground/10"
       >
         <ListChecks size={16} className="shrink-0" />
 

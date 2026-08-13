@@ -61,7 +61,7 @@ export function TaskWorkflowTimeline({
                     "mx-4 mt-5.5 h-px flex-1",
                     connectorActive
                       ? "bg-emerald-500/60"
-                      : "bg-white/8"
+                      : "bg-foreground/10"
                   )}
                 />
 

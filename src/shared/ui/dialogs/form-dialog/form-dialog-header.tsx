@@ -37,7 +37,7 @@ export function FormDialogHeader({
 
         <div className="min-w-0">
 
-          <DialogTitle className="text-lg font-bold text-neutral-100">
+          <DialogTitle className="text-lg font-bold text-foreground">
 
             {title}
 
@@ -46,7 +46,7 @@ export function FormDialogHeader({
           <DialogDescription
             className={
               description
-                ? "mt-1 text-sm text-neutral-500"
+                ? "mt-1 text-sm text-muted-foreground"
                 : "sr-only"
             }
           >

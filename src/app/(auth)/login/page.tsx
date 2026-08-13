@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   return (
 
-    <div className={`flex min-h-dvh w-full items-center justify-center bg-[#050505] px-4 py-4 text-white select-none tablet:px-6 hide-scrollbar overflow-y-auto`}>
+    <div className={`flex min-h-dvh w-full items-center justify-center bg-background px-4 py-4 text-foreground select-none tablet:px-6 hide-scrollbar overflow-y-auto`}>
 
       <div className="w-full max-w-4xl">
 
@@ -28,11 +28,11 @@ export default function LoginPage() {
           panel de marca en vez de quedar vacío, y el alto total baja
           porque deja de apilarse todo en una sola columna.
         */}
-        <div className={`overflow-hidden rounded-2xl bg-white/2 shadow-2xl backdrop-blur-xl ${SHORT}:grid ${SHORT}:grid-cols-2 laptop:grid laptop:grid-cols-2`}>
+        <div className={`overflow-hidden rounded-2xl bg-foreground/5 shadow-2xl backdrop-blur-xl ${SHORT}:grid ${SHORT}:grid-cols-2 laptop:grid laptop:grid-cols-2`}>
 
           {/* LEFT SIDE */}
 
-          <div className={`hidden border-r border-white/10 bg-linear-to-br from-[#0A0A0A] to-[#050505] p-4 ${SHORT}:flex ${SHORT}:flex-col ${SHORT}:justify-center laptop:flex laptop:flex-col laptop:justify-between laptop:p-8`}>
+          <div className={`hidden border-r border-border bg-linear-to-br from-[#0A0A0A] to-[#050505] p-4 ${SHORT}:flex ${SHORT}:flex-col ${SHORT}:justify-center laptop:flex laptop:flex-col laptop:justify-between laptop:p-8`}>
 
             <div>
 
@@ -53,11 +53,11 @@ export default function LoginPage() {
 
               </div>
 
-              <p className={`text-base text-neutral-500 ${SHORT}:text-base laptop:text-xl`}>
+              <p className={`text-base text-muted-foreground ${SHORT}:text-base laptop:text-xl`}>
                 COMPANY S.A.C.
               </p>
 
-              <p className={`mt-1 text-xs text-neutral-500 ${SHORT}:mt-1 laptop:mt-4 laptop:text-sm`}>
+              <p className={`mt-1 text-xs text-muted-foreground ${SHORT}:mt-1 laptop:mt-4 laptop:text-sm`}>
                 Sistema de Producción
               </p>
 
@@ -72,13 +72,13 @@ export default function LoginPage() {
             */}
             <div className="hidden space-y-3 laptop:block">
 
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground/80">
                 Control de proyectos · tareas · procesos · producción
               </p>
 
-              <div className="h-px w-full bg-white/5" />
+              <div className="h-px w-full bg-foreground/5" />
 
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground/80">
                 Sistema interno versión 1.0
               </p>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
                   Iniciar sesión
                 </h2>
 
-                <p className={`mt-1 text-sm text-neutral-500 ${SHORT}:hidden`}>
+                <p className={`mt-1 text-sm text-muted-foreground ${SHORT}:hidden`}>
                   Accede al sistema de producción
                 </p>
 

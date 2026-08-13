@@ -19,7 +19,7 @@ const OPTIONS: { value: PermissionsMode; label: string }[] = [
 
 export function PermissionsModeTabs({ mode, onChange }: Props) {
   return (
-    <div className="flex shrink-0 items-center gap-1 rounded-xl bg-white/3 p-1">
+    <div className="flex shrink-0 items-center gap-1 rounded-xl bg-foreground/5 p-1">
       {OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -28,8 +28,8 @@ export function PermissionsModeTabs({ mode, onChange }: Props) {
           className={cn(
             "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
             mode === option.value
-              ? "bg-white/10 text-white"
-              : "text-neutral-500 hover:text-neutral-300"
+              ? "bg-foreground/10 text-foreground"
+              : "text-muted-foreground hover:text-muted-foreground"
           )}
         >
           {option.label}

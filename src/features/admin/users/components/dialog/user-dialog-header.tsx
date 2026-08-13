@@ -83,7 +83,7 @@ export function UserDialogHeader({
     isProduccion || isPmDepartment
 
   return (
-    <div className="rounded-2xl bg-white/2 p-4 tablet:p-5">
+    <div className="rounded-2xl bg-foreground/5 p-4 tablet:p-5">
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 tablet:grid-cols-[1fr_320px] tablet:items-center tablet:gap-8">
           <DynamicBadge
@@ -111,7 +111,7 @@ export function UserDialogHeader({
 
         {showLevelSelect && (
           <div className="w-full tablet:w-[320px]">
-            <div className="mb-2 text-xs font-medium text-neutral-500">
+            <div className="mb-2 text-xs font-medium text-muted-foreground">
               {isProduccion
                 ? "Sub-nivel en Producción"
                 : "Sub-nivel"}
@@ -135,7 +135,7 @@ export function UserDialogHeader({
 
         {isProduccion && level === "OPERARIO" && (
           <div className="w-full tablet:w-[320px]">
-            <div className="mb-2 text-xs font-medium text-neutral-500">
+            <div className="mb-2 text-xs font-medium text-muted-foreground">
               Áreas
             </div>
 
@@ -147,25 +147,25 @@ export function UserDialogHeader({
         )}
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-foreground">
             {name || "Nuevo usuario"}
           </span>
 
-          <span className="text-neutral-700">
+          <span className="text-muted-foreground/70">
             •
           </span>
 
-          <span className="text-neutral-500">
+          <span className="text-muted-foreground">
             {username
               ? `@${username}`
               : "@usuario"}
           </span>
 
-          <span className="text-neutral-700">
+          <span className="text-muted-foreground/70">
             •
           </span>
 
-          <span className="min-w-0 truncate text-neutral-500">
+          <span className="min-w-0 truncate text-muted-foreground">
             {email || "usuario@etmperu.com"}
           </span>
         </div>

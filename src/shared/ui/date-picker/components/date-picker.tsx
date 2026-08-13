@@ -130,7 +130,7 @@ export function DatePicker({
             title={dateLabel}
             className={
               className ??
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-40"
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-40"
             }
           >
             <Calendar size={16} />

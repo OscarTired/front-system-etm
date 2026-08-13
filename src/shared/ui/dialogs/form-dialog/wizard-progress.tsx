@@ -28,7 +28,7 @@ export function WizardProgress({ steps, step }: Props) {
             key={s.label}
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors",
-              index <= step ? "bg-white/70" : "bg-white/10",
+              index <= step ? "bg-white/70" : "bg-foreground/10",
             )}
           />
 
@@ -36,7 +36,7 @@ export function WizardProgress({ steps, step }: Props) {
 
       </div>
 
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         Paso {step + 1} de {steps.length} · {steps[step].label}
       </p>
 

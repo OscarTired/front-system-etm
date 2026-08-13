@@ -129,10 +129,10 @@ export function EntityToolbarSearch({
           }}
           onClick={handleToggle}
           className={cn(
-            "flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-xl text-white transition-all duration-200",
+            "flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-xl text-foreground transition-all duration-200",
             open
-              ? "bg-[#101012]"
-              : "hover:bg-[#101012]"
+              ? "bg-muted"
+              : "hover:bg-muted"
           )}
         >
           <Search
@@ -161,7 +161,7 @@ export function EntityToolbarSearch({
             onPointerDown={event => event.stopPropagation()}
             onTouchStart={event => event.stopPropagation()}
             placeholder="Buscar..."
-            className="w-full touch-manipulation bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+            className="w-full touch-manipulation bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/35"
           />
         </div>
       </div>

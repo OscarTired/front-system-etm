@@ -16,7 +16,7 @@ export function EntityTableLoading({
 
   return (
 
-    <div className="relative flex h-[calc(100vh-240px)] flex-col overflow-hidden rounded-2xl bg-[#101012] ring-1 ring-white/6">
+    <div className="relative flex h-[calc(100vh-240px)] flex-col overflow-hidden rounded-2xl bg-muted ring-1 ring-white/6">
 
       <div className="flex flex-1 items-center justify-center">
 
@@ -24,10 +24,10 @@ export function EntityTableLoading({
 
           <LoaderCircle
             size={28}
-            className="animate-spin text-neutral-400"
+            className="animate-spin text-muted-foreground"
           />
 
-          <p className="text-sm font-medium tracking-[0.12em] text-neutral-500">
+          <p className="text-sm font-medium tracking-[0.12em] text-muted-foreground">
 
             {label}
 

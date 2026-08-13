@@ -30,7 +30,7 @@ export function TaskWorkflowSection({
 
     <div className="rounded-2xl border border-white/6 bg-[#0D0D10] p-6">
 
-      <div className="mb-6 text-xs font-semibold tracking-[0.18em] text-neutral-500">
+      <div className="mb-6 text-xs font-semibold tracking-[0.18em] text-muted-foreground">
 
         WORKFLOW
 

@@ -33,24 +33,24 @@ function ShapePlaceholder({
       )
 
     case "icon":
-      return <span className="block h-9 w-9 rounded-lg bg-white/6" />
+      return <span className="block h-9 w-9 rounded-lg bg-foreground/5" />
 
     case "actions-pair":
       return (
         <div className="ml-3 flex items-center gap-6">
-          <span className="block h-8 w-8 rounded-lg bg-white/6" />
-          <span className="block h-8 w-8 rounded-lg bg-white/6" />
+          <span className="block h-8 w-8 rounded-lg bg-foreground/5" />
+          <span className="block h-8 w-8 rounded-lg bg-foreground/5" />
         </div>
       )
 
     case "workflow-action":
-      return <span className="block h-9 w-full rounded-lg bg-white/6" />
+      return <span className="block h-9 w-full rounded-lg bg-foreground/5" />
 
     case "none":
       return null
 
     default:
-      return <span className="block h-4 w-4/5 max-w-24 rounded bg-white/6" />
+      return <span className="block h-4 w-4/5 max-w-24 rounded bg-foreground/5" />
   }
 }
 
@@ -65,7 +65,7 @@ function CardSkeletonRow<T>({
 
   return (
     <div
-      className="rounded-xl border-b border-white/5 px-3 py-3 transition-colors hover:bg-white/2"
+      className="rounded-xl border-b border-border px-3 py-3 transition-colors hover:bg-foreground/5"
       style={{ opacity }}
     >
       {structural.length > 0 && (
@@ -78,7 +78,7 @@ function CardSkeletonRow<T>({
         </div>
       )}
 
-      <div className="flex flex-col gap-2 rounded-lg bg-white/2 p-2">
+      <div className="flex flex-col gap-2 rounded-lg bg-foreground/5 p-2">
         {groups.map((group, groupIndex) => (
           <div
             key={group.key + groupIndex}
@@ -89,7 +89,7 @@ function CardSkeletonRow<T>({
           >
             {group.columns.map(column => (
               <div key={column.id} className="min-w-0">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {column.title}
                 </div>
 
@@ -110,7 +110,7 @@ export function EntityTableSkeleton<T>({
   rows = 6,
 }: Props<T>) {
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white/3">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-foreground/5">
       <div className="flex min-h-0 flex-1">
         <div
           data-entity-table-scroll

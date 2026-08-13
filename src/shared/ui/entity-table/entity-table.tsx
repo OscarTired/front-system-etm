@@ -43,7 +43,7 @@ export function EntityTable<T>({
   renderExpandedRow,
 }: EntityTableProps<T>) {
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white/3">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-foreground/5">
       <div
         data-entity-table-scroll
         className={cn(
@@ -51,7 +51,7 @@ export function EntityTable<T>({
         )}
       >
         {data.length === 0 && (
-          <div className="flex h-60 items-center justify-center text-neutral-500">
+          <div className="flex h-60 items-center justify-center text-muted-foreground">
             {emptyMessage}
           </div>
         )}

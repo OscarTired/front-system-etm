@@ -138,7 +138,7 @@ export function UserFormSection({
             }}
             className="pr-32"
           />
-          <span className="pointer-events-none absolute right-4 text-sm font-medium text-neutral-500 select-none">
+          <span className="pointer-events-none absolute right-4 text-sm font-medium text-muted-foreground select-none">
             {CORPORATE_DOMAIN}
           </span>
         </div>
@@ -154,12 +154,12 @@ export function UserFormSection({
               !isChangingPassword
             )
           }
-          className="flex w-full items-center justify-between rounded-xl bg-white/2 px-4 py-3 text-left transition-all hover:border-white/20 hover:bg-white/4"
+          className="flex w-full items-center justify-between rounded-xl bg-foreground/5 px-4 py-3 text-left transition-all hover:border-white/20 hover:bg-foreground/5"
         >
 
           <div className="flex items-center gap-3">
 
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground/5">
 
               <KeyRound
                 size={14}
@@ -169,13 +169,13 @@ export function UserFormSection({
 
             <div>
 
-              <div className="text-sm font-medium text-white">
+              <div className="text-sm font-medium text-foreground">
 
                 Cambiar contraseña
 
               </div>
 
-              <div className="text-xs text-neutral-500">
+              <div className="text-xs text-muted-foreground">
 
                 Actualizar credenciales del usuario
 
@@ -185,7 +185,7 @@ export function UserFormSection({
 
           </div>
 
-          <div className="rounded-full bg-white/3 px-2.5 py-1 text-sm font-medium text-neutral-400">
+          <div className="rounded-full bg-foreground/5 px-2.5 py-1 text-sm font-medium text-muted-foreground">
 
             {isChangingPassword
               ? "Activo"
@@ -199,7 +199,7 @@ export function UserFormSection({
 
       {changingPassword && (
 
-        <div className="space-y-4 rounded-xl bg-white/2 p-4">
+        <div className="space-y-4 rounded-xl bg-foreground/5 p-4">
 
           <div className="grid grid-cols-2 gap-4">
 
@@ -235,7 +235,7 @@ export function UserFormSection({
                         !current
                     )
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 transition-colors hover:text-neutral-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-muted-foreground"
                 >
 
                   {showPassword

@@ -29,7 +29,7 @@ export function TaskOverlayPreview({
 
     <div className="flex min-w-225 items-center gap-4 px-4 py-3">
 
-      <span className="w-16 font-semibold text-white">
+      <span className="w-16 font-semibold text-foreground">
 
         {String(task.taskNumber).padStart(3,"0")}
 
@@ -42,7 +42,7 @@ export function TaskOverlayPreview({
         width="field"
       />
 
-      <span className="min-w-55 text-neutral-200">
+      <span className="min-w-55 text-foreground">
 
         {task.reference}
 

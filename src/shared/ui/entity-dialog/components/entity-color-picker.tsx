@@ -19,7 +19,7 @@ export function EntityColorPicker({
 
     <div className="space-y-3">
 
-      <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">
+      <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
 
         Colores
 

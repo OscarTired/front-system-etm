@@ -42,20 +42,20 @@ export function CanvasContextMenu({ x, y, items, onClose }: Props) {
   return (
     <div
       ref={ref}
-      className="fixed z-50 min-w-45 rounded-lg border border-white/10 bg-[#141416]/98 py-1 shadow-xl backdrop-blur-md"
+      className="fixed z-50 min-w-45 rounded-lg border border-border bg-[#141416]/98 py-1 shadow-xl backdrop-blur-md"
       style={{ left, top }}
       role="menu"
     >
       {items.map((item) =>
         item.separator ? (
-          <div key={item.id} className="my-1 h-px bg-white/10" />
+          <div key={item.id} className="my-1 h-px bg-foreground/10" />
         ) : (
           <button
             key={item.id}
             type="button"
             role="menuitem"
             disabled={item.disabled}
-            className="flex w-full items-center px-3 py-1.5 text-left text-[12px] text-neutral-200 hover:bg-white/10 disabled:opacity-40"
+            className="flex w-full items-center px-3 py-1.5 text-left text-[12px] text-foreground hover:bg-foreground/10 disabled:opacity-40"
             onClick={() => {
               if (item.disabled) return
               item.onClick?.()

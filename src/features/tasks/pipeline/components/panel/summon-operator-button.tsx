@@ -77,8 +77,8 @@ export function SummonOperatorButton({ processCode, active, selectedOperatorId, 
             // contenido cambia adentro de una caja que ya está.
             "flex min-w-30 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
             active
-              ? "bg-white/20 text-white shadow-sm"
-              : "bg-white/5 text-neutral-300 hover:bg-white/10",
+              ? "bg-foreground/20 text-foreground shadow-sm"
+              : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10",
           )}
         >
           <Users size={13} className="shrink-0" />

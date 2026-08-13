@@ -45,7 +45,7 @@ export function TaskPipelinePlaceholder({
   return (
 
     <div
-      className="flex h-16 items-center justify-between rounded-xl bg-white/2 px-4"
+      className="flex h-16 items-center justify-between rounded-xl bg-foreground/5 px-4"
     >
 
       <div className="flex items-center gap-3">
@@ -64,7 +64,7 @@ export function TaskPipelinePlaceholder({
 
         <div>
 
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
 
             Piezas
 
@@ -85,9 +85,9 @@ export function TaskPipelinePlaceholder({
 
       </div>
 
-      <div className="border-l border-white/10 pl-4 text-right">
+      <div className="border-l border-border pl-4 text-right">
 
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-500">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
 
           Tareas
 

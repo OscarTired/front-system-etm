@@ -328,7 +328,7 @@ export function TaskWorkflowOverlay({
         <button
           type="button"
           onClick={handleBack}
-          className="absolute left-2 top-2 z-10 flex items-center gap-1 text-xs font-semibold text-neutral-400 transition-colors hover:text-neutral-200"
+          className="absolute left-2 top-2 z-10 flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
           <ChevronLeft size={14} />
           Volver
@@ -340,7 +340,7 @@ export function TaskWorkflowOverlay({
         type="button"
         onClick={handleClose}
         aria-label="Cerrar"
-        className="absolute right-2 top-2 z-10 flex size-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/8 hover:text-neutral-200"
+        className="absolute right-2 top-2 z-10 flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
       >
         <X size={14} />
       </button>
@@ -404,7 +404,7 @@ export function TaskWorkflowOverlay({
 
         {displayVariant === "start" && (
 
-          <div className="flex items-center justify-center rounded-lg bg-white/4 px-3 py-2">
+          <div className="flex items-center justify-center rounded-lg bg-foreground/5 px-3 py-2">
 
             <ProcessOperatorCell
               processTask={processTask}
@@ -424,7 +424,7 @@ export function TaskWorkflowOverlay({
               <button
                 type="button"
                 onClick={handleClose}
-                className="h-9 flex-1 rounded-lg bg-white/4 text-xs font-semibold text-neutral-300 transition-colors hover:bg-white/8"
+                className="h-9 flex-1 rounded-lg bg-foreground/5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-foreground/10"
               >
                 Cancelar
               </button>

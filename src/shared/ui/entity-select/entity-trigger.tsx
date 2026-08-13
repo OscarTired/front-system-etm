@@ -27,7 +27,7 @@ export function EntityTrigger({
       <ChevronDown
         size={14}
         className={cn(
-          "text-neutral-500 transition-transform",
+          "text-muted-foreground transition-transform",
           open && "rotate-180"
         )}
       />

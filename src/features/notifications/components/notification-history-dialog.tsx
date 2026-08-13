@@ -112,7 +112,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           size="large"
-          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
+          className="flex h-[min(40rem,85dvh)] max-h-[85dvh] w-full max-w-180 flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
           onPointerDownOutside={preventNestedDialogClose}
           onInteractOutside={preventNestedDialogClose}
         >
@@ -125,7 +125,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <DialogTitle className="text-lg font-bold text-neutral-100">
+                <DialogTitle className="text-lg font-bold text-foreground">
                   Notificaciones
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -136,13 +136,13 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
           </DialogHeader>
 
           <div className="shrink-0 px-5 py-3">
-            <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-              <Search size={15} className="shrink-0 text-neutral-500" />
+            <div className="flex items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2">
+              <Search size={15} className="shrink-0 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar en notificaciones..."
-                className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
               />
             </div>
           </div>
@@ -152,11 +152,11 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
             {loading ? (
               <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
                 <Spinner size={18} />
-                <p className="text-sm text-neutral-500">Cargando...</p>
+                <p className="text-sm text-muted-foreground">Cargando...</p>
               </div>
             ) : filteredNotifications.length === 0 ? (
               <div className="flex min-h-65 flex-col items-center justify-center gap-1.5 text-center">
-                <p className="text-sm text-neutral-500">No hay notificaciones</p>
+                <p className="text-sm text-muted-foreground">No hay notificaciones</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -179,7 +179,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                     type="button"
                     onClick={() => loadMore()}
                     disabled={loadingMore}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
                   >
                     {loadingMore
                       ? <Spinner size={12} />
@@ -199,7 +199,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                     type="button"
                     onClick={() => markAllAsRead()}
                     title="Marcar todas como leídas"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/8 hover:text-cyan-300"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-cyan-300"
                   >
                     <Eraser size={16} />
                   </button>
@@ -210,7 +210,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
                     type="button"
                     onClick={() => setConfirmDeleteAll(true)}
                     title="Eliminar todas las notificaciones"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -220,7 +220,7 @@ export function NotificationHistoryDialog({ open, onOpenChange }: Props) {
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                className="rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:border-white/20 hover:bg-foreground/10 hover:text-foreground"
               >
                 Cerrar
               </button>

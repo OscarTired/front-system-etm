@@ -346,10 +346,10 @@ export function ContextPicker({
         <button
           type="button"
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-xl bg-white/4 px-3 py-2.5 text-left text-sm outline-none transition-colors hover:bg-white/6",
+            "flex w-full items-center justify-between gap-2 rounded-xl bg-foreground/5 px-3 py-2.5 text-left text-sm outline-none transition-colors hover:bg-foreground/5",
             hasSelection
-              ? "text-white"
-              : "text-neutral-500",
+              ? "text-foreground"
+              : "text-muted-foreground",
           )}
         >
 
@@ -362,7 +362,7 @@ export function ContextPicker({
           <ChevronDown
             size={15}
             className={cn(
-              "shrink-0 text-neutral-500 transition-transform duration-200",
+              "shrink-0 text-muted-foreground transition-transform duration-200",
               open && "rotate-180",
             )}
           />
@@ -385,7 +385,7 @@ export function ContextPicker({
 
             <Search
               size={14}
-              className="text-white/35"
+              className="text-foreground/35"
             />
 
             <Input

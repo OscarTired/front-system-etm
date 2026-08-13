@@ -222,9 +222,9 @@ function ActiveOperatorsPopover({
 
           <div className="flex min-w-0 items-center gap-1.5">
 
-            <Users size={13} className="shrink-0 text-neutral-400" />
+            <Users size={13} className="shrink-0 text-muted-foreground" />
 
-            <span className="truncate text-xs font-semibold text-neutral-200">
+            <span className="truncate text-xs font-semibold text-foreground">
               {entries.length} operarios activos
             </span>
 
@@ -249,7 +249,7 @@ function ActiveOperatorsPopover({
         className="w-(--radix-popover-trigger-width) p-2"
       >
 
-        <div className="px-1 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-500">
+        <div className="px-1 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           Operarios en esta estación
         </div>
 
@@ -297,7 +297,7 @@ export function TaskColumnOperator({
         )}
       >
 
-        <span className="text-xs font-medium text-neutral-600">
+        <span className="text-xs font-medium text-muted-foreground/80">
           Sin operario asignado
         </span>
 

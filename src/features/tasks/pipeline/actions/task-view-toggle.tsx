@@ -16,7 +16,7 @@ export function TaskViewToggle({
 
   return (
 
-    <div className="inline-flex items-center rounded-lg bg-white/4 p-1">
+    <div className="inline-flex items-center rounded-lg bg-foreground/5 p-1">
 
       {(
         [
@@ -35,8 +35,8 @@ export function TaskViewToggle({
             className={cn(
               "rounded-md px-3 py-0.5 text-sm font-semibold transition",
               value === option.key
-                ? "bg-white/10 text-white"
-                : "text-neutral-500 hover:text-neutral-300",
+                ? "bg-foreground/10 text-foreground"
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
           >
 

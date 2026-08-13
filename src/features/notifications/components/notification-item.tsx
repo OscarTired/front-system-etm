@@ -70,7 +70,7 @@ export function NotificationItem({
 
   const avatar = (
     <div className="relative shrink-0">
-      <div className="flex size-7 items-center justify-center overflow-hidden rounded-full bg-white/10 text-[11px] font-semibold text-neutral-300">
+      <div className="flex size-7 items-center justify-center overflow-hidden rounded-full bg-foreground/10 text-[11px] font-semibold text-muted-foreground">
         {actor?.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={actor.avatarUrl} alt="" className="size-full object-cover" />
@@ -78,7 +78,7 @@ export function NotificationItem({
           (actor?.name?.[0] ?? "?").toUpperCase()
         )}
       </div>
-      <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-[#171717] text-neutral-400">
+      <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-popover text-muted-foreground">
         {isMention ? (
           <AtSign size={8} strokeWidth={2.5} />
         ) : (
@@ -93,25 +93,25 @@ export function NotificationItem({
       <div className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5">
         {avatar}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-neutral-200">
-            <span className="font-semibold text-white">{actor?.name}</span>
-            <span className="text-neutral-500"> · histórico</span>
+          <p className="truncate text-xs text-foreground">
+            <span className="font-semibold text-foreground">{actor?.name}</span>
+            <span className="text-muted-foreground"> · histórico</span>
           </p>
-          <p className="mt-0.5 text-[11px] text-neutral-500">
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
             ¿Abrir este ítem del historial?
           </p>
           <div className="mt-1.5 flex gap-2">
             <button
               type="button"
               onClick={() => onConfirm?.(notification)}
-              className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-medium text-white"
+              className="rounded-md bg-foreground/10 px-2 py-1 text-[11px] font-medium text-foreground"
             >
               Abrir
             </button>
             <button
               type="button"
               onClick={() => onCancelConfirm?.()}
-              className="rounded-md px-2 py-1 text-[11px] text-neutral-400"
+              className="rounded-md px-2 py-1 text-[11px] text-muted-foreground"
             >
               Cancelar
             </button>
@@ -127,7 +127,7 @@ export function NotificationItem({
       onClick={() => onClick(notification)}
       className={cn(
         "group flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors",
-        "hover:bg-white/5",
+        "hover:bg-foreground/5",
         isSelecting && "opacity-70",
       )}
     >
@@ -136,10 +136,10 @@ export function NotificationItem({
       <div className="min-w-0 flex-1">
         {/* L1: nombre · acción · tiempo  +  acciones */}
         <div className="flex items-center gap-1">
-          <p className="min-w-0 flex-1 truncate text-xs leading-4 text-neutral-200">
-            <span className="font-semibold text-white">{actor?.name}</span>
-            <span className="text-neutral-500"> · {actionLabel}</span>
-            <span className="text-neutral-600">
+          <p className="min-w-0 flex-1 truncate text-xs leading-4 text-foreground">
+            <span className="font-semibold text-foreground">{actor?.name}</span>
+            <span className="text-muted-foreground"> · {actionLabel}</span>
+            <span className="text-muted-foreground/80">
               {" "}
               · {formatNotificationDate(notification.createdAt)}
             </span>
@@ -161,7 +161,7 @@ export function NotificationItem({
                   void onMarkRead(notification.id)
                 }
               }}
-              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-500 opacity-100 transition hover:bg-white/10 hover:text-neutral-200 tablet:opacity-0 tablet:group-hover:opacity-100"
+              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground opacity-100 transition hover:bg-foreground/10 hover:text-foreground tablet:opacity-0 tablet:group-hover:opacity-100"
             >
               <Check size={11} strokeWidth={2.5} />
             </span>
@@ -183,7 +183,7 @@ export function NotificationItem({
                   onDelete(notification)
                 }
               }}
-              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-500 opacity-100 transition hover:bg-red-500/10 hover:text-red-400 tablet:opacity-0 tablet:group-hover:opacity-100"
+              className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground opacity-100 transition hover:bg-red-500/10 hover:text-red-400 tablet:opacity-0 tablet:group-hover:opacity-100"
             >
               <Trash2 size={11} strokeWidth={2.5} />
             </span>
@@ -200,21 +200,21 @@ export function NotificationItem({
 
         {/* L2: contexto + scope + activo en UNA fila */}
         {(contextLabel || isHistorical !== undefined) && (
-          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-neutral-500">
+          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
             {contextLabel && (
               <span className="min-w-0 truncate">{contextLabel}</span>
             )}
-            <span className="shrink-0 text-neutral-600">·</span>
-            <span className="shrink-0 uppercase tracking-wide text-[10px] text-neutral-500">
+            <span className="shrink-0 text-muted-foreground/80">·</span>
+            <span className="shrink-0 uppercase tracking-wide text-[10px] text-muted-foreground">
               {scopeLabel}
             </span>
             {isHistorical !== undefined && (
               <>
-                <span className="shrink-0 text-neutral-600">·</span>
+                <span className="shrink-0 text-muted-foreground/80">·</span>
                 <span
                   className={cn(
                     "shrink-0 text-[10px] font-medium uppercase tracking-wide",
-                    isHistorical ? "text-neutral-500" : "text-cyan-400",
+                    isHistorical ? "text-muted-foreground" : "text-cyan-400",
                   )}
                 >
                   {isHistorical ? "Histórico" : "Activo"}
@@ -226,7 +226,7 @@ export function NotificationItem({
 
         {/* L3: snippet una sola línea */}
         {notification.messageSnippet ? (
-          <p className="mt-0.5 line-clamp-1 text-xs leading-4 text-neutral-400">
+          <p className="mt-0.5 line-clamp-1 text-xs leading-4 text-muted-foreground">
             {notification.messageSnippet}
           </p>
         ) : null}

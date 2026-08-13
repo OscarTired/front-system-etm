@@ -77,9 +77,9 @@ export function IconAction({
 
           :danger
 
-            ?"text-neutral-600 hover:bg-red-500/10 hover:text-red-400"
+            ?"text-muted-foreground/80 hover:bg-red-500/10 hover:text-red-400"
 
-            :"text-neutral-500 hover:bg-white/10 hover:text-white",
+            :"text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
 
       )}
 

@@ -140,7 +140,7 @@ export function RoleMultiSelect({
 
           <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
 
-            <Search size={14} className="text-white/35" />
+            <Search size={14} className="text-foreground/35" />
 
             <Input
               ref={inputRef}

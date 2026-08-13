@@ -24,7 +24,7 @@ export function ProcessCommentsPanel({ workflowStepId }: Props) {
   return (
     <div
       ref={ref}
-      className="flex min-h-43.5 w-full flex-col rounded-xl bg-white/2 p-3"
+      className="flex min-h-43.5 w-full flex-col rounded-xl bg-foreground/5 p-3"
     >
       <div
         className={cn(

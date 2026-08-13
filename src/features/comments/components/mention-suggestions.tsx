@@ -48,10 +48,10 @@ export function MentionSuggestions({ users, onSelect }: Props) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onSelect(user.username ?? user.name)}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/5"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-foreground/5"
               >
 
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-white/8 text-[10px] font-semibold text-white shadow-inner">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-border text-[10px] font-semibold text-foreground shadow-inner">
 
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
@@ -61,10 +61,10 @@ export function MentionSuggestions({ users, onSelect }: Props) {
 
                 </div>
 
-                <span className="truncate text-sm text-neutral-200">{user.name}</span>
+                <span className="truncate text-sm text-foreground">{user.name}</span>
 
                 {user.username && (
-                  <span className="ml-auto shrink-0 text-xs text-neutral-500">@{user.username}</span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">@{user.username}</span>
                 )}
 
               </button>

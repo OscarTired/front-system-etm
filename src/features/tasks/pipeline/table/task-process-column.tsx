@@ -63,16 +63,16 @@ function ColumnHeader({
           <Icon size={15} style={{ color: definition.color }} />
         )}
 
-        <span className="text-sm font-bold uppercase tracking-wide text-neutral-200">
+        <span className="text-sm font-bold uppercase tracking-wide text-foreground">
           {definition.label}
         </span>
 
-        <span className="ml-auto text-xs font-semibold text-neutral-500">
+        <span className="ml-auto text-xs font-semibold text-muted-foreground">
           {tasks.length}
         </span>
       </header>
 
-      <div className="border-b border-white/5 px-2 py-1">
+      <div className="border-b border-border px-2 py-1">
         <TaskColumnOperator
           processCode={processCode}
           tasks={tasks}
@@ -139,7 +139,7 @@ function ColumnContent({
                   key={key}
                   data-expanded-row-id={task.id}
                   className={cn(
-                    "flex h-12 shrink-0 items-center justify-end rounded-xl bg-white/4 px-3 transition-opacity duration-300",
+                    "flex h-12 shrink-0 items-center justify-end rounded-xl bg-foreground/5 px-3 transition-opacity duration-300",
                     isRowDimmed ? "opacity-10 pointer-events-none" : "opacity-50"
                   )}
                 >
@@ -148,7 +148,7 @@ function ColumnContent({
                       <ArrowRight
                         size={13}
                         strokeWidth={2.75}
-                        className="text-neutral-600"
+                        className="text-muted-foreground/80"
                       />
                     )}
                   </span>
@@ -255,7 +255,7 @@ function ColumnContent({
 
                 {selectionMode &&
                   (isLocked ? (
-                    <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-neutral-600">
+                    <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-0.5 text-muted-foreground/80">
                       <Lock size={13} />
                     </div>
                   ) : (
@@ -264,8 +264,8 @@ function ColumnContent({
                         className={cn(
                           "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
                           isSelected
-                            ? "border-emerald-500 bg-emerald-500 text-white"
-                            : "border-white/25 bg-white/5 text-transparent"
+                            ? "border-emerald-500 bg-emerald-500 text-foreground"
+                            : "border-white/25 bg-foreground/5 text-transparent"
                         )}
                       >
                         <Check size={14} strokeWidth={3} />
@@ -277,7 +277,7 @@ function ColumnContent({
           })}
 
           {rows.length === 0 && (
-            <div className="flex h-12 items-center justify-center rounded-xl bg-white/4 px-3 text-sm font-medium text-neutral-500">
+            <div className="flex h-12 items-center justify-center rounded-xl bg-foreground/5 px-3 text-sm font-medium text-muted-foreground">
               Sin tareas
             </div>
           )}

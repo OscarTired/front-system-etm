@@ -76,16 +76,16 @@ function ActivityLogCard({
 }) {
   if (loading || !log) {
     return (
-      <div className="w-full rounded-2xl bg-white/3 p-4 animate-pulse">
+      <div className="w-full rounded-2xl bg-foreground/5 p-4 animate-pulse">
         <div className="flex items-start gap-4">
-          <div className="size-10 shrink-0 rounded-full bg-white/10" />
+          <div className="size-10 shrink-0 rounded-full bg-foreground/10" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="h-3.5 w-28 rounded bg-white/12" />
-              <div className="h-3 w-24 rounded bg-white/8" />
+              <div className="h-3 w-24 rounded bg-foreground/10" />
             </div>
-            <div className="h-3.5 w-36 rounded bg-white/10" />
-            <div className="h-3 w-48 rounded bg-white/8" />
+            <div className="h-3.5 w-36 rounded bg-foreground/10" />
+            <div className="h-3 w-48 rounded bg-foreground/10" />
           </div>
         </div>
       </div>
@@ -97,7 +97,7 @@ function ActivityLogCard({
     log.shift ?? getCurrentShift(new Date(log.loggedAt))
 
   return (
-    <div className="w-full rounded-2xl bg-white/3 p-4 transition-colors hover:bg-white/5">
+    <div className="w-full rounded-2xl bg-foreground/5 p-4 transition-colors hover:bg-foreground/5">
       <div className="flex items-start gap-4">
         <div
           className="flex size-10 shrink-0 items-center justify-center rounded-full"
@@ -111,15 +111,15 @@ function ActivityLogCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium text-neutral-100">
+            <span className="font-medium text-foreground">
               {log.user?.name ?? "—"}
             </span>
 
             <div className="flex shrink-0 items-center gap-2">
-              <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+              <span className="rounded-md bg-foreground/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {SHIFT_HOURS_LABEL[effectiveShift]}
               </span>
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-muted-foreground">
                 {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -128,7 +128,7 @@ function ActivityLogCard({
             </div>
           </div>
 
-          <p className="mt-1 text-sm text-neutral-300">
+          <p className="mt-1 text-sm text-muted-foreground">
             {log.activityType.label}
           </p>
 
@@ -141,7 +141,7 @@ function ActivityLogCard({
           )}
 
           {log.note && (
-            <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
               {log.note}
             </p>
           )}
@@ -162,8 +162,8 @@ function ShiftBucketedLogs({ logs }: { logs: Log[] }) {
         return (
           <div key={bucket.key} className="flex w-full flex-col gap-2">
             <div className="flex items-center gap-2 px-1">
-              <BucketIcon size={13} className="text-neutral-500" />
-              <span className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+              <BucketIcon size={13} className="text-muted-foreground" />
+              <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 {bucket.label}
               </span>
             </div>
@@ -190,7 +190,7 @@ function EntryCountBadge({
   if (compact) {
     return (
       <div
-        className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 px-2 text-xs font-semibold tabular-nums text-neutral-300"
+        className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold tabular-nums text-muted-foreground"
         title={`${count} ${count === 1 ? "entrada" : "entradas"}`}
       >
         {count}
@@ -199,7 +199,7 @@ function EntryCountBadge({
   }
 
   return (
-    <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
+    <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-foreground/5 px-3 text-sm font-medium text-muted-foreground">
       {count} {count === 1 ? "entrada" : "entradas"}
     </div>
   )
@@ -309,7 +309,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
   }
 
   const toolbar = (
-    <div className="w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
+    <div className="w-full shrink-0 rounded-2xl bg-card/80 p-2 shadow-lg backdrop-blur-xl tablet:p-4">
       <div className="flex flex-col gap-2 tablet:hidden">
         <UserSelect
           value={selectedUser}
@@ -413,8 +413,8 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
                 {Array.from({ length: 2 }).map((_, s) => (
                   <section key={s} className="flex w-full flex-col gap-3">
                     <div className="flex items-center justify-between pb-2 animate-pulse">
-                      <div className="h-8 w-36 rounded-lg bg-white/10" />
-                      <div className="h-6 w-20 rounded-lg bg-white/8" />
+                      <div className="h-8 w-36 rounded-lg bg-foreground/10" />
+                      <div className="h-6 w-20 rounded-lg bg-foreground/10" />
                     </div>
                     <div className="flex w-full flex-col gap-3">
                       <ActivityLogCard loading />
@@ -424,7 +424,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
                 ))}
               </div>
             ) : logs.length === 0 ? (
-              <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-white/2 text-sm text-neutral-500">
+              <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
                 Sin entradas para este filtro
               </div>
             ) : selectedUser ? (
@@ -446,7 +446,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
                         />
                       </div>
 
-                      <div className="rounded-lg bg-white/5 px-3 py-1 text-xs font-medium text-neutral-400">
+                      <div className="rounded-lg bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
                         {group.logs.length}{" "}
                         {group.logs.length === 1 ? "actividad" : "actividades"}
                       </div>

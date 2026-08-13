@@ -26,7 +26,7 @@ export function SidebarSection({
 
         <div className="mb-2 px-4">
 
-          <span className="text-[11px] font-medium uppercase tracking-widest text-neutral-500">
+          <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
             {title}
           </span>
 
@@ -49,7 +49,7 @@ export function SidebarSection({
       <div className={cn("mb-2 px-3 h-4")}>
 
         {!collapsed && (
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
             {title}
           </span>
         )}

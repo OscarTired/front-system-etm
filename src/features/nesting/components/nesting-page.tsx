@@ -71,9 +71,9 @@ let sessionToastShownThisRuntime = false
  */
 function WorkspaceSpinner() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-neutral-400">
+    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
       <Spinner className="size-8" />
-      <span className="text-xs font-medium tracking-wide text-neutral-500">
+      <span className="text-xs font-medium tracking-wide text-muted-foreground">
         Cargando…
       </span>
     </div>
@@ -540,7 +540,7 @@ export function NestingPage() {
       ) : (
         <div className="flex flex-col gap-2">
           <div
-            className="relative w-full overflow-hidden rounded-md bg-neutral-900 px-3 py-2 text-center text-sm text-white"
+            className="relative w-full overflow-hidden rounded-md bg-popover px-3 py-2 text-center text-sm text-foreground"
             role="progressbar"
             aria-valuenow={Math.round(project.progress * 100)}
             aria-valuemin={0}
@@ -662,7 +662,7 @@ export function NestingPage() {
             >
               {selectedCadRow && (
                 <div className="flex flex-col gap-1">
-                  <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                  <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Editar en lista
                   </div>
                   <PieceListRow
@@ -686,7 +686,7 @@ export function NestingPage() {
   )
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#050505]">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       <input
         ref={projectInputRef}
         type="file"
@@ -701,7 +701,7 @@ export function NestingPage() {
       {/* —— Desktop: sidebar + canvas —— */}
       {!isCompact && (
         <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
-          <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3 p-3 shadow-sm">
+          <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
             {panel}
           </aside>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -739,7 +739,7 @@ export function NestingPage() {
                     sheetKey={activeGroupIndex}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                     Importa una pieza o presiona Nestear
                   </div>
                 )}
@@ -747,8 +747,8 @@ export function NestingPage() {
             </div>
             {selectedPieceIndices.length >= 2 && (
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-0.5 rounded-xl bg-[#101012]/95 p-1.5 shadow-lg backdrop-blur-sm">
-                  <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                <div className="flex items-center gap-0.5 rounded-xl bg-muted/95 p-1.5 shadow-lg backdrop-blur-sm">
+                  <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                     Alinear
                   </span>
                   {(
@@ -765,7 +765,7 @@ export function NestingPage() {
                       key={mode}
                       type="button"
                       onClick={() => transforms.handleAlign(mode, selectedPieceIndices)}
-                      className="rounded-lg p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     >
                       <Icon className="h-4 w-4" />
                     </button>
@@ -792,7 +792,7 @@ export function NestingPage() {
                   }}
                 />
               ) : (
-                <div className="flex h-9 items-center rounded-xl bg-white/4 px-3 text-xs text-neutral-500">
+                <div className="flex h-9 items-center rounded-xl bg-foreground/5 px-3 text-xs text-muted-foreground">
                   Sin planchas
                 </div>
               )}
@@ -800,7 +800,7 @@ export function NestingPage() {
             <button
               type="button"
               aria-label="Abrir panel"
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/6 text-neutral-200"
+              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-foreground"
               onClick={() => setIsMobilePanelOpen(true)}
             >
               <SlidersHorizontal size={16} strokeWidth={2.2} />
@@ -830,11 +830,11 @@ export function NestingPage() {
                   sheetKey={activeGroupIndex}
                 />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-neutral-400">
+                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground">
                   <p>Importa una pieza o presiona Nestear</p>
                   <button
                     type="button"
-                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white"
+                    className="rounded-lg bg-foreground/10 px-3 py-1.5 text-xs text-foreground"
                     onClick={() => setIsMobilePanelOpen(true)}
                   >
                     Abrir panel
@@ -847,7 +847,7 @@ export function NestingPage() {
       )}
 
       <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-        <SheetContent className="flex flex-col gap-3 border-none bg-neutral-950 p-4">
+        <SheetContent className="flex flex-col gap-3 border-none bg-background p-4">
           <SheetHeader className="p-0">
             <SheetTitle>Panel de Control</SheetTitle>
           </SheetHeader>
@@ -866,13 +866,13 @@ export function NestingPage() {
       />
 
       <Dialog open={pendingDelete} onOpenChange={(open) => !open && setPendingDelete(false)}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl bg-neutral-900 p-5 text-white shadow-2xl sm:max-w-md">
+        <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl bg-popover p-5 text-foreground shadow-2xl sm:max-w-md">
           <DialogHeader>
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
               <Trash2 size={20} />
             </div>
-            <DialogTitle className="text-lg font-bold text-white">Eliminar piezas</DialogTitle>
-            <DialogDescription className="pt-2 text-sm leading-relaxed text-neutral-400">
+            <DialogTitle className="text-lg font-bold text-foreground">Eliminar piezas</DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed text-muted-foreground">
               {selectedPieceIndices.length === 1
                 ? "Elige cómo eliminar la pieza seleccionada."
                 : `Elige cómo eliminar las ${selectedPieceIndices.length} piezas seleccionadas.`}

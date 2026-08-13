@@ -83,18 +83,18 @@ export function DiagnosticsDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         size="large"
-        className="flex max-h-[85vh] w-[min(960px,95vw)] max-w-none flex-col gap-0 overflow-hidden border-white/10 bg-[#141416] p-0 text-neutral-200 shadow-2xl sm:max-w-none"
+        className="flex max-h-[85vh] w-[min(960px,95vw)] max-w-none flex-col gap-0 overflow-hidden border-border bg-[#141416] p-0 text-foreground shadow-2xl sm:max-w-none"
       >
-        <DialogHeader className="shrink-0 border-b border-white/8 px-6 py-4 pr-12">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <DialogTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-100 flex items-center gap-2">
+              <DialogTitle className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-cyan-400" />
                 Diagnóstico de piezas y materiales
               </DialogTitle>
-              <p className="mt-1 text-[11px] text-neutral-400">
+              <p className="mt-1 text-[11px] text-muted-foreground">
                 Parámetros más comunes del grupo:{" "}
-                <span className="font-medium text-neutral-200">
+                <span className="font-medium text-foreground">
                   Espesor: {audit ? fmtThick(audit.targetThickness) : "—"} | Material:{" "}
                   {audit?.majorityDin ?? "—"} | Aleación: {audit?.majorityAlloy ?? "—"}
                 </span>
@@ -127,17 +127,17 @@ export function DiagnosticsDialog({
 
           <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" />
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Buscar archivo por nombre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl bg-white/5 pl-9 pr-3 py-1.5 text-xs text-neutral-200 placeholder-neutral-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full rounded-xl bg-foreground/5 pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-neutral-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
               />
             </div>
 
-            <div className="flex items-center gap-1 rounded-xl bg-white/5 p-1">
+            <div className="flex items-center gap-1 rounded-xl bg-foreground/5 p-1">
               {(
                 [
                   ["all", "Todas", rows.length],
@@ -152,12 +152,12 @@ export function DiagnosticsDialog({
                   className={cn(
                     "rounded-lg px-3 py-1 text-[11px] font-medium transition-colors flex items-center gap-1.5",
                     filterMode === mode
-                      ? "bg-white/15 text-white shadow-sm"
-                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                      ? "bg-foreground/15 text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                   )}
                 >
                   <span>{label}</span>
-                  <span className="rounded-full bg-black/40 px-1.5 py-0.2 text-[9px] tabular-nums text-neutral-400">
+                  <span className="rounded-full bg-black/40 px-1.5 py-0.2 text-[9px] tabular-nums text-muted-foreground">
                     {count}
                   </span>
                 </button>
@@ -166,7 +166,7 @@ export function DiagnosticsDialog({
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-hidden bg-neutral-950/40">
+        <div className="min-h-0 flex-1 overflow-hidden bg-background/40">
           {/* min(30rem, 55vh): tope fijo en pantallas grandes (no
               queremos un diálogo gigante), pero se achica solo en
               pantallas chicas (55% del alto visible) para que no se
@@ -180,7 +180,7 @@ export function DiagnosticsDialog({
                 deslice a los costados en vez de perder contenido. */}
             <div className="overflow-x-auto">
               <table className="w-full min-w-188 border-collapse text-left text-xs">
-              <thead className="sticky top-0 z-10 bg-[#161618] text-[10px] uppercase tracking-wider text-neutral-400 shadow-sm">
+              <thead className="sticky top-0 z-10 bg-[#161618] text-[10px] uppercase tracking-wider text-muted-foreground shadow-sm">
                 <tr>
                   <th className="px-4 py-3 font-medium">Nombre del archivo</th>
                   <th className="px-2 py-3 text-center font-medium">Cant.</th>
@@ -190,7 +190,7 @@ export function DiagnosticsDialog({
                   <th className="px-4 py-3 text-right font-medium">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border">
                 {filteredAndOrdered.map((row) => {
                   const r: AuditResult | undefined = resultById.get(row.id)
                   const forgiven = forgivenIds.has(row.id)
@@ -202,12 +202,12 @@ export function DiagnosticsDialog({
                     <tr
                       key={row.id}
                       className={cn(
-                        "transition-colors hover:bg-white/2",
+                        "transition-colors hover:bg-foreground/5",
                         conflict && "bg-amber-500/4 hover:bg-amber-500/[0.07]",
                         forgiven && "bg-emerald-500/3"
                       )}
                     >
-                      <td className="max-w-75 truncate px-4 py-3 font-medium text-neutral-200">
+                      <td className="max-w-75 truncate px-4 py-3 font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           {conflict && (
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
@@ -220,7 +220,7 @@ export function DiagnosticsDialog({
                             </span>
                           )}
                           {!conflict && !forgiven && (
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-500">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-muted-foreground">
                               <ArrowUpDown className="h-3 w-3" />
                             </span>
                           )}
@@ -229,16 +229,16 @@ export function DiagnosticsDialog({
                           </span>
                         </div>
                       </td>
-                      <td className="px-2 py-3 text-center tabular-nums text-neutral-400 font-medium">
+                      <td className="px-2 py-3 text-center tabular-nums text-muted-foreground font-medium">
                         {row.quantity || "1"}
                       </td>
-                      <td className="px-3 py-3 text-center tabular-nums text-neutral-300">
+                      <td className="px-3 py-3 text-center tabular-nums text-muted-foreground">
                         {fmtThick(row.material.thickness)}
                       </td>
                       <td
                         className={cn(
                           "px-3 py-3 text-center",
-                          dinBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-neutral-300"
+                          dinBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
                         )}
                       >
                         {row.material.dinNorm || "N/D"}
@@ -246,7 +246,7 @@ export function DiagnosticsDialog({
                       <td
                         className={cn(
                           "px-3 py-3 text-center",
-                          alloyBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-neutral-300"
+                          alloyBad ? "font-semibold text-amber-400 bg-amber-500/10 rounded-md" : "text-muted-foreground"
                         )}
                       >
                         {row.material.alloy || "N/D"}
@@ -276,7 +276,7 @@ export function DiagnosticsDialog({
                             size="icon-sm"
                             variant="ghost"
                             title="Eliminar pieza del proyecto"
-                            className="h-7 w-7 text-neutral-400 hover:bg-red-500/15 hover:text-red-400 rounded-lg transition-colors"
+                            className="h-7 w-7 text-muted-foreground hover:bg-red-500/15 hover:text-red-400 rounded-lg transition-colors"
                             onClick={() => onRemove(row.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -288,9 +288,9 @@ export function DiagnosticsDialog({
                 })}
                 {filteredAndOrdered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-12 text-center text-neutral-500">
+                    <td colSpan={6} className="px-3 py-12 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <Search className="h-8 w-8 text-neutral-700" />
+                        <Search className="h-8 w-8 text-muted-foreground/70" />
                         <p className="text-xs">No se encontraron piezas con los filtros actuales.</p>
                       </div>
                     </td>
@@ -302,13 +302,13 @@ export function DiagnosticsDialog({
           </ScrollArea>
         </div>
 
-        <div className="shrink-0 border-t border-white/8 bg-[#141416] p-4 flex items-center justify-between">
-          <p className="text-[11px] text-neutral-500">
-            Mostrando <span className="font-medium text-neutral-300">{filteredAndOrdered.length}</span> de {rows.length} piezas
+        <div className="shrink-0 border-t border-border bg-[#141416] p-4 flex items-center justify-between">
+          <p className="text-[11px] text-muted-foreground">
+            Mostrando <span className="font-medium text-muted-foreground">{filteredAndOrdered.length}</span> de {rows.length} piezas
           </p>
           <Button
             type="button"
-            className="h-9 px-6 rounded-xl bg-white/10 text-xs font-semibold uppercase tracking-wider text-neutral-200 hover:bg-white/15 transition-colors"
+            className="h-9 px-6 rounded-xl bg-foreground/10 text-xs font-semibold uppercase tracking-wider text-foreground hover:bg-foreground/15 transition-colors"
             onClick={onClose}
           >
             Cerrar inspección

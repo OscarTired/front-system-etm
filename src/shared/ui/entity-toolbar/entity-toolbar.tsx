@@ -39,8 +39,8 @@ export function EntityToolbarChrome({ children }: { children: ReactNode }) {
     <div
       className="
         max-md:sticky max-md:top-14 max-md:z-10
-        max-md:bg-[#050505]/80 max-md:backdrop-blur-xl
-        max-md:supports-backdrop-filter:bg-[#050505]/55
+        max-md:bg-background/80 max-md:backdrop-blur-xl
+        max-md:supports-backdrop-filter:bg-background/55
       "
     >
       {children}

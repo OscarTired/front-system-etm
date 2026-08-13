@@ -287,7 +287,7 @@ export function ActivityPickerDialog({
         )}
 
         {/* 1. Proyectos */}
-        <div className="flex flex-col gap-2 rounded-xl bg-white/4 p-3">
+        <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3">
 
           <FormField label="Proyecto *" error={errors.projectId}>
 
@@ -332,7 +332,7 @@ export function ActivityPickerDialog({
         {/* 3. Detalle (nota + foto) */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-neutral-400">Detalle</span>
+            <span className="text-xs font-medium text-muted-foreground">Detalle</span>
 
             <button
               type="button"
@@ -340,8 +340,8 @@ export function ActivityPickerDialog({
               className={cn(
                 "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
                 showDetail || note.trim() || photo
-                  ? "bg-white/12 text-white"
-                  : "bg-white/4 text-neutral-400 hover:bg-white/8 hover:text-white"
+                  ? "bg-white/12 text-foreground"
+                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               )}
             >
               <MessageSquarePlus size={15} />
@@ -362,7 +362,7 @@ export function ActivityPickerDialog({
             )}
           >
 
-            <div className="flex flex-col gap-2 rounded-xl bg-white/4 p-2.5">
+            <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-2.5">
 
               <div className="flex min-h-0 flex-1 gap-3">
 
@@ -372,13 +372,13 @@ export function ActivityPickerDialog({
                     <img
                       src={photoPreviewUrl}
                       alt="Foto adjunta"
-                      className="size-14 rounded-xl object-cover ring-1 ring-white/10"
+                      className="size-14 rounded-xl object-cover ring-1 ring-border"
                     />
                     <button
                       type="button"
                       onClick={() => setPhoto(null)}
                       aria-label="Quitar foto"
-                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-neutral-900 text-neutral-200 ring-1 ring-white/15 hover:bg-neutral-800"
+                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
                     >
                       <X size={11} />
                     </button>
@@ -395,7 +395,7 @@ export function ActivityPickerDialog({
                       ? "Ej: se me pasó registrarlo antes..."
                       : "Detalle opcional..."
                   }
-                  className="min-h-16 min-w-0 flex-1 resize-none bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"
+                  className="min-h-16 min-w-0 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
                 />
 
               </div>
@@ -405,7 +405,7 @@ export function ActivityPickerDialog({
                 <button
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-white/10 hover:text-white"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
                 >
                   <Camera size={16} strokeWidth={2.4} />
                 </button>
@@ -429,7 +429,7 @@ export function ActivityPickerDialog({
         {/* 4. Iconos / Tipos de Actividad */}
         {maxSelection > 1 && (
           <div className="mb-1 flex items-center justify-between px-0.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Tipos de actividad
             </span>
             <span
@@ -437,7 +437,7 @@ export function ActivityPickerDialog({
                 "text-[11px] font-medium",
                 selectedTypeIds.length >= maxSelection
                   ? "text-amber-400"
-                  : "text-neutral-500",
+                  : "text-muted-foreground",
               )}
             >
               {selectedTypeIds.length}/{maxSelection}
@@ -473,8 +473,8 @@ export function ActivityPickerDialog({
                   isSelected
                     ? "bg-white/12"
                     : isDisabled
-                      ? "cursor-not-allowed bg-white/4 opacity-40"
-                      : "bg-white/4 hover:bg-white/8",
+                      ? "cursor-not-allowed bg-foreground/5 opacity-40"
+                      : "bg-foreground/5 hover:bg-foreground/10",
                 )}
               >
 
@@ -496,7 +496,7 @@ export function ActivityPickerDialog({
 
                 </div>
 
-                <span className="text-[11px] font-medium leading-tight text-neutral-300">
+                <span className="text-[11px] font-medium leading-tight text-muted-foreground">
                   {type.label}
                 </span>
 
@@ -519,7 +519,7 @@ export function ActivityPickerDialog({
                     "relative flex w-full flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                     selectedOtherTypes.length > 0 || otherTypesOpen
                       ? "bg-white/12"
-                      : "bg-white/4 hover:bg-white/8",
+                      : "bg-foreground/5 hover:bg-foreground/10",
                   )}
                 >
 
@@ -550,7 +550,7 @@ export function ActivityPickerDialog({
                     )}
                   </div>
 
-                  <span className="truncate text-[11px] font-medium leading-tight text-neutral-300">
+                  <span className="truncate text-[11px] font-medium leading-tight text-muted-foreground">
                     {selectedOtherType
                       ? selectedOtherType.label
                       : selectedOtherTypes.length > 1
@@ -590,8 +590,8 @@ export function ActivityPickerDialog({
                           isSelected
                             ? "bg-white/12"
                             : isDisabled
-                              ? "cursor-not-allowed bg-white/4 opacity-40"
-                              : "bg-white/4 hover:bg-white/8",
+                              ? "cursor-not-allowed bg-foreground/5 opacity-40"
+                              : "bg-foreground/5 hover:bg-foreground/10",
                         )}
                       >
                         {isSelected && (
@@ -608,7 +608,7 @@ export function ActivityPickerDialog({
                         >
                           <Icon size={15} />
                         </div>
-                        <span className="text-[10px] font-medium leading-tight text-neutral-300">
+                        <span className="text-[10px] font-medium leading-tight text-muted-foreground">
                           {type.label}
                         </span>
                       </button>

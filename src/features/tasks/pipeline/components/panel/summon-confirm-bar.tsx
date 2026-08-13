@@ -36,7 +36,7 @@ export function SummonConfirmBarContent({
 
       <div className="min-w-0 flex-1">
 
-        <p className="truncate text-sm font-semibold text-white">
+        <p className="truncate text-sm font-semibold text-foreground">
           {count} {count === 1 ? "tarea" : "tareas"} para {operatorName}
         </p>
 
@@ -48,8 +48,8 @@ export function SummonConfirmBarContent({
             className={cn(
               "rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
               mode === "ASSIGN"
-                ? "bg-white/15 text-white"
-                : "text-neutral-500 hover:text-neutral-300",
+                ? "bg-foreground/15 text-foreground"
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
           >
             Asignar directo
@@ -61,8 +61,8 @@ export function SummonConfirmBarContent({
             className={cn(
               "rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
               mode === "INVITE"
-                ? "bg-white/15 text-white"
-                : "text-neutral-500 hover:text-neutral-300",
+                ? "bg-foreground/15 text-foreground"
+                : "text-muted-foreground hover:text-muted-foreground",
             )}
           >
             Invitar
@@ -76,7 +76,7 @@ export function SummonConfirmBarContent({
         type="button"
         onClick={onCancel}
         aria-label="Cancelar"
-        className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/5 text-neutral-400 transition-colors hover:bg-white/10"
+        className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/5 text-muted-foreground transition-colors hover:bg-foreground/10"
       >
         <X size={16} />
       </button>
@@ -117,7 +117,7 @@ export function SummonConfirmBar(props: Props) {
     // FUERA del Portal de Radix (era hermano de <Sheet>, no hijo de
     // SheetContent), terminaba pintándose en otra capa de stacking y
     // quedaba tapado por el overlay con blur del Sheet.
-    <div className="animate-slide-up-in absolute inset-x-0 bottom-0 z-10 border-t border-white/8 bg-[#101012] px-4 py-3">
+    <div className="animate-slide-up-in absolute inset-x-0 bottom-0 z-10 border-t border-border bg-muted px-4 py-3">
 
       <SummonConfirmBarContent {...props} />
 

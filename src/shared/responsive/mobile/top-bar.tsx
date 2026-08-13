@@ -20,7 +20,7 @@ export function TopBar() {
   const [profileOpen, setProfileOpen] = useState(false)
 
   const avatar = (
-    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/3 text-xs font-semibold text-white">
+    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-foreground/5 text-xs font-semibold text-foreground">
       {user?.avatarUrl ? (
         <img
           src={user.avatarUrl}
@@ -50,7 +50,7 @@ export function TopBar() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-16 bg-[#050505]/65"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-16 bg-background/65"
           style={{
             maskImage: "linear-gradient(to bottom, black 30%, transparent)",
             WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent)",
@@ -61,7 +61,7 @@ export function TopBar() {
           type="button"
           onClick={toggleDrawer}
           aria-label="Abrir navegación"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 text-neutral-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
         >
           <Menu size={18} strokeWidth={2.2} />
         </button>
@@ -70,9 +70,9 @@ export function TopBar() {
         <div className="min-w-0 flex-1">
           <div
             title={title}
-            className="inline-flex max-w-full items-center rounded-full bg-neutral-900/80 px-2.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl"
+            className="inline-flex max-w-full items-center rounded-full bg-chrome px-2.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl"
           >
-            <span className="truncate text-sm font-semibold text-neutral-100">
+            <span className="truncate text-sm font-semibold text-foreground">
               {title}
             </span>
           </div>
@@ -91,13 +91,13 @@ export function TopBar() {
           onClick={() => setProfileOpen(true)}
           aria-label="Perfil"
           disabled={!user}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-900/80 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-neutral-900/90 active:bg-neutral-900 disabled:opacity-50"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chrome shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover disabled:opacity-50"
         >
           <div className="relative size-7 shrink-0">
             {user ? (
               avatar
             ) : (
-              <div className="size-7 animate-pulse rounded-full bg-white/5" />
+              <div className="size-7 animate-pulse rounded-full bg-foreground/5" />
             )}
           </div>
         </button>

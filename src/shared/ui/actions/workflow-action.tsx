@@ -78,7 +78,7 @@ export function WorkflowAction({
 
           icon:Play,
 
-          iconClass:"text-neutral-300",
+          iconClass:"text-muted-foreground",
 
         }
 
@@ -173,9 +173,9 @@ export function WorkflowAction({
 
         isDisabled
 
-          ?"cursor-not-allowed bg-white/4 text-white/35 opacity-50"
+          ?"cursor-not-allowed bg-foreground/5 text-foreground/35 opacity-50"
 
-          :"bg-white/4 text-neutral-200 hover:bg-white/8 active:bg-white/12",
+          :"bg-foreground/5 text-foreground hover:bg-foreground/10 active:bg-white/12",
 
         loading&&"opacity-70",
 

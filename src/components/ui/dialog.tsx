@@ -176,7 +176,7 @@ export function DialogContent({
           "overflow-hidden",
           "overscroll-contain",
           "rounded-2xl",
-          "bg-[#171717]",
+          "bg-popover",
           "p-6",
           "shadow-2xl",
           "outline-none",
@@ -220,11 +220,11 @@ export function DialogContent({
               "items-center",
               "justify-center",
               "rounded-lg",
-              "text-neutral-400",
+              "text-muted-foreground",
               "transition-colors",
-              "hover:bg-white/5",
-              "hover:text-white",
-              isFullscreenMobile && "h-9 w-9 bg-white/5",
+              "hover:bg-foreground/5",
+              "hover:text-foreground",
+              isFullscreenMobile && "h-9 w-9 bg-foreground/5",
             )}
           >
 
@@ -304,7 +304,7 @@ export function DialogTitle({
       className={cn(
         "text-lg",
         "font-semibold",
-        "text-white",
+        "text-foreground",
         className
       )}
       {...props}
@@ -326,7 +326,7 @@ export function DialogDescription({
     <DialogPrimitive.Description
       className={cn(
         "text-sm",
-        "text-neutral-400",
+        "text-muted-foreground",
         className
       )}
       {...props}

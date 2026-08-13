@@ -25,7 +25,7 @@ function SkeletonProcessRow({
         }}
       >
 
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
 
           <span
             className="h-5 w-5 rounded"
@@ -45,7 +45,7 @@ function SkeletonProcessRow({
           <div className="min-w-0 text-right">
 
             {/* TOTAL */}
-            <span className="ml-auto block h-3 w-8.5 rounded bg-white/8" />
+            <span className="ml-auto block h-3 w-8.5 rounded bg-foreground/10" />
 
             {/* 0 */}
             <span
@@ -55,12 +55,12 @@ function SkeletonProcessRow({
 
           </div>
 
-          <div className="h-8 w-px shrink-0 bg-white/10" />
+          <div className="h-8 w-px shrink-0 bg-foreground/10" />
 
           <div className="min-w-0 text-right">
 
             {/* URGENTES */}
-            <span className="ml-auto block h-3 w-19.5 rounded bg-white/8" />
+            <span className="ml-auto block h-3 w-19.5 rounded bg-foreground/10" />
 
             {/* 0 */}
             <span className="mt-1 ml-auto block h-7 w-4 rounded bg-white/12" />
@@ -69,7 +69,7 @@ function SkeletonProcessRow({
 
         </div>
 
-        <span className="h-4.5 w-4.5 shrink-0 rounded-sm bg-white/6" />
+        <span className="h-4.5 w-4.5 shrink-0 rounded-sm bg-foreground/5" />
 
       </div>
 

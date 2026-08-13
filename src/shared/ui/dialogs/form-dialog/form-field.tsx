@@ -14,7 +14,7 @@ export function FormField({
 
     <div className="min-w-0 space-y-1.5">
 
-      <p className="text-sm font-medium text-neutral-300">
+      <p className="text-sm font-medium text-muted-foreground">
 
         {label}
 

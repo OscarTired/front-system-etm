@@ -36,7 +36,7 @@ export function UserMobileCard({
 
   return (
 
-    <article className="overflow-hidden rounded-xl bg-white/2">
+    <article className="overflow-hidden rounded-xl bg-foreground/5">
 
       <button
         type="button"
@@ -46,11 +46,11 @@ export function UserMobileCard({
 
         <header className="flex items-center justify-between gap-2.5 px-3 py-3">
 
-          <span className="text-xs font-semibold tracking-[0.12em] text-neutral-500">
+          <span className="text-xs font-semibold tracking-[0.12em] text-muted-foreground">
             USUARIO {String(index + 1).padStart(3, "0")}
           </span>
 
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
 
             <span
               aria-hidden
@@ -85,7 +85,7 @@ export function UserMobileCard({
           <ChevronDown
             size={16}
             className={cn(
-              "shrink-0 text-neutral-500 transition-transform duration-200",
+              "shrink-0 text-muted-foreground transition-transform duration-200",
               expanded && "rotate-180",
             )}
           />
@@ -102,11 +102,11 @@ export function UserMobileCard({
 
             <div className="min-w-0">
 
-              <dt className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-neutral-500">
+              <dt className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground">
                 USERNAME
               </dt>
 
-              <dd className="truncate text-neutral-200">
+              <dd className="truncate text-foreground">
                 {user.username ?? "Sin username"}
               </dd>
 
@@ -114,11 +114,11 @@ export function UserMobileCard({
 
             <div className="min-w-0">
 
-              <dt className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-neutral-500">
+              <dt className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground">
                 EMAIL
               </dt>
 
-              <dd className="truncate text-neutral-300">
+              <dd className="truncate text-muted-foreground">
                 {user.email}
               </dd>
 

@@ -79,9 +79,9 @@ export function CommentTimeline({
   }
   return(
     <>
-      <div className="flex h-full min-h-0 flex-col rounded-xl bg-white/2">
+      <div className="flex h-full min-h-0 flex-col rounded-xl bg-foreground/5">
         <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-300">
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-muted-foreground">
             Últimos mensajes
           </span>
           <button
@@ -91,7 +91,7 @@ export function CommentTimeline({
                 true,
               )
             }
-            className="text-sm font-medium text-neutral-300 transition-colors hover:text-cyan-300"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-cyan-300"
           >
             Ver más →
           </button>
@@ -100,7 +100,7 @@ export function CommentTimeline({
         <ScrollArea className="max-h-32 px-3 pb-3">
           {loading?(
             <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-muted-foreground">
                 Cargando...
               </p>
             </div>

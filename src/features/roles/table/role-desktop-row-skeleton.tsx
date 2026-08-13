@@ -16,8 +16,8 @@ function SkeletonRoleDesktopRow({ opacity }: { opacity: number }) {
       style={{ opacity }}
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="size-2.5 shrink-0 rounded-full bg-white/10" />
-        <span className="h-4 w-28 rounded bg-white/10" />
+        <span className="size-2.5 shrink-0 rounded-full bg-foreground/10" />
+        <span className="h-4 w-28 rounded bg-foreground/10" />
       </div>
     </div>
   )

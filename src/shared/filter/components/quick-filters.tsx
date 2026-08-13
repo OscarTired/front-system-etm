@@ -68,7 +68,7 @@ export function QuickFilters({
                 filter.key
               )
             }
-            className="h-8 rounded-full bg-white/5 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/10"
+            className="h-8 rounded-full bg-foreground/5 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-foreground/10"
           >
 
             {filter.label}

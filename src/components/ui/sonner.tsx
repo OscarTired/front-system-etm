@@ -32,19 +32,19 @@ export function Sonner() {
         loading: (
           <Spinner
             size={16}
-            className="text-white"
+            className="text-foreground"
           />
         ),
       }}
       toastOptions={{
         duration: 4000,
         classNames: {
-          toast: "!bg-[#18181b] !text-white !border !border-0 !border-white/[0.08] !rounded-xl !p-4 !gap-3 shadow-lg",
+          toast: "!bg-[#18181b] !text-foreground !border !border-0 !border-white/[0.08] !rounded-xl !p-4 !gap-3 shadow-lg",
           icon: "!m-0 !shrink-0",
           content: "!gap-1",
-          title: "!text-sm !font-medium !text-neutral-100",
-          description: "!text-sm !text-neutral-400",
-          closeButton: "!size-5 !rounded-full !border-0 !bg-white/5 !text-neutral-400 hover:!bg-white/10 hover:!text-white",
+          title: "!text-sm !font-medium !text-foreground",
+          description: "!text-sm !text-muted-foreground",
+          closeButton: "!size-5 !rounded-full !border-0 !bg-foreground/5 !text-muted-foreground hover:!bg-foreground/10 hover:!text-foreground",
         },
       }}
     />

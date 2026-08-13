@@ -84,7 +84,7 @@ export function EntityTableCardRow<T>({
 
   return (
 
-    <div className="rounded-xl border-b border-white/5 px-3 py-3 transition-colors hover:bg-white/2">
+    <div className="rounded-xl border-b border-border px-3 py-3 transition-colors hover:bg-foreground/5">
 
       {structural.length > 0 && (
 
@@ -102,7 +102,7 @@ export function EntityTableCardRow<T>({
 
       )}
 
-      <div className="flex flex-col gap-2 rounded-lg bg-white/2 p-2">
+      <div className="flex flex-col gap-2 rounded-lg bg-foreground/5 p-2">
 
         {groups.map((group, groupIndex) => (
 
@@ -123,11 +123,11 @@ export function EntityTableCardRow<T>({
 
               <div key={column.id} className="min-w-0">
 
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {column.title}
                 </div>
 
-                <div className="mt-0.5 text-xs font-medium text-neutral-200">
+                <div className="mt-0.5 text-xs font-medium text-foreground">
                   {column.render(item, context)}
                 </div>
 

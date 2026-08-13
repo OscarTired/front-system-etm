@@ -48,8 +48,8 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                   className={cn(
                     "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
                     state.configOpen
-                      ? "bg-white/15 text-white"
-                      : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-foreground/15 text-foreground"
+                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                   )}
                 >
                   <Settings2 size={16} />
@@ -59,7 +59,7 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
           </div>
 
           {state.canChooseAreas && state.configOpen && (
-            <div className="mt-3 flex flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
+            <div className="mt-3 flex flex-wrap gap-2 rounded-xl bg-foreground/5 p-2.5">
               {state.allAreas.map(code => {
                 const definition = PROCESS_DEFINITIONS[code]
                 const Icon = ENTITY_ICONS[definition.icon]
@@ -79,8 +79,8 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
                     className={cn(
                       "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
                       selected
-                        ? "bg-white/15 text-white shadow-sm"
-                        : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200",
+                        ? "bg-foreground/15 text-foreground shadow-sm"
+                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                     )}
                   >
                     <Icon size={14} style={{ color: definition.color }} />
@@ -94,9 +94,9 @@ export function TaskAreaPanel({ open, onOpenChange }: Props) {
 
         <ScrollArea className={cn("min-h-0 min-w-0 w-full flex-1 p-4", state.summonTarget && "pb-24")}>
           {state.loading ? (
-            <div className="flex h-24 items-center justify-center text-sm text-neutral-500">Cargando…</div>
+            <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">Cargando…</div>
           ) : state.areas.length === 0 ? (
-            <div className="flex h-24 items-center justify-center text-center text-sm text-neutral-500">
+            <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
               Selecciona al menos un área con el botón de arriba para ver sus tareas acá.
             </div>
           ) : (

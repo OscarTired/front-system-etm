@@ -226,7 +226,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         <div
           className={cn(
             "flex size-9 items-center justify-center rounded-full",
-            "bg-[#141414]/95 text-neutral-200 shadow-lg backdrop-blur-md",
+            "bg-muted/95 text-foreground shadow-lg backdrop-blur-md",
           )}
           style={{
             transform: refreshing
@@ -238,7 +238,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
               : "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease",
           }}
         >
-          <Spinner size={16} className="text-neutral-200" />
+          <Spinner size={16} className="text-foreground" />
         </div>
       </div>
 

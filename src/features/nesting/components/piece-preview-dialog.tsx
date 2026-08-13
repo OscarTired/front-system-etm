@@ -46,9 +46,9 @@ export function PiecePreviewDialog({
         size="large"
         className="flex h-[75vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0 [&>button]:hidden"
       >
-        <DialogHeader className="flex flex-row items-center justify-between shrink-0 px-5 py-3 border-b border-white/10 gap-4">
+        <DialogHeader className="flex flex-row items-center justify-between shrink-0 px-5 py-3 border-b border-border gap-4">
           <div className="min-w-0 flex-1">
-            <DialogTitle className="text-sm font-semibold text-white truncate">
+            <DialogTitle className="text-sm font-semibold text-foreground truncate">
               {row?.fileName ?? ""}
             </DialogTitle>
           </div>
@@ -59,7 +59,7 @@ export function PiecePreviewDialog({
               <Button
                 size="icon-sm"
                 variant="ghost"
-                className="h-7 w-7 text-neutral-400 hover:text-white hover:bg-white/10"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                 onClick={() => onRotate?.(row.id, 90)}
                 title="Rotar 90°"
               >
@@ -68,7 +68,7 @@ export function PiecePreviewDialog({
               <Button
                 size="icon-sm"
                 variant="ghost"
-                className="h-7 w-7 text-neutral-400 hover:text-white hover:bg-white/10"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                 onClick={() => onMirrorX?.(row.id)}
                 title="Espejo horizontal"
               >
@@ -77,19 +77,19 @@ export function PiecePreviewDialog({
               <Button
                 size="icon-sm"
                 variant="ghost"
-                className="h-7 w-7 text-neutral-400 hover:text-white hover:bg-white/10"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                 onClick={() => onMirrorY?.(row.id)}
                 title="Espejo vertical"
               >
                 <FlipVertical className="h-3.5 w-3.5" />
               </Button>
 
-              <div className="h-4 w-px bg-white/10 mx-0.5" />
+              <div className="h-4 w-px bg-foreground/10 mx-0.5" />
 
               <Button
                 size="icon-sm"
                 variant="ghost"
-                className="h-7 w-7 text-neutral-400 hover:text-white hover:bg-white/10"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                 onClick={onClose}
                 title="Cerrar"
               >

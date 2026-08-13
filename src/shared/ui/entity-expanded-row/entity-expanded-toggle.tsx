@@ -63,7 +63,7 @@ export function EntityExpandedToggle<T extends string>({
       {leading}
       <div
         className={cn(
-          "inline-flex min-w-0 items-center gap-1 rounded-lg bg-white/5 p-1 select-none",
+          "inline-flex min-w-0 items-center gap-1 rounded-lg bg-foreground/5 p-1 select-none",
           fullWidth && !leading && !trailing && "flex w-full",
           fullWidth && (leading || trailing) && "min-w-0 flex-1",
         )}
@@ -84,8 +84,8 @@ export function EntityExpandedToggle<T extends string>({
                 "flex min-w-0 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold tracking-wide transition-colors",
                 fullWidth && "flex-1",
                 isActive
-                  ? "bg-white/10 text-neutral-100 shadow-sm"
-                  : "text-neutral-500 hover:text-neutral-300",
+                  ? "bg-foreground/10 text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-muted-foreground",
               )}
             >
               <span className="flex shrink-0 items-center justify-center">
@@ -108,8 +108,8 @@ export function EntityExpandedToggle<T extends string>({
                     className={cn(
                       "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums leading-none",
                       isActive
-                        ? "bg-white/15 text-neutral-200"
-                        : "bg-white/5 text-neutral-500",
+                        ? "bg-foreground/15 text-foreground"
+                        : "bg-foreground/5 text-muted-foreground",
                     )}
                   >
                     {option.count}

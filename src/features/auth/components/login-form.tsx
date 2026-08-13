@@ -51,8 +51,8 @@ export function LoginForm() {
   }
 
   const inputClass =
-    `h-11 ${SHORT}:h-10 w-full rounded-xl bg-[#111113] px-4 text-base text-white outline-none ` +
-    "placeholder:text-neutral-600 transition-colors duration-200 " +
+    `h-11 ${SHORT}:h-10 w-full rounded-xl bg-[#111113] px-4 text-base text-foreground outline-none ` +
+    "placeholder:text-muted-foreground/80 transition-colors duration-200 " +
     "focus:bg-[#1c1c20] " +
     "disabled:cursor-not-allowed disabled:opacity-60"
 
@@ -61,7 +61,7 @@ export function LoginForm() {
       <div>
         <label
           htmlFor="login_email_prefix"
-          className={`mb-1.5 block text-sm font-medium text-neutral-300 ${SHORT}:mb-1 ${SHORT}:text-xs`}
+          className={`mb-1.5 block text-sm font-medium text-muted-foreground ${SHORT}:mb-1 ${SHORT}:text-xs`}
         >
           Correo corporativo
         </label>
@@ -82,7 +82,7 @@ export function LoginForm() {
             className={`${inputClass} pr-32`}
           />
 
-          <span className="pointer-events-none absolute right-4 text-sm font-medium text-neutral-500 select-none">
+          <span className="pointer-events-none absolute right-4 text-sm font-medium text-muted-foreground select-none">
             {CORPORATE_DOMAIN}
           </span>
         </div>
@@ -91,7 +91,7 @@ export function LoginForm() {
       <div>
         <label
           htmlFor="login_password"
-          className={`mb-1.5 block text-sm font-medium text-neutral-300 ${SHORT}:mb-1 ${SHORT}:text-xs`}
+          className={`mb-1.5 block text-sm font-medium text-muted-foreground ${SHORT}:mb-1 ${SHORT}:text-xs`}
         >
           Contraseña
         </label>
@@ -114,7 +114,7 @@ export function LoginForm() {
             onMouseDown={e => e.preventDefault()}
             tabIndex={-1}
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-400 outline-none transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/10 hover:text-foreground focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -130,7 +130,7 @@ export function LoginForm() {
         disabled={loading}
         className={`flex h-11 ${SHORT}:h-10 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors ${
           success
-            ? "bg-emerald-500 text-white"
+            ? "bg-emerald-500 text-foreground"
             : "bg-white text-black hover:bg-neutral-200 disabled:cursor-not-allowed disabled:bg-neutral-300"
         }`}
       >

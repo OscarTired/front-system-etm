@@ -71,7 +71,7 @@ export function AvatarPicker({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-white/3 text-lg font-semibold text-white">
+              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-white/10 to-foreground/5 text-lg font-semibold text-foreground">
                 {name?.[0]?.toUpperCase() ?? "?"}
               </div>
             )}
@@ -86,10 +86,10 @@ export function AvatarPicker({
               {uploading ? (
                 <Spinner
                   size={18}
-                  className="text-white"
+                  className="text-foreground"
                 />
               ) : (
-                <Camera size={16} className="text-white" />
+                <Camera size={16} className="text-foreground" />
               )}
             </div>
           </button>
@@ -98,7 +98,7 @@ export function AvatarPicker({
         {/* Contenido del Popover con tus opciones */}
         <PopoverContent
           floatingClassName="w-48"
-          className="p-1.5 bg-neutral-900 border-white/10 text-neutral-200 shadow-xl rounded-xl"
+          className="p-1.5 bg-popover border-border text-foreground shadow-xl rounded-xl"
         >
           <div className="flex flex-col gap-1">
             
@@ -108,9 +108,9 @@ export function AvatarPicker({
                 setIsOpen(false)
                 inputRef.current?.click()
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
-              <Upload size={14} className="text-neutral-400" />
+              <Upload size={14} className="text-muted-foreground" />
               Cambiar foto
             </button>
 
@@ -142,7 +142,7 @@ export function AvatarPicker({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="text-[11px] font-medium text-neutral-400 hover:text-white transition"
+          className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition"
         >
           Cambiar foto
         </button>

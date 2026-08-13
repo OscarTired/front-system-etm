@@ -294,7 +294,7 @@ export function UsersPageContent() {
                   {loadingRoles ? (
                     <RoleMobileSkeleton />
                   ) : filteredRoles.length === 0 ? (
-                    <div className="rounded-2xl bg-[#101012] px-4 py-8 text-center text-sm text-neutral-500">
+                    <div className="rounded-2xl bg-muted px-4 py-8 text-center text-sm text-muted-foreground">
                       {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
                     </div>
                   ) : (
@@ -322,12 +322,12 @@ export function UsersPageContent() {
                   <button
                     type="button"
                     onClick={handleBackToRoles}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                   >
                     <ArrowLeft size={16} />
                   </button>
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Usuarios
                     </p>
                     <div className="mt-1 flex items-center gap-2">
@@ -335,7 +335,7 @@ export function UsersPageContent() {
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: selectedRole.color || "var(--muted-foreground)" }}
                       />
-                      <span className="truncate text-sm font-medium text-white">
+                      <span className="truncate text-sm font-medium text-foreground">
                         {selectedRole.name}
                       </span>
                     </div>
@@ -344,7 +344,7 @@ export function UsersPageContent() {
                     <button
                       type="button"
                       onClick={handleStartCreate}
-                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-white/8 text-white transition-colors hover:bg-white/14"
+                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
                     >
                       <Plus size={16} />
                     </button>
@@ -357,7 +357,7 @@ export function UsersPageContent() {
                   {loading ? (
                     <UserMobileSkeleton />
                   ) : filteredUsersInRole.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                       {search
                         ? "Ningún usuario coincide con la búsqueda."
                         : "Este rol todavía no tiene usuarios."}
@@ -383,11 +383,11 @@ export function UsersPageContent() {
 
         {!isMobile && (
           <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-            <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl bg-white/3">
+            <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5">
               {!selectedRole ? (
                 <>
                   <div className="shrink-0 px-4 py-3">
-                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                    <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Roles
                     </p>
                   </div>
@@ -397,7 +397,7 @@ export function UsersPageContent() {
                       {loadingRoles ? (
                         <RoleDesktopRowSkeleton />
                       ) : filteredRoles.length === 0 ? (
-                        <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                           {search ? "Ningún rol coincide con la búsqueda." : "No hay roles todavía."}
                         </p>
                       ) : (
@@ -419,12 +419,12 @@ export function UsersPageContent() {
                     <button
                       type="button"
                       onClick={handleBackToRoles}
-                      className="flex size-8 shrink-0 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-white/8 hover:text-white"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                     >
                       <ArrowLeft size={16} />
                     </button>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                      <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                         Usuarios
                       </p>
                       <div className="mt-0.5 flex items-center gap-2">
@@ -432,7 +432,7 @@ export function UsersPageContent() {
                           className="size-2 shrink-0 rounded-full"
                           style={{ backgroundColor: selectedRole.color || "var(--muted-foreground)" }}
                         />
-                        <span className="truncate text-xs font-medium text-neutral-300">
+                        <span className="truncate text-xs font-medium text-muted-foreground">
                           {selectedRole.name}
                         </span>
                       </div>
@@ -441,7 +441,7 @@ export function UsersPageContent() {
                       <button
                         type="button"
                         onClick={handleStartCreate}
-                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/8 text-white transition-colors hover:bg-white/14"
+                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
                       >
                         <Plus size={16} />
                       </button>
@@ -453,7 +453,7 @@ export function UsersPageContent() {
                       {loading ? (
                         <UserDesktopRowSkeleton />
                       ) : filteredUsersInRole.length === 0 ? (
-                        <p className="px-3 py-6 text-center text-sm text-neutral-500">
+                        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                           {search
                             ? "Ningún usuario coincide con la búsqueda."
                             : "Este rol todavía no tiene usuarios."}
@@ -474,14 +474,14 @@ export function UsersPageContent() {
               )}
             </aside>
 
-            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white/3">
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-foreground/5">
               {!showRightPanel ? (
                 <div className="flex h-full w-full items-center justify-center bg-transparent">
                   <div className="text-center">
-                    <p className="text-base font-medium text-neutral-300">
+                    <p className="text-base font-medium text-muted-foreground">
                       {selectedRole ? "Ningún usuario seleccionado" : "Ningún rol seleccionado"}
                     </p>
-                    <p className="mt-2 text-sm text-neutral-500">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       {selectedRole
                         ? "Selecciona un usuario desde el panel izquierdo para ver o editar sus datos."
                         : "Selecciona un rol desde el panel izquierdo para ver sus usuarios."}
@@ -493,7 +493,7 @@ export function UsersPageContent() {
                   <header className="flex shrink-0 items-start justify-between gap-4 px-5 py-4">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {isCreating ? "Nuevo usuario" : "Usuario"}
                         </p>
                         <div className="mt-1 flex items-center gap-2.5">
@@ -502,7 +502,7 @@ export function UsersPageContent() {
                               className="size-2.5 shrink-0 rounded-full"
                               style={{ backgroundColor: formData.color || "var(--muted-foreground)" }}
                             />
-                            <span className="truncate text-sm font-medium text-white">
+                            <span className="truncate text-sm font-medium text-foreground">
                               {isCreating
                                 ? "Asigná credenciales y permisos"
                                 : selectedUser?.name || "Detalle del usuario"}

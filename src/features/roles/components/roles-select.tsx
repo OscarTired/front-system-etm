@@ -190,7 +190,7 @@ export function RoleSelect({
 
             <Search
               size={14}
-              className="text-white/35"
+              className="text-foreground/35"
             />
 
             <Input

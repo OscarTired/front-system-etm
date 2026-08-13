@@ -69,7 +69,7 @@ function MiniLog({ log }: { log: ActivityLog }) {
   const shift = log.shift ?? getCurrentShift(new Date(log.loggedAt))
 
   return (
-    <div className="flex items-start gap-3 rounded-xl bg-white/3 px-3 py-2.5">
+    <div className="flex items-start gap-3 rounded-xl bg-foreground/5 px-3 py-2.5">
       <div
         className="flex size-8 shrink-0 items-center justify-center rounded-full"
         style={{
@@ -81,10 +81,10 @@ function MiniLog({ log }: { log: ActivityLog }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-1">
-          <span className="text-sm text-neutral-200">
+          <span className="text-sm text-foreground">
             {log.activityType.label}
           </span>
-          <span className="text-[11px] text-neutral-500 tabular-nums">
+          <span className="text-[11px] text-muted-foreground tabular-nums">
             {SHIFT_HOURS_LABEL[shift]} ·{" "}
             {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
               hour: "2-digit",
@@ -110,19 +110,19 @@ export function TeamSupervisionUserRow({
 }: Props) {
   if (loading || !row) {
     return (
-      <div className="overflow-hidden rounded-2xl bg-white/3 animate-pulse">
+      <div className="overflow-hidden rounded-2xl bg-foreground/5 animate-pulse">
         <div className="flex w-full items-center gap-3 px-3.5 py-3">
-          <div className="size-9 shrink-0 rounded-full bg-white/10" />
+          <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="h-3.5 w-28 rounded bg-white/12" />
-            <div className="h-3 w-40 rounded bg-white/8" />
+            <div className="h-3 w-40 rounded bg-foreground/10" />
           </div>
           <div className="hidden items-center gap-1.5 sm:flex">
             {Array.from({ length: 5 }).map((_, i) => (
               <span key={i} className="size-1.5 rounded-full bg-white/12" />
             ))}
           </div>
-          <div className="size-4 shrink-0 rounded bg-white/10" />
+          <div className="size-4 shrink-0 rounded bg-foreground/10" />
         </div>
       </div>
     )
@@ -135,21 +135,21 @@ export function TeamSupervisionUserRow({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl bg-white/3 transition-colors",
-        expanded && "bg-white/4.5",
+        "overflow-hidden rounded-2xl bg-foreground/5 transition-colors",
+        expanded && "bg-foreground/5.5",
       )}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-white/3"
+        className="flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-foreground/5"
       >
         <UserAvatar name={user.name} color={user.color} icon={user.icon} />
 
         {/* Nombre + meta */}
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-semibold text-neutral-100">
+            <span className="truncate text-sm font-semibold text-foreground">
               {user.name}
             </span>
             <span
@@ -162,7 +162,7 @@ export function TeamSupervisionUserRow({
             </span>
           </div>
 
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-neutral-500">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
             {total > 0 ? (
               <span className="tabular-nums">
                 {total} {total === 1 ? "entrada" : "entradas"}
@@ -173,7 +173,7 @@ export function TeamSupervisionUserRow({
               <span>Sin actividad</span>
             )}
             {lastLoggedAt ? (
-              <span className="tabular-nums text-neutral-600">
+              <span className="tabular-nums text-muted-foreground/80">
                 · Última{" "}
                 {new Date(lastLoggedAt).toLocaleTimeString("es-PE", {
                   hour: "2-digit",
@@ -204,8 +204,8 @@ export function TeamSupervisionUserRow({
         <ChevronDown
           size={16}
           className={cn(
-            "shrink-0 text-neutral-600 transition-transform",
-            expanded && "rotate-180 text-neutral-400",
+            "shrink-0 text-muted-foreground/80 transition-transform",
+            expanded && "rotate-180 text-muted-foreground",
           )}
         />
       </button>
@@ -213,7 +213,7 @@ export function TeamSupervisionUserRow({
       {expanded ? (
         <div className="space-y-1.5 px-3.5 pb-3">
           {row.logs.length === 0 ? (
-            <p className="py-2 text-center text-xs text-neutral-600">
+            <p className="py-2 text-center text-xs text-muted-foreground/80">
               Sin entradas en este periodo
             </p>
           ) : (

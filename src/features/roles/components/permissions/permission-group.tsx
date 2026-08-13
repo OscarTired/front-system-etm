@@ -37,9 +37,9 @@ export function PermissionGroup({
   const someChecked = !allChecked && ids.some((id) => checkedIds.has(id))
 
   return (
-    <section className="min-w-0 rounded-2xl bg-white/2 p-4">
+    <section className="min-w-0 rounded-2xl bg-foreground/5 p-4">
       <header className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+        <h3 className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {title}
         </h3>
 
@@ -50,7 +50,7 @@ export function PermissionGroup({
             "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors",
             allChecked
               ? "bg-green-500/15 text-green-400 hover:bg-green-500/20"
-              : "bg-white/5 text-neutral-500 hover:bg-white/8 hover:text-neutral-300",
+              : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-muted-foreground",
           )}
         >
           {allChecked ? "Todos" : someChecked ? "Completar" : "Seleccionar todos"}

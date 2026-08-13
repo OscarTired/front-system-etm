@@ -45,7 +45,7 @@ export function Command({
       className={cn(
         // h-full min-h-0: dentro del sheet IG, llena el alto y deja
         // que CommandList scrollee (no empuja el sheet fuera del VV)
-        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl text-white",
+        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl text-foreground",
         className
       )}
       {...props}
@@ -88,11 +88,11 @@ export function CommandInput({
     <div className="flex items-center gap-2 px-3 py-3">
       <Search
         size={15}
-        className="text-neutral-500"
+        className="text-muted-foreground"
       />
       <CommandPrimitive.Input
         className={cn(
-          "flex-1 bg-transparent text-sm text-neutral-300 outline-none placeholder:text-neutral-600",
+          "flex-1 bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/80",
           className
         )}
         {...props}
@@ -138,7 +138,7 @@ export function CommandEmpty({
   return (
     <CommandPrimitive.Empty
       className={cn(
-        "py-6 text-center text-sm text-neutral-500",
+        "py-6 text-center text-sm text-muted-foreground",
         className
       )}
       {...props}
@@ -168,7 +168,7 @@ export function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       className={cn(
-        "h-px bg-white/10",
+        "h-px bg-foreground/10",
         className
       )}
       {...props}
@@ -185,7 +185,7 @@ export function CommandItem({
     <CommandPrimitive.Item
       className={cn(
         "flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors cursor-pointer",
-        "hover:bg-white/5",
+        "hover:bg-foreground/5",
         "data-[disabled=true]:pointer-events-none",
         "data-[disabled=true]:opacity-40",
         className
@@ -204,7 +204,7 @@ export function CommandShortcut({
   return (
     <span
       className={cn(
-        "ml-auto text-xs text-neutral-500",
+        "ml-auto text-xs text-muted-foreground",
         className
       )}
       {...props}

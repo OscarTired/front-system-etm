@@ -46,13 +46,13 @@ export function PieceListRow({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border",
-        "bg-white/3 hover:bg-white/5",
+        "bg-foreground/5 hover:bg-foreground/5",
         highlighted && "ring-1 ring-blue-400/50 bg-blue-500/10",
         className
       )}
     >
       <div className="flex items-center justify-between gap-2 w-full">
-        <div className="min-w-0 flex-1 truncate text-xs font-medium text-neutral-200" title={row.fileName}>
+        <div className="min-w-0 flex-1 truncate text-xs font-medium text-foreground" title={row.fileName}>
           {row.fileName}
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
@@ -60,7 +60,7 @@ export function PieceListRow({
             <Button
               size="icon-sm"
               variant="ghost"
-              className="h-6 w-6 text-neutral-300 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
               onClick={() => onLocate(row)}
               title="Ubicar en plancha"
             >
@@ -71,7 +71,7 @@ export function PieceListRow({
             <Button
               size="icon-sm"
               variant="ghost"
-              className="h-6 w-6 text-neutral-300 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
               onClick={() => onPreview(row)}
               title="Ver pieza"
             >
@@ -81,13 +81,13 @@ export function PieceListRow({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 w-full">
-        <div className="min-w-0 flex-1 flex items-center gap-1 text-[10px] text-neutral-400 truncate">
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border w-full">
+        <div className="min-w-0 flex-1 flex items-center gap-1 text-[10px] text-muted-foreground truncate">
           <span className="shrink-0">
             {row.width.toFixed(0)}×{row.height.toFixed(0)}
           </span>
           {row.material.thickness > 0 && (
-            <span className="text-neutral-500 truncate">
+            <span className="text-muted-foreground truncate">
               · {row.material.thickness}mm
               {row.material.dinNorm !== "N/D" && ` · ${row.material.dinNorm}`}
             </span>
@@ -106,12 +106,12 @@ export function PieceListRow({
             value={row.quantity}
             disabled={disabled}
             onChange={(e) => handleQuantityChange(e.target.value)}
-            className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-7 text-xs w-14 shrink-0 px-1 text-center bg-foreground/5 border-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           <Button
             size="icon-sm"
             variant="ghost"
-            className="h-7 w-7 shrink-0 text-neutral-400 hover:text-white"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
             disabled={disabled}
             onClick={() => onDuplicate(row.id)}
             title="Duplicar pieza"
@@ -121,7 +121,7 @@ export function PieceListRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            className="h-7 w-7 text-neutral-400 hover:text-destructive"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
             disabled={disabled}
             onClick={() => onRemove(row.id)}
             title="Eliminar"

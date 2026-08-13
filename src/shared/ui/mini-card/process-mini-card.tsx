@@ -94,7 +94,7 @@ export function ProcessMiniCard({
                 key={row.label}
                 className="flex min-w-0 items-baseline justify-between gap-2"
               >
-                <p className="min-w-0 shrink truncate text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+                <p className="min-w-0 shrink truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   {row.label}
                 </p>
 
@@ -102,7 +102,7 @@ export function ProcessMiniCard({
                   <span
                     className={
                       row.editable === false
-                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight text-neutral-400"
+                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight text-muted-foreground"
                         : "min-w-0 truncate whitespace-nowrap text-2xl font-bold leading-tight"
                     }
                     style={
@@ -115,7 +115,7 @@ export function ProcessMiniCard({
                   </span>
 
                   {row.secondary && (
-                    <span className="max-w-24 shrink-0 truncate text-xs leading-tight text-neutral-400">
+                    <span className="max-w-24 shrink-0 truncate text-xs leading-tight text-muted-foreground">
                       {row.secondary}
                     </span>
                   )}
@@ -132,7 +132,7 @@ export function ProcessMiniCard({
                 key={row.label}
                 className="flex min-w-0 items-baseline justify-between gap-2"
               >
-                <p className="min-w-0 shrink truncate text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+                <p className="min-w-0 shrink truncate text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   {row.label}
                 </p>
 
@@ -140,7 +140,7 @@ export function ProcessMiniCard({
                   <span
                     className={
                       row.editable === false
-                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight text-neutral-400"
+                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight text-muted-foreground"
                         : "min-w-0 truncate whitespace-nowrap text-sm font-bold leading-tight"
                     }
                     style={
@@ -153,7 +153,7 @@ export function ProcessMiniCard({
                   </span>
 
                   {row.secondary && (
-                    <span className="max-w-20 shrink-0 truncate text-[11px] leading-tight text-neutral-400">
+                    <span className="max-w-20 shrink-0 truncate text-[11px] leading-tight text-muted-foreground">
                       {row.secondary}
                     </span>
                   )}
@@ -187,14 +187,14 @@ export function ProcessMiniCard({
                 key={row.label}
                 className="min-w-0"
               >
-                <p className="text-xs font-bold uppercase truncate tracking-[0.16em] text-neutral-500">
+                <p className="text-xs font-bold uppercase truncate tracking-[0.16em] text-muted-foreground">
                   {row.label}
                 </p>
 
                 <div
                   className={
                     row.editable === false
-                      ? "mt-1.5 min-w-0 text-lg font-semibold leading-tight truncate text-neutral-400"
+                      ? "mt-1.5 min-w-0 text-lg font-semibold leading-tight truncate text-muted-foreground"
                       : "mt-1.5 min-w-0 text-lg font-bold leading-tight truncate"
                   }
                   style={
@@ -207,7 +207,7 @@ export function ProcessMiniCard({
                 </div>
 
                 {row.secondary && (
-                  <p className="mt-1 text-xs leading-tight truncate text-neutral-400">
+                  <p className="mt-1 text-xs leading-tight truncate text-muted-foreground">
                     {row.secondary}
                   </p>
                 )}

@@ -34,7 +34,7 @@ export default function AssignmentPage() {
   const { state, actions } = panel
 
   return (
-    <main className="relative flex h-full min-h-0 flex-col bg-[#050505] px-3 pt-0 pb-2 text-white select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+    <main className="relative flex h-full min-h-0 flex-col bg-background px-3 pt-0 pb-2 text-foreground select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Header desktop */}
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -42,7 +42,7 @@ export default function AssignmentPage() {
             ASIGNACIÓN
           </h1>
           <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
-          <p className="min-w-0 truncate text-sm text-neutral-500">
+          <p className="min-w-0 truncate text-sm text-muted-foreground">
             Convocá operarios a las tareas de cada área
           </p>
         </div>
@@ -62,8 +62,8 @@ export default function AssignmentPage() {
               className={cn(
                 "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                 state.configOpen
-                  ? "bg-white/15 text-white"
-                  : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white",
+                  ? "bg-foreground/15 text-foreground"
+                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
               )}
             >
               <Settings2 size={16} />
@@ -120,7 +120,7 @@ export default function AssignmentPage() {
 
         {/* Selector de áreas (supervisor) */}
         {state.canChooseAreas && state.configOpen && (
-          <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-white/5 p-2.5">
+          <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-foreground/5 p-2.5">
             {state.allAreas.map(code => {
               const definition = PROCESS_DEFINITIONS[code]
               const Icon = ENTITY_ICONS[definition.icon]
@@ -140,8 +140,8 @@ export default function AssignmentPage() {
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
                     selected
-                      ? "bg-white/15 text-white shadow-sm"
-                      : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200",
+                      ? "bg-foreground/15 text-foreground shadow-sm"
+                      : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                   )}
                 >
                   <Icon size={14} style={{ color: definition.color }} />
@@ -153,11 +153,11 @@ export default function AssignmentPage() {
         )}
 
         {state.loading ? (
-          <div className="flex h-24 items-center justify-center text-sm text-neutral-500">
+          <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
             Cargando…
           </div>
         ) : state.areas.length === 0 ? (
-          <div className="flex h-24 items-center justify-center text-center text-sm text-neutral-500">
+          <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
             Selecciona al menos un área con el botón de arriba para ver sus
             tareas acá.
           </div>

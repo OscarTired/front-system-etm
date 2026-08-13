@@ -30,7 +30,7 @@ export function CommentImageDialog({ imageUrl, onClose }: Props) {
         size="large"
         className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
-        <DialogHeader className="shrink-0 border-b border-white/5 px-5 py-4">
+        <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
           <DialogTitle>Foto adjunta</DialogTitle>
         </DialogHeader>
 
@@ -46,7 +46,7 @@ export function CommentImageDialog({ imageUrl, onClose }: Props) {
               href={imageUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
             >
               <ExternalLink size={15} />
               Abrir original

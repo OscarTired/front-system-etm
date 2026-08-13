@@ -46,13 +46,13 @@ export function ProjectTaskActionsOverlay({
         type="button"
         onClick={onClose}
         aria-label="Cerrar acciones"
-        className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-white/8 hover:text-white"
+        className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
       >
         <X size={16} />
       </button>
 
       <div className="flex flex-col items-center gap-3">
-        <span className="text-xs font-semibold tracking-[0.12em] text-neutral-500">
+        <span className="text-xs font-semibold tracking-[0.12em] text-muted-foreground">
           ACCIONES DE TAREA
         </span>
 

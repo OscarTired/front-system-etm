@@ -103,14 +103,14 @@ export function ShiftGroupSection({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-white/3 p-4",
+        "rounded-2xl bg-foreground/5 p-4",
         groupUpcoming && "opacity-50",
       )}
     >
       <div className="flex items-center gap-2.5">
         <group.icon size={16} className={cn("shrink-0", iconColorClass)} />
 
-        <span className="text-sm font-semibold text-neutral-200">
+        <span className="text-sm font-semibold text-foreground">
           {group.label}
         </span>
       </div>
@@ -126,19 +126,19 @@ export function ShiftGroupSection({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-1 items-center gap-2 min-w-0">
                   {group.slots.length > 1 && (
-                    <span className="text-xs font-medium text-neutral-400 shrink-0">
+                    <span className="text-xs font-medium text-muted-foreground shrink-0">
                       {slot.hours}
                     </span>
                   )}
 
                   {!slot.required && (
-                    <span className="rounded-full bg-white/6 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500 shrink-0">
+                    <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground shrink-0">
                       Opcional
                     </span>
                   )}
 
                   {(group.slots.length > 1 || !slot.required) && (
-                    <span className="h-px flex-1 bg-white/8" />
+                    <span className="h-px flex-1 bg-foreground/10" />
                   )}
                 </div>
 
@@ -180,13 +180,13 @@ export function ShiftGroupSection({
                           aria-label="Agregar otra actividad debajo"
                           className={cn(
                             "flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
-                            "bg-white/5 text-neutral-400 transition-all duration-150",
+                            "bg-foreground/5 text-muted-foreground transition-all duration-150",
                             // Móvil: siempre visible (no hay hover).
                             // Desktop: aparece al hover/focus del row.
                             "w-9 opacity-100",
                             "tablet:w-0 tablet:opacity-0",
                             "tablet:group-hover/log:w-9 tablet:group-hover/log:opacity-100",
-                            "hover:bg-white/10 hover:text-white",
+                            "hover:bg-foreground/10 hover:text-foreground",
                             "focus-visible:w-9 focus-visible:opacity-100",
                           )}
                         >
@@ -204,7 +204,7 @@ export function ShiftGroupSection({
                           beginDrag(e, log, e.ctrlKey || e.metaKey)
                         }}
                         className={cn(
-                          "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
+                          "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl bg-foreground/5 p-2.5 transition-opacity",
                           actionsEnabled && canCreate && "select-none",
                           (isDraggingThis || busy) && "opacity-40",
                           busy && "pointer-events-none",
@@ -218,7 +218,7 @@ export function ShiftGroupSection({
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-neutral-200">
+                        <p className="text-sm font-medium text-foreground">
                           {log.activityType.label}
                         </p>
 
@@ -230,7 +230,7 @@ export function ShiftGroupSection({
                         )}
 
                         {log.note && (
-                          <p className="mt-0.5 truncate text-xs text-neutral-500">
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
                             {log.note}
                           </p>
                         )}
@@ -240,7 +240,7 @@ export function ShiftGroupSection({
                             type="button"
                             data-activity-drag-ignore
                             onClick={() => setOpenPhotoUrl(log.photoUrl)}
-                            className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+                            className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-foreground/5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                           >
                             <ImageIcon size={13} />
                             Ver foto adjunta
@@ -255,7 +255,7 @@ export function ShiftGroupSection({
                         onPointerDown={e => e.stopPropagation()}
                         className="ml-auto flex shrink-0 items-center self-start"
                       >
-                        <span className="tabular-nums text-xs text-neutral-500">
+                        <span className="tabular-nums text-xs text-muted-foreground">
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -279,7 +279,7 @@ export function ShiftGroupSection({
                                   title="Editar"
                                   aria-label="Editar entrada"
                                   onClick={() => onEditLog(log)}
-                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <Pencil size={14} />
                                 </button>
@@ -299,7 +299,7 @@ export function ShiftGroupSection({
                                     if (!canCreate || busy || !allowDup) return
                                     onDuplicateLog(log)
                                   }}
-                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <Copy size={14} />
                                 </button>
@@ -315,7 +315,7 @@ export function ShiftGroupSection({
                                   title="Eliminar"
                                   aria-label="Eliminar entrada"
                                   onClick={() => onDeleteLog(log)}
-                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -339,7 +339,7 @@ export function ShiftGroupSection({
                                   disabled={busy}
                                   aria-label="Más acciones"
                                   onPointerDown={(e) => e.stopPropagation()}
-                                  className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/8 hover:text-neutral-300 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-35"
                                 >
                                   <MoreHorizontal size={16} />
                                 </button>
@@ -373,7 +373,7 @@ export function ShiftGroupSection({
                                 >
                                   <Dialog.Title className="sr-only">Más acciones</Dialog.Title>
                                   <div className="flex w-full shrink-0 justify-center pb-1 pt-2.5">
-                                    <div className="h-1.5 w-9 rounded-full bg-white/15" />
+                                    <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
                                   </div>
                                   <div className="flex flex-col gap-0.5 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                                     {onEditLog && (
@@ -384,7 +384,7 @@ export function ShiftGroupSection({
                                           onEditLog(log)
                                           setMenuOpenLogId(null)
                                         }}
-                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
                                       >
                                         <Pencil size={15} className="text-amber-400" />
                                         Editar
@@ -397,7 +397,7 @@ export function ShiftGroupSection({
                                         onDuplicateLog?.(log)
                                         setMenuOpenLogId(null)
                                       }}
-                                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-white/6 disabled:opacity-40"
+                                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-40"
                                     >
                                       <Copy size={15} className="text-sky-400" />
                                       Duplicar
@@ -435,11 +435,11 @@ export function ShiftGroupSection({
                       "flex items-center justify-center gap-1.5 rounded-xl min-h-14.5 border border-dashed py-3 text-sm font-medium transition-colors",
                       loading && "animate-pulse pointer-events-none",
                       canCreate && !loading
-                        ? "hover:bg-white/4 hover:text-neutral-300"
+                        ? "hover:bg-foreground/5 hover:text-muted-foreground"
                         : "cursor-not-allowed opacity-50",
                       slot.required
-                        ? "border-white/10 text-neutral-500"
-                        : "border-white/6 text-neutral-600",
+                        ? "border-border text-muted-foreground"
+                        : "border-white/6 text-muted-foreground/80",
                     )}
                   >
                     <Plus size={15} />
@@ -448,7 +448,7 @@ export function ShiftGroupSection({
                 )}
 
                 {(loading || logs.length === 0) && state === "upcoming" && (
-                  <p className="py-2 text-center text-xs text-neutral-600">
+                  <p className="py-2 text-center text-xs text-muted-foreground/80">
                     Todavía no llega esta franja
                   </p>
                 )}

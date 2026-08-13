@@ -106,16 +106,16 @@ export function KanbanCardView({
         dragPreview
           ?[
               "pointer-events-none",
-              "bg-[#101012]/95",
+              "bg-muted/95",
               "backdrop-blur-xl",
               "scale-[1.03]",
               "rotate-[0.5deg]",
-              "border border-white/10",
+              "border border-border",
               "ring-1 ring-white/5",
             ]
           :[
-              "bg-white/6",
-              "hover:bg-white/10",
+              "bg-foreground/5",
+              "hover:bg-foreground/10",
             ],
       )}
       style={
@@ -136,7 +136,7 @@ export function KanbanCardView({
 
           <div className="flex items-center gap-2.5">
 
-            <span className="text-sm font-semibold text-neutral-100">
+            <span className="text-sm font-semibold text-foreground">
               #{String(taskNumber??0).padStart(3,"0")}
             </span>
 
@@ -159,7 +159,7 @@ export function KanbanCardView({
           </div>
 
           <span className="flex shrink-0 items-center gap-1.5">
-            <span className="text-sm font-semibold text-neutral-400">
+            <span className="text-sm font-semibold text-muted-foreground">
               {formatDate(deliveryDate)}
             </span>
             {!hideCommentBadge && commentCount > 0 && (
@@ -177,7 +177,7 @@ export function KanbanCardView({
 
         <h4
           title={reference}
-          className="mt-2 truncate text-base font-semibold text-neutral-100"
+          className="mt-2 truncate text-base font-semibold text-foreground"
         >
 
           {reference}
@@ -207,7 +207,7 @@ export function KanbanCardView({
             <div className="flex items-center gap-1 text-sm">
 
               <span
-                className="size-3 rounded-full border-2 border-white/10"
+                className="size-3 rounded-full border-2 border-border"
                 style={{
                   backgroundColor:colorHex,
                 }}

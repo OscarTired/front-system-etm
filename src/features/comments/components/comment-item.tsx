@@ -69,13 +69,13 @@ export function CommentItem({
 
   return(
     <div
-      className={`group animate-comment-in flex gap-2.5 rounded-lg bg-white/3 px-3 py-2.5 transition-colors hover:bg-white/6 ${
+      className={`group animate-comment-in flex gap-2.5 rounded-lg bg-foreground/5 px-3 py-2.5 transition-colors hover:bg-foreground/5 ${
         isPending||isDeleting?"opacity-60":""
       } ${
-        isReply?"ml-8 border-l-2 border-white/8 pl-3":""
+        isReply?"ml-8 border-l-2 border-border pl-3":""
       }`}
     >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-white/8 text-xs font-semibold text-white shadow-inner">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-white/5 ring-1 ring-border text-xs font-semibold text-foreground shadow-inner">
         {user.avatarUrl ? (
             <img
             src={user.avatarUrl}
@@ -90,11 +90,11 @@ export function CommentItem({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-semibold text-neutral-200">
+              <span className="truncate text-sm font-semibold text-foreground">
                 {user.name}
               </span>
               {isPending ? (
-                <span className="flex items-center gap-1 text-xs text-neutral-500">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
                   Enviando…
                 </span>
@@ -104,7 +104,7 @@ export function CommentItem({
                   Eliminando…
                 </span>
               ) : (
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   {formatCommentDate(comment.createdAt)}
                 </span>
               )}
@@ -155,7 +155,7 @@ export function CommentItem({
                   <Check
                     size={14}
                     strokeWidth={2.5}
-                    className="text-neutral-500"
+                    className="text-muted-foreground"
                   />
                 )}
 
@@ -180,7 +180,7 @@ export function CommentItem({
         </div>
         {comment.parent && (
 
-          <div className="mt-1 flex items-start gap-1.5 rounded-md bg-white/4 px-2 py-1 text-xs text-neutral-500">
+          <div className="mt-1 flex items-start gap-1.5 rounded-md bg-foreground/5 px-2 py-1 text-xs text-muted-foreground">
             <Reply
               size={11}
               className="mt-0.5 shrink-0 -scale-x-100"
@@ -191,7 +191,7 @@ export function CommentItem({
                 <span>Comentario eliminado</span>
               ) : (
                 <>
-                  <span className="font-medium text-neutral-400">
+                  <span className="font-medium text-muted-foreground">
                     {comment.parent.user.name}:
                   </span>{" "}
                   <span className="whitespace-pre-wrap wrap-break-word">
@@ -207,7 +207,7 @@ export function CommentItem({
 
         {comment.message && (
 
-          <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-neutral-300">
+          <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-muted-foreground">
             {comment.message}
           </p>
 
@@ -218,7 +218,7 @@ export function CommentItem({
             type="button"
             onClick={() => setImageDialogOpen(true)}
             disabled={isDeleting}
-            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-white/8 bg-black/30 text-left transition hover:border-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-black/30 text-left transition hover:border-white/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

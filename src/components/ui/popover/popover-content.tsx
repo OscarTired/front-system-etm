@@ -171,7 +171,7 @@ export function PopoverContent({
             {...dragHandleProps}
             className="flex w-full shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
           >
-            <div className="h-1.5 w-9 rounded-full bg-white/15" />
+            <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
           </div>
 
           {/* Viewport con scroll: acotado por lo que Content mida

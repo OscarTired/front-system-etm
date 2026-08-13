@@ -241,7 +241,7 @@ export function ActivityLogPageContent({
   const toolbar = (
     <div
       className={cn(
-        "w-full shrink-0 rounded-2xl bg-[#0c0c0e]/80 shadow-lg backdrop-blur-xl",
+        "w-full shrink-0 rounded-2xl bg-card/80 shadow-lg backdrop-blur-xl",
         isCompact ? "p-2" : "p-3 desktop:p-4",
       )}
     >
@@ -279,7 +279,7 @@ export function ActivityLogPageContent({
           </div>
 
           <div
-            className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 px-2 text-xs font-semibold tabular-nums text-neutral-300"
+            className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold tabular-nums text-muted-foreground"
             title={`${entryCount} ${entryCount === 1 ? "entrada" : "entradas"}`}
           >
             {entryCount}
@@ -317,7 +317,7 @@ export function ActivityLogPageContent({
           </div>
 
           <div className="flex items-center justify-self-end gap-2">
-            <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-white/5 px-3 text-sm font-medium text-neutral-300">
+            <div className="flex h-9 min-w-32 items-center justify-center rounded-xl bg-foreground/5 px-3 text-sm font-medium text-muted-foreground">
               {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
             </div>
 

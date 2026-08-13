@@ -79,7 +79,7 @@ export function UserActions(){
                   "hover:scale-105 hover:bg-neutral-100 active:scale-95",
                   "shadow-[0_12px_32px_rgba(0,0,0,0.55),0_4px_10px_rgba(255,255,255,0.08)]",
                 ].join(" ")
-              : "cursor-not-allowed bg-white/10 text-white/35 shadow-none",
+              : "cursor-not-allowed bg-foreground/10 text-foreground/35 shadow-none",
           )}
         >
 

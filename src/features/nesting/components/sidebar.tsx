@@ -43,20 +43,20 @@ const CollapsibleSection = memo(function CollapsibleSection({
   }, [])
 
   return (
-    <section className="rounded-2xl bg-white/3 p-2.5 transition-all">
+    <section className="rounded-2xl bg-foreground/5 p-2.5 transition-all">
       <button
         type="button"
         onClick={handleToggle}
         aria-expanded={open}
         className="flex w-full items-center justify-between py-0.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50"
       >
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
           {title}
         </h2>
         {open ? (
-          <ChevronUp className="h-3.5 w-3.5 text-neutral-500 transition-transform" />
+          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground transition-transform" />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 text-neutral-500 transition-transform" />
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform" />
         )}
       </button>
       <CollapsibleHeightSection open={open} className="pt-2.5">
@@ -103,14 +103,14 @@ const ExecutionFooter = memo(function ExecutionFooter({
         aria-valuenow={percentage} 
         aria-valuemin={0} 
         aria-valuemax={100}
-        className="h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+        className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10"
       >
         <div
           className="h-full rounded-full bg-primary transition-all duration-150"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
+      <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin" />
         Calculando… {percentage}%
       </p>
@@ -137,8 +137,8 @@ export const Sidebar = memo(
   ) {
     return (
       <aside aria-label="Panel lateral de configuración" className="flex h-full w-full flex-col gap-2.5">
-        <section className="rounded-2xl bg-white/3 p-2.5">
-          <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+        <section className="rounded-2xl bg-foreground/5 p-2.5">
+          <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Plancha
           </h2>
         </section>
@@ -151,7 +151,7 @@ export const Sidebar = memo(
           <MachinePanel settings={machine} onChange={onMachineChange} />
         </CollapsibleSection>
 
-        <div className="flex min-h-45 flex-1 flex-col rounded-2xl bg-white/3 p-2.5">
+        <div className="flex min-h-45 flex-1 flex-col rounded-2xl bg-foreground/5 p-2.5">
           <PieceList ref={ref} {...pieceListProps} />
         </div>
 

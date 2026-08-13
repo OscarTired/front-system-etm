@@ -24,7 +24,7 @@ export function HistoryToggleButton({ count, active, onClick }: Props) {
             "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold select-none transition-colors duration-200",
             active
               ? "animate-history-bounce bg-emerald-500/90 text-black shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-              : "bg-white/6 text-white/70",
+              : "bg-foreground/5 text-foreground/70",
           )}
         >
           {count}

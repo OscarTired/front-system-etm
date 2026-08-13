@@ -122,7 +122,7 @@ export function UserTable({
             />
           ))
         ) : (
-          <div className="rounded-2xl bg-[#101012] px-4 py-8 text-center text-sm text-neutral-500">
+          <div className="rounded-2xl bg-muted px-4 py-8 text-center text-sm text-muted-foreground">
             Sin usuarios
           </div>
         )}

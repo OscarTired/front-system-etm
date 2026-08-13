@@ -50,7 +50,7 @@ export function AgendaWeekView({
 
   if (isCompact) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-[#0c0c0e]">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-card">
         <div
           className={cn(
             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
@@ -69,14 +69,14 @@ export function AgendaWeekView({
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
                   "flex min-w-[2.85rem] flex-1 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 transition-colors",
-                  isAnchor && "bg-white/10",
+                  isAnchor && "bg-foreground/10",
                   isToday && !isAnchor && "bg-amber-500/10",
                 )}
               >
                 <span
                   className={cn(
                     "text-[9px] font-bold uppercase tracking-wider",
-                    isToday ? "text-amber-400" : "text-neutral-500",
+                    isToday ? "text-amber-400" : "text-muted-foreground",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}
@@ -85,9 +85,9 @@ export function AgendaWeekView({
                   className={cn(
                     "flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold tabular-nums",
                     isToday &&
-                      "bg-amber-400 text-neutral-950 shadow-[0_0_10px_rgba(251,191,36,0.35)]",
-                    !isToday && isAnchor && "bg-white/15 text-white",
-                    !isToday && !isAnchor && "text-neutral-300",
+                      "bg-amber-400 text-background shadow-[0_0_10px_rgba(251,191,36,0.35)]",
+                    !isToday && isAnchor && "bg-foreground/15 text-foreground",
+                    !isToday && !isAnchor && "text-muted-foreground",
                   )}
                 >
                   {day.getDate()}
@@ -97,7 +97,7 @@ export function AgendaWeekView({
           })}
         </div>
 
-        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-white/5">
+        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-border">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
             const iconColorClass =
@@ -117,10 +117,10 @@ export function AgendaWeekView({
                     strokeWidth={2.5}
                     className={iconColorClass}
                   />
-                  <span className="text-xs font-bold uppercase tracking-wider text-white">
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                     {group.label}
                   </span>
-                  <span className="text-[10px] tabular-nums text-neutral-500">
+                  <span className="text-[10px] tabular-nums text-muted-foreground">
                     {group.slots.map(s => s.hours).join(" · ")}
                   </span>
                 </div>
@@ -141,7 +141,7 @@ export function AgendaWeekView({
                 ) : (
                   <p
                     className={cn(
-                      "py-0.5 text-[11px] text-neutral-600",
+                      "py-0.5 text-[11px] text-muted-foreground/80",
                       loading && "animate-pulse",
                     )}
                   >
@@ -161,21 +161,21 @@ export function AgendaWeekView({
    * Solo header sticky opaco + columna hoy sólida (sin translucidez al scroll).
    */
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col rounded-2xl bg-[#0c0c0e] shadow-2xl">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col rounded-2xl bg-card shadow-2xl">
       {/* overflow en el scroller — overflow-hidden en el root rompe sticky */}
       <ScrollArea
         orientation="both"
         className="h-full min-h-0 min-w-0 flex-1 rounded-2xl"
       >
         <div
-          className="grid h-full min-h-full w-full bg-[#0c0c0e]"
+          className="grid h-full min-h-full w-full bg-card"
           style={{
             gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
             gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(min-content, 1fr))`,
           }}
         >
-          <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-white/5 bg-[#0c0c0e] p-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+          <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-border bg-card p-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Turnos / Días
             </span>
           </div>
@@ -192,21 +192,21 @@ export function AgendaWeekView({
                 type="button"
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
-                  "sticky top-0 z-20 border-b border-white/5 px-3 py-3 text-center transition-[filter] duration-200",
+                  "sticky top-0 z-20 border-b border-border px-3 py-3 text-center transition-[filter] duration-200",
                   isToday
-                    ? "bg-[#1a1408]"
+                    ? "bg-muted"
                     : isAnchor
-                      ? "bg-[#141414]"
+                      ? "bg-muted"
                       : isWeekend
-                        ? "bg-[#0e0e10]"
-                        : "bg-[#0c0c0e]",
+                        ? "bg-card"
+                        : "bg-card",
                   "hover:brightness-110",
                 )}
               >
                 <div
                   className={cn(
                     "text-[11px] font-bold uppercase tracking-widest",
-                    isToday ? "text-amber-400" : "text-neutral-400",
+                    isToday ? "text-amber-400" : "text-muted-foreground",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}
@@ -216,13 +216,13 @@ export function AgendaWeekView({
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold tabular-nums transition-all duration-200",
                       isToday &&
-                        "bg-amber-400 text-neutral-950 shadow-[0_0_15px_rgba(251,191,36,0.4)]",
+                        "bg-amber-400 text-background shadow-[0_0_15px_rgba(251,191,36,0.4)]",
                       !isToday &&
                         isAnchor &&
-                        "bg-white/20 text-white shadow-sm",
+                        "bg-foreground/20 text-foreground shadow-sm",
                       !isToday &&
                         !isAnchor &&
-                        "text-neutral-300 hover:text-white",
+                        "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {day.getDate()}
@@ -242,18 +242,18 @@ export function AgendaWeekView({
               <div key={group.key} className="contents">
                 <div
                   className={cn(
-                    "sticky left-0 z-10 flex flex-col justify-center bg-[#0c0c0e] px-3.5 py-3",
-                    !isLast && "border-b border-white/5",
+                    "sticky left-0 z-10 flex flex-col justify-center bg-card px-3.5 py-3",
+                    !isLast && "border-b border-border",
                   )}
                 >
                   <div className="flex flex-col items-center gap-1.5 text-center">
-                    <div className="flex items-center justify-center gap-2 text-neutral-300">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <GroupIcon
                         size={14}
                         strokeWidth={2.5}
                         className={cn("shrink-0", iconColorClass)}
                       />
-                      <span className="text-xs font-bold uppercase tracking-wider text-white">
+                      <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                         {group.label}
                       </span>
                     </div>
@@ -261,7 +261,7 @@ export function AgendaWeekView({
                       {group.slots.map(slot => (
                         <span
                           key={slot.shift}
-                          className="text-[11px] font-medium tabular-nums text-neutral-400"
+                          className="text-[11px] font-medium tabular-nums text-muted-foreground"
                         >
                           {slot.hours}
                         </span>
@@ -285,12 +285,12 @@ export function AgendaWeekView({
                       className={cn(
                         "flex min-h-0 min-w-0 flex-col p-2 transition-colors duration-150",
                         empty ? "justify-center" : "justify-start",
-                        !isLast && "border-b border-white/5",
+                        !isLast && "border-b border-border",
                         isToday
-                          ? "bg-[#12100c]"
+                          ? "bg-muted"
                           : isWeekend
-                            ? "bg-[#0e0e10]"
-                            : "bg-[#0c0c0e]",
+                            ? "bg-card"
+                            : "bg-card",
                       )}
                     >
                       {!loading && cellLogs.length > 0 ? (
@@ -316,7 +316,7 @@ export function AgendaWeekView({
                             loading && "animate-pulse",
                           )}
                         >
-                          <span className="h-1.5 w-1.5 rounded-full bg-white/10" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-foreground/10" />
                         </div>
                       )}
                     </div>

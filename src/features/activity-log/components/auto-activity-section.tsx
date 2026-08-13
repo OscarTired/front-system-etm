@@ -54,8 +54,8 @@ const AUTO_KIND: Record<string, AutoKind> = {
 const DEFAULT_KIND: AutoKind = {
   icon: Zap,
   verb: "",
-  iconClass: "text-neutral-400",
-  badgeClass: "bg-white/10 text-neutral-400",
+  iconClass: "text-muted-foreground",
+  badgeClass: "bg-foreground/10 text-muted-foreground",
 }
 
 // Devuelve siempre un AutoKind completo — evita el problema de
@@ -91,13 +91,13 @@ export function AutoActivitySection({ logs }: Props) {
 
   return (
 
-    <div className="rounded-2xl bg-white/3 p-4">
+    <div className="rounded-2xl bg-foreground/5 p-4">
 
       <div className="flex items-center gap-2.5">
 
-        <Zap size={16} className="text-neutral-400" />
+        <Zap size={16} className="text-muted-foreground" />
 
-        <span className="text-sm font-semibold text-neutral-200">
+        <span className="text-sm font-semibold text-foreground">
           Actividad automática
         </span>
 
@@ -117,7 +117,7 @@ export function AutoActivitySection({ logs }: Props) {
 
             <div
               key={log.id}
-              className="flex items-start gap-2.5 rounded-xl bg-white/4 p-2.5"
+              className="flex items-start gap-2.5 rounded-xl bg-foreground/5 p-2.5"
             >
 
               <div className={`flex size-8 shrink-0 items-center justify-center rounded-full ${kind.badgeClass}`}>
@@ -139,7 +139,7 @@ export function AutoActivitySection({ logs }: Props) {
 
               </div>
 
-              <span className="shrink-0 text-xs text-neutral-500">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                   hour: "2-digit",
                   minute: "2-digit",

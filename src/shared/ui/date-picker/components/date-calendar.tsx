@@ -90,11 +90,11 @@ export function DateCalendar({
 
       <CalendarGrid weeks={weeks} onSelectDay={onSelect} />
 
-      <div className="pt-2 border-t border-white/10 flex justify-center">
+      <div className="pt-2 border-t border-border flex justify-center">
         <button
           type="button"
           onClick={handleTodayClick}
-          className="px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-white/5 rounded-md transition-colors"
+          className="px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-foreground/5 rounded-md transition-colors"
         >
           Hoy
         </button>

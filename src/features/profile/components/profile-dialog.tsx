@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 
 import { AvatarPicker } from "./avatar-picker"
 
+import { ThemeToggle } from "@/shared/theme"
+
 import { useProfile } from "../hooks/use-profile"
 
 type Props = {
@@ -85,7 +87,6 @@ export function ProfileDialog({ open, onClose }: Props) {
     >
 
       <div className="space-y-5">
-
         <AvatarPicker
           name={profile?.name ?? ""}
           avatarUrl={profile?.avatarUrl}
@@ -98,7 +99,7 @@ export function ProfileDialog({ open, onClose }: Props) {
 
           <div className="space-y-1.5">
 
-            <label className="text-xs font-medium text-neutral-500">
+            <label className="text-xs font-medium text-muted-foreground">
               Nombre
             </label>
 
@@ -112,7 +113,7 @@ export function ProfileDialog({ open, onClose }: Props) {
 
           <div className="space-y-1.5">
 
-            <label className="text-xs font-medium text-neutral-500">
+            <label className="text-xs font-medium text-muted-foreground">
               Correo
             </label>
 
@@ -126,7 +127,7 @@ export function ProfileDialog({ open, onClose }: Props) {
 
           <div className="space-y-1.5">
 
-            <label className="text-xs font-medium text-neutral-500">
+            <label className="text-xs font-medium text-muted-foreground">
               Cargo
             </label>
 
@@ -140,7 +141,7 @@ export function ProfileDialog({ open, onClose }: Props) {
 
           <div className="space-y-1.5">
 
-            <label className="text-xs font-medium text-neutral-500">
+            <label className="text-xs font-medium text-muted-foreground">
               Teléfono
             </label>
 
@@ -153,6 +154,8 @@ export function ProfileDialog({ open, onClose }: Props) {
           </div>
 
         </div>
+
+        <ThemeToggle />
 
       </div>
 

@@ -50,7 +50,7 @@ export function HexColorPicker({
           className={[
             'z-50 w-58 p-3 rounded-lg shadow-lg flex flex-col gap-3',
 
-            'dark:bg-neutral-900 dark:border-neutral-800',
+            'dark:bg-popover dark:border-neutral-800',
             'animate-in fade-in-0 zoom-in-95',
           ].join(' ')}
         >

@@ -47,7 +47,7 @@ export interface MaterialPanelProps {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-medium text-neutral-400">{label}</label>
+      <label className="text-[11px] font-medium text-muted-foreground">{label}</label>
       {children}
     </div>
   )
@@ -71,25 +71,25 @@ export function MaterialPanel({
   const [isProjectExpanded, setIsProjectExpanded] = useState(true)
   const [isExpanded, setIsExpanded] = useState(true)
   const btn =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
 
   return (
     <div className="flex flex-col gap-3">
       {projectActions && (
-        <div className="flex flex-col rounded-xl items-center bg-white/2 p-1 transition-colors">
+        <div className="flex flex-col rounded-xl items-center bg-foreground/5 p-1 transition-colors">
           <button
             type="button"
             onClick={() => setIsProjectExpanded((prev) => !prev)}
-            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-foreground/5"
           >
             <div className="flex items-center gap-2">
               <FolderOpen className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Proyecto</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Proyecto</span>
             </div>
 
             <ChevronRight
               className={cn(
-                "h-4 w-4 text-neutral-500 transition-transform duration-200",
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
                 isProjectExpanded && "rotate-90"
               )}
             />
@@ -111,7 +111,7 @@ export function MaterialPanel({
               <button type="button" className={btn} title="Guardar proyecto" onClick={projectActions.onSave}>
                 <Save className="h-4 w-4" strokeWidth={1.5} />
               </button>
-              <div className="mx-1 h-4 w-px bg-white/10" aria-hidden />
+              <div className="mx-1 h-4 w-px bg-foreground/10" aria-hidden />
               <button type="button" className={btn} title="Exportar" onClick={projectActions.onExport}>
                 <FileUp className="h-4 w-4" strokeWidth={1.5} />
               </button>
@@ -121,20 +121,20 @@ export function MaterialPanel({
       )}
 
       {/* Contenedor principal estilo Box unificado */}
-      <div className="flex flex-col rounded-xl bg-white/2 p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/3"
+          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-foreground/5"
         >
           <div className="flex items-center gap-2">
             <Sliders className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Configuración</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Configuración</span>
           </div>
 
           <ChevronRight
             className={cn(
-              "h-4 w-4 text-neutral-500 transition-transform duration-200",
+              "h-4 w-4 text-muted-foreground transition-transform duration-200",
               isExpanded && "rotate-90"
             )}
           />
@@ -150,12 +150,12 @@ export function MaterialPanel({
           <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
             <div className="flex items-center gap-2 mb-2">
               <Layers className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
-              <span className="text-xs font-medium text-neutral-200">Dimensiones de Plancha</span>
+              <span className="text-xs font-medium text-foreground">Dimensiones de Plancha</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Ancho (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   inputMode="decimal"
                   value={settings.sheetWidth}
                   onChange={(e) => onChange({ sheetWidth: e.target.value })}
@@ -164,7 +164,7 @@ export function MaterialPanel({
 
               <Field label="Alto (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   inputMode="decimal"
                   value={settings.sheetHeight}
                   onChange={(e) => onChange({ sheetHeight: e.target.value })}
@@ -173,7 +173,7 @@ export function MaterialPanel({
 
               <Field label="Margen (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   inputMode="decimal"
                   value={settings.margin}
                   onChange={(e) => onChange({ margin: e.target.value })}
@@ -182,7 +182,7 @@ export function MaterialPanel({
 
               <Field label="Separación (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   inputMode="decimal"
                   value={settings.separacion}
                   onChange={(e) => onChange({ separacion: e.target.value })}
@@ -196,12 +196,12 @@ export function MaterialPanel({
           <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
             <div className="flex items-center gap-2 mb-2">
               <Sliders className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Información General</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Información General</span>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <Field label="Proyecto">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   placeholder="001-M"
                   value={settings.proyecto}
                   onChange={(e) => onChange({ proyecto: e.target.value })}
@@ -209,7 +209,7 @@ export function MaterialPanel({
               </Field>
               <Field label="Cliente">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30"
+                  className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30"
                   placeholder="ETM"
                   value={settings.cliente}
                   onChange={(e) => onChange({ cliente: e.target.value })}
@@ -226,7 +226,7 @@ export function MaterialPanel({
                   </div>
                 ) : (
                   <Input
-                    className="h-8 rounded-lg border-0 bg-neutral-950/50 text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
+                    className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
                     placeholder="INOX"
                     value={settings.material}
                     onChange={(e) => onChange({ material: e.target.value })}
@@ -242,7 +242,7 @@ export function MaterialPanel({
                   </div>
                 ) : (
                   <Input
-                    className="h-8 rounded-lg border-0 bg-neutral-950/50 text-center text-xs truncate uppercase text-neutral-200 focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
+                    className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-cyan-500/30 w-full"
                     inputMode="decimal"
                     placeholder="Ej: 3.0 mm"
                     value={settings.espesor}
@@ -260,7 +260,7 @@ export function MaterialPanel({
           <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
             <div className="flex items-center gap-2 mb-2">
               <Sliders className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Empaquetado</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Empaquetado</span>
             </div>
             <button
               type="button"
@@ -270,8 +270,8 @@ export function MaterialPanel({
               className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1 text-left"
             >
               <span className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-neutral-200">Empaquetado preciso</span>
-                <span className="text-[10px] leading-snug text-neutral-500">
+                <span className="text-xs font-medium text-foreground">Empaquetado preciso</span>
+                <span className="text-[10px] leading-snug text-muted-foreground">
                   Usa el contorno real de cada pieza (incluye calados) en vez
                   de su rectángulo — mejor aprovechamiento de plancha, pero
                   el cálculo de Nestear tarda notablemente más, sobre todo
@@ -281,7 +281,7 @@ export function MaterialPanel({
               <span
                 className={cn(
                   "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
-                  settings.empaquetadoPreciso ? "bg-cyan-500" : "bg-white/15"
+                  settings.empaquetadoPreciso ? "bg-cyan-500" : "bg-foreground/15"
                 )}
               >
                 <span

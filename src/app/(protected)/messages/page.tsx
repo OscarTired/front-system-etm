@@ -20,7 +20,7 @@ export default function MessagesPage() {
   if (!isMobile) return null
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-[#050505] px-3 pb-2 text-white select-none">
+    <main className="flex h-full min-h-0 flex-col bg-background px-3 pb-2 text-foreground select-none">
       <section className="flex min-h-0 w-full flex-1 flex-col">
         <MessagesPageContent />
       </section>

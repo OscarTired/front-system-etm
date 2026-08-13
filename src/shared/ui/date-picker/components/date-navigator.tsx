@@ -59,8 +59,8 @@ export function DateNavigator({
   }
 
   const arrowClass = iconOnly
-    ? "flex h-8 w-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
-    : "flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+    ? "flex h-8 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+    : "flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
 
   return (
     <div className={cn("flex items-center gap-0.5", className)}>
@@ -76,7 +76,7 @@ export function DateNavigator({
 
       {iconOnly && (
         <span
-          className="min-w-11 shrink-0 text-center text-xs font-semibold tabular-nums tracking-wide text-neutral-200"
+          className="min-w-11 shrink-0 text-center text-xs font-semibold tabular-nums tracking-wide text-foreground"
           aria-live="polite"
         >
           {formatDayViewer(current)}

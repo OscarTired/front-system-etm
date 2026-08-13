@@ -68,7 +68,7 @@ export function ProjectTaskPlaceholder({
           `flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-white/4 via-white/2 to-transparent px-3 text-left transition
           ${
             canCreate
-              ?"hover:bg-white/5"
+              ?"hover:bg-foreground/5"
               :"cursor-not-allowed opacity-50"
           }`
         }
@@ -78,11 +78,11 @@ export function ProjectTaskPlaceholder({
           <Plus size={14} className="text-cyan-400" />
         </div>
 
-        <span className="text-sm font-bold text-white">
+        <span className="text-sm font-bold text-foreground">
           Nueva tarea
         </span>
 
-        <span className="ml-auto shrink-0 text-xs text-neutral-500">
+        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
           Agregar
         </span>
 
@@ -130,7 +130,7 @@ export function ProjectTaskPlaceholder({
 
           canCreate
 
-            ?"hover:border-cyan-500/20 hover:bg-white/5"
+            ?"hover:border-cyan-500/20 hover:bg-foreground/5"
 
             :"cursor-not-allowed opacity-50"
 
@@ -165,13 +165,13 @@ export function ProjectTaskPlaceholder({
 
       </div>
 
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-white">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
 
         Nueva tarea
 
       </p>
 
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="mt-3 text-xs text-muted-foreground">
 
         Agregar al proyecto
 

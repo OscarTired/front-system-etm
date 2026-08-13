@@ -14,8 +14,8 @@ export interface CalendarHeaderProps {
 
 const navButtonClasses = [
   'flex items-center justify-center w-6 h-6 rounded-lg',
-  'text-neutral-500 hover:text-neutral-200 hover:bg-white/8',
-  'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/10',
+  'text-muted-foreground hover:text-foreground hover:bg-foreground/10',
+  'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-border',
 ].join(' ');
 
 export function CalendarHeader({
@@ -46,7 +46,7 @@ export function CalendarHeader({
         </button>
       </div>
 
-      <span className="text-xs font-semibold text-neutral-200 select-none">
+      <span className="text-xs font-semibold text-foreground select-none">
         {label}
       </span>
 

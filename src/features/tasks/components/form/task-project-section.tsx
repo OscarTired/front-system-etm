@@ -22,7 +22,7 @@ export function TaskProjectSection({
 
       <div className="space-y-1.5">
 
-        <p className="text-sm font-medium text-neutral-300">
+        <p className="text-sm font-medium text-muted-foreground">
           Proyecto
         </p>
 

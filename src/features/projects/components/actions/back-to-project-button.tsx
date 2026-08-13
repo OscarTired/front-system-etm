@@ -43,7 +43,7 @@ export function BackToProjectButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="flex h-8 min-w-0 items-center gap-2 rounded-xl bg-white/5 px-4 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white select-none"
+      className="flex h-8 min-w-0 items-center gap-2 rounded-xl bg-foreground/5 px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground select-none"
     >
       <ArrowLeft className="h-4 w-4 shrink-0" />
       <span className="min-w-0 truncate whitespace-nowrap">Proyecto</span>

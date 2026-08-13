@@ -30,27 +30,27 @@ function SkeletonKpiCompact() {
       }}
     >
 
-      <span className="h-11 w-11 shrink-0 rounded-xl bg-white/5" />
+      <span className="h-11 w-11 shrink-0 rounded-xl bg-foreground/5" />
 
-      <span className="hidden h-3 w-16 shrink-0 rounded bg-white/10 tablet:block" />
+      <span className="hidden h-3 w-16 shrink-0 rounded bg-foreground/10 tablet:block" />
 
       <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
 
         <div className="text-right">
-          <span className="ml-auto block h-2.5 w-16 rounded bg-white/8" />
+          <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
           <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
         </div>
 
-        <span className="h-8 w-px shrink-0 bg-white/10" />
+        <span className="h-8 w-px shrink-0 bg-foreground/10" />
 
         <div className="text-right">
-          <span className="ml-auto block h-2.5 w-16 rounded bg-white/8" />
+          <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
           <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
         </div>
 
       </div>
 
-      <span className="h-9 w-9 shrink-0 rounded-full bg-white/5" />
+      <span className="h-9 w-9 shrink-0 rounded-full bg-foreground/5" />
 
     </div>
 
@@ -76,23 +76,23 @@ function SkeletonColumnOperator({
       {/* Badge operario */}
       <div
         className={cn(
-          "flex items-center gap-1.5 rounded-lg bg-white/4 px-2 py-1",
+          "flex items-center gap-1.5 rounded-lg bg-foreground/5 px-2 py-1",
           centered ? "shrink-0" : "flex-1",
         )}
       >
 
-        <span className="size-4 shrink-0 rounded-full bg-white/10" />
+        <span className="size-4 shrink-0 rounded-full bg-foreground/10" />
 
-        <span className="h-2.5 w-20 rounded bg-white/8" />
+        <span className="h-2.5 w-20 rounded bg-foreground/10" />
 
       </div>
 
       {/* Badge estado */}
-      <div className="flex shrink-0 items-center gap-1 rounded-lg bg-white/4 px-2 py-1">
+      <div className="flex shrink-0 items-center gap-1 rounded-lg bg-foreground/5 px-2 py-1">
 
-        <span className="size-3 rounded bg-white/10" />
+        <span className="size-3 rounded bg-foreground/10" />
 
-        <span className="h-2.5 w-14 rounded bg-white/8" />
+        <span className="h-2.5 w-14 rounded bg-foreground/10" />
 
       </div>
 
@@ -110,12 +110,12 @@ function SkeletonMobileHeader() {
 
   return (
 
-    <div className="flex h-10 items-center justify-center gap-2 border-b border-white/10 px-3">
+    <div className="flex h-10 items-center justify-center gap-2 border-b border-border px-3">
 
-      <span className="size-6 shrink-0 rounded-md bg-white/10" />
-      <span className="size-4 shrink-0 rounded bg-white/10" />
-      <span className="h-3.5 w-24 rounded bg-white/10" />
-      <span className="h-3.5 w-4 rounded bg-white/5" />
+      <span className="size-6 shrink-0 rounded-md bg-foreground/10" />
+      <span className="size-4 shrink-0 rounded bg-foreground/10" />
+      <span className="h-3.5 w-24 rounded bg-foreground/10" />
+      <span className="h-3.5 w-4 rounded bg-foreground/5" />
 
     </div>
 
@@ -134,17 +134,17 @@ function SkeletonCardCompact({
   return (
 
     <div
-      className="flex h-12 items-center gap-2.5 rounded-xl bg-white/2 px-3"
+      className="flex h-12 items-center gap-2.5 rounded-xl bg-foreground/5 px-3"
       style={{ opacity }}
     >
 
-      <span className="h-3.5 w-9 rounded bg-white/10" />
+      <span className="h-3.5 w-9 rounded bg-foreground/10" />
 
-      <span className="size-1.5 rounded-full bg-white/15" />
+      <span className="size-1.5 rounded-full bg-foreground/15" />
 
-      <span className="h-3.5 flex-1 rounded bg-white/8" />
+      <span className="h-3.5 flex-1 rounded bg-foreground/10" />
 
-      <span className="h-5 w-14 rounded-md bg-white/8" />
+      <span className="h-5 w-14 rounded-md bg-foreground/10" />
 
     </div>
 
@@ -164,16 +164,16 @@ function SkeletonColumn({
 
       <div className="flex shrink-0 flex-col">
 
-        <div className="flex items-center gap-2 border-b border-white/5 px-3 py-3">
+        <div className="flex items-center gap-2 border-b border-border px-3 py-3">
 
-          <span className="size-6 rounded-md bg-white/8" />
-          <span className="size-4 rounded bg-white/8" />
-          <span className="h-3.5 w-24 rounded bg-white/8" />
-          <span className="ml-auto h-3.5 w-4 rounded bg-white/5" />
+          <span className="size-6 rounded-md bg-foreground/10" />
+          <span className="size-4 rounded bg-foreground/10" />
+          <span className="h-3.5 w-24 rounded bg-foreground/10" />
+          <span className="ml-auto h-3.5 w-4 rounded bg-foreground/5" />
 
         </div>
 
-        <div className="border-b border-white/5 px-2 py-1">
+        <div className="border-b border-border px-2 py-1">
 
           <SkeletonColumnOperator />
 
@@ -220,7 +220,7 @@ export function TaskPipelineSkeleton() {
 
           <SkeletonMobileHeader />
 
-          <div className="border-b border-white/5 px-2 py-1">
+          <div className="border-b border-border px-2 py-1">
 
             <SkeletonColumnOperator centered />
 

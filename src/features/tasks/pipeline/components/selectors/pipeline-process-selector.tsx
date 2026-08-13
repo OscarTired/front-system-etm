@@ -128,7 +128,7 @@ export function PipelineProcessSelector({
         className={cn(
           "absolute left-1 top-1/2 z-20 -translate-y-1/2",
           "flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+          "bg-[#18181b]/80 backdrop-blur-xl text-foreground transition-opacity duration-200",
           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -143,7 +143,7 @@ export function PipelineProcessSelector({
         className={cn(
           "absolute right-1 top-1/2 z-20 -translate-y-1/2",
           "flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-neutral-200 transition-opacity duration-200",
+          "bg-[#18181b]/80 backdrop-blur-xl text-foreground transition-opacity duration-200",
           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -189,7 +189,7 @@ export function PipelineProcessSelector({
                 className={cn(
                   "flex h-10 w-full shrink-0 snap-center items-center justify-center gap-2 rounded-xl border px-3 transition",
                   isActive
-                    ? "border-transparent bg-white/5"
+                    ? "border-transparent bg-foreground/5"
                     : "border-transparent opacity-50",
                 )}
               >
@@ -205,11 +205,11 @@ export function PipelineProcessSelector({
                   <Icon size={15} className="shrink-0" style={{ color: definition.color }} />
                 )}
 
-                <span className="truncate text-sm font-bold uppercase tracking-wide text-neutral-200">
+                <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
                   {definition.label}
                 </span>
 
-                <span className="shrink-0 text-xs font-semibold text-neutral-500">
+                <span className="shrink-0 text-xs font-semibold text-muted-foreground">
                   {count}
                 </span>
 

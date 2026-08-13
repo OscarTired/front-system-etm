@@ -55,7 +55,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           <div />
           <div className="flex flex-col items-center">
             {renderLogo()}
-            <h1 className="mt-2 text-sm font-semibold text-white">
+            <h1 className="mt-2 text-sm font-semibold text-foreground">
               COMPANY S.A.C.
             </h1>
           </div>
@@ -63,7 +63,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           <button
             onClick={handleClose}
             title="Cerrar"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
           >
             <ChevronLeft size={16} />
           </button>
@@ -82,14 +82,14 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
         style={{ height: HEADER_BOX_HEIGHT }}
       >
         {collapsed ? (
-          <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-2">
+          <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 py-3 px-2">
             {renderLogo()}
 
             <div className="flex flex-col items-center gap-1">
               <button
                 onClick={toggleCollapsed}
                 title="Expandir"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
               >
                 <PanelLeftClose size={15} className="rotate-180" />
               </button>
@@ -97,21 +97,21 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
               <button
                 onClick={handleClose}
                 title="Ocultar barra lateral"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
               >
                 {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>
         ) : (
-          <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-white/5 to-white/2.5 py-3 px-4">
+          <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 py-3 px-4">
             {renderLogo()}
 
             <div className="flex flex-col items-center">
-              <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-white/90">
+              <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-foreground/90">
                 COMPANY S.A.C.
               </h1>
-              <p className="mt-0.5 whitespace-nowrap text-[9px] tracking-[0.12em] text-neutral-500">
+              <p className="mt-0.5 whitespace-nowrap text-[9px] tracking-[0.12em] text-muted-foreground">
                 ERP INDUSTRIAL
               </p>
             </div>
@@ -120,7 +120,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
               <button
                 onClick={toggleCollapsed}
                 title="Comprimir"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
               >
                 <PanelLeftClose size={15} />
               </button>
@@ -128,7 +128,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
               <button
                 onClick={handleClose}
                 title="Ocultar barra lateral"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-200"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
               >
                 {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>

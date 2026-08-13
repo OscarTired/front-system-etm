@@ -138,14 +138,14 @@ export function ProjectTable({
     renderDragLabel: project => (
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-md bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/50">
+          <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50">
             {project.projectCode}
           </span>
         </div>
-        <div className="mt-1 truncate text-sm font-semibold text-white">
+        <div className="mt-1 truncate text-sm font-semibold text-foreground">
           {project.name}
         </div>
-        <div className="mt-0.5 text-[11px] text-white/40">
+        <div className="mt-0.5 text-[11px] text-foreground/40">
           {String(project.sequence).padStart(3, "0")}
         </div>
       </div>
@@ -185,7 +185,7 @@ export function ProjectTable({
         })}
 
         {displayedProjects.length === 0 && (
-          <div className="flex h-24 items-center justify-center rounded-xl bg-white/2 text-sm text-neutral-500">
+          <div className="flex h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
             Sin proyectos
           </div>
         )}

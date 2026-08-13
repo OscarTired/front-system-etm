@@ -16,7 +16,7 @@ import { getMonthGrid } from "../../utils/week-range"
 function Pulse({ className }: { className?: string }) {
   return (
     <span
-      className={cn("block animate-pulse rounded bg-white/10", className)}
+      className={cn("block animate-pulse rounded bg-foreground/10", className)}
       aria-hidden
     />
   )
@@ -79,12 +79,12 @@ function MonthEventCard({ log }: { log: ActivityLog }) {
         <Icon size={10} />
       </div>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-[10px] font-semibold text-neutral-200">
-          <span className="text-neutral-400">{formatTime(log.loggedAt)}</span>{" "}
+        <p className="truncate text-[10px] font-semibold text-foreground">
+          <span className="text-muted-foreground">{formatTime(log.loggedAt)}</span>{" "}
           {log.activityType.label}
         </p>
         {subtitle && (
-          <p className="truncate text-[9px] text-neutral-500">{subtitle}</p>
+          <p className="truncate text-[9px] text-muted-foreground">{subtitle}</p>
         )}
       </div>
     </div>
@@ -106,7 +106,7 @@ function MobileDayDots({ logs }: { logs: ActivityLog[] }) {
         />
       ))}
       {extra > 0 && (
-        <span className="text-[9px] font-semibold leading-none text-neutral-500">
+        <span className="text-[9px] font-semibold leading-none text-muted-foreground">
           +{extra}
         </span>
       )}
@@ -139,17 +139,17 @@ export function AgendaMonthView({
    * si hay más eventos de los que caben en 1fr.
    */
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-[#0c0c0e] shadow-2xl backdrop-blur-xl">
-      <div className="grid shrink-0 grid-cols-7 border-b border-white/5">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card shadow-2xl backdrop-blur-xl">
+      <div className="grid shrink-0 grid-cols-7 border-b border-border">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
             key={label}
             className={cn(
               "flex items-center justify-center py-2",
-              i >= 5 && "bg-white/2",
+              i >= 5 && "bg-foreground/5",
             )}
           >
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 tablet:text-[11px]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground tablet:text-[11px]">
               {label}
             </span>
           </div>
@@ -163,7 +163,7 @@ export function AgendaMonthView({
         {Array.from({ length: 6 }).map((_, week) => (
           <div
             key={week}
-            className="grid min-h-0 border-b border-white/5 last:border-b-0"
+            className="grid min-h-0 border-b border-border last:border-b-0"
             style={{ gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
           >
             {cells.slice(week * 7, week * 7 + 7).map((day, dayIndex) => {
@@ -190,14 +190,14 @@ export function AgendaMonthView({
                     onSelectDay?.(day)
                   }}
                   className={cn(
-                    "relative flex min-h-[4.5rem] flex-col overflow-hidden border-r border-white/5 text-left transition-colors last:border-r-0 tablet:min-h-0",
+                    "relative flex min-h-[4.5rem] flex-col overflow-hidden border-r border-border text-left transition-colors last:border-r-0 tablet:min-h-0",
                     isCompact
                       ? "items-center justify-start gap-0.5 p-1"
                       : "items-stretch gap-1 p-1.5",
-                    isWeekend && "bg-white/2",
-                    isAnchor && "bg-white/6",
+                    isWeekend && "bg-foreground/5",
+                    isAnchor && "bg-foreground/5",
                     isToday && "bg-amber-500/10",
-                    !isFuture && inMonth && "hover:bg-white/6",
+                    !isFuture && inMonth && "hover:bg-foreground/5",
                     isFuture && "cursor-default",
                   )}
                 >
@@ -227,14 +227,14 @@ export function AgendaMonthView({
                           isToday
                             ? "bg-amber-400 text-black"
                             : isAnchor
-                              ? "bg-white/15 text-white"
+                              ? "bg-foreground/15 text-foreground"
                               : !inMonth
-                                ? "text-neutral-600"
+                                ? "text-muted-foreground/80"
                                 : isFuture
-                                  ? "text-neutral-600"
+                                  ? "text-muted-foreground/80"
                                   : hasLogs
-                                    ? "text-neutral-200"
-                                    : "text-neutral-300",
+                                    ? "text-foreground"
+                                    : "text-muted-foreground",
                         )}
                       >
                         {day.getDate()}
@@ -251,7 +251,7 @@ export function AgendaMonthView({
                             <MonthEventCard key={log.id} log={log} />
                           ))}
                           {dayLogs.length > MAX_EVENTS_DESKTOP && (
-                            <span className="shrink-0 px-1 pt-0.5 text-center text-[10px] font-medium text-neutral-500">
+                            <span className="shrink-0 px-1 pt-0.5 text-center text-[10px] font-medium text-muted-foreground">
                               +{dayLogs.length - MAX_EVENTS_DESKTOP} más
                             </span>
                           )}

@@ -13,7 +13,7 @@
 function SkeletonRoleMobileCard({ opacity }: { opacity: number }) {
   return (
     <article
-      className="overflow-hidden rounded-xl bg-white/2"
+      className="overflow-hidden rounded-xl bg-foreground/5"
       style={{ opacity }}
     >
       <button
@@ -22,15 +22,15 @@ function SkeletonRoleMobileCard({ opacity }: { opacity: number }) {
         className="w-full text-left"
       >
         <header className="flex items-center justify-between gap-2.5 px-3 py-3">
-          <span className="h-4 w-24 rounded bg-white/10" />
+          <span className="h-4 w-24 rounded bg-foreground/10" />
 
           {/* Placeholder del "Inactivo" opcional de la card real */}
-          <span className="hidden h-4 w-14 rounded bg-white/8" />
+          <span className="hidden h-4 w-14 rounded bg-foreground/10" />
         </header>
 
         <div className="flex items-center gap-2.5 px-3 pb-3">
           <div className="min-w-0 flex-1">
-            <span className="block h-8 w-full rounded-full bg-white/6" />
+            <span className="block h-8 w-full rounded-full bg-foreground/5" />
           </div>
         </div>
       </button>

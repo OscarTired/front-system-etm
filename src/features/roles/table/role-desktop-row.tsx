@@ -23,8 +23,8 @@ export function RoleDesktopRow({ role, selected, onSelect }: Props) {
       className={cn(
         "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
         selected
-          ? "bg-white/10 text-white"
-          : "hover:bg-white/4 text-neutral-300"
+          ? "bg-foreground/10 text-foreground"
+          : "hover:bg-foreground/5 text-muted-foreground"
       )}
     >
       <div className="flex min-w-0 items-center gap-2.5">
@@ -38,7 +38,7 @@ export function RoleDesktopRow({ role, selected, onSelect }: Props) {
       </div>
 
       {!role.active && (
-        <span className="shrink-0 text-xs text-neutral-500">Inactivo</span>
+        <span className="shrink-0 text-xs text-muted-foreground">Inactivo</span>
       )}
     </button>
   )

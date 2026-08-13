@@ -169,7 +169,7 @@ export function EntitySelect<T extends EntityBase>({
           {triggerVariant === "row" ? (() => {
 
             const labelEl = (
-              <span className="shrink-0 text-xs font-medium text-neutral-500">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">
                 {rowLabel}
               </span>
             )
@@ -179,7 +179,7 @@ export function EntitySelect<T extends EntityBase>({
               <button
                 type="button"
                 disabled={disabled}
-                className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-white/3 px-3 py-2.5 text-left transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 text-left transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
 
                 {/* Un solo layout siempre, mobile y desktop — el
@@ -191,7 +191,7 @@ export function EntitySelect<T extends EntityBase>({
                     <ChevronDown
                       size={14}
                       className={cn(
-                        "shrink-0 text-neutral-500 transition-transform duration-200",
+                        "shrink-0 text-muted-foreground transition-transform duration-200",
                         open && "rotate-180",
                       )}
                     />
@@ -252,7 +252,7 @@ export function EntitySelect<T extends EntityBase>({
         >
           <Command>
             <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
-              <Search size={14} className="text-white/35" />
+              <Search size={14} className="text-foreground/35" />
 
               <Input
                 ref={inputRef}

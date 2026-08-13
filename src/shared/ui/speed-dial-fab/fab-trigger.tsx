@@ -44,8 +44,8 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
           ref={ref}
           type="button"
           className={cn(
-            "flex h-8 items-center gap-2 rounded-xl px-2 text-white transition-colors hover:bg-[#101012]",
-            active && "bg-[#101012]",
+            "flex h-8 items-center gap-2 rounded-xl px-2 text-foreground transition-colors hover:bg-muted",
+            active && "bg-muted",
             className,
           )}
           {...props}
@@ -66,8 +66,8 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
         aria-label={label}
         title={label}
         className={cn(
-          "relative flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95",
-          accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-white/20"),
+          "relative flex size-11 shrink-0 items-center justify-center rounded-full text-foreground shadow-lg transition active:scale-95",
+          accentClassName ?? cn("bg-[#1a1a1a]", active && "bg-foreground/20"),
           className,
         )}
         {...props}

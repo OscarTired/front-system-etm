@@ -27,7 +27,7 @@ export function EntityLink({
     <Link
       href={href}
       className={cn(
-        "transition-colors hover:text-white",
+        "transition-colors hover:text-foreground",
         className
       )}
     >

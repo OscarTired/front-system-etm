@@ -138,13 +138,13 @@ export function EntityCustomColor({
 
     <div className="space-y-3">
 
-      <p className="text-xs uppercase tracking-[0.25em] text-neutral-400">
+      <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
 
         Color personalizado
 
       </p>
 
-      <div className="flex overflow-hidden rounded-xl bg-white/4">
+      <div className="flex overflow-hidden rounded-xl bg-foreground/5">
 
         <HexColorPicker
           value={value.color}
@@ -166,7 +166,7 @@ export function EntityCustomColor({
 
         <div className="flex h-9 flex-1 items-center gap-0.5 px-6">
 
-          <span className="font-mono text-base font-semibold text-neutral-500">
+          <span className="font-mono text-base font-semibold text-muted-foreground">
             #
           </span>
 
@@ -183,7 +183,7 @@ export function EntityCustomColor({
             }
             onBlur={handleInputBlur}
             onKeyDown={handleInputKeyDown}
-            className="h-9 flex-1 rounded-none bg-transparent px-0 text-base font-semibold uppercase tracking-wide text-neutral-200"
+            className="h-9 flex-1 rounded-none bg-transparent px-0 text-base font-semibold uppercase tracking-wide text-foreground"
           />
 
         </div>
@@ -212,10 +212,10 @@ export function EntityCustomColor({
                 )
 
               }
-              className="h-9 rounded-xl text-center text-sm font-semibold text-neutral-300"
+              className="h-9 rounded-xl text-center text-sm font-semibold text-muted-foreground"
             />
 
-            <p className="text-center text-xs font-semibold text-neutral-500">
+            <p className="text-center text-xs font-semibold text-muted-foreground">
 
               {label}
 

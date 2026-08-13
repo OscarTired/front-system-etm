@@ -118,13 +118,13 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
           aria-label="Mensajes"
           onClick={() => setOpen(!open)}
           className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-neutral-300 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/15 active:bg-white/20",
-            open && "bg-white/20 text-white",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+            open && "bg-foreground/20 text-foreground",
           )}
         >
           <MessageSquare size={16} strokeWidth={2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-900 text-[10px] font-semibold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-900 text-[10px] font-semibold text-foreground">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -144,8 +144,8 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
           collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-          collapsedBadgeColor="bg-sky-900 text-white"
-          badgeColor="bg-sky-900 text-white"
+          collapsedBadgeColor="bg-sky-900 text-foreground"
+          badgeColor="bg-sky-900 text-foreground"
           badgeAnimated={count > 0}
         />
       </button>
@@ -155,13 +155,13 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
   const panelBody = (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 px-3 pb-2 pt-1">
-        <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-          <Search size={15} className="shrink-0 text-neutral-500" />
+        <div className="flex items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2">
+          <Search size={15} className="shrink-0 text-muted-foreground" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar en mis mensajes..."
-            className="w-full bg-transparent text-sm text-neutral-200 outline-none placeholder:text-neutral-600"
+            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
           />
         </div>
       </div>
@@ -171,17 +171,17 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
           {loading ? (
             <div className="flex min-h-48 flex-col items-center justify-center gap-2">
               <Spinner size={18} />
-              <p className="text-sm text-neutral-500">Cargando...</p>
+              <p className="text-sm text-muted-foreground">Cargando...</p>
             </div>
           ) : error ? (
             <div className="flex min-h-48 flex-col items-center justify-center gap-2 px-4 text-center">
-              <MessageSquare size={28} className="text-neutral-600" />
-              <p className="text-sm text-neutral-400">No se pudieron cargar</p>
+              <MessageSquare size={28} className="text-muted-foreground/80" />
+              <p className="text-sm text-muted-foreground">No se pudieron cargar</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex min-h-48 flex-col items-center justify-center gap-2 px-4 text-center">
-              <CheckCircle2 size={28} className="text-neutral-600" />
-              <p className="text-sm text-neutral-400">
+              <CheckCircle2 size={28} className="text-muted-foreground/80" />
+              <p className="text-sm text-muted-foreground">
                 {search.trim() ? "Sin resultados" : "Aún no escribiste mensajes"}
               </p>
             </div>
@@ -198,22 +198,22 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                 return (
                   <li key={c.id}>
                     {confirming ? (
-                      <div className="rounded-xl bg-white/5 p-3">
-                        <p className="mb-2 text-xs text-neutral-400">
+                      <div className="rounded-xl bg-foreground/5 p-3">
+                        <p className="mb-2 text-xs text-muted-foreground">
                           Este mensaje está en un ítem histórico. ¿Abrir igual?
                         </p>
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => openComment(c, true)}
-                            className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
+                            className="rounded-lg bg-foreground/10 px-3 py-1.5 text-xs font-medium text-foreground"
                           >
                             Abrir
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmId(null)}
-                            className="rounded-lg px-3 py-1.5 text-xs text-neutral-400"
+                            className="rounded-lg px-3 py-1.5 text-xs text-muted-foreground"
                           >
                             Cancelar
                           </button>
@@ -223,22 +223,22 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                       <button
                         type="button"
                         onClick={() => openComment(c)}
-                        className="w-full rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                        className="w-full rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-foreground/5"
                       >
                         <div className="flex min-w-0 items-center gap-1.5 text-xs">
-                          <span className="min-w-0 flex-1 truncate text-neutral-200">
+                          <span className="min-w-0 flex-1 truncate text-foreground">
                             {ctx || scopeBadge(c)}
                           </span>
-                          <span className="shrink-0 text-[10px] text-neutral-600">
+                          <span className="shrink-0 text-[10px] text-muted-foreground/80">
                             {formatCommentDate(c.createdAt)}
                           </span>
                         </div>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-neutral-500">
+                        <p className="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                           {scopeBadge(c)}
                           {typeof isHistorical === "boolean" && (
                             <span
                               className={cn(
-                                isHistorical ? "text-neutral-500" : "text-cyan-400",
+                                isHistorical ? "text-muted-foreground" : "text-cyan-400",
                               )}
                             >
                               · {isHistorical ? "Histórico" : "Activo"}
@@ -246,7 +246,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                           )}
                         </p>
                         {c.parent && (
-                          <div className="mt-1 flex items-start gap-1.5 text-xs text-neutral-500">
+                          <div className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
                             <Reply size={11} className="mt-0.5 shrink-0 -scale-x-100" />
                             <span className="min-w-0 flex-1 truncate">
                               {c.parent.deletedAt
@@ -257,17 +257,17 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                         )}
                         <div className="mt-1 flex gap-2">
                           {c.imageUrl && (
-                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-black/40 ring-1 ring-white/8">
+                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-black/40 ring-1 ring-border">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={c.imageUrl} alt="" className="size-full object-cover" />
                             </div>
                           )}
                           {c.message ? (
-                            <p className="line-clamp-1 min-w-0 flex-1 text-xs text-neutral-400">
+                            <p className="line-clamp-1 min-w-0 flex-1 text-xs text-muted-foreground">
                               {c.message}
                             </p>
                           ) : c.imageUrl ? (
-                            <p className="flex items-center gap-1 text-xs text-neutral-500">
+                            <p className="flex items-center gap-1 text-xs text-muted-foreground">
                               <ImageIcon size={12} /> Foto
                             </p>
                           ) : null}
@@ -284,8 +284,8 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
 
       <div className="flex h-10 shrink-0 items-center justify-center p-2 select-none">
         {comments.length === 0 && !loading ? (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
-            <CheckCircle2 size={13} className="shrink-0 text-neutral-600" />
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <CheckCircle2 size={13} className="shrink-0 text-muted-foreground/80" />
             Sin mensajes
           </div>
         ) : (
@@ -294,7 +294,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
             onClick={() => {
               void queryClient.invalidateQueries({ queryKey: ["comments", "mine"] })
             }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-200"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             Actualizar
           </button>
@@ -310,10 +310,10 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent
             size="large"
-            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-white shadow-2xl"
+            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
           >
             <FormDialogHeader title="Mensajes" icon={MessageSquare} />
-            <p className="px-4 pb-1 text-xs text-neutral-500">
+            <p className="px-4 pb-1 text-xs text-muted-foreground">
               Solo los mensajes que tú escribiste
             </p>
             {panelBody}
@@ -331,10 +331,10 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
         side="right"
         align="start"
         sideOffset={8}
-        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-white shadow-xl select-none"
+        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-foreground shadow-xl select-none"
       >
         <div className="flex shrink-0 items-center px-3.5 pt-3">
-          <span className="text-sm font-semibold text-neutral-200">Mensajes</span>
+          <span className="text-sm font-semibold text-foreground">Mensajes</span>
         </div>
         {panelBody}
       </PopoverContent>

@@ -43,7 +43,7 @@ export function TaskPipelineCardCompact({
 
     <div
       className={cn(
-        "flex h-12 min-w-0 w-full items-center gap-2.5 rounded-xl bg-white/6 pl-3 transition hover:bg-white/10",
+        "flex h-12 min-w-0 w-full items-center gap-2.5 rounded-xl bg-foreground/5 pl-3 transition hover:bg-foreground/10",
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
@@ -57,7 +57,7 @@ export function TaskPipelineCardCompact({
 
       <span
         title={task.reference}
-        className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-300"
+        className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground"
       >
 
         {task.reference}

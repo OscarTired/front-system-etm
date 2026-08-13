@@ -47,7 +47,7 @@ export const ColorPreview = forwardRef<HTMLButtonElement, ColorPreviewProps>(
         onClick={onClick}
         className={[
           'flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-medium',
-          'bg-white/6 border border-transparent hover:bg-white/8',
+          'bg-foreground/5 border border-transparent hover:bg-foreground/10',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15',
           'disabled:opacity-50 disabled:cursor-not-allowed transition-colors',
           className ?? '',
@@ -58,7 +58,7 @@ export const ColorPreview = forwardRef<HTMLButtonElement, ColorPreviewProps>(
           className="w-4 h-4 rounded-full border border-white/15 shrink-0"
           style={{ backgroundColor: hex }}
         />
-        <span className="text-neutral-300 font-mono text-xs">{hex}</span>
+        <span className="text-muted-foreground font-mono text-xs">{hex}</span>
       </button>
     );
   },

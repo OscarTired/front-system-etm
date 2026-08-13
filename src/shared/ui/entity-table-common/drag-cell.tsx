@@ -24,9 +24,9 @@ export function DragCell({ hidden = false }: Props) {
       onPointerDown={hidden ? undefined : handle?.onPointerDown}
       style={{ touchAction: "none" }}
       className={cn(
-        "flex shrink-0 touch-none items-center justify-center overflow-hidden rounded-lg text-neutral-500",
+        "flex shrink-0 touch-none items-center justify-center overflow-hidden rounded-lg text-muted-foreground",
         "transition-[width,opacity,margin] duration-200 ease-out",
-        "hover:bg-white/5 hover:text-neutral-200",
+        "hover:bg-foreground/5 hover:text-foreground",
         hidden
           ? "pointer-events-none h-9 w-0 opacity-0"
           : "h-9 w-9 opacity-100",

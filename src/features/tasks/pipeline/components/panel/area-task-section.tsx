@@ -21,7 +21,7 @@ export function AreaTaskSection({ code, panel }: AreaTaskSectionProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-2">
+      <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
         <div className="flex items-center gap-2.5">
 
         </div>
@@ -107,7 +107,7 @@ function OperatorTaskLists({ code, tasks, panel }: OperatorTaskListsProps) {
 
       {available.length > 0 && (
         <>
-          <p className={cn("mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-neutral-500", assigned.length > 0 && "mt-3")}>
+          <p className={cn("mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground", assigned.length > 0 && "mt-3")}>
             Disponibles
           </p>
           <TaskProcessColumn
@@ -124,7 +124,7 @@ function OperatorTaskLists({ code, tasks, panel }: OperatorTaskListsProps) {
       )}
 
       {assigned.length === 0 && available.length === 0 && (
-        <div className="flex h-12 items-center justify-center rounded-xl bg-white/4 px-3 text-sm font-medium text-neutral-500">
+        <div className="flex h-12 items-center justify-center rounded-xl bg-foreground/5 px-3 text-sm font-medium text-muted-foreground">
           Sin tareas
         </div>
       )}

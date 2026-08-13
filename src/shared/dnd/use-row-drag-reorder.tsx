@@ -250,7 +250,7 @@ export function useRowDragReorder<T>({
         ref={el => { rowEls.current[rowId] = el }}
         className={
           isGridMode
-            ? "grid min-w-0 items-center rounded-xl border-b border-white/5 px-2 transition-colors hover:bg-white/2"
+            ? "grid min-w-0 items-center rounded-xl border-b border-border px-2 transition-colors hover:bg-foreground/5"
             : "min-w-0"
         }
         style={{
@@ -302,8 +302,8 @@ export function useRowDragReorder<T>({
           zIndex: 10000,
         }}
       >
-        <div className="flex w-64 items-center gap-3 rounded-xl bg-neutral-900/95 px-3 py-2 backdrop-blur-xl shadow-[0_28px_70px_rgba(0,0,0,.45)]">
-          <span className="text-white/35 shrink-0">≡</span>
+        <div className="flex w-64 items-center gap-3 rounded-xl bg-popover px-3 py-2 backdrop-blur-xl shadow-[0_28px_70px_rgba(0,0,0,.45)]">
+          <span className="text-foreground/35 shrink-0">≡</span>
           <div className="min-w-0 overflow-hidden">
             {renderDragLabel(drag.item)}
           </div>

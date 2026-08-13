@@ -60,17 +60,17 @@ export function ActivityLogChip({
           )}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <div className="size-7 shrink-0 rounded-lg bg-white/10 md:size-6" />
+            <div className="size-7 shrink-0 rounded-lg bg-foreground/10 md:size-6" />
             <div className="min-w-0 flex-1 space-y-1.5">
               <div className="h-3 w-2/5 rounded bg-white/12" />
-              <div className="h-2.5 w-3/5 rounded bg-white/8 md:hidden" />
+              <div className="h-2.5 w-3/5 rounded bg-foreground/10 md:hidden" />
             </div>
           </div>
-          <div className="h-2.5 w-8 shrink-0 rounded bg-white/8 md:hidden" />
+          <div className="h-2.5 w-8 shrink-0 rounded bg-foreground/10 md:hidden" />
         </div>
         {!compact && (
-          <div className="mt-2 hidden w-full border-t border-white/5 pt-1.5 md:block">
-            <div className="h-2.5 w-12 rounded bg-white/8" />
+          <div className="mt-2 hidden w-full border-t border-border pt-1.5 md:block">
+            <div className="h-2.5 w-12 rounded bg-foreground/10" />
           </div>
         )}
       </div>
@@ -119,36 +119,36 @@ export function ActivityLogChip({
                 {label}
               </span>
               {log.source === "AUTO" && (
-                <span className="shrink-0 rounded-md bg-black/40 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-white/90">
+                <span className="shrink-0 rounded-md bg-black/40 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-foreground/90">
                   Auto
                 </span>
               )}
             </div>
             {subtitle && (
-              <p className="mt-0.5 truncate text-[10px] font-medium text-neutral-400 md:hidden">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-muted-foreground md:hidden">
                 {subtitle}
               </p>
             )}
           </div>
         </div>
 
-        <span className="shrink-0 text-[10px] tabular-nums text-neutral-500 md:hidden">
+        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground md:hidden">
           {formatTime(log.loggedAt)}
         </span>
       </div>
 
       {!compact && (
-        <div className="mt-2 hidden w-full flex-col gap-1 border-t border-white/5 pt-1.5 md:flex">
-          <span className="text-[10px] tabular-nums text-neutral-500">
+        <div className="mt-2 hidden w-full flex-col gap-1 border-t border-border pt-1.5 md:flex">
+          <span className="text-[10px] tabular-nums text-muted-foreground">
             {formatTime(log.loggedAt)}
           </span>
           {log.project && (
-            <span className="flex items-center gap-1 truncate text-[10px] font-medium text-neutral-300">
+            <span className="flex items-center gap-1 truncate text-[10px] font-medium text-muted-foreground">
               <span className="opacity-70">📁</span> {log.project.name}
             </span>
           )}
           {log.note && (
-            <p className="line-clamp-2 text-[11px] font-normal leading-relaxed text-neutral-400">
+            <p className="line-clamp-2 text-[11px] font-normal leading-relaxed text-muted-foreground">
               {log.note}
             </p>
           )}

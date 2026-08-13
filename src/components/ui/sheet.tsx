@@ -80,7 +80,7 @@ export function SheetContent({
         onOpenAutoFocus={event => event.preventDefault()}
         className={cn(
           "fixed inset-y-0 right-0 z-40 flex h-dvh w-full max-w-md flex-col",
-          "bg-[#101012] shadow-2xl outline-none select-none",
+          "bg-muted shadow-2xl outline-none select-none",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           "data-[state=closed]:duration-200 data-[state=open]:duration-300",
@@ -94,7 +94,7 @@ export function SheetContent({
         {showCloseButton && (
 
           <SheetClose
-            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             <X size={16} />
           </SheetClose>
@@ -130,7 +130,7 @@ export function SheetTitle({
 
   return (
     <DialogPrimitive.Title
-      className={cn("text-base font-bold tracking-wide text-white", className)}
+      className={cn("text-base font-bold tracking-wide text-foreground", className)}
       {...props}
     />
   )
@@ -144,7 +144,7 @@ export function SheetDescription({
 
   return (
     <DialogPrimitive.Description
-      className={cn("text-xs text-neutral-500", className)}
+      className={cn("text-xs text-muted-foreground", className)}
       {...props}
     />
   )

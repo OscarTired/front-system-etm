@@ -123,14 +123,14 @@ export function TeamSupervisionKpiBar({
               isCompact
                 ? "items-center rounded-xl px-1.5 py-2"
                 : "items-start rounded-2xl px-3.5 py-3",
-              "bg-white/5 hover:bg-white/8",
-              active && "bg-white/10 ring-1 ring-white/15",
+              "bg-foreground/5 hover:bg-foreground/10",
+              active && "bg-foreground/10 ring-1 ring-white/15",
               loading && "pointer-events-none animate-pulse",
             )}
           >
             <span
               className={cn(
-                "font-semibold tracking-wider text-neutral-500 uppercase",
+                "font-semibold tracking-wider text-muted-foreground uppercase",
                 isCompact ? "text-[8px]" : "text-[10px]",
               )}
             >
@@ -140,12 +140,12 @@ export function TeamSupervisionKpiBar({
               <>
                 <span
                   className={cn(
-                    "mt-1 rounded bg-white/10",
+                    "mt-1 rounded bg-foreground/10",
                     isCompact ? "h-5 w-8" : "h-7 w-12",
                   )}
                 />
                 {!isCompact && (
-                  <span className="mt-1 h-3 w-16 rounded bg-white/8" />
+                  <span className="mt-1 h-3 w-16 rounded bg-foreground/10" />
                 )}
               </>
             ) : (
@@ -157,7 +157,7 @@ export function TeamSupervisionKpiBar({
                     card.tone === "danger" && "text-rose-400",
                     card.tone === "warn" && "text-amber-400",
                     card.tone === "ok" && "text-emerald-400",
-                    card.tone === "neutral" && "text-neutral-100",
+                    card.tone === "neutral" && "text-foreground",
                   )}
                 >
                   {card.value}
@@ -165,7 +165,7 @@ export function TeamSupervisionKpiBar({
                 {card.hint ? (
                   <span
                     className={cn(
-                      "text-neutral-500",
+                      "text-muted-foreground",
                       isCompact ? "mt-0 text-[9px]" : "mt-0.5 text-[11px]",
                     )}
                   >
