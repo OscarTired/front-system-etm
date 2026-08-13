@@ -59,9 +59,9 @@ export default function RootLayout({
 
   return (
 
-    <html lang="es" className="dark h-full overflow-hidden">
+    <html lang="es" className="dark h-svh overflow-hidden">
 
-      <body className={`${geist.className} h-full overflow-hidden`}>
+      <body className={`${geist.className} h-svh overflow-hidden`}>
 
         <ApiClientProvider />
 
