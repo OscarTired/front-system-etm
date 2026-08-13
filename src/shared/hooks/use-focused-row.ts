@@ -178,6 +178,7 @@ export function useFocusedRow({
   useEffect(() => {
     if (!focusedId) {
       stopTracking()
+      useFocusNavStore.getState().end()
       useFocusSettleStore.getState().reset()
 
       const prev = prevFocusedIdRef.current
@@ -198,6 +199,10 @@ export function useFocusedRow({
     }
 
     prevFocusedIdRef.current = focusedId
+
+    // Overlay automático: cualquier deep-link (?taskId / ?projectId)
+    // lo muestra hasta centrar el row — no depende de cada router.push.
+    useFocusNavStore.getState().start("Dirigiendo…")
 
     // Todavía NO expandimos — el orden correcto es scroll primero,
     // con el row visible pero colapsado (existe en el DOM igual,

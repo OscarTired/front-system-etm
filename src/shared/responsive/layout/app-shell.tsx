@@ -151,7 +151,6 @@ function CompactShell({ children }: Props) {
 }
 
 export function AppShell({ children }: Props) {
-
   const { isMobile, ready } = useResponsive()
 
   if (!ready) {

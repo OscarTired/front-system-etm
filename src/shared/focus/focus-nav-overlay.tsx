@@ -7,10 +7,6 @@ import { useFocusNavStore } from "./store/focus-nav-store"
 
 const SAFETY_MS = 4000
 
-/**
- * Cubre la UI mientras el deep-link scrollea y expande el row.
- * Spinner del design system (rayitas), no Loader2.
- */
 export function FocusNavOverlay() {
   const active = useFocusNavStore(s => s.active)
   const label = useFocusNavStore(s => s.label)
