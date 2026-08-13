@@ -202,9 +202,9 @@ export function getBadgeColors(
       }
 
     default: {
-      const a = readCssNumber("--chip-bg-alpha", 0.32)
-      const aHover = readCssNumber("--chip-bg-alpha-hover", 0.42)
-      const aActive = readCssNumber("--chip-bg-alpha-active", 0.52)
+      const a = readCssNumber("--chip-bg-alpha", 0.50)
+      const aHover = readCssNumber("--chip-bg-alpha-hover", 0.58)
+      const aActive = readCssNumber("--chip-bg-alpha-active", 0.66)
 
       const bg = blendOnChipSurface(hex, a)
       return {

@@ -103,12 +103,14 @@
   --chrome: oklch(0.975 0.003 260 / 0.92);
   --overlay: oklch(0.2 0.01 260 / 0.45);
   /* Chips de dominio + fin gradiente mini-card (tokens, sin hardcode JS). */
+  /* Domain glass en light: misma metodologia que dark (no pasteles).
+   * Alpha un poco mas alto para que el color se lea sobre pagina clara. */
   --chip-surface-rgb: 16 16 18;
-  --chip-bg-alpha: 0.32;
-  --chip-bg-alpha-hover: 0.42;
-  --chip-bg-alpha-active: 0.52;
-  --chip-text-tint: 0.84;
-  --process-card-end: oklch(0.12 0.005 260);
+  --chip-bg-alpha: 0.50;
+  --chip-bg-alpha-hover: 0.58;
+  --chip-bg-alpha-active: 0.66;
+  --chip-text-tint: 0.88;
+  --process-card-end: oklch(0.16 0.008 260);
 }
 
 html, body {
