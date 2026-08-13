@@ -49,6 +49,7 @@ import {
 
 import {
   getBadgeColors,
+  getGlassSurface,
 } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
 
@@ -165,14 +166,14 @@ export function TaskProductionPanel({
 
           <span
             className="truncate text-xs font-bold uppercase tracking-wide"
-            style={{ color: status?.color ?? "#737373" }}
+            style={{ color: summaryTextColor }}
           >
             {status?.name ?? "Sin estado"}
           </span>
 
         </div>
 
-        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
+        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-on-glass-muted">
           {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-primary">{workflowView.progress}%</span>
         </span>
 
@@ -256,7 +257,7 @@ export function TaskProductionPanel({
                     ) : (
                       <ProcessIcon
                         size={16}
-                        style={{ color: isActive ? colors.text : "#737373" }}
+                        style={{ color: isActive ? colors.text : "var(--on-glass-faint)" }}
                       />
                     )}
                   </div>
@@ -399,7 +400,7 @@ export function TaskProductionPanel({
               onClick={() => setExpanded(true)}
               className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
               style={{
-                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, var(--process-card-end, var(--process-card-end)))`,
+                background: getGlassSurface(status?.color ?? "#64748B").background,
               }}
             >
 
@@ -423,14 +424,14 @@ export function TaskProductionPanel({
               <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Listas</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-on-glass-muted">Listas</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.completedSteps}/{workflowView.totalSteps}
                   </p>
                 </div>
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Avance</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-on-glass-muted">Avance</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.progress}%
                   </p>
@@ -438,7 +439,7 @@ export function TaskProductionPanel({
 
               </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-on-glass-muted">
                 <MoreHorizontal size={18} />
               </div>
 
@@ -449,7 +450,7 @@ export function TaskProductionPanel({
           <div
             className="flex w-full flex-col gap-6 rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, var(--process-card-end, var(--process-card-end)))`,
+              background: getGlassSurface(status?.color ?? "#64748B").background,
             }}
           >
 

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { ChevronDown } from "lucide-react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { getBadgeColors } from "@/shared/utils/badge-colors"
+import { getBadgeColors, getGlassSurface } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
 import { cn } from "@/shared/utils/utils"
 
@@ -64,7 +64,7 @@ export function ProductionProcessCard({
         onClick={onToggle}
         className="flex w-full items-center gap-3 p-3 text-left transition hover:brightness-110 tablet:gap-4"
         style={{
-          background: `linear-gradient(135deg, ${definition.color}20, var(--process-card-end, var(--process-card-end)))`,
+          background: getGlassSurface(definition.color).background,
         }}
       >
 

@@ -96,6 +96,12 @@ function rgbString(
     : `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
 }
 
+function withAlpha(cssColor: string, alpha: number): string {
+  const m = cssColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (m) return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${alpha})`
+  return cssColor
+}
+
 /**
  * Texto legible GARANTIZADO contra el fondo que se está usando de
  * verdad — en vez de oscurecer el hex un % fijo (lo que había antes,
@@ -194,6 +200,7 @@ export function getBadgeColors(
         backgroundActive: hex,
         glow: rgba(hex, 0.25),
         text: getContrastText(hex),
+        textMuted: withAlpha(getContrastText(hex), 0.62),
         shadow: {
           default: "none",
           hover: `0 4px 12px rgba(0,0,0,0.16)`,
@@ -213,6 +220,7 @@ export function getBadgeColors(
         backgroundActive: rgbString(blendOnChipSurface(hex, aActive)),
         glow: rgba(hex, 0.12),
         text: getChipText(hex, bg),
+        textMuted: withAlpha(getChipText(hex, bg), 0.62),
         shadow: {
           default: "none",
           hover: `
@@ -234,4 +242,19 @@ export function getProcessCardTextColor(
   _theme?: "light" | "dark",
 ) {
   return getBadgeColors(hex, "subtle").text
+}
+
+/** Superficie glass de dominio (KPI, process cards, workflow). */
+export function getGlassSurface(
+  hex: string,
+  theme?: "light" | "dark",
+) {
+  const c = getBadgeColors(hex, "subtle", theme)
+  return {
+    background: `linear-gradient(135deg, ${c.background}, var(--process-card-end))`,
+    backgroundInset: `linear-gradient(135deg, ${c.background}, color-mix(in oklab, var(--on-glass-foreground) 4%, var(--process-card-end)))`,
+    text: c.text,
+    textMuted: (c as { textMuted?: string }).textMuted ?? "var(--on-glass-muted)",
+    textFaint: "var(--on-glass-faint)",
+  }
 }

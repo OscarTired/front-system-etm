@@ -21,7 +21,7 @@ function SkeletonProcessRow({
       <div
         className="flex w-full items-center gap-3 p-3 tablet:gap-4"
         style={{
-          background: `linear-gradient(135deg, ${color}20, var(--process-card-end, var(--process-card-end)))`,
+          background: `linear-gradient(135deg, color-mix(in oklab, ${color} 20%, transparent), var(--process-card-end))`,
         }}
       >
 

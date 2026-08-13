@@ -16,6 +16,7 @@ import {
 
 import {
   getBadgeColors,
+  getGlassSurface,
 } from "@/shared/utils/badge-colors"
 
 import {
@@ -118,7 +119,7 @@ export function KpiCarousel({
       onClick={() => setExpanded(true)}
       className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
       style={{
-        background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", theme).background}, var(--process-card-end))`,
+        background: getGlassSurface(summary.color, theme).background,
       }}
     >
 
@@ -139,7 +140,7 @@ export function KpiCarousel({
 
           <div key={value.label} className="min-w-0 text-right">
 
-            <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground sm:text-xs">
+            <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-on-glass-muted sm:text-xs">
               {value.label}
             </p>
 
@@ -156,7 +157,7 @@ export function KpiCarousel({
 
       </div>
 
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-on-glass-muted">
         <MoreHorizontal size={18} />
       </div>
 
@@ -212,7 +213,7 @@ export function KpiCarousel({
                 <span
                   className="text-[10px] font-bold uppercase tracking-wide"
                   style={{
-                    color: isSelected ? colors.text : "#737373"
+                    color: isSelected ? colors.text : "var(--on-glass-faint)"
                   }}
                 >
                   {item.label}
@@ -245,7 +246,7 @@ export function KpiCarousel({
           <div
             className="flex w-full flex-col rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", theme).background}, var(--process-card-end))`,
+              background: getGlassSurface(summary.color, theme).background,
             }}
           >
             {mobileChips}
@@ -254,7 +255,7 @@ export function KpiCarousel({
               <div
                 className="w-full max-w-3xl rounded-xl px-5 py-3.5 transition-all duration-200"
                 style={{
-                  background: `linear-gradient(135deg, ${getBadgeColors(activeItem?.color ?? summary.color, "subtle", theme).background}, rgba(255,255,255,0.02))`,
+                  background: getGlassSurface(activeItem?.color ?? summary.color, theme).backgroundInset,
                 }}
               >
                 <div className="flex w-full min-w-0 flex-col gap-1.5">
@@ -275,7 +276,7 @@ export function KpiCarousel({
                         activeItem.rows.map((row, rIdx) => (
                           <div key={rIdx} className="flex items-center gap-1.5 text-right">
                             {activeItem.rows!.length > 1 && (
-                              <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                              <span className="text-[10px] font-bold uppercase text-on-glass-muted">
                                 {row.label}:
                               </span>
                             )}

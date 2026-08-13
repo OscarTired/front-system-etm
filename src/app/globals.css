@@ -22,6 +22,9 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-chrome: var(--chrome);
   --color-overlay: var(--overlay);
+  --color-on-glass-foreground: var(--on-glass-foreground);
+  --color-on-glass-muted: var(--on-glass-muted);
+  --color-on-glass-faint: var(--on-glass-faint);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
@@ -111,6 +114,9 @@
   --chip-bg-alpha-active: 0.66;
   --chip-text-tint: 0.88;
   --process-card-end: oklch(0.16 0.008 260);
+  --on-glass-foreground: oklch(0.96 0.005 260);
+  --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
+  --on-glass-faint: oklch(0.96 0.005 260 / 0.38);
 }
 
 html, body {
@@ -162,6 +168,9 @@ html, body {
   --chip-bg-alpha-active: 0.52;
   --chip-text-tint: 0.84;
   --process-card-end: oklch(0.12 0.005 260);
+  --on-glass-foreground: oklch(0.96 0.005 260);
+  --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
+  --on-glass-faint: oklch(0.96 0.005 260 / 0.38);
 }
 
 @layer base {
