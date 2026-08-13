@@ -9,8 +9,9 @@ import {
 } from "@/shared/utils/badge-colors"
 
 /**
- * Igual que getBadgeColors, pero se re-calcula al cambiar light/dark.
- * Los estilos inline de chips no quedan "congelados" al toggle de tema.
+ * Recalcula colores al cambiar light/dark.
+ * Pasa `resolved` a getBadgeColors para NO depender del DOM
+ * (evita race classList vs re-render y estilos "congelados").
  */
 export function useBadgeColors(
   hex: string,
@@ -18,8 +19,7 @@ export function useBadgeColors(
 ) {
   const resolved = useThemeStore(s => s.resolved)
   return useMemo(
-    () => getBadgeColors(hex, variant),
-    // resolved fuerza recompute cuando el tema cambia
+    () => getBadgeColors(hex, variant, resolved),
     [hex, variant, resolved],
   )
 }

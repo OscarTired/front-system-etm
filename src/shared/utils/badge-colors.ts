@@ -152,9 +152,11 @@ function getSubtleText(
 
 export function getBadgeColors(
   hex: string,
-  variant: BadgeVariant = "subtle"
+  variant: BadgeVariant = "subtle",
+  /** Si se pasa, NO lee el DOM — fuente de verdad para reactividad */
+  theme?: "light" | "dark",
 ) {
-  const dark = isDarkMode()
+  const dark = theme ? theme === "dark" : isDarkMode()
 
   switch (variant) {
     case "solid":
@@ -235,7 +237,8 @@ export function getBadgeColors(
 }
 
 export function getProcessCardTextColor(
-  hex: string
+  hex: string,
+  theme?: "light" | "dark",
 ) {
-  return getBadgeColors(hex, "subtle").text
+  return getBadgeColors(hex, "subtle", theme).text
 }

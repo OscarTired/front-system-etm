@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import {
   ChevronDown,
   LucideIcon,
@@ -136,6 +138,10 @@ export function DynamicBadge({
       variant
     )
 
+  // Hover en state (no mutar DOM). Se resetea al cambiar tema porque
+  // badgeColors es nuevo cuando resolved cambia.
+  const [hovered, setHovered] = useState(false)
+
   const Icon=
     placeholder
       ? Plus
@@ -157,29 +163,23 @@ export function DynamicBadge({
 
         : badgeColors.text
 
-  const backgroundColor=
-
-    placeholder
-
+  const backgroundColor =
+    placeholder || muted
       ? "var(--muted)"
-
-      : muted
-
-        ? "var(--muted)"
-
-        : active
-
-          ? badgeColors.backgroundActive
-
+      : active
+        ? badgeColors.backgroundActive
+        : hovered
+          ? badgeColors.backgroundHover
           : badgeColors.background
 
-  const boxShadow=
-
-    active
-
-      ? badgeColors.shadow.active
-
-      : badgeColors.shadow.default
+  const boxShadow =
+    muted || placeholder
+      ? undefined
+      : active
+        ? badgeColors.shadow.active
+        : hovered
+          ? badgeColors.shadow.hover
+          : badgeColors.shadow.default
 
   const actionColor=
 
@@ -208,57 +208,17 @@ export function DynamicBadge({
 
       )}
       style={{
-
-        color:textColor,
-
+        color: textColor,
         backgroundColor,
-
-        boxShadow:
-
-          muted ||
-          placeholder
-
-            ? undefined
-
-            : boxShadow,
-
+        boxShadow,
       }}
-      onMouseDown={event=>
-        event.preventDefault()
-      }
-      onMouseEnter={(event)=>{
-
-        if(
-          muted ||
-          placeholder ||
-          active
-        ){
-          return
-        }
-
-        event.currentTarget.style.boxShadow=
-          badgeColors.shadow.hover
-
-        event.currentTarget.style.backgroundColor=
-          badgeColors.backgroundHover
-
+      onMouseDown={event => event.preventDefault()}
+      onMouseEnter={() => {
+        if (muted || placeholder || active) return
+        setHovered(true)
       }}
-      onMouseLeave={(event)=>{
-
-        if(
-          muted ||
-          placeholder ||
-          active
-        ){
-          return
-        }
-
-        event.currentTarget.style.boxShadow=
-          badgeColors.shadow.default
-
-        event.currentTarget.style.backgroundColor=
-          badgeColors.background
-
+      onMouseLeave={() => {
+        setHovered(false)
       }}
     >
 

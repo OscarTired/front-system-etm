@@ -17,7 +17,6 @@ import {
 import {
   getBadgeColors,
 } from "@/shared/utils/badge-colors"
-import { useThemeStore } from "@/shared/theme"
 
 import {
   CollapsibleSummaryPanel,
@@ -60,8 +59,6 @@ export function KpiCarousel({
   summary,
   defaultExpanded,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
 
 
   const {
@@ -89,7 +86,7 @@ export function KpiCarousel({
   const Icon = summary.icon
 
   const textColor =
-    getBadgeColors(summary.color, "subtle").text
+    getBadgeColors(summary.color, "subtle", "dark").text
 
   const collapsedView = (
 
@@ -98,7 +95,7 @@ export function KpiCarousel({
       onClick={() => setExpanded(true)}
       className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
       style={{
-        background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle").background}, var(--process-card-end, #101012))`,
+        background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, #101012)`,
       }}
     >
 
@@ -154,7 +151,7 @@ export function KpiCarousel({
 
   const currentItems = items ?? []
   const activeItem = currentItems[selectedIndex] ?? currentItems[0]
-  const activeColors = getBadgeColors(activeItem?.color ?? summary.color, "subtle")
+  const activeColors = getBadgeColors(activeItem?.color ?? summary.color, "subtle", "dark")
   const ActiveIcon = activeItem?.icon ?? Icon
 
   // Misma altura que el stepper de TaskProductionPanel (h-16), sin
@@ -171,7 +168,7 @@ export function KpiCarousel({
         {currentItems.map((item, index) => {
 
           const ItemIcon = item.icon
-          const colors = getBadgeColors(item.color, "subtle")
+          const colors = getBadgeColors(item.color, "subtle", "dark")
           const isSelected = selectedIndex === index
 
           return (
@@ -230,7 +227,7 @@ export function KpiCarousel({
           <div
             className="flex w-full flex-col rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle").background}, var(--process-card-end, #101012))`,
+              background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, #101012)`,
             }}
           >
             {mobileChips}
@@ -239,7 +236,7 @@ export function KpiCarousel({
               <div
                 className="w-full max-w-3xl rounded-xl px-5 py-3.5 transition-all duration-200"
                 style={{
-                  background: `linear-gradient(135deg, ${getBadgeColors(activeItem?.color ?? summary.color, "subtle").background}, rgba(255,255,255,0.02))`,
+                  background: `linear-gradient(135deg, ${getBadgeColors(activeItem?.color ?? summary.color, "subtle", "dark").background}, rgba(255,255,255,0.02))`,
                 }}
               >
                 <div className="flex w-full min-w-0 flex-col gap-1.5">
