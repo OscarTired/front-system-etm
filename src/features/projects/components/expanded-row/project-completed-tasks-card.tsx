@@ -28,11 +28,11 @@ export function ProjectCompletedTasksCard({
       <button
         type="button"
         onClick={onClick}
-        className="flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-emerald-500/4 via-emerald-500/2 to-transparent px-3 text-left transition hover:bg-emerald-500/5"
+        className="flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent px-3 text-left transition hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
       >
 
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-          <CheckCircle2 size={14} className="text-emerald-400" />
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/18 dark:bg-emerald-500/10">
+          <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
         </div>
 
         <span className="text-sm font-bold text-foreground">
@@ -54,14 +54,14 @@ export function ProjectCompletedTasksCard({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500/4 via-emerald-500/2 to-transparent transition-all duration-200 hover:border-emerald-500/20 hover:bg-emerald-500/5"
+      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent transition-all duration-200 hover:border-emerald-500/20 hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
     >
 
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 transition duration-200 group-hover:scale-105 group-hover:bg-emerald-500/15">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/18 transition duration-200 group-hover:scale-105 group-hover:bg-emerald-500/24 dark:bg-emerald-500/10 dark:group-hover:bg-emerald-500/15">
 
         <CheckCircle2
           size={20}
-          className="text-emerald-400"
+          className="text-emerald-600 dark:text-emerald-400"
         />
 
       </div>
@@ -70,7 +70,7 @@ export function ProjectCompletedTasksCard({
         {completedCount}
       </p>
 
-      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-400">
+      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
         Finalizadas
       </p>
 

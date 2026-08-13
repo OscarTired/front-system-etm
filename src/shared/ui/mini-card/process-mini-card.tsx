@@ -39,11 +39,13 @@ export function ProcessMiniCard({
 }: CardProps) {
   const { isMobile } = useResponsive()
 
-  const textColor =
+  const badgeColors =
     useBadgeColors(
       color,
       "subtle"
-    ).text
+    )
+
+  const textColor = badgeColors.text
 
   const isLarge = size === "large"
 
@@ -57,10 +59,16 @@ export function ProcessMiniCard({
       )}
       style={{
         background:
-          // Light: --process-card-end claro; dark: #101012
+          // El primer stop viene de useBadgeColors (ya sabe que un
+          // mismo % de alpha se ve MUY distinto según qué haya
+          // detrás: contra negro un 14% de color se lee como un
+          // glow visible, contra blanco un 14% casi no se nota —
+          // por eso esa función ya usa 24% en light. Antes acá se
+          // armaba el color a mano con `${color}33` (20% fijo,
+          // pensado solo para dark), y quedaba lavado en light.
           `linear-gradient(
             135deg,
-            ${color}33,
+            ${badgeColors.background},
             var(--process-card-end, #101012)
           )`,
       }}

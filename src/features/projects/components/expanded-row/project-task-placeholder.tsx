@@ -65,17 +65,17 @@ export function ProjectTaskPlaceholder({
             :"No tienes permisos"
         }
         className={
-          `flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-white/4 via-white/2 to-transparent px-3 text-left transition
+          `flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-foreground/8 via-foreground/3 to-transparent px-3 text-left transition
           ${
             canCreate
-              ?"hover:bg-foreground/5"
+              ?"hover:bg-foreground/10"
               :"cursor-not-allowed opacity-50"
           }`
         }
       >
 
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/10">
-          <Plus size={14} className="text-cyan-400" />
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/18 dark:bg-cyan-500/10">
+          <Plus size={14} className="text-cyan-600 dark:text-cyan-400" />
         </div>
 
         <span className="text-sm font-bold text-foreground">
@@ -123,14 +123,14 @@ export function ProjectTaskPlaceholder({
       className={
 
         `group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl
-        bg-linear-to-br from-white/4 via-white/2 to-transparent
+        bg-linear-to-br from-foreground/8 via-foreground/3 to-transparent
         transition-all duration-200
 
         ${
 
           canCreate
 
-            ?"hover:border-cyan-500/20 hover:bg-foreground/5"
+            ?"hover:border-cyan-500/20 hover:bg-foreground/10"
 
             :"cursor-not-allowed opacity-50"
 
@@ -149,9 +149,9 @@ export function ProjectTaskPlaceholder({
 
             canCreate
 
-              ?"bg-cyan-500/10 group-hover:scale-105 group-hover:bg-cyan-500/15"
+              ?"bg-cyan-500/18 group-hover:scale-105 group-hover:bg-cyan-500/24 dark:bg-cyan-500/10 dark:group-hover:bg-cyan-500/15"
 
-              :"bg-cyan-500/5"
+              :"bg-cyan-500/8 dark:bg-cyan-500/5"
 
           }`
 
@@ -160,7 +160,7 @@ export function ProjectTaskPlaceholder({
 
         <Plus
           size={20}
-          className="text-cyan-400"
+          className="text-cyan-600 dark:text-cyan-400"
         />
 
       </div>
