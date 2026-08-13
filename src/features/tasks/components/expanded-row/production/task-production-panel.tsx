@@ -166,14 +166,14 @@ export function TaskProductionPanel({
 
           <span
             className="truncate text-xs font-bold uppercase tracking-wide"
-            style={{ color: summaryTextColor }}
+            style={{ color: status?.color ?? "var(--foreground)" }}
           >
             {status?.name ?? "Sin estado"}
           </span>
 
         </div>
 
-        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-on-glass-muted">
+        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
           {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-primary">{workflowView.progress}%</span>
         </span>
 

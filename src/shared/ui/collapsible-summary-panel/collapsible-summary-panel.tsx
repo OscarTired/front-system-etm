@@ -12,7 +12,7 @@ type Props = {
   showCollapseButton?: boolean
 }
 
-/** X estilo DialogClose — dentro del carousel expandido. */
+/** X sobre glass de dominio — tokens on-glass, no muted del tema de página. */
 export function CollapseIndicatorsButton({
   onClick,
   className,
@@ -26,11 +26,14 @@ export function CollapseIndicatorsButton({
       onClick={onClick}
       aria-label="Ocultar indicadores"
       className={cn(
-        "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground",
+        "absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full",
+        "text-on-glass-muted transition-colors duration-150",
+        "hover:bg-on-glass-foreground/10 hover:text-on-glass-foreground",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-glass-foreground/30",
         className,
       )}
     >
-      <X size={16} />
+      <X size={16} strokeWidth={2} />
     </button>
   )
 }

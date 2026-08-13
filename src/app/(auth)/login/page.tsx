@@ -76,9 +76,9 @@ export default function LoginPage() {
                 Control de proyectos · tareas · procesos · producción
               </p>
 
-              <div className="h-px w-full bg-foreground/5" />
+              <div className="h-px w-full bg-white/10" />
 
-              <p className="text-xs text-muted-foreground/80">
+              <p className="text-xs text-white/40">
                 Sistema interno versión 1.0
               </p>
 

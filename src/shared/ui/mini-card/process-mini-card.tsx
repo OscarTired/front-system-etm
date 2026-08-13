@@ -111,14 +111,10 @@ export function ProcessMiniCard({
                   <span
                     className={
                       row.editable === false
-                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight text-on-glass-muted"
+                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight"
                         : "min-w-0 truncate whitespace-nowrap text-2xl font-bold leading-tight"
                     }
-                    style={
-                      row.editable === false
-                        ? undefined
-                        : { color: textColor }
-                    }
+                    style={{ color: textColor }}
                   >
                     {row.value}
                   </span>
@@ -149,14 +145,10 @@ export function ProcessMiniCard({
                   <span
                     className={
                       row.editable === false
-                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight text-on-glass-muted"
+                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight"
                         : "min-w-0 truncate whitespace-nowrap text-sm font-bold leading-tight"
                     }
-                    style={
-                      row.editable === false
-                        ? undefined
-                        : { color: textColor }
-                    }
+                    style={{ color: textColor }}
                   >
                     {row.value}
                   </span>
@@ -206,11 +198,7 @@ export function ProcessMiniCard({
                       ? "mt-1.5 min-w-0 text-lg font-semibold leading-tight truncate text-on-glass-muted"
                       : "mt-1.5 min-w-0 text-lg font-bold leading-tight truncate"
                   }
-                  style={
-                    row.editable === false
-                      ? undefined
-                      : { color: textColor }
-                  }
+                  style={{ color: textColor }}
                 >
                   {row.value}
                 </div>

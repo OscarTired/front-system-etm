@@ -54,7 +54,7 @@ const SORT_OPTIONS: {
   {
     value: "manual",
     label: "Manual",
-    color: "#bdc4cf",
+    color: "#64748B",
     icon: "settings",
   },
 ]

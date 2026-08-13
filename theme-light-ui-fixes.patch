@@ -1,0 +1,170 @@
+diff --git a/src/app/(auth)/login/page.tsx b/src/app/(auth)/login/page.tsx
+index cdf81ac..d62e24e 100644
+--- a/src/app/(auth)/login/page.tsx
++++ b/src/app/(auth)/login/page.tsx
+@@ -76,9 +76,9 @@ export default function LoginPage() {
+                 Control de proyectos · tareas · procesos · producción
+               </p>
+ 
+-              <div className="h-px w-full bg-foreground/5" />
++              <div className="h-px w-full bg-white/10" />
+ 
+-              <p className="text-xs text-muted-foreground/80">
++              <p className="text-xs text-white/40">
+                 Sistema interno versión 1.0
+               </p>
+ 
+@@ -135,4 +135,4 @@ export default function LoginPage() {
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+index 66dbbce..f760643 100644
+--- a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
++++ b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+@@ -166,14 +166,14 @@ export function TaskProductionPanel({
+ 
+           <span
+             className="truncate text-xs font-bold uppercase tracking-wide"
+-            style={{ color: summaryTextColor }}
++            style={{ color: status?.color ?? "var(--foreground)" }}
+           >
+             {status?.name ?? "Sin estado"}
+           </span>
+ 
+         </div>
+ 
+-        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-on-glass-muted">
++        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
+           {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-primary">{workflowView.progress}%</span>
+         </span>
+ 
+diff --git a/src/shared/sorting/components/project-sort-button.tsx b/src/shared/sorting/components/project-sort-button.tsx
+index b2aeed0..fe7836f 100644
+--- a/src/shared/sorting/components/project-sort-button.tsx
++++ b/src/shared/sorting/components/project-sort-button.tsx
+@@ -48,7 +48,7 @@ const SORT_OPTIONS: {
+   {
+     value: "manual",
+     label: "Manual",
+-    color: "#CBD5E1",
++    color: "#64748B",
+     icon: "settings",
+   },
+ ]
+diff --git a/src/shared/sorting/components/task-sort-button.tsx b/src/shared/sorting/components/task-sort-button.tsx
+index a04a29a..1b68a02 100644
+--- a/src/shared/sorting/components/task-sort-button.tsx
++++ b/src/shared/sorting/components/task-sort-button.tsx
+@@ -54,7 +54,7 @@ const SORT_OPTIONS: {
+   {
+     value: "manual",
+     label: "Manual",
+-    color: "#bdc4cf",
++    color: "#64748B",
+     icon: "settings",
+   },
+ ]
+diff --git a/src/shared/ui/collapsible-summary-panel/collapsible-summary-panel.tsx b/src/shared/ui/collapsible-summary-panel/collapsible-summary-panel.tsx
+index 40cc728..23b1713 100644
+--- a/src/shared/ui/collapsible-summary-panel/collapsible-summary-panel.tsx
++++ b/src/shared/ui/collapsible-summary-panel/collapsible-summary-panel.tsx
+@@ -12,7 +12,7 @@ type Props = {
+   showCollapseButton?: boolean
+ }
+ 
+-/** X estilo DialogClose — dentro del carousel expandido. */
++/** X sobre glass de dominio — tokens on-glass, no muted del tema de página. */
+ export function CollapseIndicatorsButton({
+   onClick,
+   className,
+@@ -26,11 +26,14 @@ export function CollapseIndicatorsButton({
+       onClick={onClick}
+       aria-label="Ocultar indicadores"
+       className={cn(
+-        "absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground",
++        "absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full",
++        "text-on-glass-muted transition-colors duration-150",
++        "hover:bg-on-glass-foreground/10 hover:text-on-glass-foreground",
++        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-glass-foreground/30",
+         className,
+       )}
+     >
+-      <X size={16} />
++      <X size={16} strokeWidth={2} />
+     </button>
+   )
+ }
+diff --git a/src/shared/ui/date-picker/components/date-calendar.tsx b/src/shared/ui/date-picker/components/date-calendar.tsx
+index 93e2ae7..3b533fd 100644
+--- a/src/shared/ui/date-picker/components/date-calendar.tsx
++++ b/src/shared/ui/date-picker/components/date-calendar.tsx
+@@ -94,11 +94,11 @@ export function DateCalendar({
+         <button
+           type="button"
+           onClick={handleTodayClick}
+-          className="px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-foreground/5 rounded-md transition-colors"
++          className="px-3 py-1 text-xs font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded-md transition-colors"
+         >
+           Hoy
+         </button>
+       </div>
+     </div>
+   )
+-}
+\ No newline at end of file
++}
+diff --git a/src/shared/ui/mini-card/process-mini-card.tsx b/src/shared/ui/mini-card/process-mini-card.tsx
+index 5b26118..a9c4163 100644
+--- a/src/shared/ui/mini-card/process-mini-card.tsx
++++ b/src/shared/ui/mini-card/process-mini-card.tsx
+@@ -111,14 +111,10 @@ export function ProcessMiniCard({
+                   <span
+                     className={
+                       row.editable === false
+-                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight text-on-glass-muted"
++                        ? "min-w-0 truncate whitespace-nowrap text-2xl font-semibold leading-tight"
+                         : "min-w-0 truncate whitespace-nowrap text-2xl font-bold leading-tight"
+                     }
+-                    style={
+-                      row.editable === false
+-                        ? undefined
+-                        : { color: textColor }
+-                    }
++                    style={{ color: textColor }}
+                   >
+                     {row.value}
+                   </span>
+@@ -149,14 +145,10 @@ export function ProcessMiniCard({
+                   <span
+                     className={
+                       row.editable === false
+-                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight text-on-glass-muted"
++                        ? "min-w-0 truncate whitespace-nowrap text-sm font-semibold leading-tight"
+                         : "min-w-0 truncate whitespace-nowrap text-sm font-bold leading-tight"
+                     }
+-                    style={
+-                      row.editable === false
+-                        ? undefined
+-                        : { color: textColor }
+-                    }
++                    style={{ color: textColor }}
+                   >
+                     {row.value}
+                   </span>
+@@ -206,11 +198,7 @@ export function ProcessMiniCard({
+                       ? "mt-1.5 min-w-0 text-lg font-semibold leading-tight truncate text-on-glass-muted"
+                       : "mt-1.5 min-w-0 text-lg font-bold leading-tight truncate"
+                   }
+-                  style={
+-                    row.editable === false
+-                      ? undefined
+-                      : { color: textColor }
+-                  }
++                  style={{ color: textColor }}
+                 >
+                   {row.value}
+                 </div>

@@ -94,7 +94,7 @@ export function DateCalendar({
         <button
           type="button"
           onClick={handleTodayClick}
-          className="px-3 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-foreground/5 rounded-md transition-colors"
+          className="px-3 py-1 text-xs font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded-md transition-colors"
         >
           Hoy
         </button>
