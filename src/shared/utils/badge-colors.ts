@@ -12,11 +12,9 @@ function isDarkMode(): boolean {
   return document.documentElement.classList.contains("dark")
 }
 
-export function getLuminance(
-  hex: string
+function getLuminanceFromRgb(
+  rgb: { r: number; g: number; b: number }
 ) {
-  const { r, g, b } = hexToRgb(hex)
-
   const normalize = (value: number) => {
     const channel = value / 255
     return channel <= 0.03928
@@ -25,10 +23,16 @@ export function getLuminance(
   }
 
   return (
-    0.2126 * normalize(r) +
-    0.7152 * normalize(g) +
-    0.0722 * normalize(b)
+    0.2126 * normalize(rgb.r) +
+    0.7152 * normalize(rgb.g) +
+    0.0722 * normalize(rgb.b)
   )
+}
+
+export function getLuminance(
+  hex: string
+) {
+  return getLuminanceFromRgb(hexToRgb(hex))
 }
 
 function getContrastRatio(
@@ -39,6 +43,15 @@ function getContrastRatio(
   const luminanceB = getLuminance(colorB)
   const lighter = Math.max(luminanceA, luminanceB)
   const darker = Math.min(luminanceA, luminanceB)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function contrastFromLuminances(
+  lumA: number,
+  lumB: number
+) {
+  const lighter = Math.max(lumA, lumB)
+  const darker = Math.min(lumA, lumB)
   return (lighter + 0.05) / (darker + 0.05)
 }
 
@@ -90,9 +103,42 @@ function rgbString(
 }
 
 /**
+ * Texto legible GARANTIZADO contra el fondo que se está usando de
+ * verdad — en vez de oscurecer el hex un % fijo (lo que había antes,
+ * y lo que rompía colores que ya arrancan claros: "Producción" usa
+ * #f99d9d, un rosa salmón — oscurecerlo un 55-72% seguía dando un
+ * tono parecido en luminosidad al fondo, también derivado del mismo
+ * hex, así que el contraste colapsaba para ESE color puntual aunque
+ * funcionara bien para otros más saturados).
+ *
+ * Acá se prueban niveles de oscurecimiento crecientes hasta lograr
+ * contraste real (WCAG AA, 4.5:1) contra el fondo específico. Si
+ * ningún nivel de oscurecer el propio matiz alcanza — el fondo es
+ * demasiado claro para ese color en particular —, cae a un gris casi
+ * negro fijo, que da contraste de sobra contra cualquier pastel.
+ */
+function getReadableTextFor(
+  hex: string,
+  backgroundRgb: { r: number; g: number; b: number }
+) {
+  const bgLum = getLuminanceFromRgb(backgroundRgb)
+  const MIN_CONTRAST = 4.5
+
+  for (const amount of [0.55, 0.65, 0.72, 0.8, 0.88, 0.94]) {
+    const candidate = tintTowardBlack(hex, amount)
+    const candidateLum = getLuminanceFromRgb(candidate)
+    if (contrastFromLuminances(candidateLum, bgLum) >= MIN_CONTRAST) {
+      return rgbString(candidate)
+    }
+  }
+
+  return "#111827"
+}
+
+/**
  * Subtle text must stay readable on the tinted background.
  * - Dark UI: lighten toward white (historic behavior)
- * - Light UI: darken toward black so chips aren't washed out
+ * - Light UI: ver getReadableTextFor — ya no es un % fijo
  */
 function getSubtleText(
   hex: string,
@@ -101,14 +147,7 @@ function getSubtleText(
   if (dark) {
     return rgbString(tintTowardWhite(hex, 0.84))
   }
-  // Light: más agresivo para que chips/select no se vean opacos
-  const darkened = tintTowardBlack(hex, 0.55)
-  const lum =
-    (0.2126 * darkened.r + 0.7152 * darkened.g + 0.0722 * darkened.b) / 255
-  if (lum > 0.4) {
-    return rgbString(tintTowardBlack(hex, 0.72))
-  }
-  return rgbString(darkened)
+  return getReadableTextFor(hex, tintTowardWhite(hex, 0.72))
 }
 
 export function getBadgeColors(
@@ -151,7 +190,7 @@ export function getBadgeColors(
           backgroundHover: bgHover,
           backgroundActive: bgActive,
           glow: rgba(hex, 0.18),
-          text: getSubtleText(hex, dark),
+          text: getReadableTextFor(hex, tintTowardWhite(hex, 0.72)),
           shadow: {
             default: "none",
             hover: `
