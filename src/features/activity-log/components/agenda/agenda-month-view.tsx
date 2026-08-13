@@ -158,7 +158,7 @@ export function AgendaMonthView({
 
       <div
         className="grid min-h-0 w-full flex-1"
-        style={{ gridTemplateRows: "repeat(6, minmax(0, 1fr))" }}
+        style={{ gridTemplateRows: "repeat(6, minmax(min-content, 1fr))" }}
       >
         {Array.from({ length: 6 }).map((_, week) => (
           <div
@@ -174,7 +174,9 @@ export function AgendaMonthView({
               const isToday = iso === todayISO
               const isAnchor = iso === anchorISO
               const isWeekend = dayIndex >= 5
-              const isFuture = day.getTime() > Date.now()
+              // Comparar por día calendario, no por Date(…, 12:00) > now
+              // (si no, el día de hoy queda disabled toda la mañana).
+              const isFuture = iso > todayISO
               const dayLogs = byDay.get(iso) ?? []
               const hasLogs = dayLogs.length > 0
 
@@ -183,9 +185,12 @@ export function AgendaMonthView({
                   key={iso}
                   type="button"
                   disabled={isFuture}
-                  onClick={() => onSelectDay?.(day)}
+                  onClick={() => {
+                    if (isFuture) return
+                    onSelectDay?.(day)
+                  }}
                   className={cn(
-                    "relative flex min-h-0 flex-col overflow-hidden border-r border-white/5 text-left transition-colors last:border-r-0",
+                    "relative flex min-h-[4.5rem] flex-col overflow-hidden border-r border-white/5 text-left transition-colors last:border-r-0 tablet:min-h-0",
                     isCompact
                       ? "items-center justify-start gap-0.5 p-1"
                       : "items-stretch gap-1 p-1.5",
