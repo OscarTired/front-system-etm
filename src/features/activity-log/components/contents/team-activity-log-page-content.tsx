@@ -309,7 +309,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
   }
 
   const toolbar = (
-    <div className="w-full shrink-0 rounded-2xl border border-border/60 bg-surface p-2 tablet:p-4">
+    <div className="w-full shrink-0 rounded-2xl bg-surface p-2 tablet:p-4">
       <div className="flex flex-col gap-2 tablet:hidden">
         <UserSelect
           value={selectedUser}
