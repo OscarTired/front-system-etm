@@ -105,11 +105,21 @@ export function EntityToolbarSearch({
         <button
           type="button"
           data-toolbar-search=""
-          // No iniciar PTR / scroll de página desde la lupa
+          // No iniciar PTR / scroll de página desde la lupa — tanto
+          // al arrancar el toque como durante el arrastre (antes solo
+          // se frenaba el touchstart/pointerdown; un drag que
+          // arranca acá y se mueve igual burbujeaba su touchmove
+          // hacia el PullToRefresh de la lista de atrás).
           onPointerDown={event => {
             event.stopPropagation()
           }}
+          onPointerMove={event => {
+            event.stopPropagation()
+          }}
           onTouchStart={event => {
+            event.stopPropagation()
+          }}
+          onTouchMove={event => {
             event.stopPropagation()
           }}
           onMouseDown={event => {
@@ -119,7 +129,7 @@ export function EntityToolbarSearch({
           }}
           onClick={handleToggle}
           className={cn(
-            "flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-xl text-white transition-all duration-200",
+            "flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-xl text-white transition-all duration-200",
             open
               ? "bg-[#101012]"
               : "hover:bg-[#101012]"
