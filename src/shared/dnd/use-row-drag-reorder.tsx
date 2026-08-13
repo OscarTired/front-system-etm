@@ -125,7 +125,6 @@ export function useRowDragReorder<T>({
 
     startPos.current = { x: e.clientX, y: e.clientY }
     setIsActuallyDragging(false)
-    usePullToRefreshStore.getState().setDragLocked(true)
 
     setDrag({
       item,
@@ -175,6 +174,7 @@ export function useRowDragReorder<T>({
         const dy = Math.abs(e.clientY - startPos.current.y)
         if (dx > 4 || dy > 4) {
           setIsActuallyDragging(true)
+          usePullToRefreshStore.getState().setDragLocked(true)
         }
       }
 

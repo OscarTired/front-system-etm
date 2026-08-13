@@ -95,15 +95,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
   }, [])
 
-    /**
-   * Long-press (mismo espíritu que listas iOS / mail):
-   * - scroll vertical gana si el pointer se mueve antes del hold
-   * - drag solo tras ~320 ms quieto → no pelea con el scroll del día
-   * - click/tap corto = click (sin drag)
-   * Reutiliza este hook; no hace falta otro sistema ni un grip permanente.
-   */
-  const LONG_PRESS_MS = 320
-  const CANCEL_MOVE_PX = 10
+    // Misma idea que filas: umbral de distancia. Scroll gana si el gesto
+  // no cruza el umbral. PTR se bloquea solo cuando el drag YA arrancó.
+  const DRAG_THRESHOLD_PX = 12
 
   const beginDrag = useCallback((e: ReactPointerEvent<HTMLElement>, log: ActivityLog, isDuplicate = false) => {
 
@@ -116,15 +110,10 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     const pointerId = e.pointerId
     const target = e.currentTarget
     let activated = false
-    let timer: ReturnType<typeof setTimeout> | null = null
 
     function activate(clientX: number, clientY: number) {
       if (activated) return
       activated = true
-      if (timer) {
-        clearTimeout(timer)
-        timer = null
-      }
 
       try {
         target.setPointerCapture(pointerId)
@@ -147,10 +136,11 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
       const dx = ev.clientX - startX
       const dy = ev.clientY - startY
-      // Movimiento antes del hold = scroll/gesto, no drag
-      if (Math.hypot(dx, dy) >= CANCEL_MOVE_PX) {
-        cleanup()
-      }
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return
+
+      // Gesto de drag real: bloquear PTR y capturar
+      ev.preventDefault()
+      activate(ev.clientX, ev.clientY)
     }
 
     function onUp(ev: PointerEvent) {
@@ -164,21 +154,12 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     }
 
     function cleanup() {
-      if (timer) {
-        clearTimeout(timer)
-        timer = null
-      }
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
       window.removeEventListener("pointercancel", onCancel)
     }
 
-    timer = setTimeout(() => {
-      timer = null
-      activate(startX, startY)
-    }, LONG_PRESS_MS)
-
-    window.addEventListener("pointermove", onMove, { passive: true })
+    window.addEventListener("pointermove", onMove, { passive: false })
     window.addEventListener("pointerup", onUp)
     window.addEventListener("pointercancel", onCancel)
 
@@ -199,6 +180,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
     }
 
+    usePullToRefreshStore.getState().setDragLocked(false)
     setDraggingLog(null)
     setHoverShift(null)
     setIsDuplicateMode(false)

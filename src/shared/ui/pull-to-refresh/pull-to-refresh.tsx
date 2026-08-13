@@ -168,6 +168,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   }, [refreshing, runRefresh, setPullOffset])
 
   const setPtrActive = usePullToRefreshStore(s => s.setActive)
+  const dragLocked = usePullToRefreshStore(s => s.dragLocked)
 
   useEffect(() => {
     const active = offset > 4 || refreshing
@@ -176,6 +177,13 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
       setPtrActive(false)
     }
   }, [offset, refreshing, setPtrActive])
+
+  // Si un drag arranca a mitad de un pull, soltar el PTR sin pelear el gesto
+  useEffect(() => {
+    if (!dragLocked) return
+    pulling.current = false
+    setPullOffset(0)
+  }, [dragLocked, setPullOffset])
 
   const progress = Math.min(1, offset / THRESHOLD_PX)
   const showIndicator = offset > 4 || refreshing
