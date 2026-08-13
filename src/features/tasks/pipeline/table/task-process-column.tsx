@@ -265,7 +265,7 @@ function ColumnContent({
                           "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors duration-150",
                           isSelected
                             ? "border-emerald-500 bg-emerald-500 text-foreground"
-                            : "border-white/25 bg-foreground/5 text-transparent"
+                            : "border-border bg-foreground/5 text-transparent"
                         )}
                       >
                         <Check size={14} strokeWidth={3} />

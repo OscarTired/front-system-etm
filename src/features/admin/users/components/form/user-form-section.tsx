@@ -154,7 +154,7 @@ export function UserFormSection({
               !isChangingPassword
             )
           }
-          className="flex w-full items-center justify-between rounded-xl bg-foreground/5 px-4 py-3 text-left transition-all hover:border-white/20 hover:bg-foreground/5"
+          className="flex w-full items-center justify-between rounded-xl bg-foreground/5 px-4 py-3 text-left transition-all hover:border-border hover:bg-foreground/5"
         >
 
           <div className="flex items-center gap-3">

@@ -327,8 +327,8 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
               disabled={isToday}
               className={
                 isToday
-                  ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
-                  : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+                  ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-500/15 text-amber-700/60 dark:text-amber-400/50"
+                  : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
               }
             >
               Hoy
@@ -361,8 +361,8 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
             disabled={isToday}
             className={
               isToday
-                ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-400/15 text-amber-400/50"
-                : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 hover:text-amber-200"
+                ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-500/15 text-amber-700/60 dark:text-amber-400/50"
+                : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
             }
           >
             Hoy

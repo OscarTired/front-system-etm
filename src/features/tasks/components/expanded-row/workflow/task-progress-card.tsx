@@ -25,7 +25,7 @@ export function TaskProgressCard({
 
   return (
 
-    <div className="rounded-2xl border border-white/6 bg-[#0D0D10] p-5">
+    <div className="rounded-2xl border border-border bg-card p-5">
 
       <div className="mb-4 text-xs font-semibold tracking-[0.16em] text-muted-foreground">
 

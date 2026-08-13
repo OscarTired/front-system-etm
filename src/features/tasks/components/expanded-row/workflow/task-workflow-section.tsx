@@ -28,7 +28,7 @@ export function TaskWorkflowSection({
 
   return (
 
-    <div className="rounded-2xl border border-white/6 bg-[#0D0D10] p-6">
+    <div className="rounded-2xl border border-border bg-card p-6">
 
       <div className="mb-6 text-xs font-semibold tracking-[0.18em] text-muted-foreground">
 

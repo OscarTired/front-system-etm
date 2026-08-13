@@ -55,7 +55,7 @@ export const ColorPreview = forwardRef<HTMLButtonElement, ColorPreviewProps>(
         {...rest}
       >
         <span
-          className="w-4 h-4 rounded-full border border-white/15 shrink-0"
+          className="w-4 h-4 rounded-full border border-border shrink-0"
           style={{ backgroundColor: hex }}
         />
         <span className="text-muted-foreground font-mono text-xs">{hex}</span>

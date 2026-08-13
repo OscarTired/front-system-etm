@@ -57,10 +57,11 @@ export function ProcessMiniCard({
       )}
       style={{
         background:
+          // Light: --process-card-end claro; dark: #101012
           `linear-gradient(
             135deg,
-            ${color}20,
-            #101012
+            ${color}33,
+            var(--process-card-end, #101012)
           )`,
       }}
     >

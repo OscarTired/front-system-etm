@@ -316,7 +316,7 @@ export function TaskWorkflowOverlay({
 
       }}
       className={cn(
-        "absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-[#0a0a0a] transition-opacity duration-150",
+        "absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-background transition-opacity duration-150",
         visible
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0",

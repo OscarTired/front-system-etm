@@ -128,7 +128,7 @@ export function PipelineProcessSelector({
         className={cn(
           "absolute left-1 top-1/2 z-20 -translate-y-1/2",
           "flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-foreground transition-opacity duration-200",
+          "bg-card/90 border border-border backdrop-blur-xl text-foreground transition-opacity duration-200",
           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -143,7 +143,7 @@ export function PipelineProcessSelector({
         className={cn(
           "absolute right-1 top-1/2 z-20 -translate-y-1/2",
           "flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-[#18181b]/80 backdrop-blur-xl text-foreground transition-opacity duration-200",
+          "bg-card/90 border border-border backdrop-blur-xl text-foreground transition-opacity duration-200",
           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >

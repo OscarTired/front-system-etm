@@ -36,7 +36,7 @@ export function ProjectTaskActionsOverlay({
         event.stopPropagation()
       }
       className={cn(
-        "absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-[#0a0a0a] p-4 transition-opacity duration-150",
+        "absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background p-4 transition-opacity duration-150",
         visible
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0",

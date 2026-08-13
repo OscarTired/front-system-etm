@@ -34,7 +34,7 @@ export function FormDialogFooter({
         type="button"
         disabled={saving}
         onClick={onCancel}
-        className="rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:border-white/20 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:border-border hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
 
         {cancelLabel}

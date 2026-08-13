@@ -79,7 +79,7 @@ export function SelectOption({
     delete: onDelete,
   }
   const hasActions = !!(actions.edit || actions.delete)
-  const actionColor = selected && isColor ? badge.text : "#A1A1AA"
+  const actionColor = selected && isColor ? badge.text : "var(--muted-foreground)"
   const { isMobile } = useResponsive()
 
   return (
@@ -100,7 +100,7 @@ export function SelectOption({
               style={{
                 background: isColor
                   ? badge.background
-                  : "rgba(255,255,255,0.05)",
+                  : "var(--muted)",
                 boxShadow: isColor ? badge.shadow.default : undefined,
               }}
             >
@@ -119,14 +119,14 @@ export function SelectOption({
               name={cleanLabel}
               className="block truncate whitespace-nowrap text-xs font-semibold tracking-[-0.01em]"
               style={{
-                color: isColor && selected ? badge.text : "#F5F5F5",
+                color: isColor && selected ? badge.text : "var(--foreground)",
               }}
             />
 
             {cleanDescription && (
               <p
                 className="truncate whitespace-nowrap text-[11px] font-medium"
-                style={{ color: descriptionColor ?? "#737373" }}
+                style={{ color: descriptionColor ?? "var(--muted-foreground)" }}
               >
                 {cleanDescription}
               </p>

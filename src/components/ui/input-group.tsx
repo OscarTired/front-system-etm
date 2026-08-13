@@ -24,7 +24,7 @@ export function InputGroup({
         "border border-border",
         "bg-muted",
         "transition-colors",
-        "focus-within:border-white/20",
+        "focus-within:border-ring",
         className
       )}
       {...props}

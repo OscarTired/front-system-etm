@@ -120,7 +120,7 @@ export function ActionDialog({
           <button
             onClick={onClose}
             disabled={submitting}
-            className="w-full sm:w-auto rounded-xl bg-foreground/5 px-4 py-2.5 text-center text-sm font-medium text-muted-foreground transition-all hover:border-white/20 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full sm:w-auto rounded-xl bg-foreground/5 px-4 py-2.5 text-center text-sm font-medium text-muted-foreground transition-all hover:border-border hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
             {cancelLabel}
           </button>

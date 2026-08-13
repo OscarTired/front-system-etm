@@ -252,9 +252,9 @@ export function TaskPipelineBoard({
           className={`
             absolute left-2 top-5.5 z-20 -translate-y-1/2
             flex h-7 w-8 items-center justify-center
-            rounded-lg bg-[#18181b]/60 backdrop-blur-xl
+            rounded-lg bg-card/80 border border-border backdrop-blur-xl
             text-foreground transition-opacity duration-200
-            hover:bg-[#18181b]
+            hover:bg-card
             ${showLeft ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
           `}
         >
@@ -270,9 +270,9 @@ export function TaskPipelineBoard({
           className={`
             absolute right-2 top-5.5 z-20 -translate-y-1/2
             flex h-7 w-8 items-center justify-center
-            rounded-lg bg-[#18181b]/60 backdrop-blur-xl
+            rounded-lg bg-card/80 border border-border backdrop-blur-xl
             text-foreground transition-opacity duration-200
-            hover:bg-[#18181b]
+            hover:bg-card
             ${showRight ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
           `}
         >

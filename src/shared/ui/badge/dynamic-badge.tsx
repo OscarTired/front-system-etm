@@ -147,11 +147,11 @@ export function DynamicBadge({
 
     placeholder
 
-      ? "rgb(140,140,140)"
+      ? "var(--muted-foreground)"
 
       : muted
 
-        ? "rgb(90,90,90)"
+        ? "var(--muted-foreground)"
 
         : badgeColors.text
 
@@ -159,11 +159,11 @@ export function DynamicBadge({
 
     placeholder
 
-      ? "rgba(255,255,255,0.05)"
+      ? "var(--muted)"
 
       : muted
 
-        ? "rgba(255,255,255,0.05)"
+        ? "var(--muted)"
 
         : active
 
@@ -183,7 +183,7 @@ export function DynamicBadge({
 
     muted
 
-      ? "rgba(255,255,255,0.35)"
+      ? "var(--muted-foreground)"
 
       : badgeColors.text
 

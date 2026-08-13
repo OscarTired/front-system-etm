@@ -65,7 +65,7 @@ function UserRow({ user }: { user: PresenceUser }) {
             aria-hidden="true"
             className={cn(
               "absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-[#171717]",
-              user.online ? "bg-emerald-500" : "bg-neutral-600",
+              user.online ? "bg-emerald-500" : "bg-muted-foreground/40",
             )}
           />
         </div>
@@ -209,8 +209,8 @@ export function SidebarPresence({
           collapsed={collapsed}
           active={open}
           count={onlineUsers.length >= 0 ? (onlineUsers.length > 9 ? "9+" : String(onlineUsers.length)) : undefined}
-          collapsedBadgeColor="bg-emerald-500/20 text-emerald-400"
-          badgeColor="bg-emerald-500/20 text-emerald-400"
+          collapsedBadgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+          badgeColor="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
           size="sm"
         />
       </button>

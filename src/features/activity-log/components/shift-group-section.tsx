@@ -439,7 +439,7 @@ export function ShiftGroupSection({
                         : "cursor-not-allowed opacity-50",
                       slot.required
                         ? "border-border text-muted-foreground"
-                        : "border-white/6 text-muted-foreground/80",
+                        : "border-border text-muted-foreground/80",
                     )}
                   >
                     <Plus size={15} />

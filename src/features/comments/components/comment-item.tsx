@@ -218,7 +218,7 @@ export function CommentItem({
             type="button"
             onClick={() => setImageDialogOpen(true)}
             disabled={isDeleting}
-            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-black/30 text-left transition hover:border-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-black/30 text-left transition hover:border-border disabled:cursor-not-allowed disabled:opacity-60"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

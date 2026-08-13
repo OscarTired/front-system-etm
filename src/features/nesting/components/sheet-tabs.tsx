@@ -187,7 +187,7 @@ export function SheetTabs({
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  floatingClassName="w-64 border-border bg-[#141416]"
+                  floatingClassName="w-64 border-border bg-popover"
                   className="p-1.5 text-foreground"
                 >
                   <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

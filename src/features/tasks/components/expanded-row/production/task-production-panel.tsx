@@ -269,7 +269,7 @@ export function TaskProductionPanel({
                         "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
                         "flex h-4 min-w-4 items-center justify-center",
                         "rounded-full bg-sky-500 px-1 text-[9px] font-bold leading-none text-foreground",
-                        "shadow-md ring-2 ring-[#101012]",
+                        "shadow-md ring-2 ring-background",
                       )}
                     >
                       {commentCount > 99 ? "99+" : commentCount}
@@ -284,7 +284,7 @@ export function TaskProductionPanel({
                         "pointer-events-none absolute z-10",
                         "flex h-4 min-w-4 items-center justify-center overflow-hidden",
                         "rounded-full text-[9px] font-bold leading-none text-foreground",
-                        "shadow-md ring-2 ring-[#101012]",
+                        "shadow-md ring-2 ring-background",
                         hasComments
                           ? "-bottom-1 -left-1.5"
                           : "-right-1.5 -top-1.5",
@@ -313,7 +313,7 @@ export function TaskProductionPanel({
                         "pointer-events-none absolute -right-1.5 -top-1.5 z-10",
                         "flex h-4 min-w-4 items-center justify-center",
                         "rounded-full bg-amber-500 text-[9px] font-bold text-foreground",
-                        "shadow-md ring-2 ring-[#101012]",
+                        "shadow-md ring-2 ring-background",
                       )}
                     >
                       ?
@@ -395,7 +395,7 @@ export function TaskProductionPanel({
               onClick={() => setExpanded(true)}
               className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
               style={{
-                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, #101012)`,
+                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, var(--process-card-end, #101012))`,
               }}
             >
 
@@ -445,7 +445,7 @@ export function TaskProductionPanel({
           <div
             className="flex w-full flex-col gap-6 rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, #101012)`,
+              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, var(--process-card-end, #101012))`,
             }}
           >
 

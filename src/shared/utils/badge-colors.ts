@@ -101,12 +101,12 @@ function getSubtleText(
   if (dark) {
     return rgbString(tintTowardWhite(hex, 0.84))
   }
-  // Light mode: keep brand hue but ensure contrast on pale bg
-  const darkened = tintTowardBlack(hex, 0.35)
+  // Light: más agresivo para que chips/select no se vean opacos
+  const darkened = tintTowardBlack(hex, 0.5)
   const lum =
     (0.2126 * darkened.r + 0.7152 * darkened.g + 0.0722 * darkened.b) / 255
-  if (lum > 0.45) {
-    return rgbString(tintTowardBlack(hex, 0.55))
+  if (lum > 0.4) {
+    return rgbString(tintTowardBlack(hex, 0.65))
   }
   return rgbString(darkened)
 }
@@ -134,9 +134,9 @@ export function getBadgeColors(
 
     default: {
       // Subtle backgrounds: slightly stronger on light so chips don't look empty
-      const bgAlpha = dark ? 0.14 : 0.16
-      const bgHover = dark ? 0.2 : 0.22
-      const bgActive = dark ? 0.28 : 0.3
+      const bgAlpha = dark ? 0.14 : 0.22
+      const bgHover = dark ? 0.2 : 0.28
+      const bgActive = dark ? 0.28 : 0.36
 
       return {
         background: rgba(hex, bgAlpha),
