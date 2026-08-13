@@ -15,7 +15,6 @@ import {
 import { SHEET_CONFIG } from "./sheet-config"
 import { useSheetDragToDismiss } from "./use-sheet-drag-to-dismiss"
 import { useSmoothResize } from "./use-smooth-resize"
-import { useVisualViewportFrame } from "./use-visual-viewport-frame"
 
 type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portal?: boolean
@@ -47,7 +46,6 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
-  const vvFrame = useVisualViewportFrame()
 
 
   if (isSheet) {
@@ -58,13 +56,14 @@ export function PopoverContent({
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
     /**
-     * Con interactiveWidget: resizes-content (ver app/layout.tsx), el
-     * navegador ya achica el viewport de layout con el teclado — así
-     * que `fixed inset-x-0 bottom-0` se sienta solo arriba del
-     * teclado, sin calcular nada a mano. Lo único que seguimos
-     * leyendo de vvFrame es el booleano `keyboardOpen`, para darle
-     * más alto al sheet cuando hay teclado (que la lista de resultados
-     * siga viéndose), no para posicionarlo.
+     * Altura FIJA (SHEET_CONFIG.FIXED_HEIGHT_RATIO), siempre — el
+     * layout de atrás no se mueve (overlays-content, ver
+     * app/layout.tsx) y el sheet tampoco se recalcula por su cuenta
+     * ni por el teclado ni por cuánto contenido tenga (buscar y
+     * tener 1 resultado no lo achica). Nada mide nada: un solo
+     * número, pensado para sobrar por encima de un teclado normal.
+     * Si el contenido no llena esa altura, el resto queda vacío —
+     * mejor eso que la lista saltando de tamaño en cada tecla.
      */
     return (
       <DialogPrimitive.Portal>
@@ -80,7 +79,6 @@ export function PopoverContent({
         <DialogPrimitive.Content
           data-slot="popover-sheet"
           data-drag-scroll-ignore
-          data-keyboard-open={vvFrame.keyboardOpen ? "true" : "false"}
           onOpenAutoFocus={event => {
             if (onOpenAutoFocus) onOpenAutoFocus(event)
             else event.preventDefault()
@@ -107,12 +105,10 @@ export function PopoverContent({
           style={{
             ...style,
             top: "auto",
-            // maxHeight vía inline style, no clase Tailwind dinámica
+            // height vía inline style, no clase Tailwind dinámica
             // (una clase armada con template string nunca se genera
             // en build — no es texto literal para el scanner).
-            maxHeight: vvFrame.keyboardOpen
-              ? "98dvh"
-              : `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
+            height: `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: isDragging
               ? "none"
