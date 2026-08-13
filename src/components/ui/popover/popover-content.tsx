@@ -80,7 +80,7 @@ export function PopoverContent({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
+            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm pointer-events-auto",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:duration-250 data-[state=open]:duration-200",
@@ -120,7 +120,7 @@ export function PopoverContent({
           {...dragHandleProps}
           className={cn(
             // flex-col es el contrato IG: handle | body scrolleable
-            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden",
+            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing &&
               "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -186,7 +186,12 @@ export function PopoverContent({
             className={cn(
               // min-h-0 + flex-1: puede scrollear cuando el contenido
               // (measuredRef adentro) es más alto que el espacio real.
-              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto",
+              // overscroll-contain: sin esto, arrastrar acá cuando NO
+              // hay nada más para scrollear (lista corta, o ya se
+              // llegó al límite) encadena el gesto al scroll de lo
+              // que esté detrás en el DOM — se ve como que "se mueve
+              // todo el layout" y aparece su scrollbar.
+              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain",
               "px-4 pt-1 text-sm",
               className,
             )}

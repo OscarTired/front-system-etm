@@ -23,6 +23,21 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
   function onPointerDown(event: React.PointerEvent) {
     if (event.button !== 0) return
+
+    // No arrancar el drag-to-dismiss si el toque empieza dentro de
+    // un campo editable — si no, posicionar el cursor o seleccionar
+    // texto en el buscador termina arrastrando el sheet entero (y
+    // setPointerCapture le roba el puntero al input, cortando la
+    // interacción de texto nativa a mitad de camino).
+    const target = event.target as HTMLElement
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target.isContentEditable
+    ) {
+      return
+    }
+
     draggingRef.current = true
     hasCapturedRef.current = false
     startYRef.current = event.clientY
