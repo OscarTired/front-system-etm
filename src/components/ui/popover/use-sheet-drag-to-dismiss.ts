@@ -13,6 +13,17 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
   const startYRef = React.useRef(0)
   const startTimeRef = React.useRef(0)
   const timeoutRef = React.useRef<number | null>(null)
+  const lockedScrollRef = React.useRef<{
+    el: HTMLElement
+    prevOverflow: string
+  } | null>(null)
+
+  const releaseScrollLock = React.useCallback(() => {
+    const locked = lockedScrollRef.current
+    if (!locked) return
+    locked.el.style.overflow = locked.prevOverflow
+    lockedScrollRef.current = null
+  }, [])
 
   const clearPendingTimeout = React.useCallback(() => {
     if (timeoutRef.current != null) {
@@ -62,12 +73,27 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
         // (buscador con teclado abierto), sacarle el foco ya mismo
         // — así el teclado empieza a cerrarse en sincronía con la
         // animación del sheet, en vez de quedarse abierto todo el
-        // arrastre peleando contra el transform. El fondo no se
-        // mueve pase lo que pase: body es position:fixed (ver
-        // app/layout.tsx), así que no hace falta bloquear/restaurar
-        // ningún scroll a mano acá.
+        // arrastre peleando contra el transform.
         const active = document.activeElement
         if (active instanceof HTMLElement && active !== document.body) {
+          // El scrollbar que se ve pasar detrás del blur es del
+          // ScrollArea de la página (la lista de fondo) — nunca fue
+          // el body (ese siempre estuvo overflow-hidden). iOS
+          // intenta "revelar" el input al desenfocarlo moviendo ESE
+          // scroll. Lo bloqueamos mientras dura el arrastre y lo
+          // liberamos en onPointerUp/onPointerCancel — atado al
+          // gesto real, no a un tiempo adivinado.
+          const background = document.querySelector<HTMLElement>(
+            '[data-slot="scroll-area"]',
+          )
+          if (background && !lockedScrollRef.current) {
+            lockedScrollRef.current = {
+              el: background,
+              prevOverflow: background.style.overflow,
+            }
+            background.style.overflow = "hidden"
+          }
+
           active.blur()
         }
       }
@@ -88,6 +114,7 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
 
     draggingRef.current = false
     hasCapturedRef.current = false
+    releaseScrollLock()
 
     const elapsed = Math.max(performance.now() - startTimeRef.current, 1)
     const velocity = dragY / elapsed
@@ -117,6 +144,8 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
     }
     return clearPendingTimeout
   }, [isOpen, clearPendingTimeout])
+
+  React.useEffect(() => releaseScrollLock, [releaseScrollLock])
 
   return {
     dragY,
