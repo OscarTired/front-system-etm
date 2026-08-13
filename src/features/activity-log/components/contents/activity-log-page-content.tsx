@@ -330,9 +330,17 @@ export function ActivityLogPageContent({
     </div>
   )
 
+  const fillHeight = isAgenda || isMonth
+
   const body = (
-    <>
-        <div className="mb-1">{toolbar}</div>
+    <div
+      className={
+        fillHeight
+          ? "flex min-h-0 w-full flex-1 flex-col"
+          : "flex w-full flex-col"
+      }
+    >
+        <div className="mb-1 shrink-0">{toolbar}</div>
 
         {isAgenda && (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -403,17 +411,17 @@ export function ActivityLogPageContent({
             })}
           </div>
         )}
-    </>
+    </div>
   )
 
-  // embedded: no acotar con flex-1/min-h-0 (impide expandir el scroll del hub).
-  // standalone: min-h-0 flex-1 + AppListScroll.
+  // Semana/mes: flex-1 + min-h-0 → llena AppListScroll.
+  // Día: sin min-h-0 forzado en el root si embedded, crece y scrollea.
   return (
     <div
       className={
-        embedded
-          ? "relative w-full"
-          : "relative flex min-h-0 w-full flex-1 flex-col"
+        fillHeight || !embedded
+          ? "relative flex min-h-0 w-full flex-1 flex-col"
+          : "relative w-full"
       }
     >
       {embedded ? body : (

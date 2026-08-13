@@ -157,25 +157,28 @@ export default function BitacoraPage() {
             await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
           }}
         >
-          <div className="mb-2 desktop:hidden">
+          <div className="mb-2 shrink-0 desktop:hidden">
             <TabsNav compact />
           </div>
 
-          {activeView === "PRODUCCION" && (
-            <BitacoraDepartmentPage
-              config={BITACORA_DEPARTMENTS.PRODUCCION}
-              embedded
-            />
-          )}
-          {activeView === "INGENIERIA" && (
-            <BitacoraDepartmentPage
-              config={BITACORA_DEPARTMENTS.INGENIERIA}
-              embedded
-            />
-          )}
-          {activeView === "TEAM" && (
-            <TeamActivityLogPageContent embedded />
-          )}
+          {/* flex-1 min-h-0: presupuesto de altura para semana/mes */}
+          <div className="flex min-h-0 w-full flex-1 flex-col">
+            {activeView === "PRODUCCION" && (
+              <BitacoraDepartmentPage
+                config={BITACORA_DEPARTMENTS.PRODUCCION}
+                embedded
+              />
+            )}
+            {activeView === "INGENIERIA" && (
+              <BitacoraDepartmentPage
+                config={BITACORA_DEPARTMENTS.INGENIERIA}
+                embedded
+              />
+            )}
+            {activeView === "TEAM" && (
+              <TeamActivityLogPageContent embedded />
+            )}
+          </div>
         </AppListScroll>
       </section>
     </main>

@@ -193,7 +193,7 @@ export function PopoverContent({
               // llegó al límite) encadena el gesto al scroll de lo
               // que esté detrás en el DOM — se ve como que "se mueve
               // todo el layout" y aparece su scrollbar.
-              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain",
+              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
               "px-4 pt-1 text-sm",
               className,
             )}

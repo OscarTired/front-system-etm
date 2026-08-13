@@ -158,7 +158,7 @@ export function AgendaMonthView({
 
       <div
         className="grid min-h-0 w-full flex-1"
-        style={{ gridTemplateRows: "repeat(6, minmax(min-content, 1fr))" }}
+        style={{ gridTemplateRows: "repeat(6, minmax(0, 1fr))" }}
       >
         {Array.from({ length: 6 }).map((_, week) => (
           <div

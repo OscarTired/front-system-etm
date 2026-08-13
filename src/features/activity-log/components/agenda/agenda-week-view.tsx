@@ -166,11 +166,10 @@ export function AgendaWeekView({
     <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
       <ScrollArea orientation="both" className="h-full min-h-0 min-w-0 flex-1">
         <div
-          className="grid h-full w-full bg-[#0c0c0e]"
+          className="grid h-full min-h-full w-full bg-[#0c0c0e]"
           style={{
             gridTemplateColumns: "11rem repeat(7, minmax(0, 1fr))",
-            // min-content: crece con chips; 1fr: reparte el alto libre
-            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(min-content, 1fr))`,
+            gridTemplateRows: `auto repeat(${SHIFT_GROUPS.length}, minmax(0, 1fr))`,
           }}
         >
           <div className="sticky left-0 top-0 z-30 flex items-center justify-center border-b border-white/5 bg-[#0c0c0e] p-3">
