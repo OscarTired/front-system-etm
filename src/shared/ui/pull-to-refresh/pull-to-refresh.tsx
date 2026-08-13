@@ -37,6 +37,15 @@ function damp(raw: number, max: number): number {
   return max * (1 - Math.exp(-raw / max))
 }
 
+function isInsideSheetOrPopover(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      '[data-slot="popover-content"],[data-slot="popover-sheet"],[data-slot="dialog-overlay"],[data-radix-dialog-overlay]',
+    ),
+  )
+}
+
 export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const startY = useRef(0)
   const pulling = useRef(false)
@@ -52,6 +61,17 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const onTouchStart = useCallback(
     (e: TouchEvent) => {
       if (refreshing) return
+      // El sheet se porta a document.body en el DOM, pero React
+      // burbujea eventos de portales según el árbol de React, no el
+      // DOM real — así que arrastrar DENTRO de un sheet abierto
+      // (para cerrarlo) también llega hasta acá si el Popover es
+      // descendiente de este wrapper en el árbol de componentes.
+      // Sin este chequeo, ese drag-to-dismiss también activa el PTR
+      // de la página de atrás.
+      if (isInsideSheetOrPopover(e.target)) {
+        pulling.current = false
+        return
+      }
       const el = scrollRef.current
       if (!el || el.scrollTop > 1) {
         pulling.current = false
@@ -66,6 +86,11 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const onTouchMove = useCallback(
     (e: TouchEvent) => {
       if (!pulling.current || refreshing) return
+      if (isInsideSheetOrPopover(e.target)) {
+        pulling.current = false
+        setPullOffset(0)
+        return
+      }
       const el = scrollRef.current
       if (!el || el.scrollTop > 1) {
         pulling.current = false
