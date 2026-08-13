@@ -3,6 +3,7 @@
 import { getActivityIcon } from "../../constants/activity-icons"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 
 type Props = {
   /** Obligatorio salvo en estado loading. */
@@ -35,6 +36,10 @@ export function ActivityLogChip({
     ? log.project.name
     : log?.note?.trim() || null
 
+  // Tokens de tema (misma ruta que DynamicBadge): texto legible en light/dark.
+  // Evita `${hex}14` hardcode que en light deja pasteles ilegibles.
+  const badge = useBadgeColors(color, "subtle")
+
   const shellClass = cn(
     "group relative flex w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
     "border-0 outline-none ring-0 shadow-none",
@@ -45,12 +50,11 @@ export function ActivityLogChip({
     className,
   )
 
-  // ——— Loading: mismo shell, mismos slots, sin datos ———
   if (loading || !log) {
     return (
       <div
         className={shellClass}
-        style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+        style={{ backgroundColor: "var(--muted)" }}
         aria-hidden
       >
         <div
@@ -77,15 +81,14 @@ export function ActivityLogChip({
     )
   }
 
-  // ——— Datos reales ———
   return (
     <button
       type="button"
       onClick={onClick}
       title={`${formatTime(log.loggedAt)} ${label}${subtitle ? ` — ${subtitle}` : ""}`}
       style={{
-        backgroundColor: `${color}14`,
-        color,
+        backgroundColor: badge.background,
+        color: badge.text,
       }}
       className={shellClass}
     >
@@ -99,8 +102,8 @@ export function ActivityLogChip({
           <div
             className="flex size-7 shrink-0 items-center justify-center rounded-lg pointer-events-none select-none md:size-6"
             style={{
-              backgroundColor: `${color}28`,
-              boxShadow: `inset 0 0 0 1px ${color}35`,
+              backgroundColor: badge.backgroundHover,
+              boxShadow: `inset 0 0 0 1px ${color}40`,
             }}
           >
             {Icon && (

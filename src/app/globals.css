@@ -105,18 +105,16 @@
   --surface-elevated: oklch(0.995 0.002 260);
   --chrome: oklch(0.975 0.003 260 / 0.92);
   --overlay: oklch(0.2 0.01 260 / 0.45);
-  /* Chips de dominio + fin gradiente mini-card (tokens, sin hardcode JS). */
-  /* Domain glass en light: misma metodologia que dark (no pasteles).
-   * Alpha un poco mas alto para que el color se lea sobre pagina clara. */
-  --chip-surface-rgb: 16 16 18;
-  --chip-bg-alpha: 0.50;
-  --chip-bg-alpha-hover: 0.58;
-  --chip-bg-alpha-active: 0.66;
-  --chip-text-tint: 0.88;
-  --process-card-end: oklch(0.16 0.008 260);
-  --on-glass-foreground: oklch(0.96 0.005 260);
-  --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
-  --on-glass-faint: oklch(0.96 0.005 260 / 0.38);
+  /* Chips light: superficie clara para que getBadgeColors oscurezca el texto. */
+  --chip-surface-rgb: 245 246 248;
+  --chip-bg-alpha: 0.20;
+  --chip-bg-alpha-hover: 0.28;
+  --chip-bg-alpha-active: 0.36;
+  --chip-text-tint: 0.12;
+  --process-card-end: oklch(0.97 0.003 260);
+  --on-glass-foreground: oklch(0.18 0.014 260);
+  --on-glass-muted: oklch(0.22 0.012 260 / 0.72);
+  --on-glass-faint: oklch(0.22 0.012 260 / 0.45);
 }
 
 html, body {

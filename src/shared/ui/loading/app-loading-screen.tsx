@@ -14,7 +14,6 @@ export function AppLoadingScreen({
   isReady = false,
   onComplete,
 }: Props) {
-
   const [progress, setProgress] = useState(0)
   const [mounted, setMounted] = useState(false)
 
@@ -28,10 +27,8 @@ export function AppLoadingScreen({
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 92) return prev
-
         const remaining = 92 - prev
         const step = Math.max(0.5, remaining * 0.08)
-
         return Math.min(92, prev + step)
       })
     }, 120)
@@ -48,7 +45,6 @@ export function AppLoadingScreen({
           clearInterval(interval)
           return 100
         }
-
         return Math.min(100, prev + 4)
       })
     }, 16)
@@ -58,9 +54,7 @@ export function AppLoadingScreen({
 
   useEffect(() => {
     if (progress < 100 || !onComplete) return
-
     const timeout = setTimeout(onComplete, 250)
-
     return () => clearTimeout(timeout)
   }, [progress, onComplete])
 
@@ -69,7 +63,6 @@ export function AppLoadingScreen({
       <LoadingBackground />
 
       <div className="relative z-10 flex flex-col items-center justify-center">
-
         <div className="flex h-24 w-24 items-center justify-center">
           <Image
             src="/icon.svg"
@@ -82,15 +75,16 @@ export function AppLoadingScreen({
         </div>
 
         <div className="mt-3 flex h-5 items-center justify-center gap-2">
-          <span className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#FCD34D]">
+          {/* Sin #FCD34D: legible en light (ámbar oscuro) y en dark (ámbar claro) */}
+          <span className="text-[12px] font-medium uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
             Cargando
           </span>
 
           <div className="flex h-full items-center gap-1">
-            {[0,1,2].map(dot => (
+            {[0, 1, 2].map(dot => (
               <span
                 key={dot}
-                className={`h-1 w-1 rounded-full bg-[#FCD34D] ${mounted ? "animate-bounce" : ""}`}
+                className={`h-1 w-1 rounded-full bg-amber-700 dark:bg-amber-300 ${mounted ? "animate-bounce" : ""}`}
                 style={{
                   animationDelay: `${dot * -0.15}s`,
                 }}
@@ -98,7 +92,6 @@ export function AppLoadingScreen({
             ))}
           </div>
         </div>
-
       </div>
     </div>
   )
