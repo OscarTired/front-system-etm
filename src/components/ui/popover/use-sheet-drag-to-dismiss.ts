@@ -62,8 +62,10 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
         // (buscador con teclado abierto), sacarle el foco ya mismo
         // — así el teclado empieza a cerrarse en sincronía con la
         // animación del sheet, en vez de quedarse abierto todo el
-        // arrastre peleando contra el transform (eso era el cursor
-        // "colgado" + scrollbar suelto + lag).
+        // arrastre peleando contra el transform. El fondo no se
+        // mueve pase lo que pase: body es position:fixed (ver
+        // app/layout.tsx), así que no hace falta bloquear/restaurar
+        // ningún scroll a mano acá.
         const active = document.activeElement
         if (active instanceof HTMLElement && active !== document.body) {
           active.blur()
