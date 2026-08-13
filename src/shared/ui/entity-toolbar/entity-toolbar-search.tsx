@@ -94,6 +94,7 @@ export function EntityToolbarSearch({
     <div className="flex justify-end">
       <div
         ref={containerRef}
+        data-toolbar-search=""
         className={cn(
           "flex items-center overflow-hidden transition-all duration-200 ease-out",
           open
@@ -103,12 +104,22 @@ export function EntityToolbarSearch({
       >
         <button
           type="button"
-          onMouseDown={event =>
+          data-toolbar-search=""
+          // No iniciar PTR / scroll de página desde la lupa
+          onPointerDown={event => {
+            event.stopPropagation()
+          }}
+          onTouchStart={event => {
+            event.stopPropagation()
+          }}
+          onMouseDown={event => {
+            // Conserva foco del input al toggle; no arranca gestos de página
             event.preventDefault()
-          }
+            event.stopPropagation()
+          }}
           onClick={handleToggle}
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white transition-all duration-200",
+            "flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-xl text-white transition-all duration-200",
             open
               ? "bg-[#101012]"
               : "hover:bg-[#101012]"
@@ -137,8 +148,10 @@ export function EntityToolbarSearch({
               )
             }
             onBlur={handleBlur}
+            onPointerDown={event => event.stopPropagation()}
+            onTouchStart={event => event.stopPropagation()}
             placeholder="Buscar..."
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+            className="w-full touch-manipulation bg-transparent text-sm text-white outline-none placeholder:text-white/35"
           />
         </div>
       </div>

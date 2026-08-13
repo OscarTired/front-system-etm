@@ -56,6 +56,12 @@ function isDragGestureTarget(target: EventTarget | null) {
   )
 }
 
+/** Lupa / search del toolbar: no es pull-to-refresh. */
+function isToolbarChromeTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(target.closest("[data-toolbar-search]"))
+}
+
 export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const startY = useRef(0)
   const pulling = useRef(false)
@@ -77,6 +83,10 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         return
       }
       if (isDragGestureTarget(e.target)) {
+        pulling.current = false
+        return
+      }
+      if (isToolbarChromeTarget(e.target)) {
         pulling.current = false
         return
       }
@@ -111,6 +121,11 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         return
       }
       if (isDragGestureTarget(e.target)) {
+        pulling.current = false
+        setPullOffset(0)
+        return
+      }
+      if (isToolbarChromeTarget(e.target)) {
         pulling.current = false
         setPullOffset(0)
         return
