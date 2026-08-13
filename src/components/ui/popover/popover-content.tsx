@@ -138,10 +138,19 @@ export function PopoverContent({
             // dinámica (una clase armada con template string nunca
             // se genera en build — no es texto literal para el
             // scanner).
+            //
+            // CSS no anima una transición hacia/desde "auto" — por
+            // eso en reposo usamos el alto MEDIDO en px (size.height,
+            // de useSmoothResize) en vez de "auto": son dos valores
+            // reales, así que la transición sí se ve. "auto" solo se
+            // usa el primer instante, antes de que el ResizeObserver
+            // mida algo (no hay nada de qué animar todavía ahí).
             height: isInputFocused
               ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
-              : "auto",
-            // maxHeight solo en reposo — si tamién estuviera puesto
+              : size.height != null
+                ? `${size.height + SHEET_CONFIG.CHROME_OVERHEAD_PX}px`
+                : "auto",
+            // maxHeight solo en reposo — si también estuviera puesto
             // con foco, CSS toma el menor entre height y maxHeight,
             // y la altura fija de arriba nunca se alcanzaría de verdad.
             maxHeight: isInputFocused
@@ -163,8 +172,10 @@ export function PopoverContent({
             <div className="h-1.5 w-9 rounded-full bg-white/15" />
           </div>
 
+          {/* Viewport con scroll: acotado por lo que Content mida
+              tener disponible en cada momento (fijo con foco, medido
+              en reposo). */}
           <div
-            ref={containerRef}
             onWheel={event => {
               const el = event.currentTarget
               if (el.scrollHeight > el.clientHeight) event.stopPropagation()
@@ -173,14 +184,24 @@ export function PopoverContent({
               paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
             }}
             className={cn(
-              // min-h-0 + flex-1: el hijo (Command) puede scrollear
-              "flex min-h-0 w-full flex-1 flex-col overflow-hidden",
+              // min-h-0 + flex-1: puede scrollear cuando el contenido
+              // (measuredRef adentro) es más alto que el espacio real.
+              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto",
               "px-4 pt-1 text-sm",
               className,
             )}
             {...props}
           >
-            {children}
+            {/* measuredRef: SIN flex-1/min-h-0/overflow — crece a su
+                tamaño natural sin importar cuánto espacio le den de
+                verdad, así ResizeObserver mide "cuánto ocuparía si
+                nadie lo recortara". Si midiera el propio viewport
+                (que sí está acotado), su tamaño dependería de la
+                altura que le pusimos a Content, que a su vez depende
+                de esta medición — bucle. Separados, no hay bucle. */}
+            <div ref={containerRef} className="w-full">
+              {children}
+            </div>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
