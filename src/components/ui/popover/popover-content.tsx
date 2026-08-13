@@ -58,32 +58,23 @@ export function PopoverContent({
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
     /**
-     * Instagram pattern:
-     * - bottom = keyboardInset  → sheet sentado sobre el teclado
-     * - height = casi todo el VV → lista siempre visible
-     * - body flex column + min-h-0 → el scroll vive DENTRO, no empuja el sheet
-     * - sin height de ResizeObserver (rompía iOS midiendo solo el input)
+     * Con interactiveWidget: resizes-content (ver app/layout.tsx), el
+     * navegador ya achica el viewport de layout con el teclado — así
+     * que `fixed inset-x-0 bottom-0` se sienta solo arriba del
+     * teclado, sin calcular nada a mano. Lo único que seguimos
+     * leyendo de vvFrame es el booleano `keyboardOpen`, para darle
+     * más alto al sheet cuando hay teclado (que la lista de resultados
+     * siga viéndose), no para posicionarlo.
      */
-    const sheetMaxH = Math.max(
-      200,
-      vvFrame.height * (vvFrame.keyboardOpen ? 0.98 : SHEET_CONFIG.MAX_HEIGHT_RATIO),
-    )
-
     return (
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm pointer-events-auto",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:duration-250 data-[state=open]:duration-200",
           )}
-          style={{
-            top: vvFrame.top,
-            left: vvFrame.left,
-            width: vvFrame.width || "100%",
-            height: vvFrame.height || "100%",
-          }}
         />
 
         <DialogPrimitive.Content
@@ -102,7 +93,7 @@ export function PopoverContent({
           {...dragHandleProps}
           className={cn(
             // flex-col es el contrato IG: handle | body scrolleable
-            "fixed z-40 flex flex-col overflow-hidden",
+            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden",
             "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
             !dismissing &&
               "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -116,21 +107,18 @@ export function PopoverContent({
           style={{
             ...style,
             top: "auto",
-            right: "auto",
-            left: vvFrame.left || 0,
-            width: vvFrame.width ? vvFrame.width : "100%",
-            // IG: el sheet “se sienta” arriba del teclado
-            bottom: vvFrame.keyboardInset,
-            maxHeight: sheetMaxH,
-            // Con teclado: ocupar el VV (lista + input visibles).
-            // Sin teclado: auto, acotado por maxHeight.
-            height: vvFrame.keyboardOpen ? sheetMaxH : "auto",
+            // maxHeight vía inline style, no clase Tailwind dinámica
+            // (una clase armada con template string nunca se genera
+            // en build — no es texto literal para el scanner).
+            maxHeight: vvFrame.keyboardOpen
+              ? "98dvh"
+              : `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
             transform: dragY ? `translateY(${dragY}px)` : undefined,
             transition: isDragging
               ? "none"
               : dismissing
                 ? transitionStyle
-                : `bottom 160ms cubic-bezier(0.2,0,0,1), height 160ms cubic-bezier(0.2,0,0,1), max-height 160ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+                : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
           }}
         >
           <VisuallyHidden asChild>
@@ -224,4 +212,3 @@ export function PopoverContent({
 
   return <PopoverPrimitive.Portal>{content}</PopoverPrimitive.Portal>
 }
-

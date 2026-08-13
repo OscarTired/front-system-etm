@@ -45,10 +45,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // overlays-content (default): el teclado NO redimensiona el layout.
-  // El sheet se ancla con visualViewport (popover-content). Así no
-  // hay doble conteo teclado (layout shrink + bottom offset).
-  interactiveWidget: "overlays-content",
+  interactiveWidget: "resizes-content",
 }
 
 export default function RootLayout({
@@ -59,9 +56,9 @@ export default function RootLayout({
 
   return (
 
-    <html lang="es" className="dark h-svh overflow-hidden">
+    <html lang="es" className="dark h-dvh overflow-hidden">
 
-      <body className={`${geist.className} h-svh overflow-hidden`}>
+      <body className={`${geist.className} h-dvh overflow-hidden`}>
 
         <ApiClientProvider />
 
