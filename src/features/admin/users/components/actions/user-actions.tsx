@@ -75,8 +75,8 @@ export function UserActions(){
             "fixed bottom-22 right-4 z-30 flex size-12 items-center justify-center rounded-full transition duration-200",
             canCreate
               ? [
-                  "bg-white text-black",
-                  "hover:scale-105 hover:bg-neutral-100 active:scale-95",
+                  "bg-foreground text-background",
+                  "hover:scale-105 hover:bg-foreground/90 active:scale-95",
                   "shadow-[0_12px_32px_rgba(0,0,0,0.55),0_4px_10px_rgba(255,255,255,0.08)]",
                 ].join(" ")
               : "cursor-not-allowed bg-foreground/10 text-foreground/35 shadow-none",

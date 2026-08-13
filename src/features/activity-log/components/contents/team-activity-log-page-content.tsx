@@ -81,7 +81,7 @@ function ActivityLogCard({
           <div className="size-10 shrink-0 rounded-full bg-foreground/10" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="h-3.5 w-28 rounded bg-white/12" />
+              <div className="h-3.5 w-28 rounded bg-foreground/12" />
               <div className="h-3 w-24 rounded bg-foreground/10" />
             </div>
             <div className="h-3.5 w-36 rounded bg-foreground/10" />

@@ -16,7 +16,7 @@ export default function AccessPage() {
       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">ACCESO</h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Usuarios, roles y permisos
           </p>

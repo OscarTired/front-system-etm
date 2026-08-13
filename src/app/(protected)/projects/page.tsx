@@ -21,7 +21,7 @@ export default function ProjectsPage() {
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             PROYECTOS
           </h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Gestión de proyectos
           </p>

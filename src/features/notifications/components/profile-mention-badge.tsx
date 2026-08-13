@@ -16,7 +16,7 @@ export function ProfileMentionBadge({ className }: Props) {
   if (!hasUnreadMention) return null
 
   return (
-    <span className={cn("h-2.5 w-2.5 rounded-full border-2 border-neutral-900 bg-cyan-400", className)} />
+    <span className={cn("h-2.5 w-2.5 rounded-full border-2 border-background bg-cyan-400", className)} />
   )
 
 }

@@ -340,7 +340,7 @@ export function ActivityPickerDialog({
               className={cn(
                 "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
                 showDetail || note.trim() || photo
-                  ? "bg-white/12 text-foreground"
+                  ? "bg-foreground/12 text-foreground"
                   : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               )}
             >
@@ -378,7 +378,7 @@ export function ActivityPickerDialog({
                       type="button"
                       onClick={() => setPhoto(null)}
                       aria-label="Quitar foto"
-                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
+                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-border hover:bg-accent"
                     >
                       <X size={11} />
                     </button>
@@ -471,7 +471,7 @@ export function ActivityPickerDialog({
                 className={cn(
                   "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                   isSelected
-                    ? "bg-white/12"
+                    ? "bg-foreground/12"
                     : isDisabled
                       ? "cursor-not-allowed bg-foreground/5 opacity-40"
                       : "bg-foreground/5 hover:bg-foreground/10",
@@ -518,7 +518,7 @@ export function ActivityPickerDialog({
                   className={cn(
                     "relative flex w-full flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                     selectedOtherTypes.length > 0 || otherTypesOpen
-                      ? "bg-white/12"
+                      ? "bg-foreground/12"
                       : "bg-foreground/5 hover:bg-foreground/10",
                   )}
                 >
@@ -588,7 +588,7 @@ export function ActivityPickerDialog({
                         className={cn(
                           "relative flex w-[calc((100%-1.25rem)/3)] flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 text-center transition-colors",
                           isSelected
-                            ? "bg-white/12"
+                            ? "bg-foreground/12"
                             : isDisabled
                               ? "cursor-not-allowed bg-foreground/5 opacity-40"
                               : "bg-foreground/5 hover:bg-foreground/10",

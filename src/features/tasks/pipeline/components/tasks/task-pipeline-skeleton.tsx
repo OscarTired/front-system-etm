@@ -38,14 +38,14 @@ function SkeletonKpiCompact() {
 
         <div className="text-right">
           <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
-          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
+          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-foreground/12" />
         </div>
 
         <span className="h-8 w-px shrink-0 bg-foreground/10" />
 
         <div className="text-right">
           <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
-          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
+          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-foreground/12" />
         </div>
 
       </div>

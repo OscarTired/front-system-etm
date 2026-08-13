@@ -145,7 +145,7 @@ EntityColumn<User>[]{
             className={
               user.online
                 ?"h-1.5 w-1.5 rounded-full bg-emerald-400/90"
-                :"h-1.5 w-1.5 rounded-full bg-neutral-500/70"
+                :"h-1.5 w-1.5 rounded-full bg-muted-foreground/70"
             }
           />
           {user.online

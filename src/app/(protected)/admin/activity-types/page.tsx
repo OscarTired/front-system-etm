@@ -14,7 +14,7 @@ export default function ActivityTypesPage() {
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             ACTIVIDADES
           </h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Lista de actividades para la Bitácora
           </p>

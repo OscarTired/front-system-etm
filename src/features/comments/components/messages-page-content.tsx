@@ -295,7 +295,7 @@ export function MessagesPageContent() {
 
                       <div className="mt-2 flex gap-2.5">
                         {c.imageUrl && (
-                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-black/40 ring-1 ring-border">
+                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={c.imageUrl}

@@ -34,7 +34,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false 
       }}
       className={cn(
         "flex min-w-0 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors",
-        checked ? "bg-gray-500/10" : "hover:bg-foreground/5",
+        checked ? "bg-foreground/8" : "hover:bg-foreground/5",
       )}
     >
       <span

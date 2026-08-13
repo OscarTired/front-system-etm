@@ -16,11 +16,19 @@ import {
   useResponsive,
 } from "@/shared/responsive/hooks/use-responsive"
 
+import {
+  useBadgeColors,
+} from "@/shared/utils/use-badge-colors"
+
 type Props={
 
   onClick:()=>void
 
 }
+
+// cyan-500 — mismo hex que usa el resto del sistema de badges para
+// "crear/agregar". Un solo valor, una sola fuente para el color en sí.
+const CYAN_HEX = "#06b6d4"
 
 export function ProjectTaskPlaceholder({
 
@@ -39,6 +47,13 @@ export function ProjectTaskPlaceholder({
     has(
       PermissionCode.TASK_CREATE,
     )
+
+  // Mismo sistema que ProcessMiniCard/DynamicBadge (useBadgeColors):
+  // el alpha del círculo cian ya está resuelto por tema en un solo
+  // lugar reutilizable, en vez de pares dark:/light hardcoded a mano.
+  // El wash de fondo usa `foreground` (neutral, no un color puntual)
+  // que ya se invierte solo entre temas — eso queda igual.
+  const badge = useBadgeColors(CYAN_HEX, "subtle")
 
   // Mismo lenguaje visual que el resumen colapsado de KpiCarousel:
   // una sola fila compacta, sin la caja alta/decorativa que sí
@@ -74,8 +89,11 @@ export function ProjectTaskPlaceholder({
         }
       >
 
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/18 dark:bg-cyan-500/10">
-          <Plus size={14} className="text-cyan-600 dark:text-cyan-400" />
+        <div
+          className="flex size-7 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: badge.background }}
+        >
+          <Plus size={14} style={{ color: badge.text }} />
         </div>
 
         <span className="text-sm font-bold text-foreground">
@@ -130,7 +148,7 @@ export function ProjectTaskPlaceholder({
 
           canCreate
 
-            ?"hover:border-cyan-500/20 hover:bg-foreground/10"
+            ?"hover:bg-foreground/10"
 
             :"cursor-not-allowed opacity-50"
 
@@ -141,26 +159,16 @@ export function ProjectTaskPlaceholder({
     >
 
       <div
-        className={
-
-          `mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200
-
-          ${
-
-            canCreate
-
-              ?"bg-cyan-500/18 group-hover:scale-105 group-hover:bg-cyan-500/24 dark:bg-cyan-500/10 dark:group-hover:bg-cyan-500/15"
-
-              :"bg-cyan-500/8 dark:bg-cyan-500/5"
-
-          }`
-
-        }
+        className="mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200 group-hover:scale-105"
+        style={{
+          backgroundColor: badge.background,
+          opacity: canCreate ? 1 : 0.6,
+        }}
       >
 
         <Plus
           size={20}
-          className="text-cyan-600 dark:text-cyan-400"
+          style={{ color: badge.text }}
         />
 
       </div>

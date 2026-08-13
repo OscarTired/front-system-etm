@@ -216,7 +216,7 @@ function ActiveOperatorsPopover({
         <button
           type="button"
           className={cn(
-            "flex h-10 w-full items-center gap-2 rounded-lg bg-neutral-800/50 px-2 py-1.5 text-left transition-colors hover:bg-neutral-800",
+            "flex h-10 w-full items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left transition-colors hover:bg-muted",
             isMobile ? "justify-center" : "justify-between",
           )}
         >

@@ -257,7 +257,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
                         )}
                         <div className="mt-1 flex gap-2">
                           {c.imageUrl && (
-                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-black/40 ring-1 ring-border">
+                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={c.imageUrl} alt="" className="size-full object-cover" />
                             </div>

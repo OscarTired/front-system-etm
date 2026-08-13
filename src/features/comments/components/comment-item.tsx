@@ -95,7 +95,7 @@ export function CommentItem({
               </span>
               {isPending ? (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground" />
                   Enviando…
                 </span>
               ) : isDeleting ? (
@@ -218,7 +218,7 @@ export function CommentItem({
             type="button"
             onClick={() => setImageDialogOpen(true)}
             disabled={isDeleting}
-            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-black/30 text-left transition hover:border-border disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-muted text-left transition hover:border-border disabled:cursor-not-allowed disabled:opacity-60"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

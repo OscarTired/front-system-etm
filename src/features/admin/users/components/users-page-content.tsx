@@ -344,7 +344,7 @@ export function UsersPageContent() {
                     <button
                       type="button"
                       onClick={handleStartCreate}
-                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
+                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-foreground/16"
                     >
                       <Plus size={16} />
                     </button>
@@ -441,7 +441,7 @@ export function UsersPageContent() {
                       <button
                         type="button"
                         onClick={handleStartCreate}
-                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
+                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-foreground/16"
                       >
                         <Plus size={16} />
                       </button>

@@ -67,7 +67,7 @@ export function BottomNavigation() {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-active-chip"
-                    className="pointer-events-none absolute inset-0 rounded-full bg-white/12 will-change-transform"
+                    className="pointer-events-none absolute inset-0 rounded-full bg-foreground/12 will-change-transform"
                     transition={{
                       type: "spring",
                       stiffness: 400,

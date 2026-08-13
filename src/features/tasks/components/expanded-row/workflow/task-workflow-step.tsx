@@ -25,12 +25,12 @@ const statusStyles: Record<
 > = {
 
   QUEUE: {
-    dot: "border-neutral-700 bg-popover",
+    dot: "border-border bg-popover",
     text: "text-muted-foreground/80",
   },
 
   PENDING: {
-    dot: "border-neutral-600 bg-neutral-800",
+    dot: "border-border bg-muted",
     text: "text-muted-foreground",
   },
 

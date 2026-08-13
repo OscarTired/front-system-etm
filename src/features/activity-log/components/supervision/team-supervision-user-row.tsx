@@ -114,12 +114,12 @@ export function TeamSupervisionUserRow({
         <div className="flex w-full items-center gap-3 px-3.5 py-3">
           <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
           <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="h-3.5 w-28 rounded bg-white/12" />
+            <div className="h-3.5 w-28 rounded bg-foreground/12" />
             <div className="h-3 w-40 rounded bg-foreground/10" />
           </div>
           <div className="hidden items-center gap-1.5 sm:flex">
             {Array.from({ length: 5 }).map((_, i) => (
-              <span key={i} className="size-1.5 rounded-full bg-white/12" />
+              <span key={i} className="size-1.5 rounded-full bg-foreground/12" />
             ))}
           </div>
           <div className="size-4 shrink-0 rounded bg-foreground/10" />
@@ -194,7 +194,7 @@ export function TeamSupervisionUserRow({
                 title={slot.hours}
                 className={cn(
                   "size-1.5 rounded-full",
-                  filled ? "bg-cyan-400" : "bg-white/12",
+                  filled ? "bg-cyan-400" : "bg-foreground/12",
                 )}
               />
             )

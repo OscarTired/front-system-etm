@@ -63,7 +63,7 @@ function SkeletonProcessRow({
             <span className="ml-auto block h-3 w-19.5 rounded bg-foreground/10" />
 
             {/* 0 */}
-            <span className="mt-1 ml-auto block h-7 w-4 rounded bg-white/12" />
+            <span className="mt-1 ml-auto block h-7 w-4 rounded bg-foreground/12" />
 
           </div>
 

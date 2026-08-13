@@ -432,7 +432,7 @@ export function ProjectTaskRow({
             "bg-foreground/5",
             "text-foreground/40",
             "transition duration-200",
-            "hover:bg-white/[0.07] hover:text-foreground hover:scale-105",
+            "hover:bg-foreground/[0.07] hover:text-foreground hover:scale-105",
             "active:scale-95",
             "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",
             isMobile

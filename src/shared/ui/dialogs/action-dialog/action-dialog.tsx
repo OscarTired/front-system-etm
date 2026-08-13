@@ -133,7 +133,7 @@ export function ActionDialog({
               "relative isolate transform-gpu flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70",
               danger
                 ? "bg-red-500 text-foreground hover:bg-red-400"
-                : "bg-white text-black hover:bg-neutral-200",
+                : "bg-foreground text-background hover:bg-foreground/90",
             )}
           >
             {submitting ? (

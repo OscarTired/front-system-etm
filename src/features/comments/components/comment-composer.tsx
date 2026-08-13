@@ -222,7 +222,7 @@ export function CommentComposer({
                   type="button"
                   onClick={handleRemoveImage}
                   aria-label="Quitar foto"
-                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
+                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-border hover:bg-accent"
                 >
                   <X size={11} />
                 </button>

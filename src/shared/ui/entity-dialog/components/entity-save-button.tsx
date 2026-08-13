@@ -35,7 +35,7 @@ export function EntitySaveButton({
         saving
           ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
           : !disabled
-            ? "bg-white text-black hover:bg-neutral-200"
+            ? "bg-foreground text-background hover:bg-foreground/90"
             : "cursor-not-allowed bg-foreground/10 text-muted-foreground/80",
         className
       )}

@@ -1,0 +1,882 @@
+diff --git a/src/app/(protected)/admin/access/page.tsx b/src/app/(protected)/admin/access/page.tsx
+index f346dc4..2fd3d4c 100644
+--- a/src/app/(protected)/admin/access/page.tsx
++++ b/src/app/(protected)/admin/access/page.tsx
+@@ -16,7 +16,7 @@ export default function AccessPage() {
+       <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
+         <div className="flex min-w-0 flex-1 items-center gap-2">
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">ACCESO</h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Usuarios, roles y permisos
+           </p>
+diff --git a/src/app/(protected)/admin/activity-types/page.tsx b/src/app/(protected)/admin/activity-types/page.tsx
+index f919d04..192bbdc 100644
+--- a/src/app/(protected)/admin/activity-types/page.tsx
++++ b/src/app/(protected)/admin/activity-types/page.tsx
+@@ -14,7 +14,7 @@ export default function ActivityTypesPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             ACTIVIDADES
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Lista de actividades para la Bitácora
+           </p>
+diff --git a/src/app/(protected)/bitacora/page.tsx b/src/app/(protected)/bitacora/page.tsx
+index a652fe8..0125da5 100644
+--- a/src/app/(protected)/bitacora/page.tsx
++++ b/src/app/(protected)/bitacora/page.tsx
+@@ -101,12 +101,12 @@ export default function BitacoraPage() {
+                 compact
+                   ? `flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                       isActive
+-                        ? "bg-neutral-800 text-foreground shadow-sm"
++                        ? "bg-accent text-accent-foreground shadow-sm"
+                         : "text-muted-foreground hover:text-foreground"
+                     }`
+                   : `flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                       isActive
+-                        ? "bg-neutral-800 text-foreground shadow-sm"
++                        ? "bg-accent text-accent-foreground shadow-sm"
+                         : "text-muted-foreground hover:text-foreground"
+                     }`
+               }
+@@ -134,7 +134,7 @@ export default function BitacoraPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             BITÁCORA
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Control y registro de actividades
+           </p>
+diff --git a/src/app/(protected)/processes/page.tsx b/src/app/(protected)/processes/page.tsx
+index 263f3e3..17ab6de 100644
+--- a/src/app/(protected)/processes/page.tsx
++++ b/src/app/(protected)/processes/page.tsx
+@@ -26,7 +26,7 @@ export default function ProcessPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             {process?.label.toUpperCase()}
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Centro de gestión del proceso
+           </p>
+diff --git a/src/app/(protected)/production/page.tsx b/src/app/(protected)/production/page.tsx
+index ba7fd61..911db89 100644
+--- a/src/app/(protected)/production/page.tsx
++++ b/src/app/(protected)/production/page.tsx
+@@ -41,7 +41,7 @@ export default function AssignmentPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             ASIGNACIÓN
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Convocá operarios a las tareas de cada área
+           </p>
+diff --git a/src/app/(protected)/projects/page.tsx b/src/app/(protected)/projects/page.tsx
+index e26a0c6..607a5ba 100644
+--- a/src/app/(protected)/projects/page.tsx
++++ b/src/app/(protected)/projects/page.tsx
+@@ -21,7 +21,7 @@ export default function ProjectsPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             PROYECTOS
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Gestión de proyectos
+           </p>
+diff --git a/src/app/(protected)/tasks/page.tsx b/src/app/(protected)/tasks/page.tsx
+index 4b7ee97..dbeab33 100644
+--- a/src/app/(protected)/tasks/page.tsx
++++ b/src/app/(protected)/tasks/page.tsx
+@@ -21,7 +21,7 @@ export default function TasksPage() {
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             TAREAS
+           </h1>
+-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
++          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+           <p className="min-w-0 truncate text-sm text-muted-foreground">
+             Gestión de tareas
+           </p>
+diff --git a/src/features/activity-log/components/actions/activity-log-chip.tsx b/src/features/activity-log/components/actions/activity-log-chip.tsx
+index fdb20fe..caba976 100644
+--- a/src/features/activity-log/components/actions/activity-log-chip.tsx
++++ b/src/features/activity-log/components/actions/activity-log-chip.tsx
+@@ -62,7 +62,7 @@ export function ActivityLogChip({
+           <div className="flex min-w-0 flex-1 items-center gap-2">
+             <div className="size-7 shrink-0 rounded-lg bg-foreground/10 md:size-6" />
+             <div className="min-w-0 flex-1 space-y-1.5">
+-              <div className="h-3 w-2/5 rounded bg-white/12" />
++              <div className="h-3 w-2/5 rounded bg-foreground/12" />
+               <div className="h-2.5 w-3/5 rounded bg-foreground/10 md:hidden" />
+             </div>
+           </div>
+@@ -119,7 +119,7 @@ export function ActivityLogChip({
+                 {label}
+               </span>
+               {log.source === "AUTO" && (
+-                <span className="shrink-0 rounded-md bg-black/40 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-foreground/90">
++                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                   Auto
+                 </span>
+               )}
+diff --git a/src/features/activity-log/components/actions/activity-type-actions.tsx b/src/features/activity-log/components/actions/activity-type-actions.tsx
+index 5185639..24712ea 100644
+--- a/src/features/activity-log/components/actions/activity-type-actions.tsx
++++ b/src/features/activity-log/components/actions/activity-type-actions.tsx
+@@ -46,7 +46,7 @@ export function ActivityTypeActions() {
+           className={cn(
+             "fixed bottom-22 right-4 z-30 flex size-12 items-center justify-center rounded-full transition duration-200",
+             canManage
+-              ? "bg-white text-black hover:scale-105 hover:bg-neutral-100 active:scale-95"
++              ? "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95"
+               : "cursor-not-allowed bg-foreground/20 text-foreground/40",
+             "shadow-[0_12px_32px_rgba(0,0,0,0.55),0_4px_10px_rgba(255,255,255,0.08)]",
+           )}
+diff --git a/src/features/activity-log/components/contents/activity-types-page-content.tsx b/src/features/activity-log/components/contents/activity-types-page-content.tsx
+index 6f20a10..2478598 100644
+--- a/src/features/activity-log/components/contents/activity-types-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-types-page-content.tsx
+@@ -91,7 +91,7 @@ function ActivityTypeRowPlaceholder({ opacity }: { opacity: number }) {
+     >
+       <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
+       <div className="min-w-0 flex-1 space-y-1.5">
+-        <div className="h-4 w-36 max-w-[50%] rounded bg-white/12" />
++        <div className="h-4 w-36 max-w-[50%] rounded bg-foreground/12" />
+         <div className="h-3 w-28 max-w-[40%] rounded bg-foreground/5" />
+       </div>
+       <div className="flex gap-1">
+diff --git a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+index d5ceef5..aebc709 100644
+--- a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+@@ -81,7 +81,7 @@ function ActivityLogCard({
+           <div className="size-10 shrink-0 rounded-full bg-foreground/10" />
+           <div className="min-w-0 flex-1 space-y-2">
+             <div className="flex items-center justify-between gap-2">
+-              <div className="h-3.5 w-28 rounded bg-white/12" />
++              <div className="h-3.5 w-28 rounded bg-foreground/12" />
+               <div className="h-3 w-24 rounded bg-foreground/10" />
+             </div>
+             <div className="h-3.5 w-36 rounded bg-foreground/10" />
+diff --git a/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx b/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
+index 9ff23f6..df66078 100644
+--- a/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
++++ b/src/features/activity-log/components/dialogs/activity-picker-dialog.tsx
+@@ -340,7 +340,7 @@ export function ActivityPickerDialog({
+               className={cn(
+                 "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
+                 showDetail || note.trim() || photo
+-                  ? "bg-white/12 text-foreground"
++                  ? "bg-foreground/12 text-foreground"
+                   : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+               )}
+             >
+@@ -378,7 +378,7 @@ export function ActivityPickerDialog({
+                       type="button"
+                       onClick={() => setPhoto(null)}
+                       aria-label="Quitar foto"
+-                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
++                      className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-border hover:bg-accent"
+                     >
+                       <X size={11} />
+                     </button>
+@@ -471,7 +471,7 @@ export function ActivityPickerDialog({
+                 className={cn(
+                   "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                   isSelected
+-                    ? "bg-white/12"
++                    ? "bg-foreground/12"
+                     : isDisabled
+                       ? "cursor-not-allowed bg-foreground/5 opacity-40"
+                       : "bg-foreground/5 hover:bg-foreground/10",
+@@ -518,7 +518,7 @@ export function ActivityPickerDialog({
+                   className={cn(
+                     "relative flex w-full flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                     selectedOtherTypes.length > 0 || otherTypesOpen
+-                      ? "bg-white/12"
++                      ? "bg-foreground/12"
+                       : "bg-foreground/5 hover:bg-foreground/10",
+                   )}
+                 >
+@@ -588,7 +588,7 @@ export function ActivityPickerDialog({
+                         className={cn(
+                           "relative flex w-[calc((100%-1.25rem)/3)] flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 text-center transition-colors",
+                           isSelected
+-                            ? "bg-white/12"
++                            ? "bg-foreground/12"
+                             : isDisabled
+                               ? "cursor-not-allowed bg-foreground/5 opacity-40"
+                               : "bg-foreground/5 hover:bg-foreground/10",
+diff --git a/src/features/activity-log/components/dialogs/activity-type-form-dialog.tsx b/src/features/activity-log/components/dialogs/activity-type-form-dialog.tsx
+index 0aa8d5d..a4c8855 100644
+--- a/src/features/activity-log/components/dialogs/activity-type-form-dialog.tsx
++++ b/src/features/activity-log/components/dialogs/activity-type-form-dialog.tsx
+@@ -226,7 +226,7 @@ export function ActivityTypeFormDialog({
+               className={cn(
+                 "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                 pinned
+-                  ? "bg-white/12 text-foreground"
++                  ? "bg-foreground/12 text-foreground"
+                   : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+               )}
+             >
+@@ -240,7 +240,7 @@ export function ActivityTypeFormDialog({
+               className={cn(
+                 "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                 !pinned
+-                  ? "bg-white/12 text-foreground"
++                  ? "bg-foreground/12 text-foreground"
+                   : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+               )}
+             >
+diff --git a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+index 379a812..05b2538 100644
+--- a/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
++++ b/src/features/activity-log/components/supervision/team-supervision-user-row.tsx
+@@ -114,12 +114,12 @@ export function TeamSupervisionUserRow({
+         <div className="flex w-full items-center gap-3 px-3.5 py-3">
+           <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
+           <div className="min-w-0 flex-1 space-y-1.5">
+-            <div className="h-3.5 w-28 rounded bg-white/12" />
++            <div className="h-3.5 w-28 rounded bg-foreground/12" />
+             <div className="h-3 w-40 rounded bg-foreground/10" />
+           </div>
+           <div className="hidden items-center gap-1.5 sm:flex">
+             {Array.from({ length: 5 }).map((_, i) => (
+-              <span key={i} className="size-1.5 rounded-full bg-white/12" />
++              <span key={i} className="size-1.5 rounded-full bg-foreground/12" />
+             ))}
+           </div>
+           <div className="size-4 shrink-0 rounded bg-foreground/10" />
+@@ -194,7 +194,7 @@ export function TeamSupervisionUserRow({
+                 title={slot.hours}
+                 className={cn(
+                   "size-1.5 rounded-full",
+-                  filled ? "bg-cyan-400" : "bg-white/12",
++                  filled ? "bg-cyan-400" : "bg-foreground/12",
+                 )}
+               />
+             )
+diff --git a/src/features/admin/users/components/actions/user-actions.tsx b/src/features/admin/users/components/actions/user-actions.tsx
+index 2a24c20..2f715c1 100644
+--- a/src/features/admin/users/components/actions/user-actions.tsx
++++ b/src/features/admin/users/components/actions/user-actions.tsx
+@@ -75,8 +75,8 @@ export function UserActions(){
+             "fixed bottom-22 right-4 z-30 flex size-12 items-center justify-center rounded-full transition duration-200",
+             canCreate
+               ? [
+-                  "bg-white text-black",
+-                  "hover:scale-105 hover:bg-neutral-100 active:scale-95",
++                  "bg-foreground text-background",
++                  "hover:scale-105 hover:bg-foreground/90 active:scale-95",
+                   "shadow-[0_12px_32px_rgba(0,0,0,0.55),0_4px_10px_rgba(255,255,255,0.08)]",
+                 ].join(" ")
+               : "cursor-not-allowed bg-foreground/10 text-foreground/35 shadow-none",
+diff --git a/src/features/admin/users/components/cards/user-mobile-card.tsx b/src/features/admin/users/components/cards/user-mobile-card.tsx
+index 73cfed7..013f8ce 100644
+--- a/src/features/admin/users/components/cards/user-mobile-card.tsx
++++ b/src/features/admin/users/components/cards/user-mobile-card.tsx
+@@ -57,7 +57,7 @@ export function UserMobileCard({
+               className={
+                 user.online
+                   ? "h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]"
+-                  : "h-1.5 w-1.5 rounded-full bg-neutral-600"
++                  : "h-1.5 w-1.5 rounded-full bg-muted-foreground"
+               }
+             />
+ 
+diff --git a/src/features/admin/users/components/users-page-content.tsx b/src/features/admin/users/components/users-page-content.tsx
+index 3b39838..8b5816d 100644
+--- a/src/features/admin/users/components/users-page-content.tsx
++++ b/src/features/admin/users/components/users-page-content.tsx
+@@ -344,7 +344,7 @@ export function UsersPageContent() {
+                     <button
+                       type="button"
+                       onClick={handleStartCreate}
+-                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
++                      className="ml-auto flex size-9 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-foreground/16"
+                     >
+                       <Plus size={16} />
+                     </button>
+@@ -441,7 +441,7 @@ export function UsersPageContent() {
+                       <button
+                         type="button"
+                         onClick={handleStartCreate}
+-                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-white/14"
++                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground/10 text-foreground transition-colors hover:bg-foreground/16"
+                       >
+                         <Plus size={16} />
+                       </button>
+diff --git a/src/features/admin/users/table/user-columns.tsx b/src/features/admin/users/table/user-columns.tsx
+index 2b43147..ea2c869 100644
+--- a/src/features/admin/users/table/user-columns.tsx
++++ b/src/features/admin/users/table/user-columns.tsx
+@@ -145,7 +145,7 @@ EntityColumn<User>[]{
+             className={
+               user.online
+                 ?"h-1.5 w-1.5 rounded-full bg-emerald-400/90"
+-                :"h-1.5 w-1.5 rounded-full bg-neutral-500/70"
++                :"h-1.5 w-1.5 rounded-full bg-muted-foreground/70"
+             }
+           />
+           {user.online
+diff --git a/src/features/comments/components/comment-composer.tsx b/src/features/comments/components/comment-composer.tsx
+index d1b66eb..3d44ebd 100644
+--- a/src/features/comments/components/comment-composer.tsx
++++ b/src/features/comments/components/comment-composer.tsx
+@@ -222,7 +222,7 @@ export function CommentComposer({
+                   type="button"
+                   onClick={handleRemoveImage}
+                   aria-label="Quitar foto"
+-                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-white/15 hover:bg-neutral-800"
++                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-popover text-foreground ring-1 ring-border hover:bg-accent"
+                 >
+                   <X size={11} />
+                 </button>
+diff --git a/src/features/comments/components/comment-image-dialog.tsx b/src/features/comments/components/comment-image-dialog.tsx
+index 29c20b3..e13619b 100644
+--- a/src/features/comments/components/comment-image-dialog.tsx
++++ b/src/features/comments/components/comment-image-dialog.tsx
+@@ -40,7 +40,7 @@ export function CommentImageDialog({ imageUrl, onClose }: Props) {
+             <img
+               src={imageUrl}
+               alt="Foto adjunta"
+-              className="mx-auto max-h-[min(70dvh,32rem)] w-full rounded-xl object-contain bg-black/40"
++              className="mx-auto max-h-[min(70dvh,32rem)] w-full rounded-xl object-contain bg-muted"
+             />
+             <a
+               href={imageUrl}
+diff --git a/src/features/comments/components/comment-item.tsx b/src/features/comments/components/comment-item.tsx
+index 462372f..10bcd03 100644
+--- a/src/features/comments/components/comment-item.tsx
++++ b/src/features/comments/components/comment-item.tsx
+@@ -95,7 +95,7 @@ export function CommentItem({
+               </span>
+               {isPending ? (
+                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
+-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
++                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground" />
+                   Enviando…
+                 </span>
+               ) : isDeleting ? (
+@@ -218,7 +218,7 @@ export function CommentItem({
+             type="button"
+             onClick={() => setImageDialogOpen(true)}
+             disabled={isDeleting}
+-            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-black/30 text-left transition hover:border-border disabled:cursor-not-allowed disabled:opacity-60"
++            className="mt-2 block max-w-[min(100%,16rem)] overflow-hidden rounded-xl border border-border bg-muted text-left transition hover:border-border disabled:cursor-not-allowed disabled:opacity-60"
+           >
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+             <img
+diff --git a/src/features/comments/components/message-bell.tsx b/src/features/comments/components/message-bell.tsx
+index 1cf0657..b76751c 100644
+--- a/src/features/comments/components/message-bell.tsx
++++ b/src/features/comments/components/message-bell.tsx
+@@ -257,7 +257,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
+                         )}
+                         <div className="mt-1 flex gap-2">
+                           {c.imageUrl && (
+-                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-black/40 ring-1 ring-border">
++                            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border">
+                               {/* eslint-disable-next-line @next/next/no-img-element */}
+                               <img src={c.imageUrl} alt="" className="size-full object-cover" />
+                             </div>
+diff --git a/src/features/comments/components/messages-page-content.tsx b/src/features/comments/components/messages-page-content.tsx
+index 30fb002..b899f6d 100644
+--- a/src/features/comments/components/messages-page-content.tsx
++++ b/src/features/comments/components/messages-page-content.tsx
+@@ -295,7 +295,7 @@ export function MessagesPageContent() {
+ 
+                       <div className="mt-2 flex gap-2.5">
+                         {c.imageUrl && (
+-                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-black/40 ring-1 ring-border">
++                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
+                             {/* eslint-disable-next-line @next/next/no-img-element */}
+                             <img
+                               src={c.imageUrl}
+diff --git a/src/features/notifications/components/notification-toast.tsx b/src/features/notifications/components/notification-toast.tsx
+index 5fdad89..26ce391 100644
+--- a/src/features/notifications/components/notification-toast.tsx
++++ b/src/features/notifications/components/notification-toast.tsx
+@@ -55,7 +55,7 @@ export function NotificationToast({
+           )}
+         </div>
+ 
+-        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800">
++        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-popover ring-1 ring-border">
+           {isMention ? (
+             <AtSign
+               size={9}
+diff --git a/src/features/notifications/components/profile-mention-badge.tsx b/src/features/notifications/components/profile-mention-badge.tsx
+index 589c7b9..0fae331 100644
+--- a/src/features/notifications/components/profile-mention-badge.tsx
++++ b/src/features/notifications/components/profile-mention-badge.tsx
+@@ -16,7 +16,7 @@ export function ProfileMentionBadge({ className }: Props) {
+   if (!hasUnreadMention) return null
+ 
+   return (
+-    <span className={cn("h-2.5 w-2.5 rounded-full border-2 border-neutral-900 bg-cyan-400", className)} />
++    <span className={cn("h-2.5 w-2.5 rounded-full border-2 border-background bg-cyan-400", className)} />
+   )
+ 
+ }
+\ No newline at end of file
+diff --git a/src/features/processes/components/actions/process-row-actions.tsx b/src/features/processes/components/actions/process-row-actions.tsx
+index 3495673..6f3dc17 100644
+--- a/src/features/processes/components/actions/process-row-actions.tsx
++++ b/src/features/processes/components/actions/process-row-actions.tsx
+@@ -119,7 +119,7 @@ export function ProcessRowActions({
+   if (status === "QUEUE") {
+     return (
+       <div className="flex w-full items-center justify-center">
+-        <div className="flex h-8 w-full min-w-28 items-center justify-center rounded-lg border-2 border-dashed border-neutral-600/40 bg-transparent">
++        <div className="flex h-8 w-full min-w-28 items-center justify-center rounded-lg border-2 border-dashed border-border bg-transparent">
+           <div className="h-1.5 w-1.5 rounded-full bg-foreground/20" />
+         </div>
+       </div>
+diff --git a/src/features/processes/components/production-hub/production-hub-skeleton.tsx b/src/features/processes/components/production-hub/production-hub-skeleton.tsx
+index 2d7a420..4ea526e 100644
+--- a/src/features/processes/components/production-hub/production-hub-skeleton.tsx
++++ b/src/features/processes/components/production-hub/production-hub-skeleton.tsx
+@@ -63,7 +63,7 @@ function SkeletonProcessRow({
+             <span className="ml-auto block h-3 w-19.5 rounded bg-foreground/10" />
+ 
+             {/* 0 */}
+-            <span className="mt-1 ml-auto block h-7 w-4 rounded bg-white/12" />
++            <span className="mt-1 ml-auto block h-7 w-4 rounded bg-foreground/12" />
+ 
+           </div>
+ 
+diff --git a/src/features/projects/components/expanded-row/project-completed-tasks-card.tsx b/src/features/projects/components/expanded-row/project-completed-tasks-card.tsx
+index abdf81f..c800f81 100644
+--- a/src/features/projects/components/expanded-row/project-completed-tasks-card.tsx
++++ b/src/features/projects/components/expanded-row/project-completed-tasks-card.tsx
+@@ -3,6 +3,7 @@
+ import { CheckCircle2 } from "lucide-react"
+ 
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ 
+ type Props={
+   completedCount:number
+@@ -10,6 +11,10 @@ type Props={
+   onClick:()=>void
+ }
+ 
++// emerald-500 — mismo hex que usa el resto del sistema de badges para
++// "completado". Un solo valor, una sola fuente para el color en sí.
++const EMERALD_HEX = "#10b981"
++
+ export function ProjectCompletedTasksCard({
+   completedCount,
+   expanded,
+@@ -18,6 +23,13 @@ export function ProjectCompletedTasksCard({
+ 
+   const { isMobile } = useResponsive()
+ 
++  // Mismo sistema que ProcessMiniCard/DynamicBadge (useBadgeColors):
++  // el alpha ya está resuelto por tema (más fuerte en light, donde el
++  // mismo % de color se percibe mucho más pálido que sobre negro) en
++  // un solo lugar reutilizable, en vez de pares dark:/light hardcoded
++  // a mano por componente.
++  const badge = useBadgeColors(EMERALD_HEX, "subtle")
++
+   // Mismo lenguaje visual que el resumen colapsado de KpiCarousel:
+   // una sola fila compacta, sin la caja alta/decorativa que sí
+   // tiene sentido en desktop dentro del scroll horizontal de w-72.
+@@ -28,11 +40,17 @@ export function ProjectCompletedTasksCard({
+       <button
+         type="button"
+         onClick={onClick}
+-        className="flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent px-3 text-left transition hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
++        className="flex h-12 w-full items-center gap-2.5 rounded-xl px-3 text-left transition hover:brightness-110"
++        style={{
++          background: `linear-gradient(135deg, ${badge.background}, transparent)`,
++        }}
+       >
+ 
+-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/18 dark:bg-emerald-500/10">
+-          <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
++        <div
++          className="flex size-7 shrink-0 items-center justify-center rounded-full"
++          style={{ backgroundColor: badge.background }}
++        >
++          <CheckCircle2 size={14} style={{ color: badge.text }} />
+         </div>
+ 
+         <span className="text-sm font-bold text-foreground">
+@@ -54,14 +72,20 @@ export function ProjectCompletedTasksCard({
+     <button
+       type="button"
+       onClick={onClick}
+-      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent transition-all duration-200 hover:border-emerald-500/20 hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
++      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl transition-all duration-200 hover:brightness-110"
++      style={{
++        background: `linear-gradient(135deg, ${badge.background}, transparent)`,
++      }}
+     >
+ 
+-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/18 transition duration-200 group-hover:scale-105 group-hover:bg-emerald-500/24 dark:bg-emerald-500/10 dark:group-hover:bg-emerald-500/15">
++      <div
++        className="mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200 group-hover:scale-105"
++        style={{ backgroundColor: badge.background }}
++      >
+ 
+         <CheckCircle2
+           size={20}
+-          className="text-emerald-600 dark:text-emerald-400"
++          style={{ color: badge.text }}
+         />
+ 
+       </div>
+@@ -70,7 +94,10 @@ export function ProjectCompletedTasksCard({
+         {completedCount}
+       </p>
+ 
+-      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
++      <p
++        className="mt-1 text-xs font-bold uppercase tracking-[0.18em]"
++        style={{ color: badge.text }}
++      >
+         Finalizadas
+       </p>
+ 
+@@ -84,4 +111,4 @@ export function ProjectCompletedTasksCard({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/projects/components/expanded-row/project-task-placeholder.tsx b/src/features/projects/components/expanded-row/project-task-placeholder.tsx
+index fb23b30..550cf1d 100644
+--- a/src/features/projects/components/expanded-row/project-task-placeholder.tsx
++++ b/src/features/projects/components/expanded-row/project-task-placeholder.tsx
+@@ -16,12 +16,20 @@ import {
+   useResponsive,
+ } from "@/shared/responsive/hooks/use-responsive"
+ 
++import {
++  useBadgeColors,
++} from "@/shared/utils/use-badge-colors"
++
+ type Props={
+ 
+   onClick:()=>void
+ 
+ }
+ 
++// cyan-500 — mismo hex que usa el resto del sistema de badges para
++// "crear/agregar". Un solo valor, una sola fuente para el color en sí.
++const CYAN_HEX = "#06b6d4"
++
+ export function ProjectTaskPlaceholder({
+ 
+   onClick,
+@@ -40,6 +48,13 @@ export function ProjectTaskPlaceholder({
+       PermissionCode.TASK_CREATE,
+     )
+ 
++  // Mismo sistema que ProcessMiniCard/DynamicBadge (useBadgeColors):
++  // el alpha del círculo cian ya está resuelto por tema en un solo
++  // lugar reutilizable, en vez de pares dark:/light hardcoded a mano.
++  // El wash de fondo usa `foreground` (neutral, no un color puntual)
++  // que ya se invierte solo entre temas — eso queda igual.
++  const badge = useBadgeColors(CYAN_HEX, "subtle")
++
+   // Mismo lenguaje visual que el resumen colapsado de KpiCarousel:
+   // una sola fila compacta, sin la caja alta/decorativa que sí
+   // tiene sentido en desktop dentro del scroll horizontal de w-72.
+@@ -74,8 +89,11 @@ export function ProjectTaskPlaceholder({
+         }
+       >
+ 
+-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/18 dark:bg-cyan-500/10">
+-          <Plus size={14} className="text-cyan-600 dark:text-cyan-400" />
++        <div
++          className="flex size-7 shrink-0 items-center justify-center rounded-full"
++          style={{ backgroundColor: badge.background }}
++        >
++          <Plus size={14} style={{ color: badge.text }} />
+         </div>
+ 
+         <span className="text-sm font-bold text-foreground">
+@@ -130,7 +148,7 @@ export function ProjectTaskPlaceholder({
+ 
+           canCreate
+ 
+-            ?"hover:border-cyan-500/20 hover:bg-foreground/10"
++            ?"hover:bg-foreground/10"
+ 
+             :"cursor-not-allowed opacity-50"
+ 
+@@ -141,26 +159,16 @@ export function ProjectTaskPlaceholder({
+     >
+ 
+       <div
+-        className={
+-
+-          `mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200
+-
+-          ${
+-
+-            canCreate
+-
+-              ?"bg-cyan-500/18 group-hover:scale-105 group-hover:bg-cyan-500/24 dark:bg-cyan-500/10 dark:group-hover:bg-cyan-500/15"
+-
+-              :"bg-cyan-500/8 dark:bg-cyan-500/5"
+-
+-          }`
+-
+-        }
++        className="mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200 group-hover:scale-105"
++        style={{
++          backgroundColor: badge.background,
++          opacity: canCreate ? 1 : 0.6,
++        }}
+       >
+ 
+         <Plus
+           size={20}
+-          className="text-cyan-600 dark:text-cyan-400"
++          style={{ color: badge.text }}
+         />
+ 
+       </div>
+@@ -181,4 +189,4 @@ export function ProjectTaskPlaceholder({
+ 
+   )
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/projects/components/expanded-row/project-task-row.tsx b/src/features/projects/components/expanded-row/project-task-row.tsx
+index 5edd4f3..bf8b33b 100644
+--- a/src/features/projects/components/expanded-row/project-task-row.tsx
++++ b/src/features/projects/components/expanded-row/project-task-row.tsx
+@@ -432,7 +432,7 @@ export function ProjectTaskRow({
+             "bg-foreground/5",
+             "text-foreground/40",
+             "transition duration-200",
+-            "hover:bg-white/[0.07] hover:text-foreground hover:scale-105",
++            "hover:bg-foreground/[0.07] hover:text-foreground hover:scale-105",
+             "active:scale-95",
+             "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",
+             isMobile
+diff --git a/src/features/roles/components/permissions/permission-toggle.tsx b/src/features/roles/components/permissions/permission-toggle.tsx
+index 0e9fa1c..4c91f20 100644
+--- a/src/features/roles/components/permissions/permission-toggle.tsx
++++ b/src/features/roles/components/permissions/permission-toggle.tsx
+@@ -34,7 +34,7 @@ export function PermissionToggle({ label, checked, onToggle, overridden = false
+       }}
+       className={cn(
+         "flex min-w-0 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors",
+-        checked ? "bg-gray-500/10" : "hover:bg-foreground/5",
++        checked ? "bg-foreground/8" : "hover:bg-foreground/5",
+       )}
+     >
+       <span
+diff --git a/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx b/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
+index 72f056b..43956b4 100644
+--- a/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
++++ b/src/features/tasks/components/expanded-row/workflow/task-workflow-step.tsx
+@@ -25,12 +25,12 @@ const statusStyles: Record<
+ > = {
+ 
+   QUEUE: {
+-    dot: "border-neutral-700 bg-popover",
++    dot: "border-border bg-popover",
+     text: "text-muted-foreground/80",
+   },
+ 
+   PENDING: {
+-    dot: "border-neutral-600 bg-neutral-800",
++    dot: "border-border bg-muted",
+     text: "text-muted-foreground",
+   },
+ 
+diff --git a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+index 0e6795c..2e86963 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+@@ -216,7 +216,7 @@ function ActiveOperatorsPopover({
+         <button
+           type="button"
+           className={cn(
+-            "flex h-10 w-full items-center gap-2 rounded-lg bg-neutral-800/50 px-2 py-1.5 text-left transition-colors hover:bg-neutral-800",
++            "flex h-10 w-full items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left transition-colors hover:bg-muted",
+             isMobile ? "justify-center" : "justify-between",
+           )}
+         >
+diff --git a/src/features/tasks/pipeline/components/tasks/task-pipeline-skeleton.tsx b/src/features/tasks/pipeline/components/tasks/task-pipeline-skeleton.tsx
+index 14f7cd6..1b770d5 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-pipeline-skeleton.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-pipeline-skeleton.tsx
+@@ -38,14 +38,14 @@ function SkeletonKpiCompact() {
+ 
+         <div className="text-right">
+           <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
+-          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
++          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-foreground/12" />
+         </div>
+ 
+         <span className="h-8 w-px shrink-0 bg-foreground/10" />
+ 
+         <div className="text-right">
+           <span className="ml-auto block h-2.5 w-16 rounded bg-foreground/10" />
+-          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-white/12" />
++          <span className="ml-auto mt-2 block h-4 w-8 rounded bg-foreground/12" />
+         </div>
+ 
+       </div>
+diff --git a/src/shared/responsive/mobile/bottom-navigation.tsx b/src/shared/responsive/mobile/bottom-navigation.tsx
+index 3c3aaf5..6268853 100644
+--- a/src/shared/responsive/mobile/bottom-navigation.tsx
++++ b/src/shared/responsive/mobile/bottom-navigation.tsx
+@@ -67,7 +67,7 @@ export function BottomNavigation() {
+                 {isActive && (
+                   <motion.div
+                     layoutId="bottom-nav-active-chip"
+-                    className="pointer-events-none absolute inset-0 rounded-full bg-white/12 will-change-transform"
++                    className="pointer-events-none absolute inset-0 rounded-full bg-foreground/12 will-change-transform"
+                     transition={{
+                       type: "spring",
+                       stiffness: 400,
+diff --git a/src/shared/ui/actions/primary-action.tsx b/src/shared/ui/actions/primary-action.tsx
+index 5a82dd0..7c0bddd 100644
+--- a/src/shared/ui/actions/primary-action.tsx
++++ b/src/shared/ui/actions/primary-action.tsx
+@@ -19,7 +19,7 @@ export function PrimaryAction({ label, icon: Icon, disabled = false, isLoading =
+       onClick={onClick}
+       className={cn(
+         "inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold transition",
+-        disabled ? "cursor-not-allowed bg-foreground/10 text-foreground/35" : "bg-white text-black hover:bg-neutral-200",
++        disabled ? "cursor-not-allowed bg-foreground/10 text-foreground/35" : "bg-foreground text-background hover:bg-foreground/90",
+         isLoading && "opacity-80 cursor-wait"
+       )}
+     >
+diff --git a/src/shared/ui/actions/workflow-action.tsx b/src/shared/ui/actions/workflow-action.tsx
+index fe3f221..1bf7496 100644
+--- a/src/shared/ui/actions/workflow-action.tsx
++++ b/src/shared/ui/actions/workflow-action.tsx
+@@ -175,7 +175,7 @@ export function WorkflowAction({
+ 
+           ?"cursor-not-allowed bg-foreground/5 text-foreground/35 opacity-50"
+ 
+-          :"bg-foreground/5 text-foreground hover:bg-foreground/10 active:bg-white/12",
++          :"bg-foreground/5 text-foreground hover:bg-foreground/10 active:bg-foreground/12",
+ 
+         loading&&"opacity-70",
+ 
+diff --git a/src/shared/ui/color-picker/components/hex-color-picker.tsx b/src/shared/ui/color-picker/components/hex-color-picker.tsx
+index e33a4b8..1b406ea 100644
+--- a/src/shared/ui/color-picker/components/hex-color-picker.tsx
++++ b/src/shared/ui/color-picker/components/hex-color-picker.tsx
+@@ -50,7 +50,7 @@ export function HexColorPicker({
+           className={[
+             'z-50 w-58 p-3 rounded-lg shadow-lg flex flex-col gap-3',
+ 
+-            'dark:bg-popover dark:border-neutral-800',
++            'bg-popover border border-border',
+             'animate-in fade-in-0 zoom-in-95',
+           ].join(' ')}
+         >
+diff --git a/src/shared/ui/date-picker/components/calendar-day.tsx b/src/shared/ui/date-picker/components/calendar-day.tsx
+index 90b1866..ab444cd 100644
+--- a/src/shared/ui/date-picker/components/calendar-day.tsx
++++ b/src/shared/ui/date-picker/components/calendar-day.tsx
+@@ -18,11 +18,11 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
+       aria-current={isToday ? 'date' : undefined}
+       className={[
+         'relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium',
+-        'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15',
++        'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/15',
+         !isCurrentMonth ? 'text-muted-foreground/70' : 'text-muted-foreground',
+         !isDisabled && !isSelected ? 'hover:bg-foreground/10' : '',
+         isSelected
+-          ? 'bg-white text-neutral-900 hover:bg-white font-semibold'
++          ? 'bg-primary text-primary-foreground hover:bg-primary font-semibold'
+           : '',
+         isDisabled ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
+       ].join(' ')}
+@@ -30,7 +30,7 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
+       <span className="relative z-10">{date.getDate()}</span>
+ 
+       {isToday && !isSelected && !hasMarkers ? (
+-        <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white" />
++        <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+       ) : null}
+ 
+       {hasMarkers ? (
+diff --git a/src/shared/ui/dialogs/action-dialog/action-dialog.tsx b/src/shared/ui/dialogs/action-dialog/action-dialog.tsx
+index 17445ef..9a58fb6 100644
+--- a/src/shared/ui/dialogs/action-dialog/action-dialog.tsx
++++ b/src/shared/ui/dialogs/action-dialog/action-dialog.tsx
+@@ -133,7 +133,7 @@ export function ActionDialog({
+               "relative isolate transform-gpu flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70",
+               danger
+                 ? "bg-red-500 text-foreground hover:bg-red-400"
+-                : "bg-white text-black hover:bg-neutral-200",
++                : "bg-foreground text-background hover:bg-foreground/90",
+             )}
+           >
+             {submitting ? (
+diff --git a/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx b/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
+index 1e538fa..37c1c49 100644
+--- a/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
++++ b/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
+@@ -52,7 +52,7 @@ export function FormDialogFooter({
+           saving
+             ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
+             : canSave
+-              ? "bg-white text-black hover:bg-neutral-200"
++              ? "bg-foreground text-background hover:bg-foreground/90"
+               : "bg-foreground/10 text-muted-foreground hover:bg-foreground/15",
+         )}
+       >
+diff --git a/src/shared/ui/dialogs/form-dialog/wizard-progress.tsx b/src/shared/ui/dialogs/form-dialog/wizard-progress.tsx
+index 0920704..fbad6b0 100644
+--- a/src/shared/ui/dialogs/form-dialog/wizard-progress.tsx
++++ b/src/shared/ui/dialogs/form-dialog/wizard-progress.tsx
+@@ -28,7 +28,7 @@ export function WizardProgress({ steps, step }: Props) {
+             key={s.label}
+             className={cn(
+               "h-1.5 flex-1 rounded-full transition-colors",
+-              index <= step ? "bg-white/70" : "bg-foreground/10",
++              index <= step ? "bg-foreground/70" : "bg-foreground/10",
+             )}
+           />
+ 
+diff --git a/src/shared/ui/entity-dialog/components/entity-save-button.tsx b/src/shared/ui/entity-dialog/components/entity-save-button.tsx
+index c88d117..7aee209 100644
+--- a/src/shared/ui/entity-dialog/components/entity-save-button.tsx
++++ b/src/shared/ui/entity-dialog/components/entity-save-button.tsx
+@@ -35,7 +35,7 @@ export function EntitySaveButton({
+         saving
+           ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
+           : !disabled
+-            ? "bg-white text-black hover:bg-neutral-200"
++            ? "bg-foreground text-background hover:bg-foreground/90"
+             : "cursor-not-allowed bg-foreground/10 text-muted-foreground/80",
+         className
+       )}
+diff --git a/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx b/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx
+index e5edf76..01595df 100644
+--- a/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx
++++ b/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx
+@@ -133,7 +133,7 @@ export function SpeedDialFab({ actions, className }: Props) {
+         onClick={() => setDialOpen(v => !v)}
+         className={cn(
+           "pointer-events-auto flex size-12 items-center justify-center rounded-full transition duration-200",
+-          "bg-white text-black hover:scale-105 hover:bg-neutral-100 active:scale-95",
++          "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",
+           "shadow-[0_12px_32px_rgba(0,0,0,0.55)]",
+         )}
+       >

@@ -40,7 +40,7 @@ export function CommentImageDialog({ imageUrl, onClose }: Props) {
             <img
               src={imageUrl}
               alt="Foto adjunta"
-              className="mx-auto max-h-[min(70dvh,32rem)] w-full rounded-xl object-contain bg-black/40"
+              className="mx-auto max-h-[min(70dvh,32rem)] w-full rounded-xl object-contain bg-muted"
             />
             <a
               href={imageUrl}

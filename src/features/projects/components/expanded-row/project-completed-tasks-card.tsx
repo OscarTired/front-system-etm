@@ -3,12 +3,17 @@
 import { CheckCircle2 } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 
 type Props={
   completedCount:number
   expanded:boolean
   onClick:()=>void
 }
+
+// emerald-500 — mismo hex que usa el resto del sistema de badges para
+// "completado". Un solo valor, una sola fuente para el color en sí.
+const EMERALD_HEX = "#10b981"
 
 export function ProjectCompletedTasksCard({
   completedCount,
@@ -17,6 +22,13 @@ export function ProjectCompletedTasksCard({
 }:Props){
 
   const { isMobile } = useResponsive()
+
+  // Mismo sistema que ProcessMiniCard/DynamicBadge (useBadgeColors):
+  // el alpha ya está resuelto por tema (más fuerte en light, donde el
+  // mismo % de color se percibe mucho más pálido que sobre negro) en
+  // un solo lugar reutilizable, en vez de pares dark:/light hardcoded
+  // a mano por componente.
+  const badge = useBadgeColors(EMERALD_HEX, "subtle")
 
   // Mismo lenguaje visual que el resumen colapsado de KpiCarousel:
   // una sola fila compacta, sin la caja alta/decorativa que sí
@@ -28,11 +40,17 @@ export function ProjectCompletedTasksCard({
       <button
         type="button"
         onClick={onClick}
-        className="flex h-12 w-full items-center gap-2.5 rounded-xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent px-3 text-left transition hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
+        className="flex h-12 w-full items-center gap-2.5 rounded-xl px-3 text-left transition hover:brightness-110"
+        style={{
+          background: `linear-gradient(135deg, ${badge.background}, transparent)`,
+        }}
       >
 
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/18 dark:bg-emerald-500/10">
-          <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+        <div
+          className="flex size-7 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: badge.background }}
+        >
+          <CheckCircle2 size={14} style={{ color: badge.text }} />
         </div>
 
         <span className="text-sm font-bold text-foreground">
@@ -54,14 +72,20 @@ export function ProjectCompletedTasksCard({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500/14 via-emerald-500/6 to-transparent transition-all duration-200 hover:border-emerald-500/20 hover:bg-emerald-500/18 dark:from-emerald-500/4 dark:via-emerald-500/2 dark:hover:bg-emerald-500/5"
+      className="group flex h-43.5 w-full flex-col items-center justify-center rounded-2xl transition-all duration-200 hover:brightness-110"
+      style={{
+        background: `linear-gradient(135deg, ${badge.background}, transparent)`,
+      }}
     >
 
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/18 transition duration-200 group-hover:scale-105 group-hover:bg-emerald-500/24 dark:bg-emerald-500/10 dark:group-hover:bg-emerald-500/15">
+      <div
+        className="mb-4 flex h-10 w-10 items-center justify-center rounded-full transition duration-200 group-hover:scale-105"
+        style={{ backgroundColor: badge.background }}
+      >
 
         <CheckCircle2
           size={20}
-          className="text-emerald-600 dark:text-emerald-400"
+          style={{ color: badge.text }}
         />
 
       </div>
@@ -70,7 +94,10 @@ export function ProjectCompletedTasksCard({
         {completedCount}
       </p>
 
-      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+      <p
+        className="mt-1 text-xs font-bold uppercase tracking-[0.18em]"
+        style={{ color: badge.text }}
+      >
         Finalizadas
       </p>
 

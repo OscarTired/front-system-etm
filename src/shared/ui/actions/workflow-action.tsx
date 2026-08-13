@@ -175,7 +175,7 @@ export function WorkflowAction({
 
           ?"cursor-not-allowed bg-foreground/5 text-foreground/35 opacity-50"
 
-          :"bg-foreground/5 text-foreground hover:bg-foreground/10 active:bg-white/12",
+          :"bg-foreground/5 text-foreground hover:bg-foreground/10 active:bg-foreground/12",
 
         loading&&"opacity-70",
 

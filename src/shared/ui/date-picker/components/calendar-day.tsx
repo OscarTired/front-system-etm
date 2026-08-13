@@ -18,11 +18,11 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
       aria-current={isToday ? 'date' : undefined}
       className={[
         'relative flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium',
-        'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15',
+        'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/15',
         !isCurrentMonth ? 'text-muted-foreground/70' : 'text-muted-foreground',
         !isDisabled && !isSelected ? 'hover:bg-foreground/10' : '',
         isSelected
-          ? 'bg-white text-neutral-900 hover:bg-white font-semibold'
+          ? 'bg-primary text-primary-foreground hover:bg-primary font-semibold'
           : '',
         isDisabled ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
       ].join(' ')}
@@ -30,7 +30,7 @@ export function CalendarDay({ day, onSelect }: CalendarDayProps): React.JSX.Elem
       <span className="relative z-10">{date.getDate()}</span>
 
       {isToday && !isSelected && !hasMarkers ? (
-        <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white" />
+        <span className="pointer-events-none absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
       ) : null}
 
       {hasMarkers ? (

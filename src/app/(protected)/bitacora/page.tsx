@@ -101,12 +101,12 @@ export default function BitacoraPage() {
                 compact
                   ? `flex flex-1 shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-neutral-800 text-foreground shadow-sm"
+                        ? "bg-accent text-accent-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`
                   : `flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "bg-neutral-800 text-foreground shadow-sm"
+                        ? "bg-accent text-accent-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`
               }
@@ -134,7 +134,7 @@ export default function BitacoraPage() {
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             BITÁCORA
           </h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Control y registro de actividades
           </p>

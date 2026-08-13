@@ -91,7 +91,7 @@ function ActivityTypeRowPlaceholder({ opacity }: { opacity: number }) {
     >
       <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
       <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="h-4 w-36 max-w-[50%] rounded bg-white/12" />
+        <div className="h-4 w-36 max-w-[50%] rounded bg-foreground/12" />
         <div className="h-3 w-28 max-w-[40%] rounded bg-foreground/5" />
       </div>
       <div className="flex gap-1">

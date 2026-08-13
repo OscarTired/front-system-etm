@@ -62,7 +62,7 @@ export function ActivityLogChip({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <div className="size-7 shrink-0 rounded-lg bg-foreground/10 md:size-6" />
             <div className="min-w-0 flex-1 space-y-1.5">
-              <div className="h-3 w-2/5 rounded bg-white/12" />
+              <div className="h-3 w-2/5 rounded bg-foreground/12" />
               <div className="h-2.5 w-3/5 rounded bg-foreground/10 md:hidden" />
             </div>
           </div>
@@ -119,7 +119,7 @@ export function ActivityLogChip({
                 {label}
               </span>
               {log.source === "AUTO" && (
-                <span className="shrink-0 rounded-md bg-black/40 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-foreground/90">
+                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
                   Auto
                 </span>
               )}

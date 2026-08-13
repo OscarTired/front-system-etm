@@ -52,7 +52,7 @@ export function FormDialogFooter({
           saving
             ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
             : canSave
-              ? "bg-white text-black hover:bg-neutral-200"
+              ? "bg-foreground text-background hover:bg-foreground/90"
               : "bg-foreground/10 text-muted-foreground hover:bg-foreground/15",
         )}
       >

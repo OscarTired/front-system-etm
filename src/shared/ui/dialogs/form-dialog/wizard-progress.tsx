@@ -28,7 +28,7 @@ export function WizardProgress({ steps, step }: Props) {
             key={s.label}
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors",
-              index <= step ? "bg-white/70" : "bg-foreground/10",
+              index <= step ? "bg-foreground/70" : "bg-foreground/10",
             )}
           />
 

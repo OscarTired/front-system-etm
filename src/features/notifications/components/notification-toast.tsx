@@ -55,7 +55,7 @@ export function NotificationToast({
           )}
         </div>
 
-        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800">
+        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-popover ring-1 ring-border">
           {isMention ? (
             <AtSign
               size={9}

@@ -57,7 +57,7 @@ export function UserMobileCard({
               className={
                 user.online
                   ? "h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]"
-                  : "h-1.5 w-1.5 rounded-full bg-neutral-600"
+                  : "h-1.5 w-1.5 rounded-full bg-muted-foreground"
               }
             />
 

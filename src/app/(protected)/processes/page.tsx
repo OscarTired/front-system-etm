@@ -26,7 +26,7 @@ export default function ProcessPage() {
           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
             {process?.label.toUpperCase()}
           </h1>
-          <span className="h-1 w-1 shrink-0 rounded-full bg-neutral-700" />
+          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Centro de gestión del proceso
           </p>
