@@ -14,8 +14,8 @@ import {
   EntitySelectActionMenu,
 } from "@/shared/ui/entity-select/actions/entity-select-actions"
 import {
-  getBadgeColors,
-} from "@/shared/utils/badge-colors"
+  useBadgeColors,
+} from "@/shared/utils/use-badge-colors"
 import {
   useResponsive,
 } from "@/shared/responsive/hooks/use-responsive"
@@ -71,7 +71,7 @@ export function SelectOption({
 
   const Icon = icon ? ENTITY_ICONS[icon] : undefined
   const resolvedColor = swatchColor ?? color
-  const badge = getBadgeColors(resolvedColor, "solid")
+  const badge = useBadgeColors(resolvedColor, "solid")
   const isColor = variant === "color"
 
   const actions = {

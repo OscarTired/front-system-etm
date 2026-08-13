@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
+import { useThemeStore } from "@/shared/theme"
 import { cn } from "@/shared/utils/utils"
 
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
@@ -52,6 +53,9 @@ export function MobilePipelineCarousel({
   activeOverlayKey,
   onOverlayOpenChange,
 }: Props) {
+  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+  useThemeStore(s => s.resolved)
+
 
   const {
     containerRef,

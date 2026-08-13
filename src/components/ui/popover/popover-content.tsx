@@ -247,7 +247,7 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl border border-border bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none overflow-hidden",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none overflow-hidden",
         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
         // Animaciones limpias de aparición basadas puramente en opacidad (sin zoom tembloroso)
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",

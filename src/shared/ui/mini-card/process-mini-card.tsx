@@ -9,8 +9,8 @@ import type {
 } from "react"
 
 import {
-  getBadgeColors,
-} from "@/shared/utils/badge-colors"
+  useBadgeColors,
+} from "@/shared/utils/use-badge-colors"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
@@ -40,7 +40,7 @@ export function ProcessMiniCard({
   const { isMobile } = useResponsive()
 
   const textColor =
-    getBadgeColors(
+    useBadgeColors(
       color,
       "subtle"
     ).text

@@ -10,6 +10,7 @@ import {
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
+import { useThemeStore } from "@/shared/theme"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
@@ -278,6 +279,9 @@ export function TaskColumnOperator({
   processCode,
   tasks,
 }: Props) {
+  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+  useThemeStore(s => s.resolved)
+
 
   const { isMobile } = useResponsive()
 

@@ -16,9 +16,11 @@ import {
 } from "@/shared/responsive/hooks/use-responsive"
 
 import {
-  getBadgeColors,
   type BadgeVariant,
 } from "@/shared/utils/badge-colors"
+import {
+  useBadgeColors,
+} from "@/shared/utils/use-badge-colors"
 
 import {
   ENTITY_ICONS,
@@ -128,8 +130,8 @@ export function DynamicBadge({
   const safeHex=
     color ?? "#64748B"
 
-  const badgeColors=
-    getBadgeColors(
+  const badgeColors =
+    useBadgeColors(
       safeHex,
       variant
     )

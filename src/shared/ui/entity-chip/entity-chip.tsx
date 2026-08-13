@@ -6,8 +6,8 @@ import {
 } from "@/shared/constants/entity-icons"
 
 import {
-  getBadgeColors,
-} from "@/shared/utils/badge-colors"
+  useBadgeColors,
+} from "@/shared/utils/use-badge-colors"
 
 import {
   cn,
@@ -40,7 +40,7 @@ export function EntityChip({
     ENTITY_ICONS[icon]
 
   const badge =
-    getBadgeColors(color ?? "#64748B", "subtle")
+    useBadgeColors(color ?? "#64748B", "subtle")
 
   return (
 
