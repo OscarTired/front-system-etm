@@ -205,7 +205,7 @@ export function ShiftGroupSection({
                         }}
                         className={cn(
                           "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl bg-white/4 p-2.5 transition-opacity",
-                          actionsEnabled && canCreate && "cursor-grab active:cursor-grabbing",
+                          actionsEnabled && canCreate && "select-none",
                           (isDraggingThis || busy) && "opacity-40",
                           busy && "pointer-events-none",
                         )}

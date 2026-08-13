@@ -97,7 +97,6 @@ export function AgendaWeekView({
           })}
         </div>
 
-
         <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-white/5">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
@@ -158,13 +157,16 @@ export function AgendaWeekView({
   }
 
   /**
-   * Cadena esperada: AppListScroll (flex h-full) → hijo flex-1 min-h-0
-   * → este root. Llena el alto disponible; si las filas piden más
-   * (min-content), crece y scrollea el ScrollArea.
+   * Desktop: layout de celdas = commit del usuario.
+   * Solo header sticky opaco + columna hoy sólida (sin translucidez al scroll).
    */
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl shadow-2xl backdrop-blur-xl">
-      <ScrollArea orientation="both" className="h-full min-h-0 min-w-0 flex-1">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col rounded-2xl bg-[#0c0c0e] shadow-2xl">
+      {/* overflow en el scroller — overflow-hidden en el root rompe sticky */}
+      <ScrollArea
+        orientation="both"
+        className="h-full min-h-0 min-w-0 flex-1 rounded-2xl"
+      >
         <div
           className="grid h-full min-h-full w-full bg-[#0c0c0e]"
           style={{
@@ -190,11 +192,15 @@ export function AgendaWeekView({
                 type="button"
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
-                  "sticky top-0 z-20 border-b border-white/5 bg-[#0c0c0e] px-3 py-3 text-center transition-colors duration-200",
-                  "hover:bg-white/5",
-                  isWeekend && "bg-white/2",
-                  isToday && "bg-amber-500/10",
-                  isAnchor && !isToday && "bg-white/6",
+                  "sticky top-0 z-20 border-b border-white/5 px-3 py-3 text-center transition-[filter] duration-200",
+                  isToday
+                    ? "bg-[#1a1408]"
+                    : isAnchor
+                      ? "bg-[#141414]"
+                      : isWeekend
+                        ? "bg-[#0e0e10]"
+                        : "bg-[#0c0c0e]",
+                  "hover:brightness-110",
                 )}
               >
                 <div
@@ -277,11 +283,14 @@ export function AgendaWeekView({
                     <div
                       key={`${group.key}-${iso}`}
                       className={cn(
-                        "flex min-h-0 min-w-0 flex-col bg-[#0c0c0e] p-2 transition-colors duration-150",
+                        "flex min-h-0 min-w-0 flex-col p-2 transition-colors duration-150",
                         empty ? "justify-center" : "justify-start",
                         !isLast && "border-b border-white/5",
-                        isWeekend && "bg-white/2",
-                        isToday && "bg-amber-500/4",
+                        isToday
+                          ? "bg-[#12100c]"
+                          : isWeekend
+                            ? "bg-[#0e0e10]"
+                            : "bg-[#0c0c0e]",
                       )}
                     >
                       {!loading && cellLogs.length > 0 ? (
