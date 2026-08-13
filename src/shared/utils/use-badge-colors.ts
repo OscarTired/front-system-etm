@@ -9,9 +9,8 @@ import {
 } from "@/shared/utils/badge-colors"
 
 /**
- * Recalcula colores al cambiar light/dark.
- * Pasa `resolved` a getBadgeColors para NO depender del DOM
- * (evita race classList vs re-render y estilos "congelados").
+ * Recompute when theme changes so getComputedStyle picks up
+ * :root / .dark token values (--chip-*, --process-card-end).
  */
 export function useBadgeColors(
   hex: string,

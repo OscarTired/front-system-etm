@@ -6,12 +6,6 @@ export type BadgeVariant =
   | "subtle"
   | "solid"
 
-/** Resolved theme at call time (client). Default dark for SSR safety. */
-function isDarkMode(): boolean {
-  if (typeof document === "undefined") return true
-  return document.documentElement.classList.contains("dark")
-}
-
 function getLuminanceFromRgb(
   rgb: { r: number; g: number; b: number }
 ) {
@@ -136,28 +130,50 @@ function getReadableTextFor(
 }
 
 /**
- * Subtle text must stay readable on the tinted background.
- * - Dark UI: lighten toward white (historic behavior)
- * - Light UI: ver getReadableTextFor — ya no es un % fijo
+ * Lee tokens de tema (globals.css). Sin hex hardcodeados en la lógica.
+ * Mismos tokens en :root y .dark → look unificado.
  */
-function getSubtleText(
-  hex: string,
-  dark: boolean
-) {
-  if (dark) {
-    return rgbString(tintTowardWhite(hex, 0.84))
+function readCssNumber(name: string, fallback: number): number {
+  if (typeof document === "undefined") return fallback
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim()
+  const n = parseFloat(raw)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function readChipSurfaceRgb(): { r: number; g: number; b: number } {
+  if (typeof document === "undefined") return { r: 16, g: 16, b: 18 }
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--chip-surface-rgb")
+    .trim()
+  const parts = raw.split(/\s+/).map(Number)
+  if (parts.length >= 3 && parts.every(Number.isFinite)) {
+    return { r: parts[0], g: parts[1], b: parts[2] }
   }
-  return getReadableTextFor(hex, tintTowardWhite(hex, 0.72))
+  return { r: 16, g: 16, b: 18 }
+}
+
+function blendOnChipSurface(hex: string, alpha: number) {
+  const { r, g, b } = hexToRgb(hex)
+  const s = readChipSurfaceRgb()
+  return {
+    r: Math.round(r * alpha + s.r * (1 - alpha)),
+    g: Math.round(g * alpha + s.g * (1 - alpha)),
+    b: Math.round(b * alpha + s.b * (1 - alpha)),
+  }
+}
+
+function getSubtleText(hex: string) {
+  const tint = readCssNumber("--chip-text-tint", 0.84)
+  return rgbString(tintTowardWhite(hex, tint))
 }
 
 export function getBadgeColors(
   hex: string,
   variant: BadgeVariant = "subtle",
-  /** Si se pasa, NO lee el DOM — fuente de verdad para reactividad */
-  theme?: "light" | "dark",
+  _theme?: "light" | "dark",
 ) {
-  const dark = theme ? theme === "dark" : isDarkMode()
-
   switch (variant) {
     case "solid":
       return {
@@ -168,66 +184,30 @@ export function getBadgeColors(
         text: getContrastText(hex),
         shadow: {
           default: "none",
-          hover: `0 4px 12px rgba(0,0,0,${dark ? 0.16 : 0.1})`,
-          active: `0 8px 20px rgba(0,0,0,${dark ? 0.24 : 0.14})`,
+          hover: `0 4px 12px rgba(0,0,0,0.16)`,
+          active: `0 8px 20px rgba(0,0,0,0.24)`,
         },
       }
 
     default: {
-
-      if (!dark) {
-        // Light: NADA de alpha-transparencia. Mezclar un color
-        // semi-transparente con un fondo claro lo desatura sin
-        // importar qué % de alpha uses — es matemática, no un
-        // número que se pueda ajustar. En vez de eso, un color
-        // OPACO mezclado hacia blanco: se ve saturado por sí
-        // mismo, sin depender de qué haya detrás (por eso "PAUSADO"
-        // se veía vívido en dark y lavado en light con el mismo hex).
-        const bg = rgbString(tintTowardWhite(hex, 0.72))
-        const bgHover = rgbString(tintTowardWhite(hex, 0.60))
-        const bgActive = rgbString(tintTowardWhite(hex, 0.48))
-
-        return {
-          background: bg,
-          backgroundHover: bgHover,
-          backgroundActive: bgActive,
-          glow: rgba(hex, 0.18),
-          text: getReadableTextFor(hex, tintTowardWhite(hex, 0.72)),
-          shadow: {
-            default: "none",
-            hover: `
-              0 0 0 1px ${rgba(hex, 0.25)},
-              0 4px 12px rgba(0,0,0,0.06)
-            `,
-            active: `
-              0 0 0 1px ${rgba(hex, 0.35)},
-              0 8px 20px rgba(0,0,0,0.1)
-            `,
-          },
-        }
-      }
-
-      // Dark: sigue exactamente igual — acá la transparencia sí
-      // funciona (mezclar con un fondo casi negro da un glow sutil
-      // correcto), no se tocó nada de este branch.
-      const bgAlpha = 0.14
-      const bgHover = 0.2
-      const bgActive = 0.28
+      const a = readCssNumber("--chip-bg-alpha", 0.32)
+      const aHover = readCssNumber("--chip-bg-alpha-hover", 0.42)
+      const aActive = readCssNumber("--chip-bg-alpha-active", 0.52)
 
       return {
-        background: rgba(hex, bgAlpha),
-        backgroundHover: rgba(hex, bgHover),
-        backgroundActive: rgba(hex, bgActive),
-        glow: rgba(hex, 0.1),
-        text: getSubtleText(hex, dark),
+        background: rgbString(blendOnChipSurface(hex, a)),
+        backgroundHover: rgbString(blendOnChipSurface(hex, aHover)),
+        backgroundActive: rgbString(blendOnChipSurface(hex, aActive)),
+        glow: rgba(hex, 0.12),
+        text: getSubtleText(hex),
         shadow: {
           default: "none",
           hover: `
-            0 0 0 1px ${rgba(hex, 0.12)},
-            0 4px 12px rgba(0,0,0,0.1)
+            0 0 0 1px ${rgba(hex, 0.14)},
+            0 4px 12px rgba(0,0,0,0.12)
           `,
           active: `
-            0 0 0 1px ${rgba(hex, 0.18)},
+            0 0 0 1px ${rgba(hex, 0.2)},
             0 8px 20px rgba(0,0,0,0.18)
           `,
         },
@@ -238,7 +218,7 @@ export function getBadgeColors(
 
 export function getProcessCardTextColor(
   hex: string,
-  theme?: "light" | "dark",
+  _theme?: "light" | "dark",
 ) {
-  return getBadgeColors(hex, "subtle", theme).text
+  return getBadgeColors(hex, "subtle").text
 }

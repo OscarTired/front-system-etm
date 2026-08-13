@@ -102,8 +102,13 @@
   --surface-elevated: oklch(0.995 0.002 260);
   --chrome: oklch(0.975 0.003 260 / 0.92);
   --overlay: oklch(0.2 0.01 260 / 0.45);
-  /* Fin de gradiente de ProcessMiniCard en light (no negro) */
-  --process-card-end: oklch(0.92 0.008 260);
+  /* Chips de dominio + fin gradiente mini-card (tokens, sin hardcode JS). */
+  --chip-surface-rgb: 16 16 18;
+  --chip-bg-alpha: 0.32;
+  --chip-bg-alpha-hover: 0.42;
+  --chip-bg-alpha-active: 0.52;
+  --chip-text-tint: 0.84;
+  --process-card-end: oklch(0.12 0.005 260);
 }
 
 html, body {
@@ -149,7 +154,12 @@ html, body {
   --surface-elevated: oklch(0.18 0.005 260);
   --chrome: oklch(0.12 0.005 260 / 0.85);
   --overlay: oklch(0.05 0 0 / 0.55);
-  --process-card-end: #101012;
+  --chip-surface-rgb: 16 16 18;
+  --chip-bg-alpha: 0.32;
+  --chip-bg-alpha-hover: 0.42;
+  --chip-bg-alpha-active: 0.52;
+  --chip-text-tint: 0.84;
+  --process-card-end: oklch(0.12 0.005 260);
 }
 
 @layer base {

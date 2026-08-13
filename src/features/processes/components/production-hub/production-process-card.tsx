@@ -64,7 +64,7 @@ export function ProductionProcessCard({
         onClick={onToggle}
         className="flex w-full items-center gap-3 p-3 text-left transition hover:brightness-110 tablet:gap-4"
         style={{
-          background: `linear-gradient(135deg, ${definition.color}20, var(--process-card-end, #101012))`,
+          background: `linear-gradient(135deg, ${definition.color}20, var(--process-card-end, var(--process-card-end)))`,
         }}
       >
 

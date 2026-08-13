@@ -95,7 +95,7 @@ export function KpiCarousel({
       onClick={() => setExpanded(true)}
       className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
       style={{
-        background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, #101012)`,
+        background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, var(--process-card-end))`,
       }}
     >
 
@@ -227,7 +227,7 @@ export function KpiCarousel({
           <div
             className="flex w-full flex-col rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, #101012)`,
+              background: `linear-gradient(135deg, ${getBadgeColors(summary.color, "subtle", "dark").background}, var(--process-card-end))`,
             }}
           >
             {mobileChips}

@@ -69,7 +69,7 @@ export function ProcessMiniCard({
           `linear-gradient(
             135deg,
             ${badgeColors.background},
-            var(--process-card-end, #101012)
+            var(--process-card-end, var(--process-card-end))
           )`,
       }}
     >

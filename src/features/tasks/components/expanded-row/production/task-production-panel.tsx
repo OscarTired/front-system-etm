@@ -399,7 +399,7 @@ export function TaskProductionPanel({
               onClick={() => setExpanded(true)}
               className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:brightness-110 tablet:gap-4 tablet:p-4"
               style={{
-                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, var(--process-card-end, #101012))`,
+                background: `linear-gradient(135deg, ${status?.color ?? "#737373"}20, var(--process-card-end, var(--process-card-end)))`,
               }}
             >
 
@@ -449,7 +449,7 @@ export function TaskProductionPanel({
           <div
             className="flex w-full flex-col gap-6 rounded-2xl p-4 tablet:p-5"
             style={{
-              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, var(--process-card-end, #101012))`,
+              background: `linear-gradient(135deg, ${status?.color ?? "#737373"}14, var(--process-card-end, var(--process-card-end)))`,
             }}
           >
 
