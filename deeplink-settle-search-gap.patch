@@ -1,0 +1,167 @@
+diff --git a/src/shared/hooks/use-clear-focus-on-nav.ts b/src/shared/hooks/use-clear-focus-on-nav.ts
+new file mode 100644
+index 0000000..a05c31f
+--- /dev/null
++++ b/src/shared/hooks/use-clear-focus-on-nav.ts
+@@ -0,0 +1,34 @@
++"use client"
++
++import { useEffect, useRef } from "react"
++import { usePathname, useRouter, useSearchParams } from "next/navigation"
++
++import { clearEntityFocusParams } from "./clear-entity-focus-params"
++
++/**
++ * Consume deep-link al cambiar de ruta (sidebar / nav).
++ * No corre en el primer mount (F5 con ?taskId debe poder expandir).
++ */
++export function useClearFocusOnNav() {
++  const pathname = usePathname()
++  const router = useRouter()
++  const searchParams = useSearchParams()
++  const prevPath = useRef<string | null>(null)
++
++  useEffect(() => {
++    if (prevPath.current == null) {
++      prevPath.current = pathname
++      return
++    }
++    if (prevPath.current === pathname) return
++    prevPath.current = pathname
++
++    const has =
++      searchParams.has("taskId") ||
++      searchParams.has("projectId") ||
++      searchParams.has("focus")
++    if (has) {
++      clearEntityFocusParams(router, pathname, searchParams)
++    }
++  }, [pathname, router, searchParams])
++}
+diff --git a/src/shared/hooks/use-focused-row.ts b/src/shared/hooks/use-focused-row.ts
+index 0314dab..410440f 100644
+--- a/src/shared/hooks/use-focused-row.ts
++++ b/src/shared/hooks/use-focused-row.ts
+@@ -1,11 +1,9 @@
+ "use client"
+ 
+ import { useEffect, useRef } from "react"
+-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+ 
+ import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+ import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
+-import { clearEntityFocusParams } from "./clear-entity-focus-params"
+ 
+ type Props = {
+   focusedId?: string
+@@ -158,20 +156,17 @@ export function useFocusedRow({
+   focusToken,
+   onSettled,
+ }: Props) {
+-  const router = useRouter()
+-  const pathname = usePathname()
+-  const searchParams = useSearchParams()
+-
+   const prevFocusedIdRef = useRef<string | undefined>(undefined)
+   const expandedRowIdRef = useRef<string | null>(expandedRowId)
+   expandedRowIdRef.current = expandedRowId
+ 
+-  /** Tras scroll+expand: consumir URL para que F5/nav no re-dispare el mismo deep-link. */
+-  const settleAndConsume = () => {
++
++  /** Solo marca settle / callbacks. NO consume URL aquí —
++   *  consumir al salir de la ruta (otro row, sidebar, F5 limpio). */
++  const settleOnly = () => {
+     if (focusToken) {
+       useFocusSettleStore.getState().markSettled(focusToken)
+     }
+-    clearEntityFocusParams(router, pathname, searchParams)
+     onSettled?.()
+   }
+ 
+@@ -244,7 +239,7 @@ export function useFocusedRow({
+           el,
+           isActive,
+           expand,
+-          settleAndConsume,
++          settleOnly,
+         )
+       },
+       FIND_TIMEOUT_MS,
+@@ -255,7 +250,7 @@ export function useFocusedRow({
+         if (!isActive()) return
+         expand()
+         useFocusNavStore.getState().end()
+-        settleAndConsume()
++        settleOnly()
+       },
+     )
+ 
+@@ -266,5 +261,5 @@ export function useFocusedRow({
+     return () => {
+       stopTracking()
+     }
+-  }, [focusedId, setExpandedRowId, focusToken, onSettled, router, pathname, searchParams])
++  }, [focusedId, setExpandedRowId, focusToken, onSettled])
+ }
+\ No newline at end of file
+diff --git a/src/shared/responsive/layout/app-shell.tsx b/src/shared/responsive/layout/app-shell.tsx
+index 11d6734..7156c53 100644
+--- a/src/shared/responsive/layout/app-shell.tsx
++++ b/src/shared/responsive/layout/app-shell.tsx
+@@ -13,6 +13,7 @@ import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-sto
+ import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
+ import { TOP_BAR_HEIGHT_PX, BOTTOM_NAV_HEIGHT_PX } from "./chrome-constants"
+ import { TopBar } from "@/shared/responsive/mobile/top-bar"
++import { useClearFocusOnNav } from "@/shared/hooks/use-clear-focus-on-nav"
+ import { BottomNavigation } from "../mobile/bottom-navigation"
+ 
+ type Props = {
+@@ -123,6 +124,7 @@ function CompactShell({ children }: Props) {
+         }}
+       >
+ 
++        <ClearFocusOnNav />
+         <TopBar />
+ 
+         {immersive ? (
+@@ -157,6 +159,11 @@ function CompactShell({ children }: Props) {
+   )
+ }
+ 
++function ClearFocusOnNav() {
++  useClearFocusOnNav()
++  return null
++}
++
+ export function AppShell({ children }: Props) {
+   const { isMobile, ready } = useResponsive()
+ 
+diff --git a/src/shared/responsive/layout/chrome-constants.ts b/src/shared/responsive/layout/chrome-constants.ts
+index 8cc9a6f..0cc0345 100644
+--- a/src/shared/responsive/layout/chrome-constants.ts
++++ b/src/shared/responsive/layout/chrome-constants.ts
+@@ -10,4 +10,5 @@ export const TOP_BAR_HEIGHT_PX = 56
+  * padding + safe-area aproximado). */
+ export const BOTTOM_NAV_HEIGHT_PX = 80
+ /** Alto de la barra de búsqueda expandida bajo el TopBar (móvil). */
+-export const PAGE_SEARCH_BAR_HEIGHT_PX = 44
++/** Input ~36px + mismo aire que topbar→rows (~8). */
++export const PAGE_SEARCH_BAR_HEIGHT_PX = 40
+diff --git a/src/shared/responsive/mobile/top-bar.tsx b/src/shared/responsive/mobile/top-bar.tsx
+index 4277864..766b085 100644
+--- a/src/shared/responsive/mobile/top-bar.tsx
++++ b/src/shared/responsive/mobile/top-bar.tsx
+@@ -125,10 +125,10 @@ export function TopBar() {
+ 
+       {searchEnabled && searchOpen && (
+         <div
+-          className="absolute inset-x-0 z-20 px-3"
++          className="absolute inset-x-0 z-20 px-3 pt-1"
+           style={{ top: TOP_BAR_HEIGHT_PX }}
+         >
+-          {/* Mismo input simple que ya tenías (no chrome/sombra nueva) */}
++          {/* Misma separación topbar→contenido que los rows */}
+           <div className="flex items-center gap-2 rounded-xl bg-foreground/5 px-3 py-2">
+             <Search
+               size={15}

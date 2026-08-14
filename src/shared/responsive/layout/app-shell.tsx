@@ -13,6 +13,7 @@ import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-sto
 import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
 import { TOP_BAR_HEIGHT_PX, BOTTOM_NAV_HEIGHT_PX } from "./chrome-constants"
 import { TopBar } from "@/shared/responsive/mobile/top-bar"
+import { useClearFocusOnNav } from "@/shared/hooks/use-clear-focus-on-nav"
 import { BottomNavigation } from "../mobile/bottom-navigation"
 
 type Props = {
@@ -123,6 +124,7 @@ function CompactShell({ children }: Props) {
         }}
       >
 
+        <ClearFocusOnNav />
         <TopBar />
 
         {immersive ? (
@@ -155,6 +157,11 @@ function CompactShell({ children }: Props) {
       </div>
     </div>
   )
+}
+
+function ClearFocusOnNav() {
+  useClearFocusOnNav()
+  return null
 }
 
 export function AppShell({ children }: Props) {

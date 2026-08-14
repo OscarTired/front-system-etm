@@ -1,11 +1,9 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
 import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
-import { clearEntityFocusParams } from "./clear-entity-focus-params"
 
 type Props = {
   focusedId?: string
@@ -158,20 +156,17 @@ export function useFocusedRow({
   focusToken,
   onSettled,
 }: Props) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   const prevFocusedIdRef = useRef<string | undefined>(undefined)
   const expandedRowIdRef = useRef<string | null>(expandedRowId)
   expandedRowIdRef.current = expandedRowId
 
-  /** Tras scroll+expand: consumir URL para que F5/nav no re-dispare el mismo deep-link. */
-  const settleAndConsume = () => {
+
+  /** Solo marca settle / callbacks. NO consume URL aquí —
+   *  consumir al salir de la ruta (otro row, sidebar, F5 limpio). */
+  const settleOnly = () => {
     if (focusToken) {
       useFocusSettleStore.getState().markSettled(focusToken)
     }
-    clearEntityFocusParams(router, pathname, searchParams)
     onSettled?.()
   }
 
@@ -244,7 +239,7 @@ export function useFocusedRow({
           el,
           isActive,
           expand,
-          settleAndConsume,
+          settleOnly,
         )
       },
       FIND_TIMEOUT_MS,
@@ -255,7 +250,7 @@ export function useFocusedRow({
         if (!isActive()) return
         expand()
         useFocusNavStore.getState().end()
-        settleAndConsume()
+        settleOnly()
       },
     )
 
@@ -266,5 +261,5 @@ export function useFocusedRow({
     return () => {
       stopTracking()
     }
-  }, [focusedId, setExpandedRowId, focusToken, onSettled, router, pathname, searchParams])
+  }, [focusedId, setExpandedRowId, focusToken, onSettled])
 }

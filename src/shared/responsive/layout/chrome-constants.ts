@@ -10,4 +10,5 @@ export const TOP_BAR_HEIGHT_PX = 56
  * padding + safe-area aproximado). */
 export const BOTTOM_NAV_HEIGHT_PX = 80
 /** Alto de la barra de búsqueda expandida bajo el TopBar (móvil). */
-export const PAGE_SEARCH_BAR_HEIGHT_PX = 44
+/** Input ~36px + mismo aire que topbar→rows (~8). */
+export const PAGE_SEARCH_BAR_HEIGHT_PX = 40
