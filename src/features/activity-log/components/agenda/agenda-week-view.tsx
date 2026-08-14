@@ -161,7 +161,7 @@ export function AgendaWeekView({
    * Solo header sticky opaco + columna hoy sólida (sin translucidez al scroll).
    */
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col rounded-2xl bg-card shadow-2xl">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
       {/* overflow en el scroller — overflow-hidden en el root rompe sticky */}
       <ScrollArea
         orientation="both"

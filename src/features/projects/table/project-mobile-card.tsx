@@ -197,7 +197,7 @@ export function ProjectMobileCard({
                       ? "1 tarea activa"
                       : `${project.taskCount} tareas activas`
                   }
-                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-800 dark:text-green-300"
+                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-600/20 px-1.5 text-[10px] font-bold tabular-nums text-green-900 dark:bg-green-500/15 dark:text-green-300"
                 >
                   {project.taskCount}
                 </span>

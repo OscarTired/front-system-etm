@@ -1,0 +1,67 @@
+diff --git a/src/features/activity-log/components/agenda/agenda-month-view.tsx b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+index 7d67a01..66dfb71 100644
+--- a/src/features/activity-log/components/agenda/agenda-month-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+@@ -139,10 +139,7 @@ export function AgendaMonthView({
+    * si hay más eventos de los que caben en 1fr.
+    */
+   return (
+-    // px lateral: el ScrollArea padre tiene overflow-x-hidden y corta box-shadow
+-    <div className="flex h-full min-h-0 w-full flex-1 flex-col px-2 pb-3 pt-0.5">
+-      <div className="flex min-h-0 flex-1 flex-col rounded-2xl shadow-2xl">
+-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-card backdrop-blur-xl">
++    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
+       <div className="grid shrink-0 grid-cols-7 border-b border-border">
+         {WEEKDAY_LABELS.map((label, i) => (
+           <div
+@@ -269,8 +266,6 @@ export function AgendaMonthView({
+           </div>
+         ))}
+       </div>
+-        </div>
+-      </div>
+     </div>
+   )
+ }
+\ No newline at end of file
+diff --git a/src/features/activity-log/components/agenda/agenda-week-view.tsx b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+index 232a996..a4f635f 100644
+--- a/src/features/activity-log/components/agenda/agenda-week-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+@@ -161,7 +161,7 @@ export function AgendaWeekView({
+    * Solo header sticky opaco + columna hoy sólida (sin translucidez al scroll).
+    */
+   return (
+-    <div className="flex h-full min-h-0 w-full flex-1 flex-col rounded-2xl bg-card shadow-2xl">
++    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
+       {/* overflow en el scroller — overflow-hidden en el root rompe sticky */}
+       <ScrollArea
+         orientation="both"
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+index 5789861..fa99009 100644
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -197,7 +197,7 @@ export function ProjectMobileCard({
+                       ? "1 tarea activa"
+                       : `${project.taskCount} tareas activas`
+                   }
+-                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-green-800 dark:text-green-300"
++                  className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-green-600/20 px-1.5 text-[10px] font-bold tabular-nums text-green-900 dark:bg-green-500/15 dark:text-green-300"
+                 >
+                   {project.taskCount}
+                 </span>
+diff --git a/src/shared/history/components/history-toggle-button.tsx b/src/shared/history/components/history-toggle-button.tsx
+index a3f5e99..cc3d1c9 100644
+--- a/src/shared/history/components/history-toggle-button.tsx
++++ b/src/shared/history/components/history-toggle-button.tsx
+@@ -23,8 +23,8 @@ export function HistoryToggleButton({ count, active, onClick }: Props) {
+         <span
+           className={cn(
+             "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold select-none transition-colors duration-200",
+-            // Siempre contraste sobre el FAB (bg-foreground); no se pierde inactivo
+-            "bg-primary text-primary-foreground shadow-sm",
++            // Invertido respecto al FAB (bg-foreground): legible en light y dark
++            "bg-background text-foreground shadow-sm ring-1 ring-border",
+             active && "animate-history-bounce ring-2 ring-primary/40",
+           )}
+         >
