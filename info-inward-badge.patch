@@ -1,0 +1,87 @@
+diff --git a/src/features/tasks/components/task-material-info.tsx b/src/features/tasks/components/task-material-info.tsx
+index 7fa25eb..da59dcc 100644
+--- a/src/features/tasks/components/task-material-info.tsx
++++ b/src/features/tasks/components/task-material-info.tsx
+@@ -29,6 +29,7 @@ export function TaskMaterialInfo({
+ 
+   const total = getTaskPiecesTotal(task)
+   const isMd = size === "md"
++  const count = lines.length
+ 
+   return (
+     <Popover modal={false}>
+@@ -40,19 +41,31 @@ export function TaskMaterialInfo({
+           onClick={e => e.stopPropagation()}
+           onPointerDown={e => e.stopPropagation()}
+           className={cn(
+-            "flex shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors",
+-            "hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",
+-            isMd ? "size-9" : "size-7 rounded-lg",
++            "relative flex shrink-0 items-center justify-center",
++            "bg-muted text-foreground/80 shadow-sm",
++            "transition-colors hover:bg-muted/80 hover:text-foreground",
++            "active:bg-muted/70",
++            isMd ? "size-9 rounded-xl" : "size-7 rounded-lg",
+             className,
+           )}
+         >
+-          <Layers size={isMd ? 18 : 14} strokeWidth={2} />
++          <Layers size={isMd ? 18 : 14} strokeWidth={2.25} />
++          <span
++            className={cn(
++              "absolute -right-1 -top-1 flex items-center justify-center",
++              "rounded-full bg-primary font-bold tabular-nums text-primary-foreground",
++              isMd ? "size-4 text-[9px]" : "size-3.5 text-[8px]",
++            )}
++          >
++            {count > 9 ? "9+" : count}
++          </span>
+         </button>
+       </PopoverTrigger>
+       <PopoverContent
+-        align="end"
+-        side="top"
++        side="left"
++        align="center"
+         sideOffset={8}
++        collisionPadding={12}
+         className="z-50 w-72 gap-0 border-border/60 p-0"
+         onClick={e => e.stopPropagation()}
+         onPointerDown={e => e.stopPropagation()}
+diff --git a/src/shared/ui/entity-audit-info/entity-audit-info.tsx b/src/shared/ui/entity-audit-info/entity-audit-info.tsx
+index 3edc9c9..6580aa5 100644
+--- a/src/shared/ui/entity-audit-info/entity-audit-info.tsx
++++ b/src/shared/ui/entity-audit-info/entity-audit-info.tsx
+@@ -42,22 +42,25 @@ export function EntityAuditInfo({
+         <button
+           type="button"
+           aria-label="Información de auditoría"
+-          title="Información"
++          title="Auditoría"
+           onClick={e => e.stopPropagation()}
+           onPointerDown={e => e.stopPropagation()}
+           className={cn(
+-            "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors",
+-            "hover:bg-foreground/5 hover:text-foreground active:bg-foreground/10",
++            "flex size-7 shrink-0 items-center justify-center rounded-lg",
++            "bg-muted text-foreground/80 shadow-sm",
++            "transition-colors hover:bg-muted/80 hover:text-foreground",
++            "active:bg-muted/70",
+             className,
+           )}
+         >
+-          <Info size={14} strokeWidth={2} />
++          <Info size={14} strokeWidth={2.25} />
+         </button>
+       </PopoverTrigger>
+       <PopoverContent
+-        align="end"
+-        side="bottom"
+-        sideOffset={6}
++        side="left"
++        align="center"
++        sideOffset={8}
++        collisionPadding={12}
+         className="z-50 w-64 gap-0 border-border/60 p-0"
+         onClick={e => e.stopPropagation()}
+         onPointerDown={e => e.stopPropagation()}

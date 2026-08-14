@@ -42,22 +42,25 @@ export function EntityAuditInfo({
         <button
           type="button"
           aria-label="Información de auditoría"
-          title="Información"
+          title="Auditoría"
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors",
-            "hover:bg-foreground/5 hover:text-foreground active:bg-foreground/10",
+            "flex size-7 shrink-0 items-center justify-center rounded-lg",
+            "bg-muted text-foreground/80 shadow-sm",
+            "transition-colors hover:bg-muted/80 hover:text-foreground",
+            "active:bg-muted/70",
             className,
           )}
         >
-          <Info size={14} strokeWidth={2} />
+          <Info size={14} strokeWidth={2.25} />
         </button>
       </PopoverTrigger>
       <PopoverContent
-        align="end"
-        side="bottom"
-        sideOffset={6}
+        side="left"
+        align="center"
+        sideOffset={8}
+        collisionPadding={12}
         className="z-50 w-64 gap-0 border-border/60 p-0"
         onClick={e => e.stopPropagation()}
         onPointerDown={e => e.stopPropagation()}
