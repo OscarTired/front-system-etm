@@ -9,8 +9,10 @@ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import {
   TOP_BAR_HEIGHT_PX,
   BOTTOM_NAV_HEIGHT_PX,
+  PAGE_SEARCH_BAR_HEIGHT_PX,
 } from "@/shared/responsive/layout/chrome-constants"
 import { PullToRefresh } from "@/shared/ui/pull-to-refresh/pull-to-refresh"
+import { usePageSearchStore } from "@/shared/ui/entity-toolbar/page-search-store"
 
 type Props = {
   children: React.ReactNode
@@ -41,6 +43,7 @@ export function AppListScroll({
   const key = resetKey ?? pathname
   const scrollRef = useRef<HTMLDivElement>(null)
   const { isMobile } = useResponsive()
+  const searchOpen = usePageSearchStore(s => s.open && s.enabled)
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0
@@ -52,7 +55,9 @@ export function AppListScroll({
       style={
         isMobile
           ? {
-              paddingTop: TOP_BAR_HEIGHT_PX,
+              paddingTop:
+                TOP_BAR_HEIGHT_PX +
+                (searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 0),
               paddingBottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`,
             }
           : undefined

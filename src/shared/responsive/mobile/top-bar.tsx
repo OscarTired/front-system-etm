@@ -1,6 +1,6 @@
 "use client"
 
-import { Menu } from "lucide-react"
+import { Menu, Search, X } from "lucide-react"
 import { useState } from "react"
 
 import { useAuthStore } from "@/features/auth/store/auth-store"
@@ -10,18 +10,28 @@ import { MessageBell } from "@/features/comments/components/message-bell"
 import { SidebarPresence } from "../../responsive/layout/sidebar/sidebar-presence"
 import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
+import { usePageSearchStore } from "@/shared/ui/entity-toolbar/page-search-store"
+import { TOP_BAR_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 
 export function TopBar() {
   const toggleDrawer = useMobileNavStore(s => s.toggleDrawer)
   const title = usePageTitleStore(s => s.title)
 
-  const user = useAuthStore(s => s.user)
+  const searchEnabled = usePageSearchStore(s => s.enabled)
+  const searchOpen = usePageSearchStore(s => s.open)
+  const searchValue = usePageSearchStore(s => s.value)
+  const searchPlaceholder = usePageSearchStore(s => s.placeholder)
+  const setSearchOpen = usePageSearchStore(s => s.setOpen)
+  const setSearchQuery = usePageSearchStore(s => s.setQuery)
+  const closeSearch = usePageSearchStore(s => s.closeAndClear)
 
+  const user = useAuthStore(s => s.user)
   const [profileOpen, setProfileOpen] = useState(false)
 
   const avatar = (
     <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-foreground/5 text-xs font-semibold text-foreground">
       {user?.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={user.avatarUrl}
           alt={user.name}
@@ -36,10 +46,6 @@ export function TopBar() {
   return (
     <>
       <header className="absolute inset-x-0 top-0 z-20 flex h-14 shrink-0 items-center gap-1.5 px-2.5">
-        {/* Blur progresivo — mismo criterio que BottomNavigation:
-            el efecto arranca en 0% abajo de esta zona y llega a
-            100% recién cerca del borde superior de la pantalla, en
-            vez de una caja plana aplicada de golpe. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-16 backdrop-blur-xl"
@@ -56,7 +62,7 @@ export function TopBar() {
             WebkitMaskImage: "linear-gradient(to bottom, black 30%, transparent)",
           }}
         />
-{/* Botón de menú */}
+
         <button
           type="button"
           onClick={toggleDrawer}
@@ -66,7 +72,6 @@ export function TopBar() {
           <Menu size={18} strokeWidth={2.2} />
         </button>
 
-        {/* Título */}
         <div className="min-w-0 flex-1">
           <div
             title={title}
@@ -78,13 +83,29 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Presencia en línea con contador explícito */}
+        {searchEnabled && (
+          <button
+            type="button"
+            aria-label={searchOpen ? "Cerrar búsqueda" : "Buscar"}
+            aria-expanded={searchOpen}
+            onClick={() => {
+              if (searchOpen) closeSearch()
+              else setSearchOpen(true)
+            }}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chrome text-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
+          >
+            {searchOpen ? (
+              <X size={18} strokeWidth={2.2} />
+            ) : (
+              <Search size={18} strokeWidth={2.2} />
+            )}
+          </button>
+        )}
+
         <SidebarPresence variant="topbar" />
-        {/* Notificaciones con contador explícito */}
         <MessageBell variant="topbar" />
         <NotificationBell variant="topbar" />
 
-        {/* Botón de perfil */}
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
@@ -101,6 +122,38 @@ export function TopBar() {
           </div>
         </button>
       </header>
+
+      {searchEnabled && searchOpen && (
+        <div
+          className="absolute inset-x-0 z-20 px-2.5 pb-2"
+          style={{ top: TOP_BAR_HEIGHT_PX }}
+        >
+          <div className="flex items-center gap-2 rounded-xl bg-chrome px-3 py-2.5 shadow-lg shadow-black/20 backdrop-blur-xl">
+            <Search
+              size={15}
+              strokeWidth={2.2}
+              className="shrink-0 text-muted-foreground"
+            />
+            <input
+              autoFocus
+              value={searchValue}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
+            />
+            {searchValue ? (
+              <button
+                type="button"
+                aria-label="Limpiar"
+                onClick={() => setSearchQuery("")}
+                className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+              >
+                <X size={14} strokeWidth={2.2} />
+              </button>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>

@@ -1,34 +1,50 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Search, X } from "lucide-react"
+import { Search } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { usePageSearchStore } from "./page-search-store"
 
 type Props = {
   value: string
   onChange: (value: string) => void
-  /** Placeholder del input expandido. Default: "Buscar..." */
   placeholder?: string
 }
 
 /**
- * Búsqueda de toolbar.
+ * Búsqueda de entidad.
  *
- * Mobile
- *  - Cerrado: solo icono (sin reservar fila ancha).
- *  - Abierto: barra full-width tipo mensajes; empuja el contenido
- *    de abajo (el padre debe permitir w-full / flex-wrap).
+ * Mobile: no pinta UI acá — registra en page-search-store y el icono
+ * vive en el TopBar (barra expandida bajo el header).
  *
- * Desktop / tablet: icono + input inline (w-60) como antes.
+ * Desktop/tablet: lupa + input inline en la toolbar.
  */
 export function EntityToolbarSearch({
   value,
   onChange,
   placeholder = "Buscar...",
 }: Props) {
-  const { isMobile } = useResponsive()
+  const { isMobile, ready } = useResponsive()
+  const register = usePageSearchStore(s => s.register)
+  const syncValue = usePageSearchStore(s => s.syncValue)
+  const unregister = usePageSearchStore(s => s.unregister)
+
+  // —— Mobile: solo bridge al TopBar ——
+  useEffect(() => {
+    if (!ready || !isMobile) return
+    register({ value, onChange, placeholder })
+    return () => unregister()
+    // onChange/placeholder estables en la práctica; value se sync aparte
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, isMobile, register, unregister, placeholder])
+
+  useEffect(() => {
+    if (!ready || !isMobile) return
+    syncValue(value)
+  }, [ready, isMobile, value, syncValue])
+
   const [open, setOpen] = useState(Boolean(value))
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -37,83 +53,14 @@ export function EntityToolbarSearch({
     if (open) inputRef.current?.focus()
   }, [open])
 
-  useEffect(() => {
-    if (!open || value) return
-    function onPointerDown(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", onPointerDown)
-    return () => document.removeEventListener("mousedown", onPointerDown)
-  }, [open, value])
+  if (!ready) return null
 
-  function openSearch() {
-    setOpen(true)
-  }
-
-  function closeSearch() {
-    onChange("")
-    setOpen(false)
-    inputRef.current?.blur()
-  }
-
-  // —— Mobile: lupa o barra full-width (empuja layout) ——
   if (isMobile) {
-    if (!open) {
-      return (
-        <button
-          type="button"
-          data-toolbar-search=""
-          aria-label="Buscar"
-          onPointerDown={e => e.stopPropagation()}
-          onTouchStart={e => e.stopPropagation()}
-          onClick={openSearch}
-          className="flex size-8 shrink-0 touch-none items-center justify-center rounded-xl text-foreground transition hover:bg-muted"
-        >
-          <Search size={16} strokeWidth={2.2} />
-        </button>
-      )
-    }
-
-    return (
-      <div
-        ref={containerRef}
-        data-toolbar-search=""
-        className="w-full min-w-0 basis-full"
-      >
-        <div className="flex items-center gap-2 rounded-xl bg-foreground/5 px-3 py-2.5">
-          <Search
-            size={15}
-            strokeWidth={2.2}
-            className="shrink-0 text-muted-foreground"
-          />
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            onPointerDown={e => e.stopPropagation()}
-            onTouchStart={e => e.stopPropagation()}
-            placeholder={placeholder}
-            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
-          />
-          <button
-            type="button"
-            aria-label="Cerrar búsqueda"
-            onClick={closeSearch}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
-          >
-            <X size={15} strokeWidth={2.2} />
-          </button>
-        </div>
-      </div>
-    )
+    // UI en TopBar
+    return null
   }
 
-  // —— Desktop / tablet: inline compacto ——
+  // —— Desktop / tablet ——
   return (
     <div className="flex justify-end">
       <div
@@ -133,8 +80,13 @@ export function EntityToolbarSearch({
             e.stopPropagation()
           }}
           onClick={() => {
-            if (open) closeSearch()
-            else openSearch()
+            if (open) {
+              onChange("")
+              setOpen(false)
+              inputRef.current?.blur()
+            } else {
+              setOpen(true)
+            }
           }}
           className={cn(
             "flex size-8 shrink-0 touch-none items-center justify-center rounded-xl text-foreground transition-all duration-200",

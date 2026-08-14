@@ -9,3 +9,5 @@ export const TOP_BAR_HEIGHT_PX = 56
 /** Espacio reservado para el BottomNavigation flotante (pill +
  * padding + safe-area aproximado). */
 export const BOTTOM_NAV_HEIGHT_PX = 80
+/** Alto de la barra de búsqueda expandida bajo el TopBar (móvil). */
+export const PAGE_SEARCH_BAR_HEIGHT_PX = 52
