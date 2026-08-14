@@ -1,0 +1,51 @@
+diff --git a/src/shared/ui/date-picker/components/date-picker.tsx b/src/shared/ui/date-picker/components/date-picker.tsx
+index 5f0e07a..0fc78e4 100644
+--- a/src/shared/ui/date-picker/components/date-picker.tsx
++++ b/src/shared/ui/date-picker/components/date-picker.tsx
+@@ -159,28 +159,26 @@ export function DatePicker({
+         onOpenAutoFocus={e => {
+           e.preventDefault()
+         }}
+-        floatingClassName="w-auto p-0 rounded-xl shadow-xl bg-popover"
+-        className="mx-auto flex w-full max-w-xs flex-col items-center gap-3 p-4 pb-6"
++        // Ancho/caja solo en desktop. En sheet el root debe ser full-width
++        // (inset-x-0); el max-w va en el contenido interno.
++        floatingClassName="w-auto max-w-xs rounded-xl p-0 shadow-xl bg-popover"
++        className="flex w-full flex-col gap-3 p-4 pb-6"
+       >
+-        {isMobile && !iconOnly && (
+-          <div className="flex w-full justify-center">
+-            <div className="w-full max-w-70">
+-              <DateInput
+-                ref={sheetInputRef}
+-                value={inputValue}
+-                placeholder={placeholder ?? "DD/MM/YYYY"}
+-                disabled={disabled}
+-                onChange={handleInputChange}
+-                onBlur={handleInputBlur}
+-                onKeyDown={handleKeyDownWithEscape}
+-                onFocus={handleInputFocus}
+-                hideCalendarIcon
+-              />
+-            </div>
+-          </div>
+-        )}
++        <div className="mx-auto flex w-full max-w-xs flex-col items-center gap-3">
++          {isMobile && !iconOnly && (
++            <DateInput
++              ref={sheetInputRef}
++              value={inputValue}
++              placeholder={placeholder ?? "DD/MM/YYYY"}
++              disabled={disabled}
++              onChange={handleInputChange}
++              onBlur={handleInputBlur}
++              onKeyDown={handleKeyDownWithEscape}
++              onFocus={handleInputFocus}
++              hideCalendarIcon
++            />
++          )}
+ 
+-        <div className="flex min-h-[19.5rem] w-full justify-center">
+           <DateCalendar
+             value={value}
+             displayDate={livePreviewDate}
