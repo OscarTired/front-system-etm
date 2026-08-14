@@ -37,7 +37,7 @@ export function EntityAuditInfo({
   ]
 
   return (
-    <Popover modal={false}>
+    <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -61,7 +61,8 @@ export function EntityAuditInfo({
         align="start"
         sideOffset={8}
         collisionPadding={12}
-        className="z-50 w-64 gap-0 border-border/60 p-0"
+        floatingClassName="w-64"
+        className="gap-0 border-border/60 p-0"
         onClick={e => e.stopPropagation()}
         onPointerDown={e => e.stopPropagation()}
       >
