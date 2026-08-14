@@ -790,7 +790,7 @@ export function NestingPage() {
       {/* —— Mobile: tabs fijos + canvas con alto REAL (absolute) —— */}
       {isCompact && (
         <div className="absolute inset-0">
-          <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1">
+          <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1.5">
             <div className="min-w-0 flex-1">
               {project.sheetGroups.length > 0 ? (
                 <SheetTabs
