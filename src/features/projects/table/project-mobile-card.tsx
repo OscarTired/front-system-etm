@@ -9,6 +9,7 @@ import { ChevronDown, Plus, MessageSquare } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
 import {
   ENTITY_ICONS,
   type EntityIcon,
@@ -227,6 +228,20 @@ export function ProjectMobileCard({
             {formatDate(project.deliveryDate)}
           </span>
         </button>
+
+        {/* Info auditoría: desktop y mobile, después de la fecha */}
+        <div
+          className="flex shrink-0 items-center"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={project.createdAt}
+            updatedAt={project.updatedAt}
+            createdBy={project.createdBy}
+            updatedBy={project.updatedBy}
+          />
+        </div>
 
         {/* Móvil expandido: lápiz / borrar + nueva tarea en el row */}
         {actionsOnRow && (

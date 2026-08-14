@@ -9,6 +9,7 @@ import { ChevronDown, MessageSquare } from "lucide-react"
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
 import { formatDate } from "@/shared/utils/date-format"
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   ENTITY_ICONS,
@@ -270,6 +271,20 @@ export function TaskMobileCard({
           <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground md:inline">
             {formatDate(task.deliveryDate)}
           </span>
+        </div>
+
+        {/* Info auditoría: después de la fecha */}
+        <div
+          className="flex shrink-0 items-center"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
         </div>
 
         {isMobile && expanded && (

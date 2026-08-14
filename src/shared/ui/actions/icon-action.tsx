@@ -6,7 +6,7 @@ import { cn } from "@/shared/utils/utils"
 
 /** Superficie compartida: info / material / editar / borrar */
 export const CHROME_ICON_BTN =
-  "flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 shadow-sm shadow-black/15 ring-1 ring-black/[0.04] transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70 dark:shadow-black/40 dark:ring-white/10"
+  "flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 shadow-sm shadow-black/15 transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70 dark:shadow-black/40"
 
 type Props = {
   icon: LucideIcon
