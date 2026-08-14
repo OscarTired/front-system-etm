@@ -163,17 +163,15 @@ export function TaskProductionPanel({
           {StatusIcon && status && (
             <StatusIcon
               size={13}
-              className="shrink-0 text-white drop-shadow-sm"
-              style={{ color: "color-mix(in srgb, white 72%, " + status.color + ")" }}
+              className="shrink-0"
+              style={{ color: summaryTextColor }}
             />
           )}
 
           <span
-            className="truncate text-xs font-bold uppercase tracking-wide text-white drop-shadow-sm"
+            className="truncate text-xs font-bold uppercase tracking-wide"
             style={{
-              color: status
-                ? "color-mix(in srgb, white 72%, " + status.color + ")"
-                : "rgba(255,255,255,0.92)",
+              color: status ? summaryTextColor : undefined,
             }}
           >
             {status?.name ?? "Sin estado"}

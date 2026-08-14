@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+
 import { cn } from "@/shared/utils/utils"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
@@ -62,6 +64,12 @@ export function ProjectRowActions({ project, className }: ProjectRowActionsProps
   return (
     <>
       <div className={cn("flex items-center gap-1", className)}>
+        <EntityAuditInfo
+          createdAt={project.createdAt}
+          updatedAt={project.updatedAt}
+          createdBy={project.createdBy}
+          updatedBy={project.updatedBy}
+        />
         <IconAction
           icon={Pencil}
           disabled={!canUpdate}

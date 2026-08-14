@@ -62,6 +62,9 @@ export interface Task{
   createdAt:string
   updatedAt:string
 
+  createdBy?: Pick<User, "id" | "name" | "color" | "icon">
+  updatedBy?: Pick<User, "id" | "name" | "color" | "icon">
+
   project:TaskProject
 
   priority:Priority
@@ -69,6 +72,15 @@ export interface Task{
   material:Material
 
   thickness:Thickness
+
+  /** Líneas multi-material (si hay >1). Primary = material/thickness/pieces denormalizados. */
+  materialLines?: Array<{
+    id: string
+    pieces: number
+    sortOrder: number
+    material: Material
+    thickness: Thickness
+  }>
 
   color:Color | null
 

@@ -5,10 +5,17 @@ import { useProjects } from "@/features/projects/hooks/use-projects"
 import { useTasks } from "./use-tasks"
 import type { Task, ProcessCode } from "../types/task.types"
 
+export type TaskMaterialLineForm = {
+  materialId: string
+  thicknessId: string
+  pieces: number
+}
+
 export interface TaskFormValue {
   projectId: string
   reference: string
   lotNumber: number
+  /** @deprecated use materials sum — kept for denormalized primary */
   pieces: number
   assemblyCount: number
   paintKg: number
@@ -16,6 +23,7 @@ export interface TaskFormValue {
   priorityId: string
   materialId: string
   thicknessId: string
+  materials: TaskMaterialLineForm[]
   colorId: string | null
   plRt: string | null
   deliveryDate: string
@@ -36,6 +44,21 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
     priorityId: initialTask?.priority?.id || "",
     materialId: initialTask?.material?.id || "",
     thicknessId: initialTask?.thickness?.id || "",
+    materials: initialTask?.materialLines?.length
+      ? initialTask.materialLines.map(l => ({
+          materialId: l.material.id,
+          thicknessId: l.thickness.id,
+          pieces: l.pieces,
+        }))
+      : initialTask
+        ? [
+            {
+              materialId: initialTask.material?.id || "",
+              thicknessId: initialTask.thickness?.id || "",
+              pieces: initialTask.pieces || 1,
+            },
+          ]
+        : [{ materialId: "", thicknessId: "", pieces: 1 }],
     colorId: initialTask?.color?.id || null,
     plRt: initialTask?.plRt || null,
     // DatePicker/parseISODate solo aceptan "YYYY-MM-DD"
@@ -132,27 +155,43 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
       priorityId: "",
       materialId: "",
       thicknessId: "",
+      materials: [{ materialId: "", thicknessId: "", pieces: 1 }],
       colorId: null,
       plRt: null,
       deliveryDate: "",
     })
   }
 
-  const buildTask = () => ({
-    projectId: form.projectId,
-    reference: form.reference,
-    lotNumber: Number(form.lotNumber),
-    pieces: Number(form.pieces),
-    assemblyCount: Number(form.assemblyCount),
-    paintKg: Number(form.paintKg),
-    route: form.route,
-    priorityId: form.priorityId,
-    materialId: form.materialId,
-    thicknessId: form.thicknessId,
-    colorId: form.colorId || null,
-    plRt: form.plRt || null,
-    deliveryDate: form.deliveryDate || null,
-  })
+  const buildTask = () => {
+    const lines = form.materials.filter(
+      l => l.materialId && l.thicknessId && l.pieces > 0,
+    )
+    const total = lines.reduce((s, l) => s + Number(l.pieces), 0)
+    const primary = [...lines].sort(
+      (a, b) => Number(b.pieces) - Number(a.pieces),
+    )[0]
+
+    return {
+      projectId: form.projectId,
+      reference: form.reference,
+      lotNumber: Number(form.lotNumber),
+      pieces: total || Number(form.pieces),
+      assemblyCount: Number(form.assemblyCount),
+      paintKg: Number(form.paintKg),
+      route: form.route,
+      priorityId: form.priorityId,
+      materialId: primary?.materialId || form.materialId,
+      thicknessId: primary?.thicknessId || form.thicknessId,
+      materials: lines.map(l => ({
+        materialId: l.materialId,
+        thicknessId: l.thicknessId,
+        pieces: Number(l.pieces),
+      })),
+      colorId: form.colorId || null,
+      plRt: form.plRt || null,
+      deliveryDate: form.deliveryDate || null,
+    }
+  }
 
   const canSave = Boolean(
     form.projectId &&
@@ -160,8 +199,9 @@ export function useTaskForm(initialTask?: Task, initialProjectId?: string) {
     form.route.length > 0 &&
     form.deliveryDate &&
     form.priorityId &&
-    form.materialId &&
-    form.thicknessId
+    form.materials.some(
+      l => l.materialId && l.thicknessId && Number(l.pieces) > 0,
+    )
   )
 
   return {

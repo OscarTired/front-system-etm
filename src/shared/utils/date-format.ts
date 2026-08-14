@@ -19,3 +19,16 @@ export function formatDate(date?: string | null): string {
     year: "numeric",
   })
 }
+
+export function formatDateTime(date?: string | null): string {
+  if (!date) return "-"
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return "-"
+  return d.toLocaleString("es-PE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}

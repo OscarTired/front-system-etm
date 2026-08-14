@@ -20,9 +20,15 @@ export interface CreateTaskDto {
 
   priorityId:string
 
-  materialId:string
+  materialId?:string
 
-  thicknessId:string
+  thicknessId?:string
+
+  materials?: Array<{
+    materialId: string
+    thicknessId: string
+    pieces: number
+  }>
 
   colorId?:string | null
 

@@ -27,6 +27,9 @@ export interface Project{
 
   updatedAt:string
 
+  createdBy?: Pick<User, "id" | "name" | "color" | "icon">
+  updatedBy?: Pick<User, "id" | "name" | "color" | "icon">
+
   client:Client
 
   pm:User

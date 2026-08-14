@@ -8,6 +8,10 @@ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workf
 import { getWorkflowStep } from "@/features/workflow/selectors/get-workflow-step"
 
 import type { ProcessCode, Task } from "../../types/task.types"
+import {
+  getTaskMaterialLabel,
+  getTaskPiecesTotal,
+} from "@/features/tasks/utils/task-material-summary"
 
 type Props={
   task:Task
@@ -56,9 +60,9 @@ export function KanbanCardFromTask({
       deliveryDate={task.deliveryDate}
       reference={task.reference}
       lotNumber={task.lotNumber}
-      materialName={task.material.name}
+      materialName={getTaskMaterialLabel(task)}
       thicknessName={task.thickness.name}
-      pieces={task.pieces}
+      pieces={getTaskPiecesTotal(task)}
       colorName={task.color?.name}
       colorHex={
         task.color?.color
