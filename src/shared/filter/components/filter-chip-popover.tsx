@@ -136,7 +136,7 @@ export function FilterChipPopover({
         </div>
 
         <Command className="bg-transparent">
-          <CommandList className="max-h-80 overflow-y-auto">
+          <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
             <CommandEmpty>Sin resultados</CommandEmpty>
 
             <CommandGroup>

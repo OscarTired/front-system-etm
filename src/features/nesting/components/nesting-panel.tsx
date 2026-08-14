@@ -51,20 +51,20 @@ export function NestingPanel({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {activePanel === "sheet-pieces" && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5 p-3">
             {pieces}
           </div>
         )}
         {activePanel === "project-material" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-foreground/5">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
             {projectMaterial}
           </div>
         )}
         {activePanel === "layers" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-foreground/5">{layers}</div>
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">{layers}</div>
         )}
         {activePanel === "inspector" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-foreground/5">{inspector}</div>
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">{inspector}</div>
         )}
       </div>
 

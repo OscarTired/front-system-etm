@@ -104,7 +104,7 @@ export function NestingPage() {
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
   const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
-  const [activePanel, setActivePanel] = useState<NestingPanelView>("sheet-pieces")
+  const [activePanel, setActivePanel] = useState<NestingPanelView>("project-material")
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
 

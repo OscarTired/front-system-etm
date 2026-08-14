@@ -52,7 +52,7 @@ export function FilterValueView({
       <CommandInput placeholder="Buscar..." />
 
       {/* Sin max-h: el overflow-y del sheet body es el único scroll */}
-      <CommandList className="max-h-none overflow-visible">
+      <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
         <CommandEmpty>Sin resultados</CommandEmpty>
         <CommandGroup>
           {availableOptions.map(option => (

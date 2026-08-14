@@ -112,7 +112,7 @@ export function LevelSelect({
 
         <Command className="bg-transparent">
 
-          <CommandList>
+          <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
 
             <CommandGroup>
 

@@ -78,7 +78,7 @@ export function ExportScopeView({
       </div>
 
       <CommandList
-        className="max-h-80 overflow-y-auto"
+        className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto"
       >
 
         <CommandGroup>

@@ -87,7 +87,7 @@ export function TaskSortButton() {
         className="p-2"
       >
         <Command className="bg-transparent">
-          <CommandList className="max-h-80 overflow-y-auto">
+          <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
             <CommandGroup>
               {SORT_OPTIONS.map(option => (
                 <SelectOption

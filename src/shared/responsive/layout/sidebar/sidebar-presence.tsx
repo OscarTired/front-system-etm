@@ -231,8 +231,10 @@ export function SidebarPresence({
       </div>
 
       <CommandList className={cn(
-        "select-none overflow-y-auto transition-all duration-200 ease-in-out flex-1",
-        !isTopbar && (expanded || query.trim() ? "max-h-96" : "max-h-60"),
+        "select-none flex-1 transition-all duration-200 ease-in-out",
+        // Sheet mobile: un solo scroller (body del popover). Desktop: tope.
+        "max-h-none overflow-visible tablet:overflow-y-auto",
+        !isTopbar && (expanded || query.trim() ? "tablet:max-h-96" : "tablet:max-h-60"),
       )}>
         <CommandEmpty>
           {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
