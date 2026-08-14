@@ -1,8 +1,7 @@
 /**
- * Motor de nesting — capa 100% pura (sin React, sin DOM, sin Next.js).
- * Puede correr en el hilo principal, en un Web Worker, o más adelante
- * en un endpoint de servidor, sin cambiar una sola línea de este
- * módulo. Es un puerto del NestingEngine original (C++/Qt).
+ * Tipos del dominio nesting (shared shape con el backend).
+ * El algoritmo `optimize` vive en POST /engineering/nest — no en el browser.
+ * geometry / polygon-collision aquí solo sirven UI (drag, export, preview).
  */
 
 export interface Point2D {
@@ -88,18 +87,11 @@ export interface NestingOptions {
   searchStep?: number;
   /** Progreso 0-1, útil para una barra de progreso desde un worker. */
   onProgress?: (progress: number) => void;
-  /** Señal de cancelación mutable: el worker la marca en `cancelled = true`. */
+  /** Señal de cancelación (legado del worker; el server usa AbortSignal en HTTP). */
   signal?: { cancelled: boolean };
 }
 
-/**
- * Contrato que debe cumplir cualquier algoritmo de nesting. Hoy solo
- * existe RectangleHeuristicStrategy (basada en bounding box, igual al
- * motor C++ original). Si más adelante se necesita nesting real de
- * polígono (No-Fit-Polygon) para piezas cóncavas, se agrega una clase
- * nueva que implemente esta misma interfaz — nada del código que llama
- * a `optimize()` tiene que cambiar.
- */
+/** Contrato del motor en backend (documentación; no se instancia en front). */
 export interface NestingStrategy {
-  optimize(pieces: NestingPiece[], options: NestingOptions): NestedSheet[];
+  optimize(pieces: NestingPiece[], options: NestingOptions): NestedSheet[]
 }
