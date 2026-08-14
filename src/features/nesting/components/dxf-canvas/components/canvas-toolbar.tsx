@@ -42,7 +42,7 @@ import {
 const mdBtn =
   "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15 disabled:pointer-events-none disabled:opacity-30"
 const mdBtnRed =
-  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-red-500/20 hover:text-red-300 active:bg-red-500/25 disabled:pointer-events-none disabled:opacity-30"
+  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-destructive transition-colors duration-150 hover:bg-destructive/15 active:bg-destructive/20 disabled:pointer-events-none disabled:opacity-30"
 const mdBtnActive = "bg-blue-500/20 text-blue-300 hover:bg-blue-500/25 hover:text-blue-300"
 const mdDivider = "mx-0.5 h-5 w-px shrink-0 bg-foreground/10"
 
@@ -476,7 +476,10 @@ export function CanvasToolbar({
               <div className={mdDivider} />
               <button
                 type="button"
-                onClick={onOpenSim}
+                onClick={() => {
+                  setOpen(true)
+                  onOpenSim()
+                }}
                 className={`${mdBtn} transition-all duration-200 ${
                   simPanelOpen
                     ? "w-0 opacity-0 pointer-events-none p-0 m-0 overflow-hidden"
@@ -492,16 +495,18 @@ export function CanvasToolbar({
         </div>
       </div>
 
-      {/* Subpanel de simulación */}
+      {/* Subpanel de simulación — independiente de la barra de tools
+          (si dependía de `open`, en móvil al colapsar tools el play moría). */}
       {hasToolpath && (
         <div
           className={`
-            pointer-events-auto flex items-center gap-1 overflow-hidden rounded-2xl
-            bg-background/95 py-1.5 pl-3 pr-1.5
+            pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden rounded-2xl
+            bg-background/95 py-1.5 pl-2 pr-1.5
             shadow-lg backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top
+            ${isCompact ? "w-full max-w-full" : ""}
             ${
-              open && simPanelOpen
+              simPanelOpen
                 ? "max-h-20 opacity-100 translate-y-0 scale-100"
                 : "max-h-0 opacity-0 -translate-y-2 scale-95 pointer-events-none py-0"
             }
@@ -510,6 +515,7 @@ export function CanvasToolbar({
           <button
             type="button"
             onClick={onTogglePlay}
+            onPointerDown={(e) => e.stopPropagation()}
             className={mdBtn}
             title={simRunning ? "Pausar" : "Reproducir"}
           >
@@ -523,6 +529,7 @@ export function CanvasToolbar({
           <button
             type="button"
             onClick={onResetSim}
+            onPointerDown={(e) => e.stopPropagation()}
             disabled={simProgress === 0 && !simRunning}
             className={mdBtn}
             title="Reiniciar"
@@ -537,7 +544,8 @@ export function CanvasToolbar({
             step={0.001}
             value={simProgress}
             onChange={(e) => onSeek(Number(e.target.value))}
-            className="mx-2 h-1 w-32 sm:w-44 shrink-0 cursor-pointer appearance-none rounded-full bg-foreground/15 accent-primary [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+            onPointerDown={(e) => e.stopPropagation()}
+            className="mx-1 h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-foreground/15 accent-primary touch-pan-x [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
             title="Progreso de corte"
           />
 
