@@ -81,6 +81,7 @@ export function FilterBar({
     handleFieldSelect,
 
     handleValueSelect,
+    handleValueConfirm,
 
     handleChipUpdate,
 
@@ -144,9 +145,7 @@ export function FilterBar({
               onBack={
                 handleBack
               }
-              onSelect={
-                handleValueSelect
-              }
+              onConfirm={handleValueConfirm}
             />
 
           )}

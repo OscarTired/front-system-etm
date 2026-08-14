@@ -163,9 +163,8 @@ export function useFilterBar(module: FilterModule) {
 
   const handleValueSelect = useCallback(
     (option: FilterOption) => {
-
+      // compat: single option still works if called
       if (!selectedField) return
-
       addFilter(module, {
         field: selectedField,
         value: option.value,
@@ -173,12 +172,29 @@ export function useFilterBar(module: FilterModule) {
         color: option.color,
         icon: option.icon,
       })
-
       setSelectedField(undefined)
       setOpenRaw(false)
-
     },
-    [module, selectedField, addFilter]
+    [module, selectedField, addFilter],
+  )
+
+  /** Multi-select: solo aplica al confirmar (Listo). Cancelar/back no escribe store. */
+  const handleValueConfirm = useCallback(
+    (options: FilterOption[]) => {
+      if (!selectedField || options.length === 0) return
+      for (const option of options) {
+        addFilter(module, {
+          field: selectedField,
+          value: option.value,
+          label: option.label,
+          color: option.color,
+          icon: option.icon,
+        })
+      }
+      setSelectedField(undefined)
+      setOpenRaw(false)
+    },
+    [module, selectedField, addFilter],
   )
 
   const handleChipUpdate = useCallback(
@@ -235,6 +251,7 @@ export function useFilterBar(module: FilterModule) {
     handleBack,
     handleFieldSelect,
     handleValueSelect,
+    handleValueConfirm,
     handleChipUpdate,
     handleChipRemove,
     handleDirectChipRemove,

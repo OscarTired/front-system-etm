@@ -60,11 +60,8 @@ export const FilterAddButton=
             icon={Funnel}
             label="FILTROS"
             active={active}
-            accentClassName={
-              hasActiveFilters
-                ? "animate-history-bounce bg-emerald-600 text-white shadow-lg dark:bg-emerald-500 dark:text-emerald-950"
-                : undefined
-            }
+            accentClassName={undefined}
+            active={active || hasActiveFilters}
             className={className}
             {...props}
           />
