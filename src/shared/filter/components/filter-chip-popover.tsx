@@ -158,14 +158,16 @@ export function FilterChipPopover({
         </Command>
 
         {isMobile && (
-          <button
-            type="button"
-            onClick={handleRemove}
-            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive transition hover:bg-destructive/15 active:bg-destructive/20"
-          >
-            <Trash2 size={16} strokeWidth={2.2} />
-            Quitar filtro
-          </button>
+          <div className="sticky bottom-0 z-10 -mx-2 mt-2 border-t border-border/50 bg-popover px-2 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive transition hover:bg-destructive/15 active:bg-destructive/20"
+            >
+              <Trash2 size={16} strokeWidth={2.2} />
+              Quitar filtro
+            </button>
+          </div>
         )}
       </PopoverContent>
     </Popover>

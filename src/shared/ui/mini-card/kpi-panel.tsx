@@ -193,8 +193,9 @@ export function KpiCarousel({
                     ? colors.backgroundActive
                     : colors.background,
                   border: isSelected
-                    ? `2px solid ${colors.text}`
+                    ? `2px solid color-mix(in srgb, ${item.color} 72%, black)`
                     : "2px solid transparent",
+                  boxShadow: "none",
                 }}
               >
                 <ItemIcon size={16} style={{ color: colors.text }} />

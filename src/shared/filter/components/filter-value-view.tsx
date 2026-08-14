@@ -23,9 +23,11 @@ type Props = {
 }
 
 /**
- * Multi-selección diferida: los checks son locales hasta "Listo".
- * Volver / cerrar el sheet sin Listo descarta el borrador.
- * Patrón correcto en mobile para filtros (no anti-patrón).
+ * Multi-selección diferida: checks locales hasta "Listo".
+ * Volver / cerrar sin Listo descarta el borrador.
+ *
+ * Layout: lista scrolleable + footer sticky (Listo siempre visible
+ * dentro del sheet, no se pierde al final del scroll).
  */
 export function FilterValueView({
   selectedField,
@@ -35,7 +37,6 @@ export function FilterValueView({
 }: Props) {
   const [draft, setDraft] = useState<FilterOption[]>([])
 
-  // Al cambiar de campo, borrador limpio
   useEffect(() => {
     setDraft([])
   }, [selectedField])
@@ -52,8 +53,8 @@ export function FilterValueView({
 
   return (
     <div className="flex min-h-0 flex-col">
-      <Command className="bg-transparent">
-        <div className="mb-2 flex items-center gap-2">
+      <Command className="flex min-h-0 flex-col bg-transparent">
+        <div className="mb-2 flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={onBack}
@@ -68,7 +69,7 @@ export function FilterValueView({
 
         <CommandInput placeholder="Buscar..." />
 
-        <CommandList className="max-h-80 overflow-y-auto">
+        <CommandList className="max-h-[min(42dvh,18rem)] overflow-y-auto overscroll-contain">
           <CommandEmpty>Sin resultados</CommandEmpty>
           <CommandGroup>
             {availableOptions.map(option => (
@@ -85,7 +86,8 @@ export function FilterValueView({
         </CommandList>
       </Command>
 
-      <div className="mt-3 shrink-0 border-t border-border/40 pt-3">
+      {/* Sticky respecto al body del sheet (scroll del popover-content) */}
+      <div className="sticky bottom-0 z-10 -mx-2 mt-2 border-t border-border/50 bg-popover px-2 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
         <button
           type="button"
           disabled={draft.length === 0}
