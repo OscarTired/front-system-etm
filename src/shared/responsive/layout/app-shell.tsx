@@ -20,14 +20,15 @@ type Props = {
 }
 
 function DesktopTopBar() {
-  const visualState = useSidebarStore(state => state.visualState)
-  const sidebarHidden =
-    visualState === "hidden" || visualState === "curve-closing"
+  const mode = useSidebarStore(state => state.mode)
+  // Compacta o cerrada → theme fuera (junto al ojo cuando aplica).
+  // Expandida → theme vive en el header del sidebar.
+  const showThemeOutside = mode === "collapsed" || mode === "closed"
 
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 px-3">
       <SidebarShowButton />
-      {sidebarHidden && <ThemeToggle variant="icon" />}
+      {showThemeOutside && <ThemeToggle variant="icon" />}
     </div>
   )
 }

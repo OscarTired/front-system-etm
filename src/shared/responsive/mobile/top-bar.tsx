@@ -8,7 +8,6 @@ import { ProfileDialog } from "@/features/profile"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import { MessageBell } from "@/features/comments/components/message-bell"
 import { SidebarPresence } from "../../responsive/layout/sidebar/sidebar-presence"
-import { ThemeToggle } from "@/shared/theme"
 import { usePageTitleStore } from "@/shared/responsive/navigation/page-title-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 
@@ -80,11 +79,6 @@ export function TopBar() {
         </div>
 
         {/* Presencia en línea con contador explícito */}
-        <ThemeToggle
-          variant="icon"
-          className="size-10 rounded-full bg-chrome text-foreground shadow-lg shadow-black/30 backdrop-blur-xl hover:bg-chrome active:bg-popover"
-        />
-
         <SidebarPresence variant="topbar" />
         {/* Notificaciones con contador explícito */}
         <MessageBell variant="topbar" />

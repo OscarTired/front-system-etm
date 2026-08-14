@@ -60,7 +60,7 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           <ThemeToggle variant="icon" />
           <div className="flex flex-col items-center">
             {renderLogo()}
-            <h1 className="mt-2 text-sm font-semibold text-blue-700 dark:text-amber-300">
+            <h1 className="mt-2 text-sm font-semibold text-primary">
               COMPANY S.A.C.
             </h1>
           </div>
@@ -92,7 +92,6 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
             {renderLogo()}
 
             <div className="flex flex-col items-center gap-1">
-              <ThemeToggle variant="icon" />
               <button
                 type="button"
                 onClick={toggleCollapsed}
@@ -117,10 +116,10 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
             {renderLogo()}
 
             <div className="flex flex-col items-center">
-              <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-blue-700 dark:text-amber-300">
+              <h1 className="whitespace-nowrap text-[11px] font-semibold tracking-[0.16em] text-primary">
                 COMPANY S.A.C.
               </h1>
-              <p className="mt-0.5 whitespace-nowrap text-[9px] tracking-[0.12em] text-blue-600/70 dark:text-amber-300/70">
+              <p className="mt-0.5 whitespace-nowrap text-[9px] tracking-[0.12em] text-primary/70">
                 ERP INDUSTRIAL
               </p>
             </div>
