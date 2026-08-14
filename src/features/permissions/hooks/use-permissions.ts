@@ -1,75 +1,32 @@
 "use client"
 
-import {
-  usePermissionStore,
-} from "../store/permission-store"
+import { usePermissionStore } from "../store/permission-store"
+import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+import { useAuthStore } from "@/features/auth/store/auth-store"
 
-import {
-  PermissionCode,
-} from "@/shared/core/enums/permission-code.enum"
+/**
+ * Lectura de permisos efectivos.
+ * ADMIN (rol code) → acceso total, sin depender de que el Set
+ * traiga cada código (evita “todo marcado en UI pero JWT viejo”).
+ */
+export function usePermissions() {
+  const permissions = usePermissionStore(state => state.permissions)
+  const roles = useAuthStore(s => s.user?.roles)
 
-export function usePermissions(){
+  const isAdmin =
+    roles?.some(r => r.code === "ADMIN") === true
 
-  // OJO: antes esto seleccionaba `state.has` (la función), no
-  // `state.permissions` (el Set). `has` se define UNA sola vez
-  // adentro del store y nunca se reasigna — sigue siendo la MISMA
-  // referencia en cada `setPermissions()`. Zustand solo re-renderiza
-  // si el valor seleccionado cambia de referencia, así que ningún
-  // componente que usaba este hook se enteraba cuando los permisos
-  // cambiaban en vivo (ver role-permissions-handler.ts): el sidebar
-  // se quedaba mostrando ítems ya sin permiso hasta que algo MÁS
-  // forzara un re-render. Seleccionando el Set directamente, cada
-  // `setPermissions` crea un Set nuevo → cambia de referencia → el
-  // componente sí se re-renderiza.
-  const permissions=
-    usePermissionStore(
-      state=>state.permissions,
-    )
-
-  return{
-
-    has:(
-
-      permission:PermissionCode,
-
-    )=>
-
-      permissions.has(
-        permission,
-      ),
-
-    hasAny:(
-
-      ...codes:PermissionCode[]
-
-    )=>
-
-      codes.some(
-
-        permission=>
-
-          permissions.has(
-            permission,
-          ),
-
-      ),
-
-    hasAll:(
-
-      ...codes:PermissionCode[]
-
-    )=>
-
-      codes.every(
-
-        permission=>
-
-          permissions.has(
-            permission,
-          ),
-
-      ),
-
+  const has = (permission: PermissionCode) => {
+    if (isAdmin) return true
+    return permissions.has(permission)
   }
 
+  return {
+    has,
+    hasAny: (...codes: PermissionCode[]) =>
+      isAdmin || codes.some(p => permissions.has(p)),
+    hasAll: (...codes: PermissionCode[]) =>
+      isAdmin || codes.every(p => permissions.has(p)),
+    isAdmin,
+  }
 }

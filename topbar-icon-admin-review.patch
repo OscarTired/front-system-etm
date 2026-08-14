@@ -1,0 +1,133 @@
+diff --git a/src/features/permissions/hooks/use-permissions.ts b/src/features/permissions/hooks/use-permissions.ts
+index 319f5b2..5ba7a7b 100644
+--- a/src/features/permissions/hooks/use-permissions.ts
++++ b/src/features/permissions/hooks/use-permissions.ts
+@@ -1,75 +1,32 @@
+ "use client"
+ 
+-import {
+-  usePermissionStore,
+-} from "../store/permission-store"
+-
+-import {
+-  PermissionCode,
+-} from "@/shared/core/enums/permission-code.enum"
+-
+-export function usePermissions(){
+-
+-  // OJO: antes esto seleccionaba `state.has` (la función), no
+-  // `state.permissions` (el Set). `has` se define UNA sola vez
+-  // adentro del store y nunca se reasigna — sigue siendo la MISMA
+-  // referencia en cada `setPermissions()`. Zustand solo re-renderiza
+-  // si el valor seleccionado cambia de referencia, así que ningún
+-  // componente que usaba este hook se enteraba cuando los permisos
+-  // cambiaban en vivo (ver role-permissions-handler.ts): el sidebar
+-  // se quedaba mostrando ítems ya sin permiso hasta que algo MÁS
+-  // forzara un re-render. Seleccionando el Set directamente, cada
+-  // `setPermissions` crea un Set nuevo → cambia de referencia → el
+-  // componente sí se re-renderiza.
+-  const permissions=
+-    usePermissionStore(
+-      state=>state.permissions,
+-    )
+-
+-  return{
+-
+-    has:(
+-
+-      permission:PermissionCode,
+-
+-    )=>
+-
+-      permissions.has(
+-        permission,
+-      ),
+-
+-    hasAny:(
+-
+-      ...codes:PermissionCode[]
+-
+-    )=>
+-
+-      codes.some(
+-
+-        permission=>
+-
+-          permissions.has(
+-            permission,
+-          ),
+-
+-      ),
+-
+-    hasAll:(
+-
+-      ...codes:PermissionCode[]
+-
+-    )=>
+-
+-      codes.every(
+-
+-        permission=>
+-
+-          permissions.has(
+-            permission,
+-          ),
+-
+-      ),
+-
++import { usePermissionStore } from "../store/permission-store"
++import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
++import { useAuthStore } from "@/features/auth/store/auth-store"
++
++/**
++ * Lectura de permisos efectivos.
++ * ADMIN (rol code) → acceso total, sin depender de que el Set
++ * traiga cada código (evita “todo marcado en UI pero JWT viejo”).
++ */
++export function usePermissions() {
++  const permissions = usePermissionStore(state => state.permissions)
++  const roles = useAuthStore(s => s.user?.roles)
++
++  const isAdmin =
++    roles?.some(r => r.code === "ADMIN") === true
++
++  const has = (permission: PermissionCode) => {
++    if (isAdmin) return true
++    return permissions.has(permission)
+   }
+ 
+-}
+\ No newline at end of file
++  return {
++    has,
++    hasAny: (...codes: PermissionCode[]) =>
++      isAdmin || codes.some(p => permissions.has(p)),
++    hasAll: (...codes: PermissionCode[]) =>
++      isAdmin || codes.every(p => permissions.has(p)),
++    isAdmin,
++  }
++}
+diff --git a/src/shared/responsive/mobile/top-bar.tsx b/src/shared/responsive/mobile/top-bar.tsx
+index 766b085..a5f3a2b 100644
+--- a/src/shared/responsive/mobile/top-bar.tsx
++++ b/src/shared/responsive/mobile/top-bar.tsx
+@@ -92,12 +92,16 @@ export function TopBar() {
+               if (searchOpen) closeSearch()
+               else setSearchOpen(true)
+             }}
+-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chrome text-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
++            className={
++              searchOpen
++                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
++                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
++            }
+           >
+             {searchOpen ? (
+-              <X size={18} strokeWidth={2.2} />
++              <X size={16} strokeWidth={2} />
+             ) : (
+-              <Search size={18} strokeWidth={2.2} />
++              <Search size={16} strokeWidth={2} />
+             )}
+           </button>
+         )}

@@ -92,12 +92,16 @@ export function TopBar() {
               if (searchOpen) closeSearch()
               else setSearchOpen(true)
             }}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-chrome text-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
+            className={
+              searchOpen
+                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+            }
           >
             {searchOpen ? (
-              <X size={18} strokeWidth={2.2} />
+              <X size={16} strokeWidth={2} />
             ) : (
-              <Search size={18} strokeWidth={2.2} />
+              <Search size={16} strokeWidth={2} />
             )}
           </button>
         )}

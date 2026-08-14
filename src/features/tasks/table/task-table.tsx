@@ -217,7 +217,7 @@ export function TaskTable({
 
         {displayedTasks.length === 0 && (
 
-          <div className="flex h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
+          <div className="flex mt-2 h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
             Sin tareas
           </div>
 
