@@ -30,8 +30,8 @@ export function ProcessMaterialCard({
   return (
     <div className="relative h-full min-h-0">
       {multi && (
-        <div className="absolute right-2 top-2 z-10">
-          <TaskMaterialInfo task={task} />
+        <div className="absolute bottom-2.5 right-2.5 z-10">
+          <TaskMaterialInfo task={task} size="md" />
         </div>
       )}
       <ProcessMiniCard

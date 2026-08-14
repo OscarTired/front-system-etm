@@ -14,43 +14,48 @@ import { getTaskPiecesTotal } from "../utils/task-material-summary"
 type Props = {
   task: Task
   className?: string
+  /** En card de proceso: botón más grande */
+  size?: "sm" | "md"
 }
 
 /** Solo se muestra si hay >1 línea de material. */
-export function TaskMaterialInfo({ task, className }: Props) {
+export function TaskMaterialInfo({
+  task,
+  className,
+  size = "sm",
+}: Props) {
   const lines = task.materialLines
   if (!lines || lines.length <= 1) return null
 
   const total = getTaskPiecesTotal(task)
+  const isMd = size === "md"
 
   return (
-    <Popover>
+    <Popover modal={false}>
       <PopoverTrigger asChild>
         <button
           type="button"
           aria-label="Detalle de materiales"
           title="Materiales"
-          onClick={e => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          onPointerDown={e => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors",
-            "hover:bg-foreground/5 hover:text-foreground",
+            "flex shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors",
+            "hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",
+            isMd ? "size-9" : "size-7 rounded-lg",
             className,
           )}
         >
-          <Layers size={14} strokeWidth={2} />
+          <Layers size={isMd ? 18 : 14} strokeWidth={2} />
         </button>
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="w-72 gap-0 border-border/60 p-0"
+        side="top"
+        sideOffset={8}
+        className="z-50 w-72 gap-0 border-border/60 p-0"
         onClick={e => e.stopPropagation()}
+        onPointerDown={e => e.stopPropagation()}
       >
         <div className="border-b border-border/50 px-3 py-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

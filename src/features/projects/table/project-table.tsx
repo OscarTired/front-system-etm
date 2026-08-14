@@ -158,7 +158,7 @@ export function ProjectTable({
 
   return (
     <>
-      <div className="mt-2 flex flex-col gap-2 pb-2">
+      <div className="flex flex-col gap-2 pb-2">
         {displayedProjects.map(project => {
           const card = (
             <ProjectMobileCard

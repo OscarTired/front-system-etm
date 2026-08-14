@@ -37,20 +37,14 @@ export function EntityAuditInfo({
   ]
 
   return (
-    <Popover>
+    <Popover modal={false}>
       <PopoverTrigger asChild>
         <button
           type="button"
           aria-label="Información de auditoría"
           title="Información"
-          onClick={e => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          onPointerDown={e => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
           className={cn(
             "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors",
             "hover:bg-foreground/5 hover:text-foreground active:bg-foreground/10",
@@ -63,8 +57,10 @@ export function EntityAuditInfo({
       <PopoverContent
         align="end"
         side="bottom"
-        className="w-64 gap-0 border-border/60 p-0"
+        sideOffset={6}
+        className="z-50 w-64 gap-0 border-border/60 p-0"
         onClick={e => e.stopPropagation()}
+        onPointerDown={e => e.stopPropagation()}
       >
         <div className="border-b border-border/50 px-3 py-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
