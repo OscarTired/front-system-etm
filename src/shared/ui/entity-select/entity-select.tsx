@@ -263,7 +263,7 @@ export function EntitySelect<T extends EntityBase>({
               />
             </div>
 
-            <CommandList className="max-h-64 overflow-y-auto">
+            <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
               <CommandEmpty>Sin resultados</CommandEmpty>
 
               <CommandGroup>

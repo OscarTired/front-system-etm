@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
 import { useRowDragReorder } from "@/shared/dnd/use-row-drag-reorder"
 
 import { ProjectMobileCard } from "./project-mobile-card"
-import { ProjectMobileSkeleton } from "./project-mobile-skeleton"
+import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
 
 import { useProjectSearch } from "../hooks/use-project-search"
 
@@ -153,7 +153,7 @@ export function ProjectTable({
   })
 
   if (loading) {
-    return <ProjectMobileSkeleton />
+    return <EntityListSkeleton variant="project" />
   }
 
   return (

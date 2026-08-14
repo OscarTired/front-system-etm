@@ -309,7 +309,7 @@ export function UserSelect({
           </div>
 
           <CommandList
-            className="max-h-64 min-w-0 w-full"
+            className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto"
           >
 
             <CommandEmpty>

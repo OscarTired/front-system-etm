@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
 import { TaskProcessColumn } from "@/features/tasks/pipeline/table/task-process-column"
 
 import { ProcessMobileCard } from "./process-mobile-card"
-import { ProcessCardSkeleton } from "./process-card-skeleton"
+import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
 
 import { processAccess } from "../access/process-access"
 
@@ -106,6 +106,11 @@ export function ProcessTableCard({
   })
 
   const markSettled = useFocusSettleStore(s => s.markSettled)
+
+  // Cambio de proceso (tabs / deep-link code): no heredar expand del anterior
+  useEffect(() => {
+    setMobileExpandedKey(null)
+  }, [processDefinition.code])
 
   useFocusedRow({
     focusedId: focusedTaskId,
@@ -210,7 +215,7 @@ export function ProcessTableCard({
   }, [isMobile, focusedTaskId, displayedTasks, processDefinition.code])
 
   if (loading) {
-    return <ProcessCardSkeleton />
+    return <EntityListSkeleton variant="process" />
   }
 
   if (isMobile) {

@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
 import { useRowDragReorder } from "@/shared/dnd/use-row-drag-reorder"
 
 import { TaskMobileCard } from "./task-mobile-card"
-import { TaskMobileSkeleton } from "./task-mobile-skeleton"
+import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
 
 import { useTaskSearch } from "../hooks/use-task-search"
 
@@ -169,7 +169,7 @@ export function TaskTable({
   })
 
   if (loading) {
-    return <TaskMobileSkeleton />
+    return <EntityListSkeleton variant="task" />
   }
 
   return (

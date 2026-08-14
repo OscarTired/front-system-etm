@@ -1,0 +1,484 @@
+diff --git a/src/features/processes/table/process-card-skeleton.tsx b/src/features/processes/table/process-card-skeleton.tsx
+deleted file mode 100644
+index 3be9d68..0000000
+--- a/src/features/processes/table/process-card-skeleton.tsx
++++ /dev/null
+@@ -1,54 +0,0 @@
+-"use client"
+-
+-// Skeleton de la vista CARD (desktop) de Procesos — calco de
+-// TaskMobileSkeleton/ProjectMobileSkeleton para mantener el mismo
+-// lenguaje visual entre las 3 vistas CARD del ERP.
+-
+-function SkeletonProcessCardRow({ opacity }: { opacity: number }) {
+-
+-  return (
+-
+-    <div
+-      className="flex w-full items-center gap-2.5 rounded-xl bg-foreground/5 px-3 py-3"
+-      style={{ opacity }}
+-    >
+-
+-      <span className="h-4.5 w-9 shrink-0 rounded-md bg-foreground/10" />
+-
+-      <div className="min-w-0 flex-1">
+-
+-        <span className="block h-5 w-2/3 rounded bg-foreground/10" />
+-
+-        <span className="mt-0.5 block h-4 w-1/3 rounded bg-foreground/5" />
+-
+-      </div>
+-
+-      <span className="h-3 w-12 shrink-0 rounded bg-foreground/5" />
+-
+-      <span className="size-4 shrink-0 rounded bg-foreground/5" />
+-
+-    </div>
+-
+-  )
+-
+-}
+-
+-const SKELETON_ROWS = [1, 0.85, 0.7, 0.55, 0.4, 0.3]
+-
+-export function ProcessCardSkeleton() {
+-
+-  return (
+-
+-    <div className="flex animate-pulse flex-col gap-2">
+-
+-      {SKELETON_ROWS.map((opacity, i) => (
+-
+-        <SkeletonProcessCardRow key={i} opacity={opacity} />
+-
+-      ))}
+-
+-    </div>
+-
+-  )
+-
+-}
+\ No newline at end of file
+diff --git a/src/features/processes/table/process-table-card.tsx b/src/features/processes/table/process-table-card.tsx
+index 200a0c3..7081df0 100644
+--- a/src/features/processes/table/process-table-card.tsx
++++ b/src/features/processes/table/process-table-card.tsx
+@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
+ import { TaskProcessColumn } from "@/features/tasks/pipeline/table/task-process-column"
+ 
+ import { ProcessMobileCard } from "./process-mobile-card"
+-import { ProcessCardSkeleton } from "./process-card-skeleton"
++import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
+ 
+ import { processAccess } from "../access/process-access"
+ 
+@@ -107,6 +107,11 @@ export function ProcessTableCard({
+ 
+   const markSettled = useFocusSettleStore(s => s.markSettled)
+ 
++  // Cambio de proceso (tabs / deep-link code): no heredar expand del anterior
++  useEffect(() => {
++    setMobileExpandedKey(null)
++  }, [processDefinition.code])
++
+   useFocusedRow({
+     focusedId: focusedTaskId,
+     expandedRowId: expand.expandedRowId,
+@@ -210,7 +215,7 @@ export function ProcessTableCard({
+   }, [isMobile, focusedTaskId, displayedTasks, processDefinition.code])
+ 
+   if (loading) {
+-    return <ProcessCardSkeleton />
++    return <EntityListSkeleton variant="process" />
+   }
+ 
+   if (isMobile) {
+diff --git a/src/features/processes/table/process-table-skeleton.tsx b/src/features/processes/table/process-table-skeleton.tsx
+deleted file mode 100644
+index ac1498b..0000000
+--- a/src/features/processes/table/process-table-skeleton.tsx
++++ /dev/null
+@@ -1,52 +0,0 @@
+-"use client"
+-
+-// Skeleton mobile de Procesos — la vista mobile de ProcessTable
+-// reutiliza directamente TaskProcessColumn (las mismas cards
+-// compactas que el pipeline: número, punto de prioridad, referencia,
+-// badge de estado). Este skeleton calca esos mismos bones — mismo
+-// h-12, mismo padding, mismos anchos — para que no haya salto de
+-// layout al terminar de cargar. Antes esta página caía al spinner
+-// genérico (EntityTableLoading) en mobile, sin skeleton propio.
+-
+-function SkeletonProcessTaskRow({ opacity }: { opacity: number }) {
+-
+-  return (
+-
+-    <div
+-      className="flex h-12 items-center gap-2.5 rounded-xl bg-foreground/5 px-3"
+-      style={{ opacity }}
+-    >
+-
+-      <span className="h-3.5 w-9 shrink-0 rounded bg-foreground/10" />
+-
+-      <span className="size-1.5 shrink-0 rounded-full bg-foreground/15" />
+-
+-      <span className="h-3.5 flex-1 rounded bg-foreground/10" />
+-
+-      <span className="h-5 w-14 shrink-0 rounded-md bg-foreground/10" />
+-
+-    </div>
+-
+-  )
+-
+-}
+-
+-const SKELETON_OPACITIES = [1, 0.85, 0.7, 0.55, 0.4, 0.3]
+-
+-export function ProcessTableSkeleton() {
+-
+-  return (
+-
+-    <div className="flex animate-pulse flex-col gap-2 px-2 py-2">
+-
+-      {SKELETON_OPACITIES.map((opacity, i) => (
+-
+-        <SkeletonProcessTaskRow key={i} opacity={opacity} />
+-
+-      ))}
+-
+-    </div>
+-
+-  )
+-
+-}
+\ No newline at end of file
+diff --git a/src/features/projects/table/project-mobile-skeleton.tsx b/src/features/projects/table/project-mobile-skeleton.tsx
+deleted file mode 100644
+index b0f5232..0000000
+--- a/src/features/projects/table/project-mobile-skeleton.tsx
++++ /dev/null
+@@ -1,33 +0,0 @@
+-"use client"
+-
+-
+-function SkeletonProjectRow({ opacity }: { opacity: number }) {
+-  return (
+-    <div
+-      className="flex w-full items-center gap-2.5 rounded-xl bg-foreground/5 px-3 py-3"
+-      style={{ opacity }}
+-    >
+-      <span className="h-4.5 w-9 shrink-0 rounded-md bg-foreground/10" />
+-
+-      <div className="min-w-0 flex-1">
+-        <span className="block h-5 w-2/3 rounded bg-foreground/10" />
+-        <span className="mt-0.5 block h-4 w-1/3 rounded bg-foreground/5" />
+-      </div>
+-
+-      <span className="h-3 w-12 shrink-0 rounded bg-foreground/5" />
+-      <span className="size-4 shrink-0 rounded bg-foreground/5" />
+-    </div>
+-  )
+-}
+-
+-const SKELETON_ROWS = [1, 0.85, 0.7, 0.55, 0.4, 0.3]
+-
+-export function ProjectMobileSkeleton() {
+-  return (
+-    <div className="flex animate-pulse flex-col gap-2">
+-      {SKELETON_ROWS.map((opacity, i) => (
+-        <SkeletonProjectRow key={i} opacity={opacity} />
+-      ))}
+-    </div>
+-  )
+-}
+\ No newline at end of file
+diff --git a/src/features/projects/table/project-table.tsx b/src/features/projects/table/project-table.tsx
+index f9ac711..776c5bd 100644
+--- a/src/features/projects/table/project-table.tsx
++++ b/src/features/projects/table/project-table.tsx
+@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
+ import { useRowDragReorder } from "@/shared/dnd/use-row-drag-reorder"
+ 
+ import { ProjectMobileCard } from "./project-mobile-card"
+-import { ProjectMobileSkeleton } from "./project-mobile-skeleton"
++import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
+ 
+ import { useProjectSearch } from "../hooks/use-project-search"
+ 
+@@ -153,7 +153,7 @@ export function ProjectTable({
+   })
+ 
+   if (loading) {
+-    return <ProjectMobileSkeleton />
++    return <EntityListSkeleton variant="project" />
+   }
+ 
+   return (
+diff --git a/src/features/roles/components/roles-select.tsx b/src/features/roles/components/roles-select.tsx
+index d9cef69..546d9b7 100644
+--- a/src/features/roles/components/roles-select.tsx
++++ b/src/features/roles/components/roles-select.tsx
+@@ -210,7 +210,7 @@ export function RoleSelect({
+           </div>
+ 
+           <CommandList
+-            className="max-h-64 min-w-0 w-full"
++            className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto min-w-0 w-full"
+           >
+ 
+             <CommandEmpty>
+diff --git a/src/features/tasks/components/context-picker.tsx b/src/features/tasks/components/context-picker.tsx
+index 8af0439..6166fd9 100644
+--- a/src/features/tasks/components/context-picker.tsx
++++ b/src/features/tasks/components/context-picker.tsx
+@@ -413,7 +413,7 @@ export function ContextPicker({
+           </div>
+ 
+           <CommandList
+-            className="max-h-80 min-w-0 w-full"
++            className="max-h-none overflow-visible tablet:max-h-80 min-w-0 w-full"
+           >
+ 
+             <CommandEmpty>
+diff --git a/src/features/tasks/table/task-mobile-skeleton.tsx b/src/features/tasks/table/task-mobile-skeleton.tsx
+deleted file mode 100644
+index e65f8b7..0000000
+--- a/src/features/tasks/table/task-mobile-skeleton.tsx
++++ /dev/null
+@@ -1,32 +0,0 @@
+-"use client"
+-
+-function SkeletonTaskRow({ opacity }: { opacity: number }) {
+-  return (
+-    <div
+-      className="flex w-full items-center gap-2.5 rounded-xl bg-foreground/5 px-3 py-3"
+-      style={{ opacity }}
+-    >
+-      <span className="h-4.5 w-9 shrink-0 rounded-md bg-foreground/10" />
+-
+-      <div className="min-w-0 flex-1">
+-        <span className="block h-5 w-2/3 rounded bg-foreground/10" />
+-        <span className="mt-0.5 block h-4 w-1/3 rounded bg-foreground/5" />
+-      </div>
+-
+-      <span className="h-3 w-12 shrink-0 rounded bg-foreground/5" />
+-      <span className="size-4 shrink-0 rounded bg-foreground/5" />
+-    </div>
+-  )
+-}
+-
+-const SKELETON_ROWS = [1, 0.85, 0.7, 0.55, 0.4, 0.3]
+-
+-export function TaskMobileSkeleton() {
+-  return (
+-    <div className="flex animate-pulse flex-col gap-2">
+-      {SKELETON_ROWS.map((opacity, i) => (
+-        <SkeletonTaskRow key={i} opacity={opacity} />
+-      ))}
+-    </div>
+-  )
+-}
+\ No newline at end of file
+diff --git a/src/features/tasks/table/task-table.tsx b/src/features/tasks/table/task-table.tsx
+index 72db1f2..463f6b3 100644
+--- a/src/features/tasks/table/task-table.tsx
++++ b/src/features/tasks/table/task-table.tsx
+@@ -16,7 +16,7 @@ import { useEntityExpand } from "@/shared/ui/entity-table/features/expansion"
+ import { useRowDragReorder } from "@/shared/dnd/use-row-drag-reorder"
+ 
+ import { TaskMobileCard } from "./task-mobile-card"
+-import { TaskMobileSkeleton } from "./task-mobile-skeleton"
++import { EntityListSkeleton } from "@/shared/ui/entity-table/entity-list-skeleton"
+ 
+ import { useTaskSearch } from "../hooks/use-task-search"
+ 
+@@ -169,7 +169,7 @@ export function TaskTable({
+   })
+ 
+   if (loading) {
+-    return <TaskMobileSkeleton />
++    return <EntityListSkeleton variant="task" />
+   }
+ 
+   return (
+diff --git a/src/features/users/components/user-select.tsx b/src/features/users/components/user-select.tsx
+index 39c2830..a7763fc 100644
+--- a/src/features/users/components/user-select.tsx
++++ b/src/features/users/components/user-select.tsx
+@@ -309,7 +309,7 @@ export function UserSelect({
+           </div>
+ 
+           <CommandList
+-            className="max-h-64 min-w-0 w-full"
++            className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto"
+           >
+ 
+             <CommandEmpty>
+diff --git a/src/shared/hooks/use-expand-row.ts b/src/shared/hooks/use-expand-row.ts
+index 6078db0..5bc3a96 100644
+--- a/src/shared/hooks/use-expand-row.ts
++++ b/src/shared/hooks/use-expand-row.ts
+@@ -29,10 +29,13 @@ export function useExpandRow({
+     (nextId: string | null) => {
+       setExpandedRowId(nextId)
+ 
+-      // Usuario toma el control: limpia taskId/projectId/focus.
+-      // - nextId !== focusedId → otro row o null (cerrar)
+-      // - nextId === focusedId no debería pasar (toggle manda null al cerrar)
+-      if (focusedId && nextId !== focusedId) {
++      // Usuario toma el control (otro row, colapsar, o re-tocar):
++      // siempre consumir deep-link si hay params de foco en la URL.
++      const hasFocusParams =
++        searchParams.has("taskId") ||
++        searchParams.has("projectId") ||
++        searchParams.has("focus")
++      if (hasFocusParams) {
+         clearEntityFocusParams(router, pathname, searchParams)
+       }
+     },
+diff --git a/src/shared/hooks/use-focused-row.ts b/src/shared/hooks/use-focused-row.ts
+index 96714fb..0314dab 100644
+--- a/src/shared/hooks/use-focused-row.ts
++++ b/src/shared/hooks/use-focused-row.ts
+@@ -1,9 +1,11 @@
+ "use client"
+ 
+ import { useEffect, useRef } from "react"
++import { usePathname, useRouter, useSearchParams } from "next/navigation"
+ 
+ import { useFocusSettleStore } from "@/shared/focus/store/focus-settle-store"
+ import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
++import { clearEntityFocusParams } from "./clear-entity-focus-params"
+ 
+ type Props = {
+   focusedId?: string
+@@ -156,10 +158,23 @@ export function useFocusedRow({
+   focusToken,
+   onSettled,
+ }: Props) {
++  const router = useRouter()
++  const pathname = usePathname()
++  const searchParams = useSearchParams()
++
+   const prevFocusedIdRef = useRef<string | undefined>(undefined)
+   const expandedRowIdRef = useRef<string | null>(expandedRowId)
+   expandedRowIdRef.current = expandedRowId
+ 
++  /** Tras scroll+expand: consumir URL para que F5/nav no re-dispare el mismo deep-link. */
++  const settleAndConsume = () => {
++    if (focusToken) {
++      useFocusSettleStore.getState().markSettled(focusToken)
++    }
++    clearEntityFocusParams(router, pathname, searchParams)
++    onSettled?.()
++  }
++
+   const stopTrackingRef = useRef<(() => void) | null>(null)
+ 
+   const stopTracking = () => {
+@@ -229,7 +244,7 @@ export function useFocusedRow({
+           el,
+           isActive,
+           expand,
+-          onSettled,
++          settleAndConsume,
+         )
+       },
+       FIND_TIMEOUT_MS,
+@@ -240,7 +255,7 @@ export function useFocusedRow({
+         if (!isActive()) return
+         expand()
+         useFocusNavStore.getState().end()
+-        onSettled?.()
++        settleAndConsume()
+       },
+     )
+ 
+@@ -251,5 +266,5 @@ export function useFocusedRow({
+     return () => {
+       stopTracking()
+     }
+-  }, [focusedId, setExpandedRowId, focusToken, onSettled])
++  }, [focusedId, setExpandedRowId, focusToken, onSettled, router, pathname, searchParams])
+ }
+\ No newline at end of file
+diff --git a/src/shared/ui/entity-select/entity-select.tsx b/src/shared/ui/entity-select/entity-select.tsx
+index f573d5e..0f9371e 100644
+--- a/src/shared/ui/entity-select/entity-select.tsx
++++ b/src/shared/ui/entity-select/entity-select.tsx
+@@ -263,7 +263,7 @@ export function EntitySelect<T extends EntityBase>({
+               />
+             </div>
+ 
+-            <CommandList className="max-h-64 overflow-y-auto">
++            <CommandList className="max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
+               <CommandEmpty>Sin resultados</CommandEmpty>
+ 
+               <CommandGroup>
+diff --git a/src/shared/ui/entity-table/entity-list-skeleton.tsx b/src/shared/ui/entity-table/entity-list-skeleton.tsx
+new file mode 100644
+index 0000000..6055ef2
+--- /dev/null
++++ b/src/shared/ui/entity-table/entity-list-skeleton.tsx
+@@ -0,0 +1,61 @@
++"use client"
++
++import { cn } from "@/shared/utils/utils"
++
++type Variant = "task" | "project" | "process"
++
++type Props = {
++  variant?: Variant
++  rows?: number
++  className?: string
++}
++
++const OPACITIES = [1, 0.85, 0.7, 0.55, 0.4, 0.3] as const
++
++/**
++ * Skeleton de lista alineado al layout real de cards mobile
++ * (badge código + título + meta + chip estado).
++ * Inline / un solo contrato — no duplicar files por feature.
++ */
++export function EntityListSkeleton({
++  variant = "task",
++  rows = 6,
++  className,
++}: Props) {
++  const opacities = OPACITIES.slice(0, rows)
++
++  return (
++    <div
++      className={cn("flex animate-pulse flex-col gap-2", className)}
++      aria-hidden
++    >
++      {opacities.map((opacity, i) => (
++        <div
++          key={i}
++          className={cn(
++            "flex w-full items-center gap-2.5 rounded-xl bg-foreground/5 px-3",
++            variant === "process" ? "h-12" : "py-3",
++          )}
++          style={{ opacity }}
++        >
++          {/* Badge correlativo / código */}
++          <span className="h-5 w-10 shrink-0 rounded-md bg-foreground/10" />
++
++          {variant === "process" && (
++            <span className="size-1.5 shrink-0 rounded-full bg-foreground/15" />
++          )}
++
++          <div className="min-w-0 flex-1 space-y-1">
++            <span className="block h-4 w-2/3 rounded bg-foreground/10" />
++            {variant !== "process" && (
++              <span className="block h-3 w-1/3 rounded bg-foreground/5" />
++            )}
++          </div>
++
++          {/* Chip estado / meta */}
++          <span className="h-5 w-14 shrink-0 rounded-md bg-foreground/10" />
++        </div>
++      ))}
++    </div>
++  )
++}

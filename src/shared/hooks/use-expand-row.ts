@@ -29,10 +29,13 @@ export function useExpandRow({
     (nextId: string | null) => {
       setExpandedRowId(nextId)
 
-      // Usuario toma el control: limpia taskId/projectId/focus.
-      // - nextId !== focusedId → otro row o null (cerrar)
-      // - nextId === focusedId no debería pasar (toggle manda null al cerrar)
-      if (focusedId && nextId !== focusedId) {
+      // Usuario toma el control (otro row, colapsar, o re-tocar):
+      // siempre consumir deep-link si hay params de foco en la URL.
+      const hasFocusParams =
+        searchParams.has("taskId") ||
+        searchParams.has("projectId") ||
+        searchParams.has("focus")
+      if (hasFocusParams) {
         clearEntityFocusParams(router, pathname, searchParams)
       }
     },
