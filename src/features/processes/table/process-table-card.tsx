@@ -215,7 +215,13 @@ export function ProcessTableCard({
   }, [isMobile, focusedTaskId, displayedTasks, processDefinition.code])
 
   if (loading) {
-    return <EntityListSkeleton variant="process" />
+    // Desktop: filas ProcessMobileCard. Mobile: kanban TaskProcessColumn.
+    return (
+      <EntityListSkeleton
+        variant="process"
+        layout={isMobile ? "kanban" : "row"}
+      />
+    )
   }
 
   if (isMobile) {
