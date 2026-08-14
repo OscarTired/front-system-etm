@@ -159,7 +159,7 @@ export function FilterBar({
 
       {showChips && chips.length>0 && (
 
-        <div className="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none">
+        <div className="flex max-w-full flex-wrap items-center gap-2 overflow-visible">
 
           {chips.map(
             chip=>(

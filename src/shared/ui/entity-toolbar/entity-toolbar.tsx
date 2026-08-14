@@ -12,17 +12,18 @@ type Props = {
 
 /**
  * Toolbar de entidad.
- * Padding vertical/horizontal reserva aire para sombras de chips
- * (el scroller padre tiene overflow y si no hay padding, las corta).
- * min-height + wrap: crece y empuja la lista, no se superpone.
+ *
+ * Sombras de chips: un ancestro con overflow-x auto/hidden recorta
+ * box-shadow (en CSS overflow-x ≠ visible fuerza overflow-y ≠ visible).
+ * Por eso acá y en FilterBar chips → overflow-visible + flex-wrap;
+ * el padding solo ayuda si el clip ya no existe en el padre directo.
  */
 export function EntityToolbar({ left, right, className }: Props) {
   return (
     <div
       className={cn(
         "flex min-h-10 w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
-        // Aire para shadow-sm de DynamicBadge / botones (no clip por overflow del scroll)
-        "px-0.5 py-2",
+        "px-1 py-2",
         "overflow-visible",
         "tablet:min-h-12",
         className,
