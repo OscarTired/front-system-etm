@@ -5,71 +5,54 @@ import {
   type EntityIcon,
 } from "@/shared/constants/entity-icons"
 
-import {
-  useBadgeColors,
-} from "@/shared/utils/use-badge-colors"
-
-import {
-  cn,
-} from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { cn } from "@/shared/utils/utils"
 
 type Props = {
   label: string
   color?: string
   icon?: EntityIcon
-  // Para contextos más densos que la kanban card (ej. el stepper del
-  // panel de producción, donde el chip convive con texto chico tipo
-  // "(2 de 6)") — mismo chip, versión más chica.
   compact?: boolean
-  /** Solo icono (label en title) cuando el ancho solapa con acciones */
+  /** Solo icono; misma altura que el chip con texto */
   iconOnly?: boolean
+  className?: string
 }
 
-// Chip simple (ícono + label sobre fondo "subtle" del color de la
-// entidad). Es el mismo patrón visual que ya usaba KanbanCardView
-// para stage/status — se extrajo acá para que ambos lugares (kanban
-// card y el panel de producción de la tarea) pinten exactamente el
-// mismo chip en vez de tener el estilo duplicado en dos componentes.
 export function EntityChip({
   label,
   color,
   icon,
   compact = false,
   iconOnly = false,
+  className,
 }: Props) {
-
-  const Icon =
-    icon &&
-    ENTITY_ICONS[icon]
-
-  const badge =
-    useBadgeColors(color ?? "#64748B", "subtle")
+  const Icon = icon && ENTITY_ICONS[icon]
+  const badge = useBadgeColors(color ?? "#64748B", "subtle")
+  const iconSize = compact ? 12 : 15
 
   return (
-
     <div
       title={label}
       aria-label={label}
       className={cn(
-        "inline-flex items-center rounded-lg font-semibold",
+        "inline-flex shrink-0 items-center rounded-lg font-semibold",
+        compact ? "gap-1.5 py-1 text-xs" : "gap-2 py-1.5 text-sm",
         iconOnly
-          ? "justify-center p-1.5"
+          ? compact
+            ? "justify-center px-1.5"
+            : "justify-center px-2.5"
           : compact
-            ? "gap-1.5 px-2 py-1 text-xs"
-            : "gap-2 px-2.5 py-1.5 text-sm",
+            ? "px-2"
+            : "px-2.5",
+        className,
       )}
       style={{
         color: badge.text,
         backgroundColor: badge.background,
       }}
     >
-
-      {Icon && <Icon size={compact || iconOnly ? 12 : 15} />}
-
+      {Icon && <Icon size={iconSize} />}
       {!iconOnly && <span>{label}</span>}
-
     </div>
-
   )
-
 }

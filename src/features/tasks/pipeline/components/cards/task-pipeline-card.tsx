@@ -158,14 +158,25 @@ export function TaskPipelineCard({
       )}
       className="relative"
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={
-          overlayOpen ||
-          overlayLocked
-        }
-        className="block w-full text-left"
+      <div
+        role="presentation"
+        onClick={event => {
+          if (overlayOpen || overlayLocked) return
+          const target = event.target as HTMLElement | null
+          // No toggle si el click viene de un control interactivo del footer
+          if (
+            target?.closest(
+              "button, a, input, textarea, [role='button'], [data-radix-collection-item]",
+            )
+          ) {
+            return
+          }
+          onToggle()
+        }}
+        className={cn(
+          "block w-full cursor-pointer text-left",
+          (overlayOpen || overlayLocked) && "pointer-events-none",
+        )}
       >
         <div
           className={cn(
@@ -187,7 +198,46 @@ export function TaskPipelineCard({
                 task={task}
                 processCode={processCode}
                 hideCommentBadge
-                reserveActionsSpace
+                footerActions={
+                  <div
+                    className="flex items-center gap-1"
+                    onClick={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                  >
+                    <EntityAuditInfo
+                      createdAt={task.createdAt}
+                      updatedAt={task.updatedAt}
+                      createdBy={task.createdBy}
+                      updatedBy={task.updatedBy}
+                    />
+                    <TaskMaterialInfo task={task} />
+                    {processTask.workflowStep && (
+                      <button
+                        type="button"
+                        onClick={event => {
+                          event.stopPropagation()
+                          setCommentsOpen(true)
+                        }}
+                        title={
+                          (processTask.workflowStep?.commentCount ?? 0) > 0
+                            ? `${processTask.workflowStep?.commentCount} mensajes`
+                            : "Mensajes"
+                        }
+                        aria-label="Mensajes"
+                        className={cn(CHROME_ICON_BTN, "relative")}
+                      >
+                        <MessageSquare size={14} strokeWidth={2.25} />
+                        {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
+                          <span className="absolute -right-1 -top-1 flex size-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold tabular-nums text-primary-foreground">
+                            {(processTask.workflowStep?.commentCount ?? 0) > 9
+                              ? "9+"
+                              : processTask.workflowStep?.commentCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                }
               />
             </div>
           ) : (
@@ -198,7 +248,7 @@ export function TaskPipelineCard({
             </div>
           )}
         </div>
-      </button>
+      </div>
 
       {!finalized &&
         isReachedStage && (
@@ -209,59 +259,6 @@ export function TaskPipelineCard({
             onClose={closeOverlay}
           />
         )}
-
-      {/* Antes tenía "!isFinished" acá y se ocultaba del todo para
-          una tarea/paso finalizado o revisado — pero eso también
-          impedía VER el historial de mensajes viejos, no solo
-          agregar nuevos. Ahora el ícono sigue disponible siempre
-          (para poder abrir el historial), y es CommentHistoryDialog
-          el que, en modo readOnly, oculta el composer y las
-          acciones de editar/borrar/responder — se puede ver, no
-          comentar. */}
-      {expanded && !overlayOpen && (
-        <div
-          className="animate-comment-in absolute bottom-3 right-3 z-10 flex items-center gap-1"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <EntityAuditInfo
-            createdAt={task.createdAt}
-            updatedAt={task.updatedAt}
-            createdBy={task.createdBy}
-            updatedBy={task.updatedBy}
-          />
-          <TaskMaterialInfo task={task} />
-          {processTask.workflowStep && (
-            <button
-              type="button"
-              onClick={event => {
-                event.stopPropagation()
-                setCommentsOpen(true)
-              }}
-              title={
-                (processTask.workflowStep?.commentCount ?? 0) > 0
-                  ? `${processTask.workflowStep?.commentCount} mensajes`
-                  : "Mensajes"
-              }
-              aria-label="Mensajes"
-              className={cn(
-                CHROME_ICON_BTN,
-                "relative",
-                longPressEnabled && pressed && "scale-[0.98]",
-              )}
-            >
-              <MessageSquare size={14} strokeWidth={2.25} />
-              {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
-                <span className="absolute -right-1 -top-1 flex size-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold tabular-nums text-primary-foreground">
-                  {(processTask.workflowStep?.commentCount ?? 0) > 9
-                    ? "9+"
-                    : processTask.workflowStep?.commentCount}
-                </span>
-              )}
-            </button>
-          )}
-        </div>
-      )}
 
       {processTask.workflowStep && (
 
