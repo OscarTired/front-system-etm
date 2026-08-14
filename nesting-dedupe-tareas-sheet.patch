@@ -1,0 +1,65 @@
+diff --git a/src/components/ui/sheet.tsx b/src/components/ui/sheet.tsx
+index cae64a8..23470af 100644
+--- a/src/components/ui/sheet.tsx
++++ b/src/components/ui/sheet.tsx
+@@ -80,7 +80,7 @@ export function SheetContent({
+         onOpenAutoFocus={event => event.preventDefault()}
+         className={cn(
+           "fixed inset-y-0 right-0 z-40 flex h-dvh w-full max-w-md flex-col",
+-          "bg-muted shadow-2xl outline-none select-none",
++          "border-l border-border bg-background shadow-2xl outline-none select-none",
+           "data-[state=open]:animate-in data-[state=closed]:animate-out",
+           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+           "data-[state=closed]:duration-200 data-[state=open]:duration-300",
+diff --git a/src/features/nesting/components/nesting-page.tsx b/src/features/nesting/components/nesting-page.tsx
+index e114a33..c5482bf 100644
+--- a/src/features/nesting/components/nesting-page.tsx
++++ b/src/features/nesting/components/nesting-page.tsx
+@@ -703,21 +703,9 @@ export function NestingPage() {
+         }}
+       />
+ 
+-      {/* —— Desktop: título + padding (mismo ritmo que Bitácora) —— */}
++      {/* —— Desktop: sidebar + canvas —— */}
+       {!isCompact && (
+-        <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden px-4 pb-3 pt-1 desktop:px-5">
+-          <header className="mb-1 flex shrink-0 flex-wrap items-center justify-between gap-2">
+-            <div className="flex min-w-0 flex-1 items-center gap-2">
+-              <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+-                NESTING
+-              </h1>
+-              <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+-              <p className="min-w-0 truncate text-sm text-muted-foreground">
+-                Optimización de planchas y piezas
+-              </p>
+-            </div>
+-          </header>
+-        <div className="flex min-h-0 w-full flex-1 gap-3 overflow-hidden">
++        <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
+           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
+             {panel}
+           </aside>
+@@ -797,7 +785,6 @@ export function NestingPage() {
+             )}
+           </div>
+         </div>
+-        </div>
+       )}
+ 
+       {/* —— Mobile: tabs fijos + canvas con alto REAL (absolute) —— */}
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx b/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
+index 01f40a2..0f58752 100644
+--- a/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
+@@ -46,9 +46,8 @@ export function TaskAreaPanelTrigger() {
+           <span
+             className="
+               animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center
+-              rounded-full px-1.5 text-[10px] font-bold
+-              bg-emerald-600 text-white
+-              dark:bg-emerald-500 dark:text-emerald-950
++              rounded-full px-1.5 text-[10px] font-bold select-none
++              bg-background text-foreground shadow-sm ring-1 ring-border
+             "
+           >
+             {pendingCount}

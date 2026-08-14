@@ -80,7 +80,7 @@ export function SheetContent({
         onOpenAutoFocus={event => event.preventDefault()}
         className={cn(
           "fixed inset-y-0 right-0 z-40 flex h-dvh w-full max-w-md flex-col",
-          "bg-muted shadow-2xl outline-none select-none",
+          "border-l border-border bg-background shadow-2xl outline-none select-none",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           "data-[state=closed]:duration-200 data-[state=open]:duration-300",

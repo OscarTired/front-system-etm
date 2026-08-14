@@ -703,21 +703,9 @@ export function NestingPage() {
         }}
       />
 
-      {/* —— Desktop: título + padding (mismo ritmo que Bitácora) —— */}
+      {/* —— Desktop: sidebar + canvas —— */}
       {!isCompact && (
-        <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden px-4 pb-3 pt-1 desktop:px-5">
-          <header className="mb-1 flex shrink-0 flex-wrap items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <h1 className="shrink-0 text-2xl font-bold tracking-widest">
-                NESTING
-              </h1>
-              <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
-              <p className="min-w-0 truncate text-sm text-muted-foreground">
-                Optimización de planchas y piezas
-              </p>
-            </div>
-          </header>
-        <div className="flex min-h-0 w-full flex-1 gap-3 overflow-hidden">
+        <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
             {panel}
           </aside>
@@ -796,7 +784,6 @@ export function NestingPage() {
               </div>
             )}
           </div>
-        </div>
         </div>
       )}
 
