@@ -176,7 +176,7 @@ export function TaskTable({
 
     <>
 
-      <div className="flex flex-col gap-2 pb-2">
+      <div className="mt-2 flex flex-col gap-2 pb-2">
 
         {displayedTasks.map(task => {
 
@@ -217,7 +217,7 @@ export function TaskTable({
 
         {displayedTasks.length === 0 && (
 
-          <div className="flex mt-2 h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
+          <div className="flex h-24 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
             Sin tareas
           </div>
 

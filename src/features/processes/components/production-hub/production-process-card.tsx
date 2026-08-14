@@ -132,7 +132,7 @@ export function ProductionProcessCard({
 
           {processTasks.length === 0 && (
 
-            <div className="flex mt-2 h-12 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
+            <div className="flex h-12 items-center justify-center rounded-xl bg-foreground/5 text-sm text-muted-foreground">
               Sin tareas en {definition.label}
             </div>
 

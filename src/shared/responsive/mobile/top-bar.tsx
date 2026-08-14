@@ -132,8 +132,9 @@ export function TopBar() {
           className="absolute inset-x-0 z-20 px-3 pt-1"
           style={{ top: TOP_BAR_HEIGHT_PX }}
         >
-          {/* Misma separación topbar→contenido que los rows */}
-          <div className="flex items-center gap-2 rounded-xl bg-foreground/5 px-3 py-2">
+          {/* h-10 fijo: con o sin texto la altura no cambia.
+              mb-2 = mismo aire que empty state (mt-2) hacia los rows. */}
+          <div className="mb-2 flex h-10 items-center gap-2 rounded-xl bg-foreground/5 px-3">
             <Search
               size={15}
               strokeWidth={2.2}
@@ -144,18 +145,21 @@ export function TopBar() {
               value={searchValue}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={searchPlaceholder}
-              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
+              className="min-w-0 flex-1 bg-transparent text-sm leading-none text-foreground outline-none placeholder:text-muted-foreground/80"
             />
-            {searchValue ? (
-              <button
-                type="button"
-                aria-label="Limpiar"
-                onClick={() => setSearchQuery("")}
-                className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
-              >
-                <X size={14} strokeWidth={2.2} />
-              </button>
-            ) : null}
+            <button
+              type="button"
+              aria-label="Limpiar"
+              disabled={!searchValue}
+              onClick={() => setSearchQuery("")}
+              className={
+                searchValue
+                  ? "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+                  : "pointer-events-none flex size-7 shrink-0 items-center justify-center rounded-lg opacity-0"
+              }
+            >
+              <X size={14} strokeWidth={2.2} />
+            </button>
           </div>
         </div>
       )}
