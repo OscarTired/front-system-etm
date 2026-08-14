@@ -282,10 +282,17 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
         zIndex: 10000,
       }}
     >
-      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
-        <span className="shrink-0 text-foreground/35">≡</span>
+      <div className="flex w-64 max-w-full items-center justify-end gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
         <div className="min-w-0 overflow-hidden">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
+            {isDuplicateMode && (
+              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                Copiar
+              </span>
+            )}
+            <span className="min-w-0 truncate text-xs font-medium text-foreground">
+              {draggingLog.activityType.label}
+            </span>
             {(() => {
               const Icon = getActivityIcon(draggingLog.activityType.icon)
               return (
@@ -300,16 +307,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
                 </div>
               )
             })()}
-            <span className="min-w-0 truncate text-xs font-medium text-foreground">
-              {draggingLog.activityType.label}
-            </span>
-            {isDuplicateMode && (
-              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-                Copiar
-              </span>
-            )}
           </div>
         </div>
+        <span className="shrink-0 text-foreground/35">≡</span>
       </div>
     </div>
   )

@@ -152,8 +152,8 @@ export function TaskTable({
       reorderTasks(next)
     },
     renderDragLabel: task => (
-      <div className="min-w-0">
-        <div className="flex items-center gap-1.5">
+      <div className="min-w-0 text-right">
+        <div className="flex items-center justify-end gap-1.5">
           <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50">
             {String(task.taskNumber).padStart(3, "0")}
           </span>

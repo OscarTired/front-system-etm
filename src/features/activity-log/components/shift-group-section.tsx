@@ -414,8 +414,8 @@ export function ShiftGroupSection({
                       </div>
                     </div>
 
-                      {/* + a la derecha: mismo chrome que antes, solo lado */}
-                      {!loading && state !== "upcoming" && canCreate && (
+                      {/* + a la derecha; oculto mientras hay drag (desktop hover no lo muestre) */}
+                      {!loading && state !== "upcoming" && canCreate && !draggingLogId && (
                         <button
                           type="button"
                           data-activity-drag-ignore

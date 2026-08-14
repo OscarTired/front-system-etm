@@ -1,0 +1,107 @@
+diff --git a/src/features/activity-log/components/shift-group-section.tsx b/src/features/activity-log/components/shift-group-section.tsx
+index 952e206..8f681d6 100644
+--- a/src/features/activity-log/components/shift-group-section.tsx
++++ b/src/features/activity-log/components/shift-group-section.tsx
+@@ -414,8 +414,8 @@ export function ShiftGroupSection({
+                       </div>
+                     </div>
+ 
+-                      {/* + a la derecha: mismo chrome que antes, solo lado */}
+-                      {!loading && state !== "upcoming" && canCreate && (
++                      {/* + a la derecha; oculto mientras hay drag (desktop hover no lo muestre) */}
++                      {!loading && state !== "upcoming" && canCreate && !draggingLogId && (
+                         <button
+                           type="button"
+                           data-activity-drag-ignore
+diff --git a/src/features/activity-log/hooks/use-activity-drag.tsx b/src/features/activity-log/hooks/use-activity-drag.tsx
+index 4cafa37..2eb799e 100644
+--- a/src/features/activity-log/hooks/use-activity-drag.tsx
++++ b/src/features/activity-log/hooks/use-activity-drag.tsx
+@@ -282,10 +282,17 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+         zIndex: 10000,
+       }}
+     >
+-      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+-        <span className="shrink-0 text-foreground/35">≡</span>
++      <div className="flex w-64 max-w-full items-center justify-end gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+         <div className="min-w-0 overflow-hidden">
+-          <div className="flex items-center gap-2">
++          <div className="flex items-center justify-end gap-2">
++            {isDuplicateMode && (
++              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
++                Copiar
++              </span>
++            )}
++            <span className="min-w-0 truncate text-xs font-medium text-foreground">
++              {draggingLog.activityType.label}
++            </span>
+             {(() => {
+               const Icon = getActivityIcon(draggingLog.activityType.icon)
+               return (
+@@ -300,16 +307,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+                 </div>
+               )
+             })()}
+-            <span className="min-w-0 truncate text-xs font-medium text-foreground">
+-              {draggingLog.activityType.label}
+-            </span>
+-            {isDuplicateMode && (
+-              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+-                Copiar
+-              </span>
+-            )}
+           </div>
+         </div>
++        <span className="shrink-0 text-foreground/35">≡</span>
+       </div>
+     </div>
+   )
+diff --git a/src/features/projects/table/project-table.tsx b/src/features/projects/table/project-table.tsx
+index cdee378..7666f37 100644
+--- a/src/features/projects/table/project-table.tsx
++++ b/src/features/projects/table/project-table.tsx
+@@ -136,8 +136,8 @@ export function ProjectTable({
+       reorderProjects(next)
+     },
+     renderDragLabel: project => (
+-      <div className="min-w-0">
+-        <div className="flex items-center gap-1.5">
++      <div className="min-w-0 text-right">
++        <div className="flex items-center justify-end gap-1.5">
+           <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50">
+             {project.projectCode}
+           </span>
+diff --git a/src/features/tasks/table/task-table.tsx b/src/features/tasks/table/task-table.tsx
+index 47e490f..20e0073 100644
+--- a/src/features/tasks/table/task-table.tsx
++++ b/src/features/tasks/table/task-table.tsx
+@@ -152,8 +152,8 @@ export function TaskTable({
+       reorderTasks(next)
+     },
+     renderDragLabel: task => (
+-      <div className="min-w-0">
+-        <div className="flex items-center gap-1.5">
++      <div className="min-w-0 text-right">
++        <div className="flex items-center justify-end gap-1.5">
+           <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50">
+             {String(task.taskNumber).padStart(3, "0")}
+           </span>
+diff --git a/src/shared/dnd/use-row-drag-reorder.tsx b/src/shared/dnd/use-row-drag-reorder.tsx
+index 26a9a8e..470bab2 100644
+--- a/src/shared/dnd/use-row-drag-reorder.tsx
++++ b/src/shared/dnd/use-row-drag-reorder.tsx
+@@ -355,11 +355,11 @@ export function useRowDragReorder<T>({
+             zIndex: 10000,
+           }}
+         >
+-          <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+-            <span className="shrink-0 text-foreground/35">≡</span>
+-            <div className="min-w-0 overflow-hidden">
++          <div className="flex w-64 max-w-full items-center justify-end gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
++            <div className="min-w-0 overflow-hidden text-right">
+               {renderDragLabel(drag.item)}
+             </div>
++            <span className="shrink-0 text-foreground/35">≡</span>
+           </div>
+         </div>
+       </>
