@@ -207,10 +207,10 @@ export function DynamicBadge({
                   "absolute inset-0 flex cursor-pointer items-center justify-center rounded-md",
                   "transition-colors duration-150",
                   "hover:bg-black/10 dark:hover:bg-white/15",
-                  "opacity-100 tablet:opacity-90 tablet:group-hover:opacity-100",
+                  "opacity-100",
                 )}
-                // No hereda textColor pastel del badge: contraste fijo legible
-                style={{ color: "var(--foreground)" }}
+                // Mismo ink del badge (actionColor), no foreground neutro
+                style={{ color: actionColor }}
               >
                 <X
                   size={14}
