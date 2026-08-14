@@ -703,9 +703,21 @@ export function NestingPage() {
         }}
       />
 
-      {/* —— Desktop: sidebar + canvas —— */}
+      {/* —— Desktop: título + padding (mismo ritmo que Bitácora) —— */}
       {!isCompact && (
-        <div className="flex h-full min-h-0 w-full flex-1 gap-3 overflow-hidden">
+        <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden px-4 pb-3 pt-1 desktop:px-5">
+          <header className="mb-1 flex shrink-0 flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+                NESTING
+              </h1>
+              <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+              <p className="min-w-0 truncate text-sm text-muted-foreground">
+                Optimización de planchas y piezas
+              </p>
+            </div>
+          </header>
+        <div className="flex min-h-0 w-full flex-1 gap-3 overflow-hidden">
           <aside className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
             {panel}
           </aside>
@@ -785,12 +797,13 @@ export function NestingPage() {
             )}
           </div>
         </div>
+        </div>
       )}
 
       {/* —— Mobile: tabs fijos + canvas con alto REAL (absolute) —— */}
       {isCompact && (
         <div className="absolute inset-0">
-          <div className="absolute inset-x-0 top-0 z-10 flex h-11 items-center gap-1.5 px-1 pt-1.5">
+          <div className="absolute inset-x-0 top-2 z-10 flex h-11 items-center gap-1.5 px-2">
             <div className="min-w-0 flex-1">
               {project.sheetGroups.length > 0 ? (
                 <SheetTabs
@@ -818,7 +831,7 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl border border-border bg-zinc-100 shadow-sm dark:border-border/40 dark:bg-neutral-950">
+          <div className="absolute inset-x-0 bottom-0 top-14 mx-1 mb-1 overflow-hidden rounded-xl border border-border bg-zinc-100 shadow-sm dark:border-border/40 dark:bg-neutral-950">
             <div className="absolute inset-px overflow-hidden rounded-4xl">
               {!project.sessionReady ? (
                 <WorkspaceSpinner />

@@ -167,7 +167,7 @@ export function ActivityTypesPageContent() {
           await queryClient.invalidateQueries({ queryKey: ["activity-types"] })
         }}
       >
-        <div className="mb-1 shrink-0">
+        <div className="mb-1 shrink-0 max-md:mt-2">
           <EntityToolbar
             left={
               <div className="flex flex-wrap items-center gap-2 py-1">

@@ -234,7 +234,7 @@ export function RolePermissionsPageContent() {
   // AppListScroll; para desktop se sigue mostrando afuera, ya que ahí
   // no hay TopBar flotante.
   const searchToolbar = (
-    <div className="mb-1 shrink-0">
+    <div className={cn("mb-1 shrink-0", isMobile && "mt-2")}>
       <EntityToolbar
         left={
           <div className="flex flex-wrap items-center gap-2 py-1">

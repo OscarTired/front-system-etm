@@ -139,8 +139,10 @@ export function AgendaMonthView({
    * si hay más eventos de los que caben en 1fr.
    */
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col px-0.5 pb-1">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-card shadow-2xl backdrop-blur-xl">
+    // px lateral: el ScrollArea padre tiene overflow-x-hidden y corta box-shadow
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col px-2 pb-3 pt-0.5">
+      <div className="flex min-h-0 flex-1 flex-col rounded-2xl shadow-2xl">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-card backdrop-blur-xl">
       <div className="grid shrink-0 grid-cols-7 border-b border-border">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
@@ -267,6 +269,7 @@ export function AgendaMonthView({
           </div>
         ))}
       </div>
+        </div>
       </div>
     </div>
   )
