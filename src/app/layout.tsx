@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className="h-full overflow-hidden"
+      className="dark h-full overflow-hidden"
       suppressHydrationWarning
     >
       <head>

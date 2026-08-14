@@ -76,7 +76,7 @@ export function AppLoadingScreen({
 
         <div className="mt-3 flex h-5 items-center justify-center gap-2">
           {/* Cyan/primary del tema — legible en light y dark */}
-          <span className="text-[12px] font-medium uppercase tracking-[0.2em] text-blue-700 dark:text-amber-300">
+          <span className="text-[12px] font-medium uppercase tracking-[0.2em] text-primary dark:text-amber-300">
             Cargando
           </span>
 
@@ -84,7 +84,7 @@ export function AppLoadingScreen({
             {[0, 1, 2].map(dot => (
               <span
                 key={dot}
-                className={`h-1 w-1 rounded-full bg-blue-700 dark:bg-amber-300 ${mounted ? "animate-bounce" : ""}`}
+                className={`h-1 w-1 rounded-full bg-primary dark:bg-amber-300 ${mounted ? "animate-bounce" : ""}`}
                 style={{
                   animationDelay: `${dot * -0.15}s`,
                 }}
