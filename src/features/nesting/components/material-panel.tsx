@@ -155,7 +155,7 @@ export function MaterialPanel({
             <div className="grid grid-cols-2 gap-2">
               <Field label="Ancho (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-center text-base text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   inputMode="decimal"
                   value={settings.sheetWidth}
                   onChange={(e) => onChange({ sheetWidth: e.target.value })}
@@ -164,7 +164,7 @@ export function MaterialPanel({
 
               <Field label="Alto (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-center text-base text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   inputMode="decimal"
                   value={settings.sheetHeight}
                   onChange={(e) => onChange({ sheetHeight: e.target.value })}
@@ -173,7 +173,7 @@ export function MaterialPanel({
 
               <Field label="Margen (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-center text-base text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   inputMode="decimal"
                   value={settings.margin}
                   onChange={(e) => onChange({ margin: e.target.value })}
@@ -182,7 +182,7 @@ export function MaterialPanel({
 
               <Field label="Separación (mm)">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-center text-base text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   inputMode="decimal"
                   value={settings.separacion}
                   onChange={(e) => onChange({ separacion: e.target.value })}
@@ -201,7 +201,7 @@ export function MaterialPanel({
             <div className="grid grid-cols-2 gap-2 mb-2">
               <Field label="Proyecto">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-base truncate uppercase text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   placeholder="001-M"
                   value={settings.proyecto}
                   onChange={(e) => onChange({ proyecto: e.target.value })}
@@ -209,7 +209,7 @@ export function MaterialPanel({
               </Field>
               <Field label="Cliente">
                 <Input
-                  className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="h-9 rounded-lg border-0 bg-background/50 text-base truncate uppercase text-foreground tablet:text-xs focus-visible:ring-1 focus-visible:ring-primary/30"
                   placeholder="ETM"
                   value={settings.cliente}
                   onChange={(e) => onChange({ cliente: e.target.value })}
@@ -226,7 +226,7 @@ export function MaterialPanel({
                   </div>
                 ) : (
                   <Input
-                    className="h-8 rounded-lg border-0 bg-background/50 text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+                    className="h-9 rounded-lg border-0 bg-background/50 text-base tablet:text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
                     placeholder="INOX"
                     value={settings.material}
                     onChange={(e) => onChange({ material: e.target.value })}
@@ -242,7 +242,7 @@ export function MaterialPanel({
                   </div>
                 ) : (
                   <Input
-                    className="h-8 rounded-lg border-0 bg-background/50 text-center text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+                    className="h-9 rounded-lg border-0 bg-background/50 text-base tablet:text-xs truncate uppercase text-foreground focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
                     inputMode="decimal"
                     placeholder="Ej: 3.0 mm"
                     value={settings.espesor}

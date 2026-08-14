@@ -221,7 +221,16 @@ export function useNestingProject() {
     }
   }, [sheetGroups, sheetConfig])
 
-  const handleRemove = useCallback((id: string) => setRows((prev) => prev.filter((r) => r.id !== id)), [])
+  const handleRemove = useCallback((id: string) => {
+    setRows((prev) => {
+      const next = prev.filter((r) => r.id !== id)
+      if (next.length === 0) {
+        clearSheets()
+        sheetEditsRef.current = {}
+      }
+      return next
+    })
+  }, [clearSheets])
 
   const handleClearAll = useCallback(() => {
     setRows([])
