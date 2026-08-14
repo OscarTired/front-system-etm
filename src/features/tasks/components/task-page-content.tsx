@@ -38,6 +38,8 @@ import { TaskSortButton } from "@/shared/sorting/components/task-sort-button"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
 import { TaskCreateDialAction } from "@/features/tasks/components/actions/task-actions"
+import { FabTrigger } from "@/shared/ui/speed-dial-fab/fab-trigger"
+import { LayoutGrid, Rows3 } from "lucide-react"
 
 import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
@@ -98,6 +100,65 @@ export function TaskPageContent({
     await exportExcel(scope)
   }
 
+  const toolbar = (
+    <div className="mb-1 shrink-0">
+      <EntityToolbar
+        left={
+          <AdaptiveActionBar
+            pinned={
+              <>
+                <BackToProjectButton />
+                <EntityToolbarSearch value={search} onChange={setSearch} />
+                {isMobile && (
+                  <FilterBar module="tasks" showAddButton={false} />
+                )}
+              </>
+            }
+            actions={[
+              <FilterBar
+                key="filter"
+                module="tasks"
+                alwaysExpanded={isMobile}
+                showChips={!isMobile}
+              />,
+              <TaskSortButton key="sort" />,
+              <HistoryToggleButton
+                key="history"
+                count={completedCount}
+                active={showHistory}
+                onClick={() => setShowHistory(v => !v)}
+              />,
+              <ExportMenu
+                key="export"
+                scopes={REPORT_EXPORT_SCOPES}
+                onExport={handleExport}
+              />,
+              ...(isMobile
+                ? [
+                    <FabTrigger
+                      key="view"
+                      icon={view === "kanban" ? Rows3 : LayoutGrid}
+                      label={view === "kanban" ? "CARD" : "KANBAN"}
+                      active={view === "kanban"}
+                      onClick={() =>
+                        setView(view === "kanban" ? "card" : "kanban")
+                      }
+                    />,
+                    <TaskCreateDialAction key="create" />,
+                  ]
+                : []),
+            ]}
+            right={
+              !isMobile && (
+                <TaskViewToggle value={view} onChange={setView} />
+              )
+            }
+          />
+        }
+      />
+    </div>
+  )
+
   return (
     <div
       className={cn(
@@ -105,55 +166,13 @@ export function TaskPageContent({
         !isMobile && view === "kanban" ? "overflow-hidden" : "",
       )}
     >
-      {view === "card" && (
+      {view === "card" ? (
         <AppListScroll
-        onRefresh={async () => {
-          await queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        }}
-      >
-          <div className="mb-1">
-            <EntityToolbar
-              left={
-                <AdaptiveActionBar
-                  pinned={
-                    <>
-                      <BackToProjectButton />
-                      <EntityToolbarSearch value={search} onChange={setSearch} />
-                      {isMobile && (
-                        <FilterBar module="tasks" showAddButton={false} />
-                      )}
-                    </>
-                  }
-                  actions={[
-                    <FilterBar
-                      key="filter"
-                      module="tasks"
-                      alwaysExpanded={isMobile}
-                      showChips={!isMobile}
-                    />,
-                    <TaskSortButton key="sort" />,
-                    <HistoryToggleButton
-                      key="history"
-                      count={completedCount}
-                      active={showHistory}
-                      onClick={() => setShowHistory(v => !v)}
-                    />,
-                    <ExportMenu
-                      key="export"
-                      scopes={REPORT_EXPORT_SCOPES}
-                      onExport={handleExport}
-                    />,
-                    ...(isMobile ? [<TaskCreateDialAction key="create" />] : []),
-                  ]}
-                  right={
-                    !isMobile && (
-                      <TaskViewToggle value={view} onChange={setView} />
-                    )
-                  }
-                />
-              }
-            />
-          </div>
+          onRefresh={async () => {
+            await queryClient.invalidateQueries({ queryKey: ["tasks"] })
+          }}
+        >
+          {toolbar}
           <EntityExpandProvider>
             <TaskTable
               tasks={tasks}
@@ -167,16 +186,17 @@ export function TaskPageContent({
             />
           </EntityExpandProvider>
         </AppListScroll>
-      )}
-
-      {view === "kanban" && (
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <TaskPipelineBoard
-            tasks={pipelineTasks}
-            kpiTasks={pipelineKpiTasks}
-            loading={loading}
-          />
-        </div>
+      ) : (
+        <>
+          {toolbar}
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TaskPipelineBoard
+              tasks={pipelineTasks}
+              kpiTasks={pipelineKpiTasks}
+              loading={loading}
+            />
+          </div>
+        </>
       )}
     </div>
   )

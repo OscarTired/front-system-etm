@@ -13,7 +13,13 @@ import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 
 import {
   ChevronRight,
+  MessageSquare,
 } from "lucide-react"
+
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+import { TaskMaterialInfo } from "@/features/tasks/components/task-material-info"
+import { CHROME_ICON_BTN } from "@/shared/ui/actions/icon-action"
+import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
 
 import {
   useResponsive,
@@ -106,6 +112,8 @@ export function ProjectTaskRow({
     setLocalExpanded,
   ] =
     useState(false)
+
+  const [commentsOpen, setCommentsOpen] = useState(false)
 
   const expanded = expandedProp ?? localExpanded
 
@@ -355,6 +363,48 @@ export function ProjectTaskRow({
                 processCode={
                   activeProcessCode
                 }
+
+                footerActions={
+                  <div
+                    className="flex items-center gap-1"
+                    onClick={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                  >
+                    <EntityAuditInfo
+                      createdAt={task.createdAt}
+                      updatedAt={task.updatedAt}
+                      createdBy={task.createdBy}
+                      updatedBy={task.updatedBy}
+                    />
+                    <TaskMaterialInfo task={task} />
+                    {processTask?.workflowStep && (
+                      <button
+                        type="button"
+                        onClick={event => {
+                          event.stopPropagation()
+                          setCommentsOpen(true)
+                        }}
+                        title={
+                          (processTask.workflowStep?.commentCount ?? 0) > 0
+                            ? `${processTask.workflowStep?.commentCount} mensajes`
+                            : "Mensajes"
+                        }
+                        aria-label="Mensajes"
+                        className={cn(CHROME_ICON_BTN, "relative")}
+                      >
+                        <MessageSquare size={14} strokeWidth={2.25} />
+                        {(processTask.workflowStep?.commentCount ?? 0) > 0 && (
+                          <span className="absolute -right-1 -top-1 flex size-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold tabular-nums text-primary-foreground">
+                            {(processTask.workflowStep?.commentCount ?? 0) > 9
+                              ? "9+"
+                              : processTask.workflowStep?.commentCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                }
+
               />
             </div>
           </div>
@@ -426,6 +476,18 @@ export function ProjectTaskRow({
       )}
 
       {/* Desktop: la card entera / click navega; flecha solo en móvil */}
+      {processTask.workflowStep && (
+        <CommentHistoryDialog
+          target={{
+            scope: "workflowStep",
+            workflowStepId: processTask.workflowStep.id,
+          }}
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
+          readOnly={isWorkflowCompleted(task.workflowSteps)}
+        />
+      )}
+
       {!overlayOpen && isMobile && (
         <button
           type="button"
