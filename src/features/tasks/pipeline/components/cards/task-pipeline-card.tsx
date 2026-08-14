@@ -10,6 +10,9 @@ import {
   MessageSquare,
 } from "lucide-react"
 
+import { TaskMaterialInfo } from "@/features/tasks/components/task-material-info"
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+
 import {
   cn,
 } from "@/shared/utils/utils"
@@ -213,6 +216,22 @@ export function TaskPipelineCard({
           el que, en modo readOnly, oculta el composer y las
           acciones de editar/borrar/responder — se puede ver, no
           comentar. */}
+      {expanded && !overlayOpen && (
+        <div
+          className="absolute bottom-3 right-12 z-10 flex items-center gap-1"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
+          <TaskMaterialInfo task={task} />
+        </div>
+      )}
+
       {expanded &&
         !overlayOpen &&
         processTask.workflowStep && (

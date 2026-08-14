@@ -21,6 +21,8 @@ import { processAccess } from "../access/process-access"
 
 import { ProcessOperatorCell } from "../components/cells/process-operator-cell"
 import { ProcessRowActions } from "../components/actions/process-row-actions"
+import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+import { TaskMaterialInfo } from "@/features/tasks/components/task-material-info"
 import { ProcessExpandedRow } from "../components/expanded-row/process-expanded-row"
 
 function EntityIconBadge({
@@ -227,6 +229,22 @@ export function ProcessMobileCard({
               status={workflowAccess.status(processTask)}
               processCode={processCode}
             />
+          </div>
+        )}
+
+        {expanded && (
+          <div
+            className="flex shrink-0 items-center gap-1 pr-0.5"
+            onClick={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <EntityAuditInfo
+              createdAt={task.createdAt}
+              updatedAt={task.updatedAt}
+              createdBy={task.createdBy}
+              updatedBy={task.updatedBy}
+            />
+            <TaskMaterialInfo task={task} />
           </div>
         )}
 

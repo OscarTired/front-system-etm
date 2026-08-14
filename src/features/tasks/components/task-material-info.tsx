@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { CHROME_ICON_BTN } from "@/shared/ui/actions/icon-action"
 import { cn } from "@/shared/utils/utils"
 import type { Task } from "../types/task.types"
 import { getTaskPiecesTotal } from "../utils/task-material-summary"
@@ -41,11 +42,9 @@ export function TaskMaterialInfo({
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           className={cn(
-            "relative flex shrink-0 items-center justify-center",
-            "bg-muted text-foreground/80 shadow-sm",
-            "transition-colors hover:bg-muted/80 hover:text-foreground",
-            "active:bg-muted/70",
-            isMd ? "size-9 rounded-xl" : "size-7 rounded-lg",
+            CHROME_ICON_BTN,
+            "relative",
+            isMd && "size-9 rounded-xl",
             className,
           )}
         >

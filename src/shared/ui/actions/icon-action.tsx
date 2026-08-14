@@ -1,100 +1,57 @@
 "use client"
 
-import type{
-  LucideIcon,
-}from"lucide-react"
+import type { LucideIcon } from "lucide-react"
 
-import{
-  cn,
-}from"@/shared/utils/utils"
+import { cn } from "@/shared/utils/utils"
 
-type Props={
+/** Superficie compartida: info / material / editar / borrar */
+export const CHROME_ICON_BTN =
+  "flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 shadow-sm shadow-black/15 ring-1 ring-black/[0.04] transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70 dark:shadow-black/40 dark:ring-white/10"
 
-  icon:LucideIcon
-
-  variant?:"default"|"danger"
-
-  disabled?:boolean
-
-  onClick:(
-
-    event:React.MouseEvent<HTMLButtonElement>
-
-  )=>void
-
+type Props = {
+  icon: LucideIcon
+  variant?: "default" | "danger"
+  disabled?: boolean
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
+  className?: string
+  "aria-label"?: string
 }
 
 export function IconAction({
-
-  icon:Icon,
-
-  variant="default",
-
-  disabled=false,
-
+  icon: Icon,
+  variant = "default",
+  disabled = false,
   onClick,
+  className,
+  "aria-label": ariaLabel,
+}: Props) {
+  const danger = variant === "danger"
 
-}:Props){
-
-  const danger=
-    variant==="danger"
-
-  return(
-
+  return (
     <button
-
       type="button"
-
       disabled={disabled}
-
-      onPointerDown={event=>{
-
+      aria-label={ariaLabel}
+      onPointerDown={event => {
         event.preventDefault()
         event.stopPropagation()
-
       }}
-
-      onClick={event=>{
-
+      onClick={event => {
         event.preventDefault()
         event.stopPropagation()
-
-        if(disabled){
-          return
-        }
-
+        if (disabled) return
         onClick(event)
-
       }}
-
       className={cn(
-
-        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition",
-
-        disabled
-
-          ?"cursor-not-allowed opacity-35"
-
-          :danger
-
-            ?"text-muted-foreground/80 hover:bg-red-500/10 hover:text-red-400"
-
-            :"text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-
+        CHROME_ICON_BTN,
+        disabled && "cursor-not-allowed opacity-35",
+        !disabled &&
+          danger &&
+          "hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400",
+        className,
       )}
-
     >
-
-      <Icon
-
-        size={16}
-
-        strokeWidth={2.4}
-
-      />
-
+      <Icon size={14} strokeWidth={2.25} />
     </button>
-
   )
-
 }

@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { formatDateTime } from "@/shared/utils/date-format"
+import { CHROME_ICON_BTN } from "@/shared/ui/actions/icon-action"
 import { cn } from "@/shared/utils/utils"
 
 type AuditUser = { id: string; name: string }
@@ -45,13 +46,7 @@ export function EntityAuditInfo({
           title="Auditoría"
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
-          className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-lg",
-            "bg-muted text-foreground/80 shadow-sm",
-            "transition-colors hover:bg-muted/80 hover:text-foreground",
-            "active:bg-muted/70",
-            className,
-          )}
+          className={cn(CHROME_ICON_BTN, className)}
         >
           <Info size={14} strokeWidth={2.25} />
         </button>
