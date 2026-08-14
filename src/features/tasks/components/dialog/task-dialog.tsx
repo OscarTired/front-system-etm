@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Package, Plus } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
@@ -383,13 +383,35 @@ export function TaskDialog({
       <button
         type="button"
         onClick={addMaterialLine}
-        className="inline-flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+        aria-label={
+          materialQty > 1
+            ? `Añadir ${materialQty} materiales`
+            : "Añadir material"
+        }
+        title="Añadir material"
+        className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-foreground/5 px-3 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
       >
-        <Plus size={15} strokeWidth={2.5} />
-        Añadir material
-        {materialQty > 1 ? (
-          <span className="tabular-nums text-foreground/80">×{materialQty}</span>
-        ) : null}
+        {isMobile ? (
+          <>
+            <Plus size={16} strokeWidth={2.5} />
+            <Package size={16} strokeWidth={2} />
+            {materialQty > 1 ? (
+              <span className="text-xs font-semibold tabular-nums text-foreground/80">
+                ×{materialQty}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Plus size={15} strokeWidth={2.5} />
+            Añadir material
+            {materialQty > 1 ? (
+              <span className="tabular-nums text-foreground/80">
+                ×{materialQty}
+              </span>
+            ) : null}
+          </>
+        )}
       </button>
     </div>
   ) : undefined
