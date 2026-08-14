@@ -12,7 +12,7 @@ type Props = {
   showCollapseButton?: boolean
 }
 
-/** X sobre glass de dominio — tokens on-glass, no muted del tema de página. */
+/** Cerrar indicadores — ink on-glass, no muted de página. */
 export function CollapseIndicatorsButton({
   onClick,
   className,
@@ -26,7 +26,7 @@ export function CollapseIndicatorsButton({
       onClick={onClick}
       aria-label="Ocultar indicadores"
       className={cn(
-        "absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full",
+        "flex size-8 shrink-0 items-center justify-center rounded-full",
         "text-on-glass-muted transition-colors duration-150",
         "hover:bg-on-glass-foreground/10 hover:text-on-glass-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-glass-foreground/30",
@@ -52,9 +52,12 @@ export function CollapsibleSummaryPanel({
           {collapsed}
         </div>
       ) : (
-        <div className="relative w-full min-w-0 animate-comment-in">
+        <div className="flex w-full min-w-0 animate-comment-in flex-col gap-1.5">
+          {/* Fila propia: no absolute sobre la última KPI card */}
           {showCollapseButton && (
-            <CollapseIndicatorsButton onClick={onCollapse} />
+            <div className="flex w-full justify-end pr-0.5">
+              <CollapseIndicatorsButton onClick={onCollapse} />
+            </div>
           )}
           <div className="w-full min-w-0">{children}</div>
         </div>

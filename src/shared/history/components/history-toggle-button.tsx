@@ -19,16 +19,18 @@ export function HistoryToggleButton({ count, active, onClick }: Props) {
       active={active}
       onClick={onClick}
       badge={
+        count > 0 ? (
         <span
           className={cn(
             "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold select-none transition-colors duration-200",
-            active
-              ? "animate-history-bounce bg-emerald-600 text-white shadow-lg dark:bg-emerald-500 dark:text-emerald-950"
-              : "bg-foreground/5 text-foreground/70",
+            // Siempre contraste sobre el FAB (bg-foreground); no se pierde inactivo
+            "bg-primary text-primary-foreground shadow-sm",
+            active && "animate-history-bounce ring-2 ring-primary/40",
           )}
         >
-          {count}
+          {count > 9 ? "9+" : count}
         </span>
+        ) : undefined
       }
     />
   )

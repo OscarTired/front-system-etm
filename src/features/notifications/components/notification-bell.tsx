@@ -55,9 +55,6 @@ export function NotificationBell({
   const {
     notifications,
     loading,
-    loadMore,
-    hasMore,
-    loadingMore,
   } = useNotifications(open)
 
   const { count } = useUnreadCount()
@@ -217,16 +214,6 @@ export function NotificationBell({
                 />
               ))}
 
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => loadMore()}
-                  disabled={loadingMore}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
-                >
-                  {loadingMore ? <Spinner size={12} /> : "Cargar más"}
-                </button>
-              )}
             </div>
           )}
         </ScrollArea>

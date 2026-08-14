@@ -728,7 +728,7 @@ export function NestingPage() {
                 />
               ) : null}
             </div>
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-neutral-950">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-neutral-950">
               <div className="absolute inset-px overflow-hidden rounded-4xl">
                 {!project.sessionReady ? (
                   <WorkspaceSpinner />
@@ -750,8 +750,13 @@ export function NestingPage() {
                     sheetKey={activeGroupIndex}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-foreground/55">
-                    Importa una pieza o presiona Nestear
+                  <div className="flex h-full flex-col items-center justify-center gap-1.5 px-6 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Sin piezas en la plancha
+                    </p>
+                    <p className="max-w-xs text-xs leading-relaxed text-muted-foreground/80">
+                      Importa una pieza desde el panel para nestearla.
+                    </p>
                   </div>
                 )}
               </div>
@@ -819,7 +824,7 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-neutral-950">
+          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-neutral-950">
             <div className="absolute inset-px overflow-hidden rounded-4xl">
               {!project.sessionReady ? (
                 <WorkspaceSpinner />
@@ -841,11 +846,18 @@ export function NestingPage() {
                   sheetKey={activeGroupIndex}
                 />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-foreground/55">
-                  <p>Importa una pieza o presiona Nestear</p>
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Sin piezas en la plancha
+                    </p>
+                    <p className="max-w-xs text-xs leading-relaxed text-muted-foreground/80">
+                      Importa una pieza desde el panel para nestearla.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="rounded-lg bg-foreground/10 px-3 py-1.5 text-xs text-foreground"
+                    className="rounded-lg bg-foreground/10 px-3 py-1.5 text-xs font-medium text-foreground"
                     onClick={() => setIsMobilePanelOpen(true)}
                   >
                     Abrir panel
