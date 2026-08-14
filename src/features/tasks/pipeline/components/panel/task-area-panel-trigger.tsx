@@ -47,7 +47,7 @@ export function TaskAreaPanelTrigger() {
             className="
               animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center
               rounded-full px-1 text-[10px] font-bold select-none
-              bg-background text-foreground shadow-sm ring-1 ring-border
+              bg-primary text-primary-foreground shadow-sm
             "
           >
             {pendingCount > 9 ? "9+" : pendingCount}
