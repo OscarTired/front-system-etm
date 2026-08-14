@@ -272,10 +272,7 @@ export function MaterialPanel({
               <span className="flex flex-col gap-0.5">
                 <span className="text-xs font-medium text-foreground">Empaquetado preciso</span>
                 <span className="text-[10px] leading-snug text-muted-foreground">
-                  Usa el contorno real de cada pieza (incluye calados) en vez
-                  de su rectángulo — mejor aprovechamiento de plancha, pero
-                  el cálculo de Nestear tarda notablemente más, sobre todo
-                  combinado con rotación libre.
+                  Usa el contorno real de cada pieza, mejor aprovechamiento de plancha, pero lento para nesteo.
                 </span>
               </span>
               <span
