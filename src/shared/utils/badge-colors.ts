@@ -245,17 +245,40 @@ export function getProcessCardTextColor(
   return getBadgeColors(hex, "subtle").text
 }
 
-/** Superficie glass de dominio (KPI, process cards, workflow). */
+/**
+ * Superficie glass de dominio (KPI, process cards, pintura).
+ *
+ * Ambos stops del gradient llevan el hex de dominio — si el segundo
+ * fuera solo --process-card-end, negros/grises de catálogo se lavan a
+ * plata y el texto calculado para el stop oscuro queda ilegible a la
+ * derecha (blanco sobre claro).
+ *
+ * Texto: contraste WCAG contra el stop MÁS CLARO del card (peor caso).
+ */
 export function getGlassSurface(
   hex: string,
   theme?: "light" | "dark",
 ) {
   const c = getBadgeColors(hex, "subtle", theme)
+  const isLight = theme === "light" || (theme == null && typeof document !== "undefined"
+    && !document.documentElement.classList.contains("dark"))
+
+  // Identidad del color de catálogo en ambos extremos (más fuerte al inicio).
+  const startMix = isLight ? 0.38 : 0.48
+  const endMix = isLight ? 0.18 : 0.28
+
+  const start = blendOnChipSurface(hex, startMix)
+  const end = blendOnChipSurface(hex, endMix)
+
+  // Texto legible en el peor punto (stop más claro = end).
+  const text = getChipText(hex, end)
+  const textMuted = withAlpha(text, 0.72)
+
   return {
-    background: `linear-gradient(135deg, ${c.background}, var(--process-card-end))`,
-    backgroundInset: `linear-gradient(135deg, ${c.background}, color-mix(in oklab, var(--on-glass-foreground) 4%, var(--process-card-end)))`,
-    text: c.text,
-    textMuted: (c as { textMuted?: string }).textMuted ?? "var(--on-glass-muted)",
-    textFaint: "var(--on-glass-faint)",
+    background: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
+    backgroundInset: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
+    text,
+    textMuted,
+    textFaint: withAlpha(text, 0.45),
   }
 }

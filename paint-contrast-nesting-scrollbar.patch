@@ -1,0 +1,194 @@
+diff --git a/src/features/nesting/components/nesting-panel.tsx b/src/features/nesting/components/nesting-panel.tsx
+index 660bd47..3a650f9 100644
+--- a/src/features/nesting/components/nesting-panel.tsx
++++ b/src/features/nesting/components/nesting-panel.tsx
+@@ -64,17 +64,17 @@ export function NestingPanel({
+           </div>
+         )}
+         {activePanel === "project-material" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
+             {projectMaterial}
+           </div>
+         )}
+         {activePanel === "layers" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
+             {layers}
+           </div>
+         )}
+         {activePanel === "inspector" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
+             {inspector}
+           </div>
+         )}
+diff --git a/src/shared/ui/mini-card/process-mini-card.tsx b/src/shared/ui/mini-card/process-mini-card.tsx
+index 978bccd..4e40532 100644
+--- a/src/shared/ui/mini-card/process-mini-card.tsx
++++ b/src/shared/ui/mini-card/process-mini-card.tsx
+@@ -18,7 +18,7 @@ type Row = {
+ type CardProps = {
+   label: string
+   icon: LucideIcon
+-  /** Hex de dominio (proceso o color de pintura). Pasa por theme via getGlassSurface. */
++  /** Hex de dominio (proceso o color de pintura de catálogo). */
+   color: string
+   rows: Row[]
+   size?: "default" | "large"
+@@ -35,9 +35,9 @@ export function ProcessMiniCard({
+   const resolved = useThemeStore(s => s.resolved)
+ 
+   const glass = getGlassSurface(color, resolved)
+-  const textColor = glass.text
+-  // Labels sobre glass: token de tema, no muted de página (rompe contraste en light).
+-  const labelColor = "var(--on-glass-muted)"
++  const titleColor = glass.text
++  const labelColor = glass.textMuted
++  const valueColor = glass.text
+   const isLarge = size === "large"
+ 
+   return (
+@@ -50,12 +50,7 @@ export function ProcessMiniCard({
+             ? "gap-3 p-4"
+             : "min-h-43.5 p-5",
+       )}
+-      style={{
+-        // Primer stop = blend themed del hex; segundo = fin de card
+-        // mezclado con un poco del hex para que negros/grises de pintura
+-        // no se laven a plata en light.
+-        background: glass.backgroundInset,
+-      }}
++      style={{ background: glass.background }}
+     >
+       <div
+         className={cn(
+@@ -68,15 +63,14 @@ export function ProcessMiniCard({
+             "min-w-0 truncate font-bold uppercase tracking-[0.18em]",
+             isLarge ? "text-sm" : "text-xs",
+           )}
+-          style={{ color: textColor }}
++          style={{ color: titleColor }}
+         >
+           {label}
+         </span>
+-
+         <Icon
+           size={isLarge ? 26 : 20}
+           className="shrink-0"
+-          style={{ color: textColor }}
++          style={{ color: titleColor }}
+         />
+       </div>
+ 
+@@ -95,10 +89,7 @@ export function ProcessMiniCard({
+               </p>
+               <div
+                 className="min-w-0 truncate text-right text-base font-semibold leading-tight"
+-                style={{
+-                  color:
+-                    row.editable === false ? labelColor : textColor,
+-                }}
++                style={{ color: valueColor }}
+               >
+                 {row.value}
+               </div>
+@@ -120,21 +111,10 @@ export function ProcessMiniCard({
+               </p>
+               <div
+                 className="min-w-0 truncate text-right text-sm font-semibold leading-tight"
+-                style={{
+-                  color:
+-                    row.editable === false ? labelColor : textColor,
+-                }}
++                style={{ color: valueColor }}
+               >
+                 {row.value}
+               </div>
+-              {row.secondary && (
+-                <span
+-                  className="max-w-20 shrink-0 truncate text-[11px] leading-tight"
+-                  style={{ color: labelColor }}
+-                >
+-                  {row.secondary}
+-                </span>
+-              )}
+             </div>
+           ))}
+         </div>
+@@ -153,22 +133,15 @@ export function ProcessMiniCard({
+               >
+                 {row.label}
+               </p>
+-
+               <div
+                 className={cn(
+                   "mt-1.5 min-w-0 truncate text-lg leading-tight",
+-                  row.editable === false
+-                    ? "font-semibold"
+-                    : "font-bold",
++                  row.editable === false ? "font-semibold" : "font-bold",
+                 )}
+-                style={{
+-                  color:
+-                    row.editable === false ? labelColor : textColor,
+-                }}
++                style={{ color: valueColor }}
+               >
+                 {row.value}
+               </div>
+-
+               {row.secondary && (
+                 <p
+                   className="mt-1 truncate text-xs leading-tight"
+diff --git a/src/shared/utils/badge-colors.ts b/src/shared/utils/badge-colors.ts
+index a527e94..dd7e2ff 100644
+--- a/src/shared/utils/badge-colors.ts
++++ b/src/shared/utils/badge-colors.ts
+@@ -245,17 +245,40 @@ export function getProcessCardTextColor(
+   return getBadgeColors(hex, "subtle").text
+ }
+ 
+-/** Superficie glass de dominio (KPI, process cards, workflow). */
++/**
++ * Superficie glass de dominio (KPI, process cards, pintura).
++ *
++ * Ambos stops del gradient llevan el hex de dominio — si el segundo
++ * fuera solo --process-card-end, negros/grises de catálogo se lavan a
++ * plata y el texto calculado para el stop oscuro queda ilegible a la
++ * derecha (blanco sobre claro).
++ *
++ * Texto: contraste WCAG contra el stop MÁS CLARO del card (peor caso).
++ */
+ export function getGlassSurface(
+   hex: string,
+   theme?: "light" | "dark",
+ ) {
+   const c = getBadgeColors(hex, "subtle", theme)
++  const isLight = theme === "light" || (theme == null && typeof document !== "undefined"
++    && !document.documentElement.classList.contains("dark"))
++
++  // Identidad del color de catálogo en ambos extremos (más fuerte al inicio).
++  const startMix = isLight ? 0.38 : 0.48
++  const endMix = isLight ? 0.18 : 0.28
++
++  const start = blendOnChipSurface(hex, startMix)
++  const end = blendOnChipSurface(hex, endMix)
++
++  // Texto legible en el peor punto (stop más claro = end).
++  const text = getChipText(hex, end)
++  const textMuted = withAlpha(text, 0.72)
++
+   return {
+-    background: `linear-gradient(135deg, ${c.background}, var(--process-card-end))`,
+-    backgroundInset: `linear-gradient(135deg, ${c.background}, color-mix(in oklab, var(--on-glass-foreground) 4%, var(--process-card-end)))`,
+-    text: c.text,
+-    textMuted: (c as { textMuted?: string }).textMuted ?? "var(--on-glass-muted)",
+-    textFaint: "var(--on-glass-faint)",
++    background: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
++    backgroundInset: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
++    text,
++    textMuted,
++    textFaint: withAlpha(text, 0.45),
+   }
+ }

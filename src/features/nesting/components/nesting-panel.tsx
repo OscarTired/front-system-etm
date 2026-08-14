@@ -64,17 +64,17 @@ export function NestingPanel({
           </div>
         )}
         {activePanel === "project-material" && (
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
             {projectMaterial}
           </div>
         )}
         {activePanel === "layers" && (
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
             {layers}
           </div>
         )}
         {activePanel === "inspector" && (
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
             {inspector}
           </div>
         )}

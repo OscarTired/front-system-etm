@@ -18,7 +18,7 @@ type Row = {
 type CardProps = {
   label: string
   icon: LucideIcon
-  /** Hex de dominio (proceso o color de pintura). Pasa por theme via getGlassSurface. */
+  /** Hex de dominio (proceso o color de pintura de catálogo). */
   color: string
   rows: Row[]
   size?: "default" | "large"
@@ -35,9 +35,9 @@ export function ProcessMiniCard({
   const resolved = useThemeStore(s => s.resolved)
 
   const glass = getGlassSurface(color, resolved)
-  const textColor = glass.text
-  // Labels sobre glass: token de tema, no muted de página (rompe contraste en light).
-  const labelColor = "var(--on-glass-muted)"
+  const titleColor = glass.text
+  const labelColor = glass.textMuted
+  const valueColor = glass.text
   const isLarge = size === "large"
 
   return (
@@ -50,12 +50,7 @@ export function ProcessMiniCard({
             ? "gap-3 p-4"
             : "min-h-43.5 p-5",
       )}
-      style={{
-        // Primer stop = blend themed del hex; segundo = fin de card
-        // mezclado con un poco del hex para que negros/grises de pintura
-        // no se laven a plata en light.
-        background: glass.backgroundInset,
-      }}
+      style={{ background: glass.background }}
     >
       <div
         className={cn(
@@ -68,15 +63,14 @@ export function ProcessMiniCard({
             "min-w-0 truncate font-bold uppercase tracking-[0.18em]",
             isLarge ? "text-sm" : "text-xs",
           )}
-          style={{ color: textColor }}
+          style={{ color: titleColor }}
         >
           {label}
         </span>
-
         <Icon
           size={isLarge ? 26 : 20}
           className="shrink-0"
-          style={{ color: textColor }}
+          style={{ color: titleColor }}
         />
       </div>
 
@@ -95,10 +89,7 @@ export function ProcessMiniCard({
               </p>
               <div
                 className="min-w-0 truncate text-right text-base font-semibold leading-tight"
-                style={{
-                  color:
-                    row.editable === false ? labelColor : textColor,
-                }}
+                style={{ color: valueColor }}
               >
                 {row.value}
               </div>
@@ -120,21 +111,10 @@ export function ProcessMiniCard({
               </p>
               <div
                 className="min-w-0 truncate text-right text-sm font-semibold leading-tight"
-                style={{
-                  color:
-                    row.editable === false ? labelColor : textColor,
-                }}
+                style={{ color: valueColor }}
               >
                 {row.value}
               </div>
-              {row.secondary && (
-                <span
-                  className="max-w-20 shrink-0 truncate text-[11px] leading-tight"
-                  style={{ color: labelColor }}
-                >
-                  {row.secondary}
-                </span>
-              )}
             </div>
           ))}
         </div>
@@ -153,22 +133,15 @@ export function ProcessMiniCard({
               >
                 {row.label}
               </p>
-
               <div
                 className={cn(
                   "mt-1.5 min-w-0 truncate text-lg leading-tight",
-                  row.editable === false
-                    ? "font-semibold"
-                    : "font-bold",
+                  row.editable === false ? "font-semibold" : "font-bold",
                 )}
-                style={{
-                  color:
-                    row.editable === false ? labelColor : textColor,
-                }}
+                style={{ color: valueColor }}
               >
                 {row.value}
               </div>
-
               {row.secondary && (
                 <p
                   className="mt-1 truncate text-xs leading-tight"
