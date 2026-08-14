@@ -102,19 +102,19 @@ export function ProtectedLayoutClient({
 
       try{
 
-        const{
+        const {
           user,
           permissions,
-        }=
-          await authService.me()
+          accessToken,
+        } = await authService.me()
 
-        setUser(
-          user,
-        )
+        // Persistir token fresco: PermissionsGuard usa JWT, no el Set.
+        if (accessToken) {
+          authSession.set(accessToken)
+        }
 
-        setPermissions(
-          permissions,
-        )
+        setUser(user)
+        setPermissions(permissions)
 
         setBootstrapDone(
           true,

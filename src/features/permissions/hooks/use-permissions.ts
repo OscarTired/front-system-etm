@@ -2,31 +2,21 @@
 
 import { usePermissionStore } from "../store/permission-store"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
-import { useAuthStore } from "@/features/auth/store/auth-store"
 
 /**
- * Lectura de permisos efectivos.
- * ADMIN (rol code) → acceso total, sin depender de que el Set
- * traiga cada código (evita “todo marcado en UI pero JWT viejo”).
+ * Permisos efectivos = Set hidratado desde /auth/me | login | refresh.
+ * Sin bypass por rol: ADMIN obtiene todos los códigos vía seed + JWT.
  */
 export function usePermissions() {
   const permissions = usePermissionStore(state => state.permissions)
-  const roles = useAuthStore(s => s.user?.roles)
-
-  const isAdmin =
-    roles?.some(r => r.code === "ADMIN") === true
-
-  const has = (permission: PermissionCode) => {
-    if (isAdmin) return true
-    return permissions.has(permission)
-  }
 
   return {
-    has,
+    has: (permission: PermissionCode) => permissions.has(permission),
+
     hasAny: (...codes: PermissionCode[]) =>
-      isAdmin || codes.some(p => permissions.has(p)),
+      codes.some(permission => permissions.has(permission)),
+
     hasAll: (...codes: PermissionCode[]) =>
-      isAdmin || codes.every(p => permissions.has(p)),
-    isAdmin,
+      codes.every(permission => permissions.has(permission)),
   }
 }

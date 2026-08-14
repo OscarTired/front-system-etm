@@ -1,0 +1,102 @@
+diff --git a/src/app/(protected)/protected-layout-client.tsx b/src/app/(protected)/protected-layout-client.tsx
+index d212a82..f6de16a 100644
+--- a/src/app/(protected)/protected-layout-client.tsx
++++ b/src/app/(protected)/protected-layout-client.tsx
+@@ -102,19 +102,19 @@ export function ProtectedLayoutClient({
+ 
+       try{
+ 
+-        const{
++        const {
+           user,
+           permissions,
+-        }=
+-          await authService.me()
++          accessToken,
++        } = await authService.me()
+ 
+-        setUser(
+-          user,
+-        )
++        // Persistir token fresco: PermissionsGuard usa JWT, no el Set.
++        if (accessToken) {
++          authSession.set(accessToken)
++        }
+ 
+-        setPermissions(
+-          permissions,
+-        )
++        setUser(user)
++        setPermissions(permissions)
+ 
+         setBootstrapDone(
+           true,
+diff --git a/src/features/auth/services/auth.service.ts b/src/features/auth/services/auth.service.ts
+index 79771d2..23f6a96 100644
+--- a/src/features/auth/services/auth.service.ts
++++ b/src/features/auth/services/auth.service.ts
+@@ -22,6 +22,9 @@ export interface LoginResponse{
+ 
+ export interface MeResponse{
+ 
++  /** Token reemitido con permisos actuales (paridad con login/refresh). */
++  accessToken:string
++
+   user:User
+ 
+   permissions:string[]
+diff --git a/src/features/permissions/hooks/use-permissions.ts b/src/features/permissions/hooks/use-permissions.ts
+index 5ba7a7b..795b89d 100644
+--- a/src/features/permissions/hooks/use-permissions.ts
++++ b/src/features/permissions/hooks/use-permissions.ts
+@@ -2,31 +2,21 @@
+ 
+ import { usePermissionStore } from "../store/permission-store"
+ import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+-import { useAuthStore } from "@/features/auth/store/auth-store"
+ 
+ /**
+- * Lectura de permisos efectivos.
+- * ADMIN (rol code) → acceso total, sin depender de que el Set
+- * traiga cada código (evita “todo marcado en UI pero JWT viejo”).
++ * Permisos efectivos = Set hidratado desde /auth/me | login | refresh.
++ * Sin bypass por rol: ADMIN obtiene todos los códigos vía seed + JWT.
+  */
+ export function usePermissions() {
+   const permissions = usePermissionStore(state => state.permissions)
+-  const roles = useAuthStore(s => s.user?.roles)
+-
+-  const isAdmin =
+-    roles?.some(r => r.code === "ADMIN") === true
+-
+-  const has = (permission: PermissionCode) => {
+-    if (isAdmin) return true
+-    return permissions.has(permission)
+-  }
+ 
+   return {
+-    has,
++    has: (permission: PermissionCode) => permissions.has(permission),
++
+     hasAny: (...codes: PermissionCode[]) =>
+-      isAdmin || codes.some(p => permissions.has(p)),
++      codes.some(permission => permissions.has(permission)),
++
+     hasAll: (...codes: PermissionCode[]) =>
+-      isAdmin || codes.every(p => permissions.has(p)),
+-    isAdmin,
++      codes.every(permission => permissions.has(permission)),
+   }
+ }
+diff --git a/src/shared/core/enums/permission-code.enum.ts b/src/shared/core/enums/permission-code.enum.ts
+index cdd31f4..f382c28 100644
+--- a/src/shared/core/enums/permission-code.enum.ts
++++ b/src/shared/core/enums/permission-code.enum.ts
+@@ -21,6 +21,7 @@ export enum PermissionCode {
+   USER_CREATE = "USER_CREATE",
+   USER_UPDATE = "USER_UPDATE",
+   USER_DELETE = "USER_DELETE",
++  USER_PERMISSION_OVERRIDE_MANAGE = "USER_PERMISSION_OVERRIDE_MANAGE",
+ 
+   COMMENT_READ = "COMMENT_READ",
+   COMMENT_CREATE = "COMMENT_CREATE",

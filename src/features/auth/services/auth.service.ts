@@ -22,6 +22,9 @@ export interface LoginResponse{
 
 export interface MeResponse{
 
+  /** Token reemitido con permisos actuales (paridad con login/refresh). */
+  accessToken:string
+
   user:User
 
   permissions:string[]
