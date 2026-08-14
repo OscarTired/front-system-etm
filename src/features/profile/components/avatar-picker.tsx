@@ -60,7 +60,7 @@ export function AvatarPicker({
           <button
             type="button"
             className={cn(
-              "group relative shrink-0 overflow-hidden rounded-full ring-2 ring-white/15 outline-none transition-all focus:ring-primary/50",
+              "group relative shrink-0 overflow-hidden rounded-full outline-none transition-all focus-visible:outline-none",
               size,
             )}
           >

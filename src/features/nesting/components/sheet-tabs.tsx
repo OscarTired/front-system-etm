@@ -28,7 +28,7 @@ export interface SheetTabsProps {
 function usageBadgeClass(pct: number) {
   if (pct >= 80) return "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
   if (pct >= 50) return "bg-amber-500/20 text-amber-800 dark:text-amber-300"
-  return "bg-red-500/20 text-red-300"
+  return "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-300"
 }
 
 function thicknessKey(mm: number | undefined): string {

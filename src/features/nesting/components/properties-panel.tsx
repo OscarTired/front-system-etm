@@ -158,7 +158,7 @@ export function PropertiesPanel({
             isExpanded ? "mt-2 max-h-200 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
           }`}
         >
-          <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
+          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
             <StatRow label="Nombre" value={name} />
             <StatRow
               label="Ancho × Alto"
@@ -174,7 +174,7 @@ export function PropertiesPanel({
           </div>
 
           {onOverrideChange && (
-            <div className="flex flex-col rounded-lg bg-black/20 p-2.5 gap-2">
+            <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5 gap-2">
               <div className="flex items-center justify-between px-0.5">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Posición en plancha
@@ -309,7 +309,7 @@ export function PropertiesPanel({
             isExpanded ? "mt-2 max-h-150 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
           }`}
         >
-          <div className="flex flex-col rounded-lg bg-black/20 p-2.5">
+          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
             <StatRow label="Piezas" value={String(sheetStats.pieceCount)} />
             <StatRow label="Aprovechamiento" value={`${sheetStats.usagePercent.toFixed(1)}%`} />
             <StatRow label="Área plancha" value={`${(sheetStats.sheetArea / 1_000_000).toFixed(3)} m²`} />

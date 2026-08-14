@@ -221,7 +221,7 @@ export function SidebarProfile({
 
                 {avatar}
 
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-sidebar" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500" />
 
                 <ProfileMentionBadge className="absolute -top-1 -right-1" />
 
@@ -401,7 +401,7 @@ export function SidebarProfile({
 
                 {avatar}
 
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-sidebar" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500" />
 
               </div>
 

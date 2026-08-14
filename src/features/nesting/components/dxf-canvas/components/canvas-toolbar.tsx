@@ -231,12 +231,12 @@ export function CanvasToolbar({
           onClick={() => (open ? handleClose() : setOpen(true))}
           className={`
             pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-            shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md
+            shadow-lg backdrop-blur-md
             transition-all duration-200 ease-out
             ${
               open
-                ? "bg-foreground/15 text-foreground ring-1 ring-white/20"
-                : "bg-[#1c1c1e]/92 text-muted-foreground hover:bg-[#1c1c1e] hover:text-foreground"
+                ? "bg-background text-foreground shadow-md"
+                : "bg-background/90 text-muted-foreground shadow-md hover:bg-background hover:text-foreground"
             }
           `}
           title={open ? "Cerrar herramientas" : "Herramientas"}
@@ -262,8 +262,8 @@ export function CanvasToolbar({
           }
           className={`
             pointer-events-auto flex items-center gap-0.5 overflow-y-hidden rounded-full
-            bg-[#1c1c1e]/92 py-1 pl-1.5 pr-1.5
-            shadow-[0_2px_8px_rgba(0,0,0,0.45),0_1px_2px_rgba(0,0,0,0.3)] backdrop-blur-md
+            bg-background/90 py-1 pl-1.5 pr-1.5
+            shadow-lg backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
             ${
               toolsOverflow
@@ -406,7 +406,7 @@ export function CanvasToolbar({
               onClick={() => onToggleTool(tool as Exclude<MeasureTool, "none">)}
               className={`${mdBtn} ${
                 activeTool === tool
-                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
+                  ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary"
                   : ""
               }`}
               title={TOOL_LABELS[tool]}
@@ -436,7 +436,7 @@ export function CanvasToolbar({
               }
               className={`${mdBtn} ${
                 transformMode === "geometric"
-                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/25 hover:text-cyan-700 dark:text-cyan-300"
+                  ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary"
                   : ""
               }`}
               title={
@@ -497,8 +497,8 @@ export function CanvasToolbar({
         <div
           className={`
             pointer-events-auto flex items-center gap-1 overflow-hidden rounded-2xl
-            bg-[#1c1c1e]/95 py-1.5 pl-3 pr-1.5
-            shadow-[0_4px_16px_rgba(0,0,0,0.5),0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-md
+            bg-background/95 py-1.5 pl-3 pr-1.5
+            shadow-lg backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top
             ${
               open && simPanelOpen
@@ -537,7 +537,7 @@ export function CanvasToolbar({
             step={0.001}
             value={simProgress}
             onChange={(e) => onSeek(Number(e.target.value))}
-            className="mx-2 h-1 w-32 sm:w-44 shrink-0 cursor-pointer appearance-none rounded-full bg-foreground/15 accent-cyan-400 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400"
+            className="mx-2 h-1 w-32 sm:w-44 shrink-0 cursor-pointer appearance-none rounded-full bg-foreground/15 accent-primary [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
             title="Progreso de corte"
           />
 
@@ -573,7 +573,7 @@ export function CanvasToolbar({
                     }}
                     className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
                       simSpeed === s
-                        ? "bg-cyan-500/20 font-semibold text-cyan-700 dark:text-cyan-300"
+                        ? "bg-primary/15 font-semibold text-primary"
                         : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                     }`}
                   >

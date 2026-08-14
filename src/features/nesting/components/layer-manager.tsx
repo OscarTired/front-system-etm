@@ -58,7 +58,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
           isExpanded ? "mt-2 max-h-125 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
-        <div className="flex flex-col gap-1 rounded-lg bg-black/20 p-1">
+        <div className="flex flex-col gap-1 rounded-lg bg-foreground/5 p-1">
           {layers.map((layer) => {
             const isHidden = hiddenKeys.has(layer.key.toUpperCase())
             return (

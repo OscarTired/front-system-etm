@@ -189,27 +189,33 @@ export function DynamicBadge({
               <span
                 role="button"
                 tabIndex={0}
-                onClick={event => {
+                onClick={(event)=>{
                   event.preventDefault()
                   event.stopPropagation()
                   onRemove()
                 }}
-                onKeyDown={event => {
-                  if (event.key === "Enter" || event.key === " ") {
+                onKeyDown={(event)=>{
+                  if(
+                    event.key==="Enter" ||
+                    event.key===" "
+                  ){
                     event.preventDefault()
                     onRemove()
                   }
                 }}
-                style={{ color: actionColor }}
                 className={cn(
                   "absolute inset-0 flex cursor-pointer items-center justify-center rounded-md",
-                  "transition-opacity duration-150",
-                  "border-0 outline-none ring-0",
-                  "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                  "opacity-100 tablet:opacity-70 tablet:group-hover:opacity-100",
+                  "transition-colors duration-150",
+                  "hover:bg-black/10 dark:hover:bg-white/15",
+                  "opacity-100 tablet:opacity-90 tablet:group-hover:opacity-100",
                 )}
+                // No hereda textColor pastel del badge: contraste fijo legible
+                style={{ color: "var(--foreground)" }}
               >
-                <X size={14} strokeWidth={2.5} />
+                <X
+                  size={14}
+                  strokeWidth={2.75}
+                />
               </span>
             )}
           </div>

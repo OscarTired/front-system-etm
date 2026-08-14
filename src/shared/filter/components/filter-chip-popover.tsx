@@ -161,7 +161,7 @@ export function FilterChipPopover({
           <button
             type="button"
             onClick={handleRemove}
-            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-rose-500/10 text-sm font-semibold text-rose-300 transition active:bg-rose-500/20"
+            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive transition hover:bg-destructive/15 active:bg-destructive/20"
           >
             <Trash2 size={16} strokeWidth={2.2} />
             Quitar filtro

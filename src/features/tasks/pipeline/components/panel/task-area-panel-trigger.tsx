@@ -43,7 +43,14 @@ export function TaskAreaPanelTrigger() {
         </span>
 
         {pendingCount > 0 && (
-          <span className="animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold">
+          <span
+            className="
+              animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center
+              rounded-full px-1.5 text-[10px] font-bold
+              bg-emerald-600 text-white
+              dark:bg-emerald-500 dark:text-emerald-950
+            "
+          >
             {pendingCount}
           </span>
         )}

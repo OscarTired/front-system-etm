@@ -322,7 +322,7 @@ export function ProcessMobileCard({
               <span className="flex shrink-0 items-center gap-1">
                 <span className="md:hidden">
                   <EntityIconBadge
-                    icon={operator?.icon}
+                    icon={operator?.icon} 
                     color={operator?.color ?? "#a3a3a3"}
                     size={13}
                   />

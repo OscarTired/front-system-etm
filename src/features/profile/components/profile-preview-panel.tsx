@@ -100,7 +100,7 @@ export function ProfilePreviewPanel({
           className="group relative h-16 w-16 outline-none"
         >
 
-          <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-border">
+          <div className="h-16 w-16 overflow-hidden rounded-full">
 
             <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-white/10 to-foreground/5 text-xl font-semibold text-foreground shadow-inner">
 
