@@ -39,8 +39,7 @@ export function PipelineProcessSelector({
   columns,
   containerRef: externalContainerRef,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
+  const theme = useThemeStore(s => s.resolved)
 
 
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -180,7 +179,7 @@ export function PipelineProcessSelector({
 
             const definition = PROCESS_DEFINITIONS[code]
             const Icon = ENTITY_ICONS[definition.icon]
-            const badge = getBadgeColors(definition.color, "subtle")
+            const badge = getBadgeColors(definition.color, "subtle", theme)
             const count = columns.get(code)?.length ?? 0
             const isActive = code === value
 

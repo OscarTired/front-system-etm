@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation"
 import { ChevronDown } from "lucide-react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { getBadgeColors, getGlassSurface } from "@/shared/utils/badge-colors"
-import { useThemeStore } from "@/shared/theme"
+import { getGlassSurface } from "@/shared/utils/badge-colors"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 import { TaskPipelineCardCompact } from "@/features/tasks/pipeline/components/cards/task-pipeline-card-compact"
@@ -33,14 +33,11 @@ export function ProductionProcessCard({
   expanded,
   onToggle,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
-
-
   const router = useRouter()
 
   const Icon = ENTITY_ICONS[definition.icon]
-  const textColor = getBadgeColors(definition.color, "subtle").text
+  // Mismo contrato que DynamicBadge / EntityChip
+  const textColor = useBadgeColors(definition.color, "subtle").text
 
   const total = processTasks.length
 

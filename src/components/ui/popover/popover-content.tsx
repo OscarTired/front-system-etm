@@ -15,12 +15,26 @@ import {
 import { SHEET_CONFIG } from "./sheet-config"
 import { useSheetDragToDismiss } from "./use-sheet-drag-to-dismiss"
 import { useSmoothResize } from "./use-smooth-resize"
+import { useVirtualKeyboardOpen } from "./use-virtual-keyboard-open"
 
-type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
+type PopoverContentProps = React.ComponentProps<
+  typeof PopoverPrimitive.Content
+> & {
   portal?: boolean
   floatingClassName?: string
 }
 
+/**
+ * Desktop → Popover flotante
+ * Mobile  → Bottom sheet (Dialog)
+ *
+ * Contrato sheet
+ * 1. Handle = único drag-to-dismiss
+ * 2. Body = un overflow-y-auto + overscroll-contain
+ * 3. Sin locks manuales de body/scroll-area
+ * 4. Altura fija SOLO si input focused Y teclado virtual abierto
+ *    (F12 sin teclado on-screen → hug content, no crece en vacío)
+ */
 export function PopoverContent({
   className,
   floatingClassName,
@@ -52,40 +66,34 @@ export function PopoverContent({
   }
   const measuredHeight = size.height ?? lastMeasuredHeightRef.current
 
-  // Foco real del input de búsqueda — señal 100% confiable (evento
-  // de JS normal, sin depender de visualViewport/window.innerHeight
-  // ni de qué tan bien un navegador puntual respete el teclado).
-  // Con foco: el sheet crece a la altura fija. Sin foco: se achica
-  // al contenido (con un tope), como un sheet normal en reposo.
   const [isInputFocused, setIsInputFocused] = React.useState(false)
+  const keyboardOpen = useVirtualKeyboardOpen()
+
+  // Solo expandir cuando hay teclado real + foco (no F12 sin teclado visual)
+  const expandForKeyboard = isInputFocused && keyboardOpen
 
   React.useEffect(() => {
     if (!isOpen) setIsInputFocused(false)
   }, [isOpen])
 
-
   if (isSheet) {
-    const transitionStyle: string = isDragging
+    const transitionStyle = isDragging
       ? "none"
       : dismissing
         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
 
-    /**
-     * Altura dinámica según foco del buscador, no del teclado:
-     * - Sin foco (reposo): auto, acotado a MAX_HEIGHT_RATIO — hug
-     *   content, como cualquier sheet normal (4 opciones = sheet
-     *   chico).
-     * - Con foco: FIXED_HEIGHT_RATIO fijo — no se recalcula por
-     *   cuánto encuentre la búsqueda (1 resultado no lo achica).
-     * onFocusCapture/onBlurCapture detectan cualquier input/textarea
-     * de adentro sin que cada caller tenga que avisar nada a mano.
-     */
+    const sheetHeight = expandForKeyboard
+      ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
+      : measuredHeight != null
+        ? `min(${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
+        : `min(50dvh, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
+
     return (
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm pointer-events-auto",
+            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:duration-250 data-[state=open]:duration-200",
@@ -96,21 +104,29 @@ export function PopoverContent({
           data-slot="popover-sheet"
           data-drag-scroll-ignore
           onFocusCapture={event => {
-            const target = event.target
+            const t = event.target
             if (
-              target instanceof HTMLInputElement ||
-              target instanceof HTMLTextAreaElement
+              t instanceof HTMLInputElement ||
+              t instanceof HTMLTextAreaElement
             ) {
               setIsInputFocused(true)
             }
           }}
           onBlurCapture={event => {
-            const target = event.target
+            const t = event.target
             if (
-              target instanceof HTMLInputElement ||
-              target instanceof HTMLTextAreaElement
+              t instanceof HTMLInputElement ||
+              t instanceof HTMLTextAreaElement
             ) {
-              setIsInputFocused(false)
+              requestAnimationFrame(() => {
+                const active = document.activeElement
+                if (
+                  !(active instanceof HTMLInputElement) &&
+                  !(active instanceof HTMLTextAreaElement)
+                ) {
+                  setIsInputFocused(false)
+                }
+              })
             }
           }}
           onOpenAutoFocus={event => {
@@ -123,94 +139,41 @@ export function PopoverContent({
           onPointerDownOutside={onPointerDownOutside}
           onInteractOutside={onInteractOutside}
           className={cn(
-            // flex-col: handle (drag) | body scrolleable — drag SOLO en handle
             "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
-            "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
-            !dismissing &&
-              "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            !dismissing &&
-              "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-            !dismissing &&
-              "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
-            !dismissing &&
-              "data-[state=closed]:duration-250 data-[state=open]:duration-300",
+            "rounded-t-2xl bg-popover text-popover-foreground shadow-2xl outline-none",
+            "pb-[env(safe-area-inset-bottom,0px)]",
+            "[touch-action:pan-y]",
+            className,
           )}
           style={{
             ...style,
-            top: "auto",
-            // height/maxHeight vía inline style, no clase Tailwind
-            // dinámica (una clase armada con template string nunca
-            // se genera en build — no es texto literal para el
-            // scanner).
-            //
-            // CSS no anima una transición hacia/desde "auto" — por
-            // eso en reposo usamos el alto MEDIDO en px (size.height,
-            // de useSmoothResize) en vez de "auto": son dos valores
-            // reales, así que la transición sí se ve. "auto" solo se
-            // usa el primer instante, antes de que el ResizeObserver
-            // mida algo (no hay nada de qué animar todavía ahí).
-            height: isInputFocused
-              ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
-              : measuredHeight != null
-                ? `${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px`
-                : "auto",
-            // maxHeight solo en reposo — si también estuviera puesto
-            // con foco, CSS toma el menor entre height y maxHeight,
-            // y la altura fija de arriba nunca se alcanzaría de verdad.
-            maxHeight: isInputFocused
-              ? undefined
-              : `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
-            transform: dragY ? `translateY(${dragY}px)` : undefined,
-            transition: isDragging
-              ? "none"
-              : dismissing
-                ? transitionStyle
-                : `height ${SHEET_CONFIG.HEIGHT_TRANSITION_MS}ms ${SHEET_CONFIG.EASING_RESET}, transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+            height: sheetHeight,
+            maxHeight: `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
+            transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+            opacity: dismissing ? 0 : undefined,
+            transition: transitionStyle,
           }}
+          {...props}
         >
-          <VisuallyHidden asChild>
-            <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
+          <VisuallyHidden>
+            <DialogPrimitive.Title>Menú</DialogPrimitive.Title>
           </VisuallyHidden>
 
           <div
+            className="flex shrink-0 touch-none cursor-grab flex-col items-center pb-1 pt-2.5 active:cursor-grabbing"
             {...dragHandleProps}
-            className="flex w-full shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
           >
-            <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
+            <div className="h-1 w-10 rounded-full bg-foreground/20" />
           </div>
 
-          {/* Viewport con scroll: acotado por lo que Content mida
-              tener disponible en cada momento (fijo con foco, medido
-              en reposo). */}
           <div
-            onWheel={event => {
-              const el = event.currentTarget
-              if (el.scrollHeight > el.clientHeight) event.stopPropagation()
-            }}
-            style={{
-              paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
-            }}
             className={cn(
-              // min-h-0 + flex-1: puede scrollear cuando el contenido
-              // (measuredRef adentro) es más alto que el espacio real.
-              // overscroll-contain: sin esto, arrastrar acá cuando NO
-              // hay nada más para scrollear (lista corta, o ya se
-              // llegó al límite) encadena el gesto al scroll de lo
-              // que esté detrás en el DOM — se ve como que "se mueve
-              // todo el layout" y aparece su scrollbar.
-              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-              "px-4 pt-1 text-sm",
-              className,
+              "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
+              "[touch-action:pan-y]",
+              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+              "[&_input]:touch-manipulation [&_textarea]:touch-manipulation",
             )}
-            {...props}
           >
-            {/* measuredRef: SIN flex-1/min-h-0/overflow — crece a su
-                tamaño natural sin importar cuánto espacio le den de
-                verdad, así ResizeObserver mide "cuánto ocuparía si
-                nadie lo recortara". Si midiera el propio viewport
-                (que sí está acotado), su tamaño dependería de la
-                altura que le pusimos a Content, que a su vez depende
-                de esta medición — bucle. Separados, no hay bucle. */}
             <div ref={containerRef} className="w-full">
               {children}
             </div>
@@ -229,36 +192,31 @@ export function PopoverContent({
       sideOffset={sideOffset}
       avoidCollisions={avoidCollisions}
       collisionPadding={collisionPadding}
-      onOpenAutoFocus={(event) => {
-        if (onOpenAutoFocus) {
-          onOpenAutoFocus(event)
-        } else {
-          event.preventDefault()
-        }
+      onOpenAutoFocus={event => {
+        if (onOpenAutoFocus) onOpenAutoFocus(event)
+        else event.preventDefault()
       }}
-      onCloseAutoFocus={(event) => {
+      onCloseAutoFocus={event => {
         onCloseAutoFocus?.(event)
       }}
       onPointerDownOutside={onPointerDownOutside}
       onInteractOutside={onInteractOutside}
-      onWheel={(event) => {
-        const element = event.currentTarget
-        const isScrollable = element.scrollHeight > element.clientHeight
-        if (isScrollable) {
+      onWheel={event => {
+        const el = event.currentTarget
+        if (el.scrollHeight > el.clientHeight) {
           event.stopPropagation()
         }
       }}
-      onTouchMove={(event) => {
+      onTouchMove={event => {
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none overflow-hidden",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none",
         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
-        // Animaciones limpias de aparición basadas puramente en opacidad (sin zoom tembloroso)
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-150",
         floatingClassName,
-        className
+        className,
       )}
       style={{
         ...style,
@@ -267,15 +225,15 @@ export function PopoverContent({
       }}
       {...props}
     >
-      <div ref={containerRef} className="flex flex-col gap-2.5 w-full h-full overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex h-full w-full flex-col gap-2.5 overflow-hidden"
+      >
         {children}
       </div>
     </PopoverPrimitive.Content>
   )
 
-  if (!portal) {
-    return content
-  }
-
+  if (!portal) return content
   return <PopoverPrimitive.Portal>{content}</PopoverPrimitive.Portal>
 }

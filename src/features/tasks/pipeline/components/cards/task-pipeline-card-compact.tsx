@@ -2,9 +2,8 @@
 
 import { MessageSquare } from "lucide-react"
 
-import { getBadgeColors } from "@/shared/utils/badge-colors"
+import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import { useThemeStore } from "@/shared/theme"
-
 import { cn } from "@/shared/utils/utils"
 
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
@@ -22,83 +21,78 @@ type Props = {
   reserveActionsSpace?: boolean
 }
 
+/**
+ * Compact kanban row.
+ * Status chip vía EntityChip + useBadgeColors (mismo path que
+ * KanbanCardView) — reacciona a theme y a cambio de status/color
+ * sin quedar “pegado” a un estilo de edición inline.
+ */
 export function TaskPipelineCardCompact({
   processTask,
   reserveActionsSpace = false,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
-
+  // Suscripción explícita: si solo cambia el resolved del theme,
+  // EntityChip ya se re-renderiza vía useBadgeColors; esto cubre
+  // cualquier otro consumidor de tokens en este row.
+  const themeResolved = useThemeStore(s => s.resolved)
 
   const task = processTask.task
 
-  // El status ya viene correcto por step (incluyendo "QUEUE"
-  // cuando esta etapa todavía no le llegó el turno a la tarea).
+  // Status por step (QUEUE si aún no le toca).
   const stepStatus =
     processTask.workflowStep?.status ?? "QUEUE"
 
-  const status =
-    WORKFLOW_STATUS_DEFINITIONS[stepStatus]
+  const status = WORKFLOW_STATUS_DEFINITIONS[stepStatus]
 
-  const badge =
-    getBadgeColors(status.color, "subtle")
+  const commentCount =
+    processTask.workflowStep?.commentCount ??
+    processTask.task.commentCount ??
+    0
 
   return (
-
     <div
       className={cn(
         "flex h-12 min-w-0 w-full items-center gap-2.5 rounded-xl bg-foreground/5 pl-3 transition hover:bg-foreground/10",
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
-
       <span
         className="size-1.5 shrink-0 rounded-full"
-        style={{
-          backgroundColor: task.priority.color,
-        }}
+        style={{ backgroundColor: task.priority.color }}
       />
 
       <span
         title={task.reference}
         className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground"
       >
-
         {task.reference}
-
       </span>
 
-      {(() => {
-        const n = processTask.workflowStep?.commentCount
-          ?? processTask.task.commentCount
-          ?? 0
-        // Solo si hay mensajes (mismo criterio que kanban / process-mobile-card).
-        if (n <= 0) return null
-        return (
-          <span
-            title={n === 1 ? "1 mensaje" : `${n} mensajes`}
-            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
-          >
-            <MessageSquare size={10} strokeWidth={2.5} />
-            {n}
-          </span>
-        )
-      })()}
+      {commentCount > 0 && (
+        <span
+          title={
+            commentCount === 1
+              ? "1 mensaje"
+              : `${commentCount} mensajes`
+          }
+          className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+        >
+          <MessageSquare size={10} strokeWidth={2.5} />
+          {commentCount}
+        </span>
+      )}
 
-      <span
-        className="flex h-5 shrink-0 items-center whitespace-nowrap rounded-md px-2 text-xs font-semibold leading-none"
-        style={{
-          color: badge.text,
-          backgroundColor: badge.background,
-        }}
-      >
-
-        {status.label}
-
-      </span>
-
+      {/*
+        key fuerza recompute visual si cambia status o theme.
+        compact=true: misma altura que el row (h-12).
+      */}
+      <EntityChip
+        key={`${stepStatus}-${status.color}-${themeResolved}`}
+        label={status.label}
+        color={status.color}
+        icon={status.icon}
+        compact
+      />
     </div>
-
   )
-
 }

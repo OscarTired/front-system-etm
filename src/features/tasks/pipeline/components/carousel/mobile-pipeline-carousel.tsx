@@ -53,8 +53,7 @@ export function MobilePipelineCarousel({
   activeOverlayKey,
   onOverlayOpenChange,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
+  const theme = useThemeStore(s => s.resolved)
 
 
   const {
@@ -238,7 +237,7 @@ export function MobilePipelineCarousel({
 
             const definition = PROCESS_DEFINITIONS[code]
             const Icon = ENTITY_ICONS[definition.icon]
-            const badge = getBadgeColors(definition.color, "subtle")
+            const badge = getBadgeColors(definition.color, "subtle", theme)
             const processTasks = columns.get(code) ?? []
             const count = processTasks.length
 

@@ -51,6 +51,7 @@ import {
   getBadgeColors,
   getGlassSurface,
 } from "@/shared/utils/badge-colors"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { useThemeStore } from "@/shared/theme"
 
 import {
@@ -75,9 +76,8 @@ export function TaskProductionPanel({
   onIndicatorsExpandedChange,
   showCollapseButton = true,
 }: Props) {
-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
-  useThemeStore(s => s.resolved)
-
+  // theme solo para getBadgeColors en el map del stepper (hooks no en loop)
+  const theme = useThemeStore(s => s.resolved)
 
   const router = useRouter()
 
@@ -150,7 +150,7 @@ export function TaskProductionPanel({
       : undefined
 
   const summaryTextColor =
-    getBadgeColors(status?.color ?? "#737373", "subtle").text
+    useBadgeColors(status?.color ?? "#737373", "subtle").text
 
   const progressContent = (
 
@@ -210,7 +210,7 @@ export function TaskProductionPanel({
             step?.status === "COMPLETED" ||
             step?.status === "REVIEWED"
           const isLast = index === task.route.length - 1
-          const colors = getBadgeColors(definition.color, "subtle")
+          const colors = getBadgeColors(definition.color, "subtle", theme)
 
           const commentCount = step?.commentCount ?? 0
           const hasComments = commentCount > 0

@@ -1,0 +1,1288 @@
+diff --git a/src/components/ui/popover/popover-content.tsx b/src/components/ui/popover/popover-content.tsx
+index 70642bf..9e1a90c 100644
+--- a/src/components/ui/popover/popover-content.tsx
++++ b/src/components/ui/popover/popover-content.tsx
+@@ -15,12 +15,26 @@ import {
+ import { SHEET_CONFIG } from "./sheet-config"
+ import { useSheetDragToDismiss } from "./use-sheet-drag-to-dismiss"
+ import { useSmoothResize } from "./use-smooth-resize"
++import { useVirtualKeyboardOpen } from "./use-virtual-keyboard-open"
+ 
+-type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
++type PopoverContentProps = React.ComponentProps<
++  typeof PopoverPrimitive.Content
++> & {
+   portal?: boolean
+   floatingClassName?: string
+ }
+ 
++/**
++ * Desktop → Popover flotante
++ * Mobile  → Bottom sheet (Dialog)
++ *
++ * Contrato sheet
++ * 1. Handle = único drag-to-dismiss
++ * 2. Body = un overflow-y-auto + overscroll-contain
++ * 3. Sin locks manuales de body/scroll-area
++ * 4. Altura fija SOLO si input focused Y teclado virtual abierto
++ *    (F12 sin teclado on-screen → hug content, no crece en vacío)
++ */
+ export function PopoverContent({
+   className,
+   floatingClassName,
+@@ -52,40 +66,34 @@ export function PopoverContent({
+   }
+   const measuredHeight = size.height ?? lastMeasuredHeightRef.current
+ 
+-  // Foco real del input de búsqueda — señal 100% confiable (evento
+-  // de JS normal, sin depender de visualViewport/window.innerHeight
+-  // ni de qué tan bien un navegador puntual respete el teclado).
+-  // Con foco: el sheet crece a la altura fija. Sin foco: se achica
+-  // al contenido (con un tope), como un sheet normal en reposo.
+   const [isInputFocused, setIsInputFocused] = React.useState(false)
++  const keyboardOpen = useVirtualKeyboardOpen()
++
++  // Solo expandir cuando hay teclado real + foco (no F12 sin teclado visual)
++  const expandForKeyboard = isInputFocused && keyboardOpen
+ 
+   React.useEffect(() => {
+     if (!isOpen) setIsInputFocused(false)
+   }, [isOpen])
+ 
+-
+   if (isSheet) {
+-    const transitionStyle: string = isDragging
++    const transitionStyle = isDragging
+       ? "none"
+       : dismissing
+         ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
+         : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
+ 
+-    /**
+-     * Altura dinámica según foco del buscador, no del teclado:
+-     * - Sin foco (reposo): auto, acotado a MAX_HEIGHT_RATIO — hug
+-     *   content, como cualquier sheet normal (4 opciones = sheet
+-     *   chico).
+-     * - Con foco: FIXED_HEIGHT_RATIO fijo — no se recalcula por
+-     *   cuánto encuentre la búsqueda (1 resultado no lo achica).
+-     * onFocusCapture/onBlurCapture detectan cualquier input/textarea
+-     * de adentro sin que cada caller tenga que avisar nada a mano.
+-     */
++    const sheetHeight = expandForKeyboard
++      ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
++      : measuredHeight != null
++        ? `min(${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
++        : `min(50dvh, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
++
+     return (
+       <DialogPrimitive.Portal>
+         <DialogPrimitive.Overlay
+           className={cn(
+-            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm pointer-events-auto",
++            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm",
+             "data-[state=open]:animate-in data-[state=closed]:animate-out",
+             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+             "data-[state=closed]:duration-250 data-[state=open]:duration-200",
+@@ -96,21 +104,29 @@ export function PopoverContent({
+           data-slot="popover-sheet"
+           data-drag-scroll-ignore
+           onFocusCapture={event => {
+-            const target = event.target
++            const t = event.target
+             if (
+-              target instanceof HTMLInputElement ||
+-              target instanceof HTMLTextAreaElement
++              t instanceof HTMLInputElement ||
++              t instanceof HTMLTextAreaElement
+             ) {
+               setIsInputFocused(true)
+             }
+           }}
+           onBlurCapture={event => {
+-            const target = event.target
++            const t = event.target
+             if (
+-              target instanceof HTMLInputElement ||
+-              target instanceof HTMLTextAreaElement
++              t instanceof HTMLInputElement ||
++              t instanceof HTMLTextAreaElement
+             ) {
+-              setIsInputFocused(false)
++              requestAnimationFrame(() => {
++                const active = document.activeElement
++                if (
++                  !(active instanceof HTMLInputElement) &&
++                  !(active instanceof HTMLTextAreaElement)
++                ) {
++                  setIsInputFocused(false)
++                }
++              })
+             }
+           }}
+           onOpenAutoFocus={event => {
+@@ -123,94 +139,41 @@ export function PopoverContent({
+           onPointerDownOutside={onPointerDownOutside}
+           onInteractOutside={onInteractOutside}
+           className={cn(
+-            // flex-col: handle (drag) | body scrolleable — drag SOLO en handle
+             "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
+-            "rounded-t-3xl bg-popover shadow-2xl outline-none select-none",
+-            !dismissing &&
+-              "data-[state=open]:animate-in data-[state=closed]:animate-out",
+-            !dismissing &&
+-              "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+-            !dismissing &&
+-              "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
+-            !dismissing &&
+-              "data-[state=closed]:duration-250 data-[state=open]:duration-300",
++            "rounded-t-2xl bg-popover text-popover-foreground shadow-2xl outline-none",
++            "pb-[env(safe-area-inset-bottom,0px)]",
++            "[touch-action:pan-y]",
++            className,
+           )}
+           style={{
+             ...style,
+-            top: "auto",
+-            // height/maxHeight vía inline style, no clase Tailwind
+-            // dinámica (una clase armada con template string nunca
+-            // se genera en build — no es texto literal para el
+-            // scanner).
+-            //
+-            // CSS no anima una transición hacia/desde "auto" — por
+-            // eso en reposo usamos el alto MEDIDO en px (size.height,
+-            // de useSmoothResize) en vez de "auto": son dos valores
+-            // reales, así que la transición sí se ve. "auto" solo se
+-            // usa el primer instante, antes de que el ResizeObserver
+-            // mida algo (no hay nada de qué animar todavía ahí).
+-            height: isInputFocused
+-              ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
+-              : measuredHeight != null
+-                ? `${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px`
+-                : "auto",
+-            // maxHeight solo en reposo — si también estuviera puesto
+-            // con foco, CSS toma el menor entre height y maxHeight,
+-            // y la altura fija de arriba nunca se alcanzaría de verdad.
+-            maxHeight: isInputFocused
+-              ? undefined
+-              : `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
+-            transform: dragY ? `translateY(${dragY}px)` : undefined,
+-            transition: isDragging
+-              ? "none"
+-              : dismissing
+-                ? transitionStyle
+-                : `height ${SHEET_CONFIG.HEIGHT_TRANSITION_MS}ms ${SHEET_CONFIG.EASING_RESET}, transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
++            height: sheetHeight,
++            maxHeight: `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
++            transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
++            opacity: dismissing ? 0 : undefined,
++            transition: transitionStyle,
+           }}
++          {...props}
+         >
+-          <VisuallyHidden asChild>
+-            <DialogPrimitive.Title>Opciones</DialogPrimitive.Title>
++          <VisuallyHidden>
++            <DialogPrimitive.Title>Menú</DialogPrimitive.Title>
+           </VisuallyHidden>
+ 
+           <div
++            className="flex shrink-0 touch-none cursor-grab flex-col items-center pb-1 pt-2.5 active:cursor-grabbing"
+             {...dragHandleProps}
+-            className="flex w-full shrink-0 touch-none cursor-grab justify-center pb-1 pt-2.5 active:cursor-grabbing"
+           >
+-            <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
++            <div className="h-1 w-10 rounded-full bg-foreground/20" />
+           </div>
+ 
+-          {/* Viewport con scroll: acotado por lo que Content mida
+-              tener disponible en cada momento (fijo con foco, medido
+-              en reposo). */}
+           <div
+-            onWheel={event => {
+-              const el = event.currentTarget
+-              if (el.scrollHeight > el.clientHeight) event.stopPropagation()
+-            }}
+-            style={{
+-              paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${SHEET_CONFIG.SAFE_AREA_BOTTOM_OFFSET_PX}px)`,
+-            }}
+             className={cn(
+-              // min-h-0 + flex-1: puede scrollear cuando el contenido
+-              // (measuredRef adentro) es más alto que el espacio real.
+-              // overscroll-contain: sin esto, arrastrar acá cuando NO
+-              // hay nada más para scrollear (lista corta, o ya se
+-              // llegó al límite) encadena el gesto al scroll de lo
+-              // que esté detrás en el DOM — se ve como que "se mueve
+-              // todo el layout" y aparece su scrollbar.
+-              "flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+-              "px-4 pt-1 text-sm",
+-              className,
++              "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
++              "[touch-action:pan-y]",
++              "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
++              "[&_input]:touch-manipulation [&_textarea]:touch-manipulation",
+             )}
+-            {...props}
+           >
+-            {/* measuredRef: SIN flex-1/min-h-0/overflow — crece a su
+-                tamaño natural sin importar cuánto espacio le den de
+-                verdad, así ResizeObserver mide "cuánto ocuparía si
+-                nadie lo recortara". Si midiera el propio viewport
+-                (que sí está acotado), su tamaño dependería de la
+-                altura que le pusimos a Content, que a su vez depende
+-                de esta medición — bucle. Separados, no hay bucle. */}
+             <div ref={containerRef} className="w-full">
+               {children}
+             </div>
+@@ -229,36 +192,31 @@ export function PopoverContent({
+       sideOffset={sideOffset}
+       avoidCollisions={avoidCollisions}
+       collisionPadding={collisionPadding}
+-      onOpenAutoFocus={(event) => {
+-        if (onOpenAutoFocus) {
+-          onOpenAutoFocus(event)
+-        } else {
+-          event.preventDefault()
+-        }
++      onOpenAutoFocus={event => {
++        if (onOpenAutoFocus) onOpenAutoFocus(event)
++        else event.preventDefault()
+       }}
+-      onCloseAutoFocus={(event) => {
++      onCloseAutoFocus={event => {
+         onCloseAutoFocus?.(event)
+       }}
+       onPointerDownOutside={onPointerDownOutside}
+       onInteractOutside={onInteractOutside}
+-      onWheel={(event) => {
+-        const element = event.currentTarget
+-        const isScrollable = element.scrollHeight > element.clientHeight
+-        if (isScrollable) {
++      onWheel={event => {
++        const el = event.currentTarget
++        if (el.scrollHeight > el.clientHeight) {
+           event.stopPropagation()
+         }
+       }}
+-      onTouchMove={(event) => {
++      onTouchMove={event => {
+         event.stopPropagation()
+       }}
+       className={cn(
+-        "z-40 pointer-events-auto flex flex-col gap-2.5 rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none overflow-hidden",
++        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none",
+         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+-        // Animaciones limpias de aparición basadas puramente en opacidad (sin zoom tembloroso)
+         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",
+         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-150",
+         floatingClassName,
+-        className
++        className,
+       )}
+       style={{
+         ...style,
+@@ -267,15 +225,15 @@ export function PopoverContent({
+       }}
+       {...props}
+     >
+-      <div ref={containerRef} className="flex flex-col gap-2.5 w-full h-full overflow-hidden">
++      <div
++        ref={containerRef}
++        className="flex h-full w-full flex-col gap-2.5 overflow-hidden"
++      >
+         {children}
+       </div>
+     </PopoverPrimitive.Content>
+   )
+ 
+-  if (!portal) {
+-    return content
+-  }
+-
++  if (!portal) return content
+   return <PopoverPrimitive.Portal>{content}</PopoverPrimitive.Portal>
+-}
+\ No newline at end of file
++}
+diff --git a/src/components/ui/popover/sheet-config.ts b/src/components/ui/popover/sheet-config.ts
+index 481fecd..7728e2f 100644
+--- a/src/components/ui/popover/sheet-config.ts
++++ b/src/components/ui/popover/sheet-config.ts
+@@ -1,17 +1,16 @@
++/**
++ * Constantes del bottom sheet (mobile Popover → Dialog).
++ */
+ export const SHEET_CONFIG = {
+   DISMISS_THRESHOLD_PX: 90,
+   DISMISS_VELOCITY_THRESHOLD: 0.5,
+   ANIMATION_DURATION_MS: 250,
+-  /** Crecer/achicar al cambiar opciones (height en px). */
+   HEIGHT_TRANSITION_MS: 280,
+   UNMOUNT_BUFFER_MS: 20,
+   EASING_DISMISS: "cubic-bezier(0.32, 0.72, 0, 1)",
+   EASING_RESET: "cubic-bezier(0.16, 1, 0.3, 1)",
+   SAFE_AREA_BOTTOM_OFFSET_PX: 14,
+-
+   MAX_HEIGHT_RATIO: 0.85,
+-
+   FIXED_HEIGHT_RATIO: 0.9,
+-
+   CHROME_OVERHEAD_PX: 24,
+ } as const
+diff --git a/src/components/ui/popover/use-sheet-drag-to-dismiss.ts b/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
+index fdad285..ba060b9 100644
+--- a/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
++++ b/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
+@@ -5,9 +5,8 @@ import * as React from "react"
+ import { SHEET_CONFIG } from "./sheet-config"
+ 
+ /**
+- * Drag-to-dismiss solo desde el handle (no desde input/lista).
+- * Mientras el sheet está abierto, bloquea los ScrollArea de fondo
+- * para que iOS no mueva la lista detrás al focus/blur del buscador.
++ * Drag-to-dismiss — SOLO handle.
++ * Sin mutar body / scroll-area.
+  */
+ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+   const [dragY, setDragY] = React.useState(0)
+@@ -28,37 +27,13 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+     }
+   }, [])
+ 
+-  // Lock de scroll de fondo mientras el sheet vive (no solo al arrastrar).
+-  React.useEffect(() => {
+-    if (!isOpen) return
+-
+-    const locked: { el: HTMLElement; overflow: string; touchAction: string }[] =
+-      []
+-
+-    document
+-      .querySelectorAll<HTMLElement>('[data-slot="scroll-area"]')
+-      .forEach(el => {
+-        if (el.closest('[data-slot="popover-sheet"]')) return
+-        locked.push({
+-          el,
+-          overflow: el.style.overflow,
+-          touchAction: el.style.touchAction,
+-        })
+-        el.style.overflow = "hidden"
+-        el.style.touchAction = "none"
+-      })
+-
+-    const prevBodyOverflow = document.body.style.overflow
+-    document.body.style.overflow = "hidden"
+-
+-    return () => {
+-      locked.forEach(({ el, overflow, touchAction }) => {
+-        el.style.overflow = overflow
+-        el.style.touchAction = touchAction
+-      })
+-      document.body.style.overflow = prevBodyOverflow
+-    }
+-  }, [isOpen])
++  const resetGesture = React.useCallback(() => {
++    draggingRef.current = false
++    hasCapturedRef.current = false
++    setIsDragging(false)
++    setDragY(0)
++    dragYRef.current = 0
++  }, [])
+ 
+   function onPointerDown(event: React.PointerEvent) {
+     if (event.button !== 0) return
+@@ -71,31 +46,28 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+ 
+   function onPointerMove(event: React.PointerEvent) {
+     if (!draggingRef.current) return
+-
+     const delta = Math.max(0, event.clientY - startYRef.current)
+-    if (delta > 3) {
+-      if (!hasCapturedRef.current) {
+-        try {
+-          event.currentTarget.setPointerCapture(event.pointerId)
+-          hasCapturedRef.current = true
+-        } catch {
+-          // noop
+-        }
+-        setIsDragging(true)
+-        // Desenfocar buscador solo cuando el arrastre es real (desde handle)
+-        const active = document.activeElement
+-        if (active instanceof HTMLElement && active !== document.body) {
+-          active.blur()
+-        }
++    if (delta <= 3) return
++
++    if (!hasCapturedRef.current) {
++      try {
++        event.currentTarget.setPointerCapture(event.pointerId)
++        hasCapturedRef.current = true
++      } catch {
++        // noop
++      }
++      setIsDragging(true)
++      const active = document.activeElement
++      if (active instanceof HTMLElement && active !== document.body) {
++        active.blur()
+       }
+-      dragYRef.current = delta
+-      setDragY(delta)
+     }
++    dragYRef.current = delta
++    setDragY(delta)
+   }
+ 
+   function endDrag(event: React.PointerEvent) {
+     if (!draggingRef.current) return
+-
+     if (hasCapturedRef.current) {
+       try {
+         event.currentTarget.releasePointerCapture(event.pointerId)
+@@ -103,7 +75,6 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+         // noop
+       }
+     }
+-
+     draggingRef.current = false
+     hasCapturedRef.current = false
+     setIsDragging(false)
+@@ -125,27 +96,22 @@ export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+       )
+       return
+     }
+-
+     setDragY(0)
+     dragYRef.current = 0
+   }
+ 
+   React.useEffect(() => {
+-    if (isOpen) {
+-      setDragY(0)
+-      dragYRef.current = 0
+-      setDismissing(false)
+-      setIsDragging(false)
+-      clearPendingTimeout()
+-    }
++    if (!isOpen) return
++    setDismissing(false)
++    resetGesture()
++    clearPendingTimeout()
+     return clearPendingTimeout
+-  }, [isOpen, clearPendingTimeout])
++  }, [isOpen, clearPendingTimeout, resetGesture])
+ 
+   return {
+     dragY,
+     isDragging,
+     dismissing,
+-    /** Solo para el handle bar — no en Content ni en el body. */
+     dragHandleProps: {
+       onPointerDown,
+       onPointerMove,
+diff --git a/src/components/ui/popover/use-virtual-keyboard-open.ts b/src/components/ui/popover/use-virtual-keyboard-open.ts
+new file mode 100644
+index 0000000..bf7ef9b
+--- /dev/null
++++ b/src/components/ui/popover/use-virtual-keyboard-open.ts
+@@ -0,0 +1,35 @@
++"use client"
++
++import * as React from "react"
++
++/**
++ * true cuando el teclado virtual reduce el visualViewport de forma clara.
++ * En F12 / desktop sin teclado on-screen → siempre false (no hay gap).
++ */
++export function useVirtualKeyboardOpen(thresholdPx = 120) {
++  const [open, setOpen] = React.useState(false)
++
++  React.useEffect(() => {
++    const vv = window.visualViewport
++    if (!vv) return
++
++    const check = () => {
++      // layout viewport vs visual — teclado iOS/Android abre un hueco grande
++      const gap = window.innerHeight - vv.height
++      setOpen(gap > thresholdPx)
++    }
++
++    check()
++    vv.addEventListener("resize", check)
++    vv.addEventListener("scroll", check)
++    window.addEventListener("resize", check)
++
++    return () => {
++      vv.removeEventListener("resize", check)
++      vv.removeEventListener("scroll", check)
++      window.removeEventListener("resize", check)
++    }
++  }, [thresholdPx])
++
++  return open
++}
+diff --git a/src/features/processes/components/production-hub/production-process-card.tsx b/src/features/processes/components/production-hub/production-process-card.tsx
+index c28fb80..b32ef3d 100644
+--- a/src/features/processes/components/production-hub/production-process-card.tsx
++++ b/src/features/processes/components/production-hub/production-process-card.tsx
+@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation"
+ import { ChevronDown } from "lucide-react"
+ 
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+-import { getBadgeColors, getGlassSurface } from "@/shared/utils/badge-colors"
+-import { useThemeStore } from "@/shared/theme"
++import { getGlassSurface } from "@/shared/utils/badge-colors"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ import { cn } from "@/shared/utils/utils"
+ 
+ import { TaskPipelineCardCompact } from "@/features/tasks/pipeline/components/cards/task-pipeline-card-compact"
+@@ -33,14 +33,11 @@ export function ProductionProcessCard({
+   expanded,
+   onToggle,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
+-
+   const router = useRouter()
+ 
+   const Icon = ENTITY_ICONS[definition.icon]
+-  const textColor = getBadgeColors(definition.color, "subtle").text
++  // Mismo contrato que DynamicBadge / EntityChip
++  const textColor = useBadgeColors(definition.color, "subtle").text
+ 
+   const total = processTasks.length
+ 
+diff --git a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+index f760643..44dc1be 100644
+--- a/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
++++ b/src/features/tasks/components/expanded-row/production/task-production-panel.tsx
+@@ -51,6 +51,7 @@ import {
+   getBadgeColors,
+   getGlassSurface,
+ } from "@/shared/utils/badge-colors"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ import { useThemeStore } from "@/shared/theme"
+ 
+ import {
+@@ -75,9 +76,8 @@ export function TaskProductionPanel({
+   onIndicatorsExpandedChange,
+   showCollapseButton = true,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
++  // theme solo para getBadgeColors en el map del stepper (hooks no en loop)
++  const theme = useThemeStore(s => s.resolved)
+ 
+   const router = useRouter()
+ 
+@@ -150,7 +150,7 @@ export function TaskProductionPanel({
+       : undefined
+ 
+   const summaryTextColor =
+-    getBadgeColors(status?.color ?? "#737373", "subtle").text
++    useBadgeColors(status?.color ?? "#737373", "subtle").text
+ 
+   const progressContent = (
+ 
+@@ -210,7 +210,7 @@ export function TaskProductionPanel({
+             step?.status === "COMPLETED" ||
+             step?.status === "REVIEWED"
+           const isLast = index === task.route.length - 1
+-          const colors = getBadgeColors(definition.color, "subtle")
++          const colors = getBadgeColors(definition.color, "subtle", theme)
+ 
+           const commentCount = step?.commentCount ?? 0
+           const hasComments = commentCount > 0
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+index 6ed6558..f2e1a92 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -2,9 +2,8 @@
+ 
+ import { MessageSquare } from "lucide-react"
+ 
+-import { getBadgeColors } from "@/shared/utils/badge-colors"
++import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+ import { useThemeStore } from "@/shared/theme"
+-
+ import { cn } from "@/shared/utils/utils"
+ 
+ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
+@@ -22,83 +21,78 @@ type Props = {
+   reserveActionsSpace?: boolean
+ }
+ 
++/**
++ * Compact kanban row.
++ * Status chip vía EntityChip + useBadgeColors (mismo path que
++ * KanbanCardView) — reacciona a theme y a cambio de status/color
++ * sin quedar “pegado” a un estilo de edición inline.
++ */
+ export function TaskPipelineCardCompact({
+   processTask,
+   reserveActionsSpace = false,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
++  // Suscripción explícita: si solo cambia el resolved del theme,
++  // EntityChip ya se re-renderiza vía useBadgeColors; esto cubre
++  // cualquier otro consumidor de tokens en este row.
++  const themeResolved = useThemeStore(s => s.resolved)
+ 
+   const task = processTask.task
+ 
+-  // El status ya viene correcto por step (incluyendo "QUEUE"
+-  // cuando esta etapa todavía no le llegó el turno a la tarea).
++  // Status por step (QUEUE si aún no le toca).
+   const stepStatus =
+     processTask.workflowStep?.status ?? "QUEUE"
+ 
+-  const status =
+-    WORKFLOW_STATUS_DEFINITIONS[stepStatus]
++  const status = WORKFLOW_STATUS_DEFINITIONS[stepStatus]
+ 
+-  const badge =
+-    getBadgeColors(status.color, "subtle")
++  const commentCount =
++    processTask.workflowStep?.commentCount ??
++    processTask.task.commentCount ??
++    0
+ 
+   return (
+-
+     <div
+       className={cn(
+         "flex h-12 min-w-0 w-full items-center gap-2.5 rounded-xl bg-foreground/5 pl-3 transition hover:bg-foreground/10",
+         reserveActionsSpace ? "pr-12" : "pr-3",
+       )}
+     >
+-
+       <span
+         className="size-1.5 shrink-0 rounded-full"
+-        style={{
+-          backgroundColor: task.priority.color,
+-        }}
++        style={{ backgroundColor: task.priority.color }}
+       />
+ 
+       <span
+         title={task.reference}
+         className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground"
+       >
+-
+         {task.reference}
+-
+       </span>
+ 
+-      {(() => {
+-        const n = processTask.workflowStep?.commentCount
+-          ?? processTask.task.commentCount
+-          ?? 0
+-        // Solo si hay mensajes (mismo criterio que kanban / process-mobile-card).
+-        if (n <= 0) return null
+-        return (
+-          <span
+-            title={n === 1 ? "1 mensaje" : `${n} mensajes`}
+-            className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
+-          >
+-            <MessageSquare size={10} strokeWidth={2.5} />
+-            {n}
+-          </span>
+-        )
+-      })()}
+-
+-      <span
+-        className="flex h-5 shrink-0 items-center whitespace-nowrap rounded-md px-2 text-xs font-semibold leading-none"
+-        style={{
+-          color: badge.text,
+-          backgroundColor: badge.background,
+-        }}
+-      >
+-
+-        {status.label}
+-
+-      </span>
++      {commentCount > 0 && (
++        <span
++          title={
++            commentCount === 1
++              ? "1 mensaje"
++              : `${commentCount} mensajes`
++          }
++          className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold tabular-nums text-sky-700 dark:text-sky-300"
++        >
++          <MessageSquare size={10} strokeWidth={2.5} />
++          {commentCount}
++        </span>
++      )}
+ 
++      {/*
++        key fuerza recompute visual si cambia status o theme.
++        compact=true: misma altura que el row (h-12).
++      */}
++      <EntityChip
++        key={`${stepStatus}-${status.color}-${themeResolved}`}
++        label={status.label}
++        color={status.color}
++        icon={status.icon}
++        compact
++      />
+     </div>
+-
+   )
+-
+ }
+diff --git a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+index b256e93..3ec7f32 100644
+--- a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
++++ b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+@@ -53,8 +53,7 @@ export function MobilePipelineCarousel({
+   activeOverlayKey,
+   onOverlayOpenChange,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
++  const theme = useThemeStore(s => s.resolved)
+ 
+ 
+   const {
+@@ -238,7 +237,7 @@ export function MobilePipelineCarousel({
+ 
+             const definition = PROCESS_DEFINITIONS[code]
+             const Icon = ENTITY_ICONS[definition.icon]
+-            const badge = getBadgeColors(definition.color, "subtle")
++            const badge = getBadgeColors(definition.color, "subtle", theme)
+             const processTasks = columns.get(code) ?? []
+             const count = processTasks.length
+ 
+diff --git a/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx b/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
+index 76a5864..e27cedb 100644
+--- a/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
++++ b/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
+@@ -39,8 +39,7 @@ export function PipelineProcessSelector({
+   columns,
+   containerRef: externalContainerRef,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
++  const theme = useThemeStore(s => s.resolved)
+ 
+ 
+   const [canScrollLeft, setCanScrollLeft] = useState(false)
+@@ -180,7 +179,7 @@ export function PipelineProcessSelector({
+ 
+             const definition = PROCESS_DEFINITIONS[code]
+             const Icon = ENTITY_ICONS[definition.icon]
+-            const badge = getBadgeColors(definition.color, "subtle")
++            const badge = getBadgeColors(definition.color, "subtle", theme)
+             const count = columns.get(code)?.length ?? 0
+             const isActive = code === value
+ 
+diff --git a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+index 4791017..96cbc89 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+@@ -9,9 +9,6 @@ import {
+ } from "@/components/ui/popover"
+ 
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+-import { getBadgeColors } from "@/shared/utils/badge-colors"
+-import { useThemeStore } from "@/shared/theme"
+-import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
+ import { cn } from "@/shared/utils/utils"
+@@ -279,15 +276,8 @@ export function TaskColumnOperator({
+   processCode,
+   tasks,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
+-
+   const { isMobile } = useResponsive()
+ 
+-  const definition = PROCESS_DEFINITIONS[processCode]
+-  const badge = getBadgeColors(definition.color, "subtle")
+-
+   const entries = getActiveOperatorEntries(tasks, processCode)
+ 
+   if (entries.length === 0) {
+diff --git a/src/features/tasks/pipeline/components/tasks/task-pipeline-placeholder.tsx b/src/features/tasks/pipeline/components/tasks/task-pipeline-placeholder.tsx
+index 2ed8cda..20f5143 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-pipeline-placeholder.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-pipeline-placeholder.tsx
+@@ -1,117 +1,46 @@
+ "use client"
+ 
+-import {
+-  Layers3,
+-} from "lucide-react"
++import { Layers3 } from "lucide-react"
+ 
+-import type {
+-  ProcessCode,
+-  Task,
+-} from "@/features/tasks/types/task.types"
+-
+-import {
+-  PROCESS_DEFINITIONS,
+-} from "@/features/processes/constants/process-definitions"
+-
+-import {
+-  getBadgeColors,
+-} from "@/shared/utils/badge-colors"
+-import { useThemeStore } from "@/shared/theme"
++import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
++import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ 
+ type Props = {
+   processCode: ProcessCode
+   tasks: Task[]
+ }
+ 
+-export function TaskPipelinePlaceholder({
+-  processCode,
+-  tasks,
+-}: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
+-
+-  const process =
+-    PROCESS_DEFINITIONS[processCode]
++/** Empty column state — mismos tokens de chip que DynamicBadge / EntityChip. */
++export function TaskPipelinePlaceholder({ processCode, tasks }: Props) {
++  const process = PROCESS_DEFINITIONS[processCode]
++  const badge = useBadgeColors(process.color, "subtle")
+ 
+-  const badge =
+-    getBadgeColors(
+-      process.color,
+-      "subtle",
+-    )
+-
+-  const pieces =
+-    tasks.reduce(
+-      (sum, task) => sum + task.pieces,
+-      0,
+-    )
++  const pieces = tasks.reduce((sum, task) => sum + task.pieces, 0)
+ 
+   return (
+-
+-    <div
+-      className="flex h-16 items-center justify-between rounded-xl bg-foreground/5 px-4"
+-    >
+-
++    <div className="flex h-16 items-center justify-between rounded-xl bg-foreground/5 px-4">
+       <div className="flex items-center gap-3">
+-
+         <div
+           className="flex h-9 w-9 items-center justify-center rounded-lg"
+-          style={{
+-            background: badge.background,
+-            color: badge.text,
+-          }}
++          style={{ background: badge.background, color: badge.text }}
+         >
+-
+-          <Layers3 size={18} />
+-
++          <Layers3 size={16} />
+         </div>
+ 
+-        <div>
+-
+-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+-
+-            Piezas
+-
+-          </p>
+-
+-          <p
+-            className="text-lg font-bold"
+-            style={{
+-              color: badge.text,
+-            }}
+-          >
+-
+-            {pieces}
+-
+-          </p>
+-
++        <div className="flex flex-col">
++          <span className="text-sm font-semibold text-foreground">
++            {process.label}
++          </span>
++          <span className="text-xs text-muted-foreground">
++            Sin tareas en esta etapa
++          </span>
+         </div>
+-
+-      </div>
+-
+-      <div className="border-l border-border pl-4 text-right">
+-
+-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+-
+-          Tareas
+-
+-        </p>
+-
+-        <p
+-          className="text-lg text-left font-bold"
+-          style={{
+-            color: badge.text,
+-          }}
+-        >
+-
+-          {tasks.length}
+-
+-        </p>
+-
+       </div>
+ 
++      <span className="text-xs font-medium text-muted-foreground">
++        {pieces} pzas
++      </span>
+     </div>
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/table/task-process-column.tsx b/src/features/tasks/pipeline/table/task-process-column.tsx
+index 36ea431..f1fc27b 100644
+--- a/src/features/tasks/pipeline/table/task-process-column.tsx
++++ b/src/features/tasks/pipeline/table/task-process-column.tsx
+@@ -7,6 +7,7 @@ import { TaskAssignmentBadge } from "../components/panel/task-assignment-badge"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ import { getBadgeColors } from "@/shared/utils/badge-colors"
+ import { useThemeStore } from "@/shared/theme"
+ import { TaskPipelineCard } from "../components/cards/task-pipeline-card"
+@@ -43,10 +44,10 @@ function ColumnHeader({
+   tasks,
+   fullWidth,
+ }: SharedProps & { fullWidth?: boolean }) {
+-  useThemeStore(s => s.resolved)
+   const definition = PROCESS_DEFINITIONS[processCode]
+   const Icon = ENTITY_ICONS[definition.icon]
+-  const badge = getBadgeColors(definition.color, "subtle")
++  // Misma fuente que DynamicBadge / EntityChip
++  const badge = useBadgeColors(definition.color, "subtle")
+ 
+   return (
+     <div className={cn("shrink-0", fullWidth ? "w-full" : "w-72")}>
+@@ -101,6 +102,7 @@ function ColumnContent({
+   unsummoning,
+ }: ContentProps & { fullWidth?: boolean }) {
+   const { isMobile } = useResponsive()
++  const theme = useThemeStore(s => s.resolved)
+ 
+   const rows = allTasks
+     ? allTasks.map(task => ({
+@@ -133,7 +135,7 @@ function ColumnContent({
+                 ? ENTITY_ICONS[nextDefinition.icon]
+                 : null
+               const nextBadge = nextDefinition
+-                ? getBadgeColors(nextDefinition.color, "subtle")
++                ? getBadgeColors(nextDefinition.color, "subtle", theme)
+                 : null
+ 
+               return (
+@@ -319,9 +321,6 @@ export function TaskProcessColumn({
+   onUnsummon,
+   unsummoning,
+ }: Props) {
+-  // Re-render chips when theme toggles (getBadgeColors reads DOM class)
+-  useThemeStore(s => s.resolved)
+-
+   if (headerOnly) {
+     return <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
+   }
+diff --git a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts b/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
+index 94d4330..b883006 100644
+--- a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
++++ b/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
+@@ -17,156 +17,140 @@ export const PIPELINE_SCROLL_INTERACTION_EVENT =
+   "pipeline-scroll-interaction"
+ 
+ function notifyScrollInteraction() {
+-
+   window.dispatchEvent(
+-    new Event(PIPELINE_SCROLL_INTERACTION_EVENT)
++    new Event(PIPELINE_SCROLL_INTERACTION_EVENT),
+   )
++}
+ 
++function clearBodyDragStyles() {
++  document.body.style.removeProperty("user-select")
++  document.body.style.removeProperty("cursor")
+ }
+ 
++/**
++ * Drag horizontal en un contenedor overflow-x.
++ *
++ * Importante:
++ * - NO marca drag en el primer mousedown (evita body locked si un
++ *   Popover/portal se traga el mouseup).
++ * - Listeners de move/up en window mientras el gesture está activo.
++ * - Cleanup total en unmount / pointercancel / blur.
++ */
+ export function useDragScroll() {
++  const containerRef = useRef<HTMLDivElement>(null)
++
++  /** Gesture empezó (mousedown), aún no supera threshold. */
++  const armed = useRef(false)
++  /** Ya superó threshold → drag real. */
++  const isDragging = useRef(false)
++  const dragged = useRef(false)
++  const suppressClick = useRef(false)
++
++  const startX = useRef(0)
++  const startScrollLeft = useRef(0)
++
++  const stopDragging = useCallback(() => {
++    if (dragged.current) {
++      suppressClick.current = true
++      window.setTimeout(() => {
++        suppressClick.current = false
++      }, 200)
++    }
+ 
+-  const containerRef =
+-    useRef<HTMLDivElement>(null)
+-
+-  const isDragging =
+-    useRef(false)
+-
+-  const dragged =
+-    useRef(false)
+-
+-  const suppressClick =
+-    useRef(false)
+-
+-  const startX =
+-    useRef(0)
+-
+-  const startScrollLeft =
+-    useRef(0)
+-
+-  const handleMouseDown =
+-    useCallback((event: React.MouseEvent) => {
+-
+-      const target = event.target as HTMLElement
+-
+-      if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) {
+-        return
+-      }
++    armed.current = false
++    isDragging.current = false
++    dragged.current = false
++    clearBodyDragStyles()
++  }, [])
+ 
+-      const container = containerRef.current
++  const onWindowMove = useCallback((event: MouseEvent) => {
++    if (!armed.current) return
++    const container = containerRef.current
++    if (!container) return
+ 
+-      if (!container) {
+-        return
+-      }
++    const deltaX = event.clientX - startX.current
+ 
++    if (!isDragging.current) {
++      if (Math.abs(deltaX) <= DRAG_THRESHOLD) return
+       isDragging.current = true
+-      dragged.current = false
+-
+-      startX.current = event.clientX
+-      startScrollLeft.current = container.scrollLeft
+-
++      dragged.current = true
+       document.body.style.userSelect = "none"
+       document.body.style.cursor = "grabbing"
++      notifyScrollInteraction()
++    }
+ 
+-    }, [])
+-
+-  const handleMouseMove =
+-    useCallback((event: React.MouseEvent) => {
+-
+-      const container = containerRef.current
+-
+-      if (!isDragging.current || !container) {
+-        return
+-      }
+-
+-      const deltaX = event.clientX - startX.current
+-
+-      if (Math.abs(deltaX) > DRAG_THRESHOLD) {
+-
+-        if (!dragged.current) {
+-          notifyScrollInteraction()
+-        }
+-
+-        dragged.current = true
+-
+-      }
+-
+-      container.scrollLeft =
+-        startScrollLeft.current - deltaX * DRAG_SPEED
+-
+-    }, [])
+-
+-  const stopDragging =
+-    useCallback(() => {
+-
+-      if (dragged.current) {
+-
+-        suppressClick.current = true
+-
+-        window.setTimeout(() => {
+-          suppressClick.current = false
+-        }, 200)
+-
+-      }
+-
+-      isDragging.current = false
+-
+-      document.body.style.removeProperty("user-select")
+-      document.body.style.removeProperty("cursor")
+-
+-    }, [])
+-
+-  const handleClickCapture =
+-    useCallback((event: React.MouseEvent) => {
+-
+-      const target = event.target as HTMLElement
++    container.scrollLeft =
++      startScrollLeft.current - deltaX * DRAG_SPEED
++  }, [])
+ 
+-      if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) {
+-        return
+-      }
++  const onWindowUp = useCallback(() => {
++    stopDragging()
++  }, [stopDragging])
+ 
+-      if (suppressClick.current) {
++  const handleMouseDown = useCallback((event: React.MouseEvent) => {
++    const target = event.target as HTMLElement
++    if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) return
+ 
+-        event.preventDefault()
+-        event.stopPropagation()
++    const container = containerRef.current
++    if (!container) return
++
++    // Armar, no drag todavía — body no se toca hasta threshold.
++    armed.current = true
++    isDragging.current = false
++    dragged.current = false
++    startX.current = event.clientX
++    startScrollLeft.current = container.scrollLeft
++  }, [])
+ 
+-      }
++  // Move en el nodo sigue siendo útil; window cubre salida del nodo.
++  const handleMouseMove = useCallback((event: React.MouseEvent) => {
++    if (!armed.current) return
++    onWindowMove(event.nativeEvent)
++  }, [onWindowMove])
+ 
+-    }, [])
++  const handleClickCapture = useCallback((event: React.MouseEvent) => {
++    const target = event.target as HTMLElement
++    if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) return
++    if (suppressClick.current) {
++      event.preventDefault()
++      event.stopPropagation()
++    }
++  }, [])
+ 
+   useEffect(() => {
+-
+-    const handleMouseUp = () => stopDragging()
+-
+-    window.addEventListener("mouseup", handleMouseUp)
+-
++    window.addEventListener("mousemove", onWindowMove)
++    window.addEventListener("mouseup", onWindowUp)
++    window.addEventListener("pointercancel", onWindowUp)
++    window.addEventListener("blur", onWindowUp)
+     return () => {
+-      window.removeEventListener("mouseup", handleMouseUp)
++      window.removeEventListener("mousemove", onWindowMove)
++      window.removeEventListener("mouseup", onWindowUp)
++      window.removeEventListener("pointercancel", onWindowUp)
++      window.removeEventListener("blur", onWindowUp)
++      // Si el componente se desmonta a mitad de un drag (p.ej. popover),
++      // no dejar body con user-select/cursor pegados.
++      clearBodyDragStyles()
++      armed.current = false
++      isDragging.current = false
++      dragged.current = false
+     }
+-
+-  }, [stopDragging])
++  }, [onWindowMove, onWindowUp])
+ 
+   useEffect(() => {
+-
+     const container = containerRef.current
+-
+-    if (!container) {
+-      return
+-    }
++    if (!container) return
+ 
+     let frame = 0
+     let notified = false
+ 
+     const handleWheel = (event: WheelEvent) => {
+       // NO robar wheel vertical de la página/sidebar.
+-      // Antes: cualquier deltaY > deltaX hacía preventDefault y
+-      // movía scrollLeft → la lista detrás se sentía "congelada".
+-      const canScrollH = container.scrollWidth > container.clientWidth + 1
++      const canScrollH =
++        container.scrollWidth > container.clientWidth + 1
+       if (!canScrollH) return
+ 
+       const primarilyHorizontal =
+         Math.abs(event.deltaX) > Math.abs(event.deltaY)
+-      // Shift+rueda = convención de scroll horizontal en desktop
+       const shiftAsHorizontal =
+         event.shiftKey && Math.abs(event.deltaY) > 0
+ 
+@@ -205,12 +189,9 @@ export function useDragScroll() {
+     container.addEventListener("wheel", handleWheel, { passive: false })
+ 
+     return () => {
+-
+       cancelAnimationFrame(frame)
+       container.removeEventListener("wheel", handleWheel)
+-
+     }
+-
+   }, [])
+ 
+   return {
+@@ -223,5 +204,4 @@ export function useDragScroll() {
+     handleClickCapture,
+     stopDragging,
+   }
+-
+-}
+\ No newline at end of file
++}
