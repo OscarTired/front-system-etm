@@ -140,14 +140,14 @@ export function ProcessEditableValue({
       }}
       className={
         disabled
-          ? "block w-full min-w-0 truncate cursor-default text-left font-inherit leading-inherit text-muted-foreground"
+          ? "block w-full min-w-0 truncate cursor-default text-left font-inherit leading-inherit text-inherit opacity-50"
           : "block w-full min-w-0 truncate cursor-pointer text-left font-inherit leading-inherit text-inherit"
       }
     >
       {hasValue
         ? (suffix ? `${value} ${suffix}` : value)
         : (
-          <span className="block min-w-0 truncate text-muted-foreground font-normal">
+          <span className="block min-w-0 truncate font-normal text-inherit opacity-70">
             {placeholder}
           </span>
         )
