@@ -38,7 +38,11 @@ function isInsideSheetOrPopover(target: EventTarget | null) {
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [dialOpen, setDialOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  // En navegación client el documento ya existe → no hay frame vacío
+  // (el useState(false)+effect era la causa del parpadeo al cambiar de página).
+  const [mounted, setMounted] = useState(
+    () => typeof document !== "undefined",
+  )
   const rootRef = useRef<HTMLDivElement>(null)
 
   const ptrActive = usePullToRefreshStore(s => s.active)
