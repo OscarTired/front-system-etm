@@ -34,7 +34,7 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
 
   return (
     <>
-      <div className="flex min-h-10 w-full flex-wrap items-center gap-2 overflow-visible select-none">
+      <div className="flex min-h-0 w-full flex-wrap items-center gap-2 overflow-visible select-none">
         {pinned && (
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">
             {pinned}

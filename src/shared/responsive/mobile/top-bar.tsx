@@ -125,10 +125,11 @@ export function TopBar() {
 
       {searchEnabled && searchOpen && (
         <div
-          className="absolute inset-x-0 z-20 px-2.5 pb-2"
+          className="absolute inset-x-0 z-20 px-3"
           style={{ top: TOP_BAR_HEIGHT_PX }}
         >
-          <div className="flex items-center gap-2 rounded-xl bg-chrome px-3 py-2.5 shadow-lg shadow-black/20 backdrop-blur-xl">
+          {/* Mismo input simple que ya tenías (no chrome/sombra nueva) */}
+          <div className="flex items-center gap-2 rounded-xl bg-foreground/5 px-3 py-2">
             <Search
               size={15}
               strokeWidth={2.2}

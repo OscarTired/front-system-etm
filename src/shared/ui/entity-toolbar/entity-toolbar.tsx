@@ -22,10 +22,10 @@ export function EntityToolbar({ left, right, className }: Props) {
   return (
     <div
       className={cn(
-        "flex min-h-15 w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
-        "px-1 py-2.5",
+        "flex w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
+        "min-h-0 px-1 py-1",
         "overflow-visible",
-        "tablet:min-h-14",
+        "tablet:min-h-14 tablet:py-2.5",
         className,
       )}
     >

@@ -1,0 +1,59 @@
+diff --git a/src/shared/responsive/adaptative/adaptive-action-bar.tsx b/src/shared/responsive/adaptative/adaptive-action-bar.tsx
+index e9dc6af..5c47f6b 100644
+--- a/src/shared/responsive/adaptative/adaptive-action-bar.tsx
++++ b/src/shared/responsive/adaptative/adaptive-action-bar.tsx
+@@ -34,7 +34,7 @@ export function AdaptiveActionBar({ pinned, actions, right }: Props) {
+ 
+   return (
+     <>
+-      <div className="flex min-h-10 w-full flex-wrap items-center gap-2 overflow-visible select-none">
++      <div className="flex min-h-0 w-full flex-wrap items-center gap-2 overflow-visible select-none">
+         {pinned && (
+           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">
+             {pinned}
+diff --git a/src/shared/responsive/layout/chrome-constants.ts b/src/shared/responsive/layout/chrome-constants.ts
+index a990c85..8cc9a6f 100644
+--- a/src/shared/responsive/layout/chrome-constants.ts
++++ b/src/shared/responsive/layout/chrome-constants.ts
+@@ -10,4 +10,4 @@ export const TOP_BAR_HEIGHT_PX = 56
+  * padding + safe-area aproximado). */
+ export const BOTTOM_NAV_HEIGHT_PX = 80
+ /** Alto de la barra de búsqueda expandida bajo el TopBar (móvil). */
+-export const PAGE_SEARCH_BAR_HEIGHT_PX = 52
++export const PAGE_SEARCH_BAR_HEIGHT_PX = 44
+diff --git a/src/shared/responsive/mobile/top-bar.tsx b/src/shared/responsive/mobile/top-bar.tsx
+index dcaaf75..4277864 100644
+--- a/src/shared/responsive/mobile/top-bar.tsx
++++ b/src/shared/responsive/mobile/top-bar.tsx
+@@ -125,10 +125,11 @@ export function TopBar() {
+ 
+       {searchEnabled && searchOpen && (
+         <div
+-          className="absolute inset-x-0 z-20 px-2.5 pb-2"
++          className="absolute inset-x-0 z-20 px-3"
+           style={{ top: TOP_BAR_HEIGHT_PX }}
+         >
+-          <div className="flex items-center gap-2 rounded-xl bg-chrome px-3 py-2.5 shadow-lg shadow-black/20 backdrop-blur-xl">
++          {/* Mismo input simple que ya tenías (no chrome/sombra nueva) */}
++          <div className="flex items-center gap-2 rounded-xl bg-foreground/5 px-3 py-2">
+             <Search
+               size={15}
+               strokeWidth={2.2}
+diff --git a/src/shared/ui/entity-toolbar/entity-toolbar.tsx b/src/shared/ui/entity-toolbar/entity-toolbar.tsx
+index ca42f88..ecc3267 100644
+--- a/src/shared/ui/entity-toolbar/entity-toolbar.tsx
++++ b/src/shared/ui/entity-toolbar/entity-toolbar.tsx
+@@ -22,10 +22,10 @@ export function EntityToolbar({ left, right, className }: Props) {
+   return (
+     <div
+       className={cn(
+-        "flex min-h-15 w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
+-        "px-1 py-2.5",
++        "flex w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5",
++        "min-h-0 px-1 py-1",
+         "overflow-visible",
+-        "tablet:min-h-14",
++        "tablet:min-h-14 tablet:py-2.5",
+         className,
+       )}
+     >
