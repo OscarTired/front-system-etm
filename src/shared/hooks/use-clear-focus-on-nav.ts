@@ -1,34 +1,17 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-
-import { clearEntityFocusParams } from "./clear-entity-focus-params"
-
 /**
- * Consume deep-link al cambiar de ruta (sidebar / nav).
- * No corre en el primer mount (F5 con ?taskId debe poder expandir).
+ * Antes: al cambiar pathname se borraban taskId/projectId/focus.
+ * Eso consumía el deep-link en el mismo tick en que llegabas a la
+ * página destino (mensajes → /tasks?taskId=…) y el row se colapsaba.
+ *
+ * Consumo correcto (una sola política):
+ * - Usuario abre otro row / colapsa → useExpandRow
+ * - F5 con params → se re-aplica el foco (URL es la fuente)
+ *
+ * Este hook queda como no-op documentado por si el shell aún lo monta.
+ * No toca la URL.
  */
 export function useClearFocusOnNav() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const prevPath = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (prevPath.current == null) {
-      prevPath.current = pathname
-      return
-    }
-    if (prevPath.current === pathname) return
-    prevPath.current = pathname
-
-    const has =
-      searchParams.has("taskId") ||
-      searchParams.has("projectId") ||
-      searchParams.has("focus")
-    if (has) {
-      clearEntityFocusParams(router, pathname, searchParams)
-    }
-  }, [pathname, router, searchParams])
+  // intencionalmente vacío
 }

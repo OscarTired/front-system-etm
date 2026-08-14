@@ -3,6 +3,7 @@
 import Image from "next/image"
 
 import { LoginForm } from "@/features/auth/components/login-form"
+import { ThemeToggle } from "@/shared/theme/theme-toggle"
 
 // Media query compartido para "viewport bajo de alto" (teléfono
 // acostado, ~360-430px de alto real). Usamos ALTO en vez de
@@ -16,8 +17,13 @@ const SHORT = "[@media(max-height:520px)]"
 export default function LoginPage() {
   return (
     <div
-      className={`flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-4 text-foreground select-none hide-scrollbar tablet:px-6`}
+      className={`relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-4 text-foreground select-none hide-scrollbar tablet:px-6`}
     >
+      {/* Theme: esquina superior derecha, fuera del card (no compite con Entrar) */}
+      <div className="absolute right-4 top-4 z-10 tablet:right-6 tablet:top-6">
+        <ThemeToggle variant="icon" className="size-10 rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-chrome hover:text-foreground" />
+      </div>
+
       <div className="w-full max-w-4xl">
         {/*
           Grid 2 cols en alto chico y en laptop.

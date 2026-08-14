@@ -369,7 +369,7 @@ export function ProjectTaskRow({
           >
             <TaskPipelineCardCompact
               processTask={processTask}
-              reserveActionsSpace
+              reserveActionsSpace={isMobile}
             />
           </div>
         )
@@ -425,7 +425,8 @@ export function ProjectTaskRow({
         />
       )}
 
-      {!overlayOpen && (
+      {/* Desktop: la card entera / click navega; flecha solo en móvil */}
+      {!overlayOpen && isMobile && (
         <button
           type="button"
           onClick={handleNavigate}

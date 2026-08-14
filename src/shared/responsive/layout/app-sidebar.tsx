@@ -184,7 +184,7 @@ export function AppSidebar({
             />
           </div>
 
-          <div className="shrink-0 select-none p-3 pt-0 z-20">
+          <div className="shrink-0 select-none border-t border-border/40 p-3 pt-3 z-20">
             <SidebarProfile
               collapsed={collapsed}
               onEditProfile={() => setProfileEditOpen(true)}

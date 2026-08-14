@@ -64,7 +64,7 @@ export function SidebarNavigation({
       <div
         className={cn(
           "w-full",
-          isDrawer ? "px-2 py-4" : "px-3 py-3",
+          isDrawer ? "px-2 py-4 pb-5" : "px-3 py-3 pb-4",
         )}
       >
       {!isDrawer && (
