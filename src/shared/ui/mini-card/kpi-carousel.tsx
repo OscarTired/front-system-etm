@@ -203,8 +203,13 @@ export function KpiCarousel({
                   className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
                   style={{
                     backgroundColor: colors.background,
-                    border: isSelected ? `2px solid ${colors.text}` : "2px solid transparent",
-                    boxShadow: isSelected ? `0 0 10px ${colors.text}66` : "none"
+                    // Anillo = tono más oscuro del fill (no blanco/text claro)
+                    border: isSelected
+                      ? `2px solid color-mix(in srgb, ${item.color} 72%, black)`
+                      : "2px solid transparent",
+                    boxShadow: isSelected
+                      ? `0 0 10px color-mix(in srgb, ${item.color} 45%, transparent)`
+                      : "none",
                   }}
                 >
                   <ItemIcon size={16} style={{ color: colors.text }} />

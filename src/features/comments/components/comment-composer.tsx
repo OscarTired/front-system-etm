@@ -230,13 +230,15 @@ export function CommentComposer({
         }}
       >
         <PopoverAnchor asChild>
-          <div className="flex items-end gap-1">
+          <div className="flex items-center gap-1">
             {!isEditing && (
-              <IconAction
-                icon={Camera}
-                disabled={!canCreate}
-                onClick={() => fileInputRef.current?.click()}
-              />
+              <div className="flex size-9 shrink-0 items-center justify-center">
+                <IconAction
+                  icon={Camera}
+                  disabled={!canCreate}
+                  onClick={() => fileInputRef.current?.click()}
+                />
+              </div>
             )}
 
             <textarea
@@ -262,7 +264,7 @@ export function CommentComposer({
               onClick={handleSubmit}
               className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition enabled:hover:opacity-90 enabled:active:scale-95 disabled:opacity-40"
             >
-              <SendHorizontal size={16} strokeWidth={2} />
+              <SendHorizontal size={16} strokeWidth={0} fill="currentColor" className="translate-x-px" />
             </button>
           </div>
         </PopoverAnchor>
