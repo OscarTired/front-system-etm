@@ -1,6 +1,6 @@
 "use client"
 
-import { Package, Plus, Trash2 } from "lucide-react"
+import { Package, Trash2 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { FormSection } from "@/shared/ui/dialogs/form-dialog/form-section"
@@ -71,10 +71,6 @@ export function TaskMaterialSection({
     )
   }
 
-  const addLine = () => {
-    setLines([...lines, { materialId: "", thicknessId: "", pieces: 1 }])
-  }
-
   const removeLine = (index: number) => {
     if (lines.length <= 1) return
     setLines(lines.filter((_, i) => i !== index))
@@ -90,14 +86,17 @@ export function TaskMaterialSection({
 
   return (
     <FormSection title="Material" icon={Package} trailing={totalLabel}>
-      {/* Lista con tope: no crece el dialog sin fin */}
+      {/*
+        Scroll nativo. stopPropagation evita que el ScrollArea del
+        FormDialog capture la rueda / el gesto.
+      */}
       <div
         className={cn(
-          "flex flex-col gap-2",
-          !isMobile &&
-            "max-h-[13.5rem] overflow-y-auto overscroll-contain scrollbar-none " +
-              "[-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+          "flex max-h-[14rem] flex-col gap-2 overflow-y-auto overscroll-y-contain",
+          "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         )}
+        onWheel={e => e.stopPropagation()}
+        onTouchMove={e => e.stopPropagation()}
       >
         {lines.map((line, index) => {
           const selectedMaterial = materials.find(
@@ -114,7 +113,7 @@ export function TaskMaterialSection({
                 "grid grid-cols-1 gap-3",
                 isMobile
                   ? "rounded-xl bg-foreground/5 p-3"
-                  : "rounded-lg bg-background/60 p-2.5",
+                  : "rounded-lg bg-background/70 p-2.5",
                 "tablet:grid-cols-[1fr_1fr_5.5rem_auto]",
               )}
             >
@@ -193,15 +192,6 @@ export function TaskMaterialSection({
           )
         })}
       </div>
-
-      <button
-        type="button"
-        onClick={addLine}
-        className="inline-flex w-fit items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
-      >
-        <Plus size={14} strokeWidth={2.5} />
-        Añadir material
-      </button>
     </FormSection>
   )
 }

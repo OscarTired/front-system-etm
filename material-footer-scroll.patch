@@ -1,0 +1,235 @@
+diff --git a/src/features/tasks/components/dialog/task-dialog.tsx b/src/features/tasks/components/dialog/task-dialog.tsx
+index 816a385..3288fe0 100644
+--- a/src/features/tasks/components/dialog/task-dialog.tsx
++++ b/src/features/tasks/components/dialog/task-dialog.tsx
+@@ -330,6 +330,40 @@ export function TaskDialog({
+       ? handleWizardNext
+       : save
+ 
++
++  const addMaterialLine = () => {
++    const current =
++      form.materials?.length
++        ? form.materials
++        : [
++            {
++              materialId: form.materialId,
++              thicknessId: form.thicknessId,
++              pieces: form.pieces || 1,
++            },
++          ]
++    update({
++      materials: [
++        ...current,
++        { materialId: "", thicknessId: "", pieces: 1 },
++      ],
++    })
++  }
++
++  const showAddMaterial =
++    !isMobile || step === TASK_FORM_STEP_COUNT - 1
++
++  const materialFooterStart = showAddMaterial ? (
++    <button
++      type="button"
++      onClick={addMaterialLine}
++      className="inline-flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
++    >
++      <Plus size={15} strokeWidth={2.5} />
++      Añadir material
++    </button>
++  ) : undefined
++
+   const visibleErrors =
+     isMobile
+       ? (stepAttempted.has(step) ? errors : undefined)
+@@ -356,6 +390,7 @@ export function TaskDialog({
+         subHeader={isMobile ? <TaskFormWizardProgress step={step} /> : undefined}
+         onClose={close}
+         onSave={footerOnSave}
++        footerStart={materialFooterStart}
+       >
+ 
+         <TaskForm
+diff --git a/src/features/tasks/components/form/task-material-section.tsx b/src/features/tasks/components/form/task-material-section.tsx
+index 5dedd78..f3b0bfd 100644
+--- a/src/features/tasks/components/form/task-material-section.tsx
++++ b/src/features/tasks/components/form/task-material-section.tsx
+@@ -1,6 +1,6 @@
+ "use client"
+ 
+-import { Package, Plus, Trash2 } from "lucide-react"
++import { Package, Trash2 } from "lucide-react"
+ 
+ import { Input } from "@/components/ui/input"
+ import { FormSection } from "@/shared/ui/dialogs/form-dialog/form-section"
+@@ -71,10 +71,6 @@ export function TaskMaterialSection({
+     )
+   }
+ 
+-  const addLine = () => {
+-    setLines([...lines, { materialId: "", thicknessId: "", pieces: 1 }])
+-  }
+-
+   const removeLine = (index: number) => {
+     if (lines.length <= 1) return
+     setLines(lines.filter((_, i) => i !== index))
+@@ -90,14 +86,17 @@ export function TaskMaterialSection({
+ 
+   return (
+     <FormSection title="Material" icon={Package} trailing={totalLabel}>
+-      {/* Lista con tope: no crece el dialog sin fin */}
++      {/*
++        Scroll nativo. stopPropagation evita que el ScrollArea del
++        FormDialog capture la rueda / el gesto.
++      */}
+       <div
+         className={cn(
+-          "flex flex-col gap-2",
+-          !isMobile &&
+-            "max-h-[13.5rem] overflow-y-auto overscroll-contain scrollbar-none " +
+-              "[-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
++          "flex max-h-[14rem] flex-col gap-2 overflow-y-auto overscroll-y-contain",
++          "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+         )}
++        onWheel={e => e.stopPropagation()}
++        onTouchMove={e => e.stopPropagation()}
+       >
+         {lines.map((line, index) => {
+           const selectedMaterial = materials.find(
+@@ -114,7 +113,7 @@ export function TaskMaterialSection({
+                 "grid grid-cols-1 gap-3",
+                 isMobile
+                   ? "rounded-xl bg-foreground/5 p-3"
+-                  : "rounded-lg bg-background/60 p-2.5",
++                  : "rounded-lg bg-background/70 p-2.5",
+                 "tablet:grid-cols-[1fr_1fr_5.5rem_auto]",
+               )}
+             >
+@@ -193,15 +192,6 @@ export function TaskMaterialSection({
+           )
+         })}
+       </div>
+-
+-      <button
+-        type="button"
+-        onClick={addLine}
+-        className="inline-flex w-fit items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+-      >
+-        <Plus size={14} strokeWidth={2.5} />
+-        Añadir material
+-      </button>
+     </FormSection>
+   )
+ }
+diff --git a/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx b/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
+index 37c1c49..46b5909 100644
+--- a/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
++++ b/src/shared/ui/dialogs/form-dialog/form-dialog-footer.tsx
+@@ -1,10 +1,7 @@
+ "use client"
+ 
+ import { Spinner } from "@/shared/ui/spinner/spinner"
+-
+-import {
+-  cn,
+-} from "@/shared/utils/utils"
++import { cn } from "@/shared/utils/utils"
+ 
+ type Props = {
+   canSave: boolean
+@@ -14,6 +11,8 @@ type Props = {
+   cancelLabel?: string
+   onCancel: () => void
+   onSave: () => void
++  /** Acciones a la izquierda (p.ej. Añadir material) */
++  start?: React.ReactNode
+ }
+ 
+ export function FormDialogFooter({
+@@ -24,21 +23,21 @@ export function FormDialogFooter({
+   cancelLabel = "Cancelar",
+   onCancel,
+   onSave,
++  start,
+ }: Props) {
+-
+   return (
+-
+-    <div className="flex justify-end gap-3">
++    <div className="flex items-center gap-3">
++      {start && (
++        <div className="mr-auto flex min-w-0 items-center">{start}</div>
++      )}
+ 
+       <button
+         type="button"
+         disabled={saving}
+         onClick={onCancel}
+-        className="rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:border-border hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
++        className="rounded-xl bg-foreground/5 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+       >
+-
+         {cancelLabel}
+-
+       </button>
+ 
+       <button
+@@ -48,7 +47,6 @@ export function FormDialogFooter({
+         aria-label={saving ? (savingLabel ?? saveLabel) : undefined}
+         className={cn(
+           "flex min-w-38 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition",
+-
+           saving
+             ? "cursor-not-allowed bg-foreground/10 text-muted-foreground"
+             : canSave
+@@ -56,17 +54,8 @@ export function FormDialogFooter({
+               : "bg-foreground/10 text-muted-foreground hover:bg-foreground/15",
+         )}
+       >
+-
+-        {saving ? (
+-          <Spinner size={16} />
+-        ) : (
+-          saveLabel
+-        )}
+-
++        {saving ? <Spinner size={16} /> : saveLabel}
+       </button>
+-
+     </div>
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/shared/ui/dialogs/form-dialog/form-dialog.tsx b/src/shared/ui/dialogs/form-dialog/form-dialog.tsx
+index 253a9da..1af07bb 100644
+--- a/src/shared/ui/dialogs/form-dialog/form-dialog.tsx
++++ b/src/shared/ui/dialogs/form-dialog/form-dialog.tsx
+@@ -24,6 +24,8 @@ type Props = {
+   cancelLabel?: string
+   onCancelClick?: () => void
+   subHeader?: React.ReactNode
++  /** Izquierda del footer */
++  footerStart?: React.ReactNode
+   children: React.ReactNode
+   onClose: () => void
+   onSave: () => void
+@@ -40,6 +42,7 @@ export function FormDialog({
+   cancelLabel,
+   onCancelClick,
+   subHeader,
++  footerStart,
+   children,
+   onClose,
+   onSave,
+@@ -93,6 +96,7 @@ export function FormDialog({
+             cancelLabel={cancelLabel}
+             onCancel={onCancelClick ?? onClose}
+             onSave={onSave}
++            start={footerStart}
+           />
+         </div>
+       </DialogContent>

@@ -330,6 +330,40 @@ export function TaskDialog({
       ? handleWizardNext
       : save
 
+
+  const addMaterialLine = () => {
+    const current =
+      form.materials?.length
+        ? form.materials
+        : [
+            {
+              materialId: form.materialId,
+              thicknessId: form.thicknessId,
+              pieces: form.pieces || 1,
+            },
+          ]
+    update({
+      materials: [
+        ...current,
+        { materialId: "", thicknessId: "", pieces: 1 },
+      ],
+    })
+  }
+
+  const showAddMaterial =
+    !isMobile || step === TASK_FORM_STEP_COUNT - 1
+
+  const materialFooterStart = showAddMaterial ? (
+    <button
+      type="button"
+      onClick={addMaterialLine}
+      className="inline-flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+    >
+      <Plus size={15} strokeWidth={2.5} />
+      Añadir material
+    </button>
+  ) : undefined
+
   const visibleErrors =
     isMobile
       ? (stepAttempted.has(step) ? errors : undefined)
@@ -356,6 +390,7 @@ export function TaskDialog({
         subHeader={isMobile ? <TaskFormWizardProgress step={step} /> : undefined}
         onClose={close}
         onSave={footerOnSave}
+        footerStart={materialFooterStart}
       >
 
         <TaskForm

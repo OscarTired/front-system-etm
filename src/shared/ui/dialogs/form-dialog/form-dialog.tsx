@@ -24,6 +24,8 @@ type Props = {
   cancelLabel?: string
   onCancelClick?: () => void
   subHeader?: React.ReactNode
+  /** Izquierda del footer */
+  footerStart?: React.ReactNode
   children: React.ReactNode
   onClose: () => void
   onSave: () => void
@@ -40,6 +42,7 @@ export function FormDialog({
   cancelLabel,
   onCancelClick,
   subHeader,
+  footerStart,
   children,
   onClose,
   onSave,
@@ -93,6 +96,7 @@ export function FormDialog({
             cancelLabel={cancelLabel}
             onCancel={onCancelClick ?? onClose}
             onSave={onSave}
+            start={footerStart}
           />
         </div>
       </DialogContent>
