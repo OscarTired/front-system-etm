@@ -8,6 +8,7 @@ import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { EntitySelect } from "@/shared/ui/entity-select/entity-select"
 import { useMaterials } from "@/features/materials/hooks/use-materials"
 import { useThicknesses } from "@/features/thicknesses/hooks/use-thicknesses"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
 
 import type { TaskFormSectionProps } from "./types"
@@ -18,6 +19,8 @@ export function TaskMaterialSection({
   update,
   errors,
 }: TaskFormSectionProps) {
+  const { isMobile } = useResponsive()
+
   const {
     materials,
     create: createMaterial,
@@ -34,9 +37,18 @@ export function TaskMaterialSection({
 
   const lines = form.materials?.length
     ? form.materials
-    : [{ materialId: form.materialId, thicknessId: form.thicknessId, pieces: form.pieces || 1 }]
+    : [
+        {
+          materialId: form.materialId,
+          thicknessId: form.thicknessId,
+          pieces: form.pieces || 1,
+        },
+      ]
 
-  const totalPieces = lines.reduce((s, l) => s + (Number(l.pieces) || 0), 0)
+  const totalPieces = lines.reduce(
+    (s, l) => s + (Number(l.pieces) || 0),
+    0,
+  )
 
   const setLines = (next: TaskMaterialLineForm[]) => {
     const primary = [...next]
@@ -50,9 +62,13 @@ export function TaskMaterialSection({
     })
   }
 
-  const updateLine = (index: number, patch: Partial<TaskMaterialLineForm>) => {
-    const next = lines.map((l, i) => (i === index ? { ...l, ...patch } : l))
-    setLines(next)
+  const updateLine = (
+    index: number,
+    patch: Partial<TaskMaterialLineForm>,
+  ) => {
+    setLines(
+      lines.map((l, i) => (i === index ? { ...l, ...patch } : l)),
+    )
   }
 
   const addLine = () => {
@@ -64,18 +80,41 @@ export function TaskMaterialSection({
     setLines(lines.filter((_, i) => i !== index))
   }
 
+  const totalLabel = (
+    <span className="text-[11px] tabular-nums text-muted-foreground">
+      Total:{" "}
+      <span className="font-semibold text-foreground">{totalPieces}</span>{" "}
+      piezas
+    </span>
+  )
+
   return (
-    <FormSection title="Material" icon={Package}>
-      <div className="flex flex-col gap-3">
+    <FormSection title="Material" icon={Package} trailing={totalLabel}>
+      {/* Lista con tope: no crece el dialog sin fin */}
+      <div
+        className={cn(
+          "flex flex-col gap-2",
+          !isMobile &&
+            "max-h-[13.5rem] overflow-y-auto overscroll-contain scrollbar-none " +
+              "[-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        )}
+      >
         {lines.map((line, index) => {
-          const selectedMaterial = materials.find(m => m.id === line.materialId)
-          const selectedThickness = thicknesses.find(th => th.id === line.thicknessId)
+          const selectedMaterial = materials.find(
+            m => m.id === line.materialId,
+          )
+          const selectedThickness = thicknesses.find(
+            th => th.id === line.thicknessId,
+          )
 
           return (
             <div
               key={index}
               className={cn(
-                "grid grid-cols-1 gap-3 rounded-xl bg-foreground/[0.03] p-3",
+                "grid grid-cols-1 gap-3",
+                isMobile
+                  ? "rounded-xl bg-foreground/5 p-3"
+                  : "rounded-lg bg-background/60 p-2.5",
                 "tablet:grid-cols-[1fr_1fr_5.5rem_auto]",
               )}
             >
@@ -89,7 +128,9 @@ export function TaskMaterialSection({
                   items={materials}
                   placeholder="Material"
                   onChange={entity =>
-                    updateLine(index, { materialId: entity?.id ?? "" })
+                    updateLine(index, {
+                      materialId: entity?.id ?? "",
+                    })
                   }
                   onCreate={createMaterial}
                   onEdit={updateMaterial}
@@ -107,7 +148,9 @@ export function TaskMaterialSection({
                   items={thicknesses}
                   placeholder="Espesor"
                   onChange={entity =>
-                    updateLine(index, { thicknessId: entity?.id ?? "" })
+                    updateLine(index, {
+                      thicknessId: entity?.id ?? "",
+                    })
                   }
                   onCreate={createThickness}
                   onEdit={updateThickness}
@@ -149,23 +192,16 @@ export function TaskMaterialSection({
             </div>
           )
         })}
-
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={addLine}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-          >
-            <Plus size={14} strokeWidth={2.5} />
-            Añadir material
-          </button>
-          <p className="text-xs tabular-nums text-muted-foreground">
-            Total:{" "}
-            <span className="font-semibold text-foreground">{totalPieces}</span>{" "}
-            piezas
-          </p>
-        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={addLine}
+        className="inline-flex w-fit items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+      >
+        <Plus size={14} strokeWidth={2.5} />
+        Añadir material
+      </button>
     </FormSection>
   )
 }
