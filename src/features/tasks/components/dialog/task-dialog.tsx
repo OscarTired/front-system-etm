@@ -331,7 +331,10 @@ export function TaskDialog({
       : save
 
 
+  const [materialQty, setMaterialQty] = useState(1)
+
   const addMaterialLine = () => {
+    const qty = Math.min(20, Math.max(1, Math.floor(materialQty) || 1))
     const current =
       form.materials?.length
         ? form.materials
@@ -342,26 +345,53 @@ export function TaskDialog({
               pieces: form.pieces || 1,
             },
           ]
-    update({
-      materials: [
-        ...current,
-        { materialId: "", thicknessId: "", pieces: 1 },
-      ],
-    })
+    const extra = Array.from({ length: qty }, () => ({
+      materialId: "",
+      thicknessId: "",
+      pieces: 1,
+    }))
+    update({ materials: [...current, ...extra] })
+    setMaterialQty(1)
   }
 
   const showAddMaterial =
     !isMobile || step === TASK_FORM_STEP_COUNT - 1
 
   const materialFooterStart = showAddMaterial ? (
-    <button
-      type="button"
-      onClick={addMaterialLine}
-      className="inline-flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
-    >
-      <Plus size={15} strokeWidth={2.5} />
-      Añadir material
-    </button>
+    <div className="flex items-center gap-2">
+      <label className="sr-only" htmlFor="material-qty">
+        Cantidad de materiales a añadir
+      </label>
+      <input
+        id="material-qty"
+        type="number"
+        min={1}
+        max={20}
+        inputMode="numeric"
+        value={materialQty}
+        onChange={e => {
+          const n = Number(e.target.value)
+          if (Number.isNaN(n)) {
+            setMaterialQty(1)
+            return
+          }
+          setMaterialQty(Math.min(20, Math.max(1, n)))
+        }}
+        className="h-10 w-12 rounded-xl bg-foreground/5 text-center text-sm font-semibold tabular-nums text-foreground outline-none ring-0 transition focus:bg-foreground/10"
+        title="Cuántas líneas de material añadir"
+      />
+      <button
+        type="button"
+        onClick={addMaterialLine}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+      >
+        <Plus size={15} strokeWidth={2.5} />
+        Añadir material
+        {materialQty > 1 ? (
+          <span className="tabular-nums text-foreground/80">×{materialQty}</span>
+        ) : null}
+      </button>
+    </div>
   ) : undefined
 
   const visibleErrors =

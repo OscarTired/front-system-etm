@@ -167,7 +167,7 @@ export function TaskMaterialSection({
                   onClick={() => removeLine(index)}
                   className={cn(
                     "flex size-9 items-center justify-center rounded-lg text-muted-foreground transition",
-                    "hover:bg-foreground/10 hover:text-foreground",
+                    "hover:bg-red-500/15 hover:text-red-500",
                     "disabled:pointer-events-none disabled:opacity-30",
                   )}
                   aria-label="Quitar material"
