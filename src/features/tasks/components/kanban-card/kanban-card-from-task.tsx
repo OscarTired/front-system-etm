@@ -18,6 +18,7 @@ type Props={
   processCode?:ProcessCode
   dragPreview?:boolean
   hideCommentBadge?: boolean
+  reserveActionsSpace?: boolean
 }
 
 export function KanbanCardFromTask({
@@ -25,6 +26,7 @@ export function KanbanCardFromTask({
   processCode,
   dragPreview=false,
   hideCommentBadge=false,
+  reserveActionsSpace=false,
 }:Props){
 
   const stage=taskAccess.stageLabel(task)
@@ -55,6 +57,7 @@ export function KanbanCardFromTask({
       dragPreview={dragPreview}
       commentCount={commentCount}
       hideCommentBadge={hideCommentBadge}
+      reserveActionsSpace={reserveActionsSpace}
       priorityName={task.priority.name}
       priorityColor={task.priority.color}
       deliveryDate={task.deliveryDate}

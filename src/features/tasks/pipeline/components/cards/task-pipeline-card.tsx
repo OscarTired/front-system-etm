@@ -187,6 +187,7 @@ export function TaskPipelineCard({
                 task={task}
                 processCode={processCode}
                 hideCommentBadge
+                reserveActionsSpace
               />
             </div>
           ) : (

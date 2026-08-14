@@ -62,6 +62,9 @@ type Props={
   /** Ocultar badge junto a la fecha (p.ej. card expandida: el botón absolute lo cubre). */
   hideCommentBadge?: boolean
 
+  /** Hay botones chrome a la derecha → status solo icono si solapa */
+  reserveActionsSpace?: boolean
+
   dragPreview?:boolean
 
 }
@@ -88,6 +91,7 @@ export function KanbanCardView({
   taskNumber,
   commentCount = 0,
   hideCommentBadge = false,
+  reserveActionsSpace = false,
   dragPreview=false,
 
 }:Props){
@@ -241,6 +245,7 @@ export function KanbanCardView({
             label={statusName ?? ""}
             color={statusColor}
             icon={statusIcon}
+            iconOnly={reserveActionsSpace}
           />
 
         </div>

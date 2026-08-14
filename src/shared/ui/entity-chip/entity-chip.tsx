@@ -21,6 +21,8 @@ type Props = {
   // panel de producción, donde el chip convive con texto chico tipo
   // "(2 de 6)") — mismo chip, versión más chica.
   compact?: boolean
+  /** Solo icono (label en title) cuando el ancho solapa con acciones */
+  iconOnly?: boolean
 }
 
 // Chip simple (ícono + label sobre fondo "subtle" del color de la
@@ -33,6 +35,7 @@ export function EntityChip({
   color,
   icon,
   compact = false,
+  iconOnly = false,
 }: Props) {
 
   const Icon =
@@ -45,11 +48,15 @@ export function EntityChip({
   return (
 
     <div
+      title={label}
+      aria-label={label}
       className={cn(
         "inline-flex items-center rounded-lg font-semibold",
-        compact
-          ? "gap-1.5 px-2 py-1 text-xs"
-          : "gap-2 px-2.5 py-1.5 text-sm",
+        iconOnly
+          ? "justify-center p-1.5"
+          : compact
+            ? "gap-1.5 px-2 py-1 text-xs"
+            : "gap-2 px-2.5 py-1.5 text-sm",
       )}
       style={{
         color: badge.text,
@@ -57,9 +64,9 @@ export function EntityChip({
       }}
     >
 
-      {Icon && <Icon size={compact ? 12 : 15} />}
+      {Icon && <Icon size={compact || iconOnly ? 12 : 15} />}
 
-      <span>{label}</span>
+      {!iconOnly && <span>{label}</span>}
 
     </div>
 
