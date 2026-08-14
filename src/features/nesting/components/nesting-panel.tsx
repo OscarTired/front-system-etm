@@ -8,10 +8,18 @@ import {
   type EntityExpandedToggleOption,
 } from "@/shared/ui/entity-expanded-row/entity-expanded-toggle"
 
-export type NestingPanelView = "sheet-pieces" | "project-material" | "layers" | "inspector"
+export type NestingPanelView =
+  | "sheet-pieces"
+  | "project-material"
+  | "layers"
+  | "inspector"
 
 const PANEL_OPTIONS: EntityExpandedToggleOption<NestingPanelView>[] = [
-  { value: "project-material", label: "Proyecto y Material", icon: SlidersHorizontal },
+  {
+    value: "project-material",
+    label: "Proyecto y Material",
+    icon: SlidersHorizontal,
+  },
   { value: "sheet-pieces", label: "Piezas", icon: LayoutGrid },
   { value: "layers", label: "Capas", icon: Layers },
   { value: "inspector", label: "Inspector", icon: Info },
@@ -24,13 +32,13 @@ export interface NestingPanelProps {
   projectMaterial: ReactNode
   layers: ReactNode
   inspector: ReactNode
-  /** Botón Nestear / progreso */
   footer?: ReactNode
 }
 
 /**
- * Panel lateral de nesting — reutiliza EntityExpandedToggle de shared
- * (mismo control que el resto de la app).
+ * Panel lateral nesting.
+ * Zona de contenido: min-h-0 + overflow-y-auto (única fuente de scroll).
+ * Footer (Nestear) siempre visible fuera del scroller.
  */
 export function NestingPanel({
   activePanel,
@@ -51,20 +59,24 @@ export function NestingPanel({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {activePanel === "sheet-pieces" && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5 p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted/40 p-3 dark:bg-foreground/5">
             {pieces}
           </div>
         )}
         {activePanel === "project-material" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
             {projectMaterial}
           </div>
         )}
         {activePanel === "layers" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">{layers}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
+            {layers}
+          </div>
         )}
         {activePanel === "inspector" && (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">{inspector}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-muted/40 dark:bg-foreground/5">
+            {inspector}
+          </div>
         )}
       </div>
 

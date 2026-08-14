@@ -61,10 +61,10 @@ export function ProcessPaintCard({
 
   const colorValue =
     paintHex != null ? (
-      <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+      <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 py-0.5">
         <span
           aria-hidden
-          className="size-3.5 shrink-0 rounded-full ring-1 ring-black/15 dark:ring-white/20"
+          className="box-border size-3.5 shrink-0 rounded-full border border-black/20 dark:border-white/25"
           style={{ backgroundColor: paintHex }}
         />
         <span className="min-w-0 truncate">{color?.name ?? paintHex}</span>

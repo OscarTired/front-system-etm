@@ -595,8 +595,7 @@ export function NestingPage() {
       footer={nestFooter}
       pieces={<PieceList ref={pieceListRef} {...pieceListProps} />}
       projectMaterial={
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
             <MaterialPanel
               settings={project.settings}
               onChange={project.onSettingsChange}
@@ -614,24 +613,20 @@ export function NestingPage() {
                 onExport: () => setExportDialogOpen(true),
               }}
             />
-          </div>
-        </ScrollArea>
+        </div>
       }
       layers={
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
             <LayerManager
               layers={layerList}
               hiddenKeys={hiddenLayerKeys}
               onToggle={handleToggleLayer}
               onShowAll={handleShowAllLayers}
             />
-          </div>
-        </ScrollArea>
+        </div>
       }
       inspector={
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
             <PropertiesPanel
               sheetStats={sheetStats}
               selectedPiece={selectedPiece}
@@ -690,8 +685,7 @@ export function NestingPage() {
                 </div>
               )}
             </PropertiesPanel>
-          </div>
-        </ScrollArea>
+        </div>
       }
     />
   )
@@ -870,7 +864,7 @@ export function NestingPage() {
       )}
 
       <Sheet open={isCompact && isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-        <SheetContent className="flex flex-col gap-3 border-none bg-background p-4">
+        <SheetContent className="flex h-full max-h-[100dvh] flex-col gap-3 border-none bg-background p-4">
           <SheetHeader className="p-0">
             <SheetTitle>Panel de Control</SheetTitle>
           </SheetHeader>
