@@ -77,27 +77,15 @@ export function TaskMaterialSection({
   }
 
   const totalLabel = (
-    <span className="text-[11px] tabular-nums text-muted-foreground">
-      Total:{" "}
-      <span className="font-semibold text-foreground">{totalPieces}</span>{" "}
-      piezas
+    <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+      {totalPieces} total
     </span>
   )
 
   return (
     <FormSection title="Material" icon={Package} trailing={totalLabel}>
-      {/*
-        Scroll nativo. stopPropagation evita que el ScrollArea del
-        FormDialog capture la rueda / el gesto.
-      */}
-      <div
-        className={cn(
-          "flex max-h-[14rem] flex-col gap-2 overflow-y-auto overscroll-y-contain",
-          "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-        )}
-        onWheel={e => e.stopPropagation()}
-        onTouchMove={e => e.stopPropagation()}
-      >
+      {/* Filas planas dentro del panel (mismo ritmo que planchas del export) */}
+      <div className="flex flex-col gap-2">
         {lines.map((line, index) => {
           const selectedMaterial = materials.find(
             m => m.id === line.materialId,
@@ -111,9 +99,8 @@ export function TaskMaterialSection({
               key={index}
               className={cn(
                 "grid grid-cols-1 gap-3",
-                isMobile
-                  ? "rounded-xl bg-foreground/5 p-3"
-                  : "rounded-lg bg-background/70 p-2.5",
+                // Mobile: card propia. Desktop: fila dentro del panel, sin caja extra.
+                isMobile && "rounded-xl bg-foreground/5 p-3",
                 "tablet:grid-cols-[1fr_1fr_5.5rem_auto]",
               )}
             >
@@ -180,7 +167,7 @@ export function TaskMaterialSection({
                   onClick={() => removeLine(index)}
                   className={cn(
                     "flex size-9 items-center justify-center rounded-lg text-muted-foreground transition",
-                    "hover:bg-foreground/5 hover:text-foreground",
+                    "hover:bg-foreground/10 hover:text-foreground",
                     "disabled:pointer-events-none disabled:opacity-30",
                   )}
                   aria-label="Quitar material"

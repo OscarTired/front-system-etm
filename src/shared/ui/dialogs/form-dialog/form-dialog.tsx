@@ -24,13 +24,17 @@ type Props = {
   cancelLabel?: string
   onCancelClick?: () => void
   subHeader?: React.ReactNode
-  /** Izquierda del footer */
   footerStart?: React.ReactNode
   children: React.ReactNode
   onClose: () => void
   onSave: () => void
 }
 
+/**
+ * Shell alineado a ExportDialog:
+ * header fijo → body ScrollArea único → footer fijo.
+ * Desktop: h 85vh. Mobile: max-h-dvh (forms wizard).
+ */
 export function FormDialog({
   open,
   title,
@@ -59,11 +63,11 @@ export function FormDialog({
       <DialogContent
         size="large"
         className={cn(
-          "flex w-180 max-w-180 flex-col gap-0 overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-2xl",
-          // Desktop: casi el mismo shell que ExportDialog (altura fija + body scrolleable)
+          "flex flex-col gap-0 overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl",
           isMobile
-            ? "max-h-dvh"
-            : "h-[min(85vh,52rem)] max-h-[85vh]",
+            ? "max-h-dvh w-180 max-w-180 bg-popover"
+            : // Mismo contrato que ExportDialog; un poco más ancho por campos de form
+              "h-[85vh] max-h-[85vh] w-full max-w-2xl bg-popover",
         )}
       >
         <div className="shrink-0">
@@ -71,9 +75,10 @@ export function FormDialog({
         </div>
 
         {subHeader && (
-          <div className="shrink-0 px-5 py-3">{subHeader}</div>
+          <div className="shrink-0 px-5 py-2">{subHeader}</div>
         )}
 
+        {/* Única fuente de scroll — igual que ExportDialog */}
         <div className="relative min-h-0 w-full flex-1 overflow-hidden">
           <ScrollArea className="h-full w-full">
             <div

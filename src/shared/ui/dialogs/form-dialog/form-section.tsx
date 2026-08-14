@@ -3,20 +3,18 @@
 import type { LucideIcon } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { cn } from "@/shared/utils/utils"
 
 type Props = {
   title: string
   icon: LucideIcon
   children: React.ReactNode
-  /** Extra al lado del título (p.ej. total piezas) */
   trailing?: React.ReactNode
 }
 
 /**
- * Desktop → mismo contrato visual que ExportDialog:
- *   label uppercase + panel rounded-xl bg-foreground/5
- * Mobile → form clásico (icono + título + border-b)
+ * Desktop = ExportDialog:
+ *   label uppercase tracking-wide + panel rounded-xl bg-foreground/5 p-3 gap-2
+ * Mobile = form clásico con icono + border-b
  */
 export function FormSection({
   title,
@@ -44,13 +42,12 @@ export function FormSection({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2 px-0.5">
-        <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          <Icon size={14} className="text-muted-foreground" />
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {title}
         </span>
         {trailing}
       </div>
-      <div className="flex flex-col gap-3 rounded-xl bg-foreground/5 p-3">
+      <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3">
         {children}
       </div>
     </section>
