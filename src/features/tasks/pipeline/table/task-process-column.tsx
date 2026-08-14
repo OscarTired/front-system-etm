@@ -10,6 +10,7 @@ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
+import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { TaskPipelineCard } from "../components/cards/task-pipeline-card"
 import { TaskColumnOperator } from "../components/tasks/task-column-operator"
 import { getTaskProcesses } from "../utils/get-task-process"
@@ -111,6 +112,15 @@ function ColumnContent({
       }))
     : tasks.map(task => ({ task, included: true }))
 
+  const expandedTaskId = expandedKey?.split(":")[0] ?? null
+  const expandedTask = expandedTaskId
+    ? rows.find(r => r.task.id === expandedTaskId)?.task
+    : undefined
+  const dimActiveSiblings = Boolean(
+    expandedTask &&
+      !isWorkflowCompleted(expandedTask.workflowSteps),
+  )
+
   return (
     <div
       className={cn(
@@ -180,6 +190,7 @@ function ColumnContent({
                 task={task}
                 processCode={processCode}
                 expanded={expandedKey === key}
+                dimOthers={dimActiveSiblings}
                 onToggle={() => onToggleCard(key)}
                 overlayLocked={activeOverlayKey !== null && activeOverlayKey !== key}
                 onOverlayOpenChange={(isOpen) => onOverlayOpenChange(key, isOpen)}

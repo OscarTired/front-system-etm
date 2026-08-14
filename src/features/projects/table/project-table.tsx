@@ -156,6 +156,12 @@ export function ProjectTable({
     return <EntityListSkeleton variant="project" />
   }
 
+  // Solo al expandir un row ACTIVO (no histórico) se opacitan los demás activos.
+  const expandedProject = displayedProjects.find(p => p.id === expand.expandedRowId)
+  const dimActiveSiblings = Boolean(
+    expandedProject && !isProjectCompleted(expandedProject),
+  )
+
   return (
     <>
       <div className="flex flex-col gap-2 pb-2">
@@ -165,6 +171,7 @@ export function ProjectTable({
               project={project}
               tasks={tasks}
               expanded={expand.expandedRowId === project.id}
+              dimOthers={dimActiveSiblings}
               onToggle={() =>
                 setExpandedRowId(
                   expand.expandedRowId === project.id

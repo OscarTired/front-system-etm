@@ -252,6 +252,13 @@ export function ProcessTableCard({
 
   }
 
+  const expandedPt = displayedTasks.find(
+    pt => processAccess.task(pt).id === expand.expandedRowId,
+  )
+  const dimActiveSiblings = Boolean(
+    expandedPt && expandedPt.workflowStep?.status !== "REVIEWED",
+  )
+
   return (
 
     <div className="flex flex-col gap-2 pb-2">
@@ -267,6 +274,7 @@ export function ProcessTableCard({
             <ProcessMobileCard
               processTask={processTask}
               expanded={expand.expandedRowId === id}
+              dimOthers={dimActiveSiblings}
               onToggle={() =>
                 setExpandedRowId(
                   expand.expandedRowId === id

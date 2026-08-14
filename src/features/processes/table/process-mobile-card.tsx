@@ -41,12 +41,14 @@ function EntityIconBadge({
 type Props = {
   processTask: ProcessTask
   expanded: boolean
+  dimOthers?: boolean
   onToggle: () => void
 }
 
 export function ProcessMobileCard({
   processTask,
   expanded,
+  dimOthers = false,
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
@@ -72,7 +74,8 @@ export function ProcessMobileCard({
   const stepId = workflowAccess.stepId(processTask)
   const processCode = workflowAccess.processCode(processTask)
 
-  const isDimmed = workflowAccess.isCompleted(processTask)
+  const isCompleted = workflowAccess.isCompleted(processTask)
+  const isDimmed = isCompleted || (dimOthers && !expanded)
 
   return (
     <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>

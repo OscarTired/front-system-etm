@@ -45,12 +45,14 @@ function EntityIconBadge({
 type Props = {
   task: Task
   expanded: boolean
+  dimOthers?: boolean
   onToggle: () => void
 }
 
 export function TaskMobileCard({
   task,
   expanded,
+  dimOthers = false,
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
@@ -94,7 +96,8 @@ export function TaskMobileCard({
   const stage = taskAccess.stageLabel(task)
   const status = taskAccess.statusLabel(task)
 
-  const isDimmed = taskAccess.isCompleted(task)
+  const isCompleted = taskAccess.isCompleted(task)
+  const isDimmed = isCompleted || (dimOthers && !expanded)
 
   return (
     <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>

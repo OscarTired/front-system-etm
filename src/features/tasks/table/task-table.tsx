@@ -172,6 +172,11 @@ export function TaskTable({
     return <EntityListSkeleton variant="task" />
   }
 
+  const expandedTask = displayedTasks.find(t => t.id === expand.expandedRowId)
+  const dimActiveSiblings = Boolean(
+    expandedTask && !isWorkflowCompleted(expandedTask.workflowSteps),
+  )
+
   return (
 
     <>
@@ -185,6 +190,7 @@ export function TaskTable({
             <TaskMobileCard
               task={task}
               expanded={expand.expandedRowId === task.id}
+              dimOthers={dimActiveSiblings}
               onToggle={() =>
                 setExpandedRowId(
                   expand.expandedRowId === task.id

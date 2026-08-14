@@ -51,6 +51,8 @@ type Props = {
   task: Task
   processCode: ProcessCode
   expanded: boolean
+  /** Otro card activo expandido → opacar hermanos activos (no históricos) */
+  dimOthers?: boolean
   onToggle: () => void
   overlayLocked: boolean
   onOverlayOpenChange: (
@@ -62,6 +64,7 @@ export function TaskPipelineCard({
   task,
   processCode,
   expanded,
+  dimOthers = false,
   onToggle,
   overlayLocked,
   onOverlayOpenChange,
@@ -96,7 +99,8 @@ export function TaskPipelineCard({
 
   const isDimmed =
     isFutureStage ||
-    isCompletedStage
+    isCompletedStage ||
+    (dimOthers && !expanded)
 
   const isReachedStage =
     !isFutureStage &&

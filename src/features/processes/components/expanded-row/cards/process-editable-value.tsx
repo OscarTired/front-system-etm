@@ -151,8 +151,7 @@ export function ProcessEditableValue({
             className={
               "inline-flex max-w-full items-center truncate rounded-md " +
               "bg-foreground/10 px-1.5 py-0.5 font-inherit text-[length:inherit] " +
-              "font-semibold leading-inherit text-inherit " +
-              "ring-1 ring-inset ring-foreground/12"
+              "font-semibold leading-inherit text-inherit "
             }
           >
             {placeholder}

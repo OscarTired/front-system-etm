@@ -53,6 +53,8 @@ type Props = {
   project: Project
   tasks: Task[]
   expanded: boolean
+  /** true = hay un row activo expandido: opacar hermanos activos */
+  dimOthers?: boolean
   onToggle: () => void
 }
 
@@ -60,6 +62,7 @@ export function ProjectMobileCard({
   project,
   tasks,
   expanded,
+  dimOthers = false,
   onToggle,
 }: Props) {
   const [showFields, setShowFields] = useState(false)
@@ -90,7 +93,9 @@ export function ProjectMobileCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, isTarget])
 
-  const isDimmed = isProjectCompleted(project)
+  const isCompleted = isProjectCompleted(project)
+  // Historial: siempre opaco. Activos: se opacitan si otro activo está expandido.
+  const isDimmed = isCompleted || (dimOthers && !expanded)
   // Móvil expandido: acciones en el row; burbuja de conteo cede el sitio
   const actionsOnRow = isMobile && expanded
 
