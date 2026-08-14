@@ -30,6 +30,10 @@ import {
   FilterChipPopover,
 } from "./filter-chip-popover"
 
+import {
+  useResponsive,
+} from "@/shared/responsive/hooks/use-responsive"
+
 type Props={
   module:FilterModule
   /** Fuerza el texto "+ FILTRO" visible sin depender de si hay
@@ -76,21 +80,17 @@ export function FilterBar({
     availableOptions,
     availableChipOptions,
 
+    draft,
+    handleDraftToggle,
     handleBack,
-
     handleFieldSelect,
-
     handleValueSelect,
     handleValueConfirm,
-
     handleChipUpdate,
-
     handleDirectChipRemove,
+  } = useFilterBar(module)
 
-  }=
-    useFilterBar(
-      module
-    )
+  const { isMobile } = useResponsive()
 
   return(
 
@@ -122,34 +122,45 @@ export function FilterBar({
           sideOffset={8}
           floatingClassName="w-64"
           className="p-2"
+          sheetFooter={
+            selectedField && isMobile ? (
+              <button
+                type="button"
+                disabled={draft.length === 0}
+                onClick={handleValueConfirm}
+                className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition enabled:active:scale-[0.99] disabled:opacity-40"
+              >
+                Listo{draft.length > 0 ? ` (${draft.length})` : ""}
+              </button>
+            ) : undefined
+          }
         >
-
           {!selectedField ? (
-
             <FilterFieldView
               module={module}
-              onSelect={
-                handleFieldSelect
-              }
+              onSelect={handleFieldSelect}
             />
-
           ) : (
-
-            <FilterValueView
-              selectedField={
-                selectedField
-              }
-              availableOptions={
-                availableOptions
-              }
-              onBack={
-                handleBack
-              }
-              onConfirm={handleValueConfirm}
-            />
-
+            <>
+              <FilterValueView
+                selectedField={selectedField}
+                availableOptions={availableOptions}
+                draft={draft}
+                onBack={handleBack}
+                onToggle={handleDraftToggle}
+              />
+              {!isMobile && (
+                <button
+                  type="button"
+                  disabled={draft.length === 0}
+                  onClick={handleValueConfirm}
+                  className="mt-3 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition enabled:active:scale-[0.99] disabled:opacity-40"
+                >
+                  Listo{draft.length > 0 ? ` (${draft.length})` : ""}
+                </button>
+              )}
+            </>
           )}
-
         </PopoverContent>
 
       </Popover>

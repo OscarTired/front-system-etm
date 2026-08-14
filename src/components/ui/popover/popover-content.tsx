@@ -22,6 +22,11 @@ type PopoverContentProps = React.ComponentProps<
 > & {
   portal?: boolean
   floatingClassName?: string
+  /**
+   * Solo sheet mobile: footer anclado al fondo del sheet
+   * (fuera del scroll del body). Listo / acciones globales.
+   */
+  sheetFooter?: React.ReactNode
 }
 
 /**
@@ -44,6 +49,7 @@ export function PopoverContent({
   avoidCollisions = true,
   collisionPadding = 12,
   portal = true,
+  sheetFooter,
   children,
   onPointerDownOutside,
   onInteractOutside,
@@ -178,6 +184,12 @@ export function PopoverContent({
               {children}
             </div>
           </div>
+
+          {sheetFooter ? (
+            <div className="shrink-0 border-t border-border/50 bg-popover px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+              {sheetFooter}
+            </div>
+          ) : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     )

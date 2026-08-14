@@ -51,6 +51,9 @@ export function useFilterBar(module: FilterModule) {
   const [editingChip, setEditingChip] =
     useState<FilterChip | undefined>()
 
+  /** Borrador multi-select del sheet de valores (solo se aplica con Listo). */
+  const [draft, setDraft] = useState<FilterOption[]>([])
+
   const { users } = useUsersDirectory()
 
   const { clients } = useClients()
@@ -78,13 +81,11 @@ export function useFilterBar(module: FilterModule) {
   )
 
   const setOpen = useCallback((next: boolean) => {
-
     setOpenRaw(next)
-
     if (!next) {
       setSelectedField(undefined)
+      setDraft([])
     }
-
   }, [])
 
   const availableOptions = useMemo(() => {
@@ -150,15 +151,22 @@ export function useFilterBar(module: FilterModule) {
     chips,
   ])
 
-  const handleFieldSelect = useCallback(
-    (field: FilterField) => {
-      setSelectedField(field)
-    },
-    []
-  )
+  const handleFieldSelect = useCallback((field: FilterField) => {
+    setDraft([])
+    setSelectedField(field)
+  }, [])
 
   const handleBack = useCallback(() => {
+    setDraft([])
     setSelectedField(undefined)
+  }, [])
+
+  const handleDraftToggle = useCallback((option: FilterOption) => {
+    setDraft(prev => {
+      const exists = prev.some(o => o.value === option.value)
+      if (exists) return prev.filter(o => o.value !== option.value)
+      return [...prev, option]
+    })
   }, [])
 
   const handleValueSelect = useCallback(
@@ -178,24 +186,22 @@ export function useFilterBar(module: FilterModule) {
     [module, selectedField, addFilter],
   )
 
-  /** Multi-select: solo aplica al confirmar (Listo). Cancelar/back no escribe store. */
-  const handleValueConfirm = useCallback(
-    (options: FilterOption[]) => {
-      if (!selectedField || options.length === 0) return
-      for (const option of options) {
-        addFilter(module, {
-          field: selectedField,
-          value: option.value,
-          label: option.label,
-          color: option.color,
-          icon: option.icon,
-        })
-      }
-      setSelectedField(undefined)
-      setOpenRaw(false)
-    },
-    [module, selectedField, addFilter],
-  )
+  /** Multi-select global: Listo del sheet aplica el borrador. */
+  const handleValueConfirm = useCallback(() => {
+    if (!selectedField || draft.length === 0) return
+    for (const option of draft) {
+      addFilter(module, {
+        field: selectedField,
+        value: option.value,
+        label: option.label,
+        color: option.color,
+        icon: option.icon,
+      })
+    }
+    setDraft([])
+    setSelectedField(undefined)
+    setOpenRaw(false)
+  }, [module, selectedField, draft, addFilter])
 
   const handleChipUpdate = useCallback(
     (option: FilterOption) => {
@@ -248,6 +254,8 @@ export function useFilterBar(module: FilterModule) {
     availableOptions,
     availableChipOptions,
 
+    draft,
+    handleDraftToggle,
     handleBack,
     handleFieldSelect,
     handleValueSelect,
