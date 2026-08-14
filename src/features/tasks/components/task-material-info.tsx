@@ -17,16 +17,23 @@ type Props = {
   className?: string
   /** En card de proceso: botón más grande */
   size?: "sm" | "md"
+  /**
+   * En process row: siempre visible si hay al menos un material.
+   * En cards de kanban: por defecto solo si hay multi-material.
+   */
+  alwaysShow?: boolean
 }
 
-/** Solo se muestra si hay >1 línea de material. */
+/** Por defecto solo multi-material; `alwaysShow` → desde 1 línea. */
 export function TaskMaterialInfo({
   task,
   className,
   size = "sm",
+  alwaysShow = false,
 }: Props) {
   const lines = task.materialLines
-  if (!lines || lines.length <= 1) return null
+  if (!lines || lines.length === 0) return null
+  if (!alwaysShow && lines.length <= 1) return null
 
   const total = getTaskPiecesTotal(task)
   const isMd = size === "md"
@@ -49,15 +56,17 @@ export function TaskMaterialInfo({
           )}
         >
           <Layers size={isMd ? 18 : 14} strokeWidth={2.25} />
-          <span
-            className={cn(
-              "absolute -right-1 -top-1 flex items-center justify-center",
-              "rounded-full bg-primary font-bold tabular-nums text-primary-foreground",
-              isMd ? "size-4 text-[9px]" : "size-3.5 text-[8px]",
-            )}
-          >
-            {count > 9 ? "9+" : count}
-          </span>
+          {count > 1 && (
+            <span
+              className={cn(
+                "absolute -right-1 -top-1 flex items-center justify-center",
+                "rounded-full bg-primary font-bold tabular-nums text-primary-foreground",
+                isMd ? "size-4 text-[9px]" : "size-3.5 text-[8px]",
+              )}
+            >
+              {count > 9 ? "9+" : count}
+            </span>
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent

@@ -232,21 +232,20 @@ export function ProcessMobileCard({
           </div>
         )}
 
-        {expanded && (
-          <div
-            className="flex shrink-0 items-center gap-1 pr-0.5"
-            onClick={e => e.stopPropagation()}
-            onPointerDown={e => e.stopPropagation()}
-          >
-            <EntityAuditInfo
-              createdAt={task.createdAt}
-              updatedAt={task.updatedAt}
-              createdBy={task.createdBy}
-              updatedBy={task.updatedBy}
-            />
-            <TaskMaterialInfo task={task} />
-          </div>
-        )}
+        {/* Info + materiales: siempre en el row (colapsado o expandido) */}
+        <div
+          className="flex shrink-0 items-center gap-1 pr-0.5"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
+          <TaskMaterialInfo task={task} alwaysShow />
+        </div>
 
         <button
           type="button"
