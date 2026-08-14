@@ -27,7 +27,7 @@ function DesktopTopBar() {
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 px-3">
       <SidebarShowButton />
-      {sidebarHidden && <ThemeToggle variant="icon" className="size-8" />}
+      {sidebarHidden && <ThemeToggle variant="icon" />}
     </div>
   )
 }

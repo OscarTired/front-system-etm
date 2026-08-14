@@ -3,9 +3,10 @@
 import { Eye } from "lucide-react"
 
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
+import { chromeIconButtonClass } from "@/shared/theme/theme-toggle"
+import { cn } from "@/shared/utils/utils"
 
 export function SidebarShowButton() {
-
   const mode = useSidebarStore(state => state.mode)
   const toggleClosed = useSidebarStore(state => state.toggleClosed)
 
@@ -13,12 +14,13 @@ export function SidebarShowButton() {
 
   return (
     <button
+      type="button"
       onClick={toggleClosed}
       title="Mostrar barra lateral"
-      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors"
+      aria-label="Mostrar barra lateral"
+      className={cn(chromeIconButtonClass, "size-8")}
     >
-      <Eye size={16} />
+      <Eye size={16} strokeWidth={1.75} />
     </button>
   )
-
 }
