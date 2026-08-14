@@ -14,8 +14,10 @@ import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refre
 import {
   autoScrollAtPointer,
   findVerticalScrollParent,
+  overlayLeftBesidePointer,
   overlayTopAbovePointer,
 } from "@/shared/dnd/pointer-drag-utils"
+import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 
 type Props = {
   onDrop: (logId: string, shift: DayShift, isDuplicate: boolean) => void
@@ -56,6 +58,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
   const scrollParentRef = useRef<HTMLElement | null>(null)
   const lastClientY = useRef(0)
   const lastClientX = useRef(0)
+  const isMobileRef = useRef(false)
   const scrollRaf = useRef<number | null>(null)
 
   const registerSlot = useCallback((shift: DayShift, el: HTMLElement | null) => {
@@ -132,6 +135,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
         setPointerPos({ x: clientX, y: clientY })
         lastClientY.current = clientY
         lastClientX.current = clientX
+        isMobileRef.current = window.matchMedia("(max-width: 767px)").matches
         setHoverShift(null)
         isDuplicateModeRef.current = isDuplicate
         setIsDuplicateMode(isDuplicate)
@@ -204,7 +208,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
 
     function tickAutoScroll() {
       const y = lastClientY.current
-      const moved = autoScrollAtPointer(y, scrollParentRef.current)
+      const moved = autoScrollAtPointer(y, scrollParentRef.current, {
+        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
+      })
       if (moved) {
         updateCachedRects(
           isDuplicateModeRef.current
@@ -222,7 +228,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
       lastClientY.current = e.clientY
       lastClientX.current = e.clientX
       setPointerPos({ x: e.clientX, y: e.clientY })
-      autoScrollAtPointer(e.clientY, scrollParentRef.current)
+      autoScrollAtPointer(e.clientY, scrollParentRef.current, {
+        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
+      })
       updateCachedRects(
         isDuplicateModeRef.current ? null : draggingLogRef.current?.shift,
       )
@@ -264,38 +272,44 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     <div
       style={{
         position: "fixed",
-        left: pointerPos.x + 14,
+        left: overlayLeftBesidePointer(pointerPos.x, {
+          isMobile: isMobileRef.current,
+          width: 256,
+        }),
+        width: 256,
         top: overlayTopAbovePointer(pointerPos.y),
         pointerEvents: "none",
         zIndex: 10000,
-        transform: "rotate(-2deg)",
       }}
     >
-      <div className="flex max-w-64 items-center gap-2.5 rounded-xl bg-popover px-3 py-2.5 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]">
-        {(() => {
-          const Icon = getActivityIcon(draggingLog.activityType.icon)
-          return (
-            <div
-              className="flex size-7 shrink-0 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: `${draggingLog.activityType.color}22`,
-                color: draggingLog.activityType.color,
-              }}
-            >
-              <Icon size={13} />
-            </div>
-          )
-        })()}
-
-        <span className="min-w-0 truncate text-xs font-medium text-foreground">
-          {draggingLog.activityType.label}
-        </span>
-
-        {isDuplicateMode && (
-          <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-            Copiar
-          </span>
-        )}
+      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+        <span className="shrink-0 text-foreground/35">≡</span>
+        <div className="min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2">
+            {(() => {
+              const Icon = getActivityIcon(draggingLog.activityType.icon)
+              return (
+                <div
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: `${draggingLog.activityType.color}22`,
+                    color: draggingLog.activityType.color,
+                  }}
+                >
+                  <Icon size={12} />
+                </div>
+              )
+            })()}
+            <span className="min-w-0 truncate text-xs font-medium text-foreground">
+              {draggingLog.activityType.label}
+            </span>
+            {isDuplicateMode && (
+              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                Copiar
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

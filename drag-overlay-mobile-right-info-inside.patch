@@ -1,0 +1,393 @@
+diff --git a/src/features/activity-log/hooks/use-activity-drag.tsx b/src/features/activity-log/hooks/use-activity-drag.tsx
+index eb98f96..4cafa37 100644
+--- a/src/features/activity-log/hooks/use-activity-drag.tsx
++++ b/src/features/activity-log/hooks/use-activity-drag.tsx
+@@ -14,8 +14,10 @@ import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refre
+ import {
+   autoScrollAtPointer,
+   findVerticalScrollParent,
++  overlayLeftBesidePointer,
+   overlayTopAbovePointer,
+ } from "@/shared/dnd/pointer-drag-utils"
++import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
+ 
+ type Props = {
+   onDrop: (logId: string, shift: DayShift, isDuplicate: boolean) => void
+@@ -56,6 +58,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+   const scrollParentRef = useRef<HTMLElement | null>(null)
+   const lastClientY = useRef(0)
+   const lastClientX = useRef(0)
++  const isMobileRef = useRef(false)
+   const scrollRaf = useRef<number | null>(null)
+ 
+   const registerSlot = useCallback((shift: DayShift, el: HTMLElement | null) => {
+@@ -132,6 +135,7 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+         setPointerPos({ x: clientX, y: clientY })
+         lastClientY.current = clientY
+         lastClientX.current = clientX
++        isMobileRef.current = window.matchMedia("(max-width: 767px)").matches
+         setHoverShift(null)
+         isDuplicateModeRef.current = isDuplicate
+         setIsDuplicateMode(isDuplicate)
+@@ -204,7 +208,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+ 
+     function tickAutoScroll() {
+       const y = lastClientY.current
+-      const moved = autoScrollAtPointer(y, scrollParentRef.current)
++      const moved = autoScrollAtPointer(y, scrollParentRef.current, {
++        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
++      })
+       if (moved) {
+         updateCachedRects(
+           isDuplicateModeRef.current
+@@ -222,7 +228,9 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+       lastClientY.current = e.clientY
+       lastClientX.current = e.clientX
+       setPointerPos({ x: e.clientX, y: e.clientY })
+-      autoScrollAtPointer(e.clientY, scrollParentRef.current)
++      autoScrollAtPointer(e.clientY, scrollParentRef.current, {
++        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
++      })
+       updateCachedRects(
+         isDuplicateModeRef.current ? null : draggingLogRef.current?.shift,
+       )
+@@ -264,38 +272,44 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
+     <div
+       style={{
+         position: "fixed",
+-        left: pointerPos.x + 14,
++        left: overlayLeftBesidePointer(pointerPos.x, {
++          isMobile: isMobileRef.current,
++          width: 256,
++        }),
++        width: 256,
+         top: overlayTopAbovePointer(pointerPos.y),
+         pointerEvents: "none",
+         zIndex: 10000,
+-        transform: "rotate(-2deg)",
+       }}
+     >
+-      <div className="flex max-w-64 items-center gap-2.5 rounded-xl bg-popover px-3 py-2.5 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)]">
+-        {(() => {
+-          const Icon = getActivityIcon(draggingLog.activityType.icon)
+-          return (
+-            <div
+-              className="flex size-7 shrink-0 items-center justify-center rounded-full"
+-              style={{
+-                backgroundColor: `${draggingLog.activityType.color}22`,
+-                color: draggingLog.activityType.color,
+-              }}
+-            >
+-              <Icon size={13} />
+-            </div>
+-          )
+-        })()}
+-
+-        <span className="min-w-0 truncate text-xs font-medium text-foreground">
+-          {draggingLog.activityType.label}
+-        </span>
+-
+-        {isDuplicateMode && (
+-          <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+-            Copiar
+-          </span>
+-        )}
++      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
++        <span className="shrink-0 text-foreground/35">≡</span>
++        <div className="min-w-0 overflow-hidden">
++          <div className="flex items-center gap-2">
++            {(() => {
++              const Icon = getActivityIcon(draggingLog.activityType.icon)
++              return (
++                <div
++                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
++                  style={{
++                    backgroundColor: `${draggingLog.activityType.color}22`,
++                    color: draggingLog.activityType.color,
++                  }}
++                >
++                  <Icon size={12} />
++                </div>
++              )
++            })()}
++            <span className="min-w-0 truncate text-xs font-medium text-foreground">
++              {draggingLog.activityType.label}
++            </span>
++            {isDuplicateMode && (
++              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
++                Copiar
++              </span>
++            )}
++          </div>
++        </div>
+       </div>
+     </div>
+   )
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+index 5856ca7..c1e6c0a 100644
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -229,9 +229,9 @@ export function ProjectMobileCard({
+           </span>
+         </button>
+ 
+-        {/* Info auditoría: desktop y mobile, después de la fecha */}
++        {/* Info auditoría: solo desktop (en móvil vive dentro del expand / actions) */}
+         <div
+-          className="flex shrink-0 items-center"
++          className="hidden shrink-0 items-center md:flex"
+           onClick={e => e.stopPropagation()}
+           onPointerDown={e => e.stopPropagation()}
+         >
+@@ -249,7 +249,7 @@ export function ProjectMobileCard({
+             className="flex shrink-0 items-center gap-0.5 pr-0.5"
+             onClick={e => e.stopPropagation()}
+           >
+-            <ProjectRowActions project={project} className="gap-0.5" showAudit={false} />
++            <ProjectRowActions project={project} className="gap-0.5" showAudit={isMobile} />
+             <IconAction
+               icon={Plus}
+               disabled={!canCreateTask}
+@@ -390,7 +390,7 @@ export function ProjectMobileCard({
+         {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
+         {!isMobile && (
+           <div className="flex items-center justify-start gap-1">
+-            <ProjectRowActions project={project} showAudit={false} />
++            <ProjectRowActions project={project} showAudit={isMobile} />
+           </div>
+         )}
+ 
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+index 24f9f18..1b6fad4 100644
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -273,9 +273,9 @@ export function TaskMobileCard({
+           </span>
+         </div>
+ 
+-        {/* Info auditoría: después de la fecha */}
++        {/* Info auditoría: solo desktop (en móvil vive dentro del expand / actions) */}
+         <div
+-          className="flex shrink-0 items-center"
++          className="hidden shrink-0 items-center md:flex"
+           onClick={e => e.stopPropagation()}
+           onPointerDown={e => e.stopPropagation()}
+         >
+@@ -293,7 +293,7 @@ export function TaskMobileCard({
+             onClick={e => e.stopPropagation()}
+             onPointerDown={e => e.stopPropagation()}
+           >
+-            <TaskRowActions task={task} className="gap-0.5" showAudit={false} />
++            <TaskRowActions task={task} className="gap-0.5" showAudit={isMobile} />
+           </div>
+         )}
+ 
+@@ -425,7 +425,7 @@ export function TaskMobileCard({
+         {/* Desktop: acciones en el panel. Móvil: van en el row al expandir. */}
+         {!isMobile && (
+           <div className="flex items-center justify-start gap-1">
+-            <TaskRowActions task={task} showAudit={false} />
++            <TaskRowActions task={task} showAudit={isMobile} />
+           </div>
+         )}
+ 
+diff --git a/src/shared/dnd/pointer-drag-utils.ts b/src/shared/dnd/pointer-drag-utils.ts
+index d48a047..91ecc10 100644
+--- a/src/shared/dnd/pointer-drag-utils.ts
++++ b/src/shared/dnd/pointer-drag-utils.ts
+@@ -1,23 +1,34 @@
+ /**
+  * Primitivas compartidas del drag por pointer (rows + activities).
+- * Una sola fuente: clearance del dedo + auto-scroll en bordes.
++ * Una sola fuente: clearance del dedo + auto-scroll en bordes + posición overlay.
+  */
+ 
+-/** Eleva el ghost por encima del dedo para que no tape el contenido. */
+-export const DRAG_OVERLAY_CLEARANCE_PX = 64
++/** Eleva el ghost por encima del dedo (móvil y desktop). */
++export const DRAG_OVERLAY_CLEARANCE_PX = 56
++
++/** Ancho típico del chip de overlay. */
++export const DRAG_OVERLAY_WIDTH_PX = 256
+ 
+ /** Zona (px) desde el borde del scroller que activa auto-scroll. */
+-export const DRAG_SCROLL_EDGE_PX = 80
++export const DRAG_SCROLL_EDGE_PX = 96
+ 
+ /** Velocidad máx. de auto-scroll (px / frame aprox.). */
+-export const DRAG_SCROLL_MAX_SPEED = 22
++export const DRAG_SCROLL_MAX_SPEED = 28
+ 
++/**
++ * Busca el scroller vertical real.
++ * Prioriza [data-slot="scroll-area"] (AppListScroll / ScrollArea nativo).
++ */
+ export function findVerticalScrollParent(
+   start: HTMLElement | null,
+ ): HTMLElement | null {
+   let node: HTMLElement | null = start
+ 
+   while (node && node !== document.body) {
++    if (node.getAttribute("data-slot") === "scroll-area") {
++      return node
++    }
++
+     const style = window.getComputedStyle(node)
+     const oy = style.overflowY
+     const canScroll =
+@@ -37,20 +48,29 @@ export function findVerticalScrollParent(
+ }
+ 
+ /**
+- * Si el puntero está cerca del borde superior/inferior del scroller,
+- * desplaza el contenido (comportamiento nativo de listas).
++ * Auto-scroll en bordes. `bottomInset` reserva el bottom-nav en móvil
++ * para que la zona activa quede por encima de la barra.
+  */
+ export function autoScrollAtPointer(
+   clientY: number,
+   scrollParent: HTMLElement | null,
+-  edgePx: number = DRAG_SCROLL_EDGE_PX,
+-  maxSpeed: number = DRAG_SCROLL_MAX_SPEED,
++  opts?: {
++    edgePx?: number
++    maxSpeed?: number
++    bottomInset?: number
++  },
+ ): boolean {
+   if (!scrollParent) return false
+ 
++  const edgePx = opts?.edgePx ?? DRAG_SCROLL_EDGE_PX
++  const maxSpeed = opts?.maxSpeed ?? DRAG_SCROLL_MAX_SPEED
++  const bottomInset = opts?.bottomInset ?? 0
++
+   const rect = scrollParent.getBoundingClientRect()
+   const topZone = rect.top + edgePx
+-  const bottomZone = rect.bottom - edgePx
++  // Efectivo: no contar el área tapada por bottom-nav
++  const effectiveBottom = Math.min(rect.bottom, window.innerHeight - bottomInset)
++  const bottomZone = effectiveBottom - edgePx
+ 
+   if (clientY < topZone) {
+     const intensity = Math.min(1, (topZone - clientY) / edgePx)
+@@ -71,7 +91,40 @@ export function autoScrollAtPointer(
+   return false
+ }
+ 
+-/** top del overlay: por encima del dedo, no debajo. */
++/** top del overlay: por encima del dedo. */
+ export function overlayTopAbovePointer(clientY: number): number {
+-  return clientY - DRAG_OVERLAY_CLEARANCE_PX
++  return Math.max(8, clientY - DRAG_OVERLAY_CLEARANCE_PX)
++}
++
++/**
++ * left del overlay.
++ * - Móvil: a la DERECHA del dedo (si cabe); si no, a la izquierda.
++ * - Desktop: respeta preferredLeft (alineado a la fila) o puntero + 14.
++ */
++export function overlayLeftBesidePointer(
++  clientX: number,
++  opts?: {
++    isMobile?: boolean
++    preferredLeft?: number
++    width?: number
++  },
++): number {
++  const width = opts?.width ?? DRAG_OVERLAY_WIDTH_PX
++  const gap = 16
++  const margin = 8
++
++  if (!opts?.isMobile) {
++    if (typeof opts?.preferredLeft === "number") {
++      return opts.preferredLeft
++    }
++    return clientX + 14
++  }
++
++  // Móvil: preferir derecha del dedo
++  const right = clientX + gap
++  if (right + width <= window.innerWidth - margin) {
++    return right
++  }
++  // Flip a la izquierda del dedo
++  return Math.max(margin, clientX - width - gap)
+ }
+diff --git a/src/shared/dnd/use-row-drag-reorder.tsx b/src/shared/dnd/use-row-drag-reorder.tsx
+index 9b79cc6..26a9a8e 100644
+--- a/src/shared/dnd/use-row-drag-reorder.tsx
++++ b/src/shared/dnd/use-row-drag-reorder.tsx
+@@ -14,8 +14,10 @@ import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refre
+ import {
+   autoScrollAtPointer,
+   findVerticalScrollParent,
++  overlayLeftBesidePointer,
+   overlayTopAbovePointer,
+ } from "./pointer-drag-utils"
++import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
+ 
+ type RowRect = {
+   id: string
+@@ -70,6 +72,8 @@ export function useRowDragReorder<T>({
+   const startPos = useRef<{ x: number; y: number } | null>(null)
+   const scrollParentRef = useRef<HTMLElement | null>(null)
+   const lastClientY = useRef(0)
++  const lastClientX = useRef(0)
++  const isMobileRef = useRef(false)
+ 
+   function capture() {
+     rects.current = itemsRef.current.map(item => {
+@@ -121,6 +125,8 @@ export function useRowDragReorder<T>({
+ 
+     scrollParentRef.current = findVerticalScrollParent(rowEl)
+     lastClientY.current = e.clientY
++    lastClientX.current = e.clientX
++    isMobileRef.current = window.matchMedia("(max-width: 767px)").matches
+ 
+     try {
+       e.currentTarget.setPointerCapture(e.pointerId)
+@@ -184,7 +190,9 @@ export function useRowDragReorder<T>({
+ 
+     function tickAutoScroll() {
+       const y = lastClientY.current
+-      const moved = autoScrollAtPointer(y, scrollParentRef.current)
++      const moved = autoScrollAtPointer(y, scrollParentRef.current, {
++        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
++      })
+       if (moved) {
+         capture()
+         setInsertIndex(getInsertIndex(y, dragId))
+@@ -194,6 +202,7 @@ export function useRowDragReorder<T>({
+ 
+     function onMove(e: PointerEvent) {
+       lastClientY.current = e.clientY
++      lastClientX.current = e.clientX
+ 
+       if (startPos.current) {
+         const dx = Math.abs(e.clientX - startPos.current.x)
+@@ -210,7 +219,9 @@ export function useRowDragReorder<T>({
+       if (raf.current) cancelAnimationFrame(raf.current)
+ 
+       raf.current = requestAnimationFrame(() => {
+-        autoScrollAtPointer(e.clientY, scrollParentRef.current)
++        autoScrollAtPointer(e.clientY, scrollParentRef.current, {
++          bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
++        })
+         capture()
+         const newIndex = getInsertIndex(e.clientY, dragId)
+         setInsertIndex(newIndex)
+@@ -333,8 +344,12 @@ export function useRowDragReorder<T>({
+         <div
+           style={{
+             position: "fixed",
+-            left: drag.left,
+-            width: Math.min(drag.width, 288),
++            left: overlayLeftBesidePointer(lastClientX.current, {
++              isMobile: isMobileRef.current,
++              preferredLeft: drag.left,
++              width: 256,
++            }),
++            width: 256,
+             top: labelTop,
+             pointerEvents: "none",
+             zIndex: 10000,

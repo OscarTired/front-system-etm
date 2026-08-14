@@ -14,8 +14,10 @@ import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refre
 import {
   autoScrollAtPointer,
   findVerticalScrollParent,
+  overlayLeftBesidePointer,
   overlayTopAbovePointer,
 } from "./pointer-drag-utils"
+import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 
 type RowRect = {
   id: string
@@ -70,6 +72,8 @@ export function useRowDragReorder<T>({
   const startPos = useRef<{ x: number; y: number } | null>(null)
   const scrollParentRef = useRef<HTMLElement | null>(null)
   const lastClientY = useRef(0)
+  const lastClientX = useRef(0)
+  const isMobileRef = useRef(false)
 
   function capture() {
     rects.current = itemsRef.current.map(item => {
@@ -121,6 +125,8 @@ export function useRowDragReorder<T>({
 
     scrollParentRef.current = findVerticalScrollParent(rowEl)
     lastClientY.current = e.clientY
+    lastClientX.current = e.clientX
+    isMobileRef.current = window.matchMedia("(max-width: 767px)").matches
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
@@ -184,7 +190,9 @@ export function useRowDragReorder<T>({
 
     function tickAutoScroll() {
       const y = lastClientY.current
-      const moved = autoScrollAtPointer(y, scrollParentRef.current)
+      const moved = autoScrollAtPointer(y, scrollParentRef.current, {
+        bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
+      })
       if (moved) {
         capture()
         setInsertIndex(getInsertIndex(y, dragId))
@@ -194,6 +202,7 @@ export function useRowDragReorder<T>({
 
     function onMove(e: PointerEvent) {
       lastClientY.current = e.clientY
+      lastClientX.current = e.clientX
 
       if (startPos.current) {
         const dx = Math.abs(e.clientX - startPos.current.x)
@@ -210,7 +219,9 @@ export function useRowDragReorder<T>({
       if (raf.current) cancelAnimationFrame(raf.current)
 
       raf.current = requestAnimationFrame(() => {
-        autoScrollAtPointer(e.clientY, scrollParentRef.current)
+        autoScrollAtPointer(e.clientY, scrollParentRef.current, {
+          bottomInset: isMobileRef.current ? BOTTOM_NAV_HEIGHT_PX : 0,
+        })
         capture()
         const newIndex = getInsertIndex(e.clientY, dragId)
         setInsertIndex(newIndex)
@@ -333,8 +344,12 @@ export function useRowDragReorder<T>({
         <div
           style={{
             position: "fixed",
-            left: drag.left,
-            width: Math.min(drag.width, 288),
+            left: overlayLeftBesidePointer(lastClientX.current, {
+              isMobile: isMobileRef.current,
+              preferredLeft: drag.left,
+              width: 256,
+            }),
+            width: 256,
             top: labelTop,
             pointerEvents: "none",
             zIndex: 10000,

@@ -229,9 +229,9 @@ export function ProjectMobileCard({
           </span>
         </button>
 
-        {/* Info auditoría: desktop y mobile, después de la fecha */}
+        {/* Info auditoría: solo desktop (en móvil vive dentro del expand / actions) */}
         <div
-          className="flex shrink-0 items-center"
+          className="hidden shrink-0 items-center md:flex"
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
         >
@@ -249,7 +249,7 @@ export function ProjectMobileCard({
             className="flex shrink-0 items-center gap-0.5 pr-0.5"
             onClick={e => e.stopPropagation()}
           >
-            <ProjectRowActions project={project} className="gap-0.5" showAudit={false} />
+            <ProjectRowActions project={project} className="gap-0.5" showAudit={isMobile} />
             <IconAction
               icon={Plus}
               disabled={!canCreateTask}
@@ -390,7 +390,7 @@ export function ProjectMobileCard({
         {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
         {!isMobile && (
           <div className="flex items-center justify-start gap-1">
-            <ProjectRowActions project={project} showAudit={false} />
+            <ProjectRowActions project={project} showAudit={isMobile} />
           </div>
         )}
 
