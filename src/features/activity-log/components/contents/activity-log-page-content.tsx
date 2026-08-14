@@ -343,7 +343,7 @@ export function ActivityLogPageContent({
         <div className="mb-1 shrink-0">{toolbar}</div>
 
         {isAgenda && (
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
             <AgendaWeekView
               anchorDate={date}
               logs={rangeLogs}
@@ -355,7 +355,7 @@ export function ActivityLogPageContent({
         )}
 
         {isMonth && (
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
             <AgendaMonthView
               anchorDate={date}
               logs={rangeLogs}
@@ -366,7 +366,7 @@ export function ActivityLogPageContent({
         )}
 
         {viewMode === "day" && (
-          <div className="flex w-full flex-col gap-3 pb-4">
+          <div className="flex w-full flex-col gap-3 pb-4 max-md:mt-2">
             {!loading &&
               departmentQuery === "PRODUCCION" &&
               department !== "REGISTROS" && (

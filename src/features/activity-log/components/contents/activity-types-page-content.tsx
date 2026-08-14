@@ -177,7 +177,7 @@ export function ActivityTypesPageContent() {
           />
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 max-md:mt-2">
           {loading ? (
             <>
               {/* Inline: mismas secciones/filas; el search real ya está arriba. */}

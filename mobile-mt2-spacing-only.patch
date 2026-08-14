@@ -1,0 +1,83 @@
+diff --git a/src/app/(protected)/bitacora/page.tsx b/src/app/(protected)/bitacora/page.tsx
+index 0125da5..c72b5bc 100644
+--- a/src/app/(protected)/bitacora/page.tsx
++++ b/src/app/(protected)/bitacora/page.tsx
+@@ -157,7 +157,7 @@ export default function BitacoraPage() {
+             await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
+           }}
+         >
+-          <div className="mb-2 shrink-0 desktop:hidden">
++          <div className="mt-2 mb-2 shrink-0 desktop:hidden">
+             <TabsNav compact />
+           </div>
+ 
+diff --git a/src/features/activity-log/components/contents/activity-log-page-content.tsx b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+index 73d2eac..61c9d3d 100644
+--- a/src/features/activity-log/components/contents/activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+@@ -343,7 +343,7 @@ export function ActivityLogPageContent({
+         <div className="mb-1 shrink-0">{toolbar}</div>
+ 
+         {isAgenda && (
+-          <div className="flex min-h-0 flex-1 flex-col">
++          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+             <AgendaWeekView
+               anchorDate={date}
+               logs={rangeLogs}
+@@ -355,7 +355,7 @@ export function ActivityLogPageContent({
+         )}
+ 
+         {isMonth && (
+-          <div className="flex min-h-0 flex-1 flex-col">
++          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+             <AgendaMonthView
+               anchorDate={date}
+               logs={rangeLogs}
+@@ -366,7 +366,7 @@ export function ActivityLogPageContent({
+         )}
+ 
+         {viewMode === "day" && (
+-          <div className="flex w-full flex-col gap-3 pb-4">
++          <div className="flex w-full flex-col gap-3 pb-4 max-md:mt-2">
+             {!loading &&
+               departmentQuery === "PRODUCCION" &&
+               department !== "REGISTROS" && (
+diff --git a/src/features/activity-log/components/contents/activity-types-page-content.tsx b/src/features/activity-log/components/contents/activity-types-page-content.tsx
+index 2478598..3c51de2 100644
+--- a/src/features/activity-log/components/contents/activity-types-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-types-page-content.tsx
+@@ -177,7 +177,7 @@ export function ActivityTypesPageContent() {
+           />
+         </div>
+ 
+-        <div className="flex flex-col gap-6">
++        <div className="flex flex-col gap-6 max-md:mt-2">
+           {loading ? (
+             <>
+               {/* Inline: mismas secciones/filas; el search real ya está arriba. */}
+diff --git a/src/features/comments/components/messages-page-content.tsx b/src/features/comments/components/messages-page-content.tsx
+index 0b4d542..2e08356 100644
+--- a/src/features/comments/components/messages-page-content.tsx
++++ b/src/features/comments/components/messages-page-content.tsx
+@@ -127,7 +127,7 @@ export function MessagesPageContent() {
+           </div>
+         </div>
+ 
+-        <div className="px-1 py-1">
++        <div className="px-1 py-1 max-md:mt-2">
+         {loading ? (
+           <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
+             <Spinner size={18} />
+diff --git a/src/features/roles/components/role-permissions-page-content.tsx b/src/features/roles/components/role-permissions-page-content.tsx
+index 8e2e04e..e861dd1 100644
+--- a/src/features/roles/components/role-permissions-page-content.tsx
++++ b/src/features/roles/components/role-permissions-page-content.tsx
+@@ -269,7 +269,7 @@ export function RolePermissionsPageContent() {
+             }}
+           >
+             {searchToolbar}
+-            <div className="space-y-3 pb-4">
++            <div className="mt-2 space-y-3 pb-4">
+               {mode === "roles" ? (
+                 <>
+                   {loadingRoles && <RoleMobileSkeleton />}

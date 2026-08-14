@@ -127,7 +127,7 @@ export function MessagesPageContent() {
           </div>
         </div>
 
-        <div className="px-1 py-1">
+        <div className="px-1 py-1 max-md:mt-2">
         {loading ? (
           <div className="flex min-h-65 flex-col items-center justify-center gap-2.5">
             <Spinner size={18} />

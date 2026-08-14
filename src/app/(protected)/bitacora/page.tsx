@@ -157,7 +157,7 @@ export default function BitacoraPage() {
             await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
           }}
         >
-          <div className="mb-2 shrink-0 desktop:hidden">
+          <div className="mt-2 mb-2 shrink-0 desktop:hidden">
             <TabsNav compact />
           </div>
 

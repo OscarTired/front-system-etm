@@ -269,7 +269,7 @@ export function RolePermissionsPageContent() {
             }}
           >
             {searchToolbar}
-            <div className="space-y-3 pb-4">
+            <div className="mt-2 space-y-3 pb-4">
               {mode === "roles" ? (
                 <>
                   {loadingRoles && <RoleMobileSkeleton />}
