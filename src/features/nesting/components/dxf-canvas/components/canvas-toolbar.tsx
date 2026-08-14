@@ -177,18 +177,13 @@ export function CanvasToolbar({
           {open ? <X size={18} strokeWidth={1.75} /> : <Wrench size={18} strokeWidth={1.75} />}
         </button>
 
+        {/* Ancho real desde el primer frame (sin max-w→grow).
+            Animar max-width hacía wrap de 1 col = columna enorme al abrir. */}
+        {open && (
         <div
           className={`
-            min-w-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-            ${
-              isCompact
-                ? open
-                  ? "flex-1 opacity-100"
-                  : "max-w-0 flex-none opacity-0 pointer-events-none"
-                : open
-                  ? "max-w-[min(52rem,calc(100vw-6rem))] opacity-100"
-                  : "max-w-0 opacity-0 pointer-events-none"
-            }
+            min-w-0 animate-in fade-in duration-200
+            ${isCompact ? "flex-1" : "max-w-[min(52rem,calc(100vw-6rem))]"}
           `}
         >
         <div
@@ -411,6 +406,7 @@ export function CanvasToolbar({
           )}
         </div>
         </div>
+        )}
       </div>
 
       {/* Subpanel de simulación — independiente de la barra de tools
