@@ -57,8 +57,8 @@ export function EntityAuditInfo({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        side="left"
-        align="center"
+        side="bottom"
+        align="start"
         sideOffset={8}
         collisionPadding={12}
         className="z-50 w-64 gap-0 border-border/60 p-0"
@@ -67,7 +67,7 @@ export function EntityAuditInfo({
       >
         <div className="border-b border-border/50 px-3 py-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Auditoría
+            Información
           </p>
         </div>
         <div className="flex flex-col gap-2.5 px-3 py-3">

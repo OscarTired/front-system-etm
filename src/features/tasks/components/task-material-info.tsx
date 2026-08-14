@@ -62,8 +62,8 @@ export function TaskMaterialInfo({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        side="left"
-        align="center"
+        side="bottom"
+        align="start"
         sideOffset={8}
         collisionPadding={12}
         className="z-50 w-72 gap-0 border-border/60 p-0"

@@ -147,7 +147,7 @@ export function ProcessEditableValue({
       {hasValue
         ? (suffix ? `${value} ${suffix}` : value)
         : (
-          <span className="block min-w-0 truncate font-normal text-inherit opacity-70">
+          <span className="block min-w-0 truncate font-medium text-inherit underline decoration-dotted underline-offset-2 opacity-90">
             {placeholder}
           </span>
         )
