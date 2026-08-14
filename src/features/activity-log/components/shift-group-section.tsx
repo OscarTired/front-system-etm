@@ -186,8 +186,13 @@ export function ShiftGroupSection({
                           className={cn(
                             "flex h-auto w-9 shrink-0 touch-none items-center justify-center rounded-xl",
                             "text-muted-foreground transition-colors",
-                            "hover:bg-foreground/5 hover:text-foreground",
-                            (isDraggingThis || busy) && "opacity-40",
+                            // Desktop: hover. Móvil: active (no hay hover).
+                            "hover:bg-foreground/10 hover:text-foreground",
+                            "active:bg-foreground/15 active:text-foreground",
+                            // Durante el drag: feedback claro, no apagar el handle
+                            isDraggingThis &&
+                              "bg-foreground/15 text-foreground opacity-100",
+                            busy && !isDraggingThis && "opacity-40",
                           )}
                         >
                           <GripVertical size={18} />
