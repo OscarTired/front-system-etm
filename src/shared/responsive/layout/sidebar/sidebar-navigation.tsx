@@ -188,19 +188,7 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
-
-        {/* Tema al final del scroll: visible al bajar del todo */}
-        <div
-          className={cn(
-            "mt-4 w-full pb-1",
-            collapsed && "flex justify-center",
-            isMounting && "animate-gemini-in opacity-0",
-          )}
-          style={isMounting ? { animationDelay: "400ms" } : undefined}
-        >
-          <ThemeToggle compact />
-        </div>
-      </div>
+</div>
     </ScrollArea>
   )
 }

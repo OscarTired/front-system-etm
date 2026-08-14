@@ -6,6 +6,7 @@ import { ChevronLeft, PanelLeftClose, EyeOff } from "lucide-react"
 
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
+import { ThemeToggle, chromeIconButtonClass } from "@/shared/theme/theme-toggle"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {
@@ -31,10 +32,9 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
 
   const headerWrapperClass = cn(
     "px-3 pb-3 pt-4 w-full",
-    isMounting && "animate-gemini-in opacity-0"
+    isMounting && "animate-gemini-in opacity-0",
   )
 
-  // Componente reutilizable para el logo para evitar duplicación de código
   const renderLogo = () => (
     <div className="relative flex h-9 w-9 items-center justify-center">
       <Image
@@ -50,9 +50,14 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
 
   if (isDrawer) {
     return (
-      <div className={cn("px-4 pb-4 pt-5 w-full", isMounting && "animate-gemini-in opacity-0")}>
+      <div
+        className={cn(
+          "w-full px-4 pb-4 pt-5",
+          isMounting && "animate-gemini-in opacity-0",
+        )}
+      >
         <div className="grid grid-cols-[32px_1fr_32px] items-center">
-          <div />
+          <ThemeToggle variant="icon" />
           <div className="flex flex-col items-center">
             {renderLogo()}
             <h1 className="mt-2 text-sm font-semibold text-foreground">
@@ -61,9 +66,10 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
           </div>
 
           <button
+            type="button"
             onClick={handleClose}
             title="Cerrar"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
+            className={cn(chromeIconButtonClass, "size-8")}
           >
             <ChevronLeft size={16} />
           </button>
@@ -78,33 +84,36 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
       style={isMounting ? { animationDelay: "60ms" } : undefined}
     >
       <div
-        className="relative flex items-center justify-center w-full"
+        className="relative flex w-full items-center justify-center"
         style={{ height: HEADER_BOX_HEIGHT }}
       >
         {collapsed ? (
-          <div className="flex flex-col items-center justify-between w-full h-full rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 py-3 px-2">
+          <div className="flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 px-2 py-3">
             {renderLogo()}
 
             <div className="flex flex-col items-center gap-1">
+              <ThemeToggle variant="icon" />
               <button
+                type="button"
                 onClick={toggleCollapsed}
                 title="Expandir"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
+                className={cn(chromeIconButtonClass, "size-8")}
               >
                 <PanelLeftClose size={15} className="rotate-180" />
               </button>
 
               <button
+                type="button"
                 onClick={handleClose}
                 title="Ocultar barra lateral"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
+                className={cn(chromeIconButtonClass, "size-8")}
               >
                 {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
             </div>
           </div>
         ) : (
-          <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 py-3 px-4">
+          <div className="relative flex h-full w-full flex-col items-center justify-between rounded-2xl bg-linear-to-b from-foreground/5 to-foreground/5 px-4 py-3">
             {renderLogo()}
 
             <div className="flex flex-col items-center">
@@ -117,18 +126,21 @@ export function SidebarHeader({ collapsed, isDrawer = false }: Props) {
             </div>
 
             <div className="flex items-center gap-1">
+              <ThemeToggle variant="icon" />
               <button
+                type="button"
                 onClick={toggleCollapsed}
                 title="Comprimir"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
+                className={cn(chromeIconButtonClass, "size-8")}
               >
                 <PanelLeftClose size={15} />
               </button>
 
               <button
+                type="button"
                 onClick={handleClose}
                 title="Ocultar barra lateral"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200"
+                className={cn(chromeIconButtonClass, "size-8")}
               >
                 {isDrawer ? <ChevronLeft size={15} /> : <EyeOff size={15} />}
               </button>
