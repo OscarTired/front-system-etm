@@ -11,6 +11,12 @@ import {
 import { DndRowProvider } from "@/shared/ui/entity-table-common/dnd-row-context"
 import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
 
+import {
+  autoScrollAtPointer,
+  findVerticalScrollParent,
+  overlayTopAbovePointer,
+} from "./pointer-drag-utils"
+
 type RowRect = {
   id: string
   top: number
@@ -60,7 +66,10 @@ export function useRowDragReorder<T>({
   const rowEls = useRef<Record<string, HTMLDivElement | null>>({})
   const rects = useRef<RowRect[]>([])
   const raf = useRef<number | null>(null)
+  const scrollRaf = useRef<number | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
+  const scrollParentRef = useRef<HTMLElement | null>(null)
+  const lastClientY = useRef(0)
 
   function capture() {
     rects.current = itemsRef.current.map(item => {
@@ -104,13 +113,14 @@ export function useRowDragReorder<T>({
     const rowEl = rowEls.current[id]
     if (!rowEl) return
 
-    // Evita que el navegador interprete el toque como scroll nativo del
-    // contenedor (Radix ScrollArea usa overflow nativo), lo que en mobile
-    // le robaba el gesto al drag antes de que llegue el primer pointermove.
+    // Evita que el navegador interprete el toque como scroll nativo.
     e.preventDefault()
 
     const rect = rowEl.getBoundingClientRect()
     capture()
+
+    scrollParentRef.current = findVerticalScrollParent(rowEl)
+    lastClientY.current = e.clientY
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
@@ -134,7 +144,8 @@ export function useRowDragReorder<T>({
       offsetY,
     })
 
-    setLabelTop(e.clientY - offsetY)
+    // Ghost por encima del dedo (no debajo / bajo el dedo)
+    setLabelTop(overlayTopAbovePointer(e.clientY))
   }
 
   function finishDrag() {
@@ -153,38 +164,57 @@ export function useRowDragReorder<T>({
       }
     }
 
-    // Limpieza directa y síncrona de los estados de interacción del puntero.
-    // La fluidez visual se confía enteramente a la persistencia del DOM y la inversión de transforms si fuera necesario.
+    if (scrollRaf.current) {
+      cancelAnimationFrame(scrollRaf.current)
+      scrollRaf.current = null
+    }
+
     usePullToRefreshStore.getState().setDragLocked(false)
     setDrag(null)
     setIsActuallyDragging(false)
     setInsertIndex(null)
     startPos.current = null
+    scrollParentRef.current = null
   }
 
   useEffect(() => {
     if (!drag) return
 
     const dragId = drag.id
-    const offsetY = drag.offsetY
+
+    function tickAutoScroll() {
+      const y = lastClientY.current
+      const moved = autoScrollAtPointer(y, scrollParentRef.current)
+      if (moved) {
+        capture()
+        setInsertIndex(getInsertIndex(y, dragId))
+      }
+      scrollRaf.current = requestAnimationFrame(tickAutoScroll)
+    }
 
     function onMove(e: PointerEvent) {
+      lastClientY.current = e.clientY
+
       if (startPos.current) {
         const dx = Math.abs(e.clientX - startPos.current.x)
         const dy = Math.abs(e.clientY - startPos.current.y)
         if (dx > 4 || dy > 4) {
           setIsActuallyDragging(true)
           usePullToRefreshStore.getState().setDragLocked(true)
+          if (!scrollRaf.current) {
+            scrollRaf.current = requestAnimationFrame(tickAutoScroll)
+          }
         }
       }
 
       if (raf.current) cancelAnimationFrame(raf.current)
 
       raf.current = requestAnimationFrame(() => {
+        autoScrollAtPointer(e.clientY, scrollParentRef.current)
         capture()
         const newIndex = getInsertIndex(e.clientY, dragId)
         setInsertIndex(newIndex)
-        setLabelTop(e.clientY - offsetY)
+        setLabelTop(overlayTopAbovePointer(e.clientY))
       })
     }
 
@@ -194,11 +224,14 @@ export function useRowDragReorder<T>({
 
     window.addEventListener("pointermove", onMove)
     window.addEventListener("pointerup", onUp)
+    window.addEventListener("pointercancel", onUp)
 
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current)
+      if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current)
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
+      window.removeEventListener("pointercancel", onUp)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drag])
@@ -224,13 +257,15 @@ export function useRowDragReorder<T>({
   })()
 
   const isOutOfBounds = (() => {
-    if (!isActuallyDragging || insertIndex === null || rects.current.length === 0) return true
+    if (!isActuallyDragging || insertIndex === null || rects.current.length === 0)
+      return true
     const otherRects = rects.current.filter(r => r.id !== drag?.id)
     if (otherRects.length === 0) return true
 
     const firstTop = otherRects[0].top
-    const lastBottom = (otherRects.at(-1)?.top ?? 0) + (otherRects.at(-1)?.height ?? 0)
-    const currentY = labelTop + (drag?.offsetY ?? 0)
+    const lastBottom =
+      (otherRects.at(-1)?.top ?? 0) + (otherRects.at(-1)?.height ?? 0)
+    const currentY = lastClientY.current
 
     return currentY < firstTop - 20 || currentY > lastBottom + 20
   })()
@@ -247,7 +282,9 @@ export function useRowDragReorder<T>({
 
     return (
       <div
-        ref={el => { rowEls.current[rowId] = el }}
+        ref={el => {
+          rowEls.current[rowId] = el
+        }}
         className={
           isGridMode
             ? "grid min-w-0 items-center rounded-xl border-b border-border px-2 transition-colors hover:bg-foreground/5"
@@ -255,11 +292,11 @@ export function useRowDragReorder<T>({
         }
         style={{
           gridTemplateColumns: isGridMode ? templateColumns : undefined,
-          // Ocultamos el elemento original limpiamente mediante opacidad y escala sin alterar drásticamente 
-          // el flujo estático del DOM que causaba el salto de los aledaños al soltar.
           opacity: isThisDragging && isActuallyDragging ? 0 : 1,
-          transform: isThisDragging && isActuallyDragging ? "scale(0.98)" : "scale(1)",
-          pointerEvents: isThisDragging && isActuallyDragging ? "none" : "auto",
+          transform:
+            isThisDragging && isActuallyDragging ? "scale(0.98)" : "scale(1)",
+          pointerEvents:
+            isThisDragging && isActuallyDragging ? "none" : "auto",
         }}
       >
         <DndRowProvider
@@ -275,42 +312,43 @@ export function useRowDragReorder<T>({
     )
   }
 
-  const overlay = drag && isActuallyDragging && (
-    <>
-      {!isOutOfBounds && !isAtOriginalPosition && (
+  const overlay =
+    drag && isActuallyDragging ? (
+      <>
+        {!isOutOfBounds && !isAtOriginalPosition && (
+          <div
+            style={{
+              position: "fixed",
+              left: drag.left,
+              width: drag.width,
+              top: lineTop,
+              pointerEvents: "none",
+              zIndex: 9999,
+            }}
+          >
+            <div className="h-0.5 w-full rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+          </div>
+        )}
+
         <div
           style={{
             position: "fixed",
             left: drag.left,
-            top: lineTop,
-            width: drag.width,
+            width: Math.min(drag.width, 288),
+            top: labelTop,
             pointerEvents: "none",
-            zIndex: 9999,
+            zIndex: 10000,
           }}
         >
-          <div className="h-0.5 w-full rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
-        </div>
-      )}
-
-      <div
-        style={{
-          position: "fixed",
-          left: drag.left,
-          width: drag.width,
-          top: labelTop,
-          pointerEvents: "none",
-          zIndex: 10000,
-        }}
-      >
-        <div className="flex w-64 items-center gap-3 rounded-xl bg-popover px-3 py-2 backdrop-blur-xl shadow-[0_28px_70px_rgba(0,0,0,.45)]">
-          <span className="text-foreground/35 shrink-0">≡</span>
-          <div className="min-w-0 overflow-hidden">
-            {renderDragLabel(drag.item)}
+          <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+            <span className="shrink-0 text-foreground/35">≡</span>
+            <div className="min-w-0 overflow-hidden">
+              {renderDragLabel(drag.item)}
+            </div>
           </div>
         </div>
-      </div>
-    </>
-  )
+      </>
+    ) : null
 
   return {
     renderRow,

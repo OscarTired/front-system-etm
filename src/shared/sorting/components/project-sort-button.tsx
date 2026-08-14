@@ -103,25 +103,39 @@ export function ProjectSortButton() {
           </CommandList>
         </Command>
 
-        {projectSortMode !== "manual" && (
-          <button
-            type="button"
-            onClick={() => toggleProjectSortDirection()}
-            className="mt-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs text-muted-foreground transition hover:bg-foreground/5"
+        <button
+          type="button"
+          disabled={projectSortMode === "manual"}
+          onClick={() => {
+            if (projectSortMode === "manual") return
+            toggleProjectSortDirection()
+          }}
+          className={
+            "mt-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs transition " +
+            (projectSortMode === "manual"
+              ? "pointer-events-none opacity-40 text-muted-foreground"
+              : "text-muted-foreground hover:bg-foreground/5")
+          }
+        >
+          <span className="flex items-center gap-2">
+            {projectSortDirection === "asc" ? (
+              <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+            ) : (
+              <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-primary" />
+            )}
+            Dirección
+          </span>
+          <span
+            className={
+              "font-semibold tabular-nums " +
+              (projectSortMode === "manual"
+                ? "text-muted-foreground"
+                : "text-cyan-700 dark:text-primary")
+            }
           >
-            <span className="flex items-center gap-2">
-              {projectSortDirection === "asc" ? (
-                <ArrowUpAZ className="size-3.5 text-cyan-700 dark:text-primary" />
-              ) : (
-                <ArrowDownAZ className="size-3.5 text-cyan-700 dark:text-primary" />
-              )}
-              Dirección
-            </span>
-            <span className="font-semibold tabular-nums text-cyan-700 dark:text-primary">
-              {dirLabel}
-            </span>
-          </button>
-        )}
+            {dirLabel}
+          </span>
+        </button>
       </PopoverContent>
     </Popover>
   )
