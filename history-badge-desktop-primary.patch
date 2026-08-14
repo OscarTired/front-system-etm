@@ -1,0 +1,60 @@
+diff --git a/src/shared/history/components/history-toggle-button.tsx b/src/shared/history/components/history-toggle-button.tsx
+index cc3d1c9..1a8265f 100644
+--- a/src/shared/history/components/history-toggle-button.tsx
++++ b/src/shared/history/components/history-toggle-button.tsx
+@@ -3,6 +3,7 @@
+ import { History } from "lucide-react"
+ 
+ import { FabTrigger } from "@/shared/ui/speed-dial-fab/fab-trigger"
++import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { cn } from "@/shared/utils/utils"
+ 
+ type Props = {
+@@ -12,26 +13,31 @@ type Props = {
+ }
+ 
+ export function HistoryToggleButton({ count, active, onClick }: Props) {
++  const { isMobile } = useResponsive()
++
++  const badge =
++    count > 0 ? (
++      <span
++        className={cn(
++          "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold select-none transition-colors duration-200",
++          // Desktop toolbar: mismo azul que NotificationBell / TAREAS
++          !isMobile && "bg-primary text-primary-foreground shadow-sm",
++          // Mobile FAB (bg-foreground): contraste invertido
++          isMobile && "bg-background text-foreground shadow-sm ring-1 ring-border",
++          active && "animate-history-bounce ring-2 ring-primary/40",
++        )}
++      >
++        {count > 9 ? "9+" : count}
++      </span>
++    ) : undefined
++
+   return (
+     <FabTrigger
+       icon={History}
+       label="HISTORIAL"
+       active={active}
+       onClick={onClick}
+-      badge={
+-        count > 0 ? (
+-        <span
+-          className={cn(
+-            "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold select-none transition-colors duration-200",
+-            // Invertido respecto al FAB (bg-foreground): legible en light y dark
+-            "bg-background text-foreground shadow-sm ring-1 ring-border",
+-            active && "animate-history-bounce ring-2 ring-primary/40",
+-          )}
+-        >
+-          {count > 9 ? "9+" : count}
+-        </span>
+-        ) : undefined
+-      }
++      badge={badge}
+     />
+   )
+-}
+\ No newline at end of file
++}
