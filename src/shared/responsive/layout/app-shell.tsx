@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 
 import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
+import { ThemeToggle } from "@/shared/theme"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
@@ -19,9 +20,14 @@ type Props = {
 }
 
 function DesktopTopBar() {
+  const visualState = useSidebarStore(state => state.visualState)
+  const sidebarHidden =
+    visualState === "hidden" || visualState === "curve-closing"
+
   return (
-    <div className="flex h-9 shrink-0 items-center px-3">
+    <div className="flex h-9 shrink-0 items-center gap-1 px-3">
       <SidebarShowButton />
+      {sidebarHidden && <ThemeToggle variant="icon" className="size-8" />}
     </div>
   )
 }

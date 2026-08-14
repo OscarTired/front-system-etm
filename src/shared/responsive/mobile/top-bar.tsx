@@ -80,13 +80,12 @@ export function TopBar() {
         </div>
 
         {/* Presencia en línea con contador explícito */}
-        <SidebarPresence variant="topbar" />
-
         <ThemeToggle
           variant="icon"
-          className="size-10 rounded-full bg-chrome shadow-lg shadow-black/30 backdrop-blur-xl hover:bg-chrome active:bg-popover"
+          className="size-10 rounded-full bg-chrome text-foreground shadow-lg shadow-black/30 backdrop-blur-xl hover:bg-chrome active:bg-popover"
         />
 
+        <SidebarPresence variant="topbar" />
         {/* Notificaciones con contador explícito */}
         <MessageBell variant="topbar" />
         <NotificationBell variant="topbar" />

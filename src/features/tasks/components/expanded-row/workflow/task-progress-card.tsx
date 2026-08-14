@@ -36,7 +36,7 @@ export function TaskProgressCard({
       <div className="h-2 overflow-hidden rounded-full bg-foreground/5">
 
         <div
-          className="h-full rounded-full bg-cyan-500 transition-all"
+          className="h-full rounded-full bg-foreground/70 transition-all"
           style={{
             width: `${workflowView.progress}%`,
           }}
