@@ -249,7 +249,7 @@ export function ProjectMobileCard({
             className="flex shrink-0 items-center gap-0.5 pr-0.5"
             onClick={e => e.stopPropagation()}
           >
-            <ProjectRowActions project={project} className="gap-0.5" />
+            <ProjectRowActions project={project} className="gap-0.5" showAudit={false} />
             <IconAction
               icon={Plus}
               disabled={!canCreateTask}
@@ -390,7 +390,7 @@ export function ProjectMobileCard({
         {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
         {!isMobile && (
           <div className="flex items-center justify-start gap-1">
-            <ProjectRowActions project={project} />
+            <ProjectRowActions project={project} showAudit={false} />
           </div>
         )}
 

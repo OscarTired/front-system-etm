@@ -1,0 +1,126 @@
+diff --git a/src/features/projects/components/actions/project-row-actions.tsx b/src/features/projects/components/actions/project-row-actions.tsx
+index e216927..583291f 100644
+--- a/src/features/projects/components/actions/project-row-actions.tsx
++++ b/src/features/projects/components/actions/project-row-actions.tsx
+@@ -20,11 +20,17 @@ import type { Project } from "../../types/project.types"
+ type ProjectRowActionsProps = {
+   project: Project
+   className?: string
++  /** false si el row ya muestra EntityAuditInfo fuera */
++  showAudit?: boolean
+ }
+ 
+ const ACTIVE_STATUSES = ["PROGRESS", "PAUSED"] as const
+ 
+-export function ProjectRowActions({ project, className }: ProjectRowActionsProps) {
++export function ProjectRowActions({
++  project,
++  className,
++  showAudit = true,
++}: ProjectRowActionsProps) {
+   const { remove } = useProjects()
+   const { has } = usePermissions()
+   const { tasks } = useTasks()
+@@ -64,12 +70,14 @@ export function ProjectRowActions({ project, className }: ProjectRowActionsProps
+   return (
+     <>
+       <div className={cn("flex items-center gap-1", className)}>
+-        <EntityAuditInfo
+-          createdAt={project.createdAt}
+-          updatedAt={project.updatedAt}
+-          createdBy={project.createdBy}
+-          updatedBy={project.updatedBy}
+-        />
++        {showAudit && (
++          <EntityAuditInfo
++            createdAt={project.createdAt}
++            updatedAt={project.updatedAt}
++            createdBy={project.createdBy}
++            updatedBy={project.updatedBy}
++          />
++        )}
+         <IconAction
+           icon={Pencil}
+           disabled={!canUpdate}
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+index 3cc861d..5856ca7 100644
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -249,7 +249,7 @@ export function ProjectMobileCard({
+             className="flex shrink-0 items-center gap-0.5 pr-0.5"
+             onClick={e => e.stopPropagation()}
+           >
+-            <ProjectRowActions project={project} className="gap-0.5" />
++            <ProjectRowActions project={project} className="gap-0.5" showAudit={false} />
+             <IconAction
+               icon={Plus}
+               disabled={!canCreateTask}
+@@ -390,7 +390,7 @@ export function ProjectMobileCard({
+         {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
+         {!isMobile && (
+           <div className="flex items-center justify-start gap-1">
+-            <ProjectRowActions project={project} />
++            <ProjectRowActions project={project} showAudit={false} />
+           </div>
+         )}
+ 
+diff --git a/src/features/tasks/components/actions/task-row-actions.tsx b/src/features/tasks/components/actions/task-row-actions.tsx
+index 5255d9b..3735ed2 100644
+--- a/src/features/tasks/components/actions/task-row-actions.tsx
++++ b/src/features/tasks/components/actions/task-row-actions.tsx
+@@ -20,9 +20,11 @@ import type { Task } from "../../types/task.types"
+ type TaskRowActionsProps = {
+   task: Task
+   className?: string
++  /** false si el row ya muestra EntityAuditInfo fuera */
++  showAudit?: boolean
+ }
+ 
+-export function TaskRowActions({ task, className }: TaskRowActionsProps) {
++export function TaskRowActions({ task, className, showAudit = true }: TaskRowActionsProps) {
+   const { remove } = useTasks()
+   const { has } = usePermissions()
+ 
+@@ -48,12 +50,14 @@ export function TaskRowActions({ task, className }: TaskRowActionsProps) {
+   return (
+     <>
+       <div className={cn("flex items-center gap-1", className)}>
+-        <EntityAuditInfo
+-          createdAt={task.createdAt}
+-          updatedAt={task.updatedAt}
+-          createdBy={task.createdBy}
+-          updatedBy={task.updatedBy}
+-        />
++        {showAudit && (
++          <EntityAuditInfo
++            createdAt={task.createdAt}
++            updatedAt={task.updatedAt}
++            createdBy={task.createdBy}
++            updatedBy={task.updatedBy}
++          />
++        )}
+         <TaskMaterialInfo task={task} />
+         <IconAction
+           icon={Pencil}
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+index 2344e91..24f9f18 100644
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -293,7 +293,7 @@ export function TaskMobileCard({
+             onClick={e => e.stopPropagation()}
+             onPointerDown={e => e.stopPropagation()}
+           >
+-            <TaskRowActions task={task} className="gap-0.5" />
++            <TaskRowActions task={task} className="gap-0.5" showAudit={false} />
+           </div>
+         )}
+ 
+@@ -425,7 +425,7 @@ export function TaskMobileCard({
+         {/* Desktop: acciones en el panel. Móvil: van en el row al expandir. */}
+         {!isMobile && (
+           <div className="flex items-center justify-start gap-1">
+-            <TaskRowActions task={task} />
++            <TaskRowActions task={task} showAudit={false} />
+           </div>
+         )}
+ 

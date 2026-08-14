@@ -293,7 +293,7 @@ export function TaskMobileCard({
             onClick={e => e.stopPropagation()}
             onPointerDown={e => e.stopPropagation()}
           >
-            <TaskRowActions task={task} className="gap-0.5" />
+            <TaskRowActions task={task} className="gap-0.5" showAudit={false} />
           </div>
         )}
 
@@ -425,7 +425,7 @@ export function TaskMobileCard({
         {/* Desktop: acciones en el panel. Móvil: van en el row al expandir. */}
         {!isMobile && (
           <div className="flex items-center justify-start gap-1">
-            <TaskRowActions task={task} />
+            <TaskRowActions task={task} showAudit={false} />
           </div>
         )}
 

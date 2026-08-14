@@ -20,11 +20,17 @@ import type { Project } from "../../types/project.types"
 type ProjectRowActionsProps = {
   project: Project
   className?: string
+  /** false si el row ya muestra EntityAuditInfo fuera */
+  showAudit?: boolean
 }
 
 const ACTIVE_STATUSES = ["PROGRESS", "PAUSED"] as const
 
-export function ProjectRowActions({ project, className }: ProjectRowActionsProps) {
+export function ProjectRowActions({
+  project,
+  className,
+  showAudit = true,
+}: ProjectRowActionsProps) {
   const { remove } = useProjects()
   const { has } = usePermissions()
   const { tasks } = useTasks()
@@ -64,12 +70,14 @@ export function ProjectRowActions({ project, className }: ProjectRowActionsProps
   return (
     <>
       <div className={cn("flex items-center gap-1", className)}>
-        <EntityAuditInfo
-          createdAt={project.createdAt}
-          updatedAt={project.updatedAt}
-          createdBy={project.createdBy}
-          updatedBy={project.updatedBy}
-        />
+        {showAudit && (
+          <EntityAuditInfo
+            createdAt={project.createdAt}
+            updatedAt={project.updatedAt}
+            createdBy={project.createdBy}
+            updatedBy={project.updatedBy}
+          />
+        )}
         <IconAction
           icon={Pencil}
           disabled={!canUpdate}

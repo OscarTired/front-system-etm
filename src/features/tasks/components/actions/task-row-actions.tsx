@@ -20,9 +20,11 @@ import type { Task } from "../../types/task.types"
 type TaskRowActionsProps = {
   task: Task
   className?: string
+  /** false si el row ya muestra EntityAuditInfo fuera */
+  showAudit?: boolean
 }
 
-export function TaskRowActions({ task, className }: TaskRowActionsProps) {
+export function TaskRowActions({ task, className, showAudit = true }: TaskRowActionsProps) {
   const { remove } = useTasks()
   const { has } = usePermissions()
 
@@ -48,12 +50,14 @@ export function TaskRowActions({ task, className }: TaskRowActionsProps) {
   return (
     <>
       <div className={cn("flex items-center gap-1", className)}>
-        <EntityAuditInfo
-          createdAt={task.createdAt}
-          updatedAt={task.updatedAt}
-          createdBy={task.createdBy}
-          updatedBy={task.updatedBy}
-        />
+        {showAudit && (
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
+        )}
         <TaskMaterialInfo task={task} />
         <IconAction
           icon={Pencil}
