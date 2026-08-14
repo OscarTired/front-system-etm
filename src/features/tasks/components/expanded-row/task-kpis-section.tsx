@@ -33,7 +33,7 @@ type Props={
   task:Task
 }
 
-const PIEZAS_COLOR = "#996666"
+const PIEZAS_COLOR = "#c44a4a"
 
 export function TaskKpisSection({
   task,
@@ -56,7 +56,7 @@ export function TaskKpisSection({
       size={cardSize}
       label="Lote"
       icon={Layers3}
-      color={"#d4d2a6"}
+      color={"#b8a42a"}
       rows={[
         {
           label:"Lote",
@@ -164,7 +164,7 @@ export function TaskKpisSection({
 
     {
       icon: Layers3,
-      color: "#d4d2a6",
+      color: "#b8a42a",
       label: "Lote",
       value: `L${task.lotNumber}`,
     },
@@ -237,7 +237,7 @@ export function TaskKpisSection({
       items={items}
       summary={{
         icon: Layers3,
-        color: "#d4d2a6",
+        color: "#b8a42a",
         label: "Producción",
         values: [
           { label: "Lote", value: `L${task.lotNumber}` },

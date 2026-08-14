@@ -221,13 +221,13 @@ export function ProcessExpandedRow({
     },
     {
       icon: Puzzle,
-      color: "#a6c7d4",
+      color: "#3b9bb8",
       label: "Piezas",
       value: processTask.task.pieces,
     },
     {
       icon: Clock,
-      color: "#d4d2a6",
+      color: "#b8a42a",
       label: "Lote",
       value: `L${processTask.task.lotNumber}`,
     },

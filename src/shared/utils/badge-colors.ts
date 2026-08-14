@@ -124,7 +124,7 @@ function getReadableTextFor(
   const bgLum = getLuminanceFromRgb(backgroundRgb)
   const MIN_CONTRAST = 4.5
 
-  for (const amount of [0.55, 0.65, 0.72, 0.8, 0.88, 0.94]) {
+  for (const amount of [0.28, 0.40, 0.52, 0.64, 0.76, 0.88, 0.94]) {
     const candidate = tintTowardBlack(hex, amount)
     const candidateLum = getLuminanceFromRgb(candidate)
     if (contrastFromLuminances(candidateLum, bgLum) >= MIN_CONTRAST) {
