@@ -334,15 +334,11 @@ input[type="number"] {
    es un loop infinito que alterna color/fondo — para el badge de
    "Mis tareas" mientras haya tareas pendientes, no un evento
    puntual. */
+/* Solo opacidad: el color lo ponen las clases (como HistoryToggle).
+   Antes hardcodeaba blanco/emerald → ilegible en light. */
 @keyframes badge-pulse {
-  0%, 100% {
-    background-color: rgb(255 255 255 / 0.1);
-    color: rgb(255 255 255 / 0.8);
-  }
-  50% {
-    background-color: rgb(16 185 129 / 0.25);
-    color: rgb(110 231 183);
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }
 
 .animate-badge-pulse {

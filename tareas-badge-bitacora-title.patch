@@ -1,0 +1,57 @@
+diff --git a/src/app/(protected)/bitacora/page.tsx b/src/app/(protected)/bitacora/page.tsx
+index c72b5bc..e69de54 100644
+--- a/src/app/(protected)/bitacora/page.tsx
++++ b/src/app/(protected)/bitacora/page.tsx
+@@ -129,8 +129,8 @@ export default function BitacoraPage() {
+   return (
+     <main className="flex h-full min-h-0 flex-col bg-background px-3 pt-0 pb-2 text-foreground select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+       {/* Desktop: chrome de página en flujo del shell (no overlay) */}
+-      <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
+-        <div className="flex min-w-0 flex-1 items-center gap-2">
++      <header className="mb-1 hidden min-h-10 shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">
++        <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2">
+           <h1 className="shrink-0 text-2xl font-bold tracking-widest">
+             BITÁCORA
+           </h1>
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 8021a91..da05663 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -334,15 +334,11 @@ input[type="number"] {
+    es un loop infinito que alterna color/fondo — para el badge de
+    "Mis tareas" mientras haya tareas pendientes, no un evento
+    puntual. */
++/* Solo opacidad: el color lo ponen las clases (como HistoryToggle).
++   Antes hardcodeaba blanco/emerald → ilegible en light. */
+ @keyframes badge-pulse {
+-  0%, 100% {
+-    background-color: rgb(255 255 255 / 0.1);
+-    color: rgb(255 255 255 / 0.8);
+-  }
+-  50% {
+-    background-color: rgb(16 185 129 / 0.25);
+-    color: rgb(110 231 183);
+-  }
++  0%, 100% { opacity: 1; }
++  50% { opacity: 0.72; }
+ }
+ 
+ .animate-badge-pulse {
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx b/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
+index 0f58752..b94cc90 100644
+--- a/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-panel-trigger.tsx
+@@ -46,11 +46,11 @@ export function TaskAreaPanelTrigger() {
+           <span
+             className="
+               animate-badge-pulse flex h-5 min-w-5 shrink-0 items-center justify-center
+-              rounded-full px-1.5 text-[10px] font-bold select-none
++              rounded-full px-1 text-[10px] font-bold select-none
+               bg-background text-foreground shadow-sm ring-1 ring-border
+             "
+           >
+-            {pendingCount}
++            {pendingCount > 9 ? "9+" : pendingCount}
+           </span>
+         )}
+       </button>
