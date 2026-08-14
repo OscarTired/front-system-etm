@@ -11,6 +11,7 @@ import {
   NotebookPen,
   ListChecks,
   Boxes,
+  DraftingCompass,
 } from "lucide-react"
 
 import {
@@ -98,6 +99,11 @@ export const NAVIGATION = [
         href: "/nesting",
         icon: Boxes,
         //permission: PermissionCode.NESTING_READ,
+      },
+      {
+        label: "CAD · Placa",
+        href: "/cad/plate",
+        icon: DraftingCompass,
       },
     ],
   },
