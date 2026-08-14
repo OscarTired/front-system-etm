@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import type {
   FilterChip,
@@ -12,73 +8,35 @@ import type {
   FilterModule,
   FilterOption,
 } from "../types/filter.types"
-
-import {
-  getFilterOptions,
-} from "../selectors/get-filter-options"
-
-import {
-  useFilterStore,
-} from "../store/filter-store"
-
-import {
-  useUsersDirectory,
-} from "@/features/users/hooks/use-users-directory"
-
-import {
-  useClients,
-} from "@/features/clients/hooks/use-clients"
-
-import {
-  useStages,
-} from "@/features/stages/hooks/use-stages"
-
-import {
-  useStatuses,
-} from "@/features/statuses/hooks/use-statuses"
-
-import {
-  usePriorities,
-} from "@/features/priorities/hooks/use-priorities"
+import { getFilterOptions } from "../selectors/get-filter-options"
+import { useFilterStore } from "../store/filter-store"
+import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
+import { useClients } from "@/features/clients/hooks/use-clients"
+import { useStages } from "@/features/stages/hooks/use-stages"
+import { useStatuses } from "@/features/statuses/hooks/use-statuses"
+import { usePriorities } from "@/features/priorities/hooks/use-priorities"
 
 export function useFilterBar(module: FilterModule) {
-
   const [open, setOpenRaw] = useState(false)
+  const [selectedField, setSelectedField] = useState<FilterField | undefined>()
+  const [editingChip, setEditingChip] = useState<FilterChip | undefined>()
 
-  const [selectedField, setSelectedField] =
-    useState<FilterField | undefined>()
-
-  const [editingChip, setEditingChip] =
-    useState<FilterChip | undefined>()
-
-  /** Borrador multi-select del sheet de valores (solo se aplica con Listo). */
-  const [draft, setDraft] = useState<FilterOption[]>([])
+  /**
+   * Borrador GLOBAL del sheet: puede mezclar ESTADO + ETAPA + …
+   * Solo se escribe al store con Listo. Cerrar sin Listo descarta.
+   */
+  const [draft, setDraft] = useState<FilterChip[]>([])
 
   const { users } = useUsersDirectory()
-
   const { clients } = useClients()
-
   const { stages } = useStages()
-
   const { statuses } = useStatuses()
-
   const { priorities } = usePriorities()
 
-  const chips = useFilterStore(
-    state => state.filters[module]
-  )
-
-  const addFilter = useFilterStore(
-    state => state.addFilter
-  )
-
-  const updateFilter = useFilterStore(
-    state => state.updateFilter
-  )
-
-  const removeFilter = useFilterStore(
-    state => state.removeFilter
-  )
+  const chips = useFilterStore(state => state.filters[module])
+  const addFilter = useFilterStore(state => state.addFilter)
+  const updateFilter = useFilterStore(state => state.updateFilter)
+  const removeFilter = useFilterStore(state => state.removeFilter)
 
   const setOpen = useCallback((next: boolean) => {
     setOpenRaw(next)
@@ -89,7 +47,6 @@ export function useFilterBar(module: FilterModule) {
   }, [])
 
   const availableOptions = useMemo(() => {
-
     if (!selectedField) return []
 
     return getFilterOptions({
@@ -100,14 +57,13 @@ export function useFilterBar(module: FilterModule) {
       stages,
       statuses,
       users,
-    }).filter(option =>
-      !chips.some(
-        chip =>
-          chip.field === selectedField &&
-          chip.value === option.value
-      )
+    }).filter(
+      option =>
+        !chips.some(
+          chip =>
+            chip.field === selectedField && chip.value === option.value,
+        ),
     )
-
   }, [
     module,
     selectedField,
@@ -120,7 +76,6 @@ export function useFilterBar(module: FilterModule) {
   ])
 
   const availableChipOptions = useMemo(() => {
-
     if (!editingChip) return []
 
     return getFilterOptions({
@@ -131,15 +86,15 @@ export function useFilterBar(module: FilterModule) {
       stages,
       statuses,
       users,
-    }).filter(option =>
-      !chips.some(
-        chip =>
-          chip.field === editingChip.field &&
-          chip.value === option.value &&
-          chip.value !== editingChip.value
-      )
+    }).filter(
+      option =>
+        !chips.some(
+          chip =>
+            chip.field === editingChip.field &&
+            chip.value === option.value &&
+            chip.value !== editingChip.value,
+        ),
     )
-
   }, [
     module,
     editingChip,
@@ -152,26 +107,44 @@ export function useFilterBar(module: FilterModule) {
   ])
 
   const handleFieldSelect = useCallback((field: FilterField) => {
-    setDraft([])
+    // NO limpia draft: se acumulan varias listas hasta Listo
     setSelectedField(field)
   }, [])
 
   const handleBack = useCallback(() => {
-    setDraft([])
+    // Vuelve al menú de campos; el borrador se conserva
     setSelectedField(undefined)
   }, [])
 
-  const handleDraftToggle = useCallback((option: FilterOption) => {
-    setDraft(prev => {
-      const exists = prev.some(o => o.value === option.value)
-      if (exists) return prev.filter(o => o.value !== option.value)
-      return [...prev, option]
-    })
-  }, [])
+  const handleDraftToggle = useCallback(
+    (option: FilterOption) => {
+      if (!selectedField) return
+      setDraft(prev => {
+        const exists = prev.some(
+          c => c.field === selectedField && c.value === option.value,
+        )
+        if (exists) {
+          return prev.filter(
+            c => !(c.field === selectedField && c.value === option.value),
+          )
+        }
+        return [
+          ...prev,
+          {
+            field: selectedField,
+            value: option.value,
+            label: option.label,
+            color: option.color,
+            icon: option.icon,
+          },
+        ]
+      })
+    },
+    [selectedField],
+  )
 
   const handleValueSelect = useCallback(
     (option: FilterOption) => {
-      // compat: single option still works if called
       if (!selectedField) return
       addFilter(module, {
         field: selectedField,
@@ -182,32 +155,25 @@ export function useFilterBar(module: FilterModule) {
       })
       setSelectedField(undefined)
       setOpenRaw(false)
+      setDraft([])
     },
     [module, selectedField, addFilter],
   )
 
-  /** Multi-select global: Listo del sheet aplica el borrador. */
+  /** Listo global: aplica todo el borrador (todas las listas). */
   const handleValueConfirm = useCallback(() => {
-    if (!selectedField || draft.length === 0) return
-    for (const option of draft) {
-      addFilter(module, {
-        field: selectedField,
-        value: option.value,
-        label: option.label,
-        color: option.color,
-        icon: option.icon,
-      })
+    if (draft.length === 0) return
+    for (const chip of draft) {
+      addFilter(module, chip)
     }
     setDraft([])
     setSelectedField(undefined)
     setOpenRaw(false)
-  }, [module, selectedField, draft, addFilter])
+  }, [module, draft, addFilter])
 
   const handleChipUpdate = useCallback(
     (option: FilterOption) => {
-
       if (!editingChip) return
-
       updateFilter(module, editingChip, {
         field: editingChip.field,
         value: option.value,
@@ -215,46 +181,43 @@ export function useFilterBar(module: FilterModule) {
         color: option.color,
         icon: option.icon,
       })
-
       setEditingChip(undefined)
-
     },
-    [module, editingChip, updateFilter]
+    [module, editingChip, updateFilter],
   )
 
   const handleChipRemove = useCallback(() => {
-
     if (!editingChip) return
-
     removeFilter(module, editingChip)
-
     setEditingChip(undefined)
-
   }, [module, editingChip, removeFilter])
 
   const handleDirectChipRemove = useCallback(
     (chip: FilterChip) => {
       removeFilter(module, chip)
     },
-    [module, removeFilter]
+    [module, removeFilter],
   )
 
+  /** Opciones marcadas del campo actual (para checks en la lista). */
+  const draftValuesForField = useMemo(() => {
+    if (!selectedField) return new Set<string>()
+    return new Set(
+      draft.filter(c => c.field === selectedField).map(c => c.value),
+    )
+  }, [draft, selectedField])
+
   return {
-
     chips,
-
     open,
     setOpen,
-
     selectedField,
-
     editingChip,
     setEditingChip,
-
     availableOptions,
     availableChipOptions,
-
     draft,
+    draftValuesForField,
     handleDraftToggle,
     handleBack,
     handleFieldSelect,
@@ -263,7 +226,5 @@ export function useFilterBar(module: FilterModule) {
     handleChipUpdate,
     handleChipRemove,
     handleDirectChipRemove,
-
   }
-
 }

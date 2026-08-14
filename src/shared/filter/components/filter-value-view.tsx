@@ -16,24 +16,24 @@ import type { FilterField, FilterOption } from "../types/filter.types"
 type Props = {
   selectedField: FilterField
   availableOptions: FilterOption[]
-  draft: FilterOption[]
+  selectedValues: Set<string>
   onBack: () => void
   onToggle: (option: FilterOption) => void
 }
 
 /**
- * Solo la lista multi-select.
- * "Listo" es global del sheet (sheetFooter en FilterBar), no de esta lista.
+ * Lista de valores de UN campo.
+ * Sin max-height propio: el scroll lo hace el body del sheet
+ * (un solo scroller → no pelea con Listo ni rebota al soltar).
+ * Listo es global (sheetFooter).
  */
 export function FilterValueView({
   selectedField,
   availableOptions,
-  draft,
+  selectedValues,
   onBack,
   onToggle,
 }: Props) {
-  const selectedValues = new Set(draft.map(o => o.value))
-
   return (
     <Command className="bg-transparent">
       <div className="mb-2 flex items-center gap-2">
@@ -51,7 +51,8 @@ export function FilterValueView({
 
       <CommandInput placeholder="Buscar..." />
 
-      <CommandList className="max-h-[min(50dvh,22rem)] overflow-y-auto overscroll-contain">
+      {/* Sin max-h: el overflow-y del sheet body es el único scroll */}
+      <CommandList className="max-h-none overflow-visible">
         <CommandEmpty>Sin resultados</CommandEmpty>
         <CommandGroup>
           {availableOptions.map(option => (
