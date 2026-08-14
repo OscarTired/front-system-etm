@@ -46,6 +46,11 @@ export function PopoverContent({
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
+  const lastMeasuredHeightRef = React.useRef<number | null>(null)
+  if (size.height != null && size.height > 0) {
+    lastMeasuredHeightRef.current = size.height
+  }
+  const measuredHeight = size.height ?? lastMeasuredHeightRef.current
 
   // Foco real del input de búsqueda — señal 100% confiable (evento
   // de JS normal, sin depender de visualViewport/window.innerHeight
@@ -146,8 +151,8 @@ export function PopoverContent({
             // mida algo (no hay nada de qué animar todavía ahí).
             height: isInputFocused
               ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
-              : size.height != null
-                ? `${size.height + SHEET_CONFIG.CHROME_OVERHEAD_PX}px`
+              : measuredHeight != null
+                ? `${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px`
                 : "auto",
             // maxHeight solo en reposo — si también estuviera puesto
             // con foco, CSS toma el menor entre height y maxHeight,
@@ -160,7 +165,7 @@ export function PopoverContent({
               ? "none"
               : dismissing
                 ? transitionStyle
-                : `height 200ms cubic-bezier(0.2,0,0,1), transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
+                : `height ${SHEET_CONFIG.HEIGHT_TRANSITION_MS}ms ${SHEET_CONFIG.EASING_RESET}, transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`,
           }}
         >
           <VisuallyHidden asChild>

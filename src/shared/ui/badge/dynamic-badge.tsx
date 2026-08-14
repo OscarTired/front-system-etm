@@ -171,15 +171,13 @@ export function DynamicBadge({
 
         {(showChevron || showRemove) && (
           <div className="relative ml-auto flex size-5 shrink-0 items-center justify-center">
-            {showChevron && (
+            {/* Con remove: solo X. Chevron pelea el mismo slot y confunde. */}
+            {showChevron && !showRemove && (
               <ChevronDown
                 size={14}
                 style={{ color: actionColor }}
                 className={cn(
-                  "absolute inset-0 m-auto transition duration-200 ease-out",
-                  showRemove &&
-                    "opacity-0 tablet:opacity-50 tablet:group-hover:scale-75 tablet:group-hover:opacity-0",
-                  !showRemove && "opacity-50",
+                  "m-auto opacity-50 transition duration-200 ease-out",
                   chevronOpen && "rotate-180",
                 )}
               />
@@ -189,33 +187,26 @@ export function DynamicBadge({
               <span
                 role="button"
                 tabIndex={0}
-                onClick={(event)=>{
+                aria-label="Quitar filtro"
+                onClick={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
                   onRemove()
                 }}
-                onKeyDown={(event)=>{
-                  if(
-                    event.key==="Enter" ||
-                    event.key===" "
-                  ){
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault()
                     onRemove()
                   }
                 }}
                 className={cn(
-                  "absolute inset-0 flex cursor-pointer items-center justify-center rounded-md",
+                  "flex size-5 cursor-pointer items-center justify-center rounded-md",
                   "transition-colors duration-150",
                   "hover:bg-black/10 dark:hover:bg-white/15",
-                  "opacity-100",
                 )}
-                // Mismo ink del badge (actionColor), no foreground neutro
                 style={{ color: actionColor }}
               >
-                <X
-                  size={14}
-                  strokeWidth={2.75}
-                />
+                <X size={14} strokeWidth={2.75} />
               </span>
             )}
           </div>

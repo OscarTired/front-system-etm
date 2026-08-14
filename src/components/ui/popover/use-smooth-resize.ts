@@ -14,15 +14,42 @@ export function useSmoothResize() {
     const node = containerRef.current
     if (!node) return
 
+    let frame = 0
+    let pending: { width: number; height: number } | null = null
+
+    const commit = () => {
+      frame = 0
+      if (!pending) return
+      const next = pending
+      pending = null
+      setSize(prev => {
+        if (prev.width === next.width && prev.height === next.height) {
+          return prev
+        }
+        return next
+      })
+    }
+
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect
-        setSize({ width, height })
+        // Evita flash a 0 al cambiar de vista (opciones → valores)
+        if (height < 1) continue
+        pending = {
+          width: Math.round(width),
+          height: Math.round(height),
+        }
+        if (!frame) {
+          frame = requestAnimationFrame(commit)
+        }
       }
     })
 
     observer.observe(node)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (frame) cancelAnimationFrame(frame)
+    }
   }, [])
 
   return { containerRef, size }

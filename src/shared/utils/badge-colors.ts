@@ -122,9 +122,10 @@ function getReadableTextFor(
   backgroundRgb: { r: number; g: number; b: number }
 ) {
   const bgLum = getLuminanceFromRgb(backgroundRgb)
-  const MIN_CONTRAST = 4.5
+  // AA+ sobre pasteles de dominio (PAUSADO, PL, EN…)
+  const MIN_CONTRAST = 5.5
 
-  for (const amount of [0.28, 0.40, 0.52, 0.64, 0.76, 0.88, 0.94]) {
+  for (const amount of [0.42, 0.52, 0.62, 0.72, 0.82, 0.90, 0.96]) {
     const candidate = tintTowardBlack(hex, amount)
     const candidateLum = getLuminanceFromRgb(candidate)
     if (contrastFromLuminances(candidateLum, bgLum) >= MIN_CONTRAST) {
