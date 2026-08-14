@@ -728,7 +728,7 @@ export function NestingPage() {
                 />
               ) : null}
             </div>
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-neutral-950">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-zinc-100 shadow-sm dark:border-border/40 dark:bg-neutral-950">
               <div className="absolute inset-px overflow-hidden rounded-4xl">
                 {!project.sessionReady ? (
                   <WorkspaceSpinner />
@@ -824,7 +824,7 @@ export function NestingPage() {
           </div>
 
           {/* top-12 ≈ tabs; bottom-0 = todo el resto del slot immersive */}
-          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl bg-zinc-100 dark:bg-neutral-950">
+          <div className="absolute inset-x-0 bottom-0 top-12 mx-1 mb-1 overflow-hidden rounded-xl border border-border bg-zinc-100 shadow-sm dark:border-border/40 dark:bg-neutral-950">
             <div className="absolute inset-px overflow-hidden rounded-4xl">
               {!project.sessionReady ? (
                 <WorkspaceSpinner />

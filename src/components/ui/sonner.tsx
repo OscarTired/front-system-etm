@@ -53,7 +53,7 @@ export function Sonner() {
           title: "!text-sm !font-medium !text-foreground",
           description: "!text-sm !text-muted-foreground",
           closeButton:
-            "!size-5 !rounded-full !border-0 !bg-foreground/10 !text-muted-foreground hover:!bg-foreground/15 hover:!text-foreground",
+            "!size-6 !rounded-full !border !border-border !bg-muted !text-foreground hover:!bg-muted/80 hover:!text-foreground !opacity-100",
         },
       }}
     />

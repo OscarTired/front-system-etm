@@ -15,6 +15,7 @@ import { MessageBell } from "@/features/comments/components/message-bell"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ThemeToggle } from "@/shared/theme"
 
 import type { ProcessCounts } from "../hooks/use-sidebar-counts"
 
@@ -187,6 +188,18 @@ export function SidebarNavigation({
           </SidebarSection>
         )
       })}
+
+        {/* Tema al final del scroll: visible al bajar del todo */}
+        <div
+          className={cn(
+            "mt-4 w-full pb-1",
+            collapsed && "flex justify-center",
+            isMounting && "animate-gemini-in opacity-0",
+          )}
+          style={isMounting ? { animationDelay: "400ms" } : undefined}
+        >
+          <ThemeToggle compact />
+        </div>
       </div>
     </ScrollArea>
   )

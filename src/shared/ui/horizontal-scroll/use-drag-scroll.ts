@@ -111,8 +111,8 @@ export function useDragScroll() {
 
       isDragging.current = false
 
-      document.body.style.userSelect = ""
-      document.body.style.cursor = ""
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("cursor")
 
     }, [])
 
@@ -158,37 +158,48 @@ export function useDragScroll() {
     let notified = false
 
     const handleWheel = (event: WheelEvent) => {
+      // NO robar wheel vertical de la página/sidebar.
+      // Antes: cualquier deltaY > deltaX hacía preventDefault y
+      // movía scrollLeft → la lista detrás se sentía "congelada".
+      const canScrollH = container.scrollWidth > container.clientWidth + 1
+      if (!canScrollH) return
 
-      // Solo interceptamos gestos principalmente horizontales
-      // o verticales sobre la zona de KPIs. Los gestos verticales
-      // sobre las columnas son interceptados antes por useColumnScroll
-      // con stopImmediatePropagation, así que nunca llegan acá.
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+      const primarilyHorizontal =
+        Math.abs(event.deltaX) > Math.abs(event.deltaY)
+      // Shift+rueda = convención de scroll horizontal en desktop
+      const shiftAsHorizontal =
+        event.shiftKey && Math.abs(event.deltaY) > 0
+
+      if (!primarilyHorizontal && !shiftAsHorizontal) {
+        return
+      }
+
+      const delta = primarilyHorizontal
+        ? event.deltaX
+        : event.deltaY * WHEEL_MULTIPLIER
+
+      const atStart = container.scrollLeft <= 0
+      const atEnd =
+        container.scrollLeft + container.clientWidth >=
+        container.scrollWidth - 1
+      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) {
         return
       }
 
       event.preventDefault()
 
       if (!notified) {
-
         notifyScrollInteraction()
-
         notified = true
-
         window.setTimeout(() => {
           notified = false
         }, 250)
-
       }
 
-      const delta = event.deltaY * WHEEL_MULTIPLIER
-
       cancelAnimationFrame(frame)
-
       frame = requestAnimationFrame(() => {
         container.scrollLeft += delta
       })
-
     }
 
     container.addEventListener("wheel", handleWheel, { passive: false })

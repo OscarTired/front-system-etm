@@ -66,7 +66,7 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
           accentClassName ??
             cn(
               "bg-foreground text-background",
-              active && "bg-foreground/80",
+              active && "ring-2 ring-primary ring-offset-2 ring-offset-background",
             ),
           className,
         )}

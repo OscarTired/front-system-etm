@@ -33,7 +33,6 @@ import {
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 
 import { cn } from "@/shared/utils/utils"
-import { ThemeToggle } from "@/shared/theme"
 
 
 
@@ -309,13 +308,7 @@ export function SidebarProfile({
 
     <>
 
-      <div className={cn("mb-2 px-0.5", isMounting && "animate-gemini-in opacity-0")}
-        style={isMounting ? { animationDelay: "300ms" } : undefined}
-      >
-        <ThemeToggle compact />
-      </div>
-
-      <div
+            <div
 
         ref={containerRef}
 

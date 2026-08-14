@@ -111,8 +111,8 @@ export function useColumnScroll() {
       isDragging = false
       dragged = false
 
-      document.body.style.userSelect = ""
-      document.body.style.cursor = ""
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("cursor")
 
     }
 
@@ -121,8 +121,8 @@ export function useColumnScroll() {
       isDragging = false
       dragged = false
 
-      document.body.style.userSelect = ""
-      document.body.style.cursor = ""
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("cursor")
 
     }
 
