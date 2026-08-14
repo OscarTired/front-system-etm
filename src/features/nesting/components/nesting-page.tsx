@@ -293,6 +293,17 @@ export function NestingPage() {
     setSelectedPieceIndices,
   })
 
+  const handleRunAndShowCanvas = useCallback(() => {
+    setIsMobilePanelOpen(false)
+    handleRun()
+  }, [handleRun])
+
+  const doRunNestingAndShowCanvas = useCallback(() => {
+    setIsMobilePanelOpen(false)
+    doRunNesting()
+  }, [doRunNesting])
+
+
   const dxfCanvasPieces: NestingPieceInput[] = useMemo(
     () =>
       canvasPieces.map((p) => ({
@@ -534,7 +545,7 @@ export function NestingPage() {
   const nestFooter = (
     <div className="flex flex-col gap-2">
       {!project.isRunning ? (
-        <Button size="default" className="w-full" disabled={!project.canRun} onClick={handleRun}>
+        <Button size="default" className="w-full" disabled={!project.canRun} onClick={handleRunAndShowCanvas}>
           Nestear
         </Button>
       ) : (
@@ -739,7 +750,7 @@ export function NestingPage() {
                     sheetKey={activeGroupIndex}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-full items-center justify-center text-sm text-foreground/55">
                     Importa una pieza o presiona Nestear
                   </div>
                 )}
@@ -830,7 +841,7 @@ export function NestingPage() {
                   sheetKey={activeGroupIndex}
                 />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground">
+                <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-foreground/55">
                   <p>Importa una pieza o presiona Nestear</p>
                   <button
                     type="button"
@@ -861,7 +872,7 @@ export function NestingPage() {
         title="Nestear de nuevo"
         description="Se recalculará el acomodo desde cero y se perderán movimientos, rotaciones y bloqueos manuales."
         confirmLabel="Nestear de nuevo"
-        onConfirm={doRunNesting}
+        onConfirm={doRunNestingAndShowCanvas}
         autoDismissSeconds={10}
       />
 

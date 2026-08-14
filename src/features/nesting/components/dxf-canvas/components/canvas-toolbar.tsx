@@ -1,9 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 import {
   ZoomIn,
   ZoomOut,
@@ -87,6 +85,9 @@ export interface CanvasToolbarProps {
   /** Auto-cota del bbox de la selección. */
   onAutoBboxDim?: () => void
   canAutoBboxDim?: boolean
+
+  /** Avisa si la barra de tools está expandida (para mover chrome colindante). */
+  onOpenChange?: (open: boolean) => void
 }
 
 const SPEEDS = [0.5, 1, 2, 4] as const
@@ -123,87 +124,18 @@ export function CanvasToolbar({
   onSpeedChange,
   onAutoBboxDim,
   canAutoBboxDim = false,
+  onOpenChange,
 }: CanvasToolbarProps) {
   const [open, setOpen] = useState(false)
   const [speedPopoverOpen, setSpeedPopoverOpen] = useState(false)
   const [displayOpen, setDisplayOpen] = useState(false)
   const { isCompact } = useResponsive()
 
-  const {
-    containerRef: toolScrollRef,
-    handleMouseDown: handleToolMouseDown,
-    handleMouseMove: handleToolMouseMove,
-    handleClickCapture: handleToolClickCapture,
-    stopDragging: stopToolDragging,
-  } = useDragScroll()
-  const { leftFade, rightFade } = useHorizontalFade({ containerRef: toolScrollRef })
-
   const isToolActive = activeTool !== "none"
 
-  /**
-   * Scrollbar solo cuando el contenido desborda de verdad.
-   * Durante la animación de max-width el clientWidth es temporalmente
-   * menor que scrollWidth → no medimos hasta transitionend.
-   */
-  const [toolsOverflow, setToolsOverflow] = useState(false)
-  /** false mientras corre la animación de apertura; el RO no debe medir aún. */
-  const overflowReadyRef = useRef(false)
-
-  const measureOverflow = useCallback(() => {
-    const el = toolScrollRef.current
-    if (!el || !overflowReadyRef.current) return
-    setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
-  }, [toolScrollRef])
-
   useEffect(() => {
-    const el = toolScrollRef.current
-
-    if (!open) {
-      overflowReadyRef.current = false
-      setToolsOverflow(false)
-      return
-    }
-
-    if (!el) return
-
-    // Fase animación: bloquear mediciones y barra
-    overflowReadyRef.current = false
-    setToolsOverflow(false)
-
-    const markReadyAndMeasure = () => {
-      overflowReadyRef.current = true
-      // layout estable tras el frame de transitionend
-      requestAnimationFrame(() => {
-        setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
-      })
-    }
-
-    const onTransitionEnd = (e: TransitionEvent) => {
-      if (e.target !== el) return
-      // Solo max-width: opacity termina antes y mediría a mitad del grow
-      if (e.propertyName !== "max-width") return
-      markReadyAndMeasure()
-    }
-
-    el.addEventListener("transitionend", onTransitionEnd)
-
-    // Fallback si el browser no dispara transitionend (prefers-reduced-motion, etc.)
-    const fallback = window.setTimeout(markReadyAndMeasure, 400)
-
-    const ro = new ResizeObserver(() => {
-      // CRÍTICO: no medir durante la animación (era la causa del flash)
-      if (!overflowReadyRef.current) return
-      setToolsOverflow(el.scrollWidth > el.clientWidth + 4)
-    })
-    ro.observe(el)
-
-    return () => {
-      el.removeEventListener("transitionend", onTransitionEnd)
-      window.clearTimeout(fallback)
-      ro.disconnect()
-      overflowReadyRef.current = false
-    }
-  }, [open, isCompact, isToolActive, toolScrollRef])
+    onOpenChange?.(open)
+  }, [open, onOpenChange])
 
   // Auto-abre el panel al seleccionar una pieza. No auto-cierra al deseleccionar.
   useEffect(() => {
@@ -225,18 +157,18 @@ export function CanvasToolbar({
       }`}
     >
       {/* Fila superior: FAB + barra de herramientas */}
-      <div className={`flex items-center gap-2 ${isCompact ? "w-full" : ""}`}>
+      <div className={`flex items-start gap-2 ${isCompact ? "w-full" : ""}`}>
         <button
           type="button"
           onClick={() => (open ? handleClose() : setOpen(true))}
           className={`
             pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-            shadow-lg backdrop-blur-md
+            backdrop-blur-md
             transition-all duration-200 ease-out
             ${
               open
-                ? "bg-background text-foreground shadow-md"
-                : "bg-background/90 text-muted-foreground shadow-md hover:bg-background hover:text-foreground"
+                ? "bg-background text-foreground"
+                : "bg-background/90 text-muted-foreground hover:bg-background hover:text-foreground"
             }
           `}
           title={open ? "Cerrar herramientas" : "Herramientas"}
@@ -246,40 +178,25 @@ export function CanvasToolbar({
         </button>
 
         <div
-          ref={toolScrollRef}
-          onMouseDown={isCompact ? handleToolMouseDown : undefined}
-          onMouseMove={isCompact ? handleToolMouseMove : undefined}
-          onMouseUp={isCompact ? stopToolDragging : undefined}
-          onMouseLeave={isCompact ? stopToolDragging : undefined}
-          onClickCapture={isCompact ? handleToolClickCapture : undefined}
-          style={
-            isCompact
-              ? {
-                  WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-                  maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-                }
-              : undefined
-          }
           className={`
-            pointer-events-auto flex items-center gap-0.5 overflow-y-hidden rounded-full
-            bg-background/90 py-1 pl-1.5 pr-1.5
-            shadow-lg backdrop-blur-md
-            transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-            ${
-              toolsOverflow
-                ? "themed-scrollbar-x overflow-x-auto"
-                : "overflow-x-hidden"
-            }
+            min-w-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
             ${
               isCompact
-                ? `cursor-grab active:cursor-grabbing ${
-                    open ? "min-w-0 flex-1 opacity-100" : "max-w-0 opacity-0 pointer-events-none"
-                  }`
+                ? open
+                  ? "flex-1 opacity-100"
+                  : "max-w-0 flex-none opacity-0 pointer-events-none"
                 : open
                   ? "max-w-[min(52rem,calc(100vw-6rem))] opacity-100"
                   : "max-w-0 opacity-0 pointer-events-none"
             }
           `}
+        >
+        <div
+          className="
+            pointer-events-auto flex max-w-full flex-wrap items-center gap-0.5
+            rounded-2xl border border-foreground/10 bg-background/90 py-1 pl-1.5 pr-1.5
+            backdrop-blur-md
+          "
         >
           {/* Vista */}
           <button type="button" onClick={onZoomIn} className={`${mdBtn}`} title="Acercar">
@@ -493,6 +410,7 @@ export function CanvasToolbar({
             </>
           )}
         </div>
+        </div>
       </div>
 
       {/* Subpanel de simulación — independiente de la barra de tools
@@ -502,7 +420,7 @@ export function CanvasToolbar({
           className={`
             pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden rounded-2xl
             bg-background/95 py-1.5 pl-2 pr-1.5
-            shadow-lg backdrop-blur-md
+            backdrop-blur-md
             transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top
             ${isCompact ? "w-full max-w-full" : ""}
             ${

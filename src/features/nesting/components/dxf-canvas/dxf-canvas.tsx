@@ -104,6 +104,7 @@ export function DxfCanvas({
     midY: number
   } | null>(null)
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("select")
+  const [toolsChromeOpen, setToolsChromeOpen] = useState(false)
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; pieceIndex: number | null } | null>(null)
   const [showCanvasHelp, setShowCanvasHelp] = useState(false)
   const [statusActionsOpen, setStatusActionsOpen] = useState(false)
@@ -1091,7 +1092,7 @@ export function DxfCanvas({
           del canvas. Se fusionaron en un solo lugar. */}
       <div
         data-slot="canvas-status-bar"
-        className={`absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-muted/95 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-sm ${
+        className={`absolute bottom-3 left-3 z-20 flex items-center gap-2 rounded-full bg-muted/95 py-1.5 text-xs text-muted-foreground backdrop-blur-sm ${
           isCompact ? "px-2.5" : "px-3"
         }`}
       >
@@ -1190,8 +1191,8 @@ export function DxfCanvas({
             <div
               className={
                 isCompact
-                  ? "fixed inset-x-3 bottom-16 z-40 rounded-xl bg-popover/95 p-3 text-[11px] text-muted-foreground shadow-2xl backdrop-blur-md"
-                  : "absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-popover/95 p-3 text-[11px] text-muted-foreground shadow-2xl backdrop-blur-md"
+                  ? "fixed inset-x-3 bottom-16 z-40 rounded-xl bg-popover/95 p-3 text-[11px] text-muted-foreground backdrop-blur-md"
+                  : "absolute bottom-8 left-0 z-40 w-60 rounded-xl bg-popover/95 p-3 text-[11px] text-muted-foreground backdrop-blur-md"
               }
             >
               <div className="z-90 font-semibold text-foreground mb-1">Guía rápida de interacción:</div>
@@ -1208,8 +1209,13 @@ export function DxfCanvas({
 
       {/* Indicador modo interacción V/H superior — única fuente de verdad
           del modo activo (antes se repetía también en la barra de estado). */}
-      <div className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5">
-        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-muted/90 p-1 shadow-lg backdrop-blur-sm">
+      <div
+        className={`pointer-events-none absolute right-3 z-20 flex items-center gap-1.5 transition-[top] duration-300 ${
+          // Tools pueden ser 2–3 filas: bajar el toggle para no taparlo
+          toolsChromeOpen ? "top-26" : "top-3"
+        }`}
+      >
+        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-foreground/10 bg-muted/90 p-1 backdrop-blur-sm">
           <button
             type="button"
             title="Seleccionar (V)"
@@ -1259,6 +1265,7 @@ export function DxfCanvas({
       />
 
       <CanvasToolbar
+        onOpenChange={setToolsChromeOpen}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid((v) => !v)}
         onZoomIn={() => handleZoom("in")}
@@ -1321,7 +1328,7 @@ export function DxfCanvas({
       )}
 
       {measure.activeTool !== "none" && (
-        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-muted/90 px-3 py-1.5 text-[11px] text-muted-foreground shadow-md backdrop-blur-md transition-opacity duration-200">
+        <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 rounded-full bg-muted/90 px-3 py-1.5 text-[11px] text-muted-foreground backdrop-blur-md transition-opacity duration-200">
           {measure.activeTool === "distance" &&
             (measure.pendingPoints.length === 0
               ? "Cota: clic en el primer punto (snap a arista/extremo)"
@@ -1344,7 +1351,7 @@ export function DxfCanvas({
       )}
 
       {collidingPieceIndices.length > 0 && (
-        <div className="absolute left-1/2 top-16 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 shadow-md backdrop-blur-md">
+        <div className="absolute left-1/2 top-16 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-400 backdrop-blur-md">
           <AlertTriangle className="h-3.5 w-3.5" />
           {collidingPieceIndices.length === 1
             ? "1 pieza se solapa con otra"
@@ -1355,7 +1362,7 @@ export function DxfCanvas({
       {/* Panel de mediciones con altura segura sobre la barra inferior */}
       {measure.measurements.length > 0 && (
         <div
-          className="absolute bottom-14 left-3 z-30 flex max-h-[40%] w-[min(15rem,calc(100%-1.5rem))] flex-col gap-1.5 rounded-2xl bg-popover/95 p-2.5 shadow-lg backdrop-blur-md sm:p-3"
+          className="absolute bottom-14 left-3 z-30 flex max-h-[40%] w-[min(15rem,calc(100%-1.5rem))] flex-col gap-1.5 rounded-2xl bg-popover/95 p-2.5 backdrop-blur-md sm:p-3"
           title="Mediciones activas"
         >
           {/*

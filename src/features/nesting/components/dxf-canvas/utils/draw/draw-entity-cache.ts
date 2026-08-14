@@ -1,6 +1,41 @@
 import type { Entity, Point, ToolpathSeg, ViewState } from "../../types/types"
 
 /**
+ * Canvas nesting = superficie oscura fija. Textos DXF en negro/gris
+ * oscuro no se ven: remapeamos a ink claro legible.
+ */
+export function resolveCanvasInk(color: string, lightInk = "#e4e4e7"): string {
+  const c = (color || "").trim().toLowerCase()
+  if (!c || c === "black" || c === "#000" || c === "#000000") return lightInk
+
+  let r = 0, g = 0, b = 0
+  if (c.startsWith("#") && (c.length === 7 || c.length === 4)) {
+    if (c.length === 7) {
+      r = parseInt(c.slice(1, 3), 16)
+      g = parseInt(c.slice(3, 5), 16)
+      b = parseInt(c.slice(5, 7), 16)
+    } else {
+      r = parseInt(c[1] + c[1], 16)
+      g = parseInt(c[2] + c[2], 16)
+      b = parseInt(c[3] + c[3], 16)
+    }
+  } else {
+    const m = c.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/)
+    if (!m) return color
+    r = +m[1]
+    g = +m[2]
+    b = +m[3]
+  }
+  const lin = (v: number) => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+  }
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+  return L < 0.22 ? lightInk : color
+}
+
+
+/**
  * Caché de Path2D + AABB por entidad, y utilidades de culling de
  * viewport — extraído de draw.ts (que ya pasaba las 1000 líneas) sin
  * cambiar ninguna lógica, solo moviendo estas funciones autocontenidas
@@ -140,6 +175,7 @@ export function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, scale: nu
   if (e.kind === "text") {
     ctx.save()
     ctx.font = `${e.height}px sans-serif`
+    ctx.fillStyle = resolveCanvasInk(e.color)
     ctx.fillText(e.text, e.position.x, e.position.y)
     ctx.restore()
     return
