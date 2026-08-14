@@ -233,23 +233,7 @@ export function TaskDialog({
       }
 
       const createdTask=
-        await create({
-
-          projectId:form.projectId,
-          reference:form.reference,
-          lotNumber:form.lotNumber,
-          pieces:form.pieces,
-          assemblyCount:form.assemblyCount,
-          paintKg:form.paintKg,
-          route:form.route,
-          priorityId:form.priorityId,
-          materialId:form.materialId,
-          thicknessId:form.thicknessId,
-          colorId:form.colorId,
-          plRt:form.plRt,
-          deliveryDate:form.deliveryDate,
-
-        })
+        await create(buildTask())
 
       if(promptOpenAfterCreate){
 

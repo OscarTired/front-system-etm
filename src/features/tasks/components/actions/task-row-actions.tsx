@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
 import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+import { TaskMaterialInfo } from "@/features/tasks/components/task-material-info"
 
 import { cn } from "@/shared/utils/utils"
 
@@ -53,6 +54,7 @@ export function TaskRowActions({ task, className }: TaskRowActionsProps) {
           createdBy={task.createdBy}
           updatedBy={task.updatedBy}
         />
+        <TaskMaterialInfo task={task} />
         <IconAction
           icon={Pencil}
           disabled={!canUpdate}

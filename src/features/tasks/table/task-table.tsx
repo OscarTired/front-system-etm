@@ -176,7 +176,7 @@ export function TaskTable({
 
     <>
 
-      <div className="mt-2 flex flex-col gap-2 pb-2">
+      <div className="flex flex-col gap-2 pb-2">
 
         {displayedTasks.map(task => {
 
