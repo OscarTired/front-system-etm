@@ -15,6 +15,7 @@ const PERMISSION_GROUPS: Record<string,string> = {
   ACTIVITY_LOG:"Bitácora",
   ACTIVITY_TYPE:"Bitácora — tipos de actividad",
   ROLE:"Roles y permisos",
+  NESTING:"Nesting",
 
 }
 
@@ -28,6 +29,7 @@ const GROUP_ORDER = [
   "ACTIVITY_LOG",
   "ACTIVITY_TYPE",
   "ROLE",
+  "NESTING",
 ]
 
 export function getPermissionGroupKey(code:string):string{

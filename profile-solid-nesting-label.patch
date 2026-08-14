@@ -1,0 +1,33 @@
+diff --git a/src/features/roles/utils/permission-groups.ts b/src/features/roles/utils/permission-groups.ts
+index 2635184..6286c7b 100644
+--- a/src/features/roles/utils/permission-groups.ts
++++ b/src/features/roles/utils/permission-groups.ts
+@@ -15,6 +15,7 @@ const PERMISSION_GROUPS: Record<string,string> = {
+   ACTIVITY_LOG:"Bitácora",
+   ACTIVITY_TYPE:"Bitácora — tipos de actividad",
+   ROLE:"Roles y permisos",
++  NESTING:"Nesting",
+ 
+ }
+ 
+@@ -28,6 +29,7 @@ const GROUP_ORDER = [
+   "ACTIVITY_LOG",
+   "ACTIVITY_TYPE",
+   "ROLE",
++  "NESTING",
+ ]
+ 
+ export function getPermissionGroupKey(code:string):string{
+diff --git a/src/shared/responsive/layout/sidebar/sidebar-profile.tsx b/src/shared/responsive/layout/sidebar/sidebar-profile.tsx
+index 7afe153..a9f1931 100644
+--- a/src/shared/responsive/layout/sidebar/sidebar-profile.tsx
++++ b/src/shared/responsive/layout/sidebar/sidebar-profile.tsx
+@@ -382,7 +382,7 @@ export function SidebarProfile({
+ 
+           ref={cardRef}
+ 
+-          className="relative z-10 rounded-xl border border-border/50 bg-transparent px-3 py-3 transition-colors duration-300"
++          className="relative z-10 rounded-xl border border-border/60 bg-card px-3 py-3 shadow-sm transition-colors duration-300"
+ 
+         >
+ 

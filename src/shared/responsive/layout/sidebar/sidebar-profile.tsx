@@ -382,7 +382,7 @@ export function SidebarProfile({
 
           ref={cardRef}
 
-          className="relative z-10 rounded-xl border border-border/50 bg-transparent px-3 py-3 transition-colors duration-300"
+          className="relative z-10 rounded-xl border border-border/60 bg-card px-3 py-3 shadow-sm transition-colors duration-300"
 
         >
 
