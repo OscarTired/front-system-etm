@@ -6,8 +6,9 @@ import { PieceListRow } from "./piece-list-row"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { isSupportedCadFile, readCadFile } from "../cad/cad-reader"
-import { isPdfFile, parsePdf } from "../cad/pdf-parser"
+import { isSupportedCadFile } from "../cad/cad-reader"
+import { isPdfFile } from "../cad/pdf-parser"
+import { cadParseApi } from "../api/cad-parse.api"
 import { scanMaterialData, type MaterialData } from "../cad/thickness-scanner"
 import type { PieceOutline, SubEntity } from "../engine/types"
 
@@ -133,66 +134,53 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         continue
       }
 
-      if (isPdfFile(file.name)) {
+      if (isPdfFile(file.name) || isSupportedCadFile(file.name)) {
         try {
-          const buffer = await file.arrayBuffer()
-          const cadData = await parsePdf(file.name, buffer)
-          if (!cadData.valid || cadData.outline.points.length === 0) {
-            rejected.push(`${file.name} (sin geometría vectorial)`)
+          const parsed = await cadParseApi.parseFile(file)
+          const piece = parsed.pieces[0]
+          if (!parsed.valid || !piece?.outline?.points?.length) {
+            rejected.push(`${file.name} (geometría inválida)`)
             continue
+          }
+          let textForMaterial = ""
+          if (!file.name.toLowerCase().endsWith(".pdf")) {
+            try {
+              textForMaterial = await file.text()
+            } catch {
+              textForMaterial = ""
+            }
           }
           newRows.push({
             id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             source: "cad",
             fileName: file.name,
-            outline: cadData.outline,
-            subEntities: cadData.entities.map((e) => ({ outline: e.outline, color: e.color, layer: e.layer })),
-            width: cadData.width,
-            height: cadData.height,
+            outline: piece.outline,
+            subEntities: piece.subEntities ?? [],
+            width: parsed.width ?? 0,
+            height: parsed.height ?? 0,
             quantity: "1",
             color: nextColor(),
-            material: scanMaterialData(file.name, ""),
+            material: inheritMaterialFromSibling(
+              file.name,
+              scanMaterialData(file.name, textForMaterial),
+              [...rows, ...newRows],
+            ),
           })
           existingFileNames.add(file.name.toLowerCase())
         } catch {
-          rejected.push(`${file.name} (error al leer PDF)`)
+          rejected.push(`${file.name} (error al parsear en servidor)`)
         }
         continue
       }
 
-      const isCadOrNps = isSupportedCadFile(file.name) || isNpsFile(file.name)
-      if (!isCadOrNps) {
+      if (!isNpsFile(file.name)) {
         rejected.push(`${file.name} (solo .dxf, .geo, .pdf o .nps)`)
         continue
       }
 
-      const text = await file.text()
-      if (!text.trim()) continue
-
-      const cadData = readCadFile(file.name, text)
-      if (!cadData.valid || cadData.outline.points.length === 0) {
-        rejected.push(`${file.name} (geometría inválida)`)
-        continue
-      }
-
-      newRows.push({
-        id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        source: "cad",
-        fileName: file.name,
-        outline: cadData.outline,
-        subEntities: cadData.entities.map((e) => ({ outline: e.outline, color: e.color, layer: e.layer })),
-        width: cadData.width,
-        height: cadData.height,
-        quantity: "1",
-        color: nextColor(),
-        material: inheritMaterialFromSibling(
-          file.name,
-          scanMaterialData(file.name, text),
-          [...rows, ...newRows]
-        ),
-      })
-      existingFileNames.add(file.name.toLowerCase())
-    }
+      // .nps: formato de proyecto local — sin parser CAD en servidor
+      rejected.push(`${file.name} (nps: abrir desde proyectos guardados)`)
+      continue
 
     const messages: string[] = []
     if (duplicated.length > 0) messages.push(`Duplicados: ${duplicated.join(", ")}`)

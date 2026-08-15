@@ -1,5 +1,6 @@
-# CAD parsers (transicional)
+# CAD (cliente)
 
-- Nest pack: solo backend (`POST /engineering/nest` o `/engineering/nest/jobs`).
-- Parse DXF en back (primer escalón): `POST /engineering/cad/parse-dxf` (multipart `file`).
-- Parsers locales (DXF/GEO/PDF) siguen para preview/import hasta migrar el flujo de UI al upload.
+Import de producción: `POST /engineering/cad/parse` (back, parser rico DXF/GEO/PDF).
+
+Los módulos aquí quedan como referencia / utilidades locales (`isSupportedCadFile`,
+`isPdfFile`, thickness-scanner). El parseo geométrico vive en el backend.
