@@ -117,7 +117,7 @@ export function NotificationBell({
           aria-label="Notificaciones"
           onClick={() => handleOpenChange(!open)}
           className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
             open && "bg-foreground/20 text-foreground",
           )}
         >
@@ -249,7 +249,7 @@ export function NotificationBell({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
+              className="flex flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
             >
               <FormDialogHeader title="Notificaciones" icon={Bell} />
               {panelBody}
@@ -265,7 +265,7 @@ export function NotificationBell({
             side="right"
             align="start"
             sideOffset={8}
-            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-foreground shadow-xl select-none"
+            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 select-none"
           >
             <div className="flex shrink-0 items-center px-3.5 pt-3">
               <span className="text-sm font-semibold text-foreground">

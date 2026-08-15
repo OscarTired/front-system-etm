@@ -146,7 +146,7 @@ export function PopoverContent({
           onInteractOutside={onInteractOutside}
           className={cn(
             "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
-            "rounded-t-2xl bg-popover text-popover-foreground shadow-2xl outline-none",
+            "rounded-t-2xl bg-popover text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
             "pb-[env(safe-area-inset-bottom,0px)]",
             "[touch-action:pan-y]",
             className,
@@ -223,7 +223,7 @@ export function PopoverContent({
         event.stopPropagation()
       }}
       className={cn(
-        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none",
+        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-150",

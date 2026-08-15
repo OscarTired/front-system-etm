@@ -118,7 +118,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
           aria-label="Mensajes"
           onClick={() => setOpen(!open)}
           className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
             open && "bg-foreground/20 text-foreground",
           )}
         >
@@ -310,7 +310,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent
             size="large"
-            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
+            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
           >
             <FormDialogHeader title="Mensajes" icon={MessageSquare} />
             <p className="px-4 pb-1 text-xs text-muted-foreground">
@@ -331,7 +331,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
         side="right"
         align="start"
         sideOffset={8}
-        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-foreground shadow-xl select-none"
+        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 select-none"
       >
         <div className="flex shrink-0 items-center px-3.5 pt-3">
           <span className="text-sm font-semibold text-foreground">Mensajes</span>

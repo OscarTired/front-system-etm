@@ -67,7 +67,7 @@ export function TopBar() {
           type="button"
           onClick={toggleDrawer}
           aria-label="Abrir navegación"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chrome text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
         >
           <Menu size={18} strokeWidth={2.2} />
         </button>
@@ -75,7 +75,7 @@ export function TopBar() {
         <div className="min-w-0 flex-1">
           <div
             title={title}
-            className="inline-flex max-w-full items-center rounded-full bg-chrome px-2.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl"
+            className="inline-flex max-w-full items-center rounded-full bg-chrome px-2.5 py-1.5 shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl"
           >
             <span className="truncate text-sm font-semibold text-foreground">
               {title}
@@ -94,8 +94,8 @@ export function TopBar() {
             }}
             className={
               searchOpen
-                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
-                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
             }
           >
             {searchOpen ? (
@@ -115,7 +115,7 @@ export function TopBar() {
           onClick={() => setProfileOpen(true)}
           aria-label="Perfil"
           disabled={!user}
-          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20 disabled:opacity-50"
+          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20 disabled:opacity-50"
         >
           <div className="relative size-7 shrink-0">
             {user ? (
@@ -134,7 +134,7 @@ export function TopBar() {
         >
           {/* h-10 fijo: con o sin texto la altura no cambia.
               mb-2 = mismo aire que empty state (mt-2) hacia los rows. */}
-          <div className="mb-2 flex h-10 items-center gap-2 rounded-xl bg-foreground/5 px-3">
+          <div className="mb-2 flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 shadow-sm shadow-black/15 dark:shadow-black/40">
             <Search
               size={15}
               strokeWidth={2.2}

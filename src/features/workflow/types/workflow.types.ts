@@ -33,6 +33,8 @@ export interface WorkflowStep{
 
   operator:User | null
 
+  coOperatorIds:string[]
+
   // Quién puso a `operator` ahí vía "Convocar" (modo ASSIGN) — null
   // cuando el propio operario se autoasignó al iniciar. Separa
   // "Asignadas" de "Disponibles" en Mis tareas.

@@ -62,7 +62,7 @@ export const FabTrigger = forwardRef<HTMLButtonElement, Props>(
         aria-label={label}
         title={label}
         className={cn(
-          "relative flex size-11 shrink-0 items-center justify-center rounded-full shadow-lg transition active:scale-95",
+          "relative flex size-11 shrink-0 items-center justify-center rounded-full shadow-sm shadow-black/15 dark:shadow-black/40 transition active:scale-95",
           accentClassName ??
             cn(
               "bg-foreground text-background",

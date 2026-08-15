@@ -120,7 +120,7 @@ export default function AssignmentPage() {
 
         {/* Selector de áreas (supervisor) */}
         {state.canChooseAreas && state.configOpen && (
-          <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-foreground/5 p-2.5">
+          <div className="mb-1 flex shrink-0 flex-wrap justify-center gap-2 rounded-xl bg-foreground/5 p-2.5 desktop:justify-start">
             {state.allAreas.map(code => {
               const definition = PROCESS_DEFINITIONS[code]
               const Icon = ENTITY_ICONS[definition.icon]

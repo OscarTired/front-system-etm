@@ -50,7 +50,7 @@ export function BottomNavigation() {
       />
 
       <div className="pointer-events-auto relative px-3 pb-1">
-        <nav className="flex items-stretch gap-1 rounded-full bg-foreground/10 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-border backdrop-blur-xl">
+        <nav className="flex items-stretch gap-1 rounded-full bg-foreground/10 px-1.5 py-1.5 shadow-sm shadow-black/15 dark:shadow-black/40 ring-1 ring-border backdrop-blur-xl">
           {BOTTOM_NAV_ITEMS.map(item => {
             const isActive =
               item.action.type === "link" &&

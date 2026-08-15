@@ -178,7 +178,7 @@ export function DialogContent({
           "rounded-2xl",
           "bg-popover",
           "p-6",
-          "shadow-2xl",
+          "shadow-sm shadow-black/15 dark:shadow-black/40",
           "outline-none",
           "select-none",
           className,

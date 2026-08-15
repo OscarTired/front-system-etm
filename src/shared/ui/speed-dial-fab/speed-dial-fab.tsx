@@ -94,7 +94,7 @@ export function SpeedDialFab({ actions, className }: Props) {
       ref={rootRef}
       data-slot="speed-dial-fab"
       className={cn(
-        "pointer-events-none fixed bottom-22 flex flex-col items-end gap-2",
+        "pointer-events-none fixed bottom-22 flex flex-col items-center gap-2.5",
         FAB_Z_CLASS,
         "transition-opacity ease-out",
         chromeHidden ? "opacity-0" : "opacity-100",
@@ -116,7 +116,7 @@ export function SpeedDialFab({ actions, className }: Props) {
         }
         transition={{ type: "spring", stiffness: 420, damping: 28 }}
         className={cn(
-          "flex flex-col items-end gap-2",
+          "flex flex-col items-center gap-2.5",
           dialOpen
             ? "pointer-events-auto relative"
             : "pointer-events-none absolute bottom-14 right-0",
@@ -138,7 +138,7 @@ export function SpeedDialFab({ actions, className }: Props) {
         className={cn(
           "pointer-events-auto flex size-12 items-center justify-center rounded-full transition duration-200",
           "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",
-          "shadow-lg",
+          "shadow-sm shadow-black/15 dark:shadow-black/40",
         )}
       >
         {dialOpen ? (
