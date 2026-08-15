@@ -86,6 +86,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const [searchQuery, setSearchQuery] = useState("")
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const [importing, setImporting] = useState(false)
   const dragCounterRef = useRef(0)
 
   useImperativeHandle(ref, () => ({
@@ -121,6 +122,8 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
   const handleFilesSelected = async (files: FileList | null) => {
     if (!files || files.length === 0) return
 
+    setImporting(true)
+    try {
     const newRows: CadRow[] = []
     const rejected: string[] = []
     const duplicated: string[] = []
@@ -228,6 +231,9 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
 
     setErrorMsg(messages.length > 0 ? messages.join(" | ") : null)
     if (newRows.length > 0) onAddCad(newRows)
+    } finally {
+      setImporting(false)
+    }
   }
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -397,6 +403,13 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         }}
       />
 
+      {importing && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-xl bg-background/80 backdrop-blur-sm">
+          <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-foreground">Importando piezas…</p>
+          <p className="text-xs text-muted-foreground">DXF/GEO en servidor · PDF local</p>
+        </div>
+      )}
       {errorMsg && (
         <p className="mb-2 mx-3 shrink-0 flex items-start gap-1.5 rounded-lg bg-destructive/10 p-2 text-xs text-destructive animate-in fade-in duration-200">
           <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" />

@@ -220,9 +220,9 @@ export function MaterialPanel({
             <div className="flex flex-col gap-2">
               <Field label="Material">
                 {multiMat ? (
-                  <div className="flex min-h-14 flex-col items-center justify-center text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
-                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{matLabel}</span>
-                    <span className="text-[10px] text-amber-500/80">Varios materiales</span>
+                  <div className="flex min-h-14 flex-col items-center justify-center text-center gap-0.5 rounded-lg bg-amber-500/15 dark:bg-amber-500/10 px-2.5 py-2 w-full">
+                    <span className="text-xs font-medium text-amber-900 dark:text-amber-200/90 leading-tight">{matLabel}</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-500/80">Varios materiales</span>
                   </div>
                 ) : (
                   <Input
@@ -236,9 +236,9 @@ export function MaterialPanel({
 
               <Field label="Espesor">
                 {multiThick ? (
-                  <div className="flex min-h-14 flex-col items-center justify-center truncate uppercase text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
-                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{thickLabel}</span>
-                    <span className="text-[10px] text-amber-500/80">Varios espesores</span>
+                  <div className="flex min-h-14 flex-col items-center justify-center truncate uppercase text-center gap-0.5 rounded-lg bg-amber-500/15 dark:bg-amber-500/10 px-2.5 py-2 w-full">
+                    <span className="text-xs font-medium text-amber-900 dark:text-amber-200/90 leading-tight">{thickLabel}</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-500/80">Varios espesores</span>
                   </div>
                 ) : (
                   <Input

@@ -1,0 +1,91 @@
+diff --git a/src/features/nesting/api/cad-parse.api.ts b/src/features/nesting/api/cad-parse.api.ts
+index 535d315..883261d 100644
+--- a/src/features/nesting/api/cad-parse.api.ts
++++ b/src/features/nesting/api/cad-parse.api.ts
+@@ -13,10 +13,10 @@ export const cadParseApi = {
+   async parseFile(file: File, signal?: AbortSignal): Promise<CadParseResponse> {
+     const form = new FormData()
+     form.append("file", file, file.name)
++    // No fijar Content-Type: el browser añade multipart boundary.
+     const res = await api.post<CadParseResponse>("/engineering/cad/parse", form, {
+       signal,
+       timeout: 120_000,
+-      headers: { "Content-Type": "multipart/form-data" },
+     })
+     return res.data
+   },
+diff --git a/src/features/nesting/components/material-panel.tsx b/src/features/nesting/components/material-panel.tsx
+index b050482..2a895c8 100644
+--- a/src/features/nesting/components/material-panel.tsx
++++ b/src/features/nesting/components/material-panel.tsx
+@@ -220,9 +220,9 @@ export function MaterialPanel({
+             <div className="flex flex-col gap-2">
+               <Field label="Material">
+                 {multiMat ? (
+-                  <div className="flex min-h-14 flex-col items-center justify-center text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
+-                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{matLabel}</span>
+-                    <span className="text-[10px] text-amber-500/80">Varios materiales</span>
++                  <div className="flex min-h-14 flex-col items-center justify-center text-center gap-0.5 rounded-lg bg-amber-500/15 dark:bg-amber-500/10 px-2.5 py-2 w-full">
++                    <span className="text-xs font-medium text-amber-900 dark:text-amber-200/90 leading-tight">{matLabel}</span>
++                    <span className="text-[10px] text-amber-700 dark:text-amber-500/80">Varios materiales</span>
+                   </div>
+                 ) : (
+                   <Input
+@@ -236,9 +236,9 @@ export function MaterialPanel({
+ 
+               <Field label="Espesor">
+                 {multiThick ? (
+-                  <div className="flex min-h-14 flex-col items-center justify-center truncate uppercase text-center gap-0.5 rounded-lg bg-amber-500/10 px-2.5 py-2 w-full">
+-                    <span className="text-xs font-medium text-amber-200/90 leading-tight">{thickLabel}</span>
+-                    <span className="text-[10px] text-amber-500/80">Varios espesores</span>
++                  <div className="flex min-h-14 flex-col items-center justify-center truncate uppercase text-center gap-0.5 rounded-lg bg-amber-500/15 dark:bg-amber-500/10 px-2.5 py-2 w-full">
++                    <span className="text-xs font-medium text-amber-900 dark:text-amber-200/90 leading-tight">{thickLabel}</span>
++                    <span className="text-[10px] text-amber-700 dark:text-amber-500/80">Varios espesores</span>
+                   </div>
+                 ) : (
+                   <Input
+diff --git a/src/features/nesting/components/piece-list.tsx b/src/features/nesting/components/piece-list.tsx
+index 23afa36..27287fc 100644
+--- a/src/features/nesting/components/piece-list.tsx
++++ b/src/features/nesting/components/piece-list.tsx
+@@ -86,6 +86,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+   const [searchQuery, setSearchQuery] = useState("")
+ 
+   const [isDraggingOver, setIsDraggingOver] = useState(false)
++  const [importing, setImporting] = useState(false)
+   const dragCounterRef = useRef(0)
+ 
+   useImperativeHandle(ref, () => ({
+@@ -121,6 +122,8 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+   const handleFilesSelected = async (files: FileList | null) => {
+     if (!files || files.length === 0) return
+ 
++    setImporting(true)
++    try {
+     const newRows: CadRow[] = []
+     const rejected: string[] = []
+     const duplicated: string[] = []
+@@ -228,6 +231,9 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+ 
+     setErrorMsg(messages.length > 0 ? messages.join(" | ") : null)
+     if (newRows.length > 0) onAddCad(newRows)
++    } finally {
++      setImporting(false)
++    }
+   }
+ 
+   const handleDragEnter = (e: React.DragEvent) => {
+@@ -397,6 +403,13 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+         }}
+       />
+ 
++      {importing && (
++        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-xl bg-background/80 backdrop-blur-sm">
++          <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
++          <p className="text-sm font-medium text-foreground">Importando piezas…</p>
++          <p className="text-xs text-muted-foreground">DXF/GEO en servidor · PDF local</p>
++        </div>
++      )}
+       {errorMsg && (
+         <p className="mb-2 mx-3 shrink-0 flex items-start gap-1.5 rounded-lg bg-destructive/10 p-2 text-xs text-destructive animate-in fade-in duration-200">
+           <FileWarning className="mt-0.5 h-3.5 w-3.5 shrink-0" />
