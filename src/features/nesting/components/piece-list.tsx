@@ -181,6 +181,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       // .nps: formato de proyecto local — sin parser CAD en servidor
       rejected.push(`${file.name} (nps: abrir desde proyectos guardados)`)
       continue
+    }
 
     const messages: string[] = []
     if (duplicated.length > 0) messages.push(`Duplicados: ${duplicated.join(", ")}`)

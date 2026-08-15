@@ -1,0 +1,12 @@
+diff --git a/src/features/nesting/components/piece-list.tsx b/src/features/nesting/components/piece-list.tsx
+index 70af3de..5016ca8 100644
+--- a/src/features/nesting/components/piece-list.tsx
++++ b/src/features/nesting/components/piece-list.tsx
+@@ -181,6 +181,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
+       // .nps: formato de proyecto local — sin parser CAD en servidor
+       rejected.push(`${file.name} (nps: abrir desde proyectos guardados)`)
+       continue
++    }
+ 
+     const messages: string[] = []
+     if (duplicated.length > 0) messages.push(`Duplicados: ${duplicated.join(", ")}`)
