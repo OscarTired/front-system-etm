@@ -87,7 +87,16 @@ export function useNesting(): UseNestingResult {
       startProgressTimer()
 
       void nestingRunApi
-        .run({ pieces, options }, ac.signal)
+        .runViaJob(
+          { pieces, options },
+          {
+            signal: ac.signal,
+            onProgress: p => {
+              if (gen !== genRef.current) return
+              setProgress(Math.min(0.99, Math.max(0.05, p)))
+            },
+          },
+        )
         .then(data => {
           if (gen !== genRef.current) return
           stopProgressTimer()
