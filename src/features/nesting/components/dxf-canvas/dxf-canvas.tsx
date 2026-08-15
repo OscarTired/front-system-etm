@@ -1210,9 +1210,13 @@ export function DxfCanvas({
       {/* Indicador modo interacción V/H superior — única fuente de verdad
           del modo activo (antes se repetía también en la barra de estado). */}
       <div
-        className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5"
+        className={`pointer-events-none absolute right-3 z-20 flex items-center gap-1.5 transition-[top] duration-300 ${
+          // Solo en compact el toolbar es full-width y tapa V/H → bajar.
+          // Desktop: toolbar a la izquierda, V/H se queda en top-3.
+          toolsChromeOpen && isCompact ? "top-26" : "top-3"
+        }`}
       >
-        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-foreground/10 bg-muted/90 p-1 backdrop-blur-sm">
+        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-muted/90 p-1 backdrop-blur-sm">
           <button
             type="button"
             title="Seleccionar (V)"

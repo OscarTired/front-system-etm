@@ -189,7 +189,7 @@ export function CanvasToolbar({
         <div
           className="
             pointer-events-auto flex max-w-full flex-wrap items-center gap-0.5
-            rounded-2xl border border-foreground/10 bg-background/90 py-1 pl-1.5 pr-1.5
+            rounded-2xl bg-background/90 py-1 pl-1.5 pr-1.5
             backdrop-blur-md
           "
         >

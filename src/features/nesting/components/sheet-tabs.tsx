@@ -26,14 +26,15 @@ export interface SheetTabsProps {
 }
 
 function usageBadgeClass(pct: number) {
-  // Light: texto sólido + fondo tint (legible). Dark: tono suave.
+  // Light: chip opaco legible (no se pierde sobre bg claro del tab).
+  // Dark: tint suave sobre canvas oscuro.
   if (pct >= 80) {
-    return "bg-emerald-600/15 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300"
+    return "bg-emerald-600 text-white dark:bg-emerald-500/25 dark:text-emerald-300"
   }
   if (pct >= 50) {
-    return "bg-amber-600/20 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300"
+    return "bg-amber-500 text-amber-950 dark:bg-amber-500/25 dark:text-amber-300"
   }
-  return "bg-red-600/15 text-red-800 dark:bg-red-500/20 dark:text-red-300"
+  return "bg-red-600 text-white dark:bg-red-500/25 dark:text-red-300"
 }
 
 function thicknessKey(mm: number | undefined): string {
