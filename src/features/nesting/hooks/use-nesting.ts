@@ -9,6 +9,7 @@ import type {
   NestingPiece,
 } from "../engine/types"
 import { nestingRunApi } from "../api/nesting-run.api"
+import { hydrateSheetsFromSources } from "../utils/hydrate-nested-geometry"
 import { slimPiecesForNestApi } from "../utils/slim-pieces-for-api"
 
 export type NestingStatus =
@@ -95,7 +96,8 @@ export function useNesting(): UseNestingResult {
         .then(data => {
           if (gen !== genRef.current) return
           stopProgressTimer()
-          setSheets(data.sheets)
+          const hydrated = hydrateSheetsFromSources(data.sheets, pieces)
+          setSheets(hydrated)
           setStatus("done")
           setProgress(1)
         })
