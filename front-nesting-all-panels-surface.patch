@@ -1,0 +1,150 @@
+diff --git a/src/features/nesting/components/layer-manager.tsx b/src/features/nesting/components/layer-manager.tsx
+index f5321d0..91dfc5d 100644
+--- a/src/features/nesting/components/layer-manager.tsx
++++ b/src/features/nesting/components/layer-manager.tsx
+@@ -23,7 +23,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
+   }
+ 
+   return (
+-    <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
++    <div className="flex flex-col rounded-xl bg-muted/80 p-1 transition-colors dark:bg-foreground/5">
+       {/* Header: no anidar button dentro de button */}
+       <div className="flex w-full items-center gap-1 rounded-lg px-1 py-1">
+         <button
+@@ -58,7 +58,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
+           isExpanded ? "mt-2 max-h-125 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
+         }`}
+       >
+-        <div className="flex flex-col gap-1 rounded-lg bg-foreground/5 p-1">
++        <div className="flex flex-col gap-1 rounded-lg bg-background p-1 dark:bg-foreground/5">
+           {layers.map((layer) => {
+             const isHidden = hiddenKeys.has(layer.key.toUpperCase())
+             return (
+diff --git a/src/features/nesting/components/material-panel.tsx b/src/features/nesting/components/material-panel.tsx
+index 68c9b3e..b050482 100644
+--- a/src/features/nesting/components/material-panel.tsx
++++ b/src/features/nesting/components/material-panel.tsx
+@@ -76,7 +76,7 @@ export function MaterialPanel({
+   return (
+     <div className="flex flex-col gap-3">
+       {projectActions && (
+-        <div className="flex flex-col rounded-xl items-center bg-background dark:bg-foreground/5 p-1 transition-colors">
++        <div className="flex flex-col rounded-xl items-center bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
+           <button
+             type="button"
+             onClick={() => setIsProjectExpanded((prev) => !prev)}
+@@ -121,7 +121,7 @@ export function MaterialPanel({
+       )}
+ 
+       {/* Contenedor principal estilo Box unificado */}
+-      <div className="flex flex-col rounded-xl bg-background dark:bg-foreground/5 p-1 transition-colors">
++      <div className="flex flex-col rounded-xl bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
+         <button
+           type="button"
+           onClick={() => setIsExpanded((prev) => !prev)}
+diff --git a/src/features/nesting/components/nesting-page.tsx b/src/features/nesting/components/nesting-page.tsx
+index aa700f2..adf4ae1 100644
+--- a/src/features/nesting/components/nesting-page.tsx
++++ b/src/features/nesting/components/nesting-page.tsx
+@@ -714,7 +714,7 @@ export function NestingPage() {
+       {/* —— Desktop: sidebar + canvas —— */}
+       {!isCompact && (
+         <div className="flex h-full min-h-0 w-full flex-1 items-stretch gap-3 overflow-hidden">
+-          <aside className="flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
++          <aside className="flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-muted p-3 shadow-sm dark:bg-foreground/5">
+             {panel}
+           </aside>
+           <div
+diff --git a/src/features/nesting/components/nesting-panel.tsx b/src/features/nesting/components/nesting-panel.tsx
+index fb1a22c..49014c3 100644
+--- a/src/features/nesting/components/nesting-panel.tsx
++++ b/src/features/nesting/components/nesting-panel.tsx
+@@ -59,22 +59,22 @@ export function NestingPanel({
+ 
+       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+         {activePanel === "sheet-pieces" && (
+-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted p-3 dark:bg-foreground/[0.06]">
++          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-background p-3 shadow-sm dark:bg-foreground/[0.06] dark:shadow-none">
+             {pieces}
+           </div>
+         )}
+         {activePanel === "project-material" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-background shadow-sm dark:bg-foreground/[0.06] dark:shadow-none">
+             {projectMaterial}
+           </div>
+         )}
+         {activePanel === "layers" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-background shadow-sm dark:bg-foreground/[0.06] dark:shadow-none">
+             {layers}
+           </div>
+         )}
+         {activePanel === "inspector" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-background shadow-sm dark:bg-foreground/[0.06] dark:shadow-none">
+             {inspector}
+           </div>
+         )}
+diff --git a/src/features/nesting/components/piece-list-row.tsx b/src/features/nesting/components/piece-list-row.tsx
+index 5d41f7b..7f5b362 100644
+--- a/src/features/nesting/components/piece-list-row.tsx
++++ b/src/features/nesting/components/piece-list-row.tsx
+@@ -46,7 +46,7 @@ export function PieceListRow({
+     <div
+       className={cn(
+         "flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border",
+-        "bg-background hover:bg-background dark:bg-foreground/5 dark:hover:bg-foreground/[0.07]",
++        "bg-muted/80 hover:bg-muted dark:bg-foreground/5 dark:hover:bg-foreground/[0.07]",
+         highlighted && "ring-1 ring-blue-400/50 bg-blue-500/10",
+         className
+       )}
+diff --git a/src/features/nesting/components/properties-panel.tsx b/src/features/nesting/components/properties-panel.tsx
+index 1cc284a..733d271 100644
+--- a/src/features/nesting/components/properties-panel.tsx
++++ b/src/features/nesting/components/properties-panel.tsx
+@@ -108,7 +108,7 @@ export function PropertiesPanel({
+         : selectedPiece.pieceId
+ 
+     return (
+-      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
++      <div className="flex flex-col rounded-xl bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
+         <div
+           role="button"
+           tabIndex={0}
+@@ -158,7 +158,7 @@ export function PropertiesPanel({
+             isExpanded ? "mt-2 max-h-200 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
+           }`}
+         >
+-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
++          <div className="flex flex-col rounded-lg bg-background dark:bg-foreground/5 p-2.5">
+             <StatRow label="Nombre" value={name} />
+             <StatRow
+               label="Ancho × Alto"
+@@ -174,7 +174,7 @@ export function PropertiesPanel({
+           </div>
+ 
+           {onOverrideChange && (
+-            <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5 gap-2">
++            <div className="flex flex-col rounded-lg bg-background dark:bg-foreground/5 p-2.5 gap-2">
+               <div className="flex items-center justify-between px-0.5">
+                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                   Posición en plancha
+@@ -279,7 +279,7 @@ export function PropertiesPanel({
+ 
+   if (sheetStats) {
+     return (
+-      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
++      <div className="flex flex-col rounded-xl bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
+         <div
+           role="button"
+           tabIndex={0}
+@@ -309,7 +309,7 @@ export function PropertiesPanel({
+             isExpanded ? "mt-2 max-h-150 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
+           }`}
+         >
+-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
++          <div className="flex flex-col rounded-lg bg-background dark:bg-foreground/5 p-2.5">
+             <StatRow label="Piezas" value={String(sheetStats.pieceCount)} />
+             <StatRow label="Aprovechamiento" value={`${sheetStats.usagePercent.toFixed(1)}%`} />
+             <StatRow label="Área plancha" value={`${(sheetStats.sheetArea / 1_000_000).toFixed(3)} m²`} />

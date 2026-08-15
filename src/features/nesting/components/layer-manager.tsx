@@ -23,7 +23,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
   }
 
   return (
-    <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
+    <div className="flex flex-col rounded-xl bg-muted/80 p-1 transition-colors dark:bg-foreground/5">
       {/* Header: no anidar button dentro de button */}
       <div className="flex w-full items-center gap-1 rounded-lg px-1 py-1">
         <button
@@ -58,7 +58,7 @@ export function LayerManager({ layers, hiddenKeys, onToggle, onShowAll }: LayerM
           isExpanded ? "mt-2 max-h-125 opacity-100 p-1" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
-        <div className="flex flex-col gap-1 rounded-lg bg-foreground/5 p-1">
+        <div className="flex flex-col gap-1 rounded-lg bg-background p-1 dark:bg-foreground/5">
           {layers.map((layer) => {
             const isHidden = hiddenKeys.has(layer.key.toUpperCase())
             return (

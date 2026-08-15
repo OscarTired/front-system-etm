@@ -76,7 +76,7 @@ export function MaterialPanel({
   return (
     <div className="flex flex-col gap-3">
       {projectActions && (
-        <div className="flex flex-col rounded-xl items-center bg-background dark:bg-foreground/5 p-1 transition-colors">
+        <div className="flex flex-col rounded-xl items-center bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
           <button
             type="button"
             onClick={() => setIsProjectExpanded((prev) => !prev)}
@@ -121,7 +121,7 @@ export function MaterialPanel({
       )}
 
       {/* Contenedor principal estilo Box unificado */}
-      <div className="flex flex-col rounded-xl bg-background dark:bg-foreground/5 p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-muted/80 dark:bg-foreground/5 p-1 transition-colors">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}

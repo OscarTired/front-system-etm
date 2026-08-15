@@ -714,7 +714,7 @@ export function NestingPage() {
       {/* —— Desktop: sidebar + canvas —— */}
       {!isCompact && (
         <div className="flex h-full min-h-0 w-full flex-1 items-stretch gap-3 overflow-hidden">
-          <aside className="flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-foreground/5 p-3 shadow-sm">
+          <aside className="flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-muted p-3 shadow-sm dark:bg-foreground/5">
             {panel}
           </aside>
           <div
