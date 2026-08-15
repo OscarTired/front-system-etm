@@ -1,6 +1,7 @@
 # CAD (cliente)
 
-Import de producción: `POST /engineering/cad/parse` (back, parser rico DXF/GEO/PDF).
+Parse de producción: `POST /engineering/cad/parse` (back).
 
-Los módulos aquí quedan como referencia / utilidades locales (`isSupportedCadFile`,
-`isPdfFile`, thickness-scanner). El parseo geométrico vive en el backend.
+Aquí solo quedan:
+- `cad-file-types.ts` — extensiones
+- `thickness-scanner.ts` / `material-audit.ts` — material local en UI

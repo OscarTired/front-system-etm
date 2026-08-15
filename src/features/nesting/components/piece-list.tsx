@@ -6,8 +6,7 @@ import { PieceListRow } from "./piece-list-row"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { isSupportedCadFile } from "../cad/cad-reader"
-import { isPdfFile } from "../cad/pdf-parser"
+import { isSupportedCadFile, isPdfFile } from "../cad/cad-file-types"
 import { cadParseApi } from "../api/cad-parse.api"
 import { scanMaterialData, type MaterialData } from "../cad/thickness-scanner"
 import type { PieceOutline, SubEntity } from "../engine/types"
@@ -137,8 +136,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
       if (isPdfFile(file.name) || isSupportedCadFile(file.name)) {
         try {
           const parsed = await cadParseApi.parseFile(file)
-          const piece = parsed.pieces[0]
-          if (!parsed.valid || !piece?.outline?.points?.length) {
+          if (!parsed.valid || !parsed.pieces?.length) {
             rejected.push(`${file.name} (geometría inválida)`)
             continue
           }
@@ -150,22 +148,31 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
               textForMaterial = ""
             }
           }
-          newRows.push({
-            id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            source: "cad",
-            fileName: file.name,
-            outline: piece.outline,
-            subEntities: piece.subEntities ?? [],
-            width: parsed.width ?? 0,
-            height: parsed.height ?? 0,
-            quantity: "1",
-            color: nextColor(),
-            material: inheritMaterialFromSibling(
-              file.name,
-              scanMaterialData(file.name, textForMaterial),
-              [...rows, ...newRows],
-            ),
-          })
+          const material = inheritMaterialFromSibling(
+            file.name,
+            scanMaterialData(file.name, textForMaterial),
+            [...rows, ...newRows],
+          )
+          const multi = parsed.pieces.length > 1
+          for (let pi = 0; pi < parsed.pieces.length; pi++) {
+            const piece = parsed.pieces[pi]
+            if (!piece?.outline?.points?.length) continue
+            const label = multi
+              ? `${file.name}#${pi + 1}`
+              : file.name
+            newRows.push({
+              id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${pi}`,
+              source: "cad",
+              fileName: label,
+              outline: piece.outline,
+              subEntities: piece.subEntities ?? [],
+              width: parsed.width ?? 0,
+              height: parsed.height ?? 0,
+              quantity: String(piece.quantity ?? 1),
+              color: nextColor(),
+              material,
+            })
+          }
           existingFileNames.add(file.name.toLowerCase())
         } catch {
           rejected.push(`${file.name} (error al parsear en servidor)`)
