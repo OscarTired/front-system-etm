@@ -1,12 +1,17 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Download, RefreshCw } from "lucide-react"
+import { Download, RefreshCw, Boxes } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { cn } from "@/shared/utils/utils"
 import { cadPlateApi } from "../api/cad-plate.api"
 import type { CreatePlateBody, GeometryModel } from "../types/geometry-model"
 import { GeometrySvgPreview } from "./geometry-svg-preview"
+import {
+  PENDING_NESTING_PIECES_KEY,
+} from "../api/cad-plate.api"
+import { nestingPieceToCadRow } from "../utils/nesting-piece-to-cad-row"
 
 const DEFAULT: CreatePlateBody = {
   width: 400,
@@ -20,6 +25,7 @@ function num(v: string, fallback: number) {
 }
 
 export function PlateGeneratorPanel() {
+  const router = useRouter()
   const [width, setWidth] = useState(String(DEFAULT.width))
   const [height, setHeight] = useState(String(DEFAULT.height))
   const [diameter, setDiameter] = useState(String(DEFAULT.holes!.diameter))
@@ -76,6 +82,26 @@ export function PlateGeneratorPanel() {
       URL.revokeObjectURL(url)
     } catch {
       // toast global del api-client
+    }
+  }
+
+
+  const onSendToNesting = async () => {
+    try {
+      const piece = await cadPlateApi.asNestingPiece(body())
+      const row = nestingPieceToCadRow(
+        piece,
+        `placa-${body().width}x${body().height}.dxf`,
+      )
+      const prevRaw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
+      const prev = prevRaw ? (JSON.parse(prevRaw) as unknown[]) : []
+      sessionStorage.setItem(
+        PENDING_NESTING_PIECES_KEY,
+        JSON.stringify([...prev, row]),
+      )
+      router.push("/nesting")
+    } catch {
+      // toast global
     }
   }
 
@@ -170,6 +196,18 @@ export function PlateGeneratorPanel() {
           >
             <Download size={14} />
             Exportar DXF
+          </button>
+          <button
+            type="button"
+            onClick={() => void onSendToNesting()}
+            disabled={!model || loading}
+            className={cn(
+              "flex h-9 items-center justify-center gap-2 rounded-lg bg-foreground/10 text-sm font-medium text-foreground transition",
+              "hover:bg-foreground/15 disabled:opacity-50",
+            )}
+          >
+            <Boxes size={14} />
+            Enviar a Nesting
           </button>
         </div>
 

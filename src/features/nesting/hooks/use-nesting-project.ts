@@ -29,6 +29,7 @@ import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, t
 import { downloadTextFile, saveTextFile } from "../utils/file-helpers"
 import type { PieceRow, CadRow } from "../components/piece-list"
 import type { SheetStats } from "../components/properties-panel"
+import { PENDING_NESTING_PIECES_KEY } from "@/features/cad/api/cad-plate.api"
 import {
   loadNestingDraft,
   saveNestingDraft,
@@ -92,6 +93,22 @@ export function useNestingProject() {
   )
 
   const { status, progress, sheets, error, run, cancel, restoreSheets, clearSheets } = useNesting()
+
+  // Piezas enviadas desde CAD · Placa (sessionStorage one-shot)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
+      if (!raw) return
+      sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
+      const incoming = JSON.parse(raw) as CadRow[]
+      if (Array.isArray(incoming) && incoming.length > 0) {
+        setRows((prev) => [...prev, ...incoming])
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
   const isRunning = status === "running"
   const sheetsRef = useRef(sheets)
   sheetsRef.current = sheets
