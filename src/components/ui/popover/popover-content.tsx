@@ -34,11 +34,11 @@ type PopoverContentProps = React.ComponentProps<
  * Mobile  → Bottom sheet (Dialog)
  *
  * Contrato sheet
- * 1. Handle = único drag-to-dismiss
- * 2. Body = un overflow-y-auto + overscroll-contain
- * 3. Sin locks manuales de body/scroll-area
- * 4. Altura fija SOLO si input focused Y teclado virtual abierto
- *    (F12 sin teclado on-screen → hug content, no crece en vacío)
+ * 1. Handle = drag-to-dismiss siempre
+ * 2. Body = drag-to-dismiss si scrollTop≈0 y gesto hacia abajo
+ * 3. Body = un overflow-y-auto + overscroll-contain
+ * 4. Sin locks manuales de body/scroll-area
+ * 5. Altura fija SOLO si input focused Y teclado virtual abierto
  */
 export function PopoverContent({
   className,
@@ -62,7 +62,7 @@ export function PopoverContent({
   const close = React.useContext(PopoverCloseContext)
   const isOpen = React.useContext(PopoverOpenContext)
 
-  const { dragY, isDragging, dismissing, dragHandleProps } =
+  const { dragY, isDragging, dismissing, dragHandleProps, contentDragProps } =
     useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
@@ -173,12 +173,14 @@ export function PopoverContent({
           </div>
 
           <div
+            data-sheet-scroll
             className={cn(
               "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
               "[touch-action:pan-y]",
               "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
               "[&_input]:touch-manipulation [&_textarea]:touch-manipulation",
             )}
+            {...contentDragProps}
           >
             <div ref={containerRef} className="w-full">
               {children}
