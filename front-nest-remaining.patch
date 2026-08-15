@@ -1,0 +1,13 @@
+diff --git a/src/features/nesting/cad/README.md b/src/features/nesting/cad/README.md
+new file mode 100644
+index 0000000..72eeff2
+--- /dev/null
++++ b/src/features/nesting/cad/README.md
+@@ -0,0 +1,7 @@
++# CAD parsers (transicional)
++
++La autoridad de **nest** es el backend (`POST /engineering/nest`).
++
++Estos parsers (DXF/GEO/PDF) aún corren en el cliente para preview e import local.
++Migración objetivo: upload de archivo → API engineering → piezas normalizadas,
++para no exponer el pipeline CAD en el bundle del browser.
