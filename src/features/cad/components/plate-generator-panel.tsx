@@ -9,9 +9,7 @@ import { toast } from "sonner"
 import { cadPlateApi } from "../api/cad-plate.api"
 import type { CreatePlateBody, GeometryModel } from "../types/geometry-model"
 import { GeometrySvgPreview } from "./geometry-svg-preview"
-import {
-  PENDING_NESTING_PIECES_KEY,
-} from "../api/cad-plate.api"
+import { enqueuePendingNestingPieces } from "../pending-nesting-pieces"
 import { nestingPieceToCadRow } from "../utils/nesting-piece-to-cad-row"
 
 const DEFAULT: CreatePlateBody = {
@@ -94,12 +92,7 @@ export function PlateGeneratorPanel() {
         piece,
         `placa-${body().width}x${body().height}.dxf`,
       )
-      const prevRaw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
-      const prev = prevRaw ? (JSON.parse(prevRaw) as unknown[]) : []
-      sessionStorage.setItem(
-        PENDING_NESTING_PIECES_KEY,
-        JSON.stringify([...prev, row]),
-      )
+      enqueuePendingNestingPieces([row])
       toast.success("Pieza lista — abriendo Nesting")
       router.push("/nesting")
     } catch (err) {

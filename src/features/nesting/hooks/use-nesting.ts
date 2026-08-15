@@ -1,13 +1,13 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import type {
   NestedSheet,
   NestingOptions,
   NestingPiece,
 } from "../engine/types"
-import { toast } from "sonner"
 import { nestingRunApi } from "../api/nesting-run.api"
 
 export type NestingStatus =
@@ -19,7 +19,6 @@ export type NestingStatus =
 
 export type UseNestingResult = {
   status: NestingStatus
-  /** 0–1. En API síncrona solo 0 mientras corre y 1 al terminar. */
   progress: number
   sheets: NestedSheet[] | null
   error: string | null
@@ -33,8 +32,8 @@ export type UseNestingResult = {
 }
 
 /**
- * Nesting vía backend (POST /engineering/nest).
- * Sin worker ni motor local — la autoridad es el servidor.
+ * Nesting vía POST /engineering/nest.
+ * El API es síncrono (sin progress real): simulamos avance 0→90% mientras espera.
  */
 export function useNesting(): UseNestingResult {
   const [status, setStatus] = useState<NestingStatus>("idle")
@@ -46,8 +45,30 @@ export function useNesting(): UseNestingResult {
   const prevSheetsRef = useRef<NestedSheet[] | null>(null)
   const genRef = useRef(0)
   const abortRef = useRef<AbortController | null>(null)
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   sheetsRef.current = sheets
+
+  const stopProgressTimer = useCallback(() => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current)
+      progressTimerRef.current = null
+    }
+  }, [])
+
+  const startProgressTimer = useCallback(() => {
+    stopProgressTimer()
+    setProgress(0.04)
+    progressTimerRef.current = setInterval(() => {
+      setProgress(p => {
+        if (p >= 0.9) return p
+        // asymptote suave hacia 0.9
+        return p + (0.9 - p) * 0.08
+      })
+    }, 200)
+  }, [stopProgressTimer])
+
+  useEffect(() => () => stopProgressTimer(), [stopProgressTimer])
 
   const run = useCallback(
     (
@@ -61,20 +82,22 @@ export function useNesting(): UseNestingResult {
 
       prevSheetsRef.current = sheetsRef.current
       setStatus("running")
-      setProgress(0)
       setSheets(null)
       setError(null)
+      startProgressTimer()
 
       void nestingRunApi
         .run({ pieces, options }, ac.signal)
         .then(data => {
           if (gen !== genRef.current) return
+          stopProgressTimer()
           setSheets(data.sheets)
           setStatus("done")
           setProgress(1)
         })
         .catch(err => {
           if (gen !== genRef.current) return
+          stopProgressTimer()
           if (
             err?.code === "ERR_CANCELED" ||
             err?.name === "CanceledError" ||
@@ -93,20 +116,22 @@ export function useNesting(): UseNestingResult {
             : String(message)
           setError(text)
           setStatus("error")
+          setProgress(0)
           toast.error("Nesting falló", { description: text })
         })
     },
-    [],
+    [startProgressTimer, stopProgressTimer],
   )
 
   const cancel = useCallback(() => {
     genRef.current += 1
     abortRef.current?.abort()
     abortRef.current = null
+    stopProgressTimer()
     setSheets(prevSheetsRef.current)
     setStatus(prevSheetsRef.current ? "done" : "cancelled")
     setProgress(prevSheetsRef.current ? 1 : 0)
-  }, [])
+  }, [stopProgressTimer])
 
   const restoreSheets = useCallback((next: NestedSheet[] | null) => {
     const cleaned = next ? next.filter(s => s.pieces.length > 0) : null

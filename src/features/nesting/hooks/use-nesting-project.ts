@@ -29,7 +29,10 @@ import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, t
 import { downloadTextFile, saveTextFile } from "../utils/file-helpers"
 import type { PieceRow, CadRow } from "../components/piece-list"
 import type { SheetStats } from "../components/properties-panel"
-import { PENDING_NESTING_PIECES_KEY } from "@/features/cad/api/cad-plate.api"
+import {
+  peekPendingNestingPieces,
+  clearPendingNestingPieces,
+} from "@/features/cad/pending-nesting-pieces"
 import {
   loadNestingDraft,
   saveNestingDraft,
@@ -574,18 +577,11 @@ export function useNestingProject() {
       const draft = memoryDraftCache ?? (await loadNestingDraft())
       if (cancelled) return
 
-      // CAD · Placa: aplicar DESPUÉS del draft (si no, setRows(draft) las borra).
-      let pending: CadRow[] = []
-      try {
-        const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
-        if (raw) {
-          sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
-          const parsed = JSON.parse(raw) as unknown
-          if (Array.isArray(parsed)) pending = parsed as CadRow[]
-        }
-      } catch {
-        /* ignore */
-      }
+      // CAD · Placa: peek no limpia. clear solo si este effect sigue vivo
+      // (Strict Mode: el 1.er invoke cancela y no debe vaciar la cola).
+      const pending = peekPendingNestingPieces()
+
+      if (cancelled) return
 
       if (draftHasWork(draft) && draft) {
         skipNextSaveRef.current = true
@@ -594,7 +590,9 @@ export function useNestingProject() {
           setAppliedSeparation(Number(draft.settings.separacion) || 0)
           setAppliedMode(draft.settings.empaquetadoPreciso ? "precise" : "fast")
           setMachine(draft.machine)
-          setRows([...draft.rows, ...pending])
+          const seen = new Set(draft.rows.map((r) => r.id))
+          const extra = pending.filter((r) => !seen.has(r.id))
+          setRows([...draft.rows, ...extra])
           sheetEditsRef.current = draft.editsBySheet ?? {}
           activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
           if (draft.sheets && draft.sheets.length > 0) {
@@ -608,7 +606,12 @@ export function useNestingProject() {
           setRows(pending)
         })
       }
-      setSessionReady(true)
+
+      queueMicrotask(() => {
+        if (cancelled) return
+        if (pending.length > 0) clearPendingNestingPieces()
+        setSessionReady(true)
+      })
     })()
     return () => {
       cancelled = true

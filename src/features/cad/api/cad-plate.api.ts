@@ -29,5 +29,4 @@ export const cadPlateApi = {
   },
 }
 
-/** sessionStorage one-shot al abrir /nesting desde CAD. */
-export const PENDING_NESTING_PIECES_KEY = "etm:pending-nesting-pieces"
+export { PENDING_NESTING_PIECES_KEY } from "../pending-nesting-pieces"

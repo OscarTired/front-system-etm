@@ -152,7 +152,7 @@ export function CanvasToolbar({
 
   return (
     <div
-      className={`pointer-events-none absolute left-3 top-3 z-25 flex flex-col items-start gap-2 ${
+      className={`pointer-events-none absolute left-3 top-3 z-25 flex max-w-[calc(100%-1.5rem)] flex-col items-start gap-2 ${
         isCompact ? "right-3" : ""
       }`}
     >

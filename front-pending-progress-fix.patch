@@ -1,0 +1,300 @@
+diff --git a/src/features/cad/api/cad-plate.api.ts b/src/features/cad/api/cad-plate.api.ts
+index 41549f0..bae49fc 100644
+--- a/src/features/cad/api/cad-plate.api.ts
++++ b/src/features/cad/api/cad-plate.api.ts
+@@ -29,5 +29,4 @@ export const cadPlateApi = {
+   },
+ }
+ 
+-/** sessionStorage one-shot al abrir /nesting desde CAD. */
+-export const PENDING_NESTING_PIECES_KEY = "etm:pending-nesting-pieces"
++export { PENDING_NESTING_PIECES_KEY } from "../pending-nesting-pieces"
+diff --git a/src/features/cad/components/plate-generator-panel.tsx b/src/features/cad/components/plate-generator-panel.tsx
+index 940a9c0..18e0da9 100644
+--- a/src/features/cad/components/plate-generator-panel.tsx
++++ b/src/features/cad/components/plate-generator-panel.tsx
+@@ -9,9 +9,7 @@ import { toast } from "sonner"
+ import { cadPlateApi } from "../api/cad-plate.api"
+ import type { CreatePlateBody, GeometryModel } from "../types/geometry-model"
+ import { GeometrySvgPreview } from "./geometry-svg-preview"
+-import {
+-  PENDING_NESTING_PIECES_KEY,
+-} from "../api/cad-plate.api"
++import { enqueuePendingNestingPieces } from "../pending-nesting-pieces"
+ import { nestingPieceToCadRow } from "../utils/nesting-piece-to-cad-row"
+ 
+ const DEFAULT: CreatePlateBody = {
+@@ -94,12 +92,7 @@ export function PlateGeneratorPanel() {
+         piece,
+         `placa-${body().width}x${body().height}.dxf`,
+       )
+-      const prevRaw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
+-      const prev = prevRaw ? (JSON.parse(prevRaw) as unknown[]) : []
+-      sessionStorage.setItem(
+-        PENDING_NESTING_PIECES_KEY,
+-        JSON.stringify([...prev, row]),
+-      )
++      enqueuePendingNestingPieces([row])
+       toast.success("Pieza lista — abriendo Nesting")
+       router.push("/nesting")
+     } catch (err) {
+diff --git a/src/features/cad/pending-nesting-pieces.ts b/src/features/cad/pending-nesting-pieces.ts
+new file mode 100644
+index 0000000..fe9cc50
+--- /dev/null
++++ b/src/features/cad/pending-nesting-pieces.ts
+@@ -0,0 +1,56 @@
++import type { CadRow } from "@/features/nesting/components/piece-list"
++
++export const PENDING_NESTING_PIECES_KEY = "etm:pending-nesting-pieces"
++
++/** Cola en memoria: sobrevive al double-invoke de Strict Mode. */
++let memoryQueue: CadRow[] = []
++
++/** CAD → encola filas y las persiste en sessionStorage. */
++export function enqueuePendingNestingPieces(rows: CadRow[]) {
++  if (!rows.length) return
++  memoryQueue = [...memoryQueue, ...rows]
++  try {
++    sessionStorage.setItem(PENDING_NESTING_PIECES_KEY, JSON.stringify(memoryQueue))
++  } catch {
++    /* quota / private mode */
++  }
++}
++
++/**
++ * Absorbe sessionStorage → memoria (sin vaciar la cola de memoria).
++ * Seguro llamar varias veces (Strict Mode).
++ */
++export function absorbPendingFromSessionStorage() {
++  try {
++    const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
++    if (!raw) return
++    const parsed = JSON.parse(raw) as unknown
++    if (!Array.isArray(parsed) || parsed.length === 0) return
++    // Evitar duplicar si ya está en memoria (mismos ids)
++    const existing = new Set(memoryQueue.map(r => r.id))
++    for (const row of parsed as CadRow[]) {
++      if (row && typeof row === "object" && row.id && !existing.has(row.id)) {
++        memoryQueue.push(row)
++        existing.add(row.id)
++      }
++    }
++  } catch {
++    /* ignore */
++  }
++}
++
++/** Copia actual sin limpiar. */
++export function peekPendingNestingPieces(): CadRow[] {
++  absorbPendingFromSessionStorage()
++  return [...memoryQueue]
++}
++
++/** Limpia memoria + sessionStorage (solo tras aplicar al state). */
++export function clearPendingNestingPieces() {
++  memoryQueue = []
++  try {
++    sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
++  } catch {
++    /* ignore */
++  }
++}
+diff --git a/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx b/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
+index 16ec954..f1f7224 100644
+--- a/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
++++ b/src/features/nesting/components/dxf-canvas/components/canvas-toolbar.tsx
+@@ -152,7 +152,7 @@ export function CanvasToolbar({
+ 
+   return (
+     <div
+-      className={`pointer-events-none absolute left-3 top-3 z-25 flex flex-col items-start gap-2 ${
++      className={`pointer-events-none absolute left-3 top-3 z-25 flex max-w-[calc(100%-1.5rem)] flex-col items-start gap-2 ${
+         isCompact ? "right-3" : ""
+       }`}
+     >
+diff --git a/src/features/nesting/hooks/use-nesting-project.ts b/src/features/nesting/hooks/use-nesting-project.ts
+index 34e1fb1..683c479 100644
+--- a/src/features/nesting/hooks/use-nesting-project.ts
++++ b/src/features/nesting/hooks/use-nesting-project.ts
+@@ -29,7 +29,10 @@ import { defaultProjectSettings, defaultMachineSettings, type ProjectSettings, t
+ import { downloadTextFile, saveTextFile } from "../utils/file-helpers"
+ import type { PieceRow, CadRow } from "../components/piece-list"
+ import type { SheetStats } from "../components/properties-panel"
+-import { PENDING_NESTING_PIECES_KEY } from "@/features/cad/api/cad-plate.api"
++import {
++  peekPendingNestingPieces,
++  clearPendingNestingPieces,
++} from "@/features/cad/pending-nesting-pieces"
+ import {
+   loadNestingDraft,
+   saveNestingDraft,
+@@ -574,18 +577,11 @@ export function useNestingProject() {
+       const draft = memoryDraftCache ?? (await loadNestingDraft())
+       if (cancelled) return
+ 
+-      // CAD · Placa: aplicar DESPUÉS del draft (si no, setRows(draft) las borra).
+-      let pending: CadRow[] = []
+-      try {
+-        const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
+-        if (raw) {
+-          sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
+-          const parsed = JSON.parse(raw) as unknown
+-          if (Array.isArray(parsed)) pending = parsed as CadRow[]
+-        }
+-      } catch {
+-        /* ignore */
+-      }
++      // CAD · Placa: peek no limpia. clear solo si este effect sigue vivo
++      // (Strict Mode: el 1.er invoke cancela y no debe vaciar la cola).
++      const pending = peekPendingNestingPieces()
++
++      if (cancelled) return
+ 
+       if (draftHasWork(draft) && draft) {
+         skipNextSaveRef.current = true
+@@ -594,7 +590,9 @@ export function useNestingProject() {
+           setAppliedSeparation(Number(draft.settings.separacion) || 0)
+           setAppliedMode(draft.settings.empaquetadoPreciso ? "precise" : "fast")
+           setMachine(draft.machine)
+-          setRows([...draft.rows, ...pending])
++          const seen = new Set(draft.rows.map((r) => r.id))
++          const extra = pending.filter((r) => !seen.has(r.id))
++          setRows([...draft.rows, ...extra])
+           sheetEditsRef.current = draft.editsBySheet ?? {}
+           activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
+           if (draft.sheets && draft.sheets.length > 0) {
+@@ -608,7 +606,12 @@ export function useNestingProject() {
+           setRows(pending)
+         })
+       }
+-      setSessionReady(true)
++
++      queueMicrotask(() => {
++        if (cancelled) return
++        if (pending.length > 0) clearPendingNestingPieces()
++        setSessionReady(true)
++      })
+     })()
+     return () => {
+       cancelled = true
+diff --git a/src/features/nesting/hooks/use-nesting.ts b/src/features/nesting/hooks/use-nesting.ts
+index 7f5eb88..fd9190a 100644
+--- a/src/features/nesting/hooks/use-nesting.ts
++++ b/src/features/nesting/hooks/use-nesting.ts
+@@ -1,13 +1,13 @@
+ "use client"
+ 
+-import { useCallback, useRef, useState } from "react"
++import { useCallback, useEffect, useRef, useState } from "react"
++import { toast } from "sonner"
+ 
+ import type {
+   NestedSheet,
+   NestingOptions,
+   NestingPiece,
+ } from "../engine/types"
+-import { toast } from "sonner"
+ import { nestingRunApi } from "../api/nesting-run.api"
+ 
+ export type NestingStatus =
+@@ -19,7 +19,6 @@ export type NestingStatus =
+ 
+ export type UseNestingResult = {
+   status: NestingStatus
+-  /** 0–1. En API síncrona solo 0 mientras corre y 1 al terminar. */
+   progress: number
+   sheets: NestedSheet[] | null
+   error: string | null
+@@ -33,8 +32,8 @@ export type UseNestingResult = {
+ }
+ 
+ /**
+- * Nesting vía backend (POST /engineering/nest).
+- * Sin worker ni motor local — la autoridad es el servidor.
++ * Nesting vía POST /engineering/nest.
++ * El API es síncrono (sin progress real): simulamos avance 0→90% mientras espera.
+  */
+ export function useNesting(): UseNestingResult {
+   const [status, setStatus] = useState<NestingStatus>("idle")
+@@ -46,9 +45,31 @@ export function useNesting(): UseNestingResult {
+   const prevSheetsRef = useRef<NestedSheet[] | null>(null)
+   const genRef = useRef(0)
+   const abortRef = useRef<AbortController | null>(null)
++  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+ 
+   sheetsRef.current = sheets
+ 
++  const stopProgressTimer = useCallback(() => {
++    if (progressTimerRef.current) {
++      clearInterval(progressTimerRef.current)
++      progressTimerRef.current = null
++    }
++  }, [])
++
++  const startProgressTimer = useCallback(() => {
++    stopProgressTimer()
++    setProgress(0.04)
++    progressTimerRef.current = setInterval(() => {
++      setProgress(p => {
++        if (p >= 0.9) return p
++        // asymptote suave hacia 0.9
++        return p + (0.9 - p) * 0.08
++      })
++    }, 200)
++  }, [stopProgressTimer])
++
++  useEffect(() => () => stopProgressTimer(), [stopProgressTimer])
++
+   const run = useCallback(
+     (
+       pieces: NestingPiece[],
+@@ -61,20 +82,22 @@ export function useNesting(): UseNestingResult {
+ 
+       prevSheetsRef.current = sheetsRef.current
+       setStatus("running")
+-      setProgress(0)
+       setSheets(null)
+       setError(null)
++      startProgressTimer()
+ 
+       void nestingRunApi
+         .run({ pieces, options }, ac.signal)
+         .then(data => {
+           if (gen !== genRef.current) return
++          stopProgressTimer()
+           setSheets(data.sheets)
+           setStatus("done")
+           setProgress(1)
+         })
+         .catch(err => {
+           if (gen !== genRef.current) return
++          stopProgressTimer()
+           if (
+             err?.code === "ERR_CANCELED" ||
+             err?.name === "CanceledError" ||
+@@ -93,20 +116,22 @@ export function useNesting(): UseNestingResult {
+             : String(message)
+           setError(text)
+           setStatus("error")
++          setProgress(0)
+           toast.error("Nesting falló", { description: text })
+         })
+     },
+-    [],
++    [startProgressTimer, stopProgressTimer],
+   )
+ 
+   const cancel = useCallback(() => {
+     genRef.current += 1
+     abortRef.current?.abort()
+     abortRef.current = null
++    stopProgressTimer()
+     setSheets(prevSheetsRef.current)
+     setStatus(prevSheetsRef.current ? "done" : "cancelled")
+     setProgress(prevSheetsRef.current ? 1 : 0)
+-  }, [])
++  }, [stopProgressTimer])
+ 
+   const restoreSheets = useCallback((next: NestedSheet[] | null) => {
+     const cleaned = next ? next.filter(s => s.pieces.length > 0) : null
