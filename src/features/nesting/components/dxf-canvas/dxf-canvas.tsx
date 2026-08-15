@@ -1210,10 +1210,7 @@ export function DxfCanvas({
       {/* Indicador modo interacción V/H superior — única fuente de verdad
           del modo activo (antes se repetía también en la barra de estado). */}
       <div
-        className={`pointer-events-none absolute right-3 z-20 flex items-center gap-1.5 transition-[top] duration-300 ${
-          // Tools pueden ser 2–3 filas: bajar el toggle para no taparlo
-          toolsChromeOpen ? "top-26" : "top-3"
-        }`}
+        className="pointer-events-none absolute right-3 top-3 z-20 flex items-center gap-1.5"
       >
         <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-foreground/10 bg-muted/90 p-1 backdrop-blur-sm">
           <button

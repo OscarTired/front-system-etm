@@ -94,10 +94,13 @@ const ExecutionFooter = memo(function ExecutionFooter({
 
   return (
     <div className="flex flex-col gap-2">
-      <Button size="default" variant="outline" className="w-full" onClick={onCancel}>
-        <X className="h-4 w-4" />
-        Cancelar
-      </Button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive transition hover:bg-destructive/15 active:bg-destructive/20"
+      >
+        Cancelar nest
+      </button>
       <div 
         role="progressbar" 
         aria-valuenow={percentage} 

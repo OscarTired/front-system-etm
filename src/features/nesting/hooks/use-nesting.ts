@@ -58,12 +58,12 @@ export function useNesting(): UseNestingResult {
 
   const startProgressTimer = useCallback(() => {
     stopProgressTimer()
-    setProgress(0.04)
+    setProgress(0.12)
     progressTimerRef.current = setInterval(() => {
       setProgress(p => {
         if (p >= 0.9) return p
         // asymptote suave hacia 0.9
-        return p + (0.9 - p) * 0.08
+        return p + (0.9 - p) * 0.12
       })
     }, 200)
   }, [stopProgressTimer])

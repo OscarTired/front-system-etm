@@ -51,6 +51,7 @@ import { Spinner } from "@/shared/ui/spinner/spinner"
 import { computeLayerList, type NestingPieceInput } from "./dxf-canvas/dxf-canvas"
 import { LayerManager } from "./layer-manager"
 import { NestingPanel, type NestingPanelView } from "./nesting-panel"
+import { consumeCadImportSignal } from "@/features/cad/pending-nesting-pieces"
 import { NestingConfirmDialog } from "./nesting-confirm-dialog"
 
 const DxfCanvas = dynamic(
@@ -105,6 +106,14 @@ export function NestingPage() {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
   const [projectDialogMode, setProjectDialogMode] = useState<"save" | "open">("save")
   const [activePanel, setActivePanel] = useState<NestingPanelView>("project-material")
+
+  // CAD · Placa → abrir tab Piezas al llegar el import
+  useEffect(() => {
+    if (!project.sessionReady) return
+    if (!consumeCadImportSignal()) return
+    setActivePanel("sheet-pieces")
+    setIsMobilePanelOpen(true)
+  }, [project.sessionReady, project.rows.length])
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false)
   const [hiddenLayerKeys, setHiddenLayerKeys] = useState<Set<string>>(new Set())
 
@@ -572,14 +581,13 @@ export function NestingPage() {
               </span>
             </span>
           </div>
-          <Button
-            size="default"
-            variant="outline"
-            className="w-full text-red-300 hover:bg-red-500/15 hover:text-red-200"
+          <button
+            type="button"
             onClick={project.onCancel}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 text-sm font-semibold text-destructive transition hover:bg-destructive/15 active:bg-destructive/20"
           >
             Cancelar nest
-          </Button>
+          </button>
         </div>
       )}
       {project.error && (

@@ -4,16 +4,25 @@ export const PENDING_NESTING_PIECES_KEY = "etm:pending-nesting-pieces"
 
 /** Cola en memoria: sobrevive al double-invoke de Strict Mode. */
 let memoryQueue: CadRow[] = []
+let cadImportSignal = false
 
 /** CAD → encola filas y las persiste en sessionStorage. */
 export function enqueuePendingNestingPieces(rows: CadRow[]) {
   if (!rows.length) return
   memoryQueue = [...memoryQueue, ...rows]
+  cadImportSignal = true
   try {
     sessionStorage.setItem(PENDING_NESTING_PIECES_KEY, JSON.stringify(memoryQueue))
   } catch {
     /* quota / private mode */
   }
+}
+
+/** true una vez si CAD envió piezas (para abrir tab Piezas). */
+export function consumeCadImportSignal(): boolean {
+  if (!cadImportSignal) return false
+  cadImportSignal = false
+  return true
 }
 
 /**
