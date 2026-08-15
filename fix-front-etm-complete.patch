@@ -1,0 +1,327 @@
+--- a/src/app/(protected)/production/page.tsx
++++ b/src/app/(protected)/production/page.tsx
+@@ -120,7 +120,7 @@
+ 
+         {/* Selector de áreas (supervisor) */}
+         {state.canChooseAreas && state.configOpen && (
+-          <div className="mb-1 flex shrink-0 flex-wrap gap-2 rounded-xl bg-foreground/5 p-2.5">
++          <div className="mb-1 flex shrink-0 flex-wrap justify-center gap-2 rounded-xl bg-foreground/5 p-2.5 desktop:justify-start">
+             {state.allAreas.map(code => {
+               const definition = PROCESS_DEFINITIONS[code]
+               const Icon = ENTITY_ICONS[definition.icon]
+--- a/src/components/ui/dialog.tsx
++++ b/src/components/ui/dialog.tsx
+@@ -178,7 +178,7 @@
+           "rounded-2xl",
+           "bg-popover",
+           "p-6",
+-          "shadow-2xl",
++          "shadow-sm shadow-black/15 dark:shadow-black/40",
+           "outline-none",
+           "select-none",
+           className,
+--- a/src/components/ui/dropdown-menu.tsx
++++ b/src/components/ui/dropdown-menu.tsx
+@@ -253,7 +253,7 @@
+     <DropdownMenuPrimitive.SubContent
+       data-slot="dropdown-menu-sub-content"
+       className={cn(
+-        "z-50 min-w-24 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-lg duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
++        "z-50 min-w-24 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+         className,
+       )}
+       {...props}
+--- a/src/components/ui/popover/popover-content.tsx
++++ b/src/components/ui/popover/popover-content.tsx
+@@ -146,7 +146,7 @@
+           onInteractOutside={onInteractOutside}
+           className={cn(
+             "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
+-            "rounded-t-2xl bg-popover text-popover-foreground shadow-2xl outline-none",
++            "rounded-t-2xl bg-popover text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
+             "pb-[env(safe-area-inset-bottom,0px)]",
+             "[touch-action:pan-y]",
+             className,
+@@ -223,7 +223,7 @@
+         event.stopPropagation()
+       }}
+       className={cn(
+-        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-xl outline-none",
++        "z-40 pointer-events-auto flex flex-col gap-2.5 overflow-hidden rounded-xl bg-popover p-2.5 text-sm text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
+         "transition-[width,height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-200",
+         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-150",
+--- a/src/components/ui/sheet.tsx
++++ b/src/components/ui/sheet.tsx
+@@ -80,7 +80,7 @@
+         onOpenAutoFocus={event => event.preventDefault()}
+         className={cn(
+           "fixed inset-y-0 right-0 z-40 flex h-dvh w-full max-w-md flex-col",
+-          "border-l border-border bg-background shadow-2xl outline-none select-none",
++          "border-l border-border bg-background shadow-sm shadow-black/15 dark:shadow-black/40 outline-none select-none",
+           "data-[state=open]:animate-in data-[state=closed]:animate-out",
+           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+           "data-[state=closed]:duration-200 data-[state=open]:duration-300",
+--- a/src/features/comments/components/message-bell.tsx
++++ b/src/features/comments/components/message-bell.tsx
+@@ -118,7 +118,7 @@
+           aria-label="Mensajes"
+           onClick={() => setOpen(!open)}
+           className={cn(
+-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
++            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+             open && "bg-foreground/20 text-foreground",
+           )}
+         >
+@@ -310,7 +310,7 @@
+         <Dialog open={open} onOpenChange={setOpen}>
+           <DialogContent
+             size="large"
+-            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
++            className="flex max-h-[min(36rem,85dvh)] flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
+           >
+             <FormDialogHeader title="Mensajes" icon={MessageSquare} />
+             <p className="px-4 pb-1 text-xs text-muted-foreground">
+@@ -331,7 +331,7 @@
+         side="right"
+         align="start"
+         sideOffset={8}
+-        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-foreground shadow-xl select-none"
++        className="z-40 flex h-[min(32rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden border-none p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 select-none"
+       >
+         <div className="flex shrink-0 items-center px-3.5 pt-3">
+           <span className="text-sm font-semibold text-foreground">Mensajes</span>
+--- a/src/features/notifications/components/notification-bell.tsx
++++ b/src/features/notifications/components/notification-bell.tsx
+@@ -117,7 +117,7 @@
+           aria-label="Notificaciones"
+           onClick={() => handleOpenChange(!open)}
+           className={cn(
+-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
++            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+             open && "bg-foreground/20 text-foreground",
+           )}
+         >
+@@ -249,7 +249,7 @@
+           <Dialog open={open} onOpenChange={handleOpenChange}>
+             <DialogContent
+               size="large"
+-              className="flex flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-2xl"
++              className="flex flex-col overflow-hidden rounded-2xl p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
+             >
+               <FormDialogHeader title="Notificaciones" icon={Bell} />
+               {panelBody}
+@@ -265,7 +265,7 @@
+             side="right"
+             align="start"
+             sideOffset={8}
+-            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-foreground shadow-xl select-none"
++            className="z-40 flex w-full min-w-90 max-w-lg flex-col overflow-hidden p-0 border-none text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 select-none"
+           >
+             <div className="flex shrink-0 items-center px-3.5 pt-3">
+               <span className="text-sm font-semibold text-foreground">
+--- a/src/features/tasks/components/actions/task-actions.tsx
++++ b/src/features/tasks/components/actions/task-actions.tsx
+@@ -109,7 +109,7 @@
+         label="NUEVA TAREA"
+         disabled={!canCreate}
+         onClick={handleOpen}
+-        accentClassName="bg-primary text-primary-foreground shadow-lg"
++        accentClassName="bg-primary text-primary-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
+         className={!canCreate ? "cursor-not-allowed opacity-40" : undefined}
+       />
+ 
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
+@@ -181,7 +181,7 @@
+         <div
+           className={cn(
+             "overflow-hidden rounded-xl transition duration-200 ease-out",
+-            // Elevación suave (IconAction), no shadow-xl/lg que se
++            // Elevación suave (IconAction), no shadow-sm shadow-black/15 dark:shadow-black/40/lg que se
+             // recorta a los lados con overflow del shell.
+             expanded && "shadow-sm shadow-black/15 dark:shadow-black/40",
+             longPressEnabled &&
+--- a/src/features/tasks/pipeline/hooks/use-task-view.ts
++++ b/src/features/tasks/pipeline/hooks/use-task-view.ts
+@@ -2,7 +2,6 @@
+ 
+ import { useCallback } from "react"
+ import { useRouter, usePathname, useSearchParams } from "next/navigation"
+-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import type { TaskView } from "../actions/task-view-toggle"
+ 
+ const DEFAULT_VIEW: TaskView = "card"
+@@ -12,13 +11,12 @@
+ }
+ 
+ export function useTaskView() {
+-  const { isMobile } = useResponsive()
+   const router = useRouter()
+   const pathname = usePathname()
+   const searchParams = useSearchParams()
+ 
+   const rawView = searchParams.get("view")
+-  const urlView: TaskView = isValidView(rawView) ? rawView : DEFAULT_VIEW
++  const view: TaskView = isValidView(rawView) ? rawView : DEFAULT_VIEW
+ 
+   const setView = useCallback((next: TaskView) => {
+     if (!next) return
+@@ -27,7 +25,5 @@
+     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+   }, [router, pathname, searchParams])
+ 
+-  const view: TaskView = isMobile ? DEFAULT_VIEW : urlView
+-
+   return { view, setView }
+ }
+--- a/src/features/workflow/types/workflow.payloads.ts
++++ b/src/features/workflow/types/workflow.payloads.ts
+@@ -6,6 +6,7 @@
+ 
+ export type WorkflowUpdatePayload = {
+   operatorId?: string | null
++  coOperatorIds?: string[]
+   piecesOutput?: number | null
+   plRtReal?: number | null
+   paintKgReal?: number | null
+--- a/src/features/workflow/types/workflow.types.ts
++++ b/src/features/workflow/types/workflow.types.ts
+@@ -32,6 +32,8 @@
+   operatorId:string | null
+ 
+   operator:User | null
++
++  coOperatorIds:string[]
+ 
+   // Quién puso a `operator` ahí vía "Convocar" (modo ASSIGN) — null
+   // cuando el propio operario se autoasignó al iniciar. Separa
+--- a/src/shared/responsive/layout/sidebar/sidebar-presence.tsx
++++ b/src/shared/responsive/layout/sidebar/sidebar-presence.tsx
+@@ -183,7 +183,7 @@
+           aria-label="Usuarios en línea"
+           onClick={() => handleOpenChange(!open)}
+           className={cn(
+-            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
++            "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20",
+             open && "bg-foreground/20 text-foreground",
+           )}
+         >
+@@ -300,7 +300,7 @@
+           <Dialog open={open} onOpenChange={handleOpenChange}>
+             <DialogContent
+               size="large"
+-              className="flex flex-col overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-2xl"
++              className="flex flex-col overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
+             >
+               <FormDialogHeader title="Usuarios en línea" icon={Users} />
+               <div className="flex min-h-0 flex-1 flex-col p-2">
+@@ -319,7 +319,7 @@
+             align="start"
+             sideOffset={8}
+             floatingClassName="w-72"
+-            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-xl rounded-xl overflow-hidden bg-popover text-foreground border-none select-none flex flex-col"
++            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-sm shadow-black/15 dark:shadow-black/40 rounded-xl overflow-hidden bg-popover text-foreground border-none select-none flex flex-col"
+           >
+             {panelBody}
+           </PopoverContent>
+--- a/src/shared/responsive/mobile/bottom-navigation.tsx
++++ b/src/shared/responsive/mobile/bottom-navigation.tsx
+@@ -50,7 +50,7 @@
+       />
+ 
+       <div className="pointer-events-auto relative px-3 pb-1">
+-        <nav className="flex items-stretch gap-1 rounded-full bg-foreground/10 px-1.5 py-1.5 shadow-lg shadow-black/30 ring-1 ring-border backdrop-blur-xl">
++        <nav className="flex items-stretch gap-1 rounded-full bg-foreground/10 px-1.5 py-1.5 shadow-sm shadow-black/15 dark:shadow-black/40 ring-1 ring-border backdrop-blur-xl">
+           {BOTTOM_NAV_ITEMS.map(item => {
+             const isActive =
+               item.action.type === "link" &&
+--- a/src/shared/responsive/mobile/top-bar.tsx
++++ b/src/shared/responsive/mobile/top-bar.tsx
+@@ -67,7 +67,7 @@
+           type="button"
+           onClick={toggleDrawer}
+           aria-label="Abrir navegación"
+-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/30 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
++          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chrome text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-chrome active:bg-popover"
+         >
+           <Menu size={18} strokeWidth={2.2} />
+         </button>
+@@ -75,7 +75,7 @@
+         <div className="min-w-0 flex-1">
+           <div
+             title={title}
+-            className="inline-flex max-w-full items-center rounded-full bg-chrome px-2.5 py-1.5 shadow-lg shadow-black/30 backdrop-blur-xl"
++            className="inline-flex max-w-full items-center rounded-full bg-chrome px-2.5 py-1.5 shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl"
+           >
+             <span className="truncate text-sm font-semibold text-foreground">
+               {title}
+@@ -94,8 +94,8 @@
+             }}
+             className={
+               searchOpen
+-                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+-                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
++                ? "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
++                : "relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20"
+             }
+           >
+             {searchOpen ? (
+@@ -115,7 +115,7 @@
+           onClick={() => setProfileOpen(true)}
+           aria-label="Perfil"
+           disabled={!user}
+-          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20 disabled:opacity-50"
++          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl transition hover:bg-foreground/15 active:bg-foreground/20 disabled:opacity-50"
+         >
+           <div className="relative size-7 shrink-0">
+             {user ? (
+@@ -134,7 +134,7 @@
+         >
+           {/* h-10 fijo: con o sin texto la altura no cambia.
+               mb-2 = mismo aire que empty state (mt-2) hacia los rows. */}
+-          <div className="mb-2 flex h-10 items-center gap-2 rounded-xl bg-foreground/5 px-3">
++          <div className="mb-2 flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 shadow-sm shadow-black/15 dark:shadow-black/40">
+             <Search
+               size={15}
+               strokeWidth={2.2}
+--- a/src/shared/ui/speed-dial-fab/fab-trigger.tsx
++++ b/src/shared/ui/speed-dial-fab/fab-trigger.tsx
+@@ -62,7 +62,7 @@
+         aria-label={label}
+         title={label}
+         className={cn(
+-          "relative flex size-11 shrink-0 items-center justify-center rounded-full shadow-lg transition active:scale-95",
++          "relative flex size-11 shrink-0 items-center justify-center rounded-full shadow-sm shadow-black/15 dark:shadow-black/40 transition active:scale-95",
+           accentClassName ??
+             cn(
+               "bg-foreground text-background",
+--- a/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx
++++ b/src/shared/ui/speed-dial-fab/speed-dial-fab.tsx
+@@ -94,7 +94,7 @@
+       ref={rootRef}
+       data-slot="speed-dial-fab"
+       className={cn(
+-        "pointer-events-none fixed bottom-22 flex flex-col items-end gap-2",
++        "pointer-events-none fixed bottom-22 flex flex-col items-center gap-2.5",
+         FAB_Z_CLASS,
+         "transition-opacity ease-out",
+         chromeHidden ? "opacity-0" : "opacity-100",
+@@ -116,7 +116,7 @@
+         }
+         transition={{ type: "spring", stiffness: 420, damping: 28 }}
+         className={cn(
+-          "flex flex-col items-end gap-2",
++          "flex flex-col items-center gap-2.5",
+           dialOpen
+             ? "pointer-events-auto relative"
+             : "pointer-events-none absolute bottom-14 right-0",
+@@ -138,7 +138,7 @@
+         className={cn(
+           "pointer-events-auto flex size-12 items-center justify-center rounded-full transition duration-200",
+           "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",
+-          "shadow-lg",
++          "shadow-sm shadow-black/15 dark:shadow-black/40",
+         )}
+       >
+         {dialOpen ? (
