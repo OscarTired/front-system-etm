@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { isSupportedCadFile, isPdfFile } from "../cad/cad-file-types"
+import { parsePdf } from "../cad/pdf-parser"
 import { cadParseApi } from "../api/cad-parse.api"
 import { scanMaterialData, type MaterialData } from "../cad/thickness-scanner"
 import type { PieceOutline, SubEntity } from "../engine/types"
@@ -133,7 +134,42 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
         continue
       }
 
-      if (isPdfFile(file.name) || isSupportedCadFile(file.name)) {
+      if (isPdfFile(file.name)) {
+        try {
+          const buffer = await file.arrayBuffer()
+          const cadData = await parsePdf(file.name, buffer)
+          if (!cadData.valid || cadData.outline.points.length === 0) {
+            rejected.push(`${file.name} (geometría inválida)`)
+            continue
+          }
+          newRows.push({
+            id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            source: "cad",
+            fileName: file.name,
+            outline: cadData.outline,
+            subEntities: cadData.entities.map((e) => ({
+              outline: e.outline,
+              color: e.color,
+              layer: e.layer,
+            })),
+            width: cadData.width,
+            height: cadData.height,
+            quantity: "1",
+            color: nextColor(),
+            material: inheritMaterialFromSibling(
+              file.name,
+              scanMaterialData(file.name, ""),
+              [...rows, ...newRows],
+            ),
+          })
+          existingFileNames.add(file.name.toLowerCase())
+        } catch {
+          rejected.push(`${file.name} (error al leer PDF)`)
+        }
+        continue
+      }
+
+      if (isSupportedCadFile(file.name)) {
         try {
           const parsed = await cadParseApi.parseFile(file)
           if (!parsed.valid || !parsed.pieces?.length) {
@@ -141,12 +177,10 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
             continue
           }
           let textForMaterial = ""
-          if (!file.name.toLowerCase().endsWith(".pdf")) {
-            try {
-              textForMaterial = await file.text()
-            } catch {
-              textForMaterial = ""
-            }
+          try {
+            textForMaterial = await file.text()
+          } catch {
+            textForMaterial = ""
           }
           const material = inheritMaterialFromSibling(
             file.name,
@@ -157,9 +191,7 @@ export const PieceList = memo(forwardRef<PieceListHandle, PieceListProps>(functi
           for (let pi = 0; pi < parsed.pieces.length; pi++) {
             const piece = parsed.pieces[pi]
             if (!piece?.outline?.points?.length) continue
-            const label = multi
-              ? `${file.name}#${pi + 1}`
-              : file.name
+            const label = multi ? `${file.name}#${pi + 1}` : file.name
             newRows.push({
               id: `cad-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${pi}`,
               source: "cad",
