@@ -5,6 +5,7 @@ import { Download, RefreshCw, Boxes } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { cn } from "@/shared/utils/utils"
+import { toast } from "sonner"
 import { cadPlateApi } from "../api/cad-plate.api"
 import type { CreatePlateBody, GeometryModel } from "../types/geometry-model"
 import { GeometrySvgPreview } from "./geometry-svg-preview"
@@ -99,9 +100,19 @@ export function PlateGeneratorPanel() {
         PENDING_NESTING_PIECES_KEY,
         JSON.stringify([...prev, row]),
       )
+      toast.success("Pieza lista — abriendo Nesting")
       router.push("/nesting")
-    } catch {
-      // toast global
+    } catch (err) {
+      const msg =
+        err && typeof err === "object" && "response" in err
+          ? String(
+              (err as { response?: { data?: { message?: string } } }).response
+                ?.data?.message ?? "No se pudo enviar a Nesting",
+            )
+          : err instanceof Error
+            ? err.message
+            : "No se pudo enviar a Nesting"
+      toast.error(msg)
     }
   }
 

@@ -94,21 +94,6 @@ export function useNestingProject() {
 
   const { status, progress, sheets, error, run, cancel, restoreSheets, clearSheets } = useNesting()
 
-  // Piezas enviadas desde CAD · Placa (sessionStorage one-shot)
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
-      if (!raw) return
-      sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
-      const incoming = JSON.parse(raw) as CadRow[]
-      if (Array.isArray(incoming) && incoming.length > 0) {
-        setRows((prev) => [...prev, ...incoming])
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [])
-
   const isRunning = status === "running"
   const sheetsRef = useRef(sheets)
   sheetsRef.current = sheets
@@ -588,15 +573,28 @@ export function useNestingProject() {
     ;(async () => {
       const draft = memoryDraftCache ?? (await loadNestingDraft())
       if (cancelled) return
+
+      // CAD · Placa: aplicar DESPUÉS del draft (si no, setRows(draft) las borra).
+      let pending: CadRow[] = []
+      try {
+        const raw = sessionStorage.getItem(PENDING_NESTING_PIECES_KEY)
+        if (raw) {
+          sessionStorage.removeItem(PENDING_NESTING_PIECES_KEY)
+          const parsed = JSON.parse(raw) as unknown
+          if (Array.isArray(parsed)) pending = parsed as CadRow[]
+        }
+      } catch {
+        /* ignore */
+      }
+
       if (draftHasWork(draft) && draft) {
         skipNextSaveRef.current = true
-        // Hidratar en transition: no bloquear el primer paint del shell.
         startTransition(() => {
           setSettings(draft.settings)
           setAppliedSeparation(Number(draft.settings.separacion) || 0)
           setAppliedMode(draft.settings.empaquetadoPreciso ? "precise" : "fast")
           setMachine(draft.machine)
-          setRows(draft.rows)
+          setRows([...draft.rows, ...pending])
           sheetEditsRef.current = draft.editsBySheet ?? {}
           activeGroupIndexRef.current = draft.activeGroupIndex ?? 0
           if (draft.sheets && draft.sheets.length > 0) {
@@ -604,6 +602,10 @@ export function useNestingProject() {
           }
           setSessionRestored(true)
           setSessionSavedAt(draft.savedAt)
+        })
+      } else if (pending.length > 0) {
+        startTransition(() => {
+          setRows(pending)
         })
       }
       setSessionReady(true)

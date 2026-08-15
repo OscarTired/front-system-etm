@@ -7,6 +7,7 @@ import type {
   NestingOptions,
   NestingPiece,
 } from "../engine/types"
+import { toast } from "sonner"
 import { nestingRunApi } from "../api/nesting-run.api"
 
 export type NestingStatus =
@@ -87,10 +88,12 @@ export function useNesting(): UseNestingResult {
           const message =
             err?.response?.data?.message ??
             (err instanceof Error ? err.message : "Error en nesting")
-          setError(
-            Array.isArray(message) ? message.join(", ") : String(message),
-          )
+          const text = Array.isArray(message)
+            ? message.join(", ")
+            : String(message)
+          setError(text)
           setStatus("error")
+          toast.error("Nesting falló", { description: text })
         })
     },
     [],
