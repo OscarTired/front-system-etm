@@ -52,11 +52,19 @@ import type {
   User,
 } from "../types/user.types"
 
+type ItemMeta = {
+  description?: string
+  descriptionColor?: string
+}
+
 type Props = {
 
   value?:User
 
   items:User[]
+
+  /** Estado / subtítulo por user.id (ej. "Trabajando · #003 Ref"). */
+  itemMeta?: Map<string, ItemMeta>
 
   placeholder:string
 
@@ -79,6 +87,8 @@ export function UserSelect({
   value,
 
   items,
+
+  itemMeta,
 
   placeholder,
 
@@ -320,7 +330,11 @@ export function UserSelect({
 
             <CommandGroup>
 
-              {filteredItems.map(user=>(
+              {filteredItems.map(user=>{
+
+                const meta = itemMeta?.get(user.id)
+
+                return (
 
                 <SelectOption
                   key={user.id}
@@ -330,6 +344,8 @@ export function UserSelect({
                   selected={
                     value?.id===user.id
                   }
+                  description={meta?.description}
+                  descriptionColor={meta?.descriptionColor}
                   onSelect={()=>{
 
                     const isDeselecting =
@@ -346,7 +362,9 @@ export function UserSelect({
                   }}
                 />
 
-              ))}
+                )
+
+              })}
 
             </CommandGroup>
 

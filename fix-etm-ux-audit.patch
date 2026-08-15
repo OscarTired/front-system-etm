@@ -1,0 +1,401 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index da05663..96ac79b 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -122,7 +122,10 @@ html, body {
+   background-color: var(--background);
+   overflow-x: hidden;
+   overscroll-behavior-x: none;
+-  scrollbar-gutter: stable;
++  /* Sin scrollbar-gutter: body es position:fixed + overflow hidden
++     (AppShell). Reservar gutter dejaba una franja permanente a la
++     derecha del color del sidebar. El scroll vive en contenedores
++     internos, no en el documento. */
+ }
+ 
+ .dark {
+@@ -534,24 +537,20 @@ input:focus-visible {
+   }
+ }
+ 
++/* Sonner: sin transform en hover. El stacking interno de Sonner
++   pelea con translateY y hace que los toasts “se escondan” o salten.
++   Sombra discreta al estilo IconAction (shadow-sm), no la sombra
++   grande que además se recorta en overflow-hidden del shell. */
+ [data-sonner-toast] {
+   transition:
+-    transform .16s cubic-bezier(.2,.8,.2,1),
+     box-shadow .16s ease,
+     border-color .16s ease,
+     filter .16s ease;
+ }
+ 
+ [data-sonner-toast]:hover {
+-  transform: translateY(-2px);
+-
+   filter: brightness(1.02);
+-
+-  border-color: rgb(255 255 255 / 0.10);
+-
+-  box-shadow:
+-    0 18px 40px rgb(0 0 0 / 0.38),
+-    0 0 0 1px rgb(255 255 255 / 0.04);
++  border-color: color-mix(in oklch, var(--border) 80%, transparent);
+ }
+ 
+ .native-scrollbar {
+diff --git a/src/components/ui/sonner.tsx b/src/components/ui/sonner.tsx
+index fe34fe9..1fb32d1 100644
+--- a/src/components/ui/sonner.tsx
++++ b/src/components/ui/sonner.tsx
+@@ -19,7 +19,9 @@ export function Sonner() {
+       theme={theme}
+       position="bottom-right"
+       closeButton
+-      expand
++      /* expand=false (default Sonner): stack colapsado, abre al hover.
++         expand=true + CSS con transform hacía que al pasar el puntero
++         los toasts saltaran o se escondieran. */
+       gap={12}
+       offset={16}
+       visibleToasts={4}
+@@ -47,7 +49,7 @@ export function Sonner() {
+         duration: 4000,
+         classNames: {
+           toast:
+-            "!bg-card !text-foreground !border !border-border !rounded-xl !p-4 !gap-3 !shadow-lg",
++            "!bg-card !text-foreground !border !border-border !rounded-xl !p-4 !gap-3 !shadow-sm !shadow-black/15 dark:!shadow-black/40",
+           icon: "!m-0 !shrink-0",
+           content: "!gap-1",
+           title: "!text-sm !font-medium !text-foreground",
+diff --git a/src/features/processes/components/cells/process-operator-cell.tsx b/src/features/processes/components/cells/process-operator-cell.tsx
+index 4b3f061..2666737 100644
+--- a/src/features/processes/components/cells/process-operator-cell.tsx
++++ b/src/features/processes/components/cells/process-operator-cell.tsx
+@@ -1,15 +1,15 @@
+ "use client"
+ 
+ import { useMemo } from "react"
+-import { useQueryClient } from "@tanstack/react-query"
+ 
+ import {
+   UserSelect,
+ } from "@/features/users/components/user-select"
+ 
+ import {
+-  useUsersDirectory,
+-} from "@/features/users/hooks/use-users-directory"
++  useAreaOperators,
++  type OperatorAvailability,
++} from "@/features/areas/hooks/use-area-operators"
+ 
+ import {
+   useWorkflowStepField,
+@@ -19,41 +19,67 @@ import {
+   workflowAccess,
+ } from "@/features/workflow/access/workflow-access"
+ 
+-import type { Task } from "@/features/tasks/types/task.types"
+ import type {
+   ProcessTask,
+ } from "../../types/process.types"
+ 
+-type Props={
+-  processTask:ProcessTask
+-  onSavingChange?:(saving:boolean)=>void
+-  triggerVariant?:"badge"|"row"
+-  rowLabel?:string
++type Props = {
++  processTask: ProcessTask
++  onSavingChange?: (saving: boolean) => void
++  triggerVariant?: "badge" | "row"
++  rowLabel?: string
+ }
+ 
+-const NON_EDITABLE_STATUSES=[
++const NON_EDITABLE_STATUSES = [
+   "COMPLETED",
+   "REVIEWED",
+ ] as const
+ 
++const STATUS_COLOR: Record<string, string> = {
++  FREE: "#10B981",
++  WORKING: "#F59E0B",
++  PAUSED: "#737373",
++  INVITED: "#38BDF8",
++}
++
++const STATUS_LABEL: Record<string, string> = {
++  FREE: "Libre",
++  WORKING: "Trabajando",
++  PAUSED: "Pausado",
++  INVITED: "Ya convocado",
++}
++
++function availabilityMeta(availability: OperatorAvailability) {
++  if (availability.state === "FREE") {
++    return {
++      description: STATUS_LABEL.FREE,
++      descriptionColor: STATUS_COLOR.FREE,
++    }
++  }
++
++  return {
++    description: `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`,
++    descriptionColor: STATUS_COLOR[availability.state],
++  }
++}
++
++/**
++ * Asignación directa de operario en la celda del pipeline / rows.
++ * - NO filtra operarios en PROGRESS en otra tarea: un operario puede
++ *   estar trabajando en una y seguir siendo asignable en otras.
++ * - Muestra el estado (Libre / Trabajando · #003 Ref / …) igual que
++ *   SummonOperatorButton en TaskAreaPanel.
++ * - Esta vía NO dispara notificación de convocatoria (solo summon
++ *   desde TaskAreaPanel / pantalla de asignaciones).
++ */
+ export function ProcessOperatorCell({
+   processTask,
+   onSavingChange,
+   triggerVariant,
+   rowLabel,
+-}:Props){
+-
+-  const queryClient = useQueryClient()
++}: Props) {
++  const updateField = useWorkflowStepField()
+ 
+-  const{
+-    users,
+-  }=useUsersDirectory()
+-
+-  const updateField=
+-    useWorkflowStepField()
+-
+-  const currentOperatorId =
+-    workflowAccess.operator(processTask)?.id
+ 
+   const currentStepId =
+     workflowAccess.stepId(processTask)
+@@ -63,102 +89,62 @@ export function ProcessOperatorCell({
+ 
+   const isEditable =
+     !NON_EDITABLE_STATUSES.includes(
+-      status as typeof NON_EDITABLE_STATUSES[number],
++      status as (typeof NON_EDITABLE_STATUSES)[number],
+     )
+ 
+-  // Obtenemos el processCode directamente usando el workflowAccess que me pasaste
+   const currentProcessCode = workflowAccess.processCode(processTask)
+ 
+-  const busyOperatorIds = useMemo(() => {
+-
+-    const tasks =
+-      queryClient.getQueryData<Task[]>(["tasks"]) ?? []
+-
+-    const busy = new Set<string>()
+-
+-    for (const task of tasks) {
++  const areaOperators = useAreaOperators(currentProcessCode ?? null)
+ 
+-      for (const step of task.workflowSteps) {
+-
+-        if (
+-          step.status === "PROGRESS" &&
+-          step.operatorId &&
+-          step.id !== currentStepId
+-        ) {
+-          busy.add(step.operatorId)
+-        }
++  const operators = useMemo(
++    () => areaOperators.map(({ user }) => user),
++    [areaOperators],
++  )
+ 
+-      }
++  const itemMeta = useMemo(() => {
++    const map = new Map<
++      string,
++      { description?: string; descriptionColor?: string }
++    >()
+ 
++    for (const { user, availability } of areaOperators) {
++      map.set(user.id, availabilityMeta(availability))
+     }
+ 
+-    return busy
+-
+-  }, [queryClient, currentStepId])
+-
+-  const operators = useMemo(() => {
+-
+-    return users
+-      .filter(user => user.roles?.some(role => role.code === "PRODUCCION") && user.level === "OPERARIO")
+-      // Filtramos por el área/proceso correcto usando workflowAccess.processCode(item)
+-      .filter(user => {
+-        if (!currentProcessCode) return true
+-        return user.areas?.some(area => area.processCode === currentProcessCode)
+-      })
+-      .filter(user =>
+-        // Siempre mostramos el operario ya asignado a este step,
+-        // aunque esté en PROGRESS (puede ser el mismo que estamos editando).
+-        user.id === currentOperatorId ||
+-        !busyOperatorIds.has(user.id)
+-      )
+-
+-  }, [users, currentProcessCode, currentOperatorId, busyOperatorIds])
+-
+-  return(
++    return map
++  }, [areaOperators])
+ 
++  return (
+     <UserSelect
+-      value={
+-        workflowAccess.operator(processTask)??undefined
+-      }
++      value={workflowAccess.operator(processTask) ?? undefined}
+       items={operators}
++      itemMeta={itemMeta}
+       placeholder="Asignar operario"
+       disabled={!isEditable}
+       triggerVariant={triggerVariant}
+       rowLabel={rowLabel}
+-      onChange={async user=>{
+-
+-        if(!currentStepId||!isEditable){
++      onChange={async user => {
++        if (!currentStepId || !isEditable) {
+           return
+         }
+ 
+         onSavingChange?.(true)
+ 
+-        try{
+-
++        try {
+           await updateField(
+-
+             currentStepId,
+-
+             {
+-              operatorId:user?.id??null,
++              operatorId: user?.id ?? null,
+             },
+-
+             {
+-              operator:user??null,
+-              operatorId:user?.id??null,
++              operator: user ?? null,
++              operatorId: user?.id ?? null,
+             },
+-
+           )
+-
+-        }finally{
+-
++        } finally {
+           onSavingChange?.(false)
+-
+         }
+-
+       }}
+     />
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/users/components/user-select.tsx b/src/features/users/components/user-select.tsx
+index a7763fc..7975cff 100644
+--- a/src/features/users/components/user-select.tsx
++++ b/src/features/users/components/user-select.tsx
+@@ -52,12 +52,20 @@ import type {
+   User,
+ } from "../types/user.types"
+ 
++type ItemMeta = {
++  description?: string
++  descriptionColor?: string
++}
++
+ type Props = {
+ 
+   value?:User
+ 
+   items:User[]
+ 
++  /** Estado / subtítulo por user.id (ej. "Trabajando · #003 Ref"). */
++  itemMeta?: Map<string, ItemMeta>
++
+   placeholder:string
+ 
+   onChange:(
+@@ -80,6 +88,8 @@ export function UserSelect({
+ 
+   items,
+ 
++  itemMeta,
++
+   placeholder,
+ 
+   onChange,
+@@ -320,7 +330,11 @@ export function UserSelect({
+ 
+             <CommandGroup>
+ 
+-              {filteredItems.map(user=>(
++              {filteredItems.map(user=>{
++
++                const meta = itemMeta?.get(user.id)
++
++                return (
+ 
+                 <SelectOption
+                   key={user.id}
+@@ -330,6 +344,8 @@ export function UserSelect({
+                   selected={
+                     value?.id===user.id
+                   }
++                  description={meta?.description}
++                  descriptionColor={meta?.descriptionColor}
+                   onSelect={()=>{
+ 
+                     const isDeselecting =
+@@ -346,7 +362,9 @@ export function UserSelect({
+                   }}
+                 />
+ 
+-              ))}
++                )
++
++              })}
+ 
+             </CommandGroup>
+ 
+diff --git a/src/shared/ui/entity-select/entity-select.tsx b/src/shared/ui/entity-select/entity-select.tsx
+index 0f9371e..f31c891 100644
+--- a/src/shared/ui/entity-select/entity-select.tsx
++++ b/src/shared/ui/entity-select/entity-select.tsx
+@@ -130,12 +130,17 @@ export function EntitySelect<T extends EntityBase>({
+         dto,
+       })
+ 
+-      onChange(result)
++      // Solo actualizar la selección si el item editado YA era el
++      // valor elegido. Editar desde el menú del dropdown no debe
++      // auto-asignar ese item como opción seleccionada.
++      if (value?.id === editing.id) {
++        onChange(result)
++      }
+     } else {
+       await onCreate(dto)
+     }
+ 
+-    closeDialog() 
++    closeDialog()
+   }
+ 
+   return (

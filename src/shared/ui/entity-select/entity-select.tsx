@@ -130,12 +130,17 @@ export function EntitySelect<T extends EntityBase>({
         dto,
       })
 
-      onChange(result)
+      // Solo actualizar la selección si el item editado YA era el
+      // valor elegido. Editar desde el menú del dropdown no debe
+      // auto-asignar ese item como opción seleccionada.
+      if (value?.id === editing.id) {
+        onChange(result)
+      }
     } else {
       await onCreate(dto)
     }
 
-    closeDialog() 
+    closeDialog()
   }
 
   return (

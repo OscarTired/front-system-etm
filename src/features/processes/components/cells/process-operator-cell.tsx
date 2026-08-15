@@ -1,15 +1,15 @@
 "use client"
 
 import { useMemo } from "react"
-import { useQueryClient } from "@tanstack/react-query"
 
 import {
   UserSelect,
 } from "@/features/users/components/user-select"
 
 import {
-  useUsersDirectory,
-} from "@/features/users/hooks/use-users-directory"
+  useAreaOperators,
+  type OperatorAvailability,
+} from "@/features/areas/hooks/use-area-operators"
 
 import {
   useWorkflowStepField,
@@ -19,41 +19,67 @@ import {
   workflowAccess,
 } from "@/features/workflow/access/workflow-access"
 
-import type { Task } from "@/features/tasks/types/task.types"
 import type {
   ProcessTask,
 } from "../../types/process.types"
 
-type Props={
-  processTask:ProcessTask
-  onSavingChange?:(saving:boolean)=>void
-  triggerVariant?:"badge"|"row"
-  rowLabel?:string
+type Props = {
+  processTask: ProcessTask
+  onSavingChange?: (saving: boolean) => void
+  triggerVariant?: "badge" | "row"
+  rowLabel?: string
 }
 
-const NON_EDITABLE_STATUSES=[
+const NON_EDITABLE_STATUSES = [
   "COMPLETED",
   "REVIEWED",
 ] as const
 
+const STATUS_COLOR: Record<string, string> = {
+  FREE: "#10B981",
+  WORKING: "#F59E0B",
+  PAUSED: "#737373",
+  INVITED: "#38BDF8",
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  FREE: "Libre",
+  WORKING: "Trabajando",
+  PAUSED: "Pausado",
+  INVITED: "Ya convocado",
+}
+
+function availabilityMeta(availability: OperatorAvailability) {
+  if (availability.state === "FREE") {
+    return {
+      description: STATUS_LABEL.FREE,
+      descriptionColor: STATUS_COLOR.FREE,
+    }
+  }
+
+  return {
+    description: `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`,
+    descriptionColor: STATUS_COLOR[availability.state],
+  }
+}
+
+/**
+ * Asignación directa de operario en la celda del pipeline / rows.
+ * - NO filtra operarios en PROGRESS en otra tarea: un operario puede
+ *   estar trabajando en una y seguir siendo asignable en otras.
+ * - Muestra el estado (Libre / Trabajando · #003 Ref / …) igual que
+ *   SummonOperatorButton en TaskAreaPanel.
+ * - Esta vía NO dispara notificación de convocatoria (solo summon
+ *   desde TaskAreaPanel / pantalla de asignaciones).
+ */
 export function ProcessOperatorCell({
   processTask,
   onSavingChange,
   triggerVariant,
   rowLabel,
-}:Props){
+}: Props) {
+  const updateField = useWorkflowStepField()
 
-  const queryClient = useQueryClient()
-
-  const{
-    users,
-  }=useUsersDirectory()
-
-  const updateField=
-    useWorkflowStepField()
-
-  const currentOperatorId =
-    workflowAccess.operator(processTask)?.id
 
   const currentStepId =
     workflowAccess.stepId(processTask)
@@ -63,102 +89,62 @@ export function ProcessOperatorCell({
 
   const isEditable =
     !NON_EDITABLE_STATUSES.includes(
-      status as typeof NON_EDITABLE_STATUSES[number],
+      status as (typeof NON_EDITABLE_STATUSES)[number],
     )
 
-  // Obtenemos el processCode directamente usando el workflowAccess que me pasaste
   const currentProcessCode = workflowAccess.processCode(processTask)
 
-  const busyOperatorIds = useMemo(() => {
+  const areaOperators = useAreaOperators(currentProcessCode ?? null)
 
-    const tasks =
-      queryClient.getQueryData<Task[]>(["tasks"]) ?? []
+  const operators = useMemo(
+    () => areaOperators.map(({ user }) => user),
+    [areaOperators],
+  )
 
-    const busy = new Set<string>()
+  const itemMeta = useMemo(() => {
+    const map = new Map<
+      string,
+      { description?: string; descriptionColor?: string }
+    >()
 
-    for (const task of tasks) {
-
-      for (const step of task.workflowSteps) {
-
-        if (
-          step.status === "PROGRESS" &&
-          step.operatorId &&
-          step.id !== currentStepId
-        ) {
-          busy.add(step.operatorId)
-        }
-
-      }
-
+    for (const { user, availability } of areaOperators) {
+      map.set(user.id, availabilityMeta(availability))
     }
 
-    return busy
+    return map
+  }, [areaOperators])
 
-  }, [queryClient, currentStepId])
-
-  const operators = useMemo(() => {
-
-    return users
-      .filter(user => user.roles?.some(role => role.code === "PRODUCCION") && user.level === "OPERARIO")
-      // Filtramos por el área/proceso correcto usando workflowAccess.processCode(item)
-      .filter(user => {
-        if (!currentProcessCode) return true
-        return user.areas?.some(area => area.processCode === currentProcessCode)
-      })
-      .filter(user =>
-        // Siempre mostramos el operario ya asignado a este step,
-        // aunque esté en PROGRESS (puede ser el mismo que estamos editando).
-        user.id === currentOperatorId ||
-        !busyOperatorIds.has(user.id)
-      )
-
-  }, [users, currentProcessCode, currentOperatorId, busyOperatorIds])
-
-  return(
-
+  return (
     <UserSelect
-      value={
-        workflowAccess.operator(processTask)??undefined
-      }
+      value={workflowAccess.operator(processTask) ?? undefined}
       items={operators}
+      itemMeta={itemMeta}
       placeholder="Asignar operario"
       disabled={!isEditable}
       triggerVariant={triggerVariant}
       rowLabel={rowLabel}
-      onChange={async user=>{
-
-        if(!currentStepId||!isEditable){
+      onChange={async user => {
+        if (!currentStepId || !isEditable) {
           return
         }
 
         onSavingChange?.(true)
 
-        try{
-
+        try {
           await updateField(
-
             currentStepId,
-
             {
-              operatorId:user?.id??null,
+              operatorId: user?.id ?? null,
             },
-
             {
-              operator:user??null,
-              operatorId:user?.id??null,
+              operator: user ?? null,
+              operatorId: user?.id ?? null,
             },
-
           )
-
-        }finally{
-
+        } finally {
           onSavingChange?.(false)
-
         }
-
       }}
     />
-
   )
-
 }

@@ -19,7 +19,9 @@ export function Sonner() {
       theme={theme}
       position="bottom-right"
       closeButton
-      expand
+      /* expand=false (default Sonner): stack colapsado, abre al hover.
+         expand=true + CSS con transform hacía que al pasar el puntero
+         los toasts saltaran o se escondieran. */
       gap={12}
       offset={16}
       visibleToasts={4}
@@ -47,7 +49,7 @@ export function Sonner() {
         duration: 4000,
         classNames: {
           toast:
-            "!bg-card !text-foreground !border !border-border !rounded-xl !p-4 !gap-3 !shadow-lg",
+            "!bg-card !text-foreground !border !border-border !rounded-xl !p-4 !gap-3 !shadow-sm !shadow-black/15 dark:!shadow-black/40",
           icon: "!m-0 !shrink-0",
           content: "!gap-1",
           title: "!text-sm !font-medium !text-foreground",
