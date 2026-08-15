@@ -64,7 +64,7 @@ export function DxfCanvas({
   rotationStep = 90,
   sheetKey,
 }: DxfCanvasProps) {
-  const { isCompact } = useResponsive()
+  const { isCompact, isMobile } = useResponsive()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const entitiesRef = useRef<Entity[]>([])
@@ -1211,9 +1211,9 @@ export function DxfCanvas({
           del modo activo (antes se repetía también en la barra de estado). */}
       <div
         className={`pointer-events-none absolute right-3 z-20 flex items-center gap-1.5 transition-[top] duration-300 ${
-          // Solo en compact el toolbar es full-width y tapa V/H → bajar.
-          // Desktop: toolbar a la izquierda, V/H se queda en top-3.
-          toolsChromeOpen && isCompact ? "top-26" : "top-3"
+          // Solo mobile shell: toolbar full-width tapa la esquina.
+          // Tablet/desktop: hay hueco a la derecha → V/H siempre top-3.
+          toolsChromeOpen && isMobile ? "top-26" : "top-3"
         }`}
       >
         <div className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-muted/90 p-1 backdrop-blur-sm">
