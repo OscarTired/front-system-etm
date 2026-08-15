@@ -8,8 +8,11 @@ export function getNotificationActionLabel(type: NotificationType): string {
     case "COMMENT":
       return "comentó"
     case "TASK_ASSIGNED":
+      // Asignación desde la fila (ProcessOperatorCell). El nombre
+      // del actor va delante en NotificationItem.
       return "te asignó una tarea"
     case "TASK_SUMMONED":
+      // Convocatoria desde TaskAreaPanel / pantalla de asignaciones.
       return "te convocó a una tarea"
     case "TASK_INVITE_ACCEPTED":
       return "aceptó la convocatoria"

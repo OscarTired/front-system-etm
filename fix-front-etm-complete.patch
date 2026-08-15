@@ -1,0 +1,81 @@
+diff --git a/src/features/notifications/utils/notification-action-label.ts b/src/features/notifications/utils/notification-action-label.ts
+index 22ca3c3..561f437 100644
+--- a/src/features/notifications/utils/notification-action-label.ts
++++ b/src/features/notifications/utils/notification-action-label.ts
+@@ -8,8 +8,11 @@ export function getNotificationActionLabel(type: NotificationType): string {
+     case "COMMENT":
+       return "comentó"
+     case "TASK_ASSIGNED":
++      // Asignación desde la fila (ProcessOperatorCell). El nombre
++      // del actor va delante en NotificationItem.
+       return "te asignó una tarea"
+     case "TASK_SUMMONED":
++      // Convocatoria desde TaskAreaPanel / pantalla de asignaciones.
+       return "te convocó a una tarea"
+     case "TASK_INVITE_ACCEPTED":
+       return "aceptó la convocatoria"
+diff --git a/src/features/projects/components/expanded-row/project-task-row.tsx b/src/features/projects/components/expanded-row/project-task-row.tsx
+index 05af1b9..2c93372 100644
+--- a/src/features/projects/components/expanded-row/project-task-row.tsx
++++ b/src/features/projects/components/expanded-row/project-task-row.tsx
+@@ -353,7 +353,7 @@ export function ProjectTaskRow({
+                 "overflow-hidden rounded-xl transition-all duration-200",
+                 pressed &&
+                   !overlayOpen &&
+-                  "scale-[0.98] shadow-lg",
++                  "scale-[0.98] shadow-sm shadow-black/15 dark:shadow-black/40",
+                 // Opacidad final de entrada — sin animar 0→1 (evita flash claro)
+                 isDimmed && "opacity-50",
+               )}
+@@ -511,7 +511,7 @@ export function ProjectTaskRow({
+             "transition duration-200",
+             "hover:bg-foreground/[0.07] hover:text-foreground hover:scale-105",
+             "active:scale-95",
+-            "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",
++            "shadow-sm shadow-black/15 dark:shadow-black/40",
+             isMobile
+               ? "opacity-100"
+               : "opacity-0 group-hover:opacity-100",
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
+index d54d6b7..e627bfa 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card.tsx
+@@ -181,11 +181,13 @@ export function TaskPipelineCard({
+         <div
+           className={cn(
+             "overflow-hidden rounded-xl transition duration-200 ease-out",
+-            expanded && "shadow-xl",
++            // Elevación suave (IconAction), no shadow-xl/lg que se
++            // recorta a los lados con overflow del shell.
++            expanded && "shadow-sm shadow-black/15 dark:shadow-black/40",
+             longPressEnabled &&
+               pressed &&
+               !overlayOpen &&
+-              "scale-[0.98] shadow-lg",
++              "scale-[0.98] shadow-sm shadow-black/15 dark:shadow-black/40",
+             isDimmed &&
+               "opacity-50",
+             overlayLocked &&
+diff --git a/src/shared/ui/actions/icon-action.tsx b/src/shared/ui/actions/icon-action.tsx
+index f81e541..0db77ef 100644
+--- a/src/shared/ui/actions/icon-action.tsx
++++ b/src/shared/ui/actions/icon-action.tsx
+@@ -4,9 +4,17 @@ import type { LucideIcon } from "lucide-react"
+ 
+ import { cn } from "@/shared/utils/utils"
+ 
++/**
++ * Sombra única de elevación suave (cards, toasts, botones chrome).
++ * Misma que IconAction — evita shadow-lg/xl que se recortan con
++ * overflow-hidden del AppShell y se ven pesadas en light.
++ */
++export const ELEVATION_SHADOW =
++  "shadow-sm shadow-black/15 dark:shadow-black/40"
++
+ /** Superficie compartida: info / material / editar / borrar */
+ export const CHROME_ICON_BTN =
+-  "flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 shadow-sm shadow-black/15 transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70 dark:shadow-black/40"
++  `flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 ${ELEVATION_SHADOW} transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70`
+ 
+ type Props = {
+   icon: LucideIcon

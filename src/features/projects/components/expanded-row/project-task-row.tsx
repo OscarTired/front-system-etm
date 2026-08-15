@@ -353,7 +353,7 @@ export function ProjectTaskRow({
                 "overflow-hidden rounded-xl transition-all duration-200",
                 pressed &&
                   !overlayOpen &&
-                  "scale-[0.98] shadow-lg",
+                  "scale-[0.98] shadow-sm shadow-black/15 dark:shadow-black/40",
                 // Opacidad final de entrada — sin animar 0→1 (evita flash claro)
                 isDimmed && "opacity-50",
               )}
@@ -511,7 +511,7 @@ export function ProjectTaskRow({
             "transition duration-200",
             "hover:bg-foreground/[0.07] hover:text-foreground hover:scale-105",
             "active:scale-95",
-            "shadow-[0_2px_8px_rgba(0,0,0,0.28)]",
+            "shadow-sm shadow-black/15 dark:shadow-black/40",
             isMobile
               ? "opacity-100"
               : "opacity-0 group-hover:opacity-100",

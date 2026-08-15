@@ -4,9 +4,17 @@ import type { LucideIcon } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 
+/**
+ * Sombra única de elevación suave (cards, toasts, botones chrome).
+ * Misma que IconAction — evita shadow-lg/xl que se recortan con
+ * overflow-hidden del AppShell y se ven pesadas en light.
+ */
+export const ELEVATION_SHADOW =
+  "shadow-sm shadow-black/15 dark:shadow-black/40"
+
 /** Superficie compartida: info / material / editar / borrar */
 export const CHROME_ICON_BTN =
-  "flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 shadow-sm shadow-black/15 transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70 dark:shadow-black/40"
+  `flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/80 ${ELEVATION_SHADOW} transition-colors hover:bg-muted/80 hover:text-foreground active:bg-muted/70`
 
 type Props = {
   icon: LucideIcon

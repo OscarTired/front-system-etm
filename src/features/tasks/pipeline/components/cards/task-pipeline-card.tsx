@@ -181,11 +181,13 @@ export function TaskPipelineCard({
         <div
           className={cn(
             "overflow-hidden rounded-xl transition duration-200 ease-out",
-            expanded && "shadow-xl",
+            // Elevación suave (IconAction), no shadow-xl/lg que se
+            // recorta a los lados con overflow del shell.
+            expanded && "shadow-sm shadow-black/15 dark:shadow-black/40",
             longPressEnabled &&
               pressed &&
               !overlayOpen &&
-              "scale-[0.98] shadow-lg",
+              "scale-[0.98] shadow-sm shadow-black/15 dark:shadow-black/40",
             isDimmed &&
               "opacity-50",
             overlayLocked &&
