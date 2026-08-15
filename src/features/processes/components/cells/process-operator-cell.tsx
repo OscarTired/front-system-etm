@@ -2,26 +2,15 @@
 
 import { useMemo } from "react"
 
-import {
-  UserSelect,
-} from "@/features/users/components/user-select"
-
+import { UserSelect } from "@/features/users/components/user-select"
 import {
   useAreaOperators,
   type OperatorAvailability,
 } from "@/features/areas/hooks/use-area-operators"
-
-import {
-  useWorkflowStepField,
-} from "@/features/workflow/hooks/use-workflow-step-field"
-
-import {
-  workflowAccess,
-} from "@/features/workflow/access/workflow-access"
-
-import type {
-  ProcessTask,
-} from "../../types/process.types"
+import { useWorkflowStepField } from "@/features/workflow/hooks/use-workflow-step-field"
+import { workflowAccess } from "@/features/workflow/access/workflow-access"
+import type { ProcessTask } from "../../types/process.types"
+import type { User } from "@/features/users/types/user.types"
 
 type Props = {
   processTask: ProcessTask
@@ -30,10 +19,7 @@ type Props = {
   rowLabel?: string
 }
 
-const NON_EDITABLE_STATUSES = [
-  "COMPLETED",
-  "REVIEWED",
-] as const
+const NON_EDITABLE_STATUSES = ["COMPLETED", "REVIEWED"] as const
 
 const STATUS_COLOR: Record<string, string> = {
   FREE: "#10B981",
@@ -56,7 +42,6 @@ function availabilityMeta(availability: OperatorAvailability) {
       descriptionColor: STATUS_COLOR.FREE,
     }
   }
-
   return {
     description: `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`,
     descriptionColor: STATUS_COLOR[availability.state],
@@ -64,13 +49,9 @@ function availabilityMeta(availability: OperatorAvailability) {
 }
 
 /**
- * Asignación directa de operario en la celda del pipeline / rows.
- * - NO filtra operarios en PROGRESS en otra tarea: un operario puede
- *   estar trabajando en una y seguir siendo asignable en otras.
- * - Muestra el estado (Libre / Trabajando · #003 Ref / …) igual que
- *   SummonOperatorButton en TaskAreaPanel.
- * - Esta vía NO dispara notificación de convocatoria (solo summon
- *   desde TaskAreaPanel / pantalla de asignaciones).
+ * Multi-operario por step:
+ * - values[0] → operatorId (primary)
+ * - values[1..] → coOperatorIds
  */
 export function ProcessOperatorCell({
   processTask,
@@ -80,20 +61,12 @@ export function ProcessOperatorCell({
 }: Props) {
   const updateField = useWorkflowStepField()
 
-
-  const currentStepId =
-    workflowAccess.stepId(processTask)
-
-  const status =
-    workflowAccess.status(processTask)
-
-  const isEditable =
-    !NON_EDITABLE_STATUSES.includes(
-      status as (typeof NON_EDITABLE_STATUSES)[number],
-    )
-
+  const currentStepId = workflowAccess.stepId(processTask)
+  const status = workflowAccess.status(processTask)
+  const isEditable = !NON_EDITABLE_STATUSES.includes(
+    status as (typeof NON_EDITABLE_STATUSES)[number],
+  )
   const currentProcessCode = workflowAccess.processCode(processTask)
-
   const areaOperators = useAreaOperators(currentProcessCode ?? null)
 
   const operators = useMemo(
@@ -101,44 +74,67 @@ export function ProcessOperatorCell({
     [areaOperators],
   )
 
+  const byId = useMemo(() => {
+    const map = new Map<string, User>()
+    for (const u of operators) map.set(u.id, u)
+    return map
+  }, [operators])
+
+  const selectedValues = useMemo(() => {
+    const step = processTask.workflowStep
+    if (!step) return [] as User[]
+
+    const primary =
+      step.operator ??
+      (step.operatorId ? byId.get(step.operatorId) : undefined)
+
+    const cos = (step.coOperatorIds ?? [])
+      .map(id => byId.get(id))
+      .filter((u): u is User => Boolean(u))
+      .filter(u => u.id !== primary?.id)
+
+    return primary ? [primary, ...cos] : cos
+  }, [processTask.workflowStep, byId])
+
   const itemMeta = useMemo(() => {
     const map = new Map<
       string,
       { description?: string; descriptionColor?: string }
     >()
-
     for (const { user, availability } of areaOperators) {
       map.set(user.id, availabilityMeta(availability))
     }
-
     return map
   }, [areaOperators])
 
   return (
     <UserSelect
-      value={workflowAccess.operator(processTask) ?? undefined}
+      multi
+      values={selectedValues}
       items={operators}
       itemMeta={itemMeta}
       placeholder="Asignar operario"
       disabled={!isEditable}
       triggerVariant={triggerVariant}
       rowLabel={rowLabel}
-      onChange={async user => {
-        if (!currentStepId || !isEditable) {
-          return
-        }
+      onValuesChange={async users => {
+        if (!currentStepId || !isEditable) return
+
+        const primary = users[0] ?? null
+        const coOperatorIds = users.slice(1).map(u => u.id)
 
         onSavingChange?.(true)
-
         try {
           await updateField(
             currentStepId,
             {
-              operatorId: user?.id ?? null,
+              operatorId: primary?.id ?? null,
+              coOperatorIds,
             },
             {
-              operator: user ?? null,
-              operatorId: user?.id ?? null,
+              operator: primary,
+              operatorId: primary?.id ?? null,
+              coOperatorIds,
             },
           )
         } finally {

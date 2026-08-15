@@ -1,286 +1,195 @@
 "use client"
 
-import {
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { useMemo, useRef, useState } from "react"
+import { Search, ChevronDown } from "lucide-react"
 
-import {
-  Search,
-  ChevronDown,
-} from "lucide-react"
-
-import {
-  Input,
-} from "@/components/ui/input"
-
+import { Input } from "@/components/ui/input"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandList,
 } from "@/components/ui/command"
-
-import {
-  DynamicBadge,
-} from "@/shared/ui/badge/dynamic-badge"
-
-import {
-  SelectOption,
-} from "@/shared/ui/select-option/select-option"
-
-import {
-  ENTITY_ICONS,
-} from "@/shared/constants/entity-icons"
-
-import {
-  cn,
-} from "@/shared/utils/utils"
-
-import {
-  useResponsive,
-} from "@/shared/responsive/hooks/use-responsive"
-
-import type {
-  User,
-} from "../types/user.types"
+import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { SelectOption } from "@/shared/ui/select-option/select-option"
+import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+import { cn } from "@/shared/utils/utils"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import type { User } from "../types/user.types"
 
 type ItemMeta = {
   description?: string
   descriptionColor?: string
 }
 
-type Props = {
-
-  value?:User
-
-  items:User[]
-
-  /** Estado / subtítulo por user.id (ej. "Trabajando · #003 Ref"). */
+type BaseProps = {
+  items: User[]
   itemMeta?: Map<string, ItemMeta>
-
-  placeholder:string
-
-  onChange:(
-    user?:User
-  )=>void
-
-  disabled?:boolean
-
-  // "badge" (default): sin cambios. "row": fila compacta, mismo
-  // layout siempre (mobile y desktop) — ícono+valor+chevron primero,
-  // label al final.
-  triggerVariant?:"badge"|"row"
-  rowLabel?:string
-
+  placeholder: string
+  disabled?: boolean
+  triggerVariant?: "badge" | "row"
+  rowLabel?: string
 }
 
-export function UserSelect({
+type SingleProps = BaseProps & {
+  multi?: false
+  value?: User
+  onChange: (user?: User) => void
+  values?: never
+  onValuesChange?: never
+}
 
-  value,
+type MultiProps = BaseProps & {
+  multi: true
+  values: User[]
+  onValuesChange: (users: User[]) => void
+  value?: never
+  onChange?: never
+}
 
-  items,
+type Props = SingleProps | MultiProps
 
-  itemMeta,
+export function UserSelect(props: Props) {
+  const {
+    items,
+    itemMeta,
+    placeholder,
+    disabled = false,
+    triggerVariant = "badge",
+    rowLabel,
+  } = props
 
-  placeholder,
+  const multi = props.multi === true
+  const values: User[] = multi
+    ? props.values
+    : props.value
+      ? [props.value]
+      : []
 
-  onChange,
-
-  disabled=false,
-
-  triggerVariant="badge",
-  rowLabel,
-
-}:Props){
-
-  const [open,setOpen]=
-    useState(false)
-
-  const [query,setQuery]=
-    useState("")
-
-  const inputRef=
-    useRef<HTMLInputElement>(null)
-
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
   const { isCompact } = useResponsive()
 
-  const RowIcon = value?.icon
-    ? ENTITY_ICONS[value.icon]
+  const primary = values[0]
+  const extraCount = Math.max(0, values.length - 1)
+
+  const selectedIds = useMemo(
+    () => new Set(values.map(u => u.id)),
+    [values],
+  )
+
+  const RowIcon = primary?.icon
+    ? ENTITY_ICONS[primary.icon]
     : undefined
 
-  const filteredItems=
-    useMemo(()=>{
+  const filteredItems = useMemo(() => {
+    const search = query.trim().toLowerCase()
+    const source = search
+      ? items.filter(u => u.name.toLowerCase().includes(search))
+      : items
+    const selected = values.filter(u => source.some(s => s.id === u.id))
+    const rest = source.filter(u => !selectedIds.has(u.id))
+    return [...selected, ...rest]
+  }, [items, query, values, selectedIds])
 
-      const search=
-        query
-          .trim()
-          .toLowerCase()
-
-      const source=
-
-        search
-
-          ? items.filter(
-              user=>
-
-                user.name
-                  .toLowerCase()
-                  .includes(search)
-            )
-
-          : items
-
-      if(!value){
-
-        return source
-
-      }
-
-      return [
-
-        ...source.filter(
-          user=>
-            user.id===value.id
-        ),
-
-        ...source.filter(
-          user=>
-            user.id!==value.id
-        ),
-
-      ]
-
-    },[
-      items,
-      query,
-      value,
-    ])
-
-  const close=()=>{
-
+  const close = () => {
     setOpen(false)
-
     setQuery("")
-
   }
 
-  return(
+  function handleToggle(user: User) {
+    if (multi) {
+      const exists = selectedIds.has(user.id)
+      const next = exists
+        ? values.filter(u => u.id !== user.id)
+        : [...values, user]
+      props.onValuesChange(next)
+      return
+    }
+    const isDeselecting = primary?.id === user.id
+    props.onChange(isDeselecting ? undefined : user)
+    close()
+  }
 
+  const badgeLabel =
+    values.length === 0
+      ? placeholder
+      : extraCount > 0
+        ? `${primary!.name} +${extraCount}`
+        : primary!.name
+
+  return (
     <Popover
-      open={disabled?false:open}
-      onOpenChange={nextOpen=>{
-
-        if(disabled){
-          return
-        }
-
+      open={disabled ? false : open}
+      onOpenChange={nextOpen => {
+        if (disabled) return
         setOpen(nextOpen)
-
-        if(!nextOpen){
-
-          setQuery("")
-
-          inputRef.current?.blur()
-
-          return
-
+        if (!nextOpen) setQuery("")
+        else if (!isCompact) {
+          requestAnimationFrame(() => inputRef.current?.focus())
         }
-
       }}
     >
-
-      <PopoverTrigger asChild>
-
-        {triggerVariant === "row" ? (() => {
-
-          const labelEl = (
-            <span className="shrink-0 text-xs font-medium text-muted-foreground">
-              {rowLabel}
-            </span>
-          )
-
-          return (
-
-            <button
-              type="button"
-              disabled={disabled}
-              className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 text-left transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-
-              {/* Un solo layout siempre (mobile y desktop) — el
-                  orden que ya funcionaba bien en desktop. */}
-              <span className="flex min-w-0 items-center gap-1.5">
-
-                {!disabled && (
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      "shrink-0 text-muted-foreground transition-transform duration-200",
-                      open && "rotate-180",
-                    )}
-                  />
-                )}
-
-                {RowIcon && (
-                  <RowIcon
-                    size={14}
-                    className="shrink-0"
-                    style={{ color: value?.color ?? "#737373" }}
-                  />
-                )}
-
-                <span
-                  className="truncate text-sm font-semibold"
-                  style={{ color: value?.color ?? "#737373" }}
-                >
-                  {value?.name ?? placeholder}
-                </span>
-
+      <PopoverTrigger asChild disabled={disabled}>
+        {triggerVariant === "row" ? (
+          <button
+            type="button"
+            disabled={disabled}
+            className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 text-left transition hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="flex min-w-0 items-center gap-1.5">
+              {!disabled && (
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "shrink-0 text-muted-foreground transition-transform duration-200",
+                    open && "rotate-180",
+                  )}
+                />
+              )}
+              {RowIcon && (
+                <RowIcon
+                  size={14}
+                  className="shrink-0"
+                  style={{ color: primary?.color ?? "#737373" }}
+                />
+              )}
+              <span
+                className="truncate text-sm font-semibold"
+                style={{ color: primary?.color ?? "#737373" }}
+              >
+                {badgeLabel}
               </span>
-
-              {labelEl}
-
-            </button>
-
-          )
-
-        })() : (
-
+            </span>
+            {rowLabel && (
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {rowLabel}
+              </span>
+            )}
+          </button>
+        ) : (
           <button
             type="button"
             disabled={disabled}
             className="flex w-full min-w-0 items-center disabled:cursor-not-allowed"
           >
-
             <DynamicBadge
-              label={
-                value?.name ??
-                placeholder
-              }
-              color={
-                value
-                  ? value.color
-                  : "#64748B"
-              }
-              icon={value?.icon}
-              placeholder={!value}
+              label={badgeLabel}
+              color={primary ? primary.color : "#64748B"}
+              icon={primary?.icon}
+              placeholder={values.length === 0}
               width="field"
               showChevron={!disabled}
               chevronOpen={open}
             />
-
           </button>
-
         )}
-
       </PopoverTrigger>
 
       <PopoverContent
@@ -289,93 +198,54 @@ export function UserSelect({
         className="p-2"
         align={triggerVariant === "row" ? "start" : "center"}
       >
-
-        <Command
-          value={value?.name}
-          className="bg-transparent"
-        >
-
+        <Command value={primary?.name} className="bg-transparent">
           <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2">
-
-            <Search
-              size={14}
-              className="text-foreground/35"
-            />
-
+            <Search size={14} className="text-foreground/35" />
             <Input
               ref={inputRef}
               value={query}
-              onChange={event=>
-
-                setQuery(
-                  event.target.value
-                )
-
-              }
+              onChange={e => setQuery(e.target.value)}
               placeholder="Buscar..."
               className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
-
           </div>
 
-          <CommandList
-            className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto"
-          >
+          {multi && values.length > 0 && (
+            <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              {values.length === 1
+                ? "1 operario · tocá para agregar más"
+                : `${values.length} operarios · el primero es primary`}
+            </p>
+          )}
 
-            <CommandEmpty>
-
-              Sin resultados
-
-            </CommandEmpty>
-
+          <CommandList className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
+            <CommandEmpty>Sin resultados</CommandEmpty>
             <CommandGroup>
-
-              {filteredItems.map(user=>{
-
+              {filteredItems.map(user => {
                 const meta = itemMeta?.get(user.id)
-
+                const isPrimary = primary?.id === user.id
+                const selected = selectedIds.has(user.id)
                 return (
-
-                <SelectOption
-                  key={user.id}
-                  label={user.name}
-                  icon={user.icon}
-                  color={user.color}
-                  selected={
-                    value?.id===user.id
-                  }
-                  description={meta?.description}
-                  descriptionColor={meta?.descriptionColor}
-                  onSelect={()=>{
-
-                    const isDeselecting =
-                      value?.id===user.id
-
-                    onChange(
-                      isDeselecting
-                        ?undefined
-                        :user
-                    )
-
-                    close()
-
-                  }}
-                />
-
+                  <SelectOption
+                    key={user.id}
+                    label={
+                      isPrimary && multi && values.length > 1
+                        ? `${user.name} · primary`
+                        : user.name
+                    }
+                    icon={user.icon}
+                    color={user.color}
+                    selected={selected}
+                    description={meta?.description}
+                    descriptionColor={meta?.descriptionColor}
+                    onSelect={() => handleToggle(user)}
+                  />
                 )
-
               })}
-
             </CommandGroup>
-
           </CommandList>
-
         </Command>
-
       </PopoverContent>
-
     </Popover>
-
   )
-
 }

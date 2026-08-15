@@ -186,6 +186,19 @@ export function TaskPageContent({
             />
           </EntityExpandProvider>
         </AppListScroll>
+      ) : isMobile ? (
+        <AppListScroll
+          onRefresh={async () => {
+            await queryClient.invalidateQueries({ queryKey: ["tasks"] })
+          }}
+        >
+          {toolbar}
+          <TaskPipelineBoard
+            tasks={pipelineTasks}
+            kpiTasks={pipelineKpiTasks}
+            loading={loading}
+          />
+        </AppListScroll>
       ) : (
         <>
           {toolbar}
