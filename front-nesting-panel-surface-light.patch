@@ -1,0 +1,93 @@
+diff --git a/src/features/nesting/components/material-panel.tsx b/src/features/nesting/components/material-panel.tsx
+index cf8e7ec..68c9b3e 100644
+--- a/src/features/nesting/components/material-panel.tsx
++++ b/src/features/nesting/components/material-panel.tsx
+@@ -76,7 +76,7 @@ export function MaterialPanel({
+   return (
+     <div className="flex flex-col gap-3">
+       {projectActions && (
+-        <div className="flex flex-col rounded-xl items-center bg-foreground/5 p-1 transition-colors">
++        <div className="flex flex-col rounded-xl items-center bg-background dark:bg-foreground/5 p-1 transition-colors">
+           <button
+             type="button"
+             onClick={() => setIsProjectExpanded((prev) => !prev)}
+@@ -121,7 +121,7 @@ export function MaterialPanel({
+       )}
+ 
+       {/* Contenedor principal estilo Box unificado */}
+-      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
++      <div className="flex flex-col rounded-xl bg-background dark:bg-foreground/5 p-1 transition-colors">
+         <button
+           type="button"
+           onClick={() => setIsExpanded((prev) => !prev)}
+@@ -147,7 +147,7 @@ export function MaterialPanel({
+           )}
+         >
+           {/* Dimensiones */}
+-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
++          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
+             <div className="flex items-center gap-2 mb-2">
+               <Layers className="h-3.5 w-3.5 shrink-0 text-primary" />
+               <span className="text-xs font-medium text-foreground">Dimensiones de Plancha</span>
+@@ -193,7 +193,7 @@ export function MaterialPanel({
+           </div>
+ 
+           {/* Información General */}
+-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
++          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
+             <div className="flex items-center gap-2 mb-2">
+               <Sliders className="h-3.5 w-3.5 shrink-0 text-primary" />
+               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Información General</span>
+@@ -257,7 +257,7 @@ export function MaterialPanel({
+               nesting en calados, mejor aprovechamiento pero más lento —
+               antes esto estaba hardcodeado a "fast" en el motor sin
+               ninguna forma de acceder a "precise" desde la UI). */}
+-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
++          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
+             <div className="flex items-center gap-2 mb-2">
+               <Sliders className="h-3.5 w-3.5 shrink-0 text-primary" />
+               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Empaquetado</span>
+diff --git a/src/features/nesting/components/nesting-panel.tsx b/src/features/nesting/components/nesting-panel.tsx
+index 3a650f9..fb1a22c 100644
+--- a/src/features/nesting/components/nesting-panel.tsx
++++ b/src/features/nesting/components/nesting-panel.tsx
+@@ -59,22 +59,22 @@ export function NestingPanel({
+ 
+       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+         {activePanel === "sheet-pieces" && (
+-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted/40 p-3 dark:bg-foreground/5">
++          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-muted p-3 dark:bg-foreground/[0.06]">
+             {pieces}
+           </div>
+         )}
+         {activePanel === "project-material" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
+             {projectMaterial}
+           </div>
+         )}
+         {activePanel === "layers" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
+             {layers}
+           </div>
+         )}
+         {activePanel === "inspector" && (
+-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted/40 dark:bg-foreground/5">
++          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-2xl bg-muted dark:bg-foreground/[0.06]">
+             {inspector}
+           </div>
+         )}
+diff --git a/src/features/nesting/components/piece-list-row.tsx b/src/features/nesting/components/piece-list-row.tsx
+index 591eb14..5d41f7b 100644
+--- a/src/features/nesting/components/piece-list-row.tsx
++++ b/src/features/nesting/components/piece-list-row.tsx
+@@ -46,7 +46,7 @@ export function PieceListRow({
+     <div
+       className={cn(
+         "flex flex-col gap-2 rounded-lg p-3 transition-colors text-xs w-full box-border",
+-        "bg-foreground/5 hover:bg-foreground/5",
++        "bg-background hover:bg-background dark:bg-foreground/5 dark:hover:bg-foreground/[0.07]",
+         highlighted && "ring-1 ring-blue-400/50 bg-blue-500/10",
+         className
+       )}

@@ -76,7 +76,7 @@ export function MaterialPanel({
   return (
     <div className="flex flex-col gap-3">
       {projectActions && (
-        <div className="flex flex-col rounded-xl items-center bg-foreground/5 p-1 transition-colors">
+        <div className="flex flex-col rounded-xl items-center bg-background dark:bg-foreground/5 p-1 transition-colors">
           <button
             type="button"
             onClick={() => setIsProjectExpanded((prev) => !prev)}
@@ -121,7 +121,7 @@ export function MaterialPanel({
       )}
 
       {/* Contenedor principal estilo Box unificado */}
-      <div className="flex flex-col rounded-xl bg-foreground/5 p-1 transition-colors">
+      <div className="flex flex-col rounded-xl bg-background dark:bg-foreground/5 p-1 transition-colors">
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
@@ -147,7 +147,7 @@ export function MaterialPanel({
           )}
         >
           {/* Dimensiones */}
-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
+          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
             <div className="flex items-center gap-2 mb-2">
               <Layers className="h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="text-xs font-medium text-foreground">Dimensiones de Plancha</span>
@@ -193,7 +193,7 @@ export function MaterialPanel({
           </div>
 
           {/* Información General */}
-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
+          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
             <div className="flex items-center gap-2 mb-2">
               <Sliders className="h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Información General</span>
@@ -257,7 +257,7 @@ export function MaterialPanel({
               nesting en calados, mejor aprovechamiento pero más lento —
               antes esto estaba hardcodeado a "fast" en el motor sin
               ninguna forma de acceder a "precise" desde la UI). */}
-          <div className="flex flex-col rounded-lg bg-foreground/5 p-2.5">
+          <div className="flex flex-col rounded-lg bg-muted/60 p-2.5 dark:bg-foreground/5">
             <div className="flex items-center gap-2 mb-2">
               <Sliders className="h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Empaquetado</span>
