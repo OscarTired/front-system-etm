@@ -10,7 +10,6 @@ import type {
 } from "../engine/types"
 import { nestingRunApi } from "../api/nesting-run.api"
 import { hydrateSheetsFromSources } from "../utils/hydrate-nested-geometry"
-import { slimPiecesForNestApi } from "../utils/slim-pieces-for-api"
 
 export type NestingStatus =
   | "idle"
@@ -34,9 +33,8 @@ export type UseNestingResult = {
 }
 
 /**
- * Nesting via POST /engineering/nest.
- * Contrato: pack SOLO en backend. Payload slim en fast (sin huecos densos).
- * Progress estimado mientras espera respuesta.
+ * Nesting vía POST /engineering/nest.
+ * Payload completo (true-shape). Pack solo en backend.
  */
 export function useNesting(): UseNestingResult {
   const [status, setStatus] = useState<NestingStatus>("idle")
@@ -88,11 +86,8 @@ export function useNesting(): UseNestingResult {
       setError(null)
       startProgressTimer()
 
-      const mode = options.mode === "precise" ? "precise" : "fast"
-      const slim = slimPiecesForNestApi(pieces, mode)
-
       void nestingRunApi
-        .run({ pieces: slim, options: { ...options, mode } }, ac.signal)
+        .run({ pieces, options }, ac.signal)
         .then(data => {
           if (gen !== genRef.current) return
           stopProgressTimer()

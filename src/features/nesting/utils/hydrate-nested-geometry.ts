@@ -1,7 +1,6 @@
 /**
- * Misma cadena que NestingEngine.cpp / RectangleHeuristicStrategy:
- * rotateAround(center) → align(-bounds) → translate(x,y)
- * Solo rellena si el placement llegó sin subEntities.
+ * Defensa: si el API devolvió placement sin subEntities, reaplica
+ * rotateAround → align → translate (misma cadena que el back).
  */
 import {
   applyToOutline,
@@ -40,16 +39,13 @@ export function hydrateSheetsFromSources(
   return sheets.map(sheet => ({
     ...sheet,
     pieces: sheet.pieces.map(placed => {
-      if (placed.subEntities && placed.subEntities.length > 0) {
-        return placed
-      }
+      if (placed.subEntities && placed.subEntities.length > 0) return placed
 
       const src =
         byId.get(placed.pieceId) ?? byId.get(basePieceId(placed.pieceId))
       if (!src) return placed
 
       const m = placementTransform(src, placed)
-
       return {
         ...placed,
         outline: applyToOutline(m, src.outline),
