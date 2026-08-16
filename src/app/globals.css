@@ -578,16 +578,24 @@ input:focus-visible {
   background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
 }
 
-/* ── Vaul drawer: no dejar body/wrapper en blanco al cerrar ── */
-html body {
+/* ── Vaul drawer: body nunca se queda en black tras cerrar ── */
+html,
+body {
   background-color: var(--background);
 }
 
-[data-vaul-drawer-wrapper] {
+/* Vaul hardcodea background: black en body al escalar; forzar tema */
+body[style*="background"] {
+  background-color: var(--background) !important;
+}
+
+[data-vaul-drawer-wrapper],
+[vaul-drawer-wrapper] {
   background: transparent !important;
 }
 
 [data-vaul-overlay][data-state="closed"] {
   pointer-events: none !important;
   opacity: 0 !important;
+  visibility: hidden !important;
 }

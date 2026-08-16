@@ -106,28 +106,89 @@ export function Popover({
               onOpenChange={next => {
                 handleOpenChange(next)
                 if (!next && typeof document !== "undefined") {
-                  requestAnimationFrame(() => {
-                    document.body.style.removeProperty("background")
-                    document.body.style.removeProperty("background-color")
-                    document.body.style.removeProperty("overflow")
-                    document.body.style.removeProperty("pointer-events")
-                    document.documentElement.style.removeProperty("background")
-                    document.documentElement.style.removeProperty(
-                      "background-color",
+
+                // Vaul / Radix a veces dejan body con background black,
+                // overflow hidden o pointer-events none tras cerrar.
+                const unlock = () => {
+                  const body = document.body
+                  const html = document.documentElement
+                  for (const el of [body, html]) {
+                    el.style.removeProperty("background")
+                    el.style.removeProperty("background-color")
+                    el.style.removeProperty("overflow")
+                    el.style.removeProperty("pointer-events")
+                    el.style.removeProperty("padding-right")
+                    el.style.removeProperty("margin-right")
+                    el.removeAttribute("data-scroll-locked")
+                    el.removeAttribute("data-aria-hidden")
+                  }
+                  body.style.pointerEvents = ""
+                  // Restaurar fondo del tema (nunca black residual)
+                  if (!body.style.backgroundColor) {
+                    body.style.backgroundColor = "var(--background)"
+                  }
+                  document
+                    .querySelectorAll(
+                      "[data-vaul-drawer-wrapper], [vaul-drawer-wrapper]",
                     )
-                    document
-                      .querySelectorAll("[data-vaul-drawer-wrapper]")
-                      .forEach(node => {
-                        if (node instanceof HTMLElement) {
-                          node.style.removeProperty("transform")
-                          node.style.removeProperty("border-radius")
-                        }
-                      })
-                  })
+                    .forEach(node => {
+                      if (node instanceof HTMLElement) {
+                        node.style.removeProperty("transform")
+                        node.style.removeProperty("border-radius")
+                        node.style.removeProperty("overflow")
+                        node.style.removeProperty("background")
+                      }
+                    })
+                }
+                requestAnimationFrame(unlock)
+                window.setTimeout(unlock, 320)
+
+                }
+              }}
+              onAnimationEnd={open => {
+                if (!open && typeof document !== "undefined") {
+
+                // Vaul / Radix a veces dejan body con background black,
+                // overflow hidden o pointer-events none tras cerrar.
+                const unlock = () => {
+                  const body = document.body
+                  const html = document.documentElement
+                  for (const el of [body, html]) {
+                    el.style.removeProperty("background")
+                    el.style.removeProperty("background-color")
+                    el.style.removeProperty("overflow")
+                    el.style.removeProperty("pointer-events")
+                    el.style.removeProperty("padding-right")
+                    el.style.removeProperty("margin-right")
+                    el.removeAttribute("data-scroll-locked")
+                    el.removeAttribute("data-aria-hidden")
+                  }
+                  body.style.pointerEvents = ""
+                  // Restaurar fondo del tema (nunca black residual)
+                  if (!body.style.backgroundColor) {
+                    body.style.backgroundColor = "var(--background)"
+                  }
+                  document
+                    .querySelectorAll(
+                      "[data-vaul-drawer-wrapper], [vaul-drawer-wrapper]",
+                    )
+                    .forEach(node => {
+                      if (node instanceof HTMLElement) {
+                        node.style.removeProperty("transform")
+                        node.style.removeProperty("border-radius")
+                        node.style.removeProperty("overflow")
+                        node.style.removeProperty("background")
+                      }
+                    })
+                }
+                requestAnimationFrame(unlock)
+                window.setTimeout(unlock, 320)
+
                 }
               }}
               shouldScaleBackground={false}
               setBackgroundColorOnScale={false}
+              noBodyStyles
               repositionInputs={false}
               modal
             >
