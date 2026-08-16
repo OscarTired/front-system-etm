@@ -124,7 +124,7 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
         >
           <MessageSquare size={16} strokeWidth={2} />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-900 text-[10px] font-semibold text-foreground">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -144,8 +144,8 @@ export function MessageBell({ collapsed, variant = "sidebar" }: Props) {
           collapsed={collapsed}
           active={open}
           count={count > 0 ? (count > 9 ? "9+" : count) : undefined}
-          collapsedBadgeColor="bg-sky-900 text-foreground"
-          badgeColor="bg-sky-900 text-foreground"
+          collapsedBadgeColor="bg-primary text-primary-foreground"
+          badgeColor="bg-primary text-primary-foreground"
           badgeAnimated={count > 0}
         />
       </button>
