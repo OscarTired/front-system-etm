@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { Drawer } from "vaul"
 
 import { PopoverModeContext } from "./contexts"
 
@@ -42,7 +42,7 @@ export function PopoverTrigger({
 
   if (isSheet) {
     return (
-      <DialogPrimitive.Trigger
+      <Drawer.Trigger
         data-slot="popover-trigger"
         className={className}
         onClick={guardedOnClick}

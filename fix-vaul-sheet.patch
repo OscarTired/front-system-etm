@@ -1,0 +1,481 @@
+diff --git a/package.json b/package.json
+index 23a11ec..3949cda 100644
+--- a/package.json
++++ b/package.json
+@@ -44,7 +44,8 @@
+     "tailwind-merge": "^3.6.0",
+     "tw-animate-css": "^1.4.0",
+     "zod": "^4.4.3",
+-    "zustand": "^5.0.14"
++    "zustand": "^5.0.14",
++    "vaul": "^1.1.2"
+   },
+   "devDependencies": {
+     "@tailwindcss/postcss": "^4",
+diff --git a/src/components/ui/popover/popover-root.tsx b/src/components/ui/popover/popover-root.tsx
+index abd2b0c..f225c6b 100644
+--- a/src/components/ui/popover/popover-root.tsx
++++ b/src/components/ui/popover/popover-root.tsx
+@@ -2,7 +2,7 @@
+ 
+ import * as React from "react"
+ import * as PopoverPrimitive from "@radix-ui/react-popover"
+-import * as DialogPrimitive from "@radix-ui/react-dialog"
++import { Drawer } from "vaul"
+ 
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ 
+@@ -101,13 +101,14 @@ export function Popover({
+       <PopoverModeContext.Provider value={true}>
+         <PopoverOpenContext.Provider value={isOpen}>
+           <PopoverCloseContext.Provider value={close}>
+-            <DialogPrimitive.Root
++            <Drawer.Root
+               open={isOpen}
+               onOpenChange={handleOpenChange}
+-              {...props}
++              shouldScaleBackground={false}
++              repositionInputs={false}
+             >
+               {children}
+-            </DialogPrimitive.Root>
++            </Drawer.Root>
+           </PopoverCloseContext.Provider>
+         </PopoverOpenContext.Provider>
+       </PopoverModeContext.Provider>
+diff --git a/src/components/ui/popover/popover-trigger.tsx b/src/components/ui/popover/popover-trigger.tsx
+index 7dd94ec..4228810 100644
+--- a/src/components/ui/popover/popover-trigger.tsx
++++ b/src/components/ui/popover/popover-trigger.tsx
+@@ -2,7 +2,7 @@
+ 
+ import * as React from "react"
+ import * as PopoverPrimitive from "@radix-ui/react-popover"
+-import * as DialogPrimitive from "@radix-ui/react-dialog"
++import { Drawer } from "vaul"
+ 
+ import { PopoverModeContext } from "./contexts"
+ 
+@@ -42,7 +42,7 @@ export function PopoverTrigger({
+ 
+   if (isSheet) {
+     return (
+-      <DialogPrimitive.Trigger
++      <Drawer.Trigger
+         data-slot="popover-trigger"
+         className={className}
+         onClick={guardedOnClick}
+diff --git a/src/components/ui/popover/popover-content.tsx b/src/components/ui/popover/popover-content.tsx
+index bef1494..26111d5 100644
+--- a/src/components/ui/popover/popover-content.tsx
++++ b/src/components/ui/popover/popover-content.tsx
+@@ -2,18 +2,16 @@
+ 
+ import * as React from "react"
+ import * as PopoverPrimitive from "@radix-ui/react-popover"
+-import * as DialogPrimitive from "@radix-ui/react-dialog"
+ import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
++import { Drawer } from "vaul"
+ 
+ import { cn } from "@/shared/utils/utils"
+ 
+ import {
+-  PopoverCloseContext,
+   PopoverModeContext,
+   PopoverOpenContext,
+ } from "./contexts"
+ import { SHEET_CONFIG } from "./sheet-config"
+-import { useSheetDragToDismiss } from "./use-sheet-drag-to-dismiss"
+ import { useSmoothResize } from "./use-smooth-resize"
+ import { useVirtualKeyboardOpen } from "./use-virtual-keyboard-open"
+ 
+@@ -30,15 +28,13 @@ type PopoverContentProps = React.ComponentProps<
+ }
+ 
+ /**
+- * Desktop → Popover flotante
+- * Mobile  → Bottom sheet (Dialog)
++ * Desktop → Popover flotante (Radix)
++ * Mobile  → Bottom sheet (Vaul) — drag/dismiss estándar, no gesture casero
+  *
+- * Contrato sheet
+- * 1. Handle = drag-to-dismiss siempre
+- * 2. Body = drag-to-dismiss si scrollTop≈0 y gesto hacia abajo
+- * 3. Body = un overflow-y-auto + overscroll-contain
+- * 4. Sin locks manuales de body/scroll-area
+- * 5. Altura fija SOLO si input focused Y teclado virtual abierto
++ * Contrato sheet (Vaul)
++ * 1. Handle + body: dismiss nativo (scrollTop≈0 lo resuelve Vaul)
++ * 2. Body = overflow-y-auto + overscroll-contain
++ * 3. Altura fija SOLO si input focused Y teclado virtual abierto
+  */
+ export function PopoverContent({
+   className,
+@@ -59,12 +55,8 @@ export function PopoverContent({
+   ...props
+ }: PopoverContentProps) {
+   const isSheet = React.useContext(PopoverModeContext)
+-  const close = React.useContext(PopoverCloseContext)
+   const isOpen = React.useContext(PopoverOpenContext)
+ 
+-  const { dragY, isDragging, dismissing, dragHandleProps, contentDragProps } =
+-    useSheetDragToDismiss(close, isOpen)
+-
+   const { containerRef, size } = useSmoothResize()
+   const lastMeasuredHeightRef = React.useRef<number | null>(null)
+   if (size.height != null && size.height > 0) {
+@@ -83,92 +75,37 @@ export function PopoverContent({
+   }, [isOpen])
+ 
+   if (isSheet) {
+-    const transitionStyle = isDragging
+-      ? "none"
+-      : dismissing
+-        ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
+-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
+-
+     const sheetHeight = expandForKeyboard
+       ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
+       : measuredHeight != null
+         ? `min(${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
+-        : `min(50dvh, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
++        : undefined
+ 
+     return (
+-      <DialogPrimitive.Portal>
+-        <DialogPrimitive.Overlay
+-          className={cn(
+-            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm",
+-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+-            "data-[state=closed]:duration-250 data-[state=open]:duration-200",
+-          )}
+-        />
++      <Drawer.Portal>
++        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
+ 
+-        <DialogPrimitive.Content
++        <Drawer.Content
+           data-slot="popover-sheet"
+           data-drag-scroll-ignore
+-          onFocusCapture={event => {
+-            const t = event.target
+-            if (
+-              t instanceof HTMLInputElement ||
+-              t instanceof HTMLTextAreaElement
+-            ) {
+-              setIsInputFocused(true)
+-            }
+-          }}
+-          onBlurCapture={event => {
+-            const t = event.target
+-            if (
+-              t instanceof HTMLInputElement ||
+-              t instanceof HTMLTextAreaElement
+-            ) {
+-              requestAnimationFrame(() => {
+-                const active = document.activeElement
+-                if (
+-                  !(active instanceof HTMLInputElement) &&
+-                  !(active instanceof HTMLTextAreaElement)
+-                ) {
+-                  setIsInputFocused(false)
+-                }
+-              })
+-            }
+-          }}
+-          onOpenAutoFocus={event => {
+-            if (onOpenAutoFocus) onOpenAutoFocus(event)
+-            else event.preventDefault()
+-          }}
+-          onCloseAutoFocus={event => {
+-            onCloseAutoFocus?.(event)
+-          }}
+-          onPointerDownOutside={onPointerDownOutside}
+-          onInteractOutside={onInteractOutside}
+           className={cn(
+-            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
+-            "rounded-t-2xl bg-popover text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
++            "fixed inset-x-0 bottom-0 z-40 mt-16 flex flex-col overflow-hidden outline-none",
++            "rounded-t-2xl bg-popover text-popover-foreground",
++            "shadow-sm shadow-black/15 dark:shadow-black/40",
+             "pb-[env(safe-area-inset-bottom,0px)]",
+-            "[touch-action:pan-y]",
+             className,
+           )}
+           style={{
+             ...style,
+             height: sheetHeight,
+             maxHeight: `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
+-            transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+-            opacity: dismissing ? 0 : undefined,
+-            transition: transitionStyle,
+           }}
+-          {...props}
+         >
+           <VisuallyHidden>
+-            <DialogPrimitive.Title>Menú</DialogPrimitive.Title>
++            <Drawer.Title>Menú</Drawer.Title>
+           </VisuallyHidden>
+ 
+-          <div
+-            className="flex shrink-0 touch-none cursor-grab flex-col items-center pb-1 pt-2.5 active:cursor-grabbing"
+-            {...dragHandleProps}
+-          >
++          <div className="flex shrink-0 flex-col items-center pb-1 pt-2.5">
+             <div className="h-1 w-10 rounded-full bg-foreground/20" />
+           </div>
+ 
+@@ -180,7 +117,32 @@ export function PopoverContent({
+               "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+               "[&_input]:touch-manipulation [&_textarea]:touch-manipulation",
+             )}
+-            {...contentDragProps}
++            onFocusCapture={event => {
++              const t = event.target
++              if (
++                t instanceof HTMLInputElement ||
++                t instanceof HTMLTextAreaElement
++              ) {
++                setIsInputFocused(true)
++              }
++            }}
++            onBlurCapture={event => {
++              const t = event.target
++              if (
++                t instanceof HTMLInputElement ||
++                t instanceof HTMLTextAreaElement
++              ) {
++                requestAnimationFrame(() => {
++                  const active = document.activeElement
++                  if (
++                    !(active instanceof HTMLInputElement) &&
++                    !(active instanceof HTMLTextAreaElement)
++                  ) {
++                    setIsInputFocused(false)
++                  }
++                })
++              }
++            }}
+           >
+             <div ref={containerRef} className="w-full">
+               {children}
+@@ -192,8 +154,8 @@ export function PopoverContent({
+               {sheetFooter}
+             </div>
+           ) : null}
+-        </DialogPrimitive.Content>
+-      </DialogPrimitive.Portal>
++        </Drawer.Content>
++      </Drawer.Portal>
+     )
+   }
+ 
+diff --git a/src/components/ui/popover/use-sheet-drag-to-dismiss.ts b/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
+index 817fd41..cba658c 100644
+--- a/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
++++ b/src/components/ui/popover/use-sheet-drag-to-dismiss.ts
+@@ -1,194 +1,17 @@
+ "use client"
+ 
+-import * as React from "react"
+-
+-import { SHEET_CONFIG } from "./sheet-config"
+-
+ /**
+- * Drag-to-dismiss del bottom sheet.
+- *
+- * - Handle: siempre arrastrable.
+- * - Contenido: solo si el scroll del body está en top (scrollTop <= 1)
+- *   y el gesto es hacia abajo — no pelea con scroll interno.
++ * @deprecated El sheet mobile usa Vaul (`Drawer`).
++ * Este módulo queda vacío a propósito para no romper imports residuales.
++ * No reintroducir gesture handlers manuales.
+  */
+-export function useSheetDragToDismiss(close: () => void, isOpen: boolean) {
+-  const [dragY, setDragY] = React.useState(0)
+-  const [dismissing, setDismissing] = React.useState(false)
+-  const [isDragging, setIsDragging] = React.useState(false)
+-
+-  const draggingRef = React.useRef(false)
+-  const hasCapturedRef = React.useRef(false)
+-  const startYRef = React.useRef(0)
+-  const startXRef = React.useRef(0)
+-  const startTimeRef = React.useRef(0)
+-  const dragYRef = React.useRef(0)
+-  const timeoutRef = React.useRef<number | null>(null)
+-  const sourceRef = React.useRef<"handle" | "content">("handle")
+-  const scrollElRef = React.useRef<HTMLElement | null>(null)
+-  const lockedScrollRef = React.useRef(false)
+-
+-  const clearPendingTimeout = React.useCallback(() => {
+-    if (timeoutRef.current != null) {
+-      window.clearTimeout(timeoutRef.current)
+-      timeoutRef.current = null
+-    }
+-  }, [])
+-
+-  const resetGesture = React.useCallback(() => {
+-    draggingRef.current = false
+-    hasCapturedRef.current = false
+-    lockedScrollRef.current = false
+-    scrollElRef.current = null
+-    setIsDragging(false)
+-    setDragY(0)
+-    dragYRef.current = 0
+-  }, [])
+-
+-  function beginDrag(
+-    event: React.PointerEvent,
+-    source: "handle" | "content",
+-  ) {
+-    if (event.button !== 0) return
+-
+-    if (source === "content") {
+-      const target = event.target
+-      if (!(target instanceof Element)) return
+-      if (
+-        target.closest(
+-          "input, textarea, select, button, a, [role='button'], [data-no-sheet-drag]",
+-        )
+-      ) {
+-        return
+-      }
+-      const scrollEl =
+-        (target.closest("[data-sheet-scroll]") as HTMLElement | null) ??
+-        (event.currentTarget as HTMLElement)
+-      if (scrollEl.scrollTop > 1) return
+-      scrollElRef.current = scrollEl
+-    } else {
+-      scrollElRef.current = null
+-    }
+-
+-    sourceRef.current = source
+-    draggingRef.current = true
+-    hasCapturedRef.current = false
+-    lockedScrollRef.current = false
+-    startYRef.current = event.clientY
+-    startXRef.current = event.clientX
+-    startTimeRef.current = performance.now()
+-    dragYRef.current = 0
+-  }
+-
+-  function onPointerMove(event: React.PointerEvent) {
+-    if (!draggingRef.current) return
+-
+-    const dy = event.clientY - startYRef.current
+-    const dx = event.clientX - startXRef.current
+-
+-    if (sourceRef.current === "content" && !hasCapturedRef.current) {
+-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+-        draggingRef.current = false
+-        return
+-      }
+-      if (dy < -4) {
+-        draggingRef.current = false
+-        return
+-      }
+-      const el = scrollElRef.current
+-      if (el && el.scrollTop > 1) {
+-        draggingRef.current = false
+-        return
+-      }
+-    }
+-
+-    const delta = Math.max(0, dy)
+-    if (delta <= 3) return
+-
+-    if (!hasCapturedRef.current) {
+-      try {
+-        event.currentTarget.setPointerCapture(event.pointerId)
+-        hasCapturedRef.current = true
+-      } catch {
+-        // noop
+-      }
+-      lockedScrollRef.current = true
+-      setIsDragging(true)
+-      const active = document.activeElement
+-      if (active instanceof HTMLElement && active !== document.body) {
+-        active.blur()
+-      }
+-    }
+-
+-    if (lockedScrollRef.current && scrollElRef.current) {
+-      scrollElRef.current.scrollTop = 0
+-    }
+-
+-    dragYRef.current = delta
+-    setDragY(delta)
+-  }
+-
+-  function endDrag(event: React.PointerEvent) {
+-    if (!draggingRef.current) return
+-    if (hasCapturedRef.current) {
+-      try {
+-        event.currentTarget.releasePointerCapture(event.pointerId)
+-      } catch {
+-        // noop
+-      }
+-    }
+-    draggingRef.current = false
+-    hasCapturedRef.current = false
+-    lockedScrollRef.current = false
+-    setIsDragging(false)
+-
+-    const currentY = dragYRef.current
+-    const elapsed = Math.max(performance.now() - startTimeRef.current, 1)
+-    const velocity = currentY / elapsed
+-
+-    if (
+-      currentY > SHEET_CONFIG.DISMISS_THRESHOLD_PX ||
+-      velocity > SHEET_CONFIG.DISMISS_VELOCITY_THRESHOLD
+-    ) {
+-      setDismissing(true)
+-      setDragY(window.innerHeight)
+-      clearPendingTimeout()
+-      timeoutRef.current = window.setTimeout(
+-        close,
+-        SHEET_CONFIG.ANIMATION_DURATION_MS + SHEET_CONFIG.UNMOUNT_BUFFER_MS,
+-      )
+-      return
+-    }
+-    setDragY(0)
+-    dragYRef.current = 0
+-  }
+-
+-  React.useEffect(() => {
+-    if (!isOpen) return
+-    setDismissing(false)
+-    resetGesture()
+-    clearPendingTimeout()
+-    return clearPendingTimeout
+-  }, [isOpen, clearPendingTimeout, resetGesture])
+-
+-  const handleHandlers = {
+-    onPointerDown: (e: React.PointerEvent) => beginDrag(e, "handle"),
+-    onPointerMove,
+-    onPointerUp: endDrag,
+-    onPointerCancel: endDrag,
+-  }
+-
+-  const contentHandlers = {
+-    onPointerDown: (e: React.PointerEvent) => beginDrag(e, "content"),
+-    onPointerMove,
+-    onPointerUp: endDrag,
+-    onPointerCancel: endDrag,
+-  }
+ 
++export function useSheetDragToDismiss(_close: () => void, _isOpen: boolean) {
+   return {
+-    dragY,
+-    isDragging,
+-    dismissing,
+-    dragHandleProps: handleHandlers,
+-    contentDragProps: contentHandlers,
++    dragY: 0,
++    isDragging: false,
++    dismissing: false,
++    dragHandleProps: {},
++    contentDragProps: {},
+   }
+ }

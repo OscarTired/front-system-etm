@@ -2,18 +2,16 @@
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { Drawer } from "vaul"
 
 import { cn } from "@/shared/utils/utils"
 
 import {
-  PopoverCloseContext,
   PopoverModeContext,
   PopoverOpenContext,
 } from "./contexts"
 import { SHEET_CONFIG } from "./sheet-config"
-import { useSheetDragToDismiss } from "./use-sheet-drag-to-dismiss"
 import { useSmoothResize } from "./use-smooth-resize"
 import { useVirtualKeyboardOpen } from "./use-virtual-keyboard-open"
 
@@ -30,15 +28,13 @@ type PopoverContentProps = React.ComponentProps<
 }
 
 /**
- * Desktop → Popover flotante
- * Mobile  → Bottom sheet (Dialog)
+ * Desktop → Popover flotante (Radix)
+ * Mobile  → Bottom sheet (Vaul) — drag/dismiss estándar, no gesture casero
  *
- * Contrato sheet
- * 1. Handle = drag-to-dismiss siempre
- * 2. Body = drag-to-dismiss si scrollTop≈0 y gesto hacia abajo
- * 3. Body = un overflow-y-auto + overscroll-contain
- * 4. Sin locks manuales de body/scroll-area
- * 5. Altura fija SOLO si input focused Y teclado virtual abierto
+ * Contrato sheet (Vaul)
+ * 1. Handle + body: dismiss nativo (scrollTop≈0 lo resuelve Vaul)
+ * 2. Body = overflow-y-auto + overscroll-contain
+ * 3. Altura fija SOLO si input focused Y teclado virtual abierto
  */
 export function PopoverContent({
   className,
@@ -59,11 +55,7 @@ export function PopoverContent({
   ...props
 }: PopoverContentProps) {
   const isSheet = React.useContext(PopoverModeContext)
-  const close = React.useContext(PopoverCloseContext)
   const isOpen = React.useContext(PopoverOpenContext)
-
-  const { dragY, isDragging, dismissing, dragHandleProps, contentDragProps } =
-    useSheetDragToDismiss(close, isOpen)
 
   const { containerRef, size } = useSmoothResize()
   const lastMeasuredHeightRef = React.useRef<number | null>(null)
@@ -83,92 +75,37 @@ export function PopoverContent({
   }, [isOpen])
 
   if (isSheet) {
-    const transitionStyle = isDragging
-      ? "none"
-      : dismissing
-        ? `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_DISMISS}, opacity ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ease-in`
-        : `transform ${SHEET_CONFIG.ANIMATION_DURATION_MS}ms ${SHEET_CONFIG.EASING_RESET}`
-
     const sheetHeight = expandForKeyboard
       ? `${SHEET_CONFIG.FIXED_HEIGHT_RATIO * 100}dvh`
       : measuredHeight != null
         ? `min(${measuredHeight + SHEET_CONFIG.CHROME_OVERHEAD_PX}px, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
-        : `min(50dvh, ${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh)`
+        : undefined
 
     return (
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay
-          className={cn(
-            "fixed inset-0 z-40 overscroll-contain bg-black/50 backdrop-blur-sm",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:duration-250 data-[state=open]:duration-200",
-          )}
-        />
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
 
-        <DialogPrimitive.Content
+        <Drawer.Content
           data-slot="popover-sheet"
           data-drag-scroll-ignore
-          onFocusCapture={event => {
-            const t = event.target
-            if (
-              t instanceof HTMLInputElement ||
-              t instanceof HTMLTextAreaElement
-            ) {
-              setIsInputFocused(true)
-            }
-          }}
-          onBlurCapture={event => {
-            const t = event.target
-            if (
-              t instanceof HTMLInputElement ||
-              t instanceof HTMLTextAreaElement
-            ) {
-              requestAnimationFrame(() => {
-                const active = document.activeElement
-                if (
-                  !(active instanceof HTMLInputElement) &&
-                  !(active instanceof HTMLTextAreaElement)
-                ) {
-                  setIsInputFocused(false)
-                }
-              })
-            }
-          }}
-          onOpenAutoFocus={event => {
-            if (onOpenAutoFocus) onOpenAutoFocus(event)
-            else event.preventDefault()
-          }}
-          onCloseAutoFocus={event => {
-            onCloseAutoFocus?.(event)
-          }}
-          onPointerDownOutside={onPointerDownOutside}
-          onInteractOutside={onInteractOutside}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden overscroll-contain",
-            "rounded-t-2xl bg-popover text-popover-foreground shadow-sm shadow-black/15 dark:shadow-black/40 outline-none",
+            "fixed inset-x-0 bottom-0 z-40 mt-16 flex flex-col overflow-hidden outline-none",
+            "rounded-t-2xl bg-popover text-popover-foreground",
+            "shadow-sm shadow-black/15 dark:shadow-black/40",
             "pb-[env(safe-area-inset-bottom,0px)]",
-            "[touch-action:pan-y]",
             className,
           )}
           style={{
             ...style,
             height: sheetHeight,
             maxHeight: `${SHEET_CONFIG.MAX_HEIGHT_RATIO * 100}dvh`,
-            transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
-            opacity: dismissing ? 0 : undefined,
-            transition: transitionStyle,
           }}
-          {...props}
         >
           <VisuallyHidden>
-            <DialogPrimitive.Title>Menú</DialogPrimitive.Title>
+            <Drawer.Title>Menú</Drawer.Title>
           </VisuallyHidden>
 
-          <div
-            className="flex shrink-0 touch-none cursor-grab flex-col items-center pb-1 pt-2.5 active:cursor-grabbing"
-            {...dragHandleProps}
-          >
+          <div className="flex shrink-0 flex-col items-center pb-1 pt-2.5">
             <div className="h-1 w-10 rounded-full bg-foreground/20" />
           </div>
 
@@ -180,7 +117,32 @@ export function PopoverContent({
               "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
               "[&_input]:touch-manipulation [&_textarea]:touch-manipulation",
             )}
-            {...contentDragProps}
+            onFocusCapture={event => {
+              const t = event.target
+              if (
+                t instanceof HTMLInputElement ||
+                t instanceof HTMLTextAreaElement
+              ) {
+                setIsInputFocused(true)
+              }
+            }}
+            onBlurCapture={event => {
+              const t = event.target
+              if (
+                t instanceof HTMLInputElement ||
+                t instanceof HTMLTextAreaElement
+              ) {
+                requestAnimationFrame(() => {
+                  const active = document.activeElement
+                  if (
+                    !(active instanceof HTMLInputElement) &&
+                    !(active instanceof HTMLTextAreaElement)
+                  ) {
+                    setIsInputFocused(false)
+                  }
+                })
+              }
+            }}
           >
             <div ref={containerRef} className="w-full">
               {children}
@@ -192,8 +154,8 @@ export function PopoverContent({
               {sheetFooter}
             </div>
           ) : null}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
+        </Drawer.Content>
+      </Drawer.Portal>
     )
   }
 

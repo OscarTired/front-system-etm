@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { Drawer } from "vaul"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
@@ -101,13 +101,14 @@ export function Popover({
       <PopoverModeContext.Provider value={true}>
         <PopoverOpenContext.Provider value={isOpen}>
           <PopoverCloseContext.Provider value={close}>
-            <DialogPrimitive.Root
+            <Drawer.Root
               open={isOpen}
               onOpenChange={handleOpenChange}
-              {...props}
+              shouldScaleBackground={false}
+              repositionInputs={false}
             >
               {children}
-            </DialogPrimitive.Root>
+            </Drawer.Root>
           </PopoverCloseContext.Provider>
         </PopoverOpenContext.Provider>
       </PopoverModeContext.Provider>
