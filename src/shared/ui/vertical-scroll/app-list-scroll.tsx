@@ -55,10 +55,11 @@ export function AppListScroll({
       style={
         isMobile
           ? {
-              paddingTop:
-                TOP_BAR_HEIGHT_PX +
-                (searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 0),
-              paddingBottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`,
+              // CompactShell ya inseta top (TOP_BAR) y bottom (BOTTOM_NAV).
+              // Solo sumamos la search expandida + aire mínimo.
+              // Evita el hueco doble (muy visible en landscape).
+              paddingTop: searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 8,
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }
           : undefined
       }

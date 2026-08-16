@@ -16,4 +16,4 @@ export const FAB_RIGHT_OFFSET_PX = 16
 export const FAB_Z_CLASS = "z-30"
 
 /** Alineado con PANEL_TRANSITION del CompactShell. */
-export const FAB_CHROME_FADE_MS = 280
+export const FAB_CHROME_FADE_MS = 100

@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
+import { usePathname } from "next/navigation"
 import { SlidersHorizontal, X } from "lucide-react"
-import { motion } from "motion/react"
 
 import { cn } from "@/shared/utils/utils"
 import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
@@ -29,21 +29,18 @@ function isInsideSheetOrPopover(target: EventTarget | null) {
 }
 
 /**
- * FAB mobile (filtro / orden / historial / export / crear).
- *
- * - Portal body, z-30 (sheet z-40 encima del dial).
- * - Acciones siempre montadas (Popover no se desmonta).
- * - El dial / FAB no se cierra por interactuar con un bottomsheet.
- * - Solo se oculta el chrome con drawer o pull-to-refresh.
+ * FAB mobile.
+ * - Acciones: montar/desmontar sin animación de salida (evita el
+ *   "desvanecido lag" al cambiar de página por bottom-nav).
+ * - Cierre inmediato en pathname / drawer / PTR.
  */
 export function SpeedDialFab({ actions, className }: Props) {
   const [dialOpen, setDialOpen] = useState(false)
-  // En navegación client el documento ya existe → no hay frame vacío
-  // (el useState(false)+effect era la causa del parpadeo al cambiar de página).
   const [mounted, setMounted] = useState(
     () => typeof document !== "undefined",
   )
   const rootRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
   const ptrActive = usePullToRefreshStore(s => s.active)
   const drawerOpen = useMobileNavStore(s => s.mode === "open")
@@ -52,6 +49,11 @@ export function SpeedDialFab({ actions, className }: Props) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Cierre instantáneo: no hay exit animation que “laggee”.
+  useEffect(() => {
+    setDialOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (chromeHidden) setDialOpen(false)
@@ -67,7 +69,6 @@ export function SpeedDialFab({ actions, className }: Props) {
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement
       if (rootRef.current?.contains(target)) return
-      // Tocar el sheet / overlay no colapsa el FAB
       if (isInsideSheetOrPopover(target)) return
       setDialOpen(false)
     }
@@ -94,7 +95,7 @@ export function SpeedDialFab({ actions, className }: Props) {
       ref={rootRef}
       data-slot="speed-dial-fab"
       className={cn(
-        "pointer-events-none fixed bottom-22 flex flex-col items-center gap-2.5",
+        "pointer-events-none fixed bottom-22 flex flex-col items-center gap-2",
         FAB_Z_CLASS,
         "transition-opacity ease-out",
         chromeHidden ? "opacity-0" : "opacity-100",
@@ -107,28 +108,15 @@ export function SpeedDialFab({ actions, className }: Props) {
       }}
       aria-hidden={chromeHidden}
     >
-      <motion.div
-        initial={false}
-        animate={
-          dialOpen
-            ? { opacity: 1, y: 0, scale: 1 }
-            : { opacity: 0, y: 8, scale: 0.96 }
-        }
-        transition={{ type: "spring", stiffness: 420, damping: 28 }}
-        className={cn(
-          "flex flex-col items-center gap-2.5",
-          dialOpen
-            ? "pointer-events-auto relative"
-            : "pointer-events-none absolute bottom-14 right-0",
-        )}
-        aria-hidden={!dialOpen}
-      >
-        {actions.map((action, i) => (
-          <div key={i} className="flex items-center justify-end">
-            {action}
-          </div>
-        ))}
-      </motion.div>
+      {dialOpen ? (
+        <div className="pointer-events-auto relative flex flex-col items-center gap-2">
+          {actions.map((action, i) => (
+            <div key={i} className="flex items-center justify-center">
+              {action}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <button
         type="button"
@@ -136,7 +124,7 @@ export function SpeedDialFab({ actions, className }: Props) {
         aria-expanded={dialOpen}
         onClick={() => setDialOpen(v => !v)}
         className={cn(
-          "pointer-events-auto flex size-12 items-center justify-center rounded-full transition duration-200",
+          "pointer-events-auto flex size-12 items-center justify-center rounded-full transition-transform duration-150",
           "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",
           "shadow-sm shadow-black/15 dark:shadow-black/40",
         )}

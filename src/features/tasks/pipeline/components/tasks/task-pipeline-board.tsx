@@ -195,12 +195,19 @@ export function TaskPipelineBoard({
     for (const task of tasks) {
       const processes = getTaskProcesses(task)
       for (const process of processes) {
+        // Móvil: no listar steps ya revisados/completados en la cola activa.
+        if (isMobile) {
+          const step = task.workflowSteps.find(s => s.processCode === process)
+          if (step?.status === "REVIEWED" || step?.status === "COMPLETED") {
+            continue
+          }
+        }
         grouped.get(process)?.push(task)
       }
     }
 
     return grouped
-  }, [tasks])
+  }, [tasks, isMobile])
 
   if (loading) {
     return <TaskPipelineSkeleton />
