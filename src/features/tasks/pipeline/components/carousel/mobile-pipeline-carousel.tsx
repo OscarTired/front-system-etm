@@ -168,23 +168,56 @@ export function MobilePipelineCarousel({
 
   }, [containerRef])
 
+  function currentIndex() {
+    const el = containerRef.current
+    if (!el) return 0
+    const w = el.clientWidth || 1
+    return Math.round(el.scrollLeft / w)
+  }
+
+  function goToIndex(index: number) {
+    const el = containerRef.current
+    if (!el) return
+    const max = PIPELINE_PROCESS_ORDER.length - 1
+    const next = Math.max(0, Math.min(max, index))
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" })
+  }
+
   function scrollToPrevious() {
-
-    containerRef.current?.scrollBy({
-      left: -(containerRef.current?.clientWidth ?? 0),
-      behavior: "smooth",
-    })
-
+    goToIndex(currentIndex() - 1)
   }
 
   function scrollToNext() {
-
-    containerRef.current?.scrollBy({
-      left: containerRef.current?.clientWidth ?? 0,
-      behavior: "smooth",
-    })
-
+    goToIndex(currentIndex() + 1)
   }
+
+  // Snap a página completa al soltar fling / flechas a medias
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    let settleTimer: number | null = null
+    const snapToNearest = () => {
+      const w = el.clientWidth || 1
+      const max = PIPELINE_PROCESS_ORDER.length - 1
+      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
+      const target = idx * w
+      if (Math.abs(el.scrollLeft - target) > 2) {
+        el.scrollTo({ left: target, behavior: "smooth" })
+      }
+    }
+    const onScroll = () => {
+      if (settleTimer != null) window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(snapToNearest, 80)
+    }
+    el.addEventListener("scroll", onScroll, { passive: true })
+    el.addEventListener("scrollend", snapToNearest as EventListener)
+    return () => {
+      el.removeEventListener("scroll", onScroll)
+      el.removeEventListener("scrollend", snapToNearest as EventListener)
+      if (settleTimer != null) window.clearTimeout(settleTimer)
+    }
+  }, [containerRef])
+
 
   return (
 
@@ -230,7 +263,7 @@ export function MobilePipelineCarousel({
           onMouseUp={stopDragging}
           onMouseLeave={stopDragging}
           onClickCapture={handleClickCapture}
-          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none"
+          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none [touch-action:pan-x]"
         >
 
           {PIPELINE_PROCESS_ORDER.map(code => {
@@ -245,7 +278,7 @@ export function MobilePipelineCarousel({
 
               <div
                 key={code}
-                className="w-full shrink-0 snap-center"
+                className="w-full shrink-0 snap-center [touch-action:pan-y]"
               >
 
                 {/* Header propio, CENTRADO — igual que el chip

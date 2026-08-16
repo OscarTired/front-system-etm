@@ -83,7 +83,12 @@ export function PopoverContent({
 
     return (
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
+        <Drawer.Overlay
+          className={cn(
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
+            "data-[state=closed]:pointer-events-none data-[state=closed]:opacity-0",
+          )}
+        />
 
         <Drawer.Content
           data-slot="popover-sheet"

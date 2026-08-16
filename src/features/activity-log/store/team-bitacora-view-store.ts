@@ -3,7 +3,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-export type TeamBitacoraViewMode = "day" | "supervision"
+export type TeamBitacoraViewMode = "day" | "month" | "supervision"
 
 type TeamBitacoraViewStore = {
   viewMode: TeamBitacoraViewMode

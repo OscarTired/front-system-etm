@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, Sun } from "lucide-react"
+import { Eye, Sun, Grid3x3 } from "lucide-react"
 
 import { cn } from "@/shared/utils/utils"
 import {
@@ -14,6 +14,7 @@ const OPTIONS: {
   Icon: typeof Sun
 }[] = [
   { key: "day", label: "Día", Icon: Sun },
+  { key: "month", label: "Mes", Icon: Grid3x3 },
   { key: "supervision", label: "Supervisión", Icon: Eye },
 ]
 

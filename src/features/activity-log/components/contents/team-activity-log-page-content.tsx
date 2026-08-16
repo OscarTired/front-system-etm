@@ -26,6 +26,8 @@ import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-d
 import { useTeamBitacoraViewStore } from "../../store/team-bitacora-view-store"
 import { TeamBitacoraViewToggle } from "../toggles/team-bitacora-view-toggle"
 import { TeamSupervisionView } from "../supervision/team-supervision-view"
+import { AgendaMonthView } from "../agenda/agenda-month-view"
+import { getMonthRangeISO } from "../../utils/week-range"
 
 function startOfDayISO(date: string) {
   return new Date(`${date}T00:00:00`).toISOString()
@@ -218,18 +220,29 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
 
   const viewMode = useTeamBitacoraViewStore(s => s.viewMode)
   const isSupervision = viewMode === "supervision"
+  const isMonth = viewMode === "month"
 
-  const filters = useMemo(
-    () => ({
+  const monthRange = useMemo(
+    () => getMonthRangeISO(viewMonth),
+    [viewMonth],
+  )
+
+  const filters = useMemo(() => {
+    if (isMonth) {
+      return {
+        userId: selectedUser?.id,
+        from: startOfDayISO(monthRange.from),
+        to: endOfDayISO(monthRange.to),
+      }
+    }
+    return {
       userId: selectedUser?.id,
       from: date ? startOfDayISO(toISODateString(date)) : undefined,
       to: date ? endOfDayISO(toISODateString(date)) : undefined,
-    }),
-    [selectedUser, date],
-  )
+    }
+  }, [selectedUser, date, isMonth, monthRange])
 
-  // Supervisión necesita todos los logs del día (cobertura del equipo),
-  // aunque el toolbar tenga un usuario seleccionado.
+  // Supervisión: todos los logs del día (sin filtrar por usuario del toolbar).
   const supervisionFilters = useMemo(
     () => ({
       from: date ? startOfDayISO(toISODateString(date)) : undefined,
@@ -406,6 +419,18 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
             loading={loading}
             focusUserId={selectedUser?.id}
           />
+        ) : isMonth ? (
+          <div className="flex min-h-[28rem] w-full flex-1 flex-col pb-4">
+            <AgendaMonthView
+              anchorDate={viewMonth}
+              logs={logs}
+              loading={loading}
+              onSelectDay={day => {
+                setDate(day)
+                setViewMonth(day)
+              }}
+            />
+          </div>
         ) : (
           <div className="flex w-full flex-col gap-6 pb-4">
             {loading ? (

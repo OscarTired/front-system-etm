@@ -18,12 +18,24 @@ export function useTaskView() {
   const rawView = searchParams.get("view")
   const view: TaskView = isValidView(rawView) ? rawView : DEFAULT_VIEW
 
-  const setView = useCallback((next: TaskView) => {
-    if (!next) return
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("view", next)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [router, pathname, searchParams])
+  const setView = useCallback(
+    (next: TaskView) => {
+      if (!next) return
+      const params = new URLSearchParams(searchParams.toString())
+      if (next === DEFAULT_VIEW) {
+        params.delete("view")
+      } else {
+        params.set("view", next)
+      }
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [router, pathname, searchParams],
+  )
 
-  return { view, setView }
+  const toggleView = useCallback(() => {
+    setView(view === "kanban" ? "card" : "kanban")
+  }, [setView, view])
+
+  return { view, setView, toggleView }
 }

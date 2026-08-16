@@ -103,9 +103,33 @@ export function Popover({
           <PopoverCloseContext.Provider value={close}>
             <Drawer.Root
               open={isOpen}
-              onOpenChange={handleOpenChange}
+              onOpenChange={next => {
+                handleOpenChange(next)
+                if (!next && typeof document !== "undefined") {
+                  requestAnimationFrame(() => {
+                    document.body.style.removeProperty("background")
+                    document.body.style.removeProperty("background-color")
+                    document.body.style.removeProperty("overflow")
+                    document.body.style.removeProperty("pointer-events")
+                    document.documentElement.style.removeProperty("background")
+                    document.documentElement.style.removeProperty(
+                      "background-color",
+                    )
+                    document
+                      .querySelectorAll("[data-vaul-drawer-wrapper]")
+                      .forEach(node => {
+                        if (node instanceof HTMLElement) {
+                          node.style.removeProperty("transform")
+                          node.style.removeProperty("border-radius")
+                        }
+                      })
+                  })
+                }
+              }}
               shouldScaleBackground={false}
+              setBackgroundColorOnScale={false}
               repositionInputs={false}
+              modal
             >
               {children}
             </Drawer.Root>

@@ -67,7 +67,7 @@ export function TaskPageContent({
   const [search, setSearch] = useState("")
   const [showHistory, setShowHistory] = useState(initialShowHistory)
 
-  const { view, setView } = useTaskView()
+  const { view, setView, toggleView } = useTaskView()
 
   const { tasks, loading, reorderTasks } = useTasks()
 
@@ -140,9 +140,7 @@ export function TaskPageContent({
                       icon={view === "kanban" ? Rows3 : LayoutGrid}
                       label={view === "kanban" ? "CARD" : "KANBAN"}
                       active={view === "kanban"}
-                      onClick={() =>
-                        setView(view === "kanban" ? "card" : "kanban")
-                      }
+                      onClick={toggleView}
                     />,
                     <TaskCreateDialAction key="create" />,
                   ]
