@@ -1,0 +1,331 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 96ac79b..ca53d4b 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -577,3 +577,17 @@ input:focus-visible {
+ .native-scrollbar::-webkit-scrollbar-thumb:hover {
+   background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
+ }
++
++/* ── Vaul drawer: no dejar body/wrapper en blanco al cerrar ── */
++html body {
++  background-color: var(--background);
++}
++
++[data-vaul-drawer-wrapper] {
++  background: transparent !important;
++}
++
++[data-vaul-overlay][data-state="closed"] {
++  pointer-events: none !important;
++  opacity: 0 !important;
++}
+diff --git a/src/components/ui/popover/popover-content.tsx b/src/components/ui/popover/popover-content.tsx
+index 26111d5..61a7741 100644
+--- a/src/components/ui/popover/popover-content.tsx
++++ b/src/components/ui/popover/popover-content.tsx
+@@ -83,7 +83,12 @@ export function PopoverContent({
+ 
+     return (
+       <Drawer.Portal>
+-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
++        <Drawer.Overlay
++          className={cn(
++            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
++            "data-[state=closed]:pointer-events-none data-[state=closed]:opacity-0",
++          )}
++        />
+ 
+         <Drawer.Content
+           data-slot="popover-sheet"
+diff --git a/src/components/ui/popover/popover-root.tsx b/src/components/ui/popover/popover-root.tsx
+index f225c6b..34d93bf 100644
+--- a/src/components/ui/popover/popover-root.tsx
++++ b/src/components/ui/popover/popover-root.tsx
+@@ -103,9 +103,33 @@ export function Popover({
+           <PopoverCloseContext.Provider value={close}>
+             <Drawer.Root
+               open={isOpen}
+-              onOpenChange={handleOpenChange}
++              onOpenChange={next => {
++                handleOpenChange(next)
++                if (!next && typeof document !== "undefined") {
++                  requestAnimationFrame(() => {
++                    document.body.style.removeProperty("background")
++                    document.body.style.removeProperty("background-color")
++                    document.body.style.removeProperty("overflow")
++                    document.body.style.removeProperty("pointer-events")
++                    document.documentElement.style.removeProperty("background")
++                    document.documentElement.style.removeProperty(
++                      "background-color",
++                    )
++                    document
++                      .querySelectorAll("[data-vaul-drawer-wrapper]")
++                      .forEach(node => {
++                        if (node instanceof HTMLElement) {
++                          node.style.removeProperty("transform")
++                          node.style.removeProperty("border-radius")
++                        }
++                      })
++                  })
++                }
++              }}
+               shouldScaleBackground={false}
++              setBackgroundColorOnScale={false}
+               repositionInputs={false}
++              modal
+             >
+               {children}
+             </Drawer.Root>
+diff --git a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+index 7d22569..d1e1581 100644
+--- a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+@@ -26,6 +26,8 @@ import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-d
+ import { useTeamBitacoraViewStore } from "../../store/team-bitacora-view-store"
+ import { TeamBitacoraViewToggle } from "../toggles/team-bitacora-view-toggle"
+ import { TeamSupervisionView } from "../supervision/team-supervision-view"
++import { AgendaMonthView } from "../agenda/agenda-month-view"
++import { getMonthRangeISO } from "../../utils/week-range"
+ 
+ function startOfDayISO(date: string) {
+   return new Date(`${date}T00:00:00`).toISOString()
+@@ -218,18 +220,29 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+ 
+   const viewMode = useTeamBitacoraViewStore(s => s.viewMode)
+   const isSupervision = viewMode === "supervision"
++  const isMonth = viewMode === "month"
+ 
+-  const filters = useMemo(
+-    () => ({
++  const monthRange = useMemo(
++    () => getMonthRangeISO(viewMonth),
++    [viewMonth],
++  )
++
++  const filters = useMemo(() => {
++    if (isMonth) {
++      return {
++        userId: selectedUser?.id,
++        from: startOfDayISO(monthRange.from),
++        to: endOfDayISO(monthRange.to),
++      }
++    }
++    return {
+       userId: selectedUser?.id,
+       from: date ? startOfDayISO(toISODateString(date)) : undefined,
+       to: date ? endOfDayISO(toISODateString(date)) : undefined,
+-    }),
+-    [selectedUser, date],
+-  )
++    }
++  }, [selectedUser, date, isMonth, monthRange])
+ 
+-  // Supervisión necesita todos los logs del día (cobertura del equipo),
+-  // aunque el toolbar tenga un usuario seleccionado.
++  // Supervisión: todos los logs del día (sin filtrar por usuario del toolbar).
+   const supervisionFilters = useMemo(
+     () => ({
+       from: date ? startOfDayISO(toISODateString(date)) : undefined,
+@@ -406,6 +419,18 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+             loading={loading}
+             focusUserId={selectedUser?.id}
+           />
++        ) : isMonth ? (
++          <div className="flex min-h-[28rem] w-full flex-1 flex-col pb-4">
++            <AgendaMonthView
++              anchorDate={viewMonth}
++              logs={logs}
++              loading={loading}
++              onSelectDay={day => {
++                setDate(day)
++                setViewMonth(day)
++              }}
++            />
++          </div>
+         ) : (
+           <div className="flex w-full flex-col gap-6 pb-4">
+             {loading ? (
+diff --git a/src/features/activity-log/components/toggles/team-bitacora-view-toggle.tsx b/src/features/activity-log/components/toggles/team-bitacora-view-toggle.tsx
+index 8e99385..4e4989d 100644
+--- a/src/features/activity-log/components/toggles/team-bitacora-view-toggle.tsx
++++ b/src/features/activity-log/components/toggles/team-bitacora-view-toggle.tsx
+@@ -1,6 +1,6 @@
+ "use client"
+ 
+-import { Eye, Sun } from "lucide-react"
++import { Eye, Sun, Grid3x3 } from "lucide-react"
+ 
+ import { cn } from "@/shared/utils/utils"
+ import {
+@@ -14,6 +14,7 @@ const OPTIONS: {
+   Icon: typeof Sun
+ }[] = [
+   { key: "day", label: "Día", Icon: Sun },
++  { key: "month", label: "Mes", Icon: Grid3x3 },
+   { key: "supervision", label: "Supervisión", Icon: Eye },
+ ]
+ 
+diff --git a/src/features/activity-log/store/team-bitacora-view-store.ts b/src/features/activity-log/store/team-bitacora-view-store.ts
+index b346664..18e609c 100644
+--- a/src/features/activity-log/store/team-bitacora-view-store.ts
++++ b/src/features/activity-log/store/team-bitacora-view-store.ts
+@@ -3,7 +3,7 @@
+ import { create } from "zustand"
+ import { persist } from "zustand/middleware"
+ 
+-export type TeamBitacoraViewMode = "day" | "supervision"
++export type TeamBitacoraViewMode = "day" | "month" | "supervision"
+ 
+ type TeamBitacoraViewStore = {
+   viewMode: TeamBitacoraViewMode
+diff --git a/src/features/tasks/components/task-page-content.tsx b/src/features/tasks/components/task-page-content.tsx
+index aaf0c7a..bf0fc38 100644
+--- a/src/features/tasks/components/task-page-content.tsx
++++ b/src/features/tasks/components/task-page-content.tsx
+@@ -67,7 +67,7 @@ export function TaskPageContent({
+   const [search, setSearch] = useState("")
+   const [showHistory, setShowHistory] = useState(initialShowHistory)
+ 
+-  const { view, setView } = useTaskView()
++  const { view, setView, toggleView } = useTaskView()
+ 
+   const { tasks, loading, reorderTasks } = useTasks()
+ 
+@@ -140,9 +140,7 @@ export function TaskPageContent({
+                       icon={view === "kanban" ? Rows3 : LayoutGrid}
+                       label={view === "kanban" ? "CARD" : "KANBAN"}
+                       active={view === "kanban"}
+-                      onClick={() =>
+-                        setView(view === "kanban" ? "card" : "kanban")
+-                      }
++                      onClick={toggleView}
+                     />,
+                     <TaskCreateDialAction key="create" />,
+                   ]
+diff --git a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+index b7c6677..d08c855 100644
+--- a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
++++ b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+@@ -168,23 +168,56 @@ export function MobilePipelineCarousel({
+ 
+   }, [containerRef])
+ 
+-  function scrollToPrevious() {
++  function currentIndex() {
++    const el = containerRef.current
++    if (!el) return 0
++    const w = el.clientWidth || 1
++    return Math.round(el.scrollLeft / w)
++  }
+ 
+-    containerRef.current?.scrollBy({
+-      left: -(containerRef.current?.clientWidth ?? 0),
+-      behavior: "smooth",
+-    })
++  function goToIndex(index: number) {
++    const el = containerRef.current
++    if (!el) return
++    const max = PIPELINE_PROCESS_ORDER.length - 1
++    const next = Math.max(0, Math.min(max, index))
++    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" })
++  }
+ 
++  function scrollToPrevious() {
++    goToIndex(currentIndex() - 1)
+   }
+ 
+   function scrollToNext() {
++    goToIndex(currentIndex() + 1)
++  }
+ 
+-    containerRef.current?.scrollBy({
+-      left: containerRef.current?.clientWidth ?? 0,
+-      behavior: "smooth",
+-    })
++  // Snap a página completa al soltar fling / flechas a medias
++  useLayoutEffect(() => {
++    const el = containerRef.current
++    if (!el) return
++    let settleTimer: number | null = null
++    const snapToNearest = () => {
++      const w = el.clientWidth || 1
++      const max = PIPELINE_PROCESS_ORDER.length - 1
++      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
++      const target = idx * w
++      if (Math.abs(el.scrollLeft - target) > 2) {
++        el.scrollTo({ left: target, behavior: "smooth" })
++      }
++    }
++    const onScroll = () => {
++      if (settleTimer != null) window.clearTimeout(settleTimer)
++      settleTimer = window.setTimeout(snapToNearest, 80)
++    }
++    el.addEventListener("scroll", onScroll, { passive: true })
++    el.addEventListener("scrollend", snapToNearest as EventListener)
++    return () => {
++      el.removeEventListener("scroll", onScroll)
++      el.removeEventListener("scrollend", snapToNearest as EventListener)
++      if (settleTimer != null) window.clearTimeout(settleTimer)
++    }
++  }, [containerRef])
+ 
+-  }
+ 
+   return (
+ 
+@@ -230,7 +263,7 @@ export function MobilePipelineCarousel({
+           onMouseUp={stopDragging}
+           onMouseLeave={stopDragging}
+           onClickCapture={handleClickCapture}
+-          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none"
++          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none [touch-action:pan-x]"
+         >
+ 
+           {PIPELINE_PROCESS_ORDER.map(code => {
+@@ -245,7 +278,7 @@ export function MobilePipelineCarousel({
+ 
+               <div
+                 key={code}
+-                className="w-full shrink-0 snap-center"
++                className="w-full shrink-0 snap-center [touch-action:pan-y]"
+               >
+ 
+                 {/* Header propio, CENTRADO — igual que el chip
+diff --git a/src/features/tasks/pipeline/hooks/use-task-view.ts b/src/features/tasks/pipeline/hooks/use-task-view.ts
+index fe75e57..a04340d 100644
+--- a/src/features/tasks/pipeline/hooks/use-task-view.ts
++++ b/src/features/tasks/pipeline/hooks/use-task-view.ts
+@@ -18,12 +18,24 @@ export function useTaskView() {
+   const rawView = searchParams.get("view")
+   const view: TaskView = isValidView(rawView) ? rawView : DEFAULT_VIEW
+ 
+-  const setView = useCallback((next: TaskView) => {
+-    if (!next) return
+-    const params = new URLSearchParams(searchParams.toString())
+-    params.set("view", next)
+-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+-  }, [router, pathname, searchParams])
+-
+-  return { view, setView }
++  const setView = useCallback(
++    (next: TaskView) => {
++      if (!next) return
++      const params = new URLSearchParams(searchParams.toString())
++      if (next === DEFAULT_VIEW) {
++        params.delete("view")
++      } else {
++        params.set("view", next)
++      }
++      const qs = params.toString()
++      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
++    },
++    [router, pathname, searchParams],
++  )
++
++  const toggleView = useCallback(() => {
++    setView(view === "kanban" ? "card" : "kanban")
++  }, [setView, view])
++
++  return { view, setView, toggleView }
+ }
