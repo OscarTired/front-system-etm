@@ -1,0 +1,98 @@
+diff --git a/src/shared/responsive/responsive-context.tsx b/src/shared/responsive/responsive-context.tsx
+index 85a6c55..85f14ab 100644
+--- a/src/shared/responsive/responsive-context.tsx
++++ b/src/shared/responsive/responsive-context.tsx
+@@ -13,6 +13,11 @@ export type ResponsiveState = {
+   breakpoint: BreakpointName
+   /** Shell compacto: TopBar + bottom nav + FAB. Incluye phone landscape. */
+   isMobile: boolean
++  /**
++   * Viewport más ancho que alto (phone landscape, etc.).
++   * Útil para no aplicar el mismo padding chrome que en portrait.
++   */
++  isLandscape: boolean
+   isTablet: boolean
+   isLaptop: boolean
+   isDesktop: boolean
+@@ -28,11 +33,13 @@ export const ResponsiveContext =
+ function buildState(
+   breakpoint: BreakpointName,
+   isMobileShell: boolean,
++  isLandscape: boolean,
+   ready: boolean,
+ ): ResponsiveState {
+   return {
+     breakpoint,
+     isMobile: isMobileShell,
++    isLandscape,
+     isTablet: breakpoint === "tablet" && !isMobileShell,
+     isLaptop: breakpoint === "laptop",
+     isDesktop: breakpoint === "desktop",
+@@ -58,6 +65,7 @@ export function ResponsiveProvider({
+   const [isMobileShell, setIsMobileShell] = useState(
+     initialBreakpoint === "mobile",
+   )
++  const [isLandscape, setIsLandscape] = useState(false)
+   const [ready, setReady] = useState(false)
+ 
+   useEffect(() => {
+@@ -66,6 +74,7 @@ export function ResponsiveProvider({
+       const h = window.innerHeight
+       setBreakpoint(resolveBreakpoint(w))
+       setIsMobileShell(resolveIsMobileShell(w, h))
++      setIsLandscape(w > h)
+       setReady(true)
+     }
+ 
+@@ -95,7 +104,7 @@ export function ResponsiveProvider({
+     }
+   }, [])
+ 
+-  const state = buildState(breakpoint, isMobileShell, ready)
++  const state = buildState(breakpoint, isMobileShell, isLandscape, ready)
+ 
+   return (
+     <ResponsiveContext.Provider value={state}>
+diff --git a/src/shared/ui/vertical-scroll/app-list-scroll.tsx b/src/shared/ui/vertical-scroll/app-list-scroll.tsx
+index f43f5da..ead7e43 100644
+--- a/src/shared/ui/vertical-scroll/app-list-scroll.tsx
++++ b/src/shared/ui/vertical-scroll/app-list-scroll.tsx
+@@ -42,7 +42,7 @@ export function AppListScroll({
+   const pathname = usePathname()
+   const key = resetKey ?? pathname
+   const scrollRef = useRef<HTMLDivElement>(null)
+-  const { isMobile } = useResponsive()
++  const { isMobile, isLandscape } = useResponsive()
+   const searchOpen = usePageSearchStore(s => s.open && s.enabled)
+ 
+   useEffect(() => {
+@@ -54,13 +54,22 @@ export function AppListScroll({
+       className={cn("flex h-full flex-col", className)}
+       style={
+         isMobile
+-          ? {
+-              // CompactShell ya inseta top (TOP_BAR) y bottom (BOTTOM_NAV).
+-              // Solo sumamos la search expandida + aire mínimo.
+-              // Evita el hueco doble (muy visible en landscape).
+-              paddingTop: searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 8,
+-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+-            }
++          ? isLandscape
++            ? {
++                // Landscape phone: viewport bajo; el chrome ya come altura.
++                // Solo search + safe-area — sin reservar TOP_BAR/BOTTOM_NAV
++                // otra vez (era el hueco vacío entre topbar y contenido).
++                paddingTop: searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 4,
++                paddingBottom: "env(safe-area-inset-bottom, 0px)",
++              }
++            : {
++                // Portrait: panel es inset-0 bajo TopBar flotante → hay que
++                // reservar top + bottom chrome (como antes).
++                paddingTop:
++                  TOP_BAR_HEIGHT_PX +
++                  (searchOpen ? PAGE_SEARCH_BAR_HEIGHT_PX : 0),
++                paddingBottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`,
++              }
+           : undefined
+       }
+     >

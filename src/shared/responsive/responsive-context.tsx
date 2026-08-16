@@ -13,6 +13,11 @@ export type ResponsiveState = {
   breakpoint: BreakpointName
   /** Shell compacto: TopBar + bottom nav + FAB. Incluye phone landscape. */
   isMobile: boolean
+  /**
+   * Viewport más ancho que alto (phone landscape, etc.).
+   * Útil para no aplicar el mismo padding chrome que en portrait.
+   */
+  isLandscape: boolean
   isTablet: boolean
   isLaptop: boolean
   isDesktop: boolean
@@ -28,11 +33,13 @@ export const ResponsiveContext =
 function buildState(
   breakpoint: BreakpointName,
   isMobileShell: boolean,
+  isLandscape: boolean,
   ready: boolean,
 ): ResponsiveState {
   return {
     breakpoint,
     isMobile: isMobileShell,
+    isLandscape,
     isTablet: breakpoint === "tablet" && !isMobileShell,
     isLaptop: breakpoint === "laptop",
     isDesktop: breakpoint === "desktop",
@@ -58,6 +65,7 @@ export function ResponsiveProvider({
   const [isMobileShell, setIsMobileShell] = useState(
     initialBreakpoint === "mobile",
   )
+  const [isLandscape, setIsLandscape] = useState(false)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -66,6 +74,7 @@ export function ResponsiveProvider({
       const h = window.innerHeight
       setBreakpoint(resolveBreakpoint(w))
       setIsMobileShell(resolveIsMobileShell(w, h))
+      setIsLandscape(w > h)
       setReady(true)
     }
 
@@ -95,7 +104,7 @@ export function ResponsiveProvider({
     }
   }, [])
 
-  const state = buildState(breakpoint, isMobileShell, ready)
+  const state = buildState(breakpoint, isMobileShell, isLandscape, ready)
 
   return (
     <ResponsiveContext.Provider value={state}>
