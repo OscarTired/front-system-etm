@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react"
 import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import { useThemeStore } from "@/shared/theme"
 import { cn } from "@/shared/utils/utils"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 
@@ -56,12 +57,17 @@ export function TaskPipelineCardCompact({
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
-      <EntityChip
-        key={`proj-${task.project.id}-${task.priority.color}-${themeResolved}`}
-        label={String(task.project.sequence).padStart(3, "0")}
-        color={task.priority.color}
-        compact
-      />
+      {/* Mismo chip que task-mobile-card / project-mobile-card */}
+      <span
+        title={task.project.projectCode}
+        className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+        style={{
+          backgroundColor: `${task.project.client.color}15`,
+          color: task.project.client.color,
+        }}
+      >
+        {displayProjectCode(task.project.projectCode)}
+      </span>
 
       <span
         title={task.reference}

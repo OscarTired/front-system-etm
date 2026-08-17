@@ -2,8 +2,6 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
@@ -17,6 +15,7 @@ import {
   SummonConfirmBarContent,
 } from "@/features/tasks/pipeline/components/panel/summon-confirm-bar"
 import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area-task-section"
+import { AreaFilterChips } from "@/features/tasks/pipeline/components/panel/area-filter-chips"
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
 
 /**
@@ -37,48 +36,13 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
 
   if (!state.hasAreaPanel) return null
 
-  function toggleArea(code: (typeof state.allAreas)[number]) {
-    const current =
-      state.supervisorAreas.length > 0
-        ? state.supervisorAreas
-        : state.allAreas
-    const selected = current.includes(code)
-    actions.setSupervisorAreas(
-      selected ? current.filter(c => c !== code) : [...current, code],
-    )
-  }
-
-  const effectiveSelected = (code: string) =>
-    state.supervisorAreas.length > 0
-      ? state.supervisorAreas.includes(code as never)
-      : true
-
-  const areaChips =
-    state.canChooseAreas ? (
-      <div className="flex flex-wrap gap-1.5">
-        {state.allAreas.map(code => {
-          const definition = PROCESS_DEFINITIONS[code]
-          const Icon = ENTITY_ICONS[definition.icon]
-          const selected = effectiveSelected(code)
-          return (
-            <button
-              key={code}
-              type="button"
-              onClick={() => toggleArea(code)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
-                selected
-                  ? "bg-foreground/15 text-foreground"
-                  : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-              )}
-            >
-              <Icon size={13} style={{ color: definition.color }} />
-              <span>{definition.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    ) : null
+  const areaChips = state.canChooseAreas ? (
+    <AreaFilterChips
+      allAreas={state.allAreas}
+      selectedAreas={state.supervisorAreas}
+      onChange={actions.setSupervisorAreas}
+    />
+  ) : null
 
   const areasList =
     state.loading ? (
@@ -189,7 +153,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
 
       <div
         className={cn(
-          "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-3",
+          "min-h-0 min-w-0 flex-1 overflow-x-hidden hide-scrollbar overflow-y-auto overscroll-contain p-3",
           state.summonTarget &&
             state.selectedStepIds.size > 0 &&
             "pb-24",

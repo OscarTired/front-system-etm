@@ -1,13 +1,12 @@
 "use client"
 
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
 import { PendingInvitesSection } from "./pending-invites-section"
 import { SummonConfirmBar } from "./summon-confirm-bar"
 import { AreaTaskSection } from "./area-task-section"
+import { AreaFilterChips } from "./area-filter-chips"
 import type { TaskAreaPanelReturn } from "../../hooks/use-task-area-panel"
 
 type Props = {
@@ -37,18 +36,6 @@ export function TaskAreaPanelBody({
   const { state, actions } = panel
   const horizontal = orientation === "horizontal"
 
-    const effectiveSelected = (code: string) =>
-    state.supervisorAreas.length > 0
-      ? state.supervisorAreas.includes(code as never)
-      : true
-
-  /** Una sola área a la vez. Clic de nuevo → todas (vacío = ALL). */
-  function toggleArea(code: (typeof state.allAreas)[number]) {
-    const onlyThis =
-      state.supervisorAreas.length === 1 &&
-      state.supervisorAreas[0] === code
-    actions.setSupervisorAreas(onlyThis ? [] : [code])
-  }
 
   return (
     <div
@@ -74,31 +61,12 @@ export function TaskAreaPanelBody({
           </div>
 
           {state.canChooseAreas && (
-            <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {state.allAreas.map(code => {
-                  const definition = PROCESS_DEFINITIONS[code]
-                  const Icon = ENTITY_ICONS[definition.icon]
-                  const selected = effectiveSelected(code)
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => toggleArea(code)}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
-                        selected
-                          ? "bg-foreground/15 text-foreground"
-                          : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-                      )}
-                    >
-                      <Icon size={13} style={{ color: definition.color }} />
-                      <span>{definition.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            <AreaFilterChips
+              className="mt-2.5"
+              allAreas={state.allAreas}
+              selectedAreas={state.supervisorAreas}
+              onChange={actions.setSupervisorAreas}
+            />
           )}
         </div>
       )}
