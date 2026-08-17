@@ -191,9 +191,40 @@ html, body {
 }
 
 @layer base {
+  /*
+   * Sin “anillo rectangular” de foco nativo en todo el ERP.
+   * El diseño usa hover/active/bg; el outline del browser se veía
+   * como un rectángulo blanco/gris en cards, rows y botones.
+   */
+  *,
+  *::before,
+  *::after {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+  }
+
   button:focus,
-  button:focus-visible {
-    outline: none;
+  button:focus-visible,
+  a:focus,
+  a:focus-visible,
+  [role="button"]:focus,
+  [role="button"]:focus-visible,
+  [tabindex]:focus,
+  [tabindex]:focus-visible,
+  input:focus,
+  input:focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  select:focus,
+  select:focus-visible {
+    outline: none !important;
+    /* Anula ring utilitario de Tailwind en foco (ring-offset incluido) */
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
   }
 }
 
