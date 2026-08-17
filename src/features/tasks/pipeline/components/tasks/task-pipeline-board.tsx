@@ -5,8 +5,8 @@ import { ProcessBoardNavButton } from "@/shared/ui/process-board"
 
 import type { Task } from "@/features/tasks/types/task.types"
 
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { notifyScrollInteraction } from "@/shared/ui/scroll/scroll-interaction"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 
 import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
@@ -45,21 +45,8 @@ export function TaskPipelineBoard({
   // Extraer el ID de la tarea activa para aplicar el efecto de opacidad por fila
   const activeTaskId = expandedKey ? expandedKey.split(":")[0] : null
 
-  // Drag scroll horizontal exclusivo para el header
-  const {
-    containerRef: headerScrollRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
-  // Ref para el área contenedora de tarjetas
+  const headerScrollRef = useRef<HTMLDivElement | null>(null)
   const contentScrollRef = useRef<HTMLDivElement | null>(null)
-
-  // Fade horizontal independiente para header y contenido
-  const headerFade = useHorizontalFade({ containerRef: headerScrollRef })
-  const contentFade = useHorizontalFade({ containerRef: contentScrollRef })
 
   const prevTasksRef = useRef<Task[]>([])
 
@@ -78,18 +65,25 @@ export function TaskPipelineBoard({
   useEffect(() => {
     const headerEl = headerScrollRef.current
     const contentEl = contentScrollRef.current
-
     if (!headerEl || !contentEl) return
 
-    const handleHeaderScroll = () => {
-      contentEl.scrollLeft = headerEl.scrollLeft
+    let lock = false
+    const syncFrom = (source: HTMLElement, target: HTMLElement) => {
+      if (lock) return
+      lock = true
+      target.scrollLeft = source.scrollLeft
+      notifyScrollInteraction()
+      lock = false
     }
-
-    headerEl.addEventListener("scroll", handleHeaderScroll, { passive: true })
+    const onHeader = () => syncFrom(headerEl, contentEl)
+    const onContent = () => syncFrom(contentEl, headerEl)
+    headerEl.addEventListener("scroll", onHeader, { passive: true })
+    contentEl.addEventListener("scroll", onContent, { passive: true })
     return () => {
-      headerEl.removeEventListener("scroll", handleHeaderScroll)
+      headerEl.removeEventListener("scroll", onHeader)
+      contentEl.removeEventListener("scroll", onContent)
     }
-  }, [headerScrollRef, loading])
+  }, [loading])
 
   useEffect(() => {
     const prev = prevTasksRef.current
@@ -264,70 +258,51 @@ export function TaskPipelineBoard({
           label="Scrollear derecha"
         />
 
-        {/* Header con fade horizontal */}
-        <div
-          style={{
-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${headerFade.leftFade}px, black calc(100% - ${headerFade.rightFade}px), transparent 100%)`,
-            maskImage: `linear-gradient(to right, transparent 0, black ${headerFade.leftFade}px, black calc(100% - ${headerFade.rightFade}px), transparent 100%)`,
-          }}
-          className="shrink-0 overflow-hidden"
+        <ScrollArea
+          ref={headerScrollRef}
+          orientation="horizontal"
+          dragToScroll
+          className="w-full shrink-0"
         >
-          <div
-            ref={headerScrollRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={stopDragging}
-            onMouseLeave={stopDragging}
-            onClickCapture={handleClickCapture}
-            className="hide-scrollbar overflow-x-auto overflow-y-hidden cursor-grab active:cursor-grabbing select-none"
-          >
-            <div className="flex min-w-full w-max gap-4">
-              {PIPELINE_PROCESS_ORDER.map(code => (
-                <TaskProcessColumn
-                  key={code}
-                  processCode={code}
-                  tasks={columns.get(code) ?? []}
-                  expandedKey={expandedKey}
-                  onToggleCard={toggleCard}
-                  activeOverlayKey={activeOverlayKey}
-                  onOverlayOpenChange={handleOverlayOpenChange}
-                  headerOnly
-                />
-              ))}
-            </div>
+          <div className="flex min-w-full w-max gap-4">
+            {PIPELINE_PROCESS_ORDER.map(code => (
+              <TaskProcessColumn
+                key={code}
+                processCode={code}
+                tasks={columns.get(code) ?? []}
+                expandedKey={expandedKey}
+                onToggleCard={toggleCard}
+                activeOverlayKey={activeOverlayKey}
+                onOverlayOpenChange={handleOverlayOpenChange}
+                headerOnly
+              />
+            ))}
           </div>
-        </div>
+        </ScrollArea>
 
-        {/* Área de tarjetas con fade horizontal + scroll vertical compartido */}
-        <div
-          style={{
-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${contentFade.leftFade}px, black calc(100% - ${contentFade.rightFade}px), transparent 100%)`,
-            maskImage: `linear-gradient(to right, transparent 0, black ${contentFade.leftFade}px, black calc(100% - ${contentFade.rightFade}px), transparent 100%)`,
-          }}
-          className="min-h-0 flex-1 overflow-hidden"
+        <ScrollArea
+          ref={contentScrollRef}
+          orientation="both"
+          dragToScroll
+          className="min-h-0 w-full flex-1"
         >
-          <div
-            ref={contentScrollRef}
-            className="hide-scrollbar h-full overflow-x-auto overflow-y-auto"
-          >
-            <div className="flex h-fit min-w-full w-max gap-4 pb-4">
-              {PIPELINE_PROCESS_ORDER.map(code => (
-                <TaskProcessColumn
-                  key={code}
-                  processCode={code}
-                  tasks={columns.get(code) ?? []}
-                  allTasks={tasks}
-                  expandedKey={expandedKey}
-                  activeTaskId={activeTaskId}
-                  onToggleCard={toggleCard}
-                  activeOverlayKey={activeOverlayKey}
-                  onOverlayOpenChange={handleOverlayOpenChange}
-                  contentOnly
-                />
-              ))}
-            </div>
+          <div className="flex h-fit min-w-full w-max gap-4 pb-4">
+            {PIPELINE_PROCESS_ORDER.map(code => (
+              <TaskProcessColumn
+                key={code}
+                processCode={code}
+                tasks={columns.get(code) ?? []}
+                allTasks={tasks}
+                expandedKey={expandedKey}
+                activeTaskId={activeTaskId}
+                onToggleCard={toggleCard}
+                activeOverlayKey={activeOverlayKey}
+                onOverlayOpenChange={handleOverlayOpenChange}
+                contentOnly
+              />
+            ))}
           </div>
-        </div>
+        </ScrollArea>
       </div>
 
       {openTaskDialog && (

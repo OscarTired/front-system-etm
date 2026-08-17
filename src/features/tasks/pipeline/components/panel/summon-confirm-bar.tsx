@@ -15,11 +15,6 @@ type Props = {
   confirming?: boolean
 }
 
-// Separado del posicionamiento (ver SummonConfirmBar más abajo) para
-// poder reusar el mismo contenido en dos contextos: la barra fija de
-// desktop, y el bottom sheet real de mobile (Popover ya se convierte
-// solo en bottom sheet con drag-to-dismiss en mobile — no hacía
-// falta reinventar nada, solo separar el contenido de su cáscara).
 export function SummonConfirmBarContent({
   operatorName,
   count,
@@ -29,19 +24,13 @@ export function SummonConfirmBarContent({
   onCancel,
   confirming,
 }: Props) {
-
   return (
-
     <div className="flex items-center gap-3">
-
       <div className="min-w-0 flex-1">
-
         <p className="truncate text-sm font-semibold text-foreground">
           {count} {count === 1 ? "tarea" : "tareas"} para {operatorName}
         </p>
-
         <div className="mt-1.5 flex gap-1">
-
           <button
             type="button"
             onClick={() => onModeChange("ASSIGN")}
@@ -54,7 +43,6 @@ export function SummonConfirmBarContent({
           >
             Asignar directo
           </button>
-
           <button
             type="button"
             onClick={() => onModeChange("INVITE")}
@@ -67,9 +55,7 @@ export function SummonConfirmBarContent({
           >
             Invitar
           </button>
-
         </div>
-
       </div>
 
       <button
@@ -86,43 +72,29 @@ export function SummonConfirmBarContent({
         onClick={onConfirm}
         disabled={count === 0 || confirming}
         className={cn(
-          "flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-black transition-opacity",
+          "flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-sm font-semibold text-white transition-opacity",
           count === 0 && "opacity-40",
         )}
       >
         {confirming ? (
-          <Spinner size={16} className="text-black" />
+          <Spinner size={16} className="text-white" />
         ) : (
           <Check size={16} />
         )}
         OK
       </button>
-
     </div>
-
   )
-
 }
 
-// Versión desktop — barra anclada al panel (ver comentario abajo).
-// En mobile, production/page.tsx usa SummonConfirmBarContent directo
-// adentro de un Popover (bottom sheet real), no esto.
+/**
+ * Pie del panel (flex), mismo fondo que el card — no absolute ni border-t
+ * que “corta” visualmente el panel.
+ */
 export function SummonConfirmBar(props: Props) {
-
   return (
-
-    // absolute, no fixed — SheetContent (el panel) ya es position:fixed
-    // por su cuenta, así que esto se ancla al PANEL (su containing
-    // block), no al viewport completo. Antes, como fixed+z-50 vivía
-    // FUERA del Portal de Radix (era hermano de <Sheet>, no hijo de
-    // SheetContent), terminaba pintándose en otra capa de stacking y
-    // quedaba tapado por el overlay con blur del Sheet.
-    <div className="animate-slide-up-in absolute inset-x-0 bottom-0 z-10 border-t border-border bg-muted px-4 py-3">
-
+    <div className="animate-slide-up-in shrink-0 bg-card px-4 py-3">
       <SummonConfirmBarContent {...props} />
-
     </div>
-
   )
-
 }

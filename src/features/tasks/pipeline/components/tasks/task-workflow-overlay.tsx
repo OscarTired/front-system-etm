@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils/utils"
 import { workflowAccess } from "@/features/workflow/access/workflow-access"
 import { ProcessOperatorCell } from "@/features/processes/components/cells/process-operator-cell"
 
-import { PIPELINE_SCROLL_INTERACTION_EVENT } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+import { PIPELINE_SCROLL_INTERACTION_EVENT } from "@/shared/ui/scroll/scroll-interaction"
 
 import { WorkflowActionButtons } from "../workflow/workflow-action-buttons"
 import { WorkflowNumericField, type WorkflowNumericFieldKey } from "../workflow/workflow-numeric-field"

@@ -47,7 +47,7 @@ export function EntityTable<T>({
       <div
         data-entity-table-scroll
         className={cn(
-          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-1.5",
+          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-1.5",
         )}
       >
         {data.length === 0 && (

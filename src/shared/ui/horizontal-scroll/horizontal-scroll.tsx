@@ -1,64 +1,23 @@
 "use client"
 
-import {
-  PropsWithChildren,
-} from "react"
+import type { PropsWithChildren } from "react"
 
-import {
-  cn,
-} from "@/shared/utils/utils"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/shared/utils/utils"
 
-import {
-  useDragScroll,
-} from "./use-drag-scroll"
+type Props = PropsWithChildren<{ className?: string }>
 
-type Props =
-  PropsWithChildren<{
-    className?: string
-  }>
-
-export function HorizontalScroll({
-  children,
-  className,
-}: Props) {
-
-  const {
-    containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
+/** Fila horizontal — ScrollArea nativo + drag opcional con puntero. */
+export function HorizontalScroll({ children, className }: Props) {
   return (
-
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
-
-      <div
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onClickCapture={handleClickCapture}
-        className="hide-scrollbar flex-1 min-h-0 overflow-x-auto overflow-y-hidden overscroll-x-contain cursor-grab select-none scrollbar-none active:cursor-grabbing"
-      >
-
-        <div
-          className={cn(
-            "flex h-full min-h-0 w-max items-start gap-4",
-            className,
-          )}
-        >
-
-          {children}
-
-        </div>
-
+    <ScrollArea
+      orientation="horizontal"
+      dragToScroll
+      className="h-full min-h-0 w-full"
+    >
+      <div className={cn("flex h-full min-h-0 w-max items-start gap-4", className)}>
+        {children}
       </div>
-
-    </div>
-
+    </ScrollArea>
   )
-
 }

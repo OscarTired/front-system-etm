@@ -1,0 +1,2217 @@
+diff --git a/src/components/ui/scroll-area.tsx b/src/components/ui/scroll-area.tsx
+index e8e05a6..a7eeb53 100644
+--- a/src/components/ui/scroll-area.tsx
++++ b/src/components/ui/scroll-area.tsx
+@@ -6,31 +6,149 @@ import { cn } from "@/lib/utils"
+ 
+ type Props = React.ComponentPropsWithoutRef<"div"> & {
+   orientation?: "vertical" | "horizontal" | "both"
+-  /** false = thumb oculto (default pages). true = .native-scrollbar */
++  /** false = thumb oculto (default). true = .native-scrollbar */
+   showScrollbar?: boolean
++  /**
++   * Arrastre con puntero (mouse) para pan — solo complementa el nativo.
++   * No intercepta wheel/touch: eso lo hace el browser.
++   */
++  dragToScroll?: boolean
+ }
+ 
+ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
+   (
+-    { className, orientation = "vertical", showScrollbar = false, ...props },
++    {
++      className,
++      orientation = "vertical",
++      showScrollbar = false,
++      dragToScroll = false,
++      onPointerDown,
++      ...props
++    },
+     ref,
+-  ) => (
+-    <div
+-      ref={ref}
+-      data-slot="scroll-area"
+-      className={cn(
+-        "min-h-0 min-w-0 overscroll-y-contain overscroll-x-contain",
+-        orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
+-        orientation === "horizontal" && "overflow-x-auto overflow-y-hidden",
+-        orientation === "both" && "overflow-auto",
+-        showScrollbar
+-          ? "native-scrollbar"
+-          : "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+-        className,
+-      )}
+-      {...props}
+-    />
+-  ),
++  ) => {
++    const localRef = React.useRef<HTMLDivElement | null>(null)
++    const setRefs = React.useCallback(
++      (node: HTMLDivElement | null) => {
++        localRef.current = node
++        if (typeof ref === "function") ref(node)
++        else if (ref) ref.current = node
++      },
++      [ref],
++    )
++
++    const drag = React.useRef<{
++      pointerId: number
++      x: number
++      y: number
++      left: number
++      top: number
++      moved: boolean
++    } | null>(null)
++
++    const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
++      onPointerDown?.(event)
++      if (!dragToScroll || event.button !== 0) return
++      // No iniciar drag desde controles interactivos
++      const t = event.target as HTMLElement
++      if (t.closest("button, a, input, textarea, select, [role='button'], [data-drag-scroll-ignore]")) {
++        return
++      }
++      const el = localRef.current
++      if (!el) return
++      drag.current = {
++        pointerId: event.pointerId,
++        x: event.clientX,
++        y: event.clientY,
++        left: el.scrollLeft,
++        top: el.scrollTop,
++        moved: false,
++      }
++      el.setPointerCapture(event.pointerId)
++    }
++
++    const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
++      const s = drag.current
++      const el = localRef.current
++      if (!s || !el || event.pointerId !== s.pointerId) return
++      const dx = event.clientX - s.x
++      const dy = event.clientY - s.y
++      if (!s.moved && Math.hypot(dx, dy) < 4) return
++      s.moved = true
++      if (orientation === "horizontal" || orientation === "both") {
++        el.scrollLeft = s.left - dx
++      }
++      if (orientation === "vertical" || orientation === "both") {
++        el.scrollTop = s.top - dy
++      }
++    }
++
++    const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
++      const s = drag.current
++      const el = localRef.current
++      if (!s || event.pointerId !== s.pointerId) return
++      drag.current = null
++      try {
++        el?.releasePointerCapture(event.pointerId)
++      } catch {
++        /* already released */
++      }
++    }
++
++    /**
++     * Nested scroll (comunidad): el eje dominante manda.
++     * - deltaX / shift+rueda → horizontal
++     * - rueda vertical pura → NO preventDefault (sube al padre vertical)
++     * Nunca convertir Y→X: eso es el conflicto en ProjectTasksList.
++     */
++    const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
++      if (orientation === "vertical") return
++      const el = localRef.current
++      if (!el) return
++
++      const absX = Math.abs(event.deltaX)
++      const absY = Math.abs(event.deltaY)
++      const shiftAsHorizontal = event.shiftKey && absY > 0
++      const primarilyHorizontal = absX > absY
++
++      if (!primarilyHorizontal && !shiftAsHorizontal) return
++      if (el.scrollWidth <= el.clientWidth + 1) return
++
++      const delta = primarilyHorizontal ? event.deltaX : event.deltaY
++      if (Math.abs(delta) < 0.5) return
++
++      const max = el.scrollWidth - el.clientWidth
++      const next = Math.min(max, Math.max(0, el.scrollLeft + delta))
++      if (next === el.scrollLeft) return
++
++      el.scrollLeft = next
++      event.preventDefault()
++    }
++
++    return (
++      <div
++        ref={setRefs}
++        data-slot="scroll-area"
++        onPointerDown={handlePointerDown}
++        onPointerMove={dragToScroll ? handlePointerMove : undefined}
++        onPointerUp={dragToScroll ? endDrag : undefined}
++        onPointerCancel={dragToScroll ? endDrag : undefined}
++        onWheel={handleWheel}
++        className={cn(
++          "min-h-0 min-w-0",
++          orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
++          orientation === "horizontal" && "overflow-x-auto overflow-y-hidden",
++          orientation === "both" && "overflow-auto",
++          dragToScroll && "cursor-grab active:cursor-grabbing",
++          showScrollbar
++            ? "native-scrollbar"
++            : "scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
++          className,
++        )}
++        {...props}
++      />
++    )
++  },
+ )
+ ScrollArea.displayName = "ScrollArea"
+ 
+diff --git a/src/features/activity-log/components/contents/activity-log-page-content.tsx b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+index dcdeeea..5c71d3c 100644
+--- a/src/features/activity-log/components/contents/activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+@@ -14,7 +14,6 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
+ import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator"
+ import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
+ import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
+-import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
+ import { TaskAreaSidebar } from "@/features/tasks/pipeline/components/panel/task-area-sidebar"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { cn } from "@/shared/utils/utils"
+@@ -286,7 +285,6 @@ export function ActivityLogPageContent({
+             {entryCount}
+           </div>
+ 
+-          {departmentQuery === "PRODUCCION" && <TaskAreaPanelTrigger />}
+         </div>
+       ) : (
+         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+@@ -324,9 +322,6 @@ export function ActivityLogPageContent({
+               {entryCount} {entryCount === 1 ? "entrada" : "entradas"}
+             </div>
+ 
+-            {departmentQuery === "PRODUCCION" && (
+-              <TaskAreaPanelTrigger />
+-            )}
+           </div>
+         </div>
+       )}
+@@ -334,8 +329,7 @@ export function ActivityLogPageContent({
+   )
+ 
+   const fillHeight = isAgenda || isMonth
+-  // Desktop bitácora PRODUCCIÓN: convocatoria en columna fija al lado
+-  // de franjas (sin sheet). Mobile sigue con sheet vía trigger.
++  // Desktop bitácora PRODUCCIÓN: Mis tareas en columna fija al lado de franjas.
+   const showDesktopAreaSidebar =
+     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
+ 
+diff --git a/src/features/nesting/components/sheet-tabs.tsx b/src/features/nesting/components/sheet-tabs.tsx
+index b169dab..608c987 100644
+--- a/src/features/nesting/components/sheet-tabs.tsx
++++ b/src/features/nesting/components/sheet-tabs.tsx
+@@ -4,8 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
+ 
+ import { useMemo } from "react"
+ import { cn } from "@/shared/utils/utils"
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
+ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+ import { ChevronDown, Layers } from "lucide-react"
+ 
+@@ -60,16 +58,6 @@ export function SheetTabs({
+   onChange,
+   groupByThickness = true,
+ }: SheetTabsProps) {
+-  const {
+-    containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
+-
+   const groups: ThicknessGroup[] = useMemo(() => {
+     if (!groupByThickness || items.length === 0) {
+       return items.map((item, index) => ({
+@@ -94,22 +82,8 @@ export function SheetTabs({
+   if (items.length === 0) return null
+ 
+   return (
+-    <div
+-      style={{
+-        WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-        maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-      }}
+-      className="w-full overflow-hidden rounded-lg bg-foreground/5"
+-    >
+-      <div
+-        ref={containerRef}
+-        onMouseDown={handleMouseDown}
+-        onMouseMove={handleMouseMove}
+-        onMouseUp={stopDragging}
+-        onMouseLeave={stopDragging}
+-        onClickCapture={handleClickCapture}
+-        className="themed-scrollbar-x cursor-grab select-none overflow-x-auto overflow-y-hidden p-1 pb-2 active:cursor-grabbing"
+-      >
++    <div className="w-full overflow-hidden rounded-lg bg-foreground/5">
++      <ScrollArea orientation="horizontal" dragToScroll className="w-full p-1 pb-2">
+         <div className="flex w-max items-center gap-1">
+           {groups.map((group) => {
+             const multi = group.members.length > 1
+@@ -234,7 +208,7 @@ export function SheetTabs({
+             )
+           })}
+         </div>
+-      </div>
++      </ScrollArea>
+     </div>
+   )
+ }
+diff --git a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+index d562672..ea4900d 100644
+--- a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
++++ b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+@@ -1,20 +1,15 @@
+ "use client"
+ 
+-import { useLayoutEffect, useRef, useState } from "react"
++import { useCallback, useLayoutEffect, useRef, useState } from "react"
+ import { ProcessBoardNavButton } from "@/shared/ui/process-board"
+-
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { getBadgeColors } from "@/shared/utils/badge-colors"
+ import { useThemeStore } from "@/shared/theme"
+-import { cn } from "@/shared/utils/utils"
+-
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+-
++import { ScrollArea } from "@/components/ui/scroll-area"
+ import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
+ import { TaskProcessColumn } from "../../table/task-process-column"
+ import { TaskColumnOperator } from "../tasks/task-column-operator"
+-
+ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+ 
+ type Props = {
+@@ -26,25 +21,6 @@ type Props = {
+   onOverlayOpenChange: (key: string, isOpen: boolean) => void
+ }
+ 
+-const FADE_MIN = 12
+-const FADE_MAX = 40
+-
+-// Mismo mecanismo que la rama desktop de TaskPipelineBoard: un solo
+-// contenedor con scroll (useDragScroll) — sin hooks de sync propios,
+-// sin estado de "proceso activo". Header y contenido se mueven
+-// juntos porque son la misma superficie de scroll.
+-//
+-// El header NO reutiliza TaskProcessColumn(headerOnly) — ese es
+-// ColumnHeader, con "w-72" HARDCODEADO pensado para columnas
+-// angostas de desktop. Acá se arma un header propio, centrado y a
+-// todo el ancho, que sí escala con la pantalla. Incluye lo mismo
+-// que trae ColumnHeader: el chip del proceso Y la fila de operario
+-// (TaskColumnOperator) — antes se me había quedado afuera.
+-//
+-// Las flechas de navegación también son un calco de las de
+-// desktop (mismo scrollBy), solo que sin el gate de "hoveringHeader"
+-// —en touch no hay hover— así que se muestran directo según haya o
+-// no más para scrollear.
+ export function MobilePipelineCarousel({
+   tasks,
+   columns,
+@@ -54,301 +30,97 @@ export function MobilePipelineCarousel({
+   onOverlayOpenChange,
+ }: Props) {
+   const theme = useThemeStore(s => s.resolved)
+-
+-
+-  const {
+-    containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  // El fade del borde (mask-image) se escribe DIRECTO al DOM, sin
+-  // pasar por React state — un intento anterior lo manejaba con
+-  // isScrolling+setState en cada evento de scroll, y el re-render
+-  // en pleno gesto interrumpía el scroll nativo por touch (se movía
+-  // unos pixeles y se trababa). Escribiendo el mask a mano dentro
+-  // de un rAF, el scroll nunca dispara un render de React — solo
+-  // mutación de estilo, que el compositor puede aplicar sin
+-  // interferir con el momentum scroll táctil.
+-  const maskRef = useRef<HTMLDivElement>(null)
+-  const rafRef = useRef<number | null>(null)
+-
++  const containerRef = useRef<HTMLDivElement | null>(null)
+   const [canScrollLeft, setCanScrollLeft] = useState(false)
+   const [canScrollRight, setCanScrollRight] = useState(false)
+ 
+-  useLayoutEffect(() => {
+-
+-    const container = containerRef.current
+-    const mask = maskRef.current
+-
+-    if (!container || !mask) {
+-      return
+-    }
+-
+-    const applyMask = (leftFade: number, rightFade: number) => {
+-
+-      const value =
+-        `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`
+-
+-      mask.style.maskImage = value
+-      mask.style.webkitMaskImage = value
+-
+-    }
+-
+-    // Antes: dos ResizeObserver + dos listeners de "scroll" separados
+-    // sobre el MISMO contenedor (uno para el fade-mask, otro para las
+-    // flechas) — cada uno leyendo scrollLeft/clientWidth/scrollWidth
+-    // por su cuenta y disparando su propio callback. Un solo update()
+-    // hace ambas cosas, con un solo rAF compartido: la mitad del
+-    // trabajo de layout en cada resize/scroll de este carrusel.
+-    const update = () => {
+-
+-      const { scrollLeft, clientWidth, scrollWidth } = container
+-
+-      const maxScroll = Math.max(scrollWidth - clientWidth, 0)
+-
+-      if (maxScroll <= 0) {
+-        applyMask(0, 0)
+-      } else {
+-        const fadeSize = Math.min(
+-          Math.max(Math.round(clientWidth * 0.04), FADE_MIN),
+-          FADE_MAX,
+-        )
+-
+-        applyMask(
+-          Math.min(scrollLeft, fadeSize),
+-          Math.min(maxScroll - scrollLeft, fadeSize),
+-        )
+-      }
+-
+-      setCanScrollLeft(scrollLeft > 4)
+-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4)
+-
+-    }
+-
+-    const scheduleUpdate = () => {
+-
+-      if (rafRef.current !== null) {
+-        return
+-      }
+-
+-      rafRef.current = requestAnimationFrame(() => {
+-        rafRef.current = null
+-        update()
+-      })
+-
+-    }
+-
+-    mask.style.maskRepeat = "no-repeat"
+-    mask.style.webkitMaskRepeat = "no-repeat"
+-    mask.style.maskSize = "100% 100%"
+-    mask.style.webkitMaskSize = "100% 100%"
+-
+-    update()
+-
+-    container.addEventListener("scroll", scheduleUpdate, { passive: true })
+-
+-    const resizeObserver = new ResizeObserver(scheduleUpdate)
+-
+-    resizeObserver.observe(container)
+-
+-    return () => {
+-
+-      container.removeEventListener("scroll", scheduleUpdate)
+-
+-      resizeObserver.disconnect()
+-
+-      if (rafRef.current !== null) {
+-        cancelAnimationFrame(rafRef.current)
+-      }
+-
+-    }
+-
+-  }, [containerRef])
+-
+-  function currentIndex() {
+-    const el = containerRef.current
+-    if (!el) return 0
+-    const w = el.clientWidth || 1
+-    return Math.round(el.scrollLeft / w)
+-  }
+-
+-  function goToIndex(index: number) {
++  const updateArrows = useCallback(() => {
+     const el = containerRef.current
+     if (!el) return
+-    const max = PIPELINE_PROCESS_ORDER.length - 1
+-    const next = Math.max(0, Math.min(max, index))
+-    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" })
+-  }
+-
+-  function scrollToPrevious() {
+-    goToIndex(currentIndex() - 1)
+-  }
+-
+-  function scrollToNext() {
+-    goToIndex(currentIndex() + 1)
+-  }
++    setCanScrollLeft(el.scrollLeft > 2)
++    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
++  }, [])
+ 
+-  // Snap a página completa al soltar fling / flechas a medias
+   useLayoutEffect(() => {
+     const el = containerRef.current
+     if (!el) return
+-    let settleTimer: number | null = null
+-    const snapToNearest = () => {
+-      const w = el.clientWidth || 1
+-      const max = PIPELINE_PROCESS_ORDER.length - 1
+-      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
+-      const target = idx * w
+-      if (Math.abs(el.scrollLeft - target) > 2) {
+-        el.scrollTo({ left: target, behavior: "smooth" })
+-      }
+-    }
+-    const onScroll = () => {
+-      if (settleTimer != null) window.clearTimeout(settleTimer)
+-      settleTimer = window.setTimeout(snapToNearest, 80)
+-    }
+-    el.addEventListener("scroll", onScroll, { passive: true })
+-    el.addEventListener("scrollend", snapToNearest as EventListener)
++    updateArrows()
++    el.addEventListener("scroll", updateArrows, { passive: true })
++    const ro = new ResizeObserver(updateArrows)
++    ro.observe(el)
+     return () => {
+-      el.removeEventListener("scroll", onScroll)
+-      el.removeEventListener("scrollend", snapToNearest as EventListener)
+-      if (settleTimer != null) window.clearTimeout(settleTimer)
++      el.removeEventListener("scroll", updateArrows)
++      ro.disconnect()
+     }
+-  }, [containerRef])
++  }, [updateArrows, columns])
+ 
++  function scrollByPage(dir: -1 | 1) {
++    const el = containerRef.current
++    if (!el) return
++    el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" })
++  }
+ 
+   return (
+-
+-    <div className="relative">
+-
+-              <ProcessBoardNavButton
+-          direction="left"
+-          visible={canScrollLeft}
+-          onClick={scrollToPrevious}
+-          label="Proceso anterior"
+-        />
+-
+-              <ProcessBoardNavButton
+-          direction="right"
+-          visible={canScrollRight}
+-          onClick={scrollToNext}
+-          label="Proceso siguiente"
+-        />
+-
+-      <div
+-        ref={maskRef}
+-        className="overflow-hidden"
++    <div className="relative w-full">
++      <ProcessBoardNavButton
++        direction="left"
++        visible={canScrollLeft}
++        onClick={() => scrollByPage(-1)}
++        label="Proceso anterior"
++      />
++      <ProcessBoardNavButton
++        direction="right"
++        visible={canScrollRight}
++        onClick={() => scrollByPage(1)}
++        label="Proceso siguiente"
++      />
++      <ScrollArea
++        ref={containerRef}
++        orientation="horizontal"
++        dragToScroll
++        className="w-full snap-x snap-mandatory"
+       >
+-
+-        <div
+-          ref={containerRef}
+-          onMouseDown={handleMouseDown}
+-          onMouseMove={handleMouseMove}
+-          onMouseUp={stopDragging}
+-          onMouseLeave={stopDragging}
+-          onClickCapture={handleClickCapture}
+-          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none [touch-action:pan-x]"
+-        >
+-
++        <div className="flex w-max">
+           {PIPELINE_PROCESS_ORDER.map(code => {
+-
+             const definition = PROCESS_DEFINITIONS[code]
+             const Icon = ENTITY_ICONS[definition.icon]
+             const badge = getBadgeColors(definition.color, "subtle", theme)
+-            const processTasks = columns.get(code) ?? []
+-            const count = processTasks.length
+-
++            const columnTasks = columns.get(code) ?? []
+             return (
+-
+-              <div
++              <section
+                 key={code}
+-                className="w-full shrink-0 snap-center [touch-action:pan-y]"
++                className="flex w-[min(100vw,28rem)] shrink-0 snap-center flex-col gap-2 px-2"
+               >
+-
+-                {/* Header propio, CENTRADO — igual que el chip
+-                    del carrusel de KPIs, no left-aligned con el
+-                    contador empujado a la derecha como en
+-                    ColumnHeader (desktop). */}
+-                <div
+-                  data-drag-scroll-ignore
+-                  className="flex h-10 items-center justify-center gap-2 border-b px-3"
+-                  style={{ borderColor: definition.color, cursor: "default" }}
+-                >
+-
++                <div className="flex items-center justify-center gap-2 px-1">
+                   <span
+-                    className="flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold"
++                    className="flex size-7 items-center justify-center rounded-md text-xs font-bold"
+                     style={{ color: badge.text, backgroundColor: badge.background }}
+                   >
+                     {code}
+                   </span>
+-
+-                  {Icon && (
+-                    <Icon
+-                      size={15}
+-                      className="shrink-0"
+-                      style={{ color: definition.color }}
+-                    />
+-                  )}
+-
+-                  <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
++                  {Icon && <Icon size={16} style={{ color: definition.color }} />}
++                  <span className="text-sm font-bold uppercase tracking-wide text-foreground">
+                     {definition.label}
+                   </span>
+-
+-                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+-                    {count}
+-                  </span>
+-
+-                </div>
+-
+-                {/* Fila de operario — lo mismo que trae
+-                    ColumnHeader en desktop, se había quedado
+-                    afuera del header propio de acá. */}
+-                <div
+-                  data-drag-scroll-ignore
+-                  className="border-b border-border px-2 py-1"
+-                  style={{ cursor: "default" }}
+-                >
+-
+-                  <TaskColumnOperator
+-                    processCode={code}
+-                    tasks={processTasks}
+-                  />
+-
+-                </div>
+-
+-                <div
+-                  data-drag-scroll-ignore
+-                  className="mt-2"
+-                  style={{ cursor: "default" }}
+-                >
+-
+-                  <TaskProcessColumn
+-                    processCode={code}
+-                    tasks={processTasks}
+-                    allTasks={tasks}
+-                    expandedKey={expandedKey}
+-                    onToggleCard={onToggleCard}
+-                    activeOverlayKey={activeOverlayKey}
+-                    onOverlayOpenChange={onOverlayOpenChange}
+-                    contentOnly
+-                  />
+-
++                  <span className="text-xs text-muted-foreground">{columnTasks.length}</span>
+                 </div>
+-
+-              </div>
+-
++                <TaskColumnOperator processCode={code} tasks={tasks} />
++                <TaskProcessColumn
++                  processCode={code}
++                  tasks={columnTasks}
++                  allTasks={tasks}
++                  expandedKey={expandedKey}
++                  onToggleCard={onToggleCard}
++                  activeOverlayKey={activeOverlayKey}
++                  onOverlayOpenChange={onOverlayOpenChange}
++                  contentOnly
++                  fullWidth
++                />
++              </section>
+             )
+-
+           })}
+-
+         </div>
+-
+-      </div>
+-
++      </ScrollArea>
+     </div>
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/panel/summon-confirm-bar.tsx b/src/features/tasks/pipeline/components/panel/summon-confirm-bar.tsx
+index 284e22a..8288a6a 100644
+--- a/src/features/tasks/pipeline/components/panel/summon-confirm-bar.tsx
++++ b/src/features/tasks/pipeline/components/panel/summon-confirm-bar.tsx
+@@ -15,11 +15,6 @@ type Props = {
+   confirming?: boolean
+ }
+ 
+-// Separado del posicionamiento (ver SummonConfirmBar más abajo) para
+-// poder reusar el mismo contenido en dos contextos: la barra fija de
+-// desktop, y el bottom sheet real de mobile (Popover ya se convierte
+-// solo en bottom sheet con drag-to-dismiss en mobile — no hacía
+-// falta reinventar nada, solo separar el contenido de su cáscara).
+ export function SummonConfirmBarContent({
+   operatorName,
+   count,
+@@ -29,19 +24,13 @@ export function SummonConfirmBarContent({
+   onCancel,
+   confirming,
+ }: Props) {
+-
+   return (
+-
+     <div className="flex items-center gap-3">
+-
+       <div className="min-w-0 flex-1">
+-
+         <p className="truncate text-sm font-semibold text-foreground">
+           {count} {count === 1 ? "tarea" : "tareas"} para {operatorName}
+         </p>
+-
+         <div className="mt-1.5 flex gap-1">
+-
+           <button
+             type="button"
+             onClick={() => onModeChange("ASSIGN")}
+@@ -54,7 +43,6 @@ export function SummonConfirmBarContent({
+           >
+             Asignar directo
+           </button>
+-
+           <button
+             type="button"
+             onClick={() => onModeChange("INVITE")}
+@@ -67,9 +55,7 @@ export function SummonConfirmBarContent({
+           >
+             Invitar
+           </button>
+-
+         </div>
+-
+       </div>
+ 
+       <button
+@@ -86,43 +72,29 @@ export function SummonConfirmBarContent({
+         onClick={onConfirm}
+         disabled={count === 0 || confirming}
+         className={cn(
+-          "flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-black transition-opacity",
++          "flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-sm font-semibold text-white transition-opacity",
+           count === 0 && "opacity-40",
+         )}
+       >
+         {confirming ? (
+-          <Spinner size={16} className="text-black" />
++          <Spinner size={16} className="text-white" />
+         ) : (
+           <Check size={16} />
+         )}
+         OK
+       </button>
+-
+     </div>
+-
+   )
+-
+ }
+ 
+-// Versión desktop — barra anclada al panel (ver comentario abajo).
+-// En mobile, production/page.tsx usa SummonConfirmBarContent directo
+-// adentro de un Popover (bottom sheet real), no esto.
++/**
++ * Pie del panel (flex), mismo fondo que el card — no absolute ni border-t
++ * que “corta” visualmente el panel.
++ */
+ export function SummonConfirmBar(props: Props) {
+-
+   return (
+-
+-    // absolute, no fixed — SheetContent (el panel) ya es position:fixed
+-    // por su cuenta, así que esto se ancla al PANEL (su containing
+-    // block), no al viewport completo. Antes, como fixed+z-50 vivía
+-    // FUERA del Portal de Radix (era hermano de <Sheet>, no hijo de
+-    // SheetContent), terminaba pintándose en otra capa de stacking y
+-    // quedaba tapado por el overlay con blur del Sheet.
+-    <div className="animate-slide-up-in absolute inset-x-0 bottom-0 z-10 border-t border-border bg-muted px-4 py-3">
+-
++    <div className="animate-slide-up-in shrink-0 bg-card px-4 py-3">
+       <SummonConfirmBarContent {...props} />
+-
+     </div>
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+index c4c0c63..de3fe32 100644
+--- a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+@@ -3,6 +3,7 @@
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { cn } from "@/shared/utils/utils"
++import { Layers } from "lucide-react"
+ import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
+ 
+ import { PendingInvitesSection } from "./pending-invites-section"
+@@ -37,6 +38,8 @@ export function TaskAreaPanelBody({
+   const { state, actions } = panel
+   const horizontal = orientation === "horizontal"
+ 
++  const [areasOpen, setAreasOpen] = useState(false)
++
+   const effectiveSelected = (code: string) =>
+     state.supervisorAreas.length > 0
+       ? state.supervisorAreas.includes(code as never)
+@@ -66,37 +69,56 @@ export function TaskAreaPanelBody({
+             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
+               {title}
+             </h2>
+-            <HistoryToggleButton
+-              count={state.completedCount}
+-              active={state.showHistory}
+-              onClick={() => actions.setShowHistory(v => !v)}
+-            />
++            <div className="flex shrink-0 items-center gap-1">
++              {state.canChooseAreas && (
++                <button
++                  type="button"
++                  aria-label="Áreas"
++                  aria-pressed={areasOpen}
++                  onClick={() => setAreasOpen(v => !v)}
++                  className={cn(
++                    "flex size-8 items-center justify-center rounded-lg transition active:scale-95",
++                    areasOpen
++                      ? "bg-foreground/15 text-foreground"
++                      : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
++                  )}
++                >
++                  <Layers size={16} />
++                </button>
++              )}
++              <HistoryToggleButton
++                count={state.completedCount}
++                active={state.showHistory}
++                onClick={() => actions.setShowHistory(v => !v)}
++              />
++            </div>
+           </div>
+ 
+-          {/* Selector siempre visible (sin botón Settings). */}
+-          {state.canChooseAreas && (
+-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+-              {state.allAreas.map(code => {
+-                const definition = PROCESS_DEFINITIONS[code]
+-                const Icon = ENTITY_ICONS[definition.icon]
+-                const selected = effectiveSelected(code)
+-                return (
+-                  <button
+-                    key={code}
+-                    type="button"
+-                    onClick={() => toggleArea(code)}
+-                    className={cn(
+-                      "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
+-                      selected
+-                        ? "bg-foreground/15 text-foreground"
+-                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+-                    )}
+-                  >
+-                    <Icon size={13} style={{ color: definition.color }} />
+-                    <span>{definition.label}</span>
+-                  </button>
+-                )
+-              })}
++          {state.canChooseAreas && areasOpen && (
++            <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
++              <div className="flex flex-wrap gap-1.5">
++                {state.allAreas.map(code => {
++                  const definition = PROCESS_DEFINITIONS[code]
++                  const Icon = ENTITY_ICONS[definition.icon]
++                  const selected = effectiveSelected(code)
++                  return (
++                    <button
++                      key={code}
++                      type="button"
++                      onClick={() => toggleArea(code)}
++                      className={cn(
++                        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
++                        selected
++                          ? "bg-foreground/15 text-foreground"
++                          : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
++                      )}
++                    >
++                      <Icon size={13} style={{ color: definition.color }} />
++                      <span>{definition.label}</span>
++                    </button>
++                  )
++                })}
++              </div>
+             </div>
+           )}
+         </div>
+@@ -108,7 +130,7 @@ export function TaskAreaPanelBody({
+           data-task-area-scroll
+           className={cn(
+             "hide-scrollbar flex min-h-0 min-w-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden p-3",
+-            state.summonTarget && "pb-24",
++            false,
+           )}
+         >
+           {state.loading ? (
+@@ -145,7 +167,7 @@ export function TaskAreaPanelBody({
+           data-task-area-scroll
+           className={cn(
+             "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-3",
+-            state.summonTarget && "pb-24",
++            false,
+           )}
+         >
+           {state.loading ? (
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-sidebar.tsx b/src/features/tasks/pipeline/components/panel/task-area-sidebar.tsx
+index f9b4aec..ef0fe9c 100644
+--- a/src/features/tasks/pipeline/components/panel/task-area-sidebar.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-sidebar.tsx
+@@ -1,11 +1,12 @@
+ "use client"
+ 
+-import { useMemo } from "react"
++import { useMemo, useState } from "react"
+ 
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { EntityTable } from "@/shared/ui/entity-table"
+ import type { EntityColumn } from "@/shared/ui/entity-table/types"
++import { Layers } from "lucide-react"
+ import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
+ import { cn } from "@/shared/utils/utils"
+ 
+@@ -40,6 +41,7 @@ type AreaRow = SectionRow | TaskRow
+ export function TaskAreaSidebar({ className }: { className?: string }) {
+   const panel = useTaskAreaPanel()
+   const { state, actions } = panel
++  const [areasOpen, setAreasOpen] = useState(false)
+ 
+   if (!state.hasAreaPanel) return null
+ 
+@@ -106,37 +108,56 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
+             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
+               Mis tareas
+             </h2>
+-            <HistoryToggleButton
+-              count={state.completedCount}
+-              active={state.showHistory}
+-              onClick={() => actions.setShowHistory(v => !v)}
+-            />
++            <div className="flex shrink-0 items-center gap-1">
++              {state.canChooseAreas && (
++                <button
++                  type="button"
++                  aria-label="Áreas"
++                  aria-pressed={areasOpen}
++                  onClick={() => setAreasOpen(v => !v)}
++                  className={cn(
++                    "flex size-8 items-center justify-center rounded-lg transition active:scale-95",
++                    areasOpen
++                      ? "bg-foreground/15 text-foreground"
++                      : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
++                  )}
++                >
++                  <Layers size={16} />
++                </button>
++              )}
++              <HistoryToggleButton
++                count={state.completedCount}
++                active={state.showHistory}
++                onClick={() => actions.setShowHistory(v => !v)}
++              />
++            </div>
+           </div>
+ 
+-          {/* Chips de área — siempre visibles si puede elegir */}
+-          {state.canChooseAreas && (
+-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+-              {state.allAreas.map(code => {
+-                const definition = PROCESS_DEFINITIONS[code]
+-                const Icon = ENTITY_ICONS[definition.icon]
+-                const selected = effectiveSelected(code)
+-                return (
+-                  <button
+-                    key={code}
+-                    type="button"
+-                    onClick={() => toggleArea(code)}
+-                    className={cn(
+-                      "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
+-                      selected
+-                        ? "bg-foreground/15 text-foreground"
+-                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+-                    )}
+-                  >
+-                    <Icon size={13} style={{ color: definition.color }} />
+-                    <span>{definition.label}</span>
+-                  </button>
+-                )
+-              })}
++          {state.canChooseAreas && areasOpen && (
++            <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
++              <div className="flex flex-wrap gap-1.5">
++                {state.allAreas.map(code => {
++                  const definition = PROCESS_DEFINITIONS[code]
++                  const Icon = ENTITY_ICONS[definition.icon]
++                  const selected = effectiveSelected(code)
++                  return (
++                    <button
++                      key={code}
++                      type="button"
++                      onClick={() => toggleArea(code)}
++                      className={cn(
++                        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
++                        selected
++                          ? "bg-foreground/15 text-foreground"
++                          : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
++                      )}
++                    >
++                      <Icon size={13} style={{ color: definition.color }} />
++                      <span>{definition.label}</span>
++                    </button>
++                  )
++                })}
++              </div>
+             </div>
+           )}
+         </div>
+@@ -153,7 +174,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
+         <div
+           className={cn(
+             "min-h-0 flex-1 overflow-hidden",
+-            state.summonTarget && "pb-20",
++            false,
+           )}
+         >
+           {state.loading ? (
+diff --git a/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx b/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
+index e27cedb..d4860d7 100644
+--- a/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
++++ b/src/features/tasks/pipeline/components/selectors/pipeline-process-selector.tsx
+@@ -1,38 +1,24 @@
+ "use client"
+ 
+-import { useCallback, useEffect, useState, type RefObject } from "react"
++import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
+ import { ChevronLeft, ChevronRight } from "lucide-react"
+-
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { getBadgeColors } from "@/shared/utils/badge-colors"
+ import { useThemeStore } from "@/shared/theme"
+-import { cn } from "@/shared/utils/utils"
+-
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
++import { ScrollArea } from "@/components/ui/scroll-area"
+ import { useSnapCarouselSync } from "@/shared/hooks/use-snap-carousel-sync"
+-
++import { cn } from "@/shared/utils/utils"
+ import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
+-
+ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+ 
+ type Props = {
+   value: ProcessCode
+   onChange: (code: ProcessCode) => void
+   columns: Map<ProcessCode, Task[]>
+-  // Opcional: si el padre (TaskPipelineBoard) necesita acceso directo
+-  // al nodo scrolleable (ej. para espejar scroll en tiempo real con
+-  // el carrusel de tareas de abajo), le pasa su propio ref acá.
+-  // useDragScroll ya necesita SU PROPIO ref para el drag — este se
+-  // mergea a mano en el callback ref de más abajo, así los dos
+-  // apuntan al mismo nodo sin pisarse.
+   containerRef?: RefObject<HTMLDivElement | null>
+ }
+ 
+-// Mismo lenguaje visual que el carrusel de KPIs: un ítem a pantalla
+-// completa por vez, con snap y flechas — antes eran pills chicas
+-// mostrando varias a la vez, difícil de leer y de tocar con precisión.
+ export function PipelineProcessSelector({
+   value,
+   onChange,
+@@ -40,37 +26,11 @@ export function PipelineProcessSelector({
+   containerRef: externalContainerRef,
+ }: Props) {
+   const theme = useThemeStore(s => s.resolved)
+-
+-
++  const internalRef = useRef<HTMLDivElement | null>(null)
++  const containerRef = externalContainerRef ?? internalRef
+   const [canScrollLeft, setCanScrollLeft] = useState(false)
+   const [canScrollRight, setCanScrollRight] = useState(false)
+ 
+-  const {
+-    containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  const setNodeRefs = useCallback((node: HTMLDivElement | null) => {
+-
+-    containerRef.current = node
+-
+-    if (externalContainerRef) {
+-      externalContainerRef.current = node
+-    }
+-
+-  }, [containerRef, externalContainerRef])
+-
+-  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
+-
+-  // Sincronización con "value" (swipe acá -> avisa afuera; cambio
+-  // externo, ej. flecha del pipeline board -> se desliza solo) —
+-  // compartida con TaskPipelineCarousel, antes copiada acá aparte.
+-  // Le pasamos el MISMO containerRef que ya usa useDragScroll, para
+-  // que ambos operen sobre el mismo nodo en vez de crear uno propio
+-  // sin uso.
+   const { scrollToPrevious, scrollToNext } = useSnapCarouselSync({
+     value,
+     onChange,
+@@ -79,112 +39,65 @@ export function PipelineProcessSelector({
+   })
+ 
+   const updateArrows = useCallback(() => {
+-
+     const el = containerRef.current
+-
+-    if (!el) {
+-      return
+-    }
+-
++    if (!el) return
+     setCanScrollLeft(el.scrollLeft > 4)
+-
+-    setCanScrollRight(
+-      el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+-    )
+-
++    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+   }, [containerRef])
+ 
+   useEffect(() => {
+-
+     const el = containerRef.current
+-
+-    if (!el) {
+-      return
+-    }
+-
++    if (!el) return
+     updateArrows()
+-
+     el.addEventListener("scroll", updateArrows, { passive: true })
+-
+-    const observer = new ResizeObserver(updateArrows)
+-
+-    observer.observe(el)
+-
++    const ro = new ResizeObserver(updateArrows)
++    ro.observe(el)
+     return () => {
+-
+       el.removeEventListener("scroll", updateArrows)
+-      observer.disconnect()
+-
++      ro.disconnect()
+     }
+-
+   }, [updateArrows, containerRef])
+ 
+   return (
+-
+     <div className="relative h-12 w-full">
+-
+       <button
+         type="button"
+         onClick={scrollToPrevious}
+         aria-label="Proceso anterior"
+         tabIndex={-1}
+         className={cn(
+-          "absolute left-1 top-1/2 z-20 -translate-y-1/2",
+-          "flex h-8 w-8 items-center justify-center rounded-full",
+-          "bg-card/90 border border-border backdrop-blur-xl text-foreground transition-opacity duration-200",
++          "absolute left-0 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition",
+           canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
+         )}
+       >
+-        <ChevronLeft size={15} strokeWidth={2.5} />
++        <ChevronLeft size={18} />
+       </button>
+-
+       <button
+         type="button"
+         onClick={scrollToNext}
+         aria-label="Proceso siguiente"
+         tabIndex={-1}
+         className={cn(
+-          "absolute right-1 top-1/2 z-20 -translate-y-1/2",
+-          "flex h-8 w-8 items-center justify-center rounded-full",
+-          "bg-card/90 border border-border backdrop-blur-xl text-foreground transition-opacity duration-200",
++          "absolute right-0 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition",
+           canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
+         )}
+       >
+-        <ChevronRight size={15} strokeWidth={2.5} />
++        <ChevronRight size={18} />
+       </button>
+-
+-      <div
+-        style={{
+-          WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-          maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-          WebkitMaskRepeat: "no-repeat",
+-          maskRepeat: "no-repeat",
+-          WebkitMaskSize: "100% 100%",
+-          maskSize: "100% 100%",
+-        }}
+-        className="h-full overflow-hidden"
++      <ScrollArea
++        ref={containerRef}
++        orientation="horizontal"
++        dragToScroll
++        className="h-full w-full snap-x snap-mandatory"
+       >
+-
+-        <div
+-          ref={setNodeRefs}
+-          onMouseDown={handleMouseDown}
+-          onMouseMove={handleMouseMove}
+-          onMouseUp={stopDragging}
+-          onMouseLeave={stopDragging}
+-          onClickCapture={handleClickCapture}
+-          className="hide-scrollbar flex h-full snap-x snap-mandatory items-center overflow-x-auto overflow-y-hidden overscroll-contain scroll-smooth cursor-grab select-none active:cursor-grabbing"
+-        >
+-
++        <div className="flex h-full w-max">
+           {PIPELINE_PROCESS_ORDER.map(code => {
+-
+             const definition = PROCESS_DEFINITIONS[code]
+             const Icon = ENTITY_ICONS[definition.icon]
+             const badge = getBadgeColors(definition.color, "subtle", theme)
+             const count = columns.get(code)?.length ?? 0
+             const isActive = code === value
+-
+             return (
+-
+               <button
+                 key={code}
+                 type="button"
+@@ -196,38 +109,26 @@ export function PipelineProcessSelector({
+                     : "border-transparent opacity-50",
+                 )}
+               >
+-
+                 <span
+                   className="flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold"
+                   style={{ color: badge.text, backgroundColor: badge.background }}
+                 >
+                   {code}
+                 </span>
+-
+                 {Icon && (
+                   <Icon size={15} className="shrink-0" style={{ color: definition.color }} />
+                 )}
+-
+                 <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
+                   {definition.label}
+                 </span>
+-
+                 <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+                   {count}
+                 </span>
+-
+               </button>
+-
+             )
+-
+           })}
+-
+         </div>
+-
+-      </div>
+-
++      </ScrollArea>
+     </div>
+-
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx b/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
+index dd0d34f..89700f3 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
+@@ -5,8 +5,8 @@ import { ProcessBoardNavButton } from "@/shared/ui/process-board"
+ 
+ import type { Task } from "@/features/tasks/types/task.types"
+ 
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
++import { ScrollArea } from "@/components/ui/scroll-area"
++import { notifyScrollInteraction } from "@/shared/ui/scroll/scroll-interaction"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ 
+ import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
+@@ -45,22 +45,9 @@ export function TaskPipelineBoard({
+   // Extraer el ID de la tarea activa para aplicar el efecto de opacidad por fila
+   const activeTaskId = expandedKey ? expandedKey.split(":")[0] : null
+ 
+-  // Drag scroll horizontal exclusivo para el header
+-  const {
+-    containerRef: headerScrollRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  // Ref para el área contenedora de tarjetas
++  const headerScrollRef = useRef<HTMLDivElement | null>(null)
+   const contentScrollRef = useRef<HTMLDivElement | null>(null)
+ 
+-  // Fade horizontal independiente para header y contenido
+-  const headerFade = useHorizontalFade({ containerRef: headerScrollRef })
+-  const contentFade = useHorizontalFade({ containerRef: contentScrollRef })
+-
+   const prevTasksRef = useRef<Task[]>([])
+ 
+   // Sincronización del scroll horizontal (Header -> Content)
+@@ -78,18 +65,25 @@ export function TaskPipelineBoard({
+   useEffect(() => {
+     const headerEl = headerScrollRef.current
+     const contentEl = contentScrollRef.current
+-
+     if (!headerEl || !contentEl) return
+ 
+-    const handleHeaderScroll = () => {
+-      contentEl.scrollLeft = headerEl.scrollLeft
++    let lock = false
++    const syncFrom = (source: HTMLElement, target: HTMLElement) => {
++      if (lock) return
++      lock = true
++      target.scrollLeft = source.scrollLeft
++      notifyScrollInteraction()
++      lock = false
+     }
+-
+-    headerEl.addEventListener("scroll", handleHeaderScroll, { passive: true })
++    const onHeader = () => syncFrom(headerEl, contentEl)
++    const onContent = () => syncFrom(contentEl, headerEl)
++    headerEl.addEventListener("scroll", onHeader, { passive: true })
++    contentEl.addEventListener("scroll", onContent, { passive: true })
+     return () => {
+-      headerEl.removeEventListener("scroll", handleHeaderScroll)
++      headerEl.removeEventListener("scroll", onHeader)
++      contentEl.removeEventListener("scroll", onContent)
+     }
+-  }, [headerScrollRef, loading])
++  }, [loading])
+ 
+   useEffect(() => {
+     const prev = prevTasksRef.current
+@@ -264,70 +258,51 @@ export function TaskPipelineBoard({
+           label="Scrollear derecha"
+         />
+ 
+-        {/* Header con fade horizontal */}
+-        <div
+-          style={{
+-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${headerFade.leftFade}px, black calc(100% - ${headerFade.rightFade}px), transparent 100%)`,
+-            maskImage: `linear-gradient(to right, transparent 0, black ${headerFade.leftFade}px, black calc(100% - ${headerFade.rightFade}px), transparent 100%)`,
+-          }}
+-          className="shrink-0 overflow-hidden"
++        <ScrollArea
++          ref={headerScrollRef}
++          orientation="horizontal"
++          dragToScroll
++          className="w-full shrink-0"
+         >
+-          <div
+-            ref={headerScrollRef}
+-            onMouseDown={handleMouseDown}
+-            onMouseMove={handleMouseMove}
+-            onMouseUp={stopDragging}
+-            onMouseLeave={stopDragging}
+-            onClickCapture={handleClickCapture}
+-            className="hide-scrollbar overflow-x-auto overflow-y-hidden cursor-grab active:cursor-grabbing select-none"
+-          >
+-            <div className="flex min-w-full w-max gap-4">
+-              {PIPELINE_PROCESS_ORDER.map(code => (
+-                <TaskProcessColumn
+-                  key={code}
+-                  processCode={code}
+-                  tasks={columns.get(code) ?? []}
+-                  expandedKey={expandedKey}
+-                  onToggleCard={toggleCard}
+-                  activeOverlayKey={activeOverlayKey}
+-                  onOverlayOpenChange={handleOverlayOpenChange}
+-                  headerOnly
+-                />
+-              ))}
+-            </div>
++          <div className="flex min-w-full w-max gap-4">
++            {PIPELINE_PROCESS_ORDER.map(code => (
++              <TaskProcessColumn
++                key={code}
++                processCode={code}
++                tasks={columns.get(code) ?? []}
++                expandedKey={expandedKey}
++                onToggleCard={toggleCard}
++                activeOverlayKey={activeOverlayKey}
++                onOverlayOpenChange={handleOverlayOpenChange}
++                headerOnly
++              />
++            ))}
+           </div>
+-        </div>
++        </ScrollArea>
+ 
+-        {/* Área de tarjetas con fade horizontal + scroll vertical compartido */}
+-        <div
+-          style={{
+-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${contentFade.leftFade}px, black calc(100% - ${contentFade.rightFade}px), transparent 100%)`,
+-            maskImage: `linear-gradient(to right, transparent 0, black ${contentFade.leftFade}px, black calc(100% - ${contentFade.rightFade}px), transparent 100%)`,
+-          }}
+-          className="min-h-0 flex-1 overflow-hidden"
++        <ScrollArea
++          ref={contentScrollRef}
++          orientation="both"
++          dragToScroll
++          className="min-h-0 w-full flex-1"
+         >
+-          <div
+-            ref={contentScrollRef}
+-            className="hide-scrollbar h-full overflow-x-auto overflow-y-auto"
+-          >
+-            <div className="flex h-fit min-w-full w-max gap-4 pb-4">
+-              {PIPELINE_PROCESS_ORDER.map(code => (
+-                <TaskProcessColumn
+-                  key={code}
+-                  processCode={code}
+-                  tasks={columns.get(code) ?? []}
+-                  allTasks={tasks}
+-                  expandedKey={expandedKey}
+-                  activeTaskId={activeTaskId}
+-                  onToggleCard={toggleCard}
+-                  activeOverlayKey={activeOverlayKey}
+-                  onOverlayOpenChange={handleOverlayOpenChange}
+-                  contentOnly
+-                />
+-              ))}
+-            </div>
++          <div className="flex h-fit min-w-full w-max gap-4 pb-4">
++            {PIPELINE_PROCESS_ORDER.map(code => (
++              <TaskProcessColumn
++                key={code}
++                processCode={code}
++                tasks={columns.get(code) ?? []}
++                allTasks={tasks}
++                expandedKey={expandedKey}
++                activeTaskId={activeTaskId}
++                onToggleCard={toggleCard}
++                activeOverlayKey={activeOverlayKey}
++                onOverlayOpenChange={handleOverlayOpenChange}
++                contentOnly
++              />
++            ))}
+           </div>
+-        </div>
++        </ScrollArea>
+       </div>
+ 
+       {openTaskDialog && (
+diff --git a/src/features/tasks/pipeline/components/tasks/task-workflow-overlay.tsx b/src/features/tasks/pipeline/components/tasks/task-workflow-overlay.tsx
+index c095efc..b2fbba5 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-workflow-overlay.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-workflow-overlay.tsx
+@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils/utils"
+ import { workflowAccess } from "@/features/workflow/access/workflow-access"
+ import { ProcessOperatorCell } from "@/features/processes/components/cells/process-operator-cell"
+ 
+-import { PIPELINE_SCROLL_INTERACTION_EVENT } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
++import { PIPELINE_SCROLL_INTERACTION_EVENT } from "@/shared/ui/scroll/scroll-interaction"
+ 
+ import { WorkflowActionButtons } from "../workflow/workflow-action-buttons"
+ import { WorkflowNumericField, type WorkflowNumericFieldKey } from "../workflow/workflow-numeric-field"
+diff --git a/src/features/tasks/pipeline/table/task-pipeline-header.tsx b/src/features/tasks/pipeline/table/task-pipeline-header.tsx
+index b71c5af..afe07fe 100644
+--- a/src/features/tasks/pipeline/table/task-pipeline-header.tsx
++++ b/src/features/tasks/pipeline/table/task-pipeline-header.tsx
+@@ -88,6 +88,8 @@ export function TaskPipelineHeader({
+ 
+     <KpiCarousel
+       cards={cards}
++      // Kanban desktop: colapsado. Mobile / card: abierto.
++      defaultExpanded={isMobile}
+       summary={{
+         icon: CheckCircle2,
+         color: PIPELINE_KPI_COLORS.progress,
+diff --git a/src/shared/hooks/use-snap-carousel-sync.tsx b/src/shared/hooks/use-snap-carousel-sync.tsx
+index 8963073..c34c503 100644
+--- a/src/shared/hooks/use-snap-carousel-sync.tsx
++++ b/src/shared/hooks/use-snap-carousel-sync.tsx
+@@ -10,7 +10,7 @@ type Options<T> = {
+   // aparecen en el DOM — se usa para traducir índice <-> valor.
+   order: readonly T[]
+   // Si el consumidor ya tiene su propio ref (ej. porque también usa
+-  // useDragScroll sobre el mismo nodo), se lo pasa acá para que todo
++  // ScrollArea sobre el mismo nodo), se lo pasa acá para que todo
+   // opere sobre el MISMO elemento en vez de crear uno propio sin uso.
+   containerRef?: RefObject<HTMLDivElement | null>
+   // Cuánto esperar sin nuevos eventos "scroll" antes de confirmar en
+diff --git a/src/shared/ui/entity-table/entity-table.tsx b/src/shared/ui/entity-table/entity-table.tsx
+index b9ce129..5a0765c 100644
+--- a/src/shared/ui/entity-table/entity-table.tsx
++++ b/src/shared/ui/entity-table/entity-table.tsx
+@@ -47,7 +47,7 @@ export function EntityTable<T>({
+       <div
+         data-entity-table-scroll
+         className={cn(
+-          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-1.5",
++          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-1.5",
+         )}
+       >
+         {data.length === 0 && (
+diff --git a/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts b/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts
+index 480103c..4af9ef3 100644
+--- a/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts
++++ b/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts
+@@ -1,34 +1,9 @@
+ import type { CSSProperties } from "react"
+ 
++/** @deprecated Fades eliminados. */
+ export function getHorizontalMaskStyle(
+-  leftFade: number = 0,
+-  rightFade: number = 0,
+-  maxPercent: number = 40, // Tope máximo en % (ej. 40% del ancho total)
++  _leftFade = 0,
++  _rightFade = 0,
+ ): CSSProperties {
+-  const safeLeft = Math.max(0, leftFade)
+-  const safeRight = Math.max(0, rightFade)
+-
+-  if (safeLeft === 0 && safeRight === 0) {
+-    return {}
+-  }
+-
+-  // Usamos clamp para asegurar: min(0px, valor_deseado, max_porcentaje)
+-  const gradient = `linear-gradient(
+-    to right,
+-    transparent 0px,
+-    black clamp(0px, ${safeLeft}px, ${maxPercent}%),
+-    black calc(100% - clamp(0px, ${safeRight}px, ${maxPercent}%)),
+-    transparent 100%
+-  )`
+-
+-  return {
+-    maskImage: gradient,
+-    WebkitMaskImage: gradient,
+-    maskRepeat: "no-repeat",
+-    WebkitMaskRepeat: "no-repeat",
+-    maskSize: "100% 100%",
+-    WebkitMaskSize: "100% 100%",
+-    willChange: "mask-image, -webkit-mask-image",
+-    transform: "translateZ(0)",
+-  } as CSSProperties
+-}
+\ No newline at end of file
++  return {}
++}
+diff --git a/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx b/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
+index 50b100f..2e7535c 100644
+--- a/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
++++ b/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
+@@ -1,64 +1,23 @@
+ "use client"
+ 
+-import {
+-  PropsWithChildren,
+-} from "react"
++import type { PropsWithChildren } from "react"
+ 
+-import {
+-  cn,
+-} from "@/shared/utils/utils"
++import { ScrollArea } from "@/components/ui/scroll-area"
++import { cn } from "@/shared/utils/utils"
+ 
+-import {
+-  useDragScroll,
+-} from "./use-drag-scroll"
+-
+-type Props =
+-  PropsWithChildren<{
+-    className?: string
+-  }>
+-
+-export function HorizontalScroll({
+-  children,
+-  className,
+-}: Props) {
+-
+-  const {
+-    containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
++type Props = PropsWithChildren<{ className?: string }>
+ 
++/** Fila horizontal — ScrollArea nativo + drag opcional con puntero. */
++export function HorizontalScroll({ children, className }: Props) {
+   return (
+-
+-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+-
+-      <div
+-        ref={containerRef}
+-        onMouseDown={handleMouseDown}
+-        onMouseMove={handleMouseMove}
+-        onMouseUp={stopDragging}
+-        onMouseLeave={stopDragging}
+-        onClickCapture={handleClickCapture}
+-        className="hide-scrollbar flex-1 min-h-0 overflow-x-auto overflow-y-hidden overscroll-x-contain cursor-grab select-none scrollbar-none active:cursor-grabbing"
+-      >
+-
+-        <div
+-          className={cn(
+-            "flex h-full min-h-0 w-max items-start gap-4",
+-            className,
+-          )}
+-        >
+-
+-          {children}
+-
+-        </div>
+-
++    <ScrollArea
++      orientation="horizontal"
++      dragToScroll
++      className="h-full min-h-0 w-full"
++    >
++      <div className={cn("flex h-full min-h-0 w-max items-start gap-4", className)}>
++        {children}
+       </div>
+-
+-    </div>
+-
++    </ScrollArea>
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts b/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
+index bd9c746..f23dd3f 100644
+--- a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
++++ b/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
+@@ -1,221 +1,7 @@
+-"use client"
+-
+-import {
+-  useCallback,
+-  useEffect,
+-  useRef,
+-} from "react"
+-
+-const DRAG_THRESHOLD = 6
+-const DRAG_SPEED = 1.2
+-const WHEEL_MULTIPLIER = 3.5
+-
+-const DRAG_SCROLL_IGNORE_SELECTOR =
+-  "[data-drag-scroll-ignore]"
+-
+-export const PIPELINE_SCROLL_INTERACTION_EVENT =
+-  "pipeline-scroll-interaction"
+-
+-function notifyScrollInteraction() {
+-  window.dispatchEvent(
+-    new Event(PIPELINE_SCROLL_INTERACTION_EVENT),
+-  )
+-}
+-
+-function clearBodyDragStyles() {
+-  document.body.style.removeProperty("user-select")
+-  document.body.style.removeProperty("cursor")
+-}
+-
+ /**
+- * Drag horizontal en un contenedor overflow-x.
+- *
+- * Importante:
+- * - NO marca drag en el primer mousedown (evita body locked si un
+- *   Popover/portal se traga el mouseup).
+- * - Listeners de move/up en window mientras el gesture está activo.
+- * - Cleanup total en unmount / pointercancel / blur.
++ * @deprecated Usar ScrollArea. Solo reexport del evento de interacción.
+  */
+-export function useDragScroll() {
+-  const containerRef = useRef<HTMLDivElement>(null)
+-
+-  /** Gesture empezó (mousedown), aún no supera threshold. */
+-  const armed = useRef(false)
+-  /** Ya superó threshold → drag real. */
+-  const isDragging = useRef(false)
+-  const dragged = useRef(false)
+-  const suppressClick = useRef(false)
+-
+-  const startX = useRef(0)
+-  const startScrollLeft = useRef(0)
+-
+-  const stopDragging = useCallback(() => {
+-    if (dragged.current) {
+-      suppressClick.current = true
+-      window.setTimeout(() => {
+-        suppressClick.current = false
+-      }, 200)
+-    }
+-
+-    armed.current = false
+-    isDragging.current = false
+-    dragged.current = false
+-    clearBodyDragStyles()
+-  }, [])
+-
+-  const onWindowMove = useCallback((event: MouseEvent) => {
+-    if (!armed.current) return
+-    const container = containerRef.current
+-    if (!container) return
+-
+-    const deltaX = event.clientX - startX.current
+-
+-    if (!isDragging.current) {
+-      if (Math.abs(deltaX) <= DRAG_THRESHOLD) return
+-      isDragging.current = true
+-      dragged.current = true
+-      document.body.style.userSelect = "none"
+-      document.body.style.cursor = "grabbing"
+-      notifyScrollInteraction()
+-    }
+-
+-    container.scrollLeft =
+-      startScrollLeft.current - deltaX * DRAG_SPEED
+-  }, [])
+-
+-  const onWindowUp = useCallback(() => {
+-    stopDragging()
+-  }, [stopDragging])
+-
+-  const handleMouseDown = useCallback((event: React.MouseEvent) => {
+-    const target = event.target as HTMLElement
+-    if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) return
+-
+-    const container = containerRef.current
+-    if (!container) return
+-
+-    // Armar, no drag todavía — body no se toca hasta threshold.
+-    armed.current = true
+-    isDragging.current = false
+-    dragged.current = false
+-    startX.current = event.clientX
+-    startScrollLeft.current = container.scrollLeft
+-  }, [])
+-
+-  // Move en el nodo sigue siendo útil; window cubre salida del nodo.
+-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+-    if (!armed.current) return
+-    onWindowMove(event.nativeEvent)
+-  }, [onWindowMove])
+-
+-  const handleClickCapture = useCallback((event: React.MouseEvent) => {
+-    const target = event.target as HTMLElement
+-    if (target.closest(DRAG_SCROLL_IGNORE_SELECTOR)) return
+-    if (suppressClick.current) {
+-      event.preventDefault()
+-      event.stopPropagation()
+-    }
+-  }, [])
+-
+-  useEffect(() => {
+-    window.addEventListener("mousemove", onWindowMove)
+-    window.addEventListener("mouseup", onWindowUp)
+-    window.addEventListener("pointercancel", onWindowUp)
+-    window.addEventListener("blur", onWindowUp)
+-    return () => {
+-      window.removeEventListener("mousemove", onWindowMove)
+-      window.removeEventListener("mouseup", onWindowUp)
+-      window.removeEventListener("pointercancel", onWindowUp)
+-      window.removeEventListener("blur", onWindowUp)
+-      // Si el componente se desmonta a mitad de un drag (p.ej. popover),
+-      // no dejar body con user-select/cursor pegados.
+-      clearBodyDragStyles()
+-      armed.current = false
+-      isDragging.current = false
+-      dragged.current = false
+-    }
+-  }, [onWindowMove, onWindowUp])
+-
+-  useEffect(() => {
+-    // Ref puede ser null en el primer effect (board aún en loading) y
+-    // montarse después: re-sincronizamos hasta tener nodo.
+-    let frame = 0
+-    let notified = false
+-    let attached: HTMLDivElement | null = null
+-
+-    const handleWheel = (event: WheelEvent) => {
+-      const container = attached
+-      if (!container) return
+-
+-      const canScrollH =
+-        container.scrollWidth > container.clientWidth + 1
+-      if (!canScrollH) return
+-
+-      // Sobre la zona horizontal: rueda vertical → scroll X (sin Shift).
+-      const primarilyHorizontal =
+-        Math.abs(event.deltaX) > Math.abs(event.deltaY)
+-      const delta = primarilyHorizontal
+-        ? event.deltaX
+-        : event.deltaY * WHEEL_MULTIPLIER
+-
+-      if (Math.abs(delta) < 0.01) return
+-
+-      const atStart = container.scrollLeft <= 0
+-      const atEnd =
+-        container.scrollLeft + container.clientWidth >=
+-        container.scrollWidth - 1
+-      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) {
+-        return
+-      }
+-
+-      event.preventDefault()
+-
+-      if (!notified) {
+-        notifyScrollInteraction()
+-        notified = true
+-        window.setTimeout(() => {
+-          notified = false
+-        }, 250)
+-      }
+-
+-      cancelAnimationFrame(frame)
+-      frame = requestAnimationFrame(() => {
+-        container.scrollLeft += delta
+-      })
+-    }
+-
+-    const sync = () => {
+-      const el = containerRef.current
+-      if (el === attached) return
+-      if (attached) {
+-        attached.removeEventListener("wheel", handleWheel)
+-      }
+-      attached = el
+-      if (attached) {
+-        attached.addEventListener("wheel", handleWheel, { passive: false })
+-      }
+-    }
+-
+-    sync()
+-    const interval = window.setInterval(sync, 120)
+-
+-    return () => {
+-      window.clearInterval(interval)
+-      cancelAnimationFrame(frame)
+-      if (attached) {
+-        attached.removeEventListener("wheel", handleWheel)
+-      }
+-    }
+-  }, [])
+-
+-  return {
+-    containerRef,
+-    isDragging,
+-    dragged,
+-    suppressClick,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  }
+-}
++export {
++  PIPELINE_SCROLL_INTERACTION_EVENT,
++  notifyScrollInteraction,
++} from "@/shared/ui/scroll/scroll-interaction"
+diff --git a/src/shared/ui/pipeline-scroll/pipeline-scroll.tsx b/src/shared/ui/pipeline-scroll/pipeline-scroll.tsx
+index b308d0c..46b557f 100644
+--- a/src/shared/ui/pipeline-scroll/pipeline-scroll.tsx
++++ b/src/shared/ui/pipeline-scroll/pipeline-scroll.tsx
+@@ -1,61 +1,21 @@
+ "use client"
+ 
+-import { PropsWithChildren, useMemo } from "react"
++import type { PropsWithChildren } from "react"
++import { ScrollArea } from "@/components/ui/scroll-area"
+ import { cn } from "@/shared/utils/utils"
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
+-import { getHorizontalMaskStyle } from "@/shared/ui/horizontal-scroll/get-horizontal-mask-style"
+ 
+-type Props = PropsWithChildren<{
+-  className?: string
+-  fade?: boolean
+-  drag?: boolean
+-}>
+-
+-export function PipelineScroll({
+-  children,
+-  className,
+-  fade = true,
+-  drag = true,
+-}: Props) {
+-
+-  const { containerRef, handleMouseDown, handleMouseMove, handleClickCapture, stopDragging } = useDragScroll()
+-
+-  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
+-
+-  const maskStyle = useMemo(() => {
+-
+-    if (!fade) {
+-      return
+-    }
+-
+-    return getHorizontalMaskStyle(leftFade, rightFade)
+-
+-  }, [fade, leftFade, rightFade])
++type Props = PropsWithChildren<{ className?: string }>
+ 
++export function PipelineScroll({ children, className }: Props) {
+   return (
+-
+-    <div className="relative flex h-full min-h-0 flex-1 overflow-hidden">
+-
+-      <div
+-        ref={containerRef}
+-        style={maskStyle}
+-        onMouseDown={drag ? handleMouseDown : undefined}
+-        onMouseMove={drag ? handleMouseMove : undefined}
+-        onMouseUp={drag ? stopDragging : undefined}
+-        onMouseLeave={drag ? stopDragging : undefined}
+-        onClickCapture={handleClickCapture}
+-        className={cn("hide-scrollbar h-full min-h-0 overflow-x-auto overflow-y-hidden overscroll-contain", drag && ["cursor-grab", "active:cursor-grabbing", "select-none"])}
+-      >
+-
+-        <div className={cn("flex h-full w-max items-start gap-4", className)}>
+-          {children}
+-        </div>
+-
++    <ScrollArea
++      orientation="horizontal"
++      dragToScroll
++      className="h-full min-h-0 w-full"
++    >
++      <div className={cn("flex h-full w-max items-start gap-4", className)}>
++        {children}
+       </div>
+-
+-    </div>
+-
++    </ScrollArea>
+   )
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/shared/ui/process-board/process-board.tsx b/src/shared/ui/process-board/process-board.tsx
+index df7e72c..fb68f94 100644
+--- a/src/shared/ui/process-board/process-board.tsx
++++ b/src/shared/ui/process-board/process-board.tsx
+@@ -1,9 +1,10 @@
+ "use client"
+ 
+-import { useState, type ReactNode } from "react"
++import { useRef, useState, type ReactNode } from "react"
+ 
++import { ScrollArea } from "@/components/ui/scroll-area"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
++import { notifyScrollInteraction } from "@/shared/ui/scroll/scroll-interaction"
+ import { cn } from "@/shared/utils/utils"
+ 
+ import { ProcessBoardNavButton } from "./process-board-nav-button"
+@@ -18,7 +19,9 @@ type Props<TId extends string = string> = {
+   header?: ReactNode
+   loading?: boolean
+   loadingFallback?: ReactNode
+-  /** true (default): flechas solo al hover en desktop, igual TaskPipeline. */
++  /** Flechas de navegación (default true). */
++  showArrows?: boolean
++  /** Desktop: flechas solo al hover si true (default). */
+   arrowsOnHover?: boolean
+ }
+ 
+@@ -30,45 +33,38 @@ export function ProcessBoard<TId extends string = string>({
+   header,
+   loading,
+   loadingFallback,
++  showArrows = true,
+   arrowsOnHover = true,
+ }: Props<TId>) {
+   const { isMobile } = useResponsive()
+   const [hovering, setHovering] = useState(false)
++  const containerRef = useRef<HTMLDivElement>(null)
+ 
+-  const {
++  const { canScrollLeft, canScrollRight } = useProcessBoardOverflow(
+     containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  const { canScrollLeft, canScrollRight, leftFade, rightFade } =
+-    useProcessBoardOverflow(containerRef, [
+-      columns.length,
+-      isMobile,
+-      loading,
+-    ])
++    [columns.length, isMobile, loading],
++  )
+ 
+   const showLeft =
+-    canScrollLeft && (!arrowsOnHover || isMobile || hovering)
++    showArrows &&
++    canScrollLeft &&
++    (!arrowsOnHover || isMobile || hovering)
+   const showRight =
+-    canScrollRight && (!arrowsOnHover || isMobile || hovering)
++    showArrows &&
++    canScrollRight &&
++    (!arrowsOnHover || isMobile || hovering)
+ 
+   function currentIndex() {
+     const el = containerRef.current
+     if (!el) return 0
+-    if (isMobile) {
+-      return Math.round(el.scrollLeft / (el.clientWidth || 1))
+-    }
++    if (isMobile) return Math.round(el.scrollLeft / (el.clientWidth || 1))
+     return Math.round(el.scrollLeft / scrollStep)
+   }
+ 
+   function goToIndex(index: number) {
+     const el = containerRef.current
+     if (!el) return
+-    const max = columns.length - 1
+-    const next = Math.max(0, Math.min(max, index))
++    const next = Math.max(0, Math.min(columns.length - 1, index))
+     el.scrollTo({
+       left: isMobile ? next * el.clientWidth : next * scrollStep,
+       behavior: "smooth",
+@@ -88,12 +84,11 @@ export function ProcessBoard<TId extends string = string>({
+   return (
+     <div
+       className={cn(
+-        "relative flex min-h-0 w-full flex-1 flex-col select-none",
++        "relative flex min-h-0 w-full flex-1 flex-col",
+         className,
+       )}
+     >
+       {header}
+-
+       <div
+         className="relative min-h-0 w-full flex-1"
+         onMouseEnter={() => setHovering(true)}
+@@ -111,26 +106,20 @@ export function ProcessBoard<TId extends string = string>({
+           onClick={() => goToIndex(currentIndex() + 1)}
+           label="Columna siguiente"
+         />
+-
+-        <div
+-          className="h-full min-h-0 overflow-hidden"
+-          style={{
+-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-            maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+-          }}
++        <ScrollArea
++          ref={containerRef}
++          orientation="horizontal"
++          dragToScroll
++          onScroll={() => notifyScrollInteraction()}
++          className={cn(
++            "h-full min-h-0 w-full",
++            isMobile && "snap-x snap-mandatory",
++          )}
+         >
+           <div
+-            ref={containerRef}
+-            onMouseDown={handleMouseDown}
+-            onMouseMove={handleMouseMove}
+-            onMouseUp={stopDragging}
+-            onMouseLeave={stopDragging}
+-            onClickCapture={handleClickCapture}
+             className={cn(
+-              "hide-scrollbar flex h-full min-h-0 select-none",
+-              isMobile
+-                ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
+-                : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
++              "flex h-full min-h-0 w-max",
++              !isMobile && "gap-3 pb-2",
+             )}
+           >
+             {columns.map(col => (
+@@ -138,16 +127,14 @@ export function ProcessBoard<TId extends string = string>({
+                 key={col.id}
+                 className={cn(
+                   "flex shrink-0 flex-col",
+-                  isMobile
+-                    ? "w-full snap-center [touch-action:pan-y]"
+-                    : columnClassName,
++                  isMobile ? "w-full snap-center" : columnClassName,
+                 )}
+               >
+                 {col.content}
+               </div>
+             ))}
+           </div>
+-        </div>
++        </ScrollArea>
+       </div>
+     </div>
+   )
+diff --git a/src/shared/ui/process-board/use-process-board-overflow.ts b/src/shared/ui/process-board/use-process-board-overflow.ts
+index 19a3f90..5abc2a6 100644
+--- a/src/shared/ui/process-board/use-process-board-overflow.ts
++++ b/src/shared/ui/process-board/use-process-board-overflow.ts
+@@ -8,51 +8,36 @@ import {
+   type RefObject,
+ } from "react"
+ 
+-const FADE_MAX = 28
+-
++/** Overflow horizontal para flechas — sin fades. */
+ export function useProcessBoardOverflow(
+   containerRef: RefObject<HTMLDivElement | null>,
+   deps: unknown[] = [],
+ ) {
+   const [canScrollLeft, setCanScrollLeft] = useState(false)
+   const [canScrollRight, setCanScrollRight] = useState(false)
+-  const [leftFade, setLeftFade] = useState(0)
+-  const [rightFade, setRightFade] = useState(0)
+   const rafRef = useRef<number | null>(null)
+ 
+   const update = useCallback(() => {
+     const el = containerRef.current
+     if (!el) return
+-
+     const max = Math.max(0, el.scrollWidth - el.clientWidth)
+-    const left = el.scrollLeft > 2
+-    const right = el.scrollLeft < max - 2
+-
+-    setCanScrollLeft(left)
+-    setCanScrollRight(right)
+-    setLeftFade(left ? FADE_MAX : 0)
+-    setRightFade(right ? FADE_MAX : 0)
++    setCanScrollLeft(el.scrollLeft > 2)
++    setCanScrollRight(el.scrollLeft < max - 2)
+   }, [containerRef])
+ 
+   useLayoutEffect(() => {
+     const el = containerRef.current
+     if (!el) return
+-
+     const schedule = () => {
+       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+       rafRef.current = requestAnimationFrame(update)
+     }
+-
+     update()
+     const t = window.setTimeout(update, 50)
+-
+     el.addEventListener("scroll", schedule, { passive: true })
+     const ro = new ResizeObserver(schedule)
+     ro.observe(el)
+-    for (const child of Array.from(el.children)) {
+-      ro.observe(child)
+-    }
+-
++    for (const child of Array.from(el.children)) ro.observe(child)
+     return () => {
+       window.clearTimeout(t)
+       el.removeEventListener("scroll", schedule)
+@@ -62,5 +47,5 @@ export function useProcessBoardOverflow(
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [containerRef, update, ...deps])
+ 
+-  return { canScrollLeft, canScrollRight, leftFade, rightFade }
++  return { canScrollLeft, canScrollRight }
+ }
+diff --git a/src/shared/ui/scroll/scroll-interaction.ts b/src/shared/ui/scroll/scroll-interaction.ts
+new file mode 100644
+index 0000000..fad0418
+--- /dev/null
++++ b/src/shared/ui/scroll/scroll-interaction.ts
+@@ -0,0 +1,8 @@
++/** Evento al scrollear boards (cierra overlays, etc.). */
++export const PIPELINE_SCROLL_INTERACTION_EVENT =
++  "pipeline-scroll-interaction"
++
++export function notifyScrollInteraction() {
++  if (typeof window === "undefined") return
++  window.dispatchEvent(new Event(PIPELINE_SCROLL_INTERACTION_EVENT))
++}

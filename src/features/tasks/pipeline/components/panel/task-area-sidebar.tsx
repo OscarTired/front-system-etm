@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { EntityTable } from "@/shared/ui/entity-table"
 import type { EntityColumn } from "@/shared/ui/entity-table/types"
+import { Layers } from "lucide-react"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { cn } from "@/shared/utils/utils"
 
@@ -40,6 +41,7 @@ type AreaRow = SectionRow | TaskRow
 export function TaskAreaSidebar({ className }: { className?: string }) {
   const panel = useTaskAreaPanel()
   const { state, actions } = panel
+  const [areasOpen, setAreasOpen] = useState(false)
 
   if (!state.hasAreaPanel) return null
 
@@ -106,37 +108,56 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
               Mis tareas
             </h2>
-            <HistoryToggleButton
-              count={state.completedCount}
-              active={state.showHistory}
-              onClick={() => actions.setShowHistory(v => !v)}
-            />
+            <div className="flex shrink-0 items-center gap-1">
+              {state.canChooseAreas && (
+                <button
+                  type="button"
+                  aria-label="Áreas"
+                  aria-pressed={areasOpen}
+                  onClick={() => setAreasOpen(v => !v)}
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-lg transition active:scale-95",
+                    areasOpen
+                      ? "bg-foreground/15 text-foreground"
+                      : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+                  )}
+                >
+                  <Layers size={16} />
+                </button>
+              )}
+              <HistoryToggleButton
+                count={state.completedCount}
+                active={state.showHistory}
+                onClick={() => actions.setShowHistory(v => !v)}
+              />
+            </div>
           </div>
 
-          {/* Chips de área — siempre visibles si puede elegir */}
-          {state.canChooseAreas && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {state.allAreas.map(code => {
-                const definition = PROCESS_DEFINITIONS[code]
-                const Icon = ENTITY_ICONS[definition.icon]
-                const selected = effectiveSelected(code)
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => toggleArea(code)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
-                      selected
-                        ? "bg-foreground/15 text-foreground"
-                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-                    )}
-                  >
-                    <Icon size={13} style={{ color: definition.color }} />
-                    <span>{definition.label}</span>
-                  </button>
-                )
-              })}
+          {state.canChooseAreas && areasOpen && (
+            <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
+              <div className="flex flex-wrap gap-1.5">
+                {state.allAreas.map(code => {
+                  const definition = PROCESS_DEFINITIONS[code]
+                  const Icon = ENTITY_ICONS[definition.icon]
+                  const selected = effectiveSelected(code)
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => toggleArea(code)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
+                        selected
+                          ? "bg-foreground/15 text-foreground"
+                          : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+                      )}
+                    >
+                      <Icon size={13} style={{ color: definition.color }} />
+                      <span>{definition.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -153,7 +174,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
         <div
           className={cn(
             "min-h-0 flex-1 overflow-hidden",
-            state.summonTarget && "pb-20",
+            false,
           )}
         >
           {state.loading ? (

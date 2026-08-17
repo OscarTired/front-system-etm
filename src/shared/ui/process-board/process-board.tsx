@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+import { notifyScrollInteraction } from "@/shared/ui/scroll/scroll-interaction"
 import { cn } from "@/shared/utils/utils"
 
 import { ProcessBoardNavButton } from "./process-board-nav-button"
@@ -18,7 +19,9 @@ type Props<TId extends string = string> = {
   header?: ReactNode
   loading?: boolean
   loadingFallback?: ReactNode
-  /** true (default): flechas solo al hover en desktop, igual TaskPipeline. */
+  /** Flechas de navegación (default true). */
+  showArrows?: boolean
+  /** Desktop: flechas solo al hover si true (default). */
   arrowsOnHover?: boolean
 }
 
@@ -30,45 +33,38 @@ export function ProcessBoard<TId extends string = string>({
   header,
   loading,
   loadingFallback,
+  showArrows = true,
   arrowsOnHover = true,
 }: Props<TId>) {
   const { isMobile } = useResponsive()
   const [hovering, setHovering] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const {
+  const { canScrollLeft, canScrollRight } = useProcessBoardOverflow(
     containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
-  const { canScrollLeft, canScrollRight, leftFade, rightFade } =
-    useProcessBoardOverflow(containerRef, [
-      columns.length,
-      isMobile,
-      loading,
-    ])
+    [columns.length, isMobile, loading],
+  )
 
   const showLeft =
-    canScrollLeft && (!arrowsOnHover || isMobile || hovering)
+    showArrows &&
+    canScrollLeft &&
+    (!arrowsOnHover || isMobile || hovering)
   const showRight =
-    canScrollRight && (!arrowsOnHover || isMobile || hovering)
+    showArrows &&
+    canScrollRight &&
+    (!arrowsOnHover || isMobile || hovering)
 
   function currentIndex() {
     const el = containerRef.current
     if (!el) return 0
-    if (isMobile) {
-      return Math.round(el.scrollLeft / (el.clientWidth || 1))
-    }
+    if (isMobile) return Math.round(el.scrollLeft / (el.clientWidth || 1))
     return Math.round(el.scrollLeft / scrollStep)
   }
 
   function goToIndex(index: number) {
     const el = containerRef.current
     if (!el) return
-    const max = columns.length - 1
-    const next = Math.max(0, Math.min(max, index))
+    const next = Math.max(0, Math.min(columns.length - 1, index))
     el.scrollTo({
       left: isMobile ? next * el.clientWidth : next * scrollStep,
       behavior: "smooth",
@@ -88,12 +84,11 @@ export function ProcessBoard<TId extends string = string>({
   return (
     <div
       className={cn(
-        "relative flex min-h-0 w-full flex-1 flex-col select-none",
+        "relative flex min-h-0 w-full flex-1 flex-col",
         className,
       )}
     >
       {header}
-
       <div
         className="relative min-h-0 w-full flex-1"
         onMouseEnter={() => setHovering(true)}
@@ -111,26 +106,20 @@ export function ProcessBoard<TId extends string = string>({
           onClick={() => goToIndex(currentIndex() + 1)}
           label="Columna siguiente"
         />
-
-        <div
-          className="h-full min-h-0 overflow-hidden"
-          style={{
-            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-            maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-          }}
+        <ScrollArea
+          ref={containerRef}
+          orientation="horizontal"
+          dragToScroll
+          onScroll={() => notifyScrollInteraction()}
+          className={cn(
+            "h-full min-h-0 w-full",
+            isMobile && "snap-x snap-mandatory",
+          )}
         >
           <div
-            ref={containerRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={stopDragging}
-            onMouseLeave={stopDragging}
-            onClickCapture={handleClickCapture}
             className={cn(
-              "hide-scrollbar flex h-full min-h-0 select-none",
-              isMobile
-                ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
-                : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
+              "flex h-full min-h-0 w-max",
+              !isMobile && "gap-3 pb-2",
             )}
           >
             {columns.map(col => (
@@ -138,16 +127,14 @@ export function ProcessBoard<TId extends string = string>({
                 key={col.id}
                 className={cn(
                   "flex shrink-0 flex-col",
-                  isMobile
-                    ? "w-full snap-center [touch-action:pan-y]"
-                    : columnClassName,
+                  isMobile ? "w-full snap-center" : columnClassName,
                 )}
               >
                 {col.content}
               </div>
             ))}
           </div>
-        </div>
+        </ScrollArea>
       </div>
     </div>
   )

@@ -88,6 +88,8 @@ export function TaskPipelineHeader({
 
     <KpiCarousel
       cards={cards}
+      // Kanban desktop: colapsado. Mobile / card: abierto.
+      defaultExpanded={isMobile}
       summary={{
         icon: CheckCircle2,
         color: PIPELINE_KPI_COLORS.progress,

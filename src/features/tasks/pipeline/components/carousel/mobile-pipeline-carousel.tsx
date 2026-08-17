@@ -1,20 +1,15 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { ProcessBoardNavButton } from "@/shared/ui/process-board"
-
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
-import { cn } from "@/shared/utils/utils"
-
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
-
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { PIPELINE_PROCESS_ORDER } from "../../utils/process-columns"
 import { TaskProcessColumn } from "../../table/task-process-column"
 import { TaskColumnOperator } from "../tasks/task-column-operator"
-
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 
 type Props = {
@@ -26,25 +21,6 @@ type Props = {
   onOverlayOpenChange: (key: string, isOpen: boolean) => void
 }
 
-const FADE_MIN = 12
-const FADE_MAX = 40
-
-// Mismo mecanismo que la rama desktop de TaskPipelineBoard: un solo
-// contenedor con scroll (useDragScroll) — sin hooks de sync propios,
-// sin estado de "proceso activo". Header y contenido se mueven
-// juntos porque son la misma superficie de scroll.
-//
-// El header NO reutiliza TaskProcessColumn(headerOnly) — ese es
-// ColumnHeader, con "w-72" HARDCODEADO pensado para columnas
-// angostas de desktop. Acá se arma un header propio, centrado y a
-// todo el ancho, que sí escala con la pantalla. Incluye lo mismo
-// que trae ColumnHeader: el chip del proceso Y la fila de operario
-// (TaskColumnOperator) — antes se me había quedado afuera.
-//
-// Las flechas de navegación también son un calco de las de
-// desktop (mismo scrollBy), solo que sin el gate de "hoveringHeader"
-// —en touch no hay hover— así que se muestran directo según haya o
-// no más para scrollear.
 export function MobilePipelineCarousel({
   tasks,
   columns,
@@ -54,301 +30,97 @@ export function MobilePipelineCarousel({
   onOverlayOpenChange,
 }: Props) {
   const theme = useThemeStore(s => s.resolved)
-
-
-  const {
-    containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
-  // El fade del borde (mask-image) se escribe DIRECTO al DOM, sin
-  // pasar por React state — un intento anterior lo manejaba con
-  // isScrolling+setState en cada evento de scroll, y el re-render
-  // en pleno gesto interrumpía el scroll nativo por touch (se movía
-  // unos pixeles y se trababa). Escribiendo el mask a mano dentro
-  // de un rAF, el scroll nunca dispara un render de React — solo
-  // mutación de estilo, que el compositor puede aplicar sin
-  // interferir con el momentum scroll táctil.
-  const maskRef = useRef<HTMLDivElement>(null)
-  const rafRef = useRef<number | null>(null)
-
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  useLayoutEffect(() => {
-
-    const container = containerRef.current
-    const mask = maskRef.current
-
-    if (!container || !mask) {
-      return
-    }
-
-    const applyMask = (leftFade: number, rightFade: number) => {
-
-      const value =
-        `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`
-
-      mask.style.maskImage = value
-      mask.style.webkitMaskImage = value
-
-    }
-
-    // Antes: dos ResizeObserver + dos listeners de "scroll" separados
-    // sobre el MISMO contenedor (uno para el fade-mask, otro para las
-    // flechas) — cada uno leyendo scrollLeft/clientWidth/scrollWidth
-    // por su cuenta y disparando su propio callback. Un solo update()
-    // hace ambas cosas, con un solo rAF compartido: la mitad del
-    // trabajo de layout en cada resize/scroll de este carrusel.
-    const update = () => {
-
-      const { scrollLeft, clientWidth, scrollWidth } = container
-
-      const maxScroll = Math.max(scrollWidth - clientWidth, 0)
-
-      if (maxScroll <= 0) {
-        applyMask(0, 0)
-      } else {
-        const fadeSize = Math.min(
-          Math.max(Math.round(clientWidth * 0.04), FADE_MIN),
-          FADE_MAX,
-        )
-
-        applyMask(
-          Math.min(scrollLeft, fadeSize),
-          Math.min(maxScroll - scrollLeft, fadeSize),
-        )
-      }
-
-      setCanScrollLeft(scrollLeft > 4)
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4)
-
-    }
-
-    const scheduleUpdate = () => {
-
-      if (rafRef.current !== null) {
-        return
-      }
-
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null
-        update()
-      })
-
-    }
-
-    mask.style.maskRepeat = "no-repeat"
-    mask.style.webkitMaskRepeat = "no-repeat"
-    mask.style.maskSize = "100% 100%"
-    mask.style.webkitMaskSize = "100% 100%"
-
-    update()
-
-    container.addEventListener("scroll", scheduleUpdate, { passive: true })
-
-    const resizeObserver = new ResizeObserver(scheduleUpdate)
-
-    resizeObserver.observe(container)
-
-    return () => {
-
-      container.removeEventListener("scroll", scheduleUpdate)
-
-      resizeObserver.disconnect()
-
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current)
-      }
-
-    }
-
-  }, [containerRef])
-
-  function currentIndex() {
-    const el = containerRef.current
-    if (!el) return 0
-    const w = el.clientWidth || 1
-    return Math.round(el.scrollLeft / w)
-  }
-
-  function goToIndex(index: number) {
+  const updateArrows = useCallback(() => {
     const el = containerRef.current
     if (!el) return
-    const max = PIPELINE_PROCESS_ORDER.length - 1
-    const next = Math.max(0, Math.min(max, index))
-    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" })
-  }
+    setCanScrollLeft(el.scrollLeft > 2)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+  }, [])
 
-  function scrollToPrevious() {
-    goToIndex(currentIndex() - 1)
-  }
-
-  function scrollToNext() {
-    goToIndex(currentIndex() + 1)
-  }
-
-  // Snap a página completa al soltar fling / flechas a medias
   useLayoutEffect(() => {
     const el = containerRef.current
     if (!el) return
-    let settleTimer: number | null = null
-    const snapToNearest = () => {
-      const w = el.clientWidth || 1
-      const max = PIPELINE_PROCESS_ORDER.length - 1
-      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
-      const target = idx * w
-      if (Math.abs(el.scrollLeft - target) > 2) {
-        el.scrollTo({ left: target, behavior: "smooth" })
-      }
-    }
-    const onScroll = () => {
-      if (settleTimer != null) window.clearTimeout(settleTimer)
-      settleTimer = window.setTimeout(snapToNearest, 80)
-    }
-    el.addEventListener("scroll", onScroll, { passive: true })
-    el.addEventListener("scrollend", snapToNearest as EventListener)
+    updateArrows()
+    el.addEventListener("scroll", updateArrows, { passive: true })
+    const ro = new ResizeObserver(updateArrows)
+    ro.observe(el)
     return () => {
-      el.removeEventListener("scroll", onScroll)
-      el.removeEventListener("scrollend", snapToNearest as EventListener)
-      if (settleTimer != null) window.clearTimeout(settleTimer)
+      el.removeEventListener("scroll", updateArrows)
+      ro.disconnect()
     }
-  }, [containerRef])
+  }, [updateArrows, columns])
 
+  function scrollByPage(dir: -1 | 1) {
+    const el = containerRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" })
+  }
 
   return (
-
-    <div className="relative">
-
-              <ProcessBoardNavButton
-          direction="left"
-          visible={canScrollLeft}
-          onClick={scrollToPrevious}
-          label="Proceso anterior"
-        />
-
-              <ProcessBoardNavButton
-          direction="right"
-          visible={canScrollRight}
-          onClick={scrollToNext}
-          label="Proceso siguiente"
-        />
-
-      <div
-        ref={maskRef}
-        className="overflow-hidden"
+    <div className="relative w-full">
+      <ProcessBoardNavButton
+        direction="left"
+        visible={canScrollLeft}
+        onClick={() => scrollByPage(-1)}
+        label="Proceso anterior"
+      />
+      <ProcessBoardNavButton
+        direction="right"
+        visible={canScrollRight}
+        onClick={() => scrollByPage(1)}
+        label="Proceso siguiente"
+      />
+      <ScrollArea
+        ref={containerRef}
+        orientation="horizontal"
+        dragToScroll
+        className="w-full snap-x snap-mandatory"
       >
-
-        <div
-          ref={containerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
-          onClickCapture={handleClickCapture}
-          className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden select-none [touch-action:pan-x]"
-        >
-
+        <div className="flex w-max">
           {PIPELINE_PROCESS_ORDER.map(code => {
-
             const definition = PROCESS_DEFINITIONS[code]
             const Icon = ENTITY_ICONS[definition.icon]
             const badge = getBadgeColors(definition.color, "subtle", theme)
-            const processTasks = columns.get(code) ?? []
-            const count = processTasks.length
-
+            const columnTasks = columns.get(code) ?? []
             return (
-
-              <div
+              <section
                 key={code}
-                className="w-full shrink-0 snap-center [touch-action:pan-y]"
+                className="flex w-[min(100vw,28rem)] shrink-0 snap-center flex-col gap-2 px-2"
               >
-
-                {/* Header propio, CENTRADO — igual que el chip
-                    del carrusel de KPIs, no left-aligned con el
-                    contador empujado a la derecha como en
-                    ColumnHeader (desktop). */}
-                <div
-                  data-drag-scroll-ignore
-                  className="flex h-10 items-center justify-center gap-2 border-b px-3"
-                  style={{ borderColor: definition.color, cursor: "default" }}
-                >
-
+                <div className="flex items-center justify-center gap-2 px-1">
                   <span
-                    className="flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold"
+                    className="flex size-7 items-center justify-center rounded-md text-xs font-bold"
                     style={{ color: badge.text, backgroundColor: badge.background }}
                   >
                     {code}
                   </span>
-
-                  {Icon && (
-                    <Icon
-                      size={15}
-                      className="shrink-0"
-                      style={{ color: definition.color }}
-                    />
-                  )}
-
-                  <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
+                  {Icon && <Icon size={16} style={{ color: definition.color }} />}
+                  <span className="text-sm font-bold uppercase tracking-wide text-foreground">
                     {definition.label}
                   </span>
-
-                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                    {count}
-                  </span>
-
+                  <span className="text-xs text-muted-foreground">{columnTasks.length}</span>
                 </div>
-
-                {/* Fila de operario — lo mismo que trae
-                    ColumnHeader en desktop, se había quedado
-                    afuera del header propio de acá. */}
-                <div
-                  data-drag-scroll-ignore
-                  className="border-b border-border px-2 py-1"
-                  style={{ cursor: "default" }}
-                >
-
-                  <TaskColumnOperator
-                    processCode={code}
-                    tasks={processTasks}
-                  />
-
-                </div>
-
-                <div
-                  data-drag-scroll-ignore
-                  className="mt-2"
-                  style={{ cursor: "default" }}
-                >
-
-                  <TaskProcessColumn
-                    processCode={code}
-                    tasks={processTasks}
-                    allTasks={tasks}
-                    expandedKey={expandedKey}
-                    onToggleCard={onToggleCard}
-                    activeOverlayKey={activeOverlayKey}
-                    onOverlayOpenChange={onOverlayOpenChange}
-                    contentOnly
-                  />
-
-                </div>
-
-              </div>
-
+                <TaskColumnOperator processCode={code} tasks={tasks} />
+                <TaskProcessColumn
+                  processCode={code}
+                  tasks={columnTasks}
+                  allTasks={tasks}
+                  expandedKey={expandedKey}
+                  onToggleCard={onToggleCard}
+                  activeOverlayKey={activeOverlayKey}
+                  onOverlayOpenChange={onOverlayOpenChange}
+                  contentOnly
+                  fullWidth
+                />
+              </section>
             )
-
           })}
-
         </div>
-
-      </div>
-
+      </ScrollArea>
     </div>
-
   )
-
 }

@@ -4,8 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { useMemo } from "react"
 import { cn } from "@/shared/utils/utils"
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
-import { useHorizontalFade } from "@/shared/hooks/use-horizontal-fade"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ChevronDown, Layers } from "lucide-react"
 
@@ -60,16 +58,6 @@ export function SheetTabs({
   onChange,
   groupByThickness = true,
 }: SheetTabsProps) {
-  const {
-    containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
-  const { leftFade, rightFade } = useHorizontalFade({ containerRef })
-
   const groups: ThicknessGroup[] = useMemo(() => {
     if (!groupByThickness || items.length === 0) {
       return items.map((item, index) => ({
@@ -94,22 +82,8 @@ export function SheetTabs({
   if (items.length === 0) return null
 
   return (
-    <div
-      style={{
-        WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-        maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
-      }}
-      className="w-full overflow-hidden rounded-lg bg-foreground/5"
-    >
-      <div
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onClickCapture={handleClickCapture}
-        className="themed-scrollbar-x cursor-grab select-none overflow-x-auto overflow-y-hidden p-1 pb-2 active:cursor-grabbing"
-      >
+    <div className="w-full overflow-hidden rounded-lg bg-foreground/5">
+      <ScrollArea orientation="horizontal" dragToScroll className="w-full p-1 pb-2">
         <div className="flex w-max items-center gap-1">
           {groups.map((group) => {
             const multi = group.members.length > 1
@@ -234,7 +208,7 @@ export function SheetTabs({
             )
           })}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   )
 }

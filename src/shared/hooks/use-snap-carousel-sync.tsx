@@ -10,7 +10,7 @@ type Options<T> = {
   // aparecen en el DOM — se usa para traducir índice <-> valor.
   order: readonly T[]
   // Si el consumidor ya tiene su propio ref (ej. porque también usa
-  // useDragScroll sobre el mismo nodo), se lo pasa acá para que todo
+  // ScrollArea sobre el mismo nodo), se lo pasa acá para que todo
   // opere sobre el MISMO elemento en vez de crear uno propio sin uso.
   containerRef?: RefObject<HTMLDivElement | null>
   // Cuánto esperar sin nuevos eventos "scroll" antes de confirmar en
