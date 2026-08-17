@@ -67,14 +67,15 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
 
         const absX = Math.abs(event.deltaX)
         const absY = Math.abs(event.deltaY)
-        // Trackpad X, shift+rueda, o rueda vertical del mouse → X
-        const delta =
-          absX > absY
-            ? event.deltaX
-            : event.shiftKey
-              ? event.deltaY
-              : event.deltaY
 
+        // Solo gesto horizontal nativo (trackpad X) o shift+rueda.
+        // NO convertir rueda vertical → X: eso roba el scroll del
+        // padre vertical y mete "espera" entre ejes (Instagram no lo hace).
+        const isHorizontalIntent =
+          absX > absY || (event.shiftKey && absY > 0)
+        if (!isHorizontalIntent) return
+
+        const delta = absX > absY ? event.deltaX : event.deltaY
         if (Math.abs(delta) < 0.5) return
 
         const max = el.scrollWidth - el.clientWidth

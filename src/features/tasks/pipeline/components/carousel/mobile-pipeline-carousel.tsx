@@ -57,7 +57,7 @@ export function MobilePipelineCarousel({
   function scrollByPage(dir: -1 | 1) {
     const el = containerRef.current
     if (!el) return
-    el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" })
+    el.scrollBy({ left: dir * el.clientWidth, behavior: "auto" })
   }
 
   return (

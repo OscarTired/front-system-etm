@@ -64,6 +64,7 @@ function isToolbarChromeTarget(target: EventTarget | null) {
 
 export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
   const startY = useRef(0)
+  const startX = useRef(0)
   const pulling = useRef(false)
   const offsetRef = useRef(0)
   const [offset, setOffset] = useState(0)
@@ -107,6 +108,7 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
         return
       }
       startY.current = e.touches[0].clientY
+      startX.current = e.touches[0].clientX
       pulling.current = true
     },
     [refreshing, scrollRef],
@@ -143,6 +145,15 @@ export function PullToRefresh({ children, onRefresh, scrollRef }: Props) {
       }
 
       const dy = e.touches[0].clientY - startY.current
+      const dx = e.touches[0].clientX - startX.current
+
+      // Gesto horizontal dominante → ceder al scroller nativo (carrusel / kanban)
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
+        pulling.current = false
+        setPullOffset(0)
+        return
+      }
+
       if (dy <= 0) {
         setPullOffset(0)
         return

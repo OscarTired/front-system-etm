@@ -44,7 +44,7 @@ export function TaskPipelineCarousel({
 
     <div
       ref={containerRef}
-      className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-contain scroll-smooth"
+      className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
     >
 
       {PIPELINE_PROCESS_ORDER.map(code => (

@@ -37,7 +37,7 @@ export function useSnapCarouselSync<T>({
   onChange,
   order,
   containerRef: externalRef,
-  settleDelay = 120,
+  settleDelay = 0,
 }: Options<T>) {
 
   const internalRef = useRef<HTMLDivElement>(null)
@@ -56,21 +56,22 @@ export function useSnapCarouselSync<T>({
     let timeout: ReturnType<typeof setTimeout>
 
     const handleSnapSettle = () => {
-
       clearTimeout(timeout)
 
-      timeout = setTimeout(() => {
-
+      const run = () => {
         const index = Math.round(el.scrollLeft / el.clientWidth)
-
         const next = order[index]
-
         if (next !== undefined && next !== value) {
           onChange(next)
         }
+      }
 
-      }, settleDelay)
-
+      // 0 = al siguiente frame (sin espera artificial entre ejes)
+      if (settleDelay <= 0) {
+        timeout = requestAnimationFrame(run) as unknown as ReturnType<typeof setTimeout>
+      } else {
+        timeout = setTimeout(run, settleDelay)
+      }
     }
 
     el.addEventListener("scroll", handleSnapSettle, { passive: true })
@@ -78,6 +79,7 @@ export function useSnapCarouselSync<T>({
     return () => {
 
       clearTimeout(timeout)
+      cancelAnimationFrame(timeout as unknown as number)
       el.removeEventListener("scroll", handleSnapSettle)
 
     }
@@ -105,7 +107,7 @@ export function useSnapCarouselSync<T>({
     const target = index * el.clientWidth
 
     if (Math.abs(el.scrollLeft - target) > 4) {
-      el.scrollTo({ left: target, behavior: "smooth" })
+      el.scrollTo({ left: target, behavior: "auto" })
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +119,7 @@ export function useSnapCarouselSync<T>({
 
     el?.scrollBy({
       left: direction * el.clientWidth,
-      behavior: "smooth",
+      behavior: "auto",
     })
 
   }
