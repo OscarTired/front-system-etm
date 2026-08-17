@@ -60,7 +60,7 @@ function DesktopShell({ children }: Props) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-sidebar text-foreground">
+    <div className="flex h-screen overflow-hidden bg-sidebar text-foreground select-none">
       <AppSidebar />
       <main
         onTransitionEnd={handleTransitionEnd}
