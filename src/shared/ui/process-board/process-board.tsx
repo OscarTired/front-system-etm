@@ -18,13 +18,12 @@ type Props<TId extends string = string> = {
   loading?: boolean
   loadingFallback?: ReactNode
   showArrows?: boolean
-  /** Desktop: flechas solo al hover (default true). Mobile: siempre. */
   arrowsOnHover?: boolean
 }
 
 /**
- * Board de columnas horizontales compartido (ingeniería / pipeline).
- * Mobile: snap full-width + scroll vertical por columna (como MobilePipelineCarousel).
+ * Board de columnas horizontal compartido (pipeline + ingeniería).
+ * Mobile: snap full-width + scroll Y por columna.
  * Desktop: columnas fijas + flechas al hover.
  */
 export function ProcessBoard<TId extends string = string>({
@@ -97,7 +96,7 @@ export function ProcessBoard<TId extends string = string>({
         className,
       )}
     >
-      {header}
+      {header ? <div className="mb-3 shrink-0">{header}</div> : null}
 
       <div
         className="relative min-h-0 w-full flex-1"
@@ -132,7 +131,7 @@ export function ProcessBoard<TId extends string = string>({
               className={cn(
                 "flex shrink-0 flex-col",
                 isMobile
-                  ? "h-full w-full min-w-full snap-center overflow-y-auto overscroll-contain px-2 [touch-action:pan-y]"
+                  ? "h-full w-full min-w-full snap-center overflow-y-auto overscroll-contain [touch-action:pan-y]"
                   : columnClassName,
               )}
             >

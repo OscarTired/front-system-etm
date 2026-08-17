@@ -192,11 +192,7 @@ export function EngineeringProcessBoard({
       columns={columns}
       loading={loading}
       loadingFallback={<EngineeringProcessSkeleton />}
-      header={
-        <div className="mb-3 shrink-0">
-          <EngineeringKpiHeader tasks={tasks} />
-        </div>
-      }
+      header={<EngineeringKpiHeader tasks={tasks} />}
       columnClassName="w-72 min-w-72 shrink-0"
       scrollStep={288}
     />
