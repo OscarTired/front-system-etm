@@ -1,3 +1,4 @@
+import type { EntityIcon } from "@/shared/constants/entity-icons"
 import type { EngineeringProcessCode } from "../constants/engineering-process-definitions"
 
 export type EngineeringTaskStatus =
@@ -27,7 +28,7 @@ export type EngineeringTask = {
     id: string
     name: string
     color: string
-    icon: string
+    icon: EntityIcon
   } | null
 }
 

@@ -11,7 +11,6 @@ type Props = {
   label: string
 }
 
-/** Flechas compartidas pipeline + ingeniería (rounded-lg). */
 export function ProcessBoardNavButton({
   direction,
   visible,

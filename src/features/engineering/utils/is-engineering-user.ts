@@ -4,7 +4,7 @@ import {
   userHasRoleCode,
 } from "@/shared/core/constants/department-roles"
 
-/** Activo + rol RoleCode.INGENIERIA (SSOT). */
+/** Activo + rol INGENIERIA o PROYECTOS (misma lista que bitácora). */
 export function isEngineeringUser(
   user: Pick<User, "active" | "deletedAt" | "roles">,
 ): boolean {

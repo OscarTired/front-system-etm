@@ -13,9 +13,9 @@ export const PROJECT_MANAGER_ROLE_CODES = [
   RoleCode.PROYECTOS,
 ] as const satisfies readonly RoleCode[]
 
-export const ENGINEERING_ASSIGNABLE_ROLE_CODES = [
-  RoleCode.INGENIERIA,
-] as const satisfies readonly RoleCode[]
+/** Misma fuente que bitácora de ingeniería (INGENIERIA + PROYECTOS). */
+export const ENGINEERING_ASSIGNABLE_ROLE_CODES =
+  BITACORA_DEPARTMENT_ROLE_CODES.INGENIERIA
 
 export const PRODUCTION_OPERATOR_ROLE_CODE = RoleCode.PRODUCCION
 

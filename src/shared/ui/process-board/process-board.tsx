@@ -20,10 +20,6 @@ type Props<TId extends string = string> = {
   loadingFallback?: ReactNode
 }
 
-/**
- * Shell horizontal de columnas por proceso.
- * Task Pipeline e Ingeniería comparten drag, flechas y snap mobile.
- */
 export function ProcessBoard<TId extends string = string>({
   columns,
   columnClassName = "w-72",

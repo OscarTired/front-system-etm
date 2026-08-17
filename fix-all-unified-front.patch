@@ -1,0 +1,86 @@
+diff --git a/src/features/engineering/types/engineering-task.types.ts b/src/features/engineering/types/engineering-task.types.ts
+index c358cce..7c71bef 100644
+--- a/src/features/engineering/types/engineering-task.types.ts
++++ b/src/features/engineering/types/engineering-task.types.ts
+@@ -1,3 +1,4 @@
++import type { EntityIcon } from "@/shared/constants/entity-icons"
+ import type { EngineeringProcessCode } from "../constants/engineering-process-definitions"
+ 
+ export type EngineeringTaskStatus =
+@@ -27,7 +28,7 @@ export type EngineeringTask = {
+     id: string
+     name: string
+     color: string
+-    icon: string
++    icon: EntityIcon
+   } | null
+ }
+ 
+diff --git a/src/features/engineering/utils/is-engineering-user.ts b/src/features/engineering/utils/is-engineering-user.ts
+index afbbd76..2e95518 100644
+--- a/src/features/engineering/utils/is-engineering-user.ts
++++ b/src/features/engineering/utils/is-engineering-user.ts
+@@ -4,7 +4,7 @@ import {
+   userHasRoleCode,
+ } from "@/shared/core/constants/department-roles"
+ 
+-/** Activo + rol RoleCode.INGENIERIA (SSOT). */
++/** Activo + rol INGENIERIA o PROYECTOS (misma lista que bitácora). */
+ export function isEngineeringUser(
+   user: Pick<User, "active" | "deletedAt" | "roles">,
+ ): boolean {
+diff --git a/src/shared/core/constants/department-roles.ts b/src/shared/core/constants/department-roles.ts
+index 0e8687b..b4817b5 100644
+--- a/src/shared/core/constants/department-roles.ts
++++ b/src/shared/core/constants/department-roles.ts
+@@ -13,9 +13,9 @@ export const PROJECT_MANAGER_ROLE_CODES = [
+   RoleCode.PROYECTOS,
+ ] as const satisfies readonly RoleCode[]
+ 
+-export const ENGINEERING_ASSIGNABLE_ROLE_CODES = [
+-  RoleCode.INGENIERIA,
+-] as const satisfies readonly RoleCode[]
++/** Misma fuente que bitácora de ingeniería (INGENIERIA + PROYECTOS). */
++export const ENGINEERING_ASSIGNABLE_ROLE_CODES =
++  BITACORA_DEPARTMENT_ROLE_CODES.INGENIERIA
+ 
+ export const PRODUCTION_OPERATOR_ROLE_CODE = RoleCode.PRODUCCION
+ 
+diff --git a/src/shared/ui/process-board/process-board-nav-button.tsx b/src/shared/ui/process-board/process-board-nav-button.tsx
+index d4535d6..fd05261 100644
+--- a/src/shared/ui/process-board/process-board-nav-button.tsx
++++ b/src/shared/ui/process-board/process-board-nav-button.tsx
+@@ -11,7 +11,6 @@ type Props = {
+   label: string
+ }
+ 
+-/** Flechas compartidas pipeline + ingeniería (rounded-lg). */
+ export function ProcessBoardNavButton({
+   direction,
+   visible,
+diff --git a/src/shared/ui/process-board/process-board.tsx b/src/shared/ui/process-board/process-board.tsx
+index 2ecd594..14ecbf4 100644
+--- a/src/shared/ui/process-board/process-board.tsx
++++ b/src/shared/ui/process-board/process-board.tsx
+@@ -20,10 +20,6 @@ type Props<TId extends string = string> = {
+   loadingFallback?: ReactNode
+ }
+ 
+-/**
+- * Shell horizontal de columnas por proceso.
+- * Task Pipeline e Ingeniería comparten drag, flechas y snap mobile.
+- */
+ export function ProcessBoard<TId extends string = string>({
+   columns,
+   columnClassName = "w-72",
+diff --git a/src/shared/ui/process-board/process-board.types.ts b/src/shared/ui/process-board/process-board.types.ts
+index b649137..c8aa1aa 100644
+--- a/src/shared/ui/process-board/process-board.types.ts
++++ b/src/shared/ui/process-board/process-board.types.ts
+@@ -1,6 +1,5 @@
+ import type { ReactNode } from "react"
+ 
+-/** Columna genérica de un board por proceso (pipeline o ingeniería). */
+ export type ProcessBoardColumn<TId extends string = string> = {
+   id: TId
+   content: ReactNode
