@@ -103,7 +103,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
       const t = event.target as HTMLElement
       if (
         t.closest(
-          "button, a, input, textarea, select, [role='button'], [data-drag-scroll-ignore]",
+          "button, a, input, textarea, select, [role='button'], [role='menuitem'], [data-radix-collection-item], [data-drag-scroll-ignore]",
         )
       ) {
         return

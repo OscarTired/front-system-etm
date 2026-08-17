@@ -55,6 +55,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
 
   return (
     <div
+      data-drag-scroll-ignore
       className={cn(
         "group flex h-12 min-w-0 w-full items-center gap-2 rounded-xl bg-foreground/5 px-2.5 text-left transition",
         "hover:bg-foreground/10",
@@ -91,7 +92,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem onClick={() => onEdit?.(task)}>
+          <DropdownMenuItem onSelect={() => onEdit?.(task)}>
             <Pencil size={14} className="mr-2" />
             Editar
           </DropdownMenuItem>
@@ -103,7 +104,9 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
               <DropdownMenuItem
                 key={status}
                 disabled={active}
-                onClick={() => void handleStatus(status)}
+                onSelect={() => {
+                  void handleStatus(status)
+                }}
               >
                 <span
                   className="mr-2 size-2 shrink-0 rounded-full"
@@ -123,7 +126,9 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => void handleDelete()}
+                onSelect={() => {
+                  void handleDelete()
+                }}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 size={14} className="mr-2" />

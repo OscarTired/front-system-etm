@@ -123,7 +123,7 @@ export function ShiftGroupSection({
       <div
         className={cn(
           "mt-3 flex flex-col gap-4",
-          fill && "min-h-0 flex-1",
+          fill && "min-h-0 flex-1 overflow-y-auto overscroll-contain themed-scrollbar-y",
         )}
       >
         {group.slots.map((slot) => {
@@ -135,7 +135,7 @@ export function ShiftGroupSection({
               key={slot.shift}
               className={cn(
                 "flex flex-col gap-2",
-                fill && "min-h-0 flex-1",
+                fill && "min-h-0",
               )}
             >
               {/* Cabecera de la sub-franja */}
@@ -165,7 +165,7 @@ export function ShiftGroupSection({
                 ref={getSlotRefCallback(slot.shift)}
                 className={cn(
                   "flex flex-col gap-2 rounded-xl p-1.5 -m-1.5 transition-all",
-                  fill && "min-h-0 flex-1",
+                  fill && "min-h-0",
                   hoverShift === slot.shift
                     ? "duration-150 bg-emerald-500/20 dark:bg-emerald-500/6 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
                     : "duration-0",

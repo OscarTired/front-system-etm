@@ -1,14 +1,13 @@
 "use client"
 
 import { useMemo } from "react"
-import { Plus, Zap } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import {
@@ -25,6 +24,7 @@ import {
 } from "../constants/engineering-process-definitions"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import { EngineeringTaskRow } from "./engineering-task-row"
+import { EngineeringColumnOperators } from "./engineering-column-operators"
 import { EngineeringKpiHeader } from "./engineering-kpi-header"
 
 type Props = {
@@ -43,41 +43,6 @@ function groupByProcess(tasks: EngineeringTask[]) {
     else map.set(t.processCode, [t])
   }
   return map
-}
-
-function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
-  const active = tasks.filter(t => t.status === "PROGRESS" && t.assignee)
-  if (active.length === 0) return null
-
-  const seen = new Set<string>()
-  const unique = active.filter(t => {
-    const id = t.assignee!.id
-    if (seen.has(id)) return false
-    seen.add(id)
-    return true
-  })
-
-  return (
-    <div className="flex flex-wrap items-center gap-1.5 px-1 pb-1 pt-0.5">
-      {unique.map(t => (
-        <div key={t.assignee!.id} className="flex items-center gap-1.5">
-          <DynamicBadge
-            label={t.assignee!.name}
-            color={t.assignee!.color}
-            icon={t.assignee!.icon}
-            width="field"
-          />
-          <span
-            title="Trabajando"
-            aria-label="Trabajando"
-            className="flex size-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-          >
-            <Zap size={11} />
-          </span>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 function ProcessColumnHeader({
@@ -169,7 +134,7 @@ export function EngineeringProcessBoard({
                   }
                 />
               }
-              meta={<ActiveAssignees tasks={colTasks} />}
+              meta={<EngineeringColumnOperators tasks={colTasks} />}
             >
               <div className="flex flex-col gap-1.5 px-0.5 pb-2 pt-1">
                 {colTasks.length === 0 ? (

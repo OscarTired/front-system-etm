@@ -298,17 +298,23 @@ export function ProjectTaskRow({
       (
         event: React.MouseEvent,
       ) => {
+        const target = event.target as HTMLElement | null
+        if (
+          target?.closest(
+            "button, a, input, textarea, [role='button'], [data-radix-collection-item]",
+          )
+        ) {
+          return
+        }
+
         if (isMobile) {
           if (!overlayOpen) {
             toggleExpanded()
           }
-
           return
         }
 
-        // El long-press ya abrió el overlay — el mouseup que sigue
-        // no debería además disparar la navegación normal del
-        // click.
+        // Overlay abierto por long-press: no navegar encima.
         if (overlayOpen) {
           return
         }
@@ -319,6 +325,7 @@ export function ProjectTaskRow({
         isMobile,
         overlayOpen,
         handleNavigate,
+        toggleExpanded,
       ],
     )
 
