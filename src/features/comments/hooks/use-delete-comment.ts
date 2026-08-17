@@ -5,6 +5,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { commentsService } from "../services/comments.service"
 import { commentsQueryKey } from "../utils/comment-target"
 import { myCommentsQueryKey } from "./use-my-comments"
+import {
+  bumpEntityCommentCounts,
+  locationFromComment,
+} from "../utils/bump-entity-comment-counts"
 import type { Comment, CommentTarget } from "../types/comment.types"
 
 export function useDeleteComment(target: CommentTarget) {
@@ -52,13 +56,19 @@ export function useDeleteComment(target: CommentTarget) {
 
     },
 
-    onSuccess: (_data, _comment, context) => {
+    onSuccess: (_data, comment, context) => {
 
       // Confirmado por el servidor: ahí sí lo sacamos de la lista.
       queryClient.setQueryData<Comment[]>(
         queryKey,
         current =>
           (current ?? []).filter(c => c.id !== context?.commentId),
+      )
+
+      bumpEntityCommentCounts(
+        queryClient,
+        locationFromComment(comment),
+        -1,
       )
 
       void queryClient.invalidateQueries({ queryKey: myCommentsQueryKey })

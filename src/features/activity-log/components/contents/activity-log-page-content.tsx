@@ -413,10 +413,14 @@ export function ActivityLogPageContent({
     </>
   )
 
+  // Con sidebar desktop el alto debe quedar acotado siempre (también en Día):
+  // si no, el panel crece con el contenido y scrollea la página entera.
+  const constrainHeight = fillHeight || showDesktopAreaSidebar
+
   const body = (
     <div
       className={
-        fillHeight
+        constrainHeight
           ? "flex min-h-0 w-full flex-1 flex-col"
           : "flex w-full flex-col"
       }
@@ -424,18 +428,8 @@ export function ActivityLogPageContent({
       <div className="mb-1 shrink-0">{toolbar}</div>
 
       {showDesktopAreaSidebar ? (
-        <div
-          className={cn(
-            "flex min-h-0 w-full gap-3",
-            fillHeight ? "flex-1" : "",
-          )}
-        >
-          <div
-            className={cn(
-              "min-w-0 flex-1",
-              fillHeight ? "flex min-h-0 flex-col" : "flex flex-col",
-            )}
-          >
+        <div className="flex min-h-0 w-full flex-1 gap-3">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y">
             {mainContent}
           </div>
           <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
@@ -446,12 +440,12 @@ export function ActivityLogPageContent({
     </div>
   )
 
-  // Semana/mes: flex-1 + min-h-0 → llena AppListScroll.
-  // Día: sin min-h-0 forzado en el root si embedded, crece y scrollea.
+  // Semana/mes o sidebar desktop → flex-1 min-h-0 (scroll interno).
+  // Día sin sidebar embedded: crece y scrollea el padre.
   return (
     <div
       className={
-        fillHeight || !embedded
+        constrainHeight || !embedded
           ? "relative flex min-h-0 w-full flex-1 flex-col"
           : "relative w-full"
       }

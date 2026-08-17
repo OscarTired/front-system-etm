@@ -7,6 +7,10 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 import { commentsService } from "../services/comments.service"
 import { commentsQueryKey } from "../utils/comment-target"
 import { myCommentsQueryKey } from "./use-my-comments"
+import {
+  bumpEntityCommentCounts,
+  locationFromTarget,
+} from "../utils/bump-entity-comment-counts"
 import type { Comment, CommentTarget, CreateCommentDto } from "../types/comment.types"
 
 export function useCreateComment(target:CommentTarget){
@@ -91,7 +95,9 @@ export function useCreateComment(target:CommentTarget){
         current => [optimisticComment, ...(current ?? [])],
       )
 
-      return { previousComments, optimisticId }
+      const location = locationFromTarget(target)
+      bumpEntityCommentCounts(queryClient, location, 1)
+      return { previousComments, optimisticId, location }
 
     },
 
@@ -101,6 +107,9 @@ export function useCreateComment(target:CommentTarget){
       // lentitud del servidor. Revertimos al estado real anterior.
       if (context?.previousComments) {
         queryClient.setQueryData(queryKey, context.previousComments)
+      }
+      if (context?.location) {
+        bumpEntityCommentCounts(queryClient, context.location, -1)
       }
 
     },
