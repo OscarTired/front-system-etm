@@ -2,12 +2,13 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import { SHIFT_GROUPS } from "../../constants/shift-definitions"
+import type { ActivityLog } from "../../types/activity-log.types"
 import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
-import type { ActivityLog, DayShift } from "../../types/activity-log.types"
+import { SHIFT_GROUPS } from "../../constants/shift-definitions"
+import type { DayShift } from "../../types/activity-log.types"
 import type { SlotState } from "../../types/shift-schedule.types"
-import { AutoActivitySection } from "../auto-activity-section"
 import { ShiftGroupSection } from "../shift-group-section"
+import { AutoActivitySection } from "../auto-activity-section"
 
 type Props = {
   logs: ActivityLog[]
@@ -16,29 +17,28 @@ type Props = {
   onLogClick: (slot: ShiftSlotDefinition) => void
   onDeleteLog: (log: ActivityLog) => void
   beginDrag: (
-    e: React.PointerEvent<HTMLElement>,
     log: ActivityLog,
-    isDuplicate?: boolean,
+    e: React.PointerEvent,
   ) => void
   registerSlot: (shift: DayShift, el: HTMLElement | null) => void
   draggingLogId: string | null
   hoverShift: DayShift | null
-  deletingLogId?: string | null
+  deletingLogId: string | null
   canCreate: boolean
   canDelete: boolean
-  slotState?: (shift: DayShift) => SlotState
-  isLogBusy?: (logId: string) => boolean
-  canDuplicateLog?: (log: ActivityLog) => boolean
-  onEditLog?: (log: ActivityLog) => void
-  onDuplicateLog?: (log: ActivityLog) => void
+  slotState: (shift: DayShift) => SlotState
+  isLogBusy: (logId: string) => boolean
+  canDuplicateLog: (log: ActivityLog) => boolean
+  onEditLog: (log: ActivityLog) => void
+  onDuplicateLog: (log: ActivityLog) => void
 }
 
 /**
- * Vista día — mismo contrato que AgendaWeekView:
+ * Vista día — stack vertical por franja.
  *
- * - Root acotado + ScrollArea (scrollea cuando el contenido empuja).
- * - Grid `min-h-full` + filas `minmax(min-content, 1fr)`:
- *   poco contenido → llena viewport; mucho → crece y hay scroll.
+ * Sin grid 1fr: cada ShiftGroup mide su contenido.
+ * El ScrollArea de página es el único scroller (como semana con contenido).
+ * No fill/overflow interno que recorte logs.
  */
 export function AgendaDayView({
   logs,
@@ -72,47 +72,39 @@ export function AgendaDayView({
             </div>
           )}
 
-          <div
-            className="grid w-full min-h-full flex-1 gap-3"
-            style={{
-              gridTemplateRows: `repeat(${SHIFT_GROUPS.length}, minmax(min-content, 1fr))`,
-            }}
-          >
-            {SHIFT_GROUPS.map(group => {
-              const logsBySlot: Record<string, ActivityLog[]> = {}
-              if (!loading) {
-                for (const slot of group.slots) {
-                  logsBySlot[slot.shift] = logs.filter(
-                    log => log.shift === slot.shift,
-                  )
-                }
+          {SHIFT_GROUPS.map(group => {
+            const logsBySlot: Record<string, ActivityLog[]> = {}
+            if (!loading) {
+              for (const slot of group.slots) {
+                logsBySlot[slot.shift] = logs.filter(
+                  log => log.shift === slot.shift,
+                )
               }
+            }
 
-              return (
-                <ShiftGroupSection
-                  key={group.key}
-                  group={group}
-                  logsBySlot={logsBySlot}
-                  loading={loading}
-                  fill
-                  onLogClick={onLogClick}
-                  onDeleteLog={onDeleteLog}
-                  beginDrag={beginDrag}
-                  registerSlot={registerSlot}
-                  draggingLogId={draggingLogId}
-                  hoverShift={hoverShift}
-                  deletingLogId={deletingLogId}
-                  canCreate={canCreate}
-                  canDelete={canDelete}
-                  slotState={slotState}
-                  isLogBusy={isLogBusy}
-                  canDuplicateLog={canDuplicateLog}
-                  onEditLog={onEditLog}
-                  onDuplicateLog={onDuplicateLog}
-                />
-              )
-            })}
-          </div>
+            return (
+              <ShiftGroupSection
+                key={group.key}
+                group={group}
+                logsBySlot={logsBySlot}
+                loading={loading}
+                onLogClick={onLogClick}
+                onDeleteLog={onDeleteLog}
+                beginDrag={beginDrag}
+                registerSlot={registerSlot}
+                draggingLogId={draggingLogId}
+                hoverShift={hoverShift}
+                deletingLogId={deletingLogId}
+                canCreate={canCreate}
+                canDelete={canDelete}
+                slotState={slotState}
+                isLogBusy={isLogBusy}
+                canDuplicateLog={canDuplicateLog}
+                onEditLog={onEditLog}
+                onDuplicateLog={onDuplicateLog}
+              />
+            )
+          })}
         </div>
       </ScrollArea>
     </div>

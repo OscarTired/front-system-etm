@@ -78,7 +78,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
               "Sin asignar"}
           </p>
         </div>
-        <WorkflowStatusChip status={task.status} compact />
+        <WorkflowStatusChip status={task.status} compact iconOnly />
       </button>
 
       <DropdownMenu>

@@ -204,7 +204,7 @@ export function KanbanCardView({
             label={statusName ?? ""}
             color={statusColor}
             icon={statusIcon}
-            iconOnly={statusIconOnly}
+            iconOnly
           />
           {hasFooterActions && (
             <div

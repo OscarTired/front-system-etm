@@ -258,8 +258,9 @@ export function ProjectTaskRow({
   // En mobile sigue exigiendo estar expandida primero (comportamiento
   // sin cambios). En desktop no hay ese paso de "expandir" — el
   // long-press queda siempre habilitado directo sobre KanbanCardView.
-  const longPressEnabled =
-    isMobile ? expanded : true
+  // Desktop: click navega; long-press solo en mobile (expandido).
+  // Long-press en desktop bloqueaba el click (overlayOpen / handlers).
+  const longPressEnabled = isMobile && expanded
 
   const {
     bind,
@@ -298,12 +299,9 @@ export function ProjectTaskRow({
       (
         event: React.MouseEvent,
       ) => {
+        // Controles explícitos marcan data-no-navigate (footer, chevron, etc.)
         const target = event.target as HTMLElement | null
-        if (
-          target?.closest(
-            "button, a, input, textarea, [role='button'], [data-radix-collection-item]",
-          )
-        ) {
+        if (target?.closest("[data-no-navigate]")) {
           return
         }
 
@@ -314,19 +312,15 @@ export function ProjectTaskRow({
           return
         }
 
-        // Overlay abierto por long-press: no navegar encima.
+        // Desktop: click corto → navegar a la tarea.
+        // Long-press abre overlay; si ya está abierto, no empujar ruta encima.
         if (overlayOpen) {
           return
         }
 
         handleNavigate(event)
       },
-      [
-        isMobile,
-        overlayOpen,
-        handleNavigate,
-        toggleExpanded,
-      ],
+      [isMobile, overlayOpen, handleNavigate, toggleExpanded],
     )
 
   // Mismo criterio que ya usa TaskPipelineCard en el Kanban de

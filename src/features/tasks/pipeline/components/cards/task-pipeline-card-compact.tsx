@@ -56,6 +56,10 @@ export function TaskPipelineCardCompact({
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
+      <span className="shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
+        {String(task.taskNumber).padStart(3, "0")}
+      </span>
+
       <span
         className="size-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: task.priority.color }}
@@ -92,6 +96,7 @@ export function TaskPipelineCardCompact({
         color={status.color}
         icon={status.icon}
         compact
+        iconOnly
       />
     </div>
   )
