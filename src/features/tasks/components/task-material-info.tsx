@@ -75,16 +75,14 @@ export function TaskMaterialInfo({
         sideOffset={8}
         collisionPadding={12}
         floatingClassName="w-72"
-        className="gap-0 border-border/60 p-0"
-        onClick={e => e.stopPropagation()}
-        onPointerDown={e => e.stopPropagation()}
+        className="gap-0 p-0"
       >
-        <div className="border-b border-border/50 px-3 py-2">
+        <div className="px-3 pt-1 pb-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Materiales · {total} piezas
           </p>
         </div>
-        <div className="flex flex-col gap-2 px-3 py-3">
+        <div className="flex flex-col gap-2 px-3 pb-3">
           {lines.map(line => (
             <div
               key={line.id}

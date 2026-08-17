@@ -8,6 +8,7 @@ import { Drawer } from "vaul"
 import { cn } from "@/shared/utils/utils"
 
 import {
+  PopoverCloseContext,
   PopoverModeContext,
   PopoverOpenContext,
 } from "./contexts"
@@ -56,6 +57,7 @@ export function PopoverContent({
 }: PopoverContentProps) {
   const isSheet = React.useContext(PopoverModeContext)
   const isOpen = React.useContext(PopoverOpenContext)
+  const close = React.useContext(PopoverCloseContext)
 
   const { containerRef, size } = useSmoothResize()
   const lastMeasuredHeightRef = React.useRef<number | null>(null)
@@ -86,8 +88,16 @@ export function PopoverContent({
         <Drawer.Overlay
           className={cn(
             "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
+            "pointer-events-auto cursor-default select-none",
             "data-[state=closed]:pointer-events-none data-[state=closed]:opacity-0",
           )}
+          onPointerDown={event => {
+            // Evita ghost-click al shell bajo el portal
+            event.preventDefault()
+          }}
+          onClick={() => {
+            close()
+          }}
         />
 
         <Drawer.Content

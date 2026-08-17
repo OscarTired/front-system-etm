@@ -186,6 +186,7 @@ export function Popover({
 
                 }
               }}
+              dismissible
               shouldScaleBackground={false}
               setBackgroundColorOnScale={false}
               noBodyStyles

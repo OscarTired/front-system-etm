@@ -57,16 +57,14 @@ export function EntityAuditInfo({
         sideOffset={8}
         collisionPadding={12}
         floatingClassName="w-64"
-        className="gap-0 border-border/60 p-0"
-        onClick={e => e.stopPropagation()}
-        onPointerDown={e => e.stopPropagation()}
+        className="gap-0 p-0"
       >
-        <div className="border-b border-border/50 px-3 py-2">
+        <div className="px-3 pt-1 pb-2">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Información
           </p>
         </div>
-        <div className="flex flex-col gap-2.5 px-3 py-3">
+        <div className="flex flex-col gap-2.5 px-3 pb-3">
           {rows.map(row => (
             <div key={row.label} className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
