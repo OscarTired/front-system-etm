@@ -14,8 +14,8 @@ import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
-import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 import { cn } from "@/shared/utils/utils"
 
 import {
@@ -196,8 +196,8 @@ export function EngineeringTaskDialog({
           </div>
 
           {showProcessGrid ? (
-            <div className="grid grid-cols-3 gap-2">
-              {ENGINEERING_PROCESS_ORDER.map((code, index) => {
+            <div className="flex flex-wrap gap-2">
+              {ENGINEERING_PROCESS_ORDER.map(code => {
                 const def = ENGINEERING_PROCESS_DEFINITIONS[code]
                 const Icon = ENTITY_ICONS[def.icon]
                 const isSelected = processCode === code
@@ -206,31 +206,15 @@ export function EngineeringTaskDialog({
                     key={code}
                     type="button"
                     onClick={() => setProcessCode(code)}
-                    style={{
-                      animationDelay: `${Math.min(index, 8) * 25}ms`,
-                    }}
-                    className={cn(
-                      "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
-                      isSelected
-                        ? "bg-foreground/12"
-                        : "bg-foreground/5 hover:bg-foreground/10",
-                    )}
+                    className="cursor-pointer active:scale-95"
                   >
-                    <span
-                      className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
-                      style={{
-                        backgroundColor: `${def.color}22`,
-                        color: def.color,
-                      }}
-                    >
-                      {Icon ? <Icon size={15} /> : def.short}
-                    </span>
-                    <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
-                      {def.short}
-                    </span>
-                    <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
-                      {def.label}
-                    </span>
+                    <DynamicBadge
+                      label={def.short}
+                      color={def.color}
+                      iconComponent={Icon}
+                      muted={!isSelected}
+                      width="process"
+                    />
                   </button>
                 )
               })}
@@ -259,17 +243,20 @@ export function EngineeringTaskDialog({
             <div className="flex flex-wrap gap-2">
               {STATUS_OPTIONS.map(opt => {
                 const isSelected = status === opt.value
+                const def = WORKFLOW_STATUS_DEFINITIONS[opt.value]
                 return (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setStatus(opt.value)}
-                    className={cn(
-                      "rounded-lg transition-opacity",
-                      isSelected ? "opacity-100 ring-1 ring-foreground/25" : "opacity-20 hover:opacity-90",
-                    )}
+                    className="cursor-pointer active:scale-95"
                   >
-                    <WorkflowStatusChip status={opt.value} />
+                    <DynamicBadge
+                      label={def.label}
+                      color={def.color}
+                      icon={def.icon}
+                      muted={!isSelected}
+                    />
                   </button>
                 )
               })}

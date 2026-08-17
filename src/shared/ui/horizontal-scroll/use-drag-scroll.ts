@@ -137,30 +137,28 @@ export function useDragScroll() {
   }, [onWindowMove, onWindowUp])
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
+    // Ref puede ser null en el primer effect (board aún en loading) y
+    // montarse después: re-sincronizamos hasta tener nodo.
     let frame = 0
     let notified = false
+    let attached: HTMLDivElement | null = null
 
     const handleWheel = (event: WheelEvent) => {
-      // NO robar wheel vertical de la página/sidebar.
+      const container = attached
+      if (!container) return
+
       const canScrollH =
         container.scrollWidth > container.clientWidth + 1
       if (!canScrollH) return
 
+      // Sobre la zona horizontal: rueda vertical → scroll X (sin Shift).
       const primarilyHorizontal =
         Math.abs(event.deltaX) > Math.abs(event.deltaY)
-      const shiftAsHorizontal =
-        event.shiftKey && Math.abs(event.deltaY) > 0
-
-      if (!primarilyHorizontal && !shiftAsHorizontal) {
-        return
-      }
-
       const delta = primarilyHorizontal
         ? event.deltaX
         : event.deltaY * WHEEL_MULTIPLIER
+
+      if (Math.abs(delta) < 0.01) return
 
       const atStart = container.scrollLeft <= 0
       const atEnd =
@@ -186,11 +184,27 @@ export function useDragScroll() {
       })
     }
 
-    container.addEventListener("wheel", handleWheel, { passive: false })
+    const sync = () => {
+      const el = containerRef.current
+      if (el === attached) return
+      if (attached) {
+        attached.removeEventListener("wheel", handleWheel)
+      }
+      attached = el
+      if (attached) {
+        attached.addEventListener("wheel", handleWheel, { passive: false })
+      }
+    }
+
+    sync()
+    const interval = window.setInterval(sync, 120)
 
     return () => {
+      window.clearInterval(interval)
       cancelAnimationFrame(frame)
-      container.removeEventListener("wheel", handleWheel)
+      if (attached) {
+        attached.removeEventListener("wheel", handleWheel)
+      }
     }
   }, [])
 

@@ -1,9 +1,6 @@
 "use client"
 
-import { Settings2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
@@ -43,73 +40,12 @@ export function TaskAreaPanelBody({
               {title}
             </h2>
 
-            <div className="flex shrink-0 items-center gap-1">
-              <HistoryToggleButton
-                count={state.completedCount}
-                active={state.showHistory}
-                onClick={() => actions.setShowHistory(v => !v)}
-              />
-
-              {state.canChooseAreas && (
-                <button
-                  type="button"
-                  onClick={() => actions.setConfigOpen(v => !v)}
-                  aria-label="Elegir áreas"
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-                    state.configOpen
-                      ? "bg-foreground/15 text-foreground"
-                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
-                  )}
-                >
-                  <Settings2 size={16} />
-                </button>
-              )}
-            </div>
+            <HistoryToggleButton
+              count={state.completedCount}
+              active={state.showHistory}
+              onClick={() => actions.setShowHistory(v => !v)}
+            />
           </div>
-
-          {state.canChooseAreas && state.configOpen && (
-            <div className="mt-3 flex flex-wrap gap-2 rounded-xl bg-foreground/5 p-2.5">
-              {state.allAreas.map(code => {
-                const definition = PROCESS_DEFINITIONS[code]
-                const Icon = ENTITY_ICONS[definition.icon]
-                // Si el store está vacío mostramos allAreas: el chip
-                // seleccionado refleja ese default.
-                const effectiveSelected =
-                  state.supervisorAreas.length > 0
-                    ? state.supervisorAreas.includes(code)
-                    : true
-
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => {
-                      const current =
-                        state.supervisorAreas.length > 0
-                          ? state.supervisorAreas
-                          : state.allAreas
-                      const selected = current.includes(code)
-                      actions.setSupervisorAreas(
-                        selected
-                          ? current.filter(c => c !== code)
-                          : [...current, code],
-                      )
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
-                      effectiveSelected
-                        ? "bg-foreground/15 text-foreground shadow-sm"
-                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-                    )}
-                  >
-                    <Icon size={14} style={{ color: definition.color }} />
-                    <span>{definition.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
         </div>
       )}
 

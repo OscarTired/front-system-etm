@@ -84,6 +84,7 @@ export function AreaTaskSection({
             activeOverlayKey={state.activeOverlayKey}
             onOverlayOpenChange={actions.setActiveOverlayKey}
             fullWidth
+            contentOnly
             selectionMode={isSummoningThis}
             selectedStepIds={state.selectedStepIds}
             onToggleStepSelection={actions.handleToggleStepSelection}
