@@ -196,7 +196,7 @@ export function EngineeringTaskDialog({
                   className={cn(
                     "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
                     isSelected
-                      ? "bg-foreground/12 ring-1 ring-foreground/20"
+                      ? "bg-foreground/12"
                       : "bg-foreground/5 hover:bg-foreground/10",
                   )}
                 >

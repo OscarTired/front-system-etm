@@ -216,7 +216,7 @@ export function EngineeringUserList({
                     </div>
 
                     {expanded && (
-                      <div className="flex flex-col gap-1.5 rounded-b-2xl border border-t-0 border-border/40 bg-foreground/[0.03] p-2">
+                      <div className="flex flex-col gap-1.5 rounded-b-2xl bg-foreground/3 p-2">
                         {assigned.length === 0 ? (
                           <p className="px-2 py-4 text-center text-xs text-muted-foreground">
                             Sin tareas asignadas

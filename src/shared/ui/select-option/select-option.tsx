@@ -86,7 +86,7 @@ export function SelectOption({
     <CommandItem
       value={cleanLabel}
       onSelect={onSelect}
-      className="group mb-0.5 last:mb-0 w-full cursor-pointer rounded-xl border-0 px-3 py-2.5 transition-all duration-150"
+      className="group mb-0.5 last:mb-0 w-full cursor-pointer rounded-xl border-0 px-3 py-2.5 transition-all duration-150 select-none"
       style={{
         background: selected && isColor ? badge.background : undefined,
       }}
