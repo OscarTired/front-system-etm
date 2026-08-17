@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreHorizontal, Pencil, CheckCircle2, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { cn } from "@/shared/utils/utils"
@@ -11,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { EngineeringTask } from "../types/engineering-task.types"
+import type { EngineeringTask, EngineeringTaskStatus } from "../types/engineering-task.types"
+import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 import { useEngineeringTaskMutations } from "../hooks/use-engineering-task-mutations"
 
 type Props = {
@@ -31,6 +32,21 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
       dto: { status: "COMPLETED" },
     })
   }
+
+  async function handleStatus(status: EngineeringTaskStatus) {
+    if (task.status === status) return
+    await update.mutateAsync({
+      id: task.id,
+      dto: { status },
+    })
+  }
+
+  const STATUS_ITEMS: EngineeringTaskStatus[] = [
+    "QUEUE",
+    "PENDING",
+    "PROGRESS",
+    "COMPLETED",
+  ]
 
   async function handleDelete() {
     if (isCompleted) return
@@ -74,17 +90,34 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
             <MoreHorizontal size={16} />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={() => onEdit?.(task)}>
             <Pencil size={14} className="mr-2" />
             Editar
           </DropdownMenuItem>
-          {!isCompleted && (
-            <DropdownMenuItem onClick={() => void handleComplete()}>
-              <CheckCircle2 size={14} className="mr-2" />
-              Marcar completada
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuSeparator />
+          {STATUS_ITEMS.map(status => {
+            const def = WORKFLOW_STATUS_DEFINITIONS[status]
+            const active = task.status === status
+            return (
+              <DropdownMenuItem
+                key={status}
+                disabled={active}
+                onClick={() => void handleStatus(status)}
+              >
+                <span
+                  className="mr-2 size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: def.color }}
+                />
+                {def.label}
+                {active && (
+                  <span className="ml-auto text-[10px] text-muted-foreground">
+                    actual
+                  </span>
+                )}
+              </DropdownMenuItem>
+            )
+          })}
           {!isCompleted && (
             <>
               <DropdownMenuSeparator />

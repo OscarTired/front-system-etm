@@ -173,10 +173,9 @@ export function EngineeringPageContent() {
     </div>
   )
 
-  // Vista procesos (kanban): igual que TaskPipeline — sin AppListScroll
-  // en desktop para que el scroll horizontal del board no compita con
-  // el vertical del list-scroll.
-  const useListScroll = viewMode !== "processes" || isMobile
+  // Vista procesos: el board es dueño del scroll (desktop y mobile).
+  // AppListScroll rompe el snap horizontal y el alto en mobile.
+  const useListScroll = viewMode !== "processes"
 
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col select-none overflow-hidden">

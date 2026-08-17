@@ -1,10 +1,8 @@
 "use client"
 
-import { useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { notifyScrollInteraction } from "@/shared/ui/scroll/scroll-interaction"
 import { cn } from "@/shared/utils/utils"
 
 import { ProcessBoardNavButton } from "./process-board-nav-button"
@@ -19,12 +17,16 @@ type Props<TId extends string = string> = {
   header?: ReactNode
   loading?: boolean
   loadingFallback?: ReactNode
-  /** Flechas de navegación (default true). */
   showArrows?: boolean
-  /** Desktop: flechas solo al hover si true (default). */
+  /** Desktop: flechas solo al hover (default true). Mobile: siempre. */
   arrowsOnHover?: boolean
 }
 
+/**
+ * Board de columnas horizontales compartido (ingeniería / pipeline).
+ * Mobile: snap full-width + scroll vertical por columna (como MobilePipelineCarousel).
+ * Desktop: columnas fijas + flechas al hover.
+ */
 export function ProcessBoard<TId extends string = string>({
   columns,
   columnClassName = "w-72 min-w-72 shrink-0",
@@ -48,11 +50,11 @@ export function ProcessBoard<TId extends string = string>({
   const showLeft =
     showArrows &&
     canScrollLeft &&
-    (!arrowsOnHover || isMobile || hovering)
+    (isMobile || !arrowsOnHover || hovering)
   const showRight =
     showArrows &&
     canScrollRight &&
-    (!arrowsOnHover || isMobile || hovering)
+    (isMobile || !arrowsOnHover || hovering)
 
   function currentIndex() {
     const el = containerRef.current
@@ -71,6 +73,13 @@ export function ProcessBoard<TId extends string = string>({
     })
   }
 
+  const prevLen = useRef(columns.length)
+  useEffect(() => {
+    if (prevLen.current === columns.length) return
+    prevLen.current = columns.length
+    containerRef.current?.scrollTo({ left: 0 })
+  }, [columns.length])
+
   if (loading) {
     return (
       loadingFallback ?? (
@@ -84,11 +93,12 @@ export function ProcessBoard<TId extends string = string>({
   return (
     <div
       className={cn(
-        "relative flex min-h-0 w-full flex-1 flex-col",
+        "relative flex min-h-0 w-full flex-1 flex-col select-none",
         className,
       )}
     >
       {header}
+
       <div
         className="relative min-h-0 w-full flex-1"
         onMouseEnter={() => setHovering(true)}
@@ -106,35 +116,30 @@ export function ProcessBoard<TId extends string = string>({
           onClick={() => goToIndex(currentIndex() + 1)}
           label="Columna siguiente"
         />
-        <ScrollArea
+
+        <div
           ref={containerRef}
-          orientation="horizontal"
-          dragToScroll
-          onScroll={() => notifyScrollInteraction()}
           className={cn(
-            "h-full min-h-0 w-full",
-            isMobile && "snap-x snap-mandatory",
+            "hide-scrollbar flex h-full min-h-0",
+            isMobile
+              ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
+              : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
           )}
         >
-          <div
-            className={cn(
-              "flex h-full min-h-0 w-max",
-              !isMobile && "gap-3 pb-2",
-            )}
-          >
-            {columns.map(col => (
-              <div
-                key={col.id}
-                className={cn(
-                  "flex shrink-0 flex-col",
-                  isMobile ? "w-full snap-center" : columnClassName,
-                )}
-              >
-                {col.content}
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+          {columns.map(col => (
+            <div
+              key={col.id}
+              className={cn(
+                "flex shrink-0 flex-col",
+                isMobile
+                  ? "h-full w-full min-w-full snap-center overflow-y-auto overscroll-contain px-2 [touch-action:pan-y]"
+                  : columnClassName,
+              )}
+            >
+              {col.content}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

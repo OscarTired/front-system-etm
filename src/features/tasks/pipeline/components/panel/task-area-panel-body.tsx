@@ -128,7 +128,7 @@ export function TaskAreaPanelBody({
         <div
           data-task-area-scroll
           className={cn(
-            "hide-scrollbar flex min-h-0 min-w-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden p-3",
+            "hide-scrollbar flex min-h-0 min-w-0 flex-1 items-stretch justify-start gap-3 overflow-x-auto overflow-y-hidden p-3",
             false,
           )}
         >
@@ -143,17 +143,15 @@ export function TaskAreaPanelBody({
           ) : (
             <>
               {state.currentUserId && (
-                <div className="flex h-full min-h-0 w-56 shrink-0 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y">
-                  <PendingInvitesSection
-                    tasks={state.allTasks}
-                    currentUserId={state.currentUserId}
-                  />
-                </div>
+                <PendingInvitesSection
+                  tasks={state.allTasks}
+                  currentUserId={state.currentUserId}
+                />
               )}
               {state.areas.map(code => (
                 <div
                   key={code}
-                  className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y"
+                  className="flex h-full min-h-0 w-64 shrink-0 flex-col items-stretch justify-start overflow-y-auto overscroll-contain themed-scrollbar-y"
                 >
                   <AreaTaskSection code={code} panel={panel} column />
                 </div>

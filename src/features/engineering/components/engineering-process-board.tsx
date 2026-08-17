@@ -23,6 +23,8 @@ import {
 } from "../constants/engineering-process-definitions"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import { EngineeringTaskRow } from "./engineering-task-row"
+import { EngineeringProcessSkeleton } from "./engineering-process-skeleton"
+import { EngineeringKpiHeader } from "./engineering-kpi-header"
 
 type Props = {
   tasks: EngineeringTask[]
@@ -189,6 +191,12 @@ export function EngineeringProcessBoard({
     <ProcessBoard
       columns={columns}
       loading={loading}
+      loadingFallback={<EngineeringProcessSkeleton />}
+      header={
+        <div className="mb-3 shrink-0">
+          <EngineeringKpiHeader tasks={tasks} />
+        </div>
+      }
       columnClassName="w-72 min-w-72 shrink-0"
       scrollStep={288}
     />
