@@ -59,6 +59,21 @@ export function SpeedDialFab({ actions, className }: Props) {
     if (chromeHidden) setDialOpen(false)
   }, [chromeHidden])
 
+  // Scroll activo o recién terminado → no se permite ABRIR el dial.
+  // Si ya está abierto, el scroll lo cierra (UX estándar).
+  const lastScrollAtRef = useRef(0)
+  const SCROLL_LOCK_MS = 450
+
+  useEffect(() => {
+    const onScroll = (e: Event) => {
+      if (isInsideSheetOrPopover(e.target)) return
+      lastScrollAtRef.current = performance.now()
+      setDialOpen(false)
+    }
+    window.addEventListener("scroll", onScroll, true)
+    return () => window.removeEventListener("scroll", onScroll, true)
+  }, [])
+
   useEffect(() => {
     if (!dialOpen) return
 
@@ -73,20 +88,23 @@ export function SpeedDialFab({ actions, className }: Props) {
       setDialOpen(false)
     }
 
-    const onScroll = (e: Event) => {
-      if (isInsideSheetOrPopover(e.target)) return
-      setDialOpen(false)
-    }
-
     window.addEventListener("keydown", onKey)
     document.addEventListener("pointerdown", onPointerDown)
-    window.addEventListener("scroll", onScroll, true)
     return () => {
       window.removeEventListener("keydown", onKey)
       document.removeEventListener("pointerdown", onPointerDown)
-      window.removeEventListener("scroll", onScroll, true)
     }
   }, [dialOpen])
+
+  function toggleDial() {
+    // En pleno scroll (o <450ms después): no abrir. Solo permitir cerrar.
+    const sinceScroll = performance.now() - lastScrollAtRef.current
+    if (sinceScroll < SCROLL_LOCK_MS) {
+      setDialOpen(false)
+      return
+    }
+    setDialOpen(v => !v)
+  }
 
   if (actions.length === 0 || !mounted) return null
 
@@ -122,7 +140,7 @@ export function SpeedDialFab({ actions, className }: Props) {
         type="button"
         aria-label={dialOpen ? "Cerrar acciones" : "Más acciones"}
         aria-expanded={dialOpen}
-        onClick={() => setDialOpen(v => !v)}
+        onClick={toggleDial}
         className={cn(
           "pointer-events-auto flex size-12 items-center justify-center rounded-full transition-transform duration-150",
           "bg-foreground text-background hover:scale-105 hover:bg-foreground/90 active:scale-95",

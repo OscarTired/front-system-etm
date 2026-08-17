@@ -6,6 +6,7 @@ import type { EngineeringTask } from "../types/engineering-task.types"
 import {
   ENGINEERING_PROCESS_DEFINITIONS,
 } from "../constants/engineering-process-definitions"
+import { EngineeringTaskRow } from "./engineering-task-row"
 
 type Props = {
   users: User[]
@@ -14,8 +15,8 @@ type Props = {
 }
 
 /**
- * Tab Lista: usuarios (ingeniería) con resumen de tareas asignadas.
- * Filosofía TaskAreaPanel (acciones por persona), no panel flotante.
+ * Tab Lista — formato Team Bitácora (secciones por persona)
+ * + filas estilo pipeline.
  */
 export function EngineeringUserList({ users, tasks, loading }: Props) {
   if (loading) {
@@ -28,44 +29,51 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
 
   if (users.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
+      <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
         Sin usuarios para mostrar
       </div>
     )
   }
 
+  // Usuarios con al menos una tarea primero; luego el resto
+  const withTasks = users
+    .map(u => ({
+      user: u,
+      tasks: tasks.filter(t => t.assigneeId === u.id),
+    }))
+    .sort((a, b) => b.tasks.length - a.tasks.length)
+
   return (
-    <div className="flex w-full flex-col gap-3 pb-4">
-      {users.map(user => {
-        const assigned = tasks.filter(t => t.assigneeId === user.id)
-        const inProgress = assigned.filter(t => t.status === "PROGRESS")
+    <div className="flex w-full flex-col gap-6 pb-4">
+      {withTasks.map(({ user, tasks: assigned }) => {
+        const inProgress = assigned.some(t => t.status === "PROGRESS")
         const byProcess = new Map<string, number>()
         for (const t of assigned) {
-          byProcess.set(t.processCode, (byProcess.get(t.processCode) ?? 0) + 1)
+          byProcess.set(
+            t.processCode,
+            (byProcess.get(t.processCode) ?? 0) + 1,
+          )
         }
 
         return (
-          <div
-            key={user.id}
-            className="flex flex-col gap-2 rounded-2xl bg-foreground/5 p-3 transition hover:bg-foreground/10"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <DynamicBadge
-                label={user.name}
-                color={user.color}
-                icon={user.icon}
-                width="field"
-              />
-              <div className="flex shrink-0 items-center gap-2">
-                {inProgress.length > 0 && (
-                  <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+          <section key={user.id} className="flex w-full flex-col gap-3">
+            <div className="flex items-center justify-between gap-2 pb-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <DynamicBadge
+                  label={user.name}
+                  color={user.color}
+                  icon={user.icon}
+                  width="field"
+                />
+                {inProgress && (
+                  <span className="shrink-0 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                     Trabajando
                   </span>
                 )}
-                <span className="rounded-lg bg-foreground/5 px-2 py-1 text-xs font-medium text-muted-foreground">
-                  {assigned.length}{" "}
-                  {assigned.length === 1 ? "tarea" : "tareas"}
-                </span>
+              </div>
+              <div className="rounded-lg bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
+                {assigned.length}{" "}
+                {assigned.length === 1 ? "tarea" : "tareas"}
               </div>
             </div>
 
@@ -92,7 +100,19 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
                 })}
               </div>
             )}
-          </div>
+
+            {assigned.length === 0 ? (
+              <div className="flex h-16 items-center justify-center rounded-2xl bg-foreground/5 text-xs text-muted-foreground">
+                Sin tareas asignadas
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {assigned.map(task => (
+                  <EngineeringTaskRow key={task.id} task={task} />
+                ))}
+              </div>
+            )}
+          </section>
         )
       })}
     </div>
