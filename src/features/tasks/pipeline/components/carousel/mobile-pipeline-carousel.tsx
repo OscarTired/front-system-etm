@@ -1,7 +1,7 @@
 "use client"
 
 import { useLayoutEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ProcessBoardNavButton } from "@/shared/ui/process-board"
 
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
@@ -223,33 +223,19 @@ export function MobilePipelineCarousel({
 
     <div className="relative">
 
-      <button
-        type="button"
-        onClick={scrollToPrevious}
-        aria-label="Proceso anterior"
-        tabIndex={-1}
-        className={cn(
-          "absolute left-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-card/90 border border-border text-foreground backdrop-blur-xl transition-opacity duration-200",
-          canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
-        <ChevronLeft size={15} strokeWidth={2.5} />
-      </button>
+              <ProcessBoardNavButton
+          direction="left"
+          visible={canScrollLeft}
+          onClick={scrollToPrevious}
+          label="Proceso anterior"
+        />
 
-      <button
-        type="button"
-        onClick={scrollToNext}
-        aria-label="Proceso siguiente"
-        tabIndex={-1}
-        className={cn(
-          "absolute right-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "bg-card/90 border border-border text-foreground backdrop-blur-xl transition-opacity duration-200",
-          canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
-        <ChevronRight size={15} strokeWidth={2.5} />
-      </button>
+              <ProcessBoardNavButton
+          direction="right"
+          visible={canScrollRight}
+          onClick={scrollToNext}
+          label="Proceso siguiente"
+        />
 
       <div
         ref={maskRef}

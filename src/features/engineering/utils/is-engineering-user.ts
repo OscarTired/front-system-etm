@@ -1,19 +1,14 @@
 import type { User } from "@/features/users/types/user.types"
+import {
+  ENGINEERING_ASSIGNABLE_ROLE_CODES,
+  userHasRoleCode,
+} from "@/shared/core/constants/department-roles"
 
-/** Usuarios de ingeniería: rol code contiene ING, o sin roles de planta puros. */
-export function isEngineeringUser(user: User): boolean {
+/** Activo + rol RoleCode.INGENIERIA (SSOT). */
+export function isEngineeringUser(
+  user: Pick<User, "active" | "deletedAt" | "roles">,
+): boolean {
   if (!user.active) return false
   if (user.deletedAt) return false
-  const roles = user.roles ?? []
-  if (roles.length === 0) return true
-  return roles.some(r => {
-    const c = (r.code ?? "").toUpperCase()
-    const n = (r.name ?? "").toUpperCase()
-    return (
-      c.includes("ING") ||
-      n.includes("INGENIER") ||
-      c === "ADMIN" ||
-      c.includes("ADMIN")
-    )
-  })
+  return userHasRoleCode(user.roles, ENGINEERING_ASSIGNABLE_ROLE_CODES)
 }

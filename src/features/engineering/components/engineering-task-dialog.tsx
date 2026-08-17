@@ -1,13 +1,18 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { PenTool } from "lucide-react"
+import {
+  MessageSquarePlus,
+  PenTool,
+} from "lucide-react"
 
 import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
+import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { ContextPicker } from "@/features/tasks/components/context-picker"
 import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
+import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
 
 import {
@@ -22,23 +27,27 @@ import type {
 import { useEngineeringTaskMutations } from "../hooks/use-engineering-task-mutations"
 import { isEngineeringUser } from "../utils/is-engineering-user"
 
-const STATUS_OPTIONS: { value: EngineeringTaskStatus; label: string }[] = [
-  { value: "QUEUE", label: "En cola" },
-  { value: "PENDING", label: "Pendiente" },
-  { value: "PROGRESS", label: "En proceso" },
-  { value: "COMPLETED", label: "Completado" },
+const STATUS_OPTIONS: {
+  value: EngineeringTaskStatus
+  label: string
+  color: string
+}[] = [
+  { value: "QUEUE", label: "En cola", color: "#64748B" },
+  { value: "PENDING", label: "Pendiente", color: "#2563EB" },
+  { value: "PROGRESS", label: "En proceso", color: "#F59E0B" },
+  { value: "COMPLETED", label: "Completado", color: "#16A34A" },
 ]
 
 type Props = {
   open: boolean
   onClose: () => void
   task?: EngineeringTask | null
-  /** Prefills al crear */
   defaultProcessCode?: EngineeringProcessCode
   defaultProjectId?: string
   defaultAssigneeId?: string
 }
 
+/** Shell/UX alineado a ActivityPickerDialog. */
 export function EngineeringTaskDialog({
   open,
   onClose,
@@ -51,7 +60,7 @@ export function EngineeringTaskDialog({
   const { users } = useUsersDirectory()
   const { create, update } = useEngineeringTaskMutations()
 
-  const engineeringUsers = useMemo(
+  const assignableUsers = useMemo(
     () => (users as User[]).filter(isEngineeringUser),
     [users],
   )
@@ -64,6 +73,8 @@ export function EngineeringTaskDialog({
   const [status, setStatus] = useState<EngineeringTaskStatus>("QUEUE")
   const [assigneeId, setAssigneeId] = useState<string | undefined>()
   const [note, setNote] = useState("")
+  const [showDetail, setShowDetail] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -74,6 +85,7 @@ export function EngineeringTaskDialog({
       setStatus(task.status)
       setAssigneeId(task.assigneeId ?? undefined)
       setNote(task.note ?? "")
+      setShowDetail(!!task.note)
     } else {
       setTitle("")
       setProjectId(defaultProjectId ?? "")
@@ -81,10 +93,12 @@ export function EngineeringTaskDialog({
       setStatus("QUEUE")
       setAssigneeId(defaultAssigneeId)
       setNote("")
+      setShowDetail(false)
     }
+    setSubmitAttempted(false)
   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
 
-  const assignee = engineeringUsers.find(u => u.id === assigneeId)
+  const assignee = assignableUsers.find(u => u.id === assigneeId)
 
   const canSave =
     title.trim().length > 0 &&
@@ -93,8 +107,18 @@ export function EngineeringTaskDialog({
     !create.isPending &&
     !update.isPending
 
+  const errors = {
+    title:
+      submitAttempted && !title.trim() ? "El título es obligatorio" : undefined,
+    projectId:
+      submitAttempted && !projectId ? "El proyecto es obligatorio" : undefined,
+  }
+
   async function handleSave() {
-    if (!canSave) return
+    if (!canSave) {
+      setSubmitAttempted(true)
+      return
+    }
     if (isEdit && task) {
       await update.mutateAsync({
         id: task.id,
@@ -118,9 +142,6 @@ export function EngineeringTaskDialog({
     onClose()
   }
 
-  const fieldClass =
-    "h-10 w-full rounded-xl bg-foreground/5 px-3 text-sm text-foreground outline-none focus:bg-foreground/10"
-
   return (
     <FormDialog
       open={open}
@@ -129,106 +150,172 @@ export function EngineeringTaskDialog({
       canSave={canSave}
       saving={create.isPending || update.isPending}
       saveLabel={isEdit ? "Guardar" : "Crear"}
+      savingLabel="Guardando..."
       onClose={onClose}
       onSave={() => void handleSave()}
     >
-      <div className="flex flex-col gap-4 p-1">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Título
-          </span>
+      <div className="flex flex-col gap-4">
+        <FormField label="Título *" error={errors.title}>
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className={fieldClass}
             placeholder="Ej. Lista de procura tablero"
+            className="h-10 w-full rounded-xl bg-foreground/5 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/80 focus:bg-foreground/10"
           />
-        </label>
+        </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Proyecto
-          </span>
-          <ContextPicker
-            mode="projects"
-            value={{ projectId, taskId: "" }}
-            onChange={v => setProjectId(v.projectId)}
-          />
-          {!projectId && (
-            <span className="text-[11px] text-muted-foreground">
-              Obligatorio — el stage del proyecto no bloquea la creación
-            </span>
-          )}
+        <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3">
+          <FormField label="Proyecto *" error={errors.projectId}>
+            <ContextPicker
+              mode="projects"
+              value={{ projectId, taskId: "" }}
+              onChange={v => setProjectId(v.projectId)}
+            />
+          </FormField>
         </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Proceso
-          </span>
-          <select
-            value={processCode}
-            onChange={e =>
-              setProcessCode(e.target.value as EngineeringProcessCode)
-            }
-            className={fieldClass}
-          >
-            {ENGINEERING_PROCESS_ORDER.map(code => (
-              <option key={code} value={code}>
-                {ENGINEERING_PROCESS_DEFINITIONS[code].short} ·{" "}
-                {ENGINEERING_PROCESS_DEFINITIONS[code].label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col gap-2">
+          <div className="mb-0.5 flex items-center justify-between px-0.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Proceso
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {ENGINEERING_PROCESS_ORDER.map((code, index) => {
+              const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+              const Icon = ENTITY_ICONS[def.icon]
+              const isSelected = processCode === code
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setProcessCode(code)}
+                  style={{
+                    animationDelay: `${Math.min(index, 8) * 25}ms`,
+                  }}
+                  className={cn(
+                    "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                    isSelected
+                      ? "bg-foreground/12 ring-1 ring-foreground/20"
+                      : "bg-foreground/5 hover:bg-foreground/10",
+                  )}
+                >
+                  <span
+                    className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
+                    style={{
+                      backgroundColor: `${def.color}22`,
+                      color: def.color,
+                    }}
+                  >
+                    {Icon ? <Icon size={15} /> : def.short}
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
+                    {def.short}
+                  </span>
+                  <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+                    {def.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {isEdit && (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
+          <div className="flex flex-col gap-2">
+            <span className="px-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Estado
             </span>
-            <select
-              value={status}
-              onChange={e =>
-                setStatus(e.target.value as EngineeringTaskStatus)
-              }
-              className={fieldClass}
-            >
-              {STATUS_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="grid grid-cols-2 gap-2 tablet:grid-cols-4">
+              {STATUS_OPTIONS.map(opt => {
+                const isSelected = status === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setStatus(opt.value)}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5 text-center text-xs font-semibold transition-colors",
+                      isSelected
+                        ? "ring-1 ring-foreground/20"
+                        : "bg-foreground/5 hover:bg-foreground/10",
+                    )}
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: `${opt.color}22`,
+                            color: opt.color,
+                          }
+                        : undefined
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Asignar a
-          </span>
+        <FormField label="Asignar a">
           <UserSelect
-            items={engineeringUsers}
+            items={assignableUsers}
             value={assignee}
             placeholder="Sin asignar"
             onChange={u => setAssigneeId(u?.id)}
           />
-        </div>
+          {assignableUsers.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
+            </p>
+          )}
+        </FormField>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Nota (opcional)
-          </span>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={3}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Detalle
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowDetail(prev => !prev)}
+              className={cn(
+                "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
+                showDetail || note.trim()
+                  ? "bg-foreground/12 text-foreground"
+                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+              )}
+            >
+              <MessageSquarePlus size={15} />
+              <span>
+                {showDetail || note.trim()
+                  ? "Ocultar detalle"
+                  : "Añadir detalle"}
+              </span>
+              {note.trim() && (
+                <span className="absolute -right-1 -top-1 size-2 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          </div>
+
+          <div
             className={cn(
-              fieldClass,
-              "h-auto min-h-[4.5rem] resize-none py-2",
+              "overflow-hidden transition-all duration-200 tablet:max-h-none tablet:opacity-100 tablet:pointer-events-auto",
+              showDetail || note.trim()
+                ? "max-h-40 opacity-100"
+                : "max-h-0 opacity-0 pointer-events-none tablet:max-h-none tablet:opacity-100",
             )}
-            placeholder="Detalle o alcance"
-          />
-        </label>
+          >
+            <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-2.5">
+              <textarea
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                placeholder="Detalle o alcance (opcional)..."
+                className="min-h-16 min-w-0 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </FormDialog>
   )

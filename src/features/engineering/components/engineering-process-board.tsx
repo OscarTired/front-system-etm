@@ -1,17 +1,20 @@
 "use client"
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { useMemo } from "react"
+import { Plus } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
 import { useThemeStore } from "@/shared/theme"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
 import { cn } from "@/shared/utils/utils"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+import {
+  ProcessBoard,
+  type ProcessBoardColumn,
+} from "@/shared/ui/process-board"
 
 import {
   ENGINEERING_PROCESS_DEFINITIONS,
@@ -82,7 +85,7 @@ function ProcessColumnHeader({
   const theme = useThemeStore(s => s.resolved)
   const def = ENGINEERING_PROCESS_DEFINITIONS[code]
   const Icon = ENTITY_ICONS[def.icon]
-  const badge = getBadgeColors(def.color, theme)
+  const badge = getBadgeColors(def.color, "subtle", theme)
   const { has } = usePermissions()
   const canCreate = has(PermissionCode.TASK_CREATE)
 
@@ -130,150 +133,16 @@ export function EngineeringProcessBoard({
   onEditTask,
 }: Props) {
   const { isMobile } = useResponsive()
-  const columns = useMemo(() => groupByProcess(tasks), [tasks])
+  const byProcess = useMemo(() => groupByProcess(tasks), [tasks])
 
-  const {
-    containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleClickCapture,
-    stopDragging,
-  } = useDragScroll()
-
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-  const rafRef = useRef<number | null>(null)
-
-  useLayoutEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const update = () => {
-      const max = el.scrollWidth - el.clientWidth
-      setCanScrollLeft(el.scrollLeft > 4)
-      setCanScrollRight(el.scrollLeft < max - 4)
-    }
-    const schedule = () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
-      rafRef.current = requestAnimationFrame(update)
-    }
-    update()
-    el.addEventListener("scroll", schedule, { passive: true })
-    const ro = new ResizeObserver(schedule)
-    ro.observe(el)
-    return () => {
-      el.removeEventListener("scroll", schedule)
-      ro.disconnect()
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
-    }
-  }, [containerRef, tasks, isMobile])
-
-  useLayoutEffect(() => {
-    if (!isMobile) return
-    const el = containerRef.current
-    if (!el) return
-    let settleTimer: number | null = null
-    const snap = () => {
-      const w = el.clientWidth || 1
-      const max = ENGINEERING_PROCESS_ORDER.length - 1
-      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
-      const target = idx * w
-      if (Math.abs(el.scrollLeft - target) > 2) {
-        el.scrollTo({ left: target, behavior: "smooth" })
-      }
-    }
-    const onScroll = () => {
-      if (settleTimer != null) window.clearTimeout(settleTimer)
-      settleTimer = window.setTimeout(snap, 80)
-    }
-    el.addEventListener("scroll", onScroll, { passive: true })
-    el.addEventListener("scrollend", snap as EventListener)
-    return () => {
-      el.removeEventListener("scroll", onScroll)
-      el.removeEventListener("scrollend", snap as EventListener)
-      if (settleTimer != null) window.clearTimeout(settleTimer)
-    }
-  }, [containerRef, isMobile])
-
-  function currentIndex() {
-    const el = containerRef.current
-    if (!el) return 0
-    return Math.round(el.scrollLeft / (el.clientWidth || 1))
-  }
-
-  function goToIndex(index: number) {
-    const el = containerRef.current
-    if (!el) return
-    const max = ENGINEERING_PROCESS_ORDER.length - 1
-    const next = Math.max(0, Math.min(max, index))
-    el.scrollTo({
-      left: isMobile ? next * el.clientWidth : next * 288,
-      behavior: "smooth",
-    })
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-        Cargando…
-      </div>
-    )
-  }
-
-  return (
-    <div className="relative min-h-0 w-full flex-1 select-none">
-      <button
-        type="button"
-        onClick={() => goToIndex(currentIndex() - 1)}
-        aria-label="Proceso anterior"
-        tabIndex={-1}
-        className={cn(
-          "absolute left-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "border border-border bg-card/90 text-foreground backdrop-blur-xl transition-opacity duration-200",
-          canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
-        <ChevronLeft size={15} strokeWidth={2.5} />
-      </button>
-      <button
-        type="button"
-        onClick={() => goToIndex(currentIndex() + 1)}
-        aria-label="Proceso siguiente"
-        tabIndex={-1}
-        className={cn(
-          "absolute right-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
-          "border border-border bg-card/90 text-foreground backdrop-blur-xl transition-opacity duration-200",
-          canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
-        <ChevronRight size={15} strokeWidth={2.5} />
-      </button>
-
-      <div
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDragging}
-        onMouseLeave={stopDragging}
-        onClickCapture={handleClickCapture}
-        className={cn(
-          "hide-scrollbar flex h-full min-h-0 select-none",
-          isMobile
-            ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
-            : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
-        )}
-      >
-        {ENGINEERING_PROCESS_ORDER.map(code => {
-          const colTasks = columns.get(code) ?? []
-          return (
-            <div
-              key={code}
-              className={cn(
-                "flex shrink-0 flex-col",
-                isMobile
-                  ? "w-full snap-center [touch-action:pan-y]"
-                  : "w-72",
-              )}
-            >
+  const columns: ProcessBoardColumn<EngineeringProcessCode>[] = useMemo(
+    () =>
+      ENGINEERING_PROCESS_ORDER.map(code => {
+        const colTasks = byProcess.get(code) ?? []
+        return {
+          id: code,
+          content: (
+            <>
               <ProcessColumnHeader
                 code={code}
                 count={colTasks.length}
@@ -305,10 +174,19 @@ export function EngineeringProcessBoard({
                   ))
                 )}
               </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
+            </>
+          ),
+        }
+      }),
+    [byProcess, isMobile, onCreateInProcess, onEditTask],
+  )
+
+  return (
+    <ProcessBoard
+      columns={columns}
+      loading={loading}
+      columnClassName="w-72"
+      scrollStep={288}
+    />
   )
 }

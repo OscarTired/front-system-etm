@@ -1,5 +1,7 @@
 "use client"
 
+import { PROJECT_MANAGER_ROLE_CODES } from "@/shared/core/constants/department-roles"
+
 import {
   RoleMultiSelect,
 } from "@/features/roles/components/role-multi-select"
@@ -76,7 +78,7 @@ export function UserDialogHeader({
   // varios roles a la vez, alcanza con que UNO sea de este tipo.
   const isPmDepartment =
     selectedRoles.some(
-      role => role.code === "INGENIERIA" || role.code === "PROYECTOS",
+      role => (PROJECT_MANAGER_ROLE_CODES as readonly string[]).includes(role.code),
     )
 
   const showLevelSelect =

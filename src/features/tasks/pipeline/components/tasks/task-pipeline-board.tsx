@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ProcessBoardNavButton } from "@/shared/ui/process-board"
 
 import type { Task } from "@/features/tasks/types/task.types"
 
@@ -250,41 +250,19 @@ export function TaskPipelineBoard({
         onMouseEnter={() => setHoveringHeader(true)}
         onMouseLeave={() => setHoveringHeader(false)}
       >
-        <button
-          type="button"
+                <ProcessBoardNavButton
+          direction="left"
+          visible={showLeft}
           onClick={scrollLeft}
-          aria-label="Scrollear izquierda"
-          tabIndex={-1}
-          style={{ userSelect: "none", WebkitUserSelect: "none" }}
-          className={`
-            absolute left-2 top-5.5 z-20 -translate-y-1/2
-            flex h-7 w-8 items-center justify-center
-            rounded-lg bg-card/80 border border-border backdrop-blur-xl
-            text-foreground transition-opacity duration-200
-            hover:bg-card
-            ${showLeft ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
-          `}
-        >
-          <ChevronLeft size={13} strokeWidth={2.5} />
-        </button>
+          label="Scrollear izquierda"
+        />
 
-        <button
-          type="button"
+                <ProcessBoardNavButton
+          direction="right"
+          visible={showRight}
           onClick={scrollRight}
-          aria-label="Scrollear derecha"
-          tabIndex={-1}
-          style={{ userSelect: "none", WebkitUserSelect: "none" }}
-          className={`
-            absolute right-2 top-5.5 z-20 -translate-y-1/2
-            flex h-7 w-8 items-center justify-center
-            rounded-lg bg-card/80 border border-border backdrop-blur-xl
-            text-foreground transition-opacity duration-200
-            hover:bg-card
-            ${showRight ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
-          `}
-        >
-          <ChevronRight size={13} strokeWidth={2.5} />
-        </button>
+          label="Scrollear derecha"
+        />
 
         {/* Header con fade horizontal */}
         <div

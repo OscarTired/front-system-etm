@@ -1,0 +1,1591 @@
+diff --git a/src/features/activity-log/constants/bitacora-departments.ts b/src/features/activity-log/constants/bitacora-departments.ts
+index 3f13c9f..46c4821 100644
+--- a/src/features/activity-log/constants/bitacora-departments.ts
++++ b/src/features/activity-log/constants/bitacora-departments.ts
+@@ -1,22 +1,12 @@
+ import type { ActivityDepartment } from "../types/activity-log.types"
++import { BITACORA_DEPARTMENT_ROLE_CODES } from "@/shared/core/constants/department-roles"
+ 
+ export type BitacoraDepartmentConfig = {
+   department: ActivityDepartment
+-  // Título de pestaña (usePageTitle) — sentence case.
+   pageTitle: string
+-  /** Topbar móvil — el depto ya se ve en los tabs */
+   mobileTitle?: string
+-  // Encabezado visible en la página — el mock ya lo mostraba en
+-  // mayúsculas, se deja como string aparte en vez de transformar
+-  // pageTitle en runtime.
+   heading: string
+   subtitle: string
+-  // Roles (además de ADMIN, que siempre pasa) habilitados para esta
+-  // bitácora. Espejo de BITACORA_DEPARTMENT_ROLES en el backend
+-  // (activity-log/constants/bitacora-department-roles.ts) — si se
+-  // agrega un rol acá, hay que agregarlo también del otro lado, o
+-  // vuelve a pasar lo de PROYECTOS: el sidebar lo dejaba entrar pero
+-  // el backend tiraba 403.
+   roles: readonly string[]
+ }
+ 
+@@ -27,7 +17,7 @@ export const BITACORA_DEPARTMENTS: Record<ActivityDepartment, BitacoraDepartment
+     mobileTitle: "Bitácora",
+     heading: "BITÁCORA DE PRODUCCIÓN",
+     subtitle: "Qué hiciste hoy",
+-    roles: ["PRODUCCION"],
++    roles: [...BITACORA_DEPARTMENT_ROLE_CODES.PRODUCCION],
+   },
+   INGENIERIA: {
+     department: "INGENIERIA",
+@@ -35,6 +25,6 @@ export const BITACORA_DEPARTMENTS: Record<ActivityDepartment, BitacoraDepartment
+     mobileTitle: "Bitácora",
+     heading: "BITÁCORA DE INGENIERÍA",
+     subtitle: "Qué hiciste hoy",
+-    roles: ["INGENIERIA", "PROYECTOS"],
++    roles: [...BITACORA_DEPARTMENT_ROLE_CODES.INGENIERIA],
+   },
+ }
+diff --git a/src/features/admin/users/components/dialog/user-dialog-header.tsx b/src/features/admin/users/components/dialog/user-dialog-header.tsx
+index 7b1c5f1..e94c3ad 100644
+--- a/src/features/admin/users/components/dialog/user-dialog-header.tsx
++++ b/src/features/admin/users/components/dialog/user-dialog-header.tsx
+@@ -1,5 +1,7 @@
+ "use client"
+ 
++import { PROJECT_MANAGER_ROLE_CODES } from "@/shared/core/constants/department-roles"
++
+ import {
+   RoleMultiSelect,
+ } from "@/features/roles/components/role-multi-select"
+@@ -76,7 +78,7 @@ export function UserDialogHeader({
+   // varios roles a la vez, alcanza con que UNO sea de este tipo.
+   const isPmDepartment =
+     selectedRoles.some(
+-      role => role.code === "INGENIERIA" || role.code === "PROYECTOS",
++      role => (PROJECT_MANAGER_ROLE_CODES as readonly string[]).includes(role.code),
+     )
+ 
+   const showLevelSelect =
+diff --git a/src/features/areas/hooks/use-area-operators.ts b/src/features/areas/hooks/use-area-operators.ts
+index 8a51711..0d2a4bb 100644
+--- a/src/features/areas/hooks/use-area-operators.ts
++++ b/src/features/areas/hooks/use-area-operators.ts
+@@ -7,6 +7,7 @@ import { useTasks } from "@/features/tasks/hooks/use-tasks"
+ 
+ import type { ProcessCode } from "@/features/tasks/types/task.types"
+ import type { User } from "@/features/users/types/user.types"
++import { PRODUCTION_OPERATOR_ROLE_CODE } from "@/shared/core/constants/department-roles"
+ 
+ export type OperatorAvailability =
+   | { state: "FREE" }
+@@ -43,7 +44,7 @@ export function useAreaOperators(processCode: ProcessCode | null) {
+ 
+     const candidates = (users as User[]).filter(
+       user =>
+-        user.roles?.some(role => role.code === "PRODUCCION") &&
++        user.roles?.some(role => role.code === PRODUCTION_OPERATOR_ROLE_CODE) &&
+         user.level === "OPERARIO" &&
+         // Antes era user.area?.processCode === processCode (1 a 1)
+         // — ahora un operario puede estar en varias áreas, así que
+diff --git a/src/features/engineering/components/engineering-process-board.tsx b/src/features/engineering/components/engineering-process-board.tsx
+index b7b95e4..a456d28 100644
+--- a/src/features/engineering/components/engineering-process-board.tsx
++++ b/src/features/engineering/components/engineering-process-board.tsx
+@@ -1,17 +1,20 @@
+ "use client"
+ 
+-import { useLayoutEffect, useMemo, useRef, useState } from "react"
+-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
++import { useMemo } from "react"
++import { Plus } from "lucide-react"
+ 
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { getBadgeColors } from "@/shared/utils/badge-colors"
+ import { useThemeStore } from "@/shared/theme"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+-import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
+ import { cn } from "@/shared/utils/utils"
+ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+ import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
++import {
++  ProcessBoard,
++  type ProcessBoardColumn,
++} from "@/shared/ui/process-board"
+ 
+ import {
+   ENGINEERING_PROCESS_DEFINITIONS,
+@@ -82,7 +85,7 @@ function ProcessColumnHeader({
+   const theme = useThemeStore(s => s.resolved)
+   const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+   const Icon = ENTITY_ICONS[def.icon]
+-  const badge = getBadgeColors(def.color, theme)
++  const badge = getBadgeColors(def.color, "subtle", theme)
+   const { has } = usePermissions()
+   const canCreate = has(PermissionCode.TASK_CREATE)
+ 
+@@ -130,150 +133,16 @@ export function EngineeringProcessBoard({
+   onEditTask,
+ }: Props) {
+   const { isMobile } = useResponsive()
+-  const columns = useMemo(() => groupByProcess(tasks), [tasks])
+-
+-  const {
+-    containerRef,
+-    handleMouseDown,
+-    handleMouseMove,
+-    handleClickCapture,
+-    stopDragging,
+-  } = useDragScroll()
+-
+-  const [canScrollLeft, setCanScrollLeft] = useState(false)
+-  const [canScrollRight, setCanScrollRight] = useState(false)
+-  const rafRef = useRef<number | null>(null)
+-
+-  useLayoutEffect(() => {
+-    const el = containerRef.current
+-    if (!el) return
+-    const update = () => {
+-      const max = el.scrollWidth - el.clientWidth
+-      setCanScrollLeft(el.scrollLeft > 4)
+-      setCanScrollRight(el.scrollLeft < max - 4)
+-    }
+-    const schedule = () => {
+-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+-      rafRef.current = requestAnimationFrame(update)
+-    }
+-    update()
+-    el.addEventListener("scroll", schedule, { passive: true })
+-    const ro = new ResizeObserver(schedule)
+-    ro.observe(el)
+-    return () => {
+-      el.removeEventListener("scroll", schedule)
+-      ro.disconnect()
+-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+-    }
+-  }, [containerRef, tasks, isMobile])
+-
+-  useLayoutEffect(() => {
+-    if (!isMobile) return
+-    const el = containerRef.current
+-    if (!el) return
+-    let settleTimer: number | null = null
+-    const snap = () => {
+-      const w = el.clientWidth || 1
+-      const max = ENGINEERING_PROCESS_ORDER.length - 1
+-      const idx = Math.max(0, Math.min(max, Math.round(el.scrollLeft / w)))
+-      const target = idx * w
+-      if (Math.abs(el.scrollLeft - target) > 2) {
+-        el.scrollTo({ left: target, behavior: "smooth" })
+-      }
+-    }
+-    const onScroll = () => {
+-      if (settleTimer != null) window.clearTimeout(settleTimer)
+-      settleTimer = window.setTimeout(snap, 80)
+-    }
+-    el.addEventListener("scroll", onScroll, { passive: true })
+-    el.addEventListener("scrollend", snap as EventListener)
+-    return () => {
+-      el.removeEventListener("scroll", onScroll)
+-      el.removeEventListener("scrollend", snap as EventListener)
+-      if (settleTimer != null) window.clearTimeout(settleTimer)
+-    }
+-  }, [containerRef, isMobile])
+-
+-  function currentIndex() {
+-    const el = containerRef.current
+-    if (!el) return 0
+-    return Math.round(el.scrollLeft / (el.clientWidth || 1))
+-  }
+-
+-  function goToIndex(index: number) {
+-    const el = containerRef.current
+-    if (!el) return
+-    const max = ENGINEERING_PROCESS_ORDER.length - 1
+-    const next = Math.max(0, Math.min(max, index))
+-    el.scrollTo({
+-      left: isMobile ? next * el.clientWidth : next * 288,
+-      behavior: "smooth",
+-    })
+-  }
+-
+-  if (loading) {
+-    return (
+-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+-        Cargando…
+-      </div>
+-    )
+-  }
+-
+-  return (
+-    <div className="relative min-h-0 w-full flex-1 select-none">
+-      <button
+-        type="button"
+-        onClick={() => goToIndex(currentIndex() - 1)}
+-        aria-label="Proceso anterior"
+-        tabIndex={-1}
+-        className={cn(
+-          "absolute left-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
+-          "border border-border bg-card/90 text-foreground backdrop-blur-xl transition-opacity duration-200",
+-          canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
+-        )}
+-      >
+-        <ChevronLeft size={15} strokeWidth={2.5} />
+-      </button>
+-      <button
+-        type="button"
+-        onClick={() => goToIndex(currentIndex() + 1)}
+-        aria-label="Proceso siguiente"
+-        tabIndex={-1}
+-        className={cn(
+-          "absolute right-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
+-          "border border-border bg-card/90 text-foreground backdrop-blur-xl transition-opacity duration-200",
+-          canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
+-        )}
+-      >
+-        <ChevronRight size={15} strokeWidth={2.5} />
+-      </button>
+-
+-      <div
+-        ref={containerRef}
+-        onMouseDown={handleMouseDown}
+-        onMouseMove={handleMouseMove}
+-        onMouseUp={stopDragging}
+-        onMouseLeave={stopDragging}
+-        onClickCapture={handleClickCapture}
+-        className={cn(
+-          "hide-scrollbar flex h-full min-h-0 select-none",
+-          isMobile
+-            ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
+-            : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
+-        )}
+-      >
+-        {ENGINEERING_PROCESS_ORDER.map(code => {
+-          const colTasks = columns.get(code) ?? []
+-          return (
+-            <div
+-              key={code}
+-              className={cn(
+-                "flex shrink-0 flex-col",
+-                isMobile
+-                  ? "w-full snap-center [touch-action:pan-y]"
+-                  : "w-72",
+-              )}
+-            >
++  const byProcess = useMemo(() => groupByProcess(tasks), [tasks])
++
++  const columns: ProcessBoardColumn<EngineeringProcessCode>[] = useMemo(
++    () =>
++      ENGINEERING_PROCESS_ORDER.map(code => {
++        const colTasks = byProcess.get(code) ?? []
++        return {
++          id: code,
++          content: (
++            <>
+               <ProcessColumnHeader
+                 code={code}
+                 count={colTasks.length}
+@@ -305,10 +174,19 @@ export function EngineeringProcessBoard({
+                   ))
+                 )}
+               </div>
+-            </div>
+-          )
+-        })}
+-      </div>
+-    </div>
++            </>
++          ),
++        }
++      }),
++    [byProcess, isMobile, onCreateInProcess, onEditTask],
++  )
++
++  return (
++    <ProcessBoard
++      columns={columns}
++      loading={loading}
++      columnClassName="w-72"
++      scrollStep={288}
++    />
+   )
+ }
+diff --git a/src/features/engineering/components/engineering-task-dialog.tsx b/src/features/engineering/components/engineering-task-dialog.tsx
+index b2ed64b..d6acdc9 100644
+--- a/src/features/engineering/components/engineering-task-dialog.tsx
++++ b/src/features/engineering/components/engineering-task-dialog.tsx
+@@ -1,13 +1,18 @@
+ "use client"
+ 
+ import { useEffect, useMemo, useState } from "react"
+-import { PenTool } from "lucide-react"
++import {
++  MessageSquarePlus,
++  PenTool,
++} from "lucide-react"
+ 
+ import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
++import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
+ import { ContextPicker } from "@/features/tasks/components/context-picker"
+ import { UserSelect } from "@/features/users/components/user-select"
+ import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
+ import type { User } from "@/features/users/types/user.types"
++import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { cn } from "@/shared/utils/utils"
+ 
+ import {
+@@ -22,23 +27,27 @@ import type {
+ import { useEngineeringTaskMutations } from "../hooks/use-engineering-task-mutations"
+ import { isEngineeringUser } from "../utils/is-engineering-user"
+ 
+-const STATUS_OPTIONS: { value: EngineeringTaskStatus; label: string }[] = [
+-  { value: "QUEUE", label: "En cola" },
+-  { value: "PENDING", label: "Pendiente" },
+-  { value: "PROGRESS", label: "En proceso" },
+-  { value: "COMPLETED", label: "Completado" },
++const STATUS_OPTIONS: {
++  value: EngineeringTaskStatus
++  label: string
++  color: string
++}[] = [
++  { value: "QUEUE", label: "En cola", color: "#64748B" },
++  { value: "PENDING", label: "Pendiente", color: "#2563EB" },
++  { value: "PROGRESS", label: "En proceso", color: "#F59E0B" },
++  { value: "COMPLETED", label: "Completado", color: "#16A34A" },
+ ]
+ 
+ type Props = {
+   open: boolean
+   onClose: () => void
+   task?: EngineeringTask | null
+-  /** Prefills al crear */
+   defaultProcessCode?: EngineeringProcessCode
+   defaultProjectId?: string
+   defaultAssigneeId?: string
+ }
+ 
++/** Shell/UX alineado a ActivityPickerDialog. */
+ export function EngineeringTaskDialog({
+   open,
+   onClose,
+@@ -51,7 +60,7 @@ export function EngineeringTaskDialog({
+   const { users } = useUsersDirectory()
+   const { create, update } = useEngineeringTaskMutations()
+ 
+-  const engineeringUsers = useMemo(
++  const assignableUsers = useMemo(
+     () => (users as User[]).filter(isEngineeringUser),
+     [users],
+   )
+@@ -64,6 +73,8 @@ export function EngineeringTaskDialog({
+   const [status, setStatus] = useState<EngineeringTaskStatus>("QUEUE")
+   const [assigneeId, setAssigneeId] = useState<string | undefined>()
+   const [note, setNote] = useState("")
++  const [showDetail, setShowDetail] = useState(false)
++  const [submitAttempted, setSubmitAttempted] = useState(false)
+ 
+   useEffect(() => {
+     if (!open) return
+@@ -74,6 +85,7 @@ export function EngineeringTaskDialog({
+       setStatus(task.status)
+       setAssigneeId(task.assigneeId ?? undefined)
+       setNote(task.note ?? "")
++      setShowDetail(!!task.note)
+     } else {
+       setTitle("")
+       setProjectId(defaultProjectId ?? "")
+@@ -81,10 +93,12 @@ export function EngineeringTaskDialog({
+       setStatus("QUEUE")
+       setAssigneeId(defaultAssigneeId)
+       setNote("")
++      setShowDetail(false)
+     }
++    setSubmitAttempted(false)
+   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
+ 
+-  const assignee = engineeringUsers.find(u => u.id === assigneeId)
++  const assignee = assignableUsers.find(u => u.id === assigneeId)
+ 
+   const canSave =
+     title.trim().length > 0 &&
+@@ -93,8 +107,18 @@ export function EngineeringTaskDialog({
+     !create.isPending &&
+     !update.isPending
+ 
++  const errors = {
++    title:
++      submitAttempted && !title.trim() ? "El título es obligatorio" : undefined,
++    projectId:
++      submitAttempted && !projectId ? "El proyecto es obligatorio" : undefined,
++  }
++
+   async function handleSave() {
+-    if (!canSave) return
++    if (!canSave) {
++      setSubmitAttempted(true)
++      return
++    }
+     if (isEdit && task) {
+       await update.mutateAsync({
+         id: task.id,
+@@ -118,9 +142,6 @@ export function EngineeringTaskDialog({
+     onClose()
+   }
+ 
+-  const fieldClass =
+-    "h-10 w-full rounded-xl bg-foreground/5 px-3 text-sm text-foreground outline-none focus:bg-foreground/10"
+-
+   return (
+     <FormDialog
+       open={open}
+@@ -129,106 +150,172 @@ export function EngineeringTaskDialog({
+       canSave={canSave}
+       saving={create.isPending || update.isPending}
+       saveLabel={isEdit ? "Guardar" : "Crear"}
++      savingLabel="Guardando..."
+       onClose={onClose}
+       onSave={() => void handleSave()}
+     >
+-      <div className="flex flex-col gap-4 p-1">
+-        <label className="flex flex-col gap-1.5">
+-          <span className="text-xs font-medium text-muted-foreground">
+-            Título
+-          </span>
++      <div className="flex flex-col gap-4">
++        <FormField label="Título *" error={errors.title}>
+           <input
+             value={title}
+             onChange={e => setTitle(e.target.value)}
+-            className={fieldClass}
+             placeholder="Ej. Lista de procura tablero"
++            className="h-10 w-full rounded-xl bg-foreground/5 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/80 focus:bg-foreground/10"
+           />
+-        </label>
+-
+-        <div className="flex flex-col gap-1.5">
+-          <span className="text-xs font-medium text-muted-foreground">
+-            Proyecto
+-          </span>
+-          <ContextPicker
+-            mode="projects"
+-            value={{ projectId, taskId: "" }}
+-            onChange={v => setProjectId(v.projectId)}
+-          />
+-          {!projectId && (
+-            <span className="text-[11px] text-muted-foreground">
+-              Obligatorio — el stage del proyecto no bloquea la creación
+-            </span>
+-          )}
++        </FormField>
++
++        <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3">
++          <FormField label="Proyecto *" error={errors.projectId}>
++            <ContextPicker
++              mode="projects"
++              value={{ projectId, taskId: "" }}
++              onChange={v => setProjectId(v.projectId)}
++            />
++          </FormField>
+         </div>
+ 
+-        <label className="flex flex-col gap-1.5">
+-          <span className="text-xs font-medium text-muted-foreground">
+-            Proceso
+-          </span>
+-          <select
+-            value={processCode}
+-            onChange={e =>
+-              setProcessCode(e.target.value as EngineeringProcessCode)
+-            }
+-            className={fieldClass}
+-          >
+-            {ENGINEERING_PROCESS_ORDER.map(code => (
+-              <option key={code} value={code}>
+-                {ENGINEERING_PROCESS_DEFINITIONS[code].short} ·{" "}
+-                {ENGINEERING_PROCESS_DEFINITIONS[code].label}
+-              </option>
+-            ))}
+-          </select>
+-        </label>
++        <div className="flex flex-col gap-2">
++          <div className="mb-0.5 flex items-center justify-between px-0.5">
++            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
++              Proceso
++            </span>
++          </div>
++          <div className="grid grid-cols-3 gap-2">
++            {ENGINEERING_PROCESS_ORDER.map((code, index) => {
++              const def = ENGINEERING_PROCESS_DEFINITIONS[code]
++              const Icon = ENTITY_ICONS[def.icon]
++              const isSelected = processCode === code
++              return (
++                <button
++                  key={code}
++                  type="button"
++                  onClick={() => setProcessCode(code)}
++                  style={{
++                    animationDelay: `${Math.min(index, 8) * 25}ms`,
++                  }}
++                  className={cn(
++                    "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
++                    isSelected
++                      ? "bg-foreground/12 ring-1 ring-foreground/20"
++                      : "bg-foreground/5 hover:bg-foreground/10",
++                  )}
++                >
++                  <span
++                    className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
++                    style={{
++                      backgroundColor: `${def.color}22`,
++                      color: def.color,
++                    }}
++                  >
++                    {Icon ? <Icon size={15} /> : def.short}
++                  </span>
++                  <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
++                    {def.short}
++                  </span>
++                  <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
++                    {def.label}
++                  </span>
++                </button>
++              )
++            })}
++          </div>
++        </div>
+ 
+         {isEdit && (
+-          <label className="flex flex-col gap-1.5">
+-            <span className="text-xs font-medium text-muted-foreground">
++          <div className="flex flex-col gap-2">
++            <span className="px-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+               Estado
+             </span>
+-            <select
+-              value={status}
+-              onChange={e =>
+-                setStatus(e.target.value as EngineeringTaskStatus)
+-              }
+-              className={fieldClass}
+-            >
+-              {STATUS_OPTIONS.map(o => (
+-                <option key={o.value} value={o.value}>
+-                  {o.label}
+-                </option>
+-              ))}
+-            </select>
+-          </label>
++            <div className="grid grid-cols-2 gap-2 tablet:grid-cols-4">
++              {STATUS_OPTIONS.map(opt => {
++                const isSelected = status === opt.value
++                return (
++                  <button
++                    key={opt.value}
++                    type="button"
++                    onClick={() => setStatus(opt.value)}
++                    className={cn(
++                      "rounded-xl px-3 py-2.5 text-center text-xs font-semibold transition-colors",
++                      isSelected
++                        ? "ring-1 ring-foreground/20"
++                        : "bg-foreground/5 hover:bg-foreground/10",
++                    )}
++                    style={
++                      isSelected
++                        ? {
++                            backgroundColor: `${opt.color}22`,
++                            color: opt.color,
++                          }
++                        : undefined
++                    }
++                  >
++                    {opt.label}
++                  </button>
++                )
++              })}
++            </div>
++          </div>
+         )}
+ 
+-        <div className="flex flex-col gap-1.5">
+-          <span className="text-xs font-medium text-muted-foreground">
+-            Asignar a
+-          </span>
++        <FormField label="Asignar a">
+           <UserSelect
+-            items={engineeringUsers}
++            items={assignableUsers}
+             value={assignee}
+             placeholder="Sin asignar"
+             onChange={u => setAssigneeId(u?.id)}
+           />
+-        </div>
++          {assignableUsers.length === 0 && (
++            <p className="text-[11px] text-muted-foreground">
++              No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
++            </p>
++          )}
++        </FormField>
+ 
+-        <label className="flex flex-col gap-1.5">
+-          <span className="text-xs font-medium text-muted-foreground">
+-            Nota (opcional)
+-          </span>
+-          <textarea
+-            value={note}
+-            onChange={e => setNote(e.target.value)}
+-            rows={3}
++        <div className="flex flex-col gap-2">
++          <div className="flex items-center justify-between gap-2">
++            <span className="text-xs font-medium text-muted-foreground">
++              Detalle
++            </span>
++            <button
++              type="button"
++              onClick={() => setShowDetail(prev => !prev)}
++              className={cn(
++                "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors tablet:hidden",
++                showDetail || note.trim()
++                  ? "bg-foreground/12 text-foreground"
++                  : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
++              )}
++            >
++              <MessageSquarePlus size={15} />
++              <span>
++                {showDetail || note.trim()
++                  ? "Ocultar detalle"
++                  : "Añadir detalle"}
++              </span>
++              {note.trim() && (
++                <span className="absolute -right-1 -top-1 size-2 rounded-full bg-emerald-500" />
++              )}
++            </button>
++          </div>
++
++          <div
+             className={cn(
+-              fieldClass,
+-              "h-auto min-h-[4.5rem] resize-none py-2",
++              "overflow-hidden transition-all duration-200 tablet:max-h-none tablet:opacity-100 tablet:pointer-events-auto",
++              showDetail || note.trim()
++                ? "max-h-40 opacity-100"
++                : "max-h-0 opacity-0 pointer-events-none tablet:max-h-none tablet:opacity-100",
+             )}
+-            placeholder="Detalle o alcance"
+-          />
+-        </label>
++          >
++            <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-2.5">
++              <textarea
++                value={note}
++                onChange={e => setNote(e.target.value)}
++                placeholder="Detalle o alcance (opcional)..."
++                className="min-h-16 min-w-0 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
++              />
++            </div>
++          </div>
++        </div>
+       </div>
+     </FormDialog>
+   )
+diff --git a/src/features/engineering/components/engineering-user-list.tsx b/src/features/engineering/components/engineering-user-list.tsx
+index 3c5f72c..cd0eda2 100644
+--- a/src/features/engineering/components/engineering-user-list.tsx
++++ b/src/features/engineering/components/engineering-user-list.tsx
+@@ -1,11 +1,15 @@
+ "use client"
+ 
+-import { Plus } from "lucide-react"
++import { useState } from "react"
++import { ChevronDown, Plus } from "lucide-react"
+ 
+-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
++import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
++import type { EntityIcon } from "@/shared/constants/entity-icons"
+ import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+ import type { User } from "@/features/users/types/user.types"
++import { cn } from "@/shared/utils/utils"
++
+ import type { EngineeringTask } from "../types/engineering-task.types"
+ import {
+   ENGINEERING_PROCESS_DEFINITIONS,
+@@ -20,6 +24,32 @@ type Props = {
+   onCreateForUser?: (userId: string) => void
+ }
+ 
++function UserAvatar({
++  name,
++  color,
++  icon,
++}: {
++  name: string
++  color: string
++  icon?: EntityIcon
++}) {
++  const Icon = icon ? ENTITY_ICONS[icon] : undefined
++  const initial = name.trim().charAt(0).toUpperCase() || "?"
++
++  return (
++    <div
++      className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
++      style={{
++        backgroundColor: `${color}28`,
++        color,
++      }}
++    >
++      {Icon ? <Icon size={15} /> : initial}
++    </div>
++  )
++}
++
++/** Lista por persona — lenguaje TeamSupervisionUserRow. */
+ export function EngineeringUserList({
+   users,
+   tasks,
+@@ -29,6 +59,7 @@ export function EngineeringUserList({
+ }: Props) {
+   const { has } = usePermissions()
+   const canCreate = has(PermissionCode.TASK_CREATE)
++  const [expandedId, setExpandedId] = useState<string | null>(null)
+ 
+   if (loading) {
+     return (
+@@ -41,7 +72,7 @@ export function EngineeringUserList({
+   if (users.length === 0) {
+     return (
+       <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
+-        Sin usuarios de ingeniería
++        Sin usuarios con rol Ingeniería
+       </div>
+     )
+   }
+@@ -53,92 +84,172 @@ export function EngineeringUserList({
+     }))
+     .sort((a, b) => b.tasks.length - a.tasks.length)
+ 
+-  return (
+-    <div className="flex w-full flex-col gap-6 pb-4 select-none">
+-      {withTasks.map(({ user, tasks: assigned }) => {
+-        const inProgress = assigned.some(t => t.status === "PROGRESS")
+-        const byProcess = new Map<string, number>()
+-        for (const t of assigned) {
+-          byProcess.set(
+-            t.processCode,
+-            (byProcess.get(t.processCode) ?? 0) + 1,
+-          )
+-        }
++  const working = withTasks.filter(x =>
++    x.tasks.some(t => t.status === "PROGRESS"),
++  )
++  const withAssigned = withTasks.filter(
++    x =>
++      x.tasks.length > 0 &&
++      !x.tasks.some(t => t.status === "PROGRESS"),
++  )
++  const idle = withTasks.filter(x => x.tasks.length === 0)
+ 
++  const sections: {
++    key: string
++    title: string
++    subtitle: string
++    dot: string
++    rows: typeof withTasks
++  }[] = [
++    {
++      key: "working",
++      title: "Trabajando",
++      subtitle: "Con tarea en proceso",
++      dot: "bg-emerald-400",
++      rows: working,
++    },
++    {
++      key: "assigned",
++      title: "Asignados",
++      subtitle: "Con tareas pendientes",
++      dot: "bg-amber-400",
++      rows: withAssigned,
++    },
++    {
++      key: "idle",
++      title: "Sin tareas",
++      subtitle: "Disponibles",
++      dot: "bg-rose-400",
++      rows: idle,
++    },
++  ]
++
++  return (
++    <div className="flex w-full flex-col gap-5 pb-4 select-none">
++      {sections.map(section => {
++        if (section.rows.length === 0) return null
+         return (
+-          <section key={user.id} className="flex w-full flex-col gap-3">
+-            <div className="flex items-center justify-between gap-2 pb-1">
++          <div key={section.key} className="flex flex-col gap-2">
++            <div className="flex items-baseline justify-between gap-3 px-0.5 pt-1">
+               <div className="flex min-w-0 items-center gap-2">
+-                <DynamicBadge
+-                  label={user.name}
+-                  color={user.color}
+-                  icon={user.icon}
+-                  width="field"
++                <span
++                  className={cn("size-1.5 shrink-0 rounded-full", section.dot)}
+                 />
+-                {inProgress && (
+-                  <span className="shrink-0 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+-                    Trabajando
+-                  </span>
+-                )}
+-              </div>
+-              <div className="flex shrink-0 items-center gap-2">
+-                <div className="rounded-lg bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
+-                  {assigned.length}{" "}
+-                  {assigned.length === 1 ? "tarea" : "tareas"}
+-                </div>
+-                {canCreate && onCreateForUser && (
+-                  <button
+-                    type="button"
+-                    onClick={() => onCreateForUser(user.id)}
+-                    title={`Asignar / crear tarea a ${user.name}`}
+-                    className="flex size-8 items-center justify-center rounded-lg bg-foreground/5 text-foreground transition hover:bg-foreground/10 active:scale-95"
+-                  >
+-                    <Plus size={15} strokeWidth={2.5} />
+-                  </button>
+-                )}
++                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
++                  {section.title}
++                </span>
++                <span className="truncate text-[11px] text-muted-foreground/80">
++                  {section.subtitle}
++                </span>
+               </div>
++              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/80">
++                {section.rows.length}
++              </span>
+             </div>
+ 
+-            {byProcess.size > 0 && (
+-              <div className="flex flex-wrap gap-1.5">
+-                {[...byProcess.entries()].map(([code, count]) => {
+-                  const def =
+-                    ENGINEERING_PROCESS_DEFINITIONS[
+-                      code as keyof typeof ENGINEERING_PROCESS_DEFINITIONS
+-                    ]
+-                  if (!def) return null
+-                  return (
+-                    <span
+-                      key={code}
+-                      className="rounded-md px-2 py-0.5 text-[10px] font-semibold"
+-                      style={{
+-                        backgroundColor: `${def.color}22`,
+-                        color: def.color,
+-                      }}
++            <div className="flex flex-col gap-1.5">
++              {section.rows.map(({ user, tasks: assigned }) => {
++                const expanded = expandedId === user.id
++                const inProgress = assigned.some(t => t.status === "PROGRESS")
++
++                return (
++                  <div key={user.id} className="flex flex-col">
++                    <div
++                      className={cn(
++                        "flex items-center gap-3 rounded-2xl bg-foreground/5 px-3 py-2.5 transition",
++                        expanded && "rounded-b-none bg-foreground/8",
++                      )}
+                     >
+-                      {def.short} · {count}
+-                    </span>
+-                  )
+-                })}
+-              </div>
+-            )}
++                      <button
++                        type="button"
++                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
++                        onClick={() =>
++                          setExpandedId(expanded ? null : user.id)
++                        }
++                      >
++                        <UserAvatar
++                          name={user.name}
++                          color={user.color}
++                          icon={user.icon}
++                        />
++                        <div className="min-w-0 flex-1">
++                          <div className="flex flex-wrap items-center gap-2">
++                            <span className="truncate text-sm font-medium text-foreground">
++                              {user.name}
++                            </span>
++                            {inProgress && (
++                              <span className="shrink-0 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
++                                Trabajando
++                              </span>
++                            )}
++                          </div>
++                          <p className="truncate text-[11px] text-muted-foreground">
++                            {assigned.length === 0
++                              ? "Sin actividad"
++                              : `${assigned.length} ${assigned.length === 1 ? "tarea" : "tareas"}`}
++                          </p>
++                        </div>
++                        <ChevronDown
++                          size={16}
++                          className={cn(
++                            "shrink-0 text-muted-foreground transition-transform",
++                            expanded && "rotate-180",
++                          )}
++                        />
++                      </button>
+ 
+-            {assigned.length === 0 ? (
+-              <div className="flex h-16 items-center justify-center rounded-2xl bg-foreground/5 text-xs text-muted-foreground">
+-                Sin tareas asignadas
+-              </div>
+-            ) : (
+-              <div className="flex flex-col gap-1.5">
+-                {assigned.map(task => (
+-                  <EngineeringTaskRow
+-                    key={task.id}
+-                    task={task}
+-                    onClick={() => onEditTask?.(task)}
+-                  />
+-                ))}
+-              </div>
+-            )}
+-          </section>
++                      <div className="flex shrink-0 items-center gap-1.5">
++                        <span className="rounded-lg bg-foreground/5 px-2.5 py-1 text-xs font-medium tabular-nums text-muted-foreground">
++                          {assigned.length}
++                        </span>
++                        {canCreate && onCreateForUser && (
++                          <button
++                            type="button"
++                            onClick={() => onCreateForUser(user.id)}
++                            title={`Crear tarea para ${user.name}`}
++                            className="flex size-8 items-center justify-center rounded-lg bg-foreground/5 text-foreground transition hover:bg-foreground/10 active:scale-95"
++                          >
++                            <Plus size={15} strokeWidth={2.5} />
++                          </button>
++                        )}
++                      </div>
++                    </div>
++
++                    {expanded && (
++                      <div className="flex flex-col gap-1.5 rounded-b-2xl border border-t-0 border-border/40 bg-foreground/[0.03] p-2">
++                        {assigned.length === 0 ? (
++                          <p className="px-2 py-4 text-center text-xs text-muted-foreground">
++                            Sin tareas asignadas
++                          </p>
++                        ) : (
++                          assigned.map(task => {
++                            const def =
++                              ENGINEERING_PROCESS_DEFINITIONS[task.processCode]
++                            return (
++                              <div key={task.id} className="flex flex-col gap-1">
++                                {def && (
++                                  <span
++                                    className="px-1 text-[10px] font-semibold"
++                                    style={{ color: def.color }}
++                                  >
++                                    {def.short} · {def.label}
++                                  </span>
++                                )}
++                                <EngineeringTaskRow
++                                  task={task}
++                                  onClick={() => onEditTask?.(task)}
++                                />
++                              </div>
++                            )
++                          })
++                        )}
++                      </div>
++                    )}
++                  </div>
++                )
++              })}
++            </div>
++          </div>
+         )
+       })}
+     </div>
+diff --git a/src/features/engineering/utils/is-engineering-user.ts b/src/features/engineering/utils/is-engineering-user.ts
+index 13fa04b..afbbd76 100644
+--- a/src/features/engineering/utils/is-engineering-user.ts
++++ b/src/features/engineering/utils/is-engineering-user.ts
+@@ -1,19 +1,14 @@
+ import type { User } from "@/features/users/types/user.types"
++import {
++  ENGINEERING_ASSIGNABLE_ROLE_CODES,
++  userHasRoleCode,
++} from "@/shared/core/constants/department-roles"
+ 
+-/** Usuarios de ingeniería: rol code contiene ING, o sin roles de planta puros. */
+-export function isEngineeringUser(user: User): boolean {
++/** Activo + rol RoleCode.INGENIERIA (SSOT). */
++export function isEngineeringUser(
++  user: Pick<User, "active" | "deletedAt" | "roles">,
++): boolean {
+   if (!user.active) return false
+   if (user.deletedAt) return false
+-  const roles = user.roles ?? []
+-  if (roles.length === 0) return true
+-  return roles.some(r => {
+-    const c = (r.code ?? "").toUpperCase()
+-    const n = (r.name ?? "").toUpperCase()
+-    return (
+-      c.includes("ING") ||
+-      n.includes("INGENIER") ||
+-      c === "ADMIN" ||
+-      c.includes("ADMIN")
+-    )
+-  })
++  return userHasRoleCode(user.roles, ENGINEERING_ASSIGNABLE_ROLE_CODES)
+ }
+diff --git a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+index d08c855..f2a0d92 100644
+--- a/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
++++ b/src/features/tasks/pipeline/components/carousel/mobile-pipeline-carousel.tsx
+@@ -1,7 +1,7 @@
+ "use client"
+ 
+ import { useLayoutEffect, useRef, useState } from "react"
+-import { ChevronLeft, ChevronRight } from "lucide-react"
++import { ProcessBoardNavButton } from "@/shared/ui/process-board"
+ 
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+@@ -223,33 +223,19 @@ export function MobilePipelineCarousel({
+ 
+     <div className="relative">
+ 
+-      <button
+-        type="button"
+-        onClick={scrollToPrevious}
+-        aria-label="Proceso anterior"
+-        tabIndex={-1}
+-        className={cn(
+-          "absolute left-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
+-          "bg-card/90 border border-border text-foreground backdrop-blur-xl transition-opacity duration-200",
+-          canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
+-        )}
+-      >
+-        <ChevronLeft size={15} strokeWidth={2.5} />
+-      </button>
+-
+-      <button
+-        type="button"
+-        onClick={scrollToNext}
+-        aria-label="Proceso siguiente"
+-        tabIndex={-1}
+-        className={cn(
+-          "absolute right-1 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full",
+-          "bg-card/90 border border-border text-foreground backdrop-blur-xl transition-opacity duration-200",
+-          canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
+-        )}
+-      >
+-        <ChevronRight size={15} strokeWidth={2.5} />
+-      </button>
++              <ProcessBoardNavButton
++          direction="left"
++          visible={canScrollLeft}
++          onClick={scrollToPrevious}
++          label="Proceso anterior"
++        />
++
++              <ProcessBoardNavButton
++          direction="right"
++          visible={canScrollRight}
++          onClick={scrollToNext}
++          label="Proceso siguiente"
++        />
+ 
+       <div
+         ref={maskRef}
+diff --git a/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx b/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
+index 128297b..8ae0816 100644
+--- a/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-pipeline-board.tsx
+@@ -1,7 +1,7 @@
+ "use client"
+ 
+ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+-import { ChevronLeft, ChevronRight } from "lucide-react"
++import { ProcessBoardNavButton } from "@/shared/ui/process-board"
+ 
+ import type { Task } from "@/features/tasks/types/task.types"
+ 
+@@ -250,41 +250,19 @@ export function TaskPipelineBoard({
+         onMouseEnter={() => setHoveringHeader(true)}
+         onMouseLeave={() => setHoveringHeader(false)}
+       >
+-        <button
+-          type="button"
++                <ProcessBoardNavButton
++          direction="left"
++          visible={showLeft}
+           onClick={scrollLeft}
+-          aria-label="Scrollear izquierda"
+-          tabIndex={-1}
+-          style={{ userSelect: "none", WebkitUserSelect: "none" }}
+-          className={`
+-            absolute left-2 top-5.5 z-20 -translate-y-1/2
+-            flex h-7 w-8 items-center justify-center
+-            rounded-lg bg-card/80 border border-border backdrop-blur-xl
+-            text-foreground transition-opacity duration-200
+-            hover:bg-card
+-            ${showLeft ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+-          `}
+-        >
+-          <ChevronLeft size={13} strokeWidth={2.5} />
+-        </button>
++          label="Scrollear izquierda"
++        />
+ 
+-        <button
+-          type="button"
++                <ProcessBoardNavButton
++          direction="right"
++          visible={showRight}
+           onClick={scrollRight}
+-          aria-label="Scrollear derecha"
+-          tabIndex={-1}
+-          style={{ userSelect: "none", WebkitUserSelect: "none" }}
+-          className={`
+-            absolute right-2 top-5.5 z-20 -translate-y-1/2
+-            flex h-7 w-8 items-center justify-center
+-            rounded-lg bg-card/80 border border-border backdrop-blur-xl
+-            text-foreground transition-opacity duration-200
+-            hover:bg-card
+-            ${showRight ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+-          `}
+-        >
+-          <ChevronRight size={13} strokeWidth={2.5} />
+-        </button>
++          label="Scrollear derecha"
++        />
+ 
+         {/* Header con fade horizontal */}
+         <div
+diff --git a/src/features/users/utils/allowed-levels-for-roles.ts b/src/features/users/utils/allowed-levels-for-roles.ts
+index bb31671..d1201c7 100644
+--- a/src/features/users/utils/allowed-levels-for-roles.ts
++++ b/src/features/users/utils/allowed-levels-for-roles.ts
+@@ -1,30 +1,21 @@
+ import type { UserRole } from "../types/user.types"
++import {
++  LEVELS_BY_ROLE_CODE,
++  type JobLevelCode,
++} from "@/shared/core/constants/department-roles"
++import { RoleCode } from "@/shared/core/enums/role-code.enum"
+ 
+-export type Level = "OPERARIO" | "SUPERVISOR"
++export type Level = JobLevelCode
+ 
+-// Mismo criterio que el backend (assertLevelMatchesRole): PRODUCCION
+-// admite OPERARIO/SUPERVISOR, Ingeniería y Proyectos admiten solo
+-// SUPERVISOR, el resto no admite sub-nivel. Antes esta lógica vivía
+-// duplicada (completa en un lugar, incompleta en otro) — este es el
+-// único lugar a tocar si mañana se suma un departamento más.
+-const LEVELS_BY_ROLE_CODE: Record<string, Level[]> = {
+-  PRODUCCION: ["OPERARIO", "SUPERVISOR"],
+-  INGENIERIA: ["SUPERVISOR"],
+-  PROYECTOS: ["SUPERVISOR"],
+-}
+-
+-// Con varios roles a la vez, el nivel es válido si CUALQUIERA de los
+-// roles elegidos lo permite (unión, no intersección) — así alguien
+-// Producción + Ingeniería puede seguir siendo Operario, que
+-// Ingeniería sola no permitiría.
+ export function getAllowedLevelsForRoles(
+   roles: Pick<UserRole, "code">[],
+ ): Level[] {
+   return Array.from(
+     new Set(
+-      roles.flatMap(
+-        role => LEVELS_BY_ROLE_CODE[role.code] ?? [],
+-      ),
++      roles.flatMap(role => {
++        const code = role.code as RoleCode
++        return LEVELS_BY_ROLE_CODE[code] ?? []
++      }),
+     ),
+   )
+ }
+@@ -36,6 +27,5 @@ export function isLevelAllowedForRoles(
+   if (!level || level === "GENERAL") {
+     return true
+   }
+-
+   return getAllowedLevelsForRoles(roles).includes(level)
+ }
+diff --git a/src/features/users/utils/is-project-manager.ts b/src/features/users/utils/is-project-manager.ts
+index fe22073..20e604d 100644
+--- a/src/features/users/utils/is-project-manager.ts
++++ b/src/features/users/utils/is-project-manager.ts
+@@ -1,25 +1,14 @@
+ import type { User } from "../types/user.types"
+-
+-// Departamentos que hoy pueden aportar Project Managers. Antes esto
+-// era "todo el que sea del departamento PROYECTOS" (sin mirar
+-// nivel), lo que traía a TODOS los usuarios de Proyectos —
+-// operarios/generales incluidos — como candidatos a PM, e ignoraba
+-// por completo a Ingeniería. El criterio real es "supervisor dentro
+-// de Ingeniería o Proyectos": si mañana se suma un tercer
+-// departamento con supervisores que también puedan ser PM, este es
+-// el único lugar a tocar.
+-const PM_DEPARTMENTS = [
+-  "INGENIERIA",
+-  "PROYECTOS",
+-] as const
++import {
++  PROJECT_MANAGER_ROLE_CODES,
++  userHasRoleCode,
++} from "@/shared/core/constants/department-roles"
+ 
+ export function isProjectManager(
+   user: Pick<User, "roles" | "level">,
+ ): boolean {
+   return (
+-    user.roles.some(
+-      role => PM_DEPARTMENTS.includes(role.code as typeof PM_DEPARTMENTS[number]),
+-    )
+-    && user.level === "SUPERVISOR"
++    userHasRoleCode(user.roles, PROJECT_MANAGER_ROLE_CODES) &&
++    user.level === "SUPERVISOR"
+   )
+ }
+diff --git a/src/shared/core/constants/department-roles.ts b/src/shared/core/constants/department-roles.ts
+new file mode 100644
+index e69de29..0e8687b 100644
+--- /dev/null
++++ b/src/shared/core/constants/department-roles.ts
+@@ -0,0 +1,47 @@
++import { RoleCode } from "@/shared/core/enums/role-code.enum"
++
++export type JobLevelCode = "OPERARIO" | "SUPERVISOR"
++
++/** Espejo backend BITACORA_DEPARTMENT_ROLES */
++export const BITACORA_DEPARTMENT_ROLE_CODES = {
++  PRODUCCION: [RoleCode.PRODUCCION],
++  INGENIERIA: [RoleCode.INGENIERIA, RoleCode.PROYECTOS],
++} as const satisfies Record<string, readonly RoleCode[]>
++
++export const PROJECT_MANAGER_ROLE_CODES = [
++  RoleCode.INGENIERIA,
++  RoleCode.PROYECTOS,
++] as const satisfies readonly RoleCode[]
++
++export const ENGINEERING_ASSIGNABLE_ROLE_CODES = [
++  RoleCode.INGENIERIA,
++] as const satisfies readonly RoleCode[]
++
++export const PRODUCTION_OPERATOR_ROLE_CODE = RoleCode.PRODUCCION
++
++/** Espejo backend UsersService.LEVELS_BY_ROLE */
++export const LEVELS_BY_ROLE_CODE: Partial<Record<RoleCode, JobLevelCode[]>> = {
++  [RoleCode.PRODUCCION]: ["OPERARIO", "SUPERVISOR"],
++  [RoleCode.INGENIERIA]: ["SUPERVISOR"],
++  [RoleCode.PROYECTOS]: ["SUPERVISOR"],
++}
++
++export function roleCodesInclude(
++  userRoleCodes: readonly string[],
++  allowed: readonly RoleCode[],
++): boolean {
++  return userRoleCodes.some(code =>
++    (allowed as readonly string[]).includes(code),
++  )
++}
++
++export function userHasRoleCode(
++  roles: readonly { code: string }[] | null | undefined,
++  allowed: readonly RoleCode[],
++): boolean {
++  if (!roles?.length) return false
++  return roleCodesInclude(
++    roles.map(r => r.code),
++    allowed,
++  )
++}
+diff --git a/src/shared/core/enums/role-code.enum.ts b/src/shared/core/enums/role-code.enum.ts
+new file mode 100644
+index e69de29..771790b 100644
+--- /dev/null
++++ b/src/shared/core/enums/role-code.enum.ts
+@@ -0,0 +1,12 @@
++/**
++ * Espejo de backend `src/core/enums/role-code.enum.ts` / seed.
++ * No hardcodear strings de rol fuera de este enum + department-roles.
++ */
++export enum RoleCode {
++  ADMIN = "ADMIN",
++  ADMINISTRACION = "ADMINISTRACION",
++  INGENIERIA = "INGENIERIA",
++  PROYECTOS = "PROYECTOS",
++  PRODUCCION = "PRODUCCION",
++  LOGISTICA = "LOGISTICA",
++}
+diff --git a/src/shared/ui/process-board/index.ts b/src/shared/ui/process-board/index.ts
+new file mode 100644
+index e69de29..36610b0 100644
+--- /dev/null
++++ b/src/shared/ui/process-board/index.ts
+@@ -0,0 +1,4 @@
++export { ProcessBoard } from "./process-board"
++export { ProcessBoardNavButton } from "./process-board-nav-button"
++export { useProcessBoardOverflow } from "./use-process-board-overflow"
++export type { ProcessBoardColumn } from "./process-board.types"
+diff --git a/src/shared/ui/process-board/process-board-nav-button.tsx b/src/shared/ui/process-board/process-board-nav-button.tsx
+new file mode 100644
+index e69de29..d4535d6 100644
+--- /dev/null
++++ b/src/shared/ui/process-board/process-board-nav-button.tsx
+@@ -0,0 +1,42 @@
++"use client"
++
++import { ChevronLeft, ChevronRight } from "lucide-react"
++
++import { cn } from "@/shared/utils/utils"
++
++type Props = {
++  direction: "left" | "right"
++  visible: boolean
++  onClick: () => void
++  label: string
++}
++
++/** Flechas compartidas pipeline + ingeniería (rounded-lg). */
++export function ProcessBoardNavButton({
++  direction,
++  visible,
++  onClick,
++  label,
++}: Props) {
++  const Icon = direction === "left" ? ChevronLeft : ChevronRight
++
++  return (
++    <button
++      type="button"
++      onClick={onClick}
++      aria-label={label}
++      tabIndex={-1}
++      style={{ userSelect: "none", WebkitUserSelect: "none" }}
++      className={cn(
++        "absolute top-5.5 z-20 -translate-y-1/2",
++        direction === "left" ? "left-2" : "right-2",
++        "flex h-7 w-8 items-center justify-center",
++        "rounded-lg border border-border/60 bg-card/80 text-foreground backdrop-blur-xl",
++        "transition-opacity duration-200",
++        visible ? "opacity-100" : "pointer-events-none opacity-0",
++      )}
++    >
++      <Icon size={13} strokeWidth={2.5} />
++    </button>
++  )
++}
+diff --git a/src/shared/ui/process-board/process-board.tsx b/src/shared/ui/process-board/process-board.tsx
+new file mode 100644
+index e69de29..2ecd594 100644
+--- /dev/null
++++ b/src/shared/ui/process-board/process-board.tsx
+@@ -0,0 +1,135 @@
++"use client"
++
++import type { ReactNode } from "react"
++
++import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
++import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
++import { cn } from "@/shared/utils/utils"
++
++import { ProcessBoardNavButton } from "./process-board-nav-button"
++import { useProcessBoardOverflow } from "./use-process-board-overflow"
++import type { ProcessBoardColumn } from "./process-board.types"
++
++type Props<TId extends string = string> = {
++  columns: ProcessBoardColumn<TId>[]
++  columnClassName?: string
++  scrollStep?: number
++  className?: string
++  header?: ReactNode
++  loading?: boolean
++  loadingFallback?: ReactNode
++}
++
++/**
++ * Shell horizontal de columnas por proceso.
++ * Task Pipeline e Ingeniería comparten drag, flechas y snap mobile.
++ */
++export function ProcessBoard<TId extends string = string>({
++  columns,
++  columnClassName = "w-72",
++  scrollStep = 288,
++  className,
++  header,
++  loading,
++  loadingFallback,
++}: Props<TId>) {
++  const { isMobile } = useResponsive()
++
++  const {
++    containerRef,
++    handleMouseDown,
++    handleMouseMove,
++    handleClickCapture,
++    stopDragging,
++  } = useDragScroll()
++
++  const { canScrollLeft, canScrollRight } = useProcessBoardOverflow(
++    containerRef,
++    [columns.length, isMobile],
++  )
++
++  function currentIndex() {
++    const el = containerRef.current
++    if (!el) return 0
++    if (isMobile) {
++      return Math.round(el.scrollLeft / (el.clientWidth || 1))
++    }
++    return Math.round(el.scrollLeft / scrollStep)
++  }
++
++  function goToIndex(index: number) {
++    const el = containerRef.current
++    if (!el) return
++    const max = columns.length - 1
++    const next = Math.max(0, Math.min(max, index))
++    el.scrollTo({
++      left: isMobile ? next * el.clientWidth : next * scrollStep,
++      behavior: "smooth",
++    })
++  }
++
++  if (loading) {
++    return (
++      loadingFallback ?? (
++        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
++          Cargando…
++        </div>
++      )
++    )
++  }
++
++  return (
++    <div
++      className={cn(
++        "relative flex min-h-0 w-full flex-1 flex-col select-none",
++        className,
++      )}
++    >
++      {header}
++
++      <div className="relative min-h-0 w-full flex-1">
++        <ProcessBoardNavButton
++          direction="left"
++          visible={canScrollLeft}
++          onClick={() => goToIndex(currentIndex() - 1)}
++          label="Columna anterior"
++        />
++        <ProcessBoardNavButton
++          direction="right"
++          visible={canScrollRight}
++          onClick={() => goToIndex(currentIndex() + 1)}
++          label="Columna siguiente"
++        />
++
++        <div
++          ref={containerRef}
++          onMouseDown={handleMouseDown}
++          onMouseMove={handleMouseMove}
++          onMouseUp={stopDragging}
++          onMouseLeave={stopDragging}
++          onClickCapture={handleClickCapture}
++          className={cn(
++            "hide-scrollbar flex h-full min-h-0 select-none",
++            isMobile
++              ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
++              : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
++          )}
++        >
++          {columns.map(col => (
++            <div
++              key={col.id}
++              className={cn(
++                "flex shrink-0 flex-col",
++                isMobile
++                  ? "w-full snap-center [touch-action:pan-y]"
++                  : columnClassName,
++              )}
++            >
++              {col.content}
++            </div>
++          ))}
++        </div>
++      </div>
++    </div>
++  )
++}
+diff --git a/src/shared/ui/process-board/process-board.types.ts b/src/shared/ui/process-board/process-board.types.ts
+new file mode 100644
+index e69de29..b649137 100644
+--- /dev/null
++++ b/src/shared/ui/process-board/process-board.types.ts
+@@ -0,0 +1,7 @@
++import type { ReactNode } from "react"
++
++/** Columna genérica de un board por proceso (pipeline o ingeniería). */
++export type ProcessBoardColumn<TId extends string = string> = {
++  id: TId
++  content: ReactNode
++}
+diff --git a/src/shared/ui/process-board/use-process-board-overflow.ts b/src/shared/ui/process-board/use-process-board-overflow.ts
+new file mode 100644
+index e69de29..c324d5d 100644
+--- /dev/null
++++ b/src/shared/ui/process-board/use-process-board-overflow.ts
+@@ -0,0 +1,47 @@
++"use client"
++
++import {
++  useLayoutEffect,
++  useRef,
++  useState,
++  type RefObject,
++} from "react"
++
++export function useProcessBoardOverflow(
++  containerRef: RefObject<HTMLDivElement | null>,
++  deps: unknown[] = [],
++) {
++  const [canScrollLeft, setCanScrollLeft] = useState(false)
++  const [canScrollRight, setCanScrollRight] = useState(false)
++  const rafRef = useRef<number | null>(null)
++
++  useLayoutEffect(() => {
++    const el = containerRef.current
++    if (!el) return
++
++    const update = () => {
++      const max = el.scrollWidth - el.clientWidth
++      setCanScrollLeft(el.scrollLeft > 4)
++      setCanScrollRight(el.scrollLeft < max - 4)
++    }
++
++    const schedule = () => {
++      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
++      rafRef.current = requestAnimationFrame(update)
++    }
++
++    update()
++    el.addEventListener("scroll", schedule, { passive: true })
++    const ro = new ResizeObserver(schedule)
++    ro.observe(el)
++
++    return () => {
++      el.removeEventListener("scroll", schedule)
++      ro.disconnect()
++      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
++    }
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [containerRef, ...deps])
++
++  return { canScrollLeft, canScrollRight }
++}
