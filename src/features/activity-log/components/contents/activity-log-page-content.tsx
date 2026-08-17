@@ -438,7 +438,7 @@ export function ActivityLogPageContent({
           >
             {mainContent}
           </div>
-          <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(42vw,28rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
+          <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
         </div>
       ) : (
         mainContent

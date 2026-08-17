@@ -1,6 +1,7 @@
 "use client"
 
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
@@ -15,12 +16,17 @@ type Props = {
   className?: string
   showHeader?: boolean
   /**
-   * "horizontal" — columnas de área lado a lado (desktop sidebar).
-   * "vertical" — apiladas (sheet móvil / fallback).
+   * "horizontal" — columnas lado a lado (desktop sidebar).
+   * "vertical" — apiladas (sheet móvil).
    */
   orientation?: "horizontal" | "vertical"
 }
 
+/**
+ * Mis tareas — mismo contrato de scroll que EntityTable:
+ * shell overflow-hidden + cuerpo min-h-0 flex-1 overflow-y-auto overscroll-contain.
+ * Así el scroll vertical vive solo dentro de este contenedor (no mueve franjas).
+ */
 export function TaskAreaPanelBody({
   panel,
   title = "Mis tareas",
@@ -31,28 +37,77 @@ export function TaskAreaPanelBody({
   const { state, actions } = panel
   const horizontal = orientation === "horizontal"
 
+  const effectiveSelected = (code: string) =>
+    state.supervisorAreas.length > 0
+      ? state.supervisorAreas.includes(code as never)
+      : true
+
+  function toggleArea(code: (typeof state.allAreas)[number]) {
+    const current =
+      state.supervisorAreas.length > 0
+        ? state.supervisorAreas
+        : state.allAreas
+    const selected = current.includes(code)
+    actions.setSupervisorAreas(
+      selected ? current.filter(c => c !== code) : [...current, code],
+    )
+  }
+
   return (
-    <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", className)}>
+    <div
+      className={cn(
+        "relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+        className,
+      )}
+    >
       {showHeader && (
-        <div className="shrink-0 border-b border-border/60 px-3 pb-3 pt-1">
+        <div className="shrink-0 border-b border-border/60 px-3 pb-2.5 pt-1">
           <div className="flex items-center justify-between gap-2">
             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
               {title}
             </h2>
-
             <HistoryToggleButton
               count={state.completedCount}
               active={state.showHistory}
               onClick={() => actions.setShowHistory(v => !v)}
             />
           </div>
+
+          {/* Selector siempre visible (sin botón Settings). */}
+          {state.canChooseAreas && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {state.allAreas.map(code => {
+                const definition = PROCESS_DEFINITIONS[code]
+                const Icon = ENTITY_ICONS[definition.icon]
+                const selected = effectiveSelected(code)
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => toggleArea(code)}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
+                      selected
+                        ? "bg-foreground/15 text-foreground"
+                        : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+                    )}
+                  >
+                    <Icon size={13} style={{ color: definition.color }} />
+                    <span>{definition.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
+      {/* Cuerpo con scroll independiente (patrón EntityTable). */}
       {horizontal ? (
         <div
+          data-task-area-scroll
           className={cn(
-            "hide-scrollbar flex min-h-0 min-w-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden p-3",
+            "hide-scrollbar flex min-h-0 min-w-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden p-3",
             state.summonTarget && "pb-24",
           )}
         >
@@ -62,14 +117,12 @@ export function TaskAreaPanelBody({
             </div>
           ) : state.areas.length === 0 ? (
             <div className="flex h-24 w-full items-center justify-center text-center text-sm text-muted-foreground">
-              {state.canChooseAreas
-                ? "Selecciona al menos un área con el botón de arriba."
-                : "No hay áreas asignadas."}
+              No hay áreas asignadas.
             </div>
           ) : (
             <>
               {state.currentUserId && (
-                <div className="w-56 shrink-0">
+                <div className="flex h-full min-h-0 w-56 shrink-0 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y">
                   <PendingInvitesSection
                     tasks={state.allTasks}
                     currentUserId={state.currentUserId}
@@ -77,20 +130,21 @@ export function TaskAreaPanelBody({
                 </div>
               )}
               {state.areas.map(code => (
-                <AreaTaskSection
+                <div
                   key={code}
-                  code={code}
-                  panel={panel}
-                  column
-                />
+                  className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y"
+                >
+                  <AreaTaskSection code={code} panel={panel} column />
+                </div>
               ))}
             </>
           )}
         </div>
       ) : (
-        <ScrollArea
+        <div
+          data-task-area-scroll
           className={cn(
-            "min-h-0 min-w-0 w-full flex-1 p-3",
+            "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-3",
             state.summonTarget && "pb-24",
           )}
         >
@@ -100,9 +154,7 @@ export function TaskAreaPanelBody({
             </div>
           ) : state.areas.length === 0 ? (
             <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
-              {state.canChooseAreas
-                ? "Selecciona al menos un área con el botón de arriba para ver sus tareas acá."
-                : "No hay áreas asignadas."}
+              No hay áreas asignadas.
             </div>
           ) : (
             <div className="flex min-w-0 w-full flex-col gap-6">
@@ -117,7 +169,7 @@ export function TaskAreaPanelBody({
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       )}
 
       {state.summonTarget && (

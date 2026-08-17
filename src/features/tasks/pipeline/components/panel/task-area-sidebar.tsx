@@ -4,8 +4,9 @@ import { useTaskAreaPanel } from "../../hooks/use-task-area-panel"
 import { TaskAreaPanelBody } from "./task-area-panel-body"
 
 /**
- * Columna lateral desktop de "Mis tareas".
- * Áreas en columnas horizontales (no apiladas) → franjas más cortas.
+ * Sidebar desktop bitácora.
+ * Alto acotado por el padre; el scroll vertical vive solo adentro
+ * (mismo modelo que EntityTable: overflow-hidden + flex-1 min-h-0).
  */
 export function TaskAreaSidebar({ className }: { className?: string }) {
   const panel = useTaskAreaPanel()
@@ -17,7 +18,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
     <aside
       className={
         className ??
-        "flex h-full min-h-0 w-[min(42vw,28rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card"
+        "flex h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card"
       }
     >
       <TaskAreaPanelBody
