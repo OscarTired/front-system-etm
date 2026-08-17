@@ -26,7 +26,6 @@ import { useCreateActivityLog } from "../../hooks/use-create-activity-log"
 import { useActivityDrag } from "../../hooks/use-activity-drag"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
-import { SHIFT_GROUPS } from "../../constants/shift-definitions"
 import { useShiftSchedule } from "../../hooks/use-shift-schedule"
 import type {
   ActivityDepartment,
@@ -36,11 +35,10 @@ import { useBitacoraViewStore } from "../../store/bitacora-view-store"
 import { getWeekRangeISO, getMonthRangeISO } from "../../utils/week-range"
 import { canDuplicateActivity } from "../../utils/duplicate-limit"
 
-import { ShiftGroupSection } from "../shift-group-section"
-import { AutoActivitySection } from "../auto-activity-section"
 import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
 import { ActivityLogEditDialog } from "../dialogs/activity-log-edit-dialog"
 import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
+import { AgendaDayView } from "../agenda/agenda-day-view"
 import { AgendaWeekView } from "../agenda/agenda-week-view"
 import { AgendaMonthView } from "../agenda/agenda-month-view"
 
@@ -328,8 +326,9 @@ export function ActivityLogPageContent({
     </div>
   )
 
-  const fillHeight = isAgenda || isMonth
-  // Desktop bitácora PRODUCCIÓN: Mis tareas en columna fija al lado de franjas.
+  const isDay = viewMode === "day"
+  // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
+  const fillHeight = isAgenda || isMonth || isDay
   const showDesktopAreaSidebar =
     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
 
@@ -358,64 +357,41 @@ export function ActivityLogPageContent({
         </div>
       )}
 
-      {viewMode === "day" && (
-        <div className="flex w-full flex-col gap-3 pb-4 max-md:mt-2">
-          {!loading &&
-            departmentQuery === "PRODUCCION" &&
-            department !== "REGISTROS" && (
-              <AutoActivitySection
-                logs={logs.filter(log => log.source === "AUTO")}
-              />
-            )}
-
-          {SHIFT_GROUPS.map(group => {
-            const logsBySlot: Record<string, typeof logs> = {}
-
-            if (!loading) {
-              for (const slot of group.slots) {
-                logsBySlot[slot.shift] = logs.filter(
-                  log => log.shift === slot.shift,
-                )
-              }
+      {isDay && (
+        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+          <AgendaDayView
+            logs={logs}
+            loading={loading}
+            showAutoSection={
+              !loading &&
+              departmentQuery === "PRODUCCION" &&
+              department !== "REGISTROS"
             }
-
-            return (
-              <ShiftGroupSection
-                key={group.key}
-                group={group}
-                logsBySlot={logsBySlot}
-                loading={loading}
-                onLogClick={handleOpenPicker}
-                onDeleteLog={handleDeleteLog}
-                beginDrag={beginDrag}
-                registerSlot={registerSlot}
-                draggingLogId={draggingLogId}
-                hoverShift={hoverShift}
-                deletingLogId={pendingDelete?.id ?? null}
-                canCreate={canCreate}
-                canDelete={canDelete}
-                slotState={getState}
-                isLogBusy={isLogBusy}
-                canDuplicateLog={canDuplicateLog}
-                onEditLog={handleEditLog}
-                onDuplicateLog={handleDuplicateLog}
-              />
-            )
-          })}
+            onLogClick={handleOpenPicker}
+            onDeleteLog={handleDeleteLog}
+            beginDrag={beginDrag}
+            registerSlot={registerSlot}
+            draggingLogId={draggingLogId}
+            hoverShift={hoverShift}
+            deletingLogId={pendingDelete?.id ?? null}
+            canCreate={canCreate}
+            canDelete={canDelete}
+            slotState={getState}
+            isLogBusy={isLogBusy}
+            canDuplicateLog={canDuplicateLog}
+            onEditLog={handleEditLog}
+            onDuplicateLog={handleDuplicateLog}
+          />
         </div>
       )}
     </>
   )
 
-  // Con sidebar desktop el alto debe quedar acotado siempre (también en Día):
-  // si no, el panel crece con el contenido y scrollea la página entera.
-  const constrainHeight = fillHeight || showDesktopAreaSidebar
-
   const body = (
     <div
       className={
-        constrainHeight
-          ? "flex min-h-0 w-full flex-1 flex-col"
+        fillHeight
+          ? "flex h-full min-h-0 w-full flex-1 flex-col"
           : "flex w-full flex-col"
       }
     >
@@ -423,7 +399,7 @@ export function ActivityLogPageContent({
 
       {showDesktopAreaSidebar ? (
         <div className="flex min-h-0 w-full flex-1 gap-3">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain themed-scrollbar-y">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {mainContent}
           </div>
           <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
@@ -434,13 +410,11 @@ export function ActivityLogPageContent({
     </div>
   )
 
-  // Semana/mes o sidebar desktop → flex-1 min-h-0 (scroll interno).
-  // Día sin sidebar embedded: crece y scrollea el padre.
   return (
     <div
       className={
-        constrainHeight || !embedded
-          ? "relative flex min-h-0 w-full flex-1 flex-col"
+        fillHeight || !embedded
+          ? "relative flex h-full min-h-0 w-full flex-1 flex-col"
           : "relative w-full"
       }
     >

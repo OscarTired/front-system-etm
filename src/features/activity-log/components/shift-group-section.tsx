@@ -13,6 +13,8 @@ import type { ActivityLog, DayShift } from "../types/activity-log.types"
 import type { SlotState } from "../types/shift-schedule.types"
 
 type Props = {
+  /** true = fila de grid (día); reparte alto disponible. */
+  fill?: boolean
   group: ShiftGroupDefinition
   logsBySlot: Record<string, ActivityLog[]>
   onLogClick: (slot: ShiftSlotDefinition) => void
@@ -66,6 +68,7 @@ export function ShiftGroupSection({
   onEditLog,
   onDuplicateLog,
   loading = false,
+  fill = false,
 }: Props) {
   const now = referenceNow ?? new Date()
   const [menuOpenLogId, setMenuOpenLogId] = useState<string | null>(null)
@@ -104,10 +107,12 @@ export function ShiftGroupSection({
     <div
       className={cn(
         "rounded-2xl bg-foreground/5 p-4",
+        // min-h-0 obligatorio en item de grid 1fr (si no, min-content gana)
+        fill && "flex h-full min-h-0 flex-col overflow-hidden",
         groupUpcoming && "opacity-50",
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex shrink-0 items-center gap-2.5">
         <group.icon size={16} className={cn("shrink-0", iconColorClass)} />
 
         <span className="text-sm font-semibold text-foreground">
@@ -115,13 +120,24 @@ export function ShiftGroupSection({
         </span>
       </div>
 
-      <div className="mt-3 flex flex-col gap-4">
+      <div
+        className={cn(
+          "mt-3 flex flex-col gap-4",
+          fill && "min-h-0 flex-1",
+        )}
+      >
         {group.slots.map((slot) => {
           const state = resolveState(slot)
           const logs = logsBySlot[slot.shift] ?? []
 
           return (
-            <div key={slot.shift} className="flex flex-col gap-2">
+            <div
+              key={slot.shift}
+              className={cn(
+                "flex flex-col gap-2",
+                fill && "min-h-0 flex-1",
+              )}
+            >
               {/* Cabecera de la sub-franja */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-1 items-center gap-2 min-w-0">
@@ -149,6 +165,7 @@ export function ShiftGroupSection({
                 ref={getSlotRefCallback(slot.shift)}
                 className={cn(
                   "flex flex-col gap-2 rounded-xl p-1.5 -m-1.5 transition-all",
+                  fill && "min-h-0 flex-1",
                   hoverShift === slot.shift
                     ? "duration-150 bg-emerald-500/20 dark:bg-emerald-500/6 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25),0_12px_32px_-12px_rgba(16,185,129,0.4)]"
                     : "duration-0",

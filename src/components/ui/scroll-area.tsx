@@ -9,12 +9,22 @@ type Props = React.ComponentPropsWithoutRef<"div"> & {
   /** false = thumb oculto (default). true = .native-scrollbar */
   showScrollbar?: boolean
   /**
-   * Arrastre con puntero (mouse) para pan — solo complementa el nativo.
-   * No intercepta wheel/touch: eso lo hace el browser.
+   * Arrastre con puntero (mouse). Touch y trackpad siguen nativos.
    */
   dragToScroll?: boolean
 }
 
+/**
+ * Scroll nativo.
+ *
+ * Rueda (orientation="horizontal"):
+ * - Rueda vertical del mouse → scroll X (carrusel / kanban).
+ * - Trackpad con deltaX → scroll X.
+ * - Se registra con { passive: false } (React onWheel es passive en
+ *   Chromium y preventDefault no aplica).
+ *
+ * orientation="both"|vertical: no se intercepta la rueda (nativo).
+ */
 const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
   (
     {
@@ -46,12 +56,48 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
       moved: boolean
     } | null>(null)
 
+    // Wheel con listener nativo no-passive (React onWheel no sirve aquí).
+    React.useEffect(() => {
+      const el = localRef.current
+      if (!el) return
+      if (orientation !== "horizontal") return
+
+      const onWheel = (event: WheelEvent) => {
+        if (el.scrollWidth <= el.clientWidth + 1) return
+
+        const absX = Math.abs(event.deltaX)
+        const absY = Math.abs(event.deltaY)
+        // Trackpad X, shift+rueda, o rueda vertical del mouse → X
+        const delta =
+          absX > absY
+            ? event.deltaX
+            : event.shiftKey
+              ? event.deltaY
+              : event.deltaY
+
+        if (Math.abs(delta) < 0.5) return
+
+        const max = el.scrollWidth - el.clientWidth
+        const next = Math.min(max, Math.max(0, el.scrollLeft + delta))
+        if (next === el.scrollLeft) return
+
+        el.scrollLeft = next
+        event.preventDefault()
+      }
+
+      el.addEventListener("wheel", onWheel, { passive: false })
+      return () => el.removeEventListener("wheel", onWheel)
+    }, [orientation])
+
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
       onPointerDown?.(event)
       if (!dragToScroll || event.button !== 0) return
-      // No iniciar drag desde controles interactivos
       const t = event.target as HTMLElement
-      if (t.closest("button, a, input, textarea, select, [role='button'], [data-drag-scroll-ignore]")) {
+      if (
+        t.closest(
+          "button, a, input, textarea, select, [role='button'], [data-drag-scroll-ignore]",
+        )
+      ) {
         return
       }
       const el = localRef.current
@@ -95,36 +141,6 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
       }
     }
 
-    /**
-     * Nested scroll (comunidad): el eje dominante manda.
-     * - deltaX / shift+rueda → horizontal
-     * - rueda vertical pura → NO preventDefault (sube al padre vertical)
-     * Nunca convertir Y→X: eso es el conflicto en ProjectTasksList.
-     */
-    const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-      if (orientation === "vertical") return
-      const el = localRef.current
-      if (!el) return
-
-      const absX = Math.abs(event.deltaX)
-      const absY = Math.abs(event.deltaY)
-      const shiftAsHorizontal = event.shiftKey && absY > 0
-      const primarilyHorizontal = absX > absY
-
-      if (!primarilyHorizontal && !shiftAsHorizontal) return
-      if (el.scrollWidth <= el.clientWidth + 1) return
-
-      const delta = primarilyHorizontal ? event.deltaX : event.deltaY
-      if (Math.abs(delta) < 0.5) return
-
-      const max = el.scrollWidth - el.clientWidth
-      const next = Math.min(max, Math.max(0, el.scrollLeft + delta))
-      if (next === el.scrollLeft) return
-
-      el.scrollLeft = next
-      event.preventDefault()
-    }
-
     return (
       <div
         ref={setRefs}
@@ -133,7 +149,6 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
         onPointerMove={dragToScroll ? handlePointerMove : undefined}
         onPointerUp={dragToScroll ? endDrag : undefined}
         onPointerCancel={dragToScroll ? endDrag : undefined}
-        onWheel={handleWheel}
         className={cn(
           "min-h-0 min-w-0",
           orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
