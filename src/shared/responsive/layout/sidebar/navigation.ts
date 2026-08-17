@@ -12,6 +12,7 @@ import {
   ListChecks,
   Boxes,
   DraftingCompass,
+  PenTool,
 } from "lucide-react"
 
 import {
@@ -94,6 +95,12 @@ export const NAVIGATION = [
   {
     title: "Ingeniería",
     items: [
+      {
+        label: "Ingeniería",
+        href: "/ingenieria",
+        icon: PenTool,
+        permission: PermissionCode.TASK_READ,
+      },
       {
         label: "Nesting",
         href: "/nesting",
