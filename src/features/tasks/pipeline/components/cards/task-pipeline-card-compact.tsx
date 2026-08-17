@@ -58,9 +58,9 @@ export function TaskPipelineCardCompact({
     >
       <span
         title={task.project.projectCode}
-        className="shrink-0 max-w-[4.5rem] truncate text-[11px] font-bold tabular-nums text-muted-foreground"
+        className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide text-muted-foreground"
       >
-        {task.project.projectCode}
+        {String(task.project.sequence).padStart(3, "0")}
       </span>
 
       <span
