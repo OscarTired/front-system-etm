@@ -1,7 +1,6 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { X } from "lucide-react"
 
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
@@ -323,11 +322,6 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
     }
   }
 
-  /** Sale de la vista filtrada por persona (día del usuario → equipo). */
-  const clearSelectedUser = () => {
-    setSelectedUser(undefined)
-  }
-
   const toolbar = (
     <div className="w-full shrink-0 rounded-2xl bg-surface p-2 tablet:p-4">
       <div className="flex flex-col gap-2 tablet:hidden">
@@ -337,27 +331,6 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
           placeholder="Todo el equipo"
           onChange={handleUserChange}
         />
-
-        {selectedUser && !isMonth && !isSupervision && (
-          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-foreground/5 px-3 py-2">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Vista del usuario
-              </p>
-              <p className="truncate text-sm font-semibold text-foreground">
-                {selectedUser.name}
-              </p>
-            </div>
-            <button
-              type="button"
-              aria-label="Salir de la vista del usuario"
-              onClick={clearSelectedUser}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-foreground/10 text-foreground transition hover:bg-foreground/15 active:scale-95"
-            >
-              <X size={16} strokeWidth={2.4} />
-            </button>
-          </div>
-        )}
 
         <div className="flex items-center gap-1.5">
           <div className="flex shrink-0 items-center gap-1">
@@ -429,19 +402,6 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
               placeholder="Todo el equipo"
               onChange={handleUserChange}
             />
-
-            {selectedUser && !isMonth && !isSupervision && (
-              <button
-                type="button"
-                aria-label="Salir de la vista del usuario"
-                onClick={clearSelectedUser}
-                title={`Salir de ${selectedUser.name}`}
-                className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-foreground/5 px-3 text-sm font-semibold text-foreground transition hover:bg-foreground/10"
-              >
-                <span className="max-w-[10rem] truncate">{selectedUser.name}</span>
-                <X size={14} strokeWidth={2.4} />
-              </button>
-            )}
           </div>
           <EntryCountBadge count={logs.length} />
         </div>
@@ -449,9 +409,17 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
     </div>
   )
 
+  const fillHeight = isMonth
+
   const body = (
-    <>
-        <div className="mb-1">{toolbar}</div>
+    <div
+      className={
+        fillHeight
+          ? "flex min-h-0 w-full flex-1 flex-col"
+          : "flex w-full flex-col"
+      }
+    >
+        <div className="mb-1 shrink-0">{toolbar}</div>
 
         {isSupervision ? (
           <TeamSupervisionView
@@ -461,7 +429,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
             focusUserId={selectedUser?.id}
           />
         ) : isMonth ? (
-          <div className="flex min-h-[28rem] w-full flex-1 flex-col pb-4">
+          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
             <AgendaMonthView
               anchorDate={viewMonth}
               logs={logs}
@@ -474,7 +442,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
             />
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-6 pb-4">
+          <div className="flex w-full flex-col gap-6 pb-4 max-md:mt-2">
             {loading ? (
               <div className="flex w-full flex-col gap-8">
                 {Array.from({ length: 2 }).map((_, s) => (
@@ -526,13 +494,17 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
             )}
           </div>
         )}
-    </>
+    </div>
   )
 
   // embedded: crecer con el contenido (scroll del hub). Sin overflow-hidden.
   // standalone: este hijo es dueño del scroll.
   if (embedded) {
-    return <div className="w-full">{body}</div>
+    return (
+      <div className={fillHeight ? "flex min-h-0 w-full flex-1 flex-col" : "w-full"}>
+        {body}
+      </div>
+    )
   }
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
