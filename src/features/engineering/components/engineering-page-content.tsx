@@ -6,6 +6,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 import { AdaptiveActionBar } from "@/shared/responsive/adaptative/adaptive-action-bar"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import {
+  TOP_BAR_HEIGHT_PX,
+  BOTTOM_NAV_HEIGHT_PX,
+} from "@/shared/responsive/layout/chrome-constants"
 import { cn } from "@/shared/utils/utils"
 
 import { ContextPicker } from "@/features/tasks/components/context-picker"
@@ -190,7 +194,19 @@ export function EngineeringPageContent() {
           {body}
         </AppListScroll>
       ) : (
-        body
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          style={
+            isMobile
+              ? {
+                  paddingTop: TOP_BAR_HEIGHT_PX,
+                  paddingBottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`,
+                }
+              : undefined
+          }
+        >
+          {body}
+        </div>
       )}
 
       <EngineeringTaskDialog

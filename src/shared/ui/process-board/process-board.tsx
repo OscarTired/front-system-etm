@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
 
@@ -22,9 +23,13 @@ type Props<TId extends string = string> = {
 }
 
 /**
- * Board de columnas horizontal compartido (pipeline + ingeniería).
- * Mobile: snap full-width + scroll Y por columna.
- * Desktop: columnas fijas + flechas al hover.
+ * Board horizontal compartido (pipeline + ingeniería).
+ *
+ * Altura (causa raíz del “corte” desktop):
+ * - Raíz min-h-0 flex-1 flex-col
+ * - Track h-full
+ * - Cada columna: h-full min-h-0 overflow-y-auto
+ * Padre debe ser flex + min-h-0 + overflow-hidden.
  */
 export function ProcessBoard<TId extends string = string>({
   columns,
@@ -116,29 +121,34 @@ export function ProcessBoard<TId extends string = string>({
           label="Columna siguiente"
         />
 
-        <div
+        <ScrollArea
           ref={containerRef}
-          className={cn(
-            "hide-scrollbar flex h-full min-h-0",
-            isMobile
-              ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
-              : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
-          )}
+          orientation="horizontal"
+          dragToScroll
+          mapVerticalWheel
+          className="h-full min-h-0 w-full"
         >
-          {columns.map(col => (
-            <div
-              key={col.id}
-              className={cn(
-                "flex shrink-0 flex-col",
-                isMobile
-                  ? "h-full w-full min-w-full snap-center overflow-y-auto overscroll-contain [touch-action:pan-y]"
-                  : columnClassName,
-              )}
-            >
-              {col.content}
-            </div>
-          ))}
-        </div>
+          <div
+            className={cn(
+              "flex h-full min-h-0",
+              isMobile ? "snap-x snap-mandatory" : "gap-3",
+            )}
+          >
+            {columns.map(col => (
+              <div
+                key={col.id}
+                className={cn(
+                  "flex h-full min-h-0 shrink-0 flex-col overflow-y-auto overscroll-contain",
+                  isMobile
+                    ? "w-full min-w-full snap-center [touch-action:pan-y]"
+                    : columnClassName,
+                )}
+              >
+                {col.content}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   )

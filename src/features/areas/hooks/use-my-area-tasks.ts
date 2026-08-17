@@ -35,11 +35,13 @@ export function useMyAreaTasks() {
   const canChooseFreely = isSupervisor || isAdmin
 
   // Operario → solo las suyas.
-  // Admin/supervisor → solo lo elegido en el selector (vacío = ninguna).
+  // Admin/supervisor → selector; vacío = todas de frente (sin botón extra).
   const areas: ProcessCode[] = isOperarioWithArea
     ? operarioAreaCodes
     : canChooseFreely
-      ? supervisorAreas
+      ? supervisorAreas.length > 0
+        ? supervisorAreas
+        : ALL_PROCESS_CODES
       : []
 
   return {

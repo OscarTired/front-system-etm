@@ -5,6 +5,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import {
+  TOP_BAR_HEIGHT_PX,
+  BOTTOM_NAV_HEIGHT_PX,
+} from "@/shared/responsive/layout/chrome-constants"
 import { cn } from "@/shared/utils/utils"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
@@ -161,7 +165,7 @@ export function TaskPageContent({
     <div
       className={cn(
         "relative flex h-full min-h-0 w-full flex-col",
-        !isMobile && view === "kanban" ? "overflow-hidden" : "",
+        view === "kanban" ? "overflow-hidden" : "",
       )}
     >
       {view === "card" ? (
@@ -185,7 +189,17 @@ export function TaskPageContent({
           </EntityExpandProvider>
         </AppListScroll>
       ) : (
-        <>
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          style={
+            isMobile
+              ? {
+                  paddingTop: TOP_BAR_HEIGHT_PX,
+                  paddingBottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`,
+                }
+              : undefined
+          }
+        >
           {toolbar}
           <div className="min-h-0 flex-1 overflow-hidden">
             <TaskPipelineBoard
@@ -194,7 +208,7 @@ export function TaskPageContent({
               loading={loading}
             />
           </div>
-        </>
+        </div>
       )}
     </div>
   )

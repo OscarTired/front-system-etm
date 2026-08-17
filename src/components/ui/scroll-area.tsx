@@ -12,6 +12,11 @@ type Props = React.ComponentPropsWithoutRef<"div"> & {
    * Arrastre con puntero (mouse). Touch y trackpad siguen nativos.
    */
   dragToScroll?: boolean
+  /**
+   * Solo orientation="horizontal". Si true, rueda vertical → scroll X
+   * (kanban / process board). Default false para no robar scroll vertical.
+   */
+  mapVerticalWheel?: boolean
 }
 
 /**
@@ -32,6 +37,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
       orientation = "vertical",
       showScrollbar = false,
       dragToScroll = false,
+      mapVerticalWheel = false,
       onPointerDown,
       ...props
     },
@@ -68,11 +74,12 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
         const absX = Math.abs(event.deltaX)
         const absY = Math.abs(event.deltaY)
 
-        // Solo gesto horizontal nativo (trackpad X) o shift+rueda.
-        // NO convertir rueda vertical → X: eso roba el scroll del
-        // padre vertical y mete "espera" entre ejes (Instagram no lo hace).
+        // Trackpad X o shift+rueda siempre.
+        // mapVerticalWheel: rueda vertical → X (kanban / process board).
         const isHorizontalIntent =
-          absX > absY || (event.shiftKey && absY > 0)
+          absX > absY ||
+          (event.shiftKey && absY > 0) ||
+          (mapVerticalWheel && absY > 0)
         if (!isHorizontalIntent) return
 
         const delta = absX > absY ? event.deltaX : event.deltaY
@@ -88,7 +95,7 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
 
       el.addEventListener("wheel", onWheel, { passive: false })
       return () => el.removeEventListener("wheel", onWheel)
-    }, [orientation])
+    }, [orientation, mapVerticalWheel])
 
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
       onPointerDown?.(event)

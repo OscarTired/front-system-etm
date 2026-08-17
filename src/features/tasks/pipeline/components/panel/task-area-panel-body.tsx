@@ -1,11 +1,8 @@
 "use client"
 
-import { useState } from "react"
-
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
-import { Settings2 } from "lucide-react"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
 import { PendingInvitesSection } from "./pending-invites-section"
@@ -40,15 +37,16 @@ export function TaskAreaPanelBody({
   const { state, actions } = panel
   const horizontal = orientation === "horizontal"
 
-  const [areasOpen, setAreasOpen] = useState(
-    () => state.canChooseAreas && state.supervisorAreas.length === 0,
-  )
-
-  const effectiveSelected = (code: string) =>
-    state.supervisorAreas.includes(code as never)
+    const effectiveSelected = (code: string) =>
+    state.supervisorAreas.length > 0
+      ? state.supervisorAreas.includes(code as never)
+      : true
 
   function toggleArea(code: (typeof state.allAreas)[number]) {
-    const current = state.supervisorAreas
+    const current =
+      state.supervisorAreas.length > 0
+        ? state.supervisorAreas
+        : state.allAreas
     const selected = current.includes(code)
     actions.setSupervisorAreas(
       selected ? current.filter(c => c !== code) : [...current, code],
@@ -69,22 +67,7 @@ export function TaskAreaPanelBody({
               {title}
             </h2>
             <div className="flex shrink-0 items-center gap-1">
-              {state.canChooseAreas && (
-                <button
-                  type="button"
-                  aria-label="Áreas"
-                  aria-pressed={areasOpen}
-                  onClick={() => setAreasOpen(v => !v)}
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded-lg transition active:scale-95",
-                    areasOpen
-                      ? "bg-foreground/15 text-foreground"
-                      : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
-                  )}
-                >
-                  <Settings2 size={16} />
-                </button>
-              )}
+              
               <HistoryToggleButton
                 count={state.completedCount}
                 active={state.showHistory}
@@ -93,7 +76,7 @@ export function TaskAreaPanelBody({
             </div>
           </div>
 
-          {state.canChooseAreas && areasOpen && (
+          {state.canChooseAreas && (
             <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
               <div className="flex flex-wrap gap-1.5">
                 {state.allAreas.map(code => {

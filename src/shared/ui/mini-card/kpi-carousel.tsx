@@ -181,7 +181,7 @@ export function KpiCarousel({
   const mobileChips = (
 
     <div className="w-full h-15.5">
-      <HorizontalScroll>
+      <HorizontalScroll className="min-w-full justify-center gap-5">
         {currentItems.map((item, index) => {
 
           const ItemIcon = item.icon
