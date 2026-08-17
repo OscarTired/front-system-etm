@@ -155,7 +155,7 @@ export function EngineeringPageContent() {
       </div>
 
       {viewMode === "processes" ? (
-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden max-md:mt-2">
           <EngineeringProcessBoard
             tasks={tasks}
             loading={loading}

@@ -13,6 +13,8 @@ import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import {
   ProcessBoard,
+  ProcessBoardColumnFrame,
+  ProcessBoardSkeleton,
   type ProcessBoardColumn,
 } from "@/shared/ui/process-board"
 
@@ -23,7 +25,6 @@ import {
 } from "../constants/engineering-process-definitions"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import { EngineeringTaskRow } from "./engineering-task-row"
-import { EngineeringProcessSkeleton } from "./engineering-process-skeleton"
 import { EngineeringKpiHeader } from "./engineering-kpi-header"
 
 type Props = {
@@ -47,6 +48,7 @@ function groupByProcess(tasks: EngineeringTask[]) {
 function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
   const active = tasks.filter(t => t.status === "PROGRESS" && t.assignee)
   if (active.length === 0) return null
+
   const seen = new Set<string>()
   const unique = active.filter(t => {
     const id = t.assignee!.id
@@ -54,6 +56,7 @@ function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
     seen.add(id)
     return true
   })
+
   return (
     <div className="flex flex-wrap items-center gap-1.5 px-1 pb-1 pt-0.5">
       {unique.map(t => (
@@ -132,6 +135,11 @@ function ProcessColumnHeader({
   )
 }
 
+/**
+ * Board de procesos de ingeniería.
+ * Layout 100% vía ProcessBoard + ProcessBoardColumnFrame (shared).
+ * Sin hacks de scroll/altura locales.
+ */
 export function EngineeringProcessBoard({
   tasks,
   loading,
@@ -148,24 +156,22 @@ export function EngineeringProcessBoard({
         return {
           id: code,
           content: (
-            <>
-              <ProcessColumnHeader
-                code={code}
-                count={colTasks.length}
-                centered={isMobile}
-                onAdd={
-                  onCreateInProcess
-                    ? () => onCreateInProcess(code)
-                    : undefined
-                }
-              />
-              <ActiveAssignees tasks={colTasks} />
-              <div
-                className={cn(
-                  "mt-1 flex flex-col gap-1.5 px-0.5",
-                  isMobile && "overflow-y-auto overscroll-contain pb-4",
-                )}
-              >
+            <ProcessBoardColumnFrame
+              header={
+                <ProcessColumnHeader
+                  code={code}
+                  count={colTasks.length}
+                  centered={isMobile}
+                  onAdd={
+                    onCreateInProcess
+                      ? () => onCreateInProcess(code)
+                      : undefined
+                  }
+                />
+              }
+              meta={<ActiveAssignees tasks={colTasks} />}
+            >
+              <div className="flex flex-col gap-1.5 px-0.5 pb-2 pt-1">
                 {colTasks.length === 0 ? (
                   <p className="px-2 py-8 text-center text-xs text-muted-foreground">
                     Sin tareas
@@ -180,7 +186,7 @@ export function EngineeringProcessBoard({
                   ))
                 )}
               </div>
-            </>
+            </ProcessBoardColumnFrame>
           ),
         }
       }),
@@ -191,7 +197,12 @@ export function EngineeringProcessBoard({
     <ProcessBoard
       columns={columns}
       loading={loading}
-      loadingFallback={<EngineeringProcessSkeleton />}
+      loadingFallback={
+        <ProcessBoardSkeleton
+          accentColor="#16A34A"
+          columnCount={ENGINEERING_PROCESS_ORDER.length}
+        />
+      }
       header={<EngineeringKpiHeader tasks={tasks} />}
       columnClassName="w-72 min-w-72 shrink-0"
       scrollStep={288}

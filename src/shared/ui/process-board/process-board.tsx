@@ -12,6 +12,7 @@ import type { ProcessBoardColumn } from "./process-board.types"
 
 type Props<TId extends string = string> = {
   columns: ProcessBoardColumn<TId>[]
+  /** Ancho de columna en desktop. Mobile = 100% viewport. */
   columnClassName?: string
   scrollStep?: number
   className?: string
@@ -23,13 +24,14 @@ type Props<TId extends string = string> = {
 }
 
 /**
- * Board horizontal compartido (pipeline + ingeniería).
+ * Board horizontal compartido (ingeniería, hubs de proceso, etc.).
  *
- * Altura (causa raíz del “corte” desktop):
- * - Raíz min-h-0 flex-1 flex-col
- * - Track h-full
- * - Cada columna: h-full min-h-0 overflow-y-auto
- * Padre debe ser flex + min-h-0 + overflow-hidden.
+ * Ejes:
+ * - X → este componente (ScrollArea + drag + rueda→X + flechas)
+ * - Y → ProcessBoardColumnFrame dentro de cada column.content
+ *
+ * Padre obligatorio:
+ *   className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
  */
 export function ProcessBoard<TId extends string = string>({
   columns,
@@ -97,7 +99,7 @@ export function ProcessBoard<TId extends string = string>({
   return (
     <div
       className={cn(
-        "relative flex min-h-0 w-full flex-1 flex-col select-none",
+        "relative flex h-full min-h-0 w-full flex-1 flex-col select-none",
         className,
       )}
     >
@@ -138,9 +140,9 @@ export function ProcessBoard<TId extends string = string>({
               <div
                 key={col.id}
                 className={cn(
-                  "flex h-full min-h-0 shrink-0 flex-col overflow-y-auto overscroll-contain",
+                  "flex h-full min-h-0 shrink-0 flex-col",
                   isMobile
-                    ? "w-full min-w-full snap-center [touch-action:pan-y]"
+                    ? "w-full min-w-full snap-center"
                     : columnClassName,
                 )}
               >

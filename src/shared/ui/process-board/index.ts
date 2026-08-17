@@ -1,4 +1,6 @@
 export { ProcessBoard } from "./process-board"
+export { ProcessBoardColumnFrame } from "./process-board-column-frame"
+export { ProcessBoardSkeleton } from "./process-board-skeleton"
 export { ProcessBoardNavButton } from "./process-board-nav-button"
 export { useProcessBoardOverflow } from "./use-process-board-overflow"
 export type { ProcessBoardColumn } from "./process-board.types"
