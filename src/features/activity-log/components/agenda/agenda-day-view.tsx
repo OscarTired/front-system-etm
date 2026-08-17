@@ -17,8 +17,9 @@ type Props = {
   onLogClick: (slot: ShiftSlotDefinition) => void
   onDeleteLog: (log: ActivityLog) => void
   beginDrag: (
+    e: React.PointerEvent<HTMLElement>,
     log: ActivityLog,
-    e: React.PointerEvent,
+    isDuplicate?: boolean,
   ) => void
   registerSlot: (shift: DayShift, el: HTMLElement | null) => void
   draggingLogId: string | null

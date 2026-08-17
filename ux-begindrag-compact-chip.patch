@@ -1,0 +1,39 @@
+diff --git a/src/features/activity-log/components/agenda/agenda-day-view.tsx b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+--- a/src/features/activity-log/components/agenda/agenda-day-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+@@ -17,8 +17,9 @@
+   onLogClick: (slot: ShiftSlotDefinition) => void
+   onDeleteLog: (log: ActivityLog) => void
+   beginDrag: (
++    e: React.PointerEvent<HTMLElement>,
+     log: ActivityLog,
+-    e: React.PointerEvent,
++    isDuplicate?: boolean,
+   ) => void
+   registerSlot: (shift: DayShift, el: HTMLElement | null) => void
+   draggingLogId: string | null
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -56,16 +56,11 @@
+         reserveActionsSpace ? "pr-12" : "pr-3",
+       )}
+     >
+-      <span
+-        title={task.project.projectCode}
+-        className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide text-muted-foreground"
+-      >
+-        {String(task.project.sequence).padStart(3, "0")}
+-      </span>
+-
+-      <span
+-        className="size-1.5 shrink-0 rounded-full"
+-        style={{ backgroundColor: task.priority.color }}
++      <EntityChip
++        key={`proj-${task.project.id}-${task.priority.color}-${themeResolved}`}
++        label={String(task.project.sequence).padStart(3, "0")}
++        color={task.priority.color}
++        compact
+       />
+ 
+       <span

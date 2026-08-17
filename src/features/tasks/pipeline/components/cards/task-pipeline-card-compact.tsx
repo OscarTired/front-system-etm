@@ -56,16 +56,11 @@ export function TaskPipelineCardCompact({
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
-      <span
-        title={task.project.projectCode}
-        className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide text-muted-foreground"
-      >
-        {String(task.project.sequence).padStart(3, "0")}
-      </span>
-
-      <span
-        className="size-1.5 shrink-0 rounded-full"
-        style={{ backgroundColor: task.priority.color }}
+      <EntityChip
+        key={`proj-${task.project.id}-${task.priority.color}-${themeResolved}`}
+        label={String(task.project.sequence).padStart(3, "0")}
+        color={task.priority.color}
+        compact
       />
 
       <span
