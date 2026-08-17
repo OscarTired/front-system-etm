@@ -1,7 +1,7 @@
 "use client"
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
@@ -10,6 +10,8 @@ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
 import { cn } from "@/shared/utils/utils"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 
 import {
   ENGINEERING_PROCESS_DEFINITIONS,
@@ -22,6 +24,8 @@ import { EngineeringTaskRow } from "./engineering-task-row"
 type Props = {
   tasks: EngineeringTask[]
   loading?: boolean
+  onCreateInProcess?: (code: EngineeringProcessCode) => void
+  onEditTask?: (task: EngineeringTask) => void
 }
 
 function groupByProcess(tasks: EngineeringTask[]) {
@@ -35,13 +39,9 @@ function groupByProcess(tasks: EngineeringTask[]) {
   return map
 }
 
-/** Quién está en PROGRESS en esta columna (estilo TaskColumnOperator). */
 function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
-  const active = tasks.filter(
-    t => t.status === "PROGRESS" && t.assignee,
-  )
+  const active = tasks.filter(t => t.status === "PROGRESS" && t.assignee)
   if (active.length === 0) return null
-
   const seen = new Set<string>()
   const unique = active.filter(t => {
     const id = t.assignee!.id
@@ -49,7 +49,6 @@ function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
     seen.add(id)
     return true
   })
-
   return (
     <div className="flex flex-wrap items-center gap-1.5 px-1 pb-1 pt-0.5">
       {unique.map(t => (
@@ -73,20 +72,24 @@ function ProcessColumnHeader({
   code,
   count,
   centered = false,
+  onAdd,
 }: {
   code: EngineeringProcessCode
   count: number
   centered?: boolean
+  onAdd?: () => void
 }) {
   const theme = useThemeStore(s => s.resolved)
   const def = ENGINEERING_PROCESS_DEFINITIONS[code]
   const Icon = ENTITY_ICONS[def.icon]
   const badge = getBadgeColors(def.color, theme)
+  const { has } = usePermissions()
+  const canCreate = has(PermissionCode.TASK_CREATE)
 
   return (
     <div
       className={cn(
-        "flex h-10 shrink-0 items-center gap-2 border-b px-3",
+        "flex h-10 shrink-0 items-center gap-2 border-b px-2",
         centered && "justify-center",
       )}
       style={{ borderColor: def.color }}
@@ -100,17 +103,32 @@ function ProcessColumnHeader({
       {Icon && (
         <Icon size={14} style={{ color: def.color }} className="shrink-0" />
       )}
-      <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
+      <span className="min-w-0 flex-1 truncate text-sm font-bold uppercase tracking-wide text-foreground">
         {def.label}
       </span>
       <span className="shrink-0 text-xs font-semibold text-muted-foreground">
         {count}
       </span>
+      {canCreate && onAdd && (
+        <button
+          type="button"
+          onClick={onAdd}
+          title="Nueva tarea en este proceso"
+          className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground transition hover:bg-foreground/10 active:scale-95"
+        >
+          <Plus size={14} strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   )
 }
 
-export function EngineeringProcessBoard({ tasks, loading }: Props) {
+export function EngineeringProcessBoard({
+  tasks,
+  loading,
+  onCreateInProcess,
+  onEditTask,
+}: Props) {
   const { isMobile } = useResponsive()
   const columns = useMemo(() => groupByProcess(tasks), [tasks])
 
@@ -129,18 +147,15 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
   useLayoutEffect(() => {
     const el = containerRef.current
     if (!el) return
-
     const update = () => {
       const max = el.scrollWidth - el.clientWidth
       setCanScrollLeft(el.scrollLeft > 4)
       setCanScrollRight(el.scrollLeft < max - 4)
     }
-
     const schedule = () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
       rafRef.current = requestAnimationFrame(update)
     }
-
     update()
     el.addEventListener("scroll", schedule, { passive: true })
     const ro = new ResizeObserver(schedule)
@@ -152,7 +167,6 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
     }
   }, [containerRef, tasks, isMobile])
 
-  // Mobile: snap a página (misma idea que MobilePipelineCarousel)
   useLayoutEffect(() => {
     if (!isMobile) return
     const el = containerRef.current
@@ -183,8 +197,7 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
   function currentIndex() {
     const el = containerRef.current
     if (!el) return 0
-    const w = el.clientWidth || 1
-    return Math.round(el.scrollLeft / w)
+    return Math.round(el.scrollLeft / (el.clientWidth || 1))
   }
 
   function goToIndex(index: number) {
@@ -207,7 +220,7 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
   }
 
   return (
-    <div className="relative min-h-0 w-full flex-1">
+    <div className="relative min-h-0 w-full flex-1 select-none">
       <button
         type="button"
         onClick={() => goToIndex(currentIndex() - 1)}
@@ -265,6 +278,11 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
                 code={code}
                 count={colTasks.length}
                 centered={isMobile}
+                onAdd={
+                  onCreateInProcess
+                    ? () => onCreateInProcess(code)
+                    : undefined
+                }
               />
               <ActiveAssignees tasks={colTasks} />
               <div
@@ -279,7 +297,11 @@ export function EngineeringProcessBoard({ tasks, loading }: Props) {
                   </p>
                 ) : (
                   colTasks.map(task => (
-                    <EngineeringTaskRow key={task.id} task={task} />
+                    <EngineeringTaskRow
+                      key={task.id}
+                      task={task}
+                      onClick={() => onEditTask?.(task)}
+                    />
                   ))
                 )}
               </div>

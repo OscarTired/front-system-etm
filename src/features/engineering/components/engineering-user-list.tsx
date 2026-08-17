@@ -1,6 +1,10 @@
 "use client"
 
+import { Plus } from "lucide-react"
+
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import type { User } from "@/features/users/types/user.types"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import {
@@ -12,13 +16,20 @@ type Props = {
   users: User[]
   tasks: EngineeringTask[]
   loading?: boolean
+  onEditTask?: (task: EngineeringTask) => void
+  onCreateForUser?: (userId: string) => void
 }
 
-/**
- * Tab Lista — formato Team Bitácora (secciones por persona)
- * + filas estilo pipeline.
- */
-export function EngineeringUserList({ users, tasks, loading }: Props) {
+export function EngineeringUserList({
+  users,
+  tasks,
+  loading,
+  onEditTask,
+  onCreateForUser,
+}: Props) {
+  const { has } = usePermissions()
+  const canCreate = has(PermissionCode.TASK_CREATE)
+
   if (loading) {
     return (
       <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
@@ -30,12 +41,11 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
   if (users.length === 0) {
     return (
       <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-foreground/5 text-sm text-muted-foreground">
-        Sin usuarios para mostrar
+        Sin usuarios de ingeniería
       </div>
     )
   }
 
-  // Usuarios con al menos una tarea primero; luego el resto
   const withTasks = users
     .map(u => ({
       user: u,
@@ -44,7 +54,7 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
     .sort((a, b) => b.tasks.length - a.tasks.length)
 
   return (
-    <div className="flex w-full flex-col gap-6 pb-4">
+    <div className="flex w-full flex-col gap-6 pb-4 select-none">
       {withTasks.map(({ user, tasks: assigned }) => {
         const inProgress = assigned.some(t => t.status === "PROGRESS")
         const byProcess = new Map<string, number>()
@@ -71,9 +81,21 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
                   </span>
                 )}
               </div>
-              <div className="rounded-lg bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
-                {assigned.length}{" "}
-                {assigned.length === 1 ? "tarea" : "tareas"}
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="rounded-lg bg-foreground/5 px-3 py-1 text-xs font-medium text-muted-foreground">
+                  {assigned.length}{" "}
+                  {assigned.length === 1 ? "tarea" : "tareas"}
+                </div>
+                {canCreate && onCreateForUser && (
+                  <button
+                    type="button"
+                    onClick={() => onCreateForUser(user.id)}
+                    title={`Asignar / crear tarea a ${user.name}`}
+                    className="flex size-8 items-center justify-center rounded-lg bg-foreground/5 text-foreground transition hover:bg-foreground/10 active:scale-95"
+                  >
+                    <Plus size={15} strokeWidth={2.5} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -108,7 +130,11 @@ export function EngineeringUserList({ users, tasks, loading }: Props) {
             ) : (
               <div className="flex flex-col gap-1.5">
                 {assigned.map(task => (
-                  <EngineeringTaskRow key={task.id} task={task} />
+                  <EngineeringTaskRow
+                    key={task.id}
+                    task={task}
+                    onClick={() => onEditTask?.(task)}
+                  />
                 ))}
               </div>
             )}
