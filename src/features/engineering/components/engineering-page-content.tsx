@@ -173,17 +173,26 @@ export function EngineeringPageContent() {
     </div>
   )
 
+  // Vista procesos (kanban): igual que TaskPipeline — sin AppListScroll
+  // en desktop para que el scroll horizontal del board no compita con
+  // el vertical del list-scroll.
+  const useListScroll = viewMode !== "processes" || isMobile
+
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col select-none">
-      <AppListScroll
-        onRefresh={async () => {
-          await queryClient.invalidateQueries({
-            queryKey: ["engineering-tasks"],
-          })
-        }}
-      >
-        {body}
-      </AppListScroll>
+    <div className="relative flex min-h-0 w-full flex-1 flex-col select-none overflow-hidden">
+      {useListScroll ? (
+        <AppListScroll
+          onRefresh={async () => {
+            await queryClient.invalidateQueries({
+              queryKey: ["engineering-tasks"],
+            })
+          }}
+        >
+          {body}
+        </AppListScroll>
+      ) : (
+        body
+      )}
 
       <EngineeringTaskDialog
         open={dialogOpen}

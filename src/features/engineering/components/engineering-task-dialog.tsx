@@ -14,6 +14,7 @@ import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { cn } from "@/shared/utils/utils"
 
@@ -264,15 +265,11 @@ export function EngineeringTaskDialog({
                     type="button"
                     onClick={() => setStatus(opt.value)}
                     className={cn(
-                      "transition-opacity",
-                      isSelected ? "opacity-100" : "opacity-20 hover:opacity-90",
+                      "rounded-lg transition-opacity",
+                      isSelected ? "opacity-100 ring-1 ring-foreground/25" : "opacity-20 hover:opacity-90",
                     )}
                   >
-                    <EntityChip
-                      label={opt.label}
-                      color={opt.color}
-                      className={isSelected ? "ring-none" : undefined}
-                    />
+                    <WorkflowStatusChip status={opt.value} />
                   </button>
                 )
               })}

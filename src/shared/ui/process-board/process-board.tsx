@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useDragScroll } from "@/shared/ui/horizontal-scroll/use-drag-scroll"
@@ -18,18 +18,22 @@ type Props<TId extends string = string> = {
   header?: ReactNode
   loading?: boolean
   loadingFallback?: ReactNode
+  /** true (default): flechas solo al hover en desktop, igual TaskPipeline. */
+  arrowsOnHover?: boolean
 }
 
 export function ProcessBoard<TId extends string = string>({
   columns,
-  columnClassName = "w-72",
+  columnClassName = "w-72 min-w-72 shrink-0",
   scrollStep = 288,
   className,
   header,
   loading,
   loadingFallback,
+  arrowsOnHover = true,
 }: Props<TId>) {
   const { isMobile } = useResponsive()
+  const [hovering, setHovering] = useState(false)
 
   const {
     containerRef,
@@ -39,10 +43,17 @@ export function ProcessBoard<TId extends string = string>({
     stopDragging,
   } = useDragScroll()
 
-  const { canScrollLeft, canScrollRight } = useProcessBoardOverflow(
-    containerRef,
-    [columns.length, isMobile],
-  )
+  const { canScrollLeft, canScrollRight, leftFade, rightFade } =
+    useProcessBoardOverflow(containerRef, [
+      columns.length,
+      isMobile,
+      loading,
+    ])
+
+  const showLeft =
+    canScrollLeft && (!arrowsOnHover || isMobile || hovering)
+  const showRight =
+    canScrollRight && (!arrowsOnHover || isMobile || hovering)
 
   function currentIndex() {
     const el = containerRef.current
@@ -83,47 +94,59 @@ export function ProcessBoard<TId extends string = string>({
     >
       {header}
 
-      <div className="relative min-h-0 w-full flex-1">
+      <div
+        className="relative min-h-0 w-full flex-1"
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+      >
         <ProcessBoardNavButton
           direction="left"
-          visible={canScrollLeft}
+          visible={showLeft}
           onClick={() => goToIndex(currentIndex() - 1)}
           label="Columna anterior"
         />
         <ProcessBoardNavButton
           direction="right"
-          visible={canScrollRight}
+          visible={showRight}
           onClick={() => goToIndex(currentIndex() + 1)}
           label="Columna siguiente"
         />
 
         <div
-          ref={containerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
-          onClickCapture={handleClickCapture}
-          className={cn(
-            "hide-scrollbar flex h-full min-h-0 select-none",
-            isMobile
-              ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
-              : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
-          )}
+          className="h-full min-h-0 overflow-hidden"
+          style={{
+            WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+            maskImage: `linear-gradient(to right, transparent 0, black ${leftFade}px, black calc(100% - ${rightFade}px), transparent 100%)`,
+          }}
         >
-          {columns.map(col => (
-            <div
-              key={col.id}
-              className={cn(
-                "flex shrink-0 flex-col",
-                isMobile
-                  ? "w-full snap-center [touch-action:pan-y]"
-                  : columnClassName,
-              )}
-            >
-              {col.content}
-            </div>
-          ))}
+          <div
+            ref={containerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={stopDragging}
+            onMouseLeave={stopDragging}
+            onClickCapture={handleClickCapture}
+            className={cn(
+              "hide-scrollbar flex h-full min-h-0 select-none",
+              isMobile
+                ? "snap-x snap-mandatory overflow-x-auto overflow-y-hidden [touch-action:pan-x]"
+                : "gap-3 overflow-x-auto overflow-y-hidden pb-2",
+            )}
+          >
+            {columns.map(col => (
+              <div
+                key={col.id}
+                className={cn(
+                  "flex shrink-0 flex-col",
+                  isMobile
+                    ? "w-full snap-center [touch-action:pan-y]"
+                    : columnClassName,
+                )}
+              >
+                {col.content}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -14,25 +14,25 @@ import type { TaskAreaPanelReturn } from "../../hooks/use-task-area-panel"
 
 type Props = {
   panel: TaskAreaPanelReturn
-  /** Título opcional (sheet / sidebar). */
   title?: string
-  /** Clase del contenedor raíz. */
   className?: string
-  /** Si false, no muestra header con historial/config (cuando el padre ya los tiene). */
   showHeader?: boolean
+  /**
+   * "horizontal" — columnas de área lado a lado (desktop sidebar).
+   * "vertical" — apiladas (sheet móvil / fallback).
+   */
+  orientation?: "horizontal" | "vertical"
 }
 
-/**
- * Cuerpo compartido de "Mis tareas" / convocatoria.
- * Sheet (móvil) y columna lateral (desktop bitácora) reutilizan esto.
- */
 export function TaskAreaPanelBody({
   panel,
   title = "Mis tareas",
   className,
   showHeader = true,
+  orientation = "vertical",
 }: Props) {
   const { state, actions } = panel
+  const horizontal = orientation === "horizontal"
 
   return (
     <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", className)}>
@@ -73,22 +73,32 @@ export function TaskAreaPanelBody({
               {state.allAreas.map(code => {
                 const definition = PROCESS_DEFINITIONS[code]
                 const Icon = ENTITY_ICONS[definition.icon]
-                const selected = state.supervisorAreas.includes(code)
+                // Si el store está vacío mostramos allAreas: el chip
+                // seleccionado refleja ese default.
+                const effectiveSelected =
+                  state.supervisorAreas.length > 0
+                    ? state.supervisorAreas.includes(code)
+                    : true
 
                 return (
                   <button
                     key={code}
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      const current =
+                        state.supervisorAreas.length > 0
+                          ? state.supervisorAreas
+                          : state.allAreas
+                      const selected = current.includes(code)
                       actions.setSupervisorAreas(
                         selected
-                          ? state.supervisorAreas.filter(c => c !== code)
-                          : [...state.supervisorAreas, code],
+                          ? current.filter(c => c !== code)
+                          : [...current, code],
                       )
-                    }
+                    }}
                     className={cn(
                       "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition active:scale-95",
-                      selected
+                      effectiveSelected
                         ? "bg-foreground/15 text-foreground shadow-sm"
                         : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                     )}
@@ -103,37 +113,76 @@ export function TaskAreaPanelBody({
         </div>
       )}
 
-      <ScrollArea
-        className={cn(
-          "min-h-0 min-w-0 w-full flex-1 p-3",
-          state.summonTarget && "pb-24",
-        )}
-      >
-        {state.loading ? (
-          <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
-            Cargando…
-          </div>
-        ) : state.areas.length === 0 ? (
-          <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
-            {state.canChooseAreas
-              ? "Selecciona al menos un área con el botón de arriba para ver sus tareas acá."
-              : "No hay áreas asignadas."}
-          </div>
-        ) : (
-          <div className="flex min-w-0 w-full flex-col gap-6">
-            {state.currentUserId && (
-              <PendingInvitesSection
-                tasks={state.allTasks}
-                currentUserId={state.currentUserId}
-              />
-            )}
-
-            {state.areas.map(code => (
-              <AreaTaskSection key={code} code={code} panel={panel} />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+      {horizontal ? (
+        <div
+          className={cn(
+            "hide-scrollbar flex min-h-0 min-w-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden p-3",
+            state.summonTarget && "pb-24",
+          )}
+        >
+          {state.loading ? (
+            <div className="flex h-24 w-full items-center justify-center text-sm text-muted-foreground">
+              Cargando…
+            </div>
+          ) : state.areas.length === 0 ? (
+            <div className="flex h-24 w-full items-center justify-center text-center text-sm text-muted-foreground">
+              {state.canChooseAreas
+                ? "Selecciona al menos un área con el botón de arriba."
+                : "No hay áreas asignadas."}
+            </div>
+          ) : (
+            <>
+              {state.currentUserId && (
+                <div className="w-56 shrink-0">
+                  <PendingInvitesSection
+                    tasks={state.allTasks}
+                    currentUserId={state.currentUserId}
+                  />
+                </div>
+              )}
+              {state.areas.map(code => (
+                <AreaTaskSection
+                  key={code}
+                  code={code}
+                  panel={panel}
+                  column
+                />
+              ))}
+            </>
+          )}
+        </div>
+      ) : (
+        <ScrollArea
+          className={cn(
+            "min-h-0 min-w-0 w-full flex-1 p-3",
+            state.summonTarget && "pb-24",
+          )}
+        >
+          {state.loading ? (
+            <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
+              Cargando…
+            </div>
+          ) : state.areas.length === 0 ? (
+            <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
+              {state.canChooseAreas
+                ? "Selecciona al menos un área con el botón de arriba para ver sus tareas acá."
+                : "No hay áreas asignadas."}
+            </div>
+          ) : (
+            <div className="flex min-w-0 w-full flex-col gap-6">
+              {state.currentUserId && (
+                <PendingInvitesSection
+                  tasks={state.allTasks}
+                  currentUserId={state.currentUserId}
+                />
+              )}
+              {state.areas.map(code => (
+                <AreaTaskSection key={code} code={code} panel={panel} />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      )}
 
       {state.summonTarget && (
         <SummonConfirmBar

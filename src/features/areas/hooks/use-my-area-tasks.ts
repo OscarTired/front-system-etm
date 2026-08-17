@@ -29,30 +29,26 @@ export function useMyAreaTasks() {
   const isOperarioWithArea =
     user?.level === "OPERARIO" && operarioAreaCodes.length > 0
 
-  // Admin / permiso global: ve todas las áreas de frente, sin botón
-  // "mostrar / expandir áreas". Supervisor puro sí elige subset.
   const hasGlobalManagementPermission = has(PermissionCode.ROLE_MANAGE)
   const isAdmin = hasGlobalManagementPermission
-  const isSupervisor = user?.level === "SUPERVISOR" && !isAdmin
-
+  const isSupervisor = user?.level === "SUPERVISOR"
   const canChooseFreely = isSupervisor || isAdmin
 
-  // Admin → siempre todas. Supervisor → las que eligió en store.
   // Operario → solo las suyas.
-  const areas: ProcessCode[] =
-    isOperarioWithArea
-      ? operarioAreaCodes
-      : isAdmin
-        ? ALL_PROCESS_CODES
-        : isSupervisor
-          ? supervisorAreas
-          : []
+  // Admin/supervisor → selección del store; si está vacío, TODAS de frente
+  // (no hace falta abrir el selector para "mostrar" áreas).
+  // El selector sigue disponible para filtrar.
+  const areas: ProcessCode[] = isOperarioWithArea
+    ? operarioAreaCodes
+    : canChooseFreely
+      ? supervisorAreas.length > 0
+        ? supervisorAreas
+        : ALL_PROCESS_CODES
+      : []
 
   return {
     areas,
-    // Solo supervisor necesita el toggle de elegir áreas.
-    // Admin las ve todas de frente (desktop + móvil).
-    canChooseAreas: isSupervisor,
+    canChooseAreas: canChooseFreely,
     isAdmin,
     supervisorAreas,
     setSupervisorAreas,

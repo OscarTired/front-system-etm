@@ -2,7 +2,7 @@
 
 import { MoreHorizontal, Pencil, CheckCircle2, Trash2 } from "lucide-react"
 
-import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { cn } from "@/shared/utils/utils"
 import {
   DropdownMenu,
@@ -13,20 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import { useEngineeringTaskMutations } from "../hooks/use-engineering-task-mutations"
-
-const STATUS_LABEL: Record<EngineeringTask["status"], string> = {
-  QUEUE: "En cola",
-  PENDING: "Pendiente",
-  PROGRESS: "Proceso",
-  COMPLETED: "Completado",
-}
-
-const STATUS_COLOR: Record<EngineeringTask["status"], string> = {
-  QUEUE: "#64748B",
-  PENDING: "#2563EB",
-  PROGRESS: "#F59E0B",
-  COMPLETED: "#16A34A",
-}
 
 type Props = {
   task: EngineeringTask
@@ -75,11 +61,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
               "Sin asignar"}
           </p>
         </div>
-        <EntityChip
-          label={STATUS_LABEL[task.status]}
-          color={STATUS_COLOR[task.status]}
-          compact
-        />
+        <WorkflowStatusChip status={task.status} compact />
       </button>
 
       <DropdownMenu>

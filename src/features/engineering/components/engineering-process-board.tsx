@@ -189,7 +189,7 @@ export function EngineeringProcessBoard({
     <ProcessBoard
       columns={columns}
       loading={loading}
-      columnClassName="w-72"
+      columnClassName="w-72 min-w-72 shrink-0"
       scrollStep={288}
     />
   )

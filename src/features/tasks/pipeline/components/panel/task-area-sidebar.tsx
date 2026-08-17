@@ -4,8 +4,8 @@ import { useTaskAreaPanel } from "../../hooks/use-task-area-panel"
 import { TaskAreaPanelBody } from "./task-area-panel-body"
 
 /**
- * Columna lateral fija de "Mis tareas" / convocatoria para desktop bitácora.
- * Misma data que el sheet móvil; distinto shell (columna vs sheet).
+ * Columna lateral desktop de "Mis tareas".
+ * Áreas en columnas horizontales (no apiladas) → franjas más cortas.
  */
 export function TaskAreaSidebar({ className }: { className?: string }) {
   const panel = useTaskAreaPanel()
@@ -17,10 +17,14 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
     <aside
       className={
         className ??
-        "flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-card"
+        "flex h-full min-h-0 w-[min(42vw,28rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card"
       }
     >
-      <TaskAreaPanelBody panel={panel} title="Mis tareas" />
+      <TaskAreaPanelBody
+        panel={panel}
+        title="Mis tareas"
+        orientation="horizontal"
+      />
     </aside>
   )
 }
