@@ -42,15 +42,12 @@ export function TaskAreaPanelBody({
       ? state.supervisorAreas.includes(code as never)
       : true
 
+  /** Una sola área a la vez. Clic de nuevo → todas (vacío = ALL). */
   function toggleArea(code: (typeof state.allAreas)[number]) {
-    const current =
-      state.supervisorAreas.length > 0
-        ? state.supervisorAreas
-        : state.allAreas
-    const selected = current.includes(code)
-    actions.setSupervisorAreas(
-      selected ? current.filter(c => c !== code) : [...current, code],
-    )
+    const onlyThis =
+      state.supervisorAreas.length === 1 &&
+      state.supervisorAreas[0] === code
+    actions.setSupervisorAreas(onlyThis ? [] : [code])
   }
 
   return (
@@ -78,7 +75,7 @@ export function TaskAreaPanelBody({
 
           {state.canChooseAreas && (
             <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap justify-center gap-1.5">
                 {state.allAreas.map(code => {
                   const definition = PROCESS_DEFINITIONS[code]
                   const Icon = ENTITY_ICONS[definition.icon]
@@ -134,7 +131,7 @@ export function TaskAreaPanelBody({
               {state.areas.map(code => (
                 <div
                   key={code}
-                  className="flex h-full min-h-0 w-64 shrink-0 flex-col items-stretch justify-start overflow-y-auto overscroll-contain themed-scrollbar-y"
+                  className="flex h-full min-h-0 w-64 shrink-0 flex-col items-stretch justify-start hide-scrollbar overflow-y-auto overscroll-contain"
                 >
                   <AreaTaskSection code={code} panel={panel} column />
                 </div>
@@ -146,7 +143,7 @@ export function TaskAreaPanelBody({
         <div
           data-task-area-scroll
           className={cn(
-            "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-3",
+            "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden hide-scrollbar overflow-y-auto overscroll-contain p-3",
             false,
           )}
         >

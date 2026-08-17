@@ -1,0 +1,129 @@
+diff --git a/src/features/projects/components/expanded-row/project-task-row.tsx b/src/features/projects/components/expanded-row/project-task-row.tsx
+--- a/src/features/projects/components/expanded-row/project-task-row.tsx
++++ b/src/features/projects/components/expanded-row/project-task-row.tsx
+@@ -258,9 +258,9 @@
+   // En mobile sigue exigiendo estar expandida primero (comportamiento
+   // sin cambios). En desktop no hay ese paso de "expandir" — el
+   // long-press queda siempre habilitado directo sobre KanbanCardView.
+-  // Desktop: click navega; long-press solo en mobile (expandido).
+-  // Long-press en desktop bloqueaba el click (overlayOpen / handlers).
+-  const longPressEnabled = isMobile && expanded
++  // Mobile: long-press solo con card expandida.
++  // Desktop: long-press abre overlay de acciones; la ruta va por botón dedicado.
++  const longPressEnabled = isMobile ? expanded : true
+ 
+   const {
+     bind,
+@@ -299,12 +299,12 @@
+       (
+         event: React.MouseEvent,
+       ) => {
+-        // Controles explícitos marcan data-no-navigate (footer, chevron, etc.)
+         const target = event.target as HTMLElement | null
+         if (target?.closest("[data-no-navigate]")) {
+           return
+         }
+ 
++        // Mobile: tap expande; la ruta es el botón chevron.
+         if (isMobile) {
+           if (!overlayOpen) {
+             toggleExpanded()
+@@ -312,15 +312,10 @@
+           return
+         }
+ 
+-        // Desktop: click corto → navegar a la tarea.
+-        // Long-press abre overlay; si ya está abierto, no empujar ruta encima.
+-        if (overlayOpen) {
+-          return
+-        }
+-
+-        handleNavigate(event)
++        // Desktop: el click de la card no navega (convive con long-press).
++        // La ruta es el botón chevron (mismo control que mobile).
+       },
+-      [isMobile, overlayOpen, handleNavigate, toggleExpanded],
++      [isMobile, overlayOpen, toggleExpanded],
+     )
+ 
+   // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
+@@ -499,9 +494,10 @@
+         />
+       )}
+ 
+-      {!overlayOpen && isMobile && (
++      {!overlayOpen && (
+         <button
+           type="button"
++          data-no-navigate
+           onClick={handleNavigate}
+           aria-label="Abrir tarea"
+           className={cn(
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -56,8 +56,11 @@
+         reserveActionsSpace ? "pr-12" : "pr-3",
+       )}
+     >
+-      <span className="shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
+-        {String(task.taskNumber).padStart(3, "0")}
++      <span
++        title={task.project.projectCode}
++        className="shrink-0 max-w-[4.5rem] truncate text-[11px] font-bold tabular-nums text-muted-foreground"
++      >
++        {task.project.projectCode}
+       </span>
+ 
+       <span
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+--- a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+@@ -42,15 +42,12 @@
+       ? state.supervisorAreas.includes(code as never)
+       : true
+ 
++  /** Una sola área a la vez. Clic de nuevo → todas (vacío = ALL). */
+   function toggleArea(code: (typeof state.allAreas)[number]) {
+-    const current =
+-      state.supervisorAreas.length > 0
+-        ? state.supervisorAreas
+-        : state.allAreas
+-    const selected = current.includes(code)
+-    actions.setSupervisorAreas(
+-      selected ? current.filter(c => c !== code) : [...current, code],
+-    )
++    const onlyThis =
++      state.supervisorAreas.length === 1 &&
++      state.supervisorAreas[0] === code
++    actions.setSupervisorAreas(onlyThis ? [] : [code])
+   }
+ 
+   return (
+@@ -78,7 +75,7 @@
+ 
+           {state.canChooseAreas && (
+             <div className="mt-2.5 rounded-xl bg-foreground/5 p-2">
+-              <div className="flex flex-wrap gap-1.5">
++              <div className="flex flex-wrap justify-center gap-1.5">
+                 {state.allAreas.map(code => {
+                   const definition = PROCESS_DEFINITIONS[code]
+                   const Icon = ENTITY_ICONS[definition.icon]
+@@ -134,7 +131,7 @@
+               {state.areas.map(code => (
+                 <div
+                   key={code}
+-                  className="flex h-full min-h-0 w-64 shrink-0 flex-col items-stretch justify-start overflow-y-auto overscroll-contain themed-scrollbar-y"
++                  className="flex h-full min-h-0 w-64 shrink-0 flex-col items-stretch justify-start hide-scrollbar overflow-y-auto overscroll-contain"
+                 >
+                   <AreaTaskSection code={code} panel={panel} column />
+                 </div>
+@@ -146,7 +143,7 @@
+         <div
+           data-task-area-scroll
+           className={cn(
+-            "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain themed-scrollbar-y p-3",
++            "min-h-0 min-w-0 w-full flex-1 overflow-x-hidden hide-scrollbar overflow-y-auto overscroll-contain p-3",
+             false,
+           )}
+         >

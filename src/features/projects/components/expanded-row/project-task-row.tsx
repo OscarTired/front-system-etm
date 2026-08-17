@@ -258,9 +258,9 @@ export function ProjectTaskRow({
   // En mobile sigue exigiendo estar expandida primero (comportamiento
   // sin cambios). En desktop no hay ese paso de "expandir" — el
   // long-press queda siempre habilitado directo sobre KanbanCardView.
-  // Desktop: click navega; long-press solo en mobile (expandido).
-  // Long-press en desktop bloqueaba el click (overlayOpen / handlers).
-  const longPressEnabled = isMobile && expanded
+  // Mobile: long-press solo con card expandida.
+  // Desktop: long-press abre overlay de acciones; la ruta va por botón dedicado.
+  const longPressEnabled = isMobile ? expanded : true
 
   const {
     bind,
@@ -299,12 +299,12 @@ export function ProjectTaskRow({
       (
         event: React.MouseEvent,
       ) => {
-        // Controles explícitos marcan data-no-navigate (footer, chevron, etc.)
         const target = event.target as HTMLElement | null
         if (target?.closest("[data-no-navigate]")) {
           return
         }
 
+        // Mobile: tap expande; la ruta es el botón chevron.
         if (isMobile) {
           if (!overlayOpen) {
             toggleExpanded()
@@ -312,15 +312,10 @@ export function ProjectTaskRow({
           return
         }
 
-        // Desktop: click corto → navegar a la tarea.
-        // Long-press abre overlay; si ya está abierto, no empujar ruta encima.
-        if (overlayOpen) {
-          return
-        }
-
-        handleNavigate(event)
+        // Desktop: el click de la card no navega (convive con long-press).
+        // La ruta es el botón chevron (mismo control que mobile).
       },
-      [isMobile, overlayOpen, handleNavigate, toggleExpanded],
+      [isMobile, overlayOpen, toggleExpanded],
     )
 
   // Mismo criterio que ya usa TaskPipelineCard en el Kanban de
@@ -499,9 +494,10 @@ export function ProjectTaskRow({
         />
       )}
 
-      {!overlayOpen && isMobile && (
+      {!overlayOpen && (
         <button
           type="button"
+          data-no-navigate
           onClick={handleNavigate}
           aria-label="Abrir tarea"
           className={cn(

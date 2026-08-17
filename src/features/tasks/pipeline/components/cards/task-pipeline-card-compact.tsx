@@ -56,8 +56,11 @@ export function TaskPipelineCardCompact({
         reserveActionsSpace ? "pr-12" : "pr-3",
       )}
     >
-      <span className="shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
-        {String(task.taskNumber).padStart(3, "0")}
+      <span
+        title={task.project.projectCode}
+        className="shrink-0 max-w-[4.5rem] truncate text-[11px] font-bold tabular-nums text-muted-foreground"
+      >
+        {task.project.projectCode}
       </span>
 
       <span
