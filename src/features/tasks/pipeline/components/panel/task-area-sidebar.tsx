@@ -103,7 +103,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
       }
     >
       <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-border/60 px-3 pb-2.5 pt-1">
+        <div className="shrink-0 px-3 pb-2.5 pt-1">
           <div className="flex items-center justify-between gap-2">
             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
               Mis tareas
@@ -199,7 +199,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
                     state.summonTarget?.processCode === row.processCode
 
                   return (
-                    <div className="flex items-center justify-between gap-2 border-b border-border/50 px-2 pb-2 pt-3">
+                    <div className="flex items-center justify-between gap-2 px-2 pb-2 pt-3">
                       <div className="flex min-w-0 items-center gap-2">
                         <span
                           className="flex size-6 shrink-0 items-center justify-center rounded-md"

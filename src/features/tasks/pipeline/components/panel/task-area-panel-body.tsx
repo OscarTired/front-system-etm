@@ -66,7 +66,7 @@ export function TaskAreaPanelBody({
       )}
     >
       {showHeader && (
-        <div className="shrink-0 border-b border-border/60 px-3 pb-2.5 pt-1">
+        <div className="shrink-0 px-3 pb-2.5 pt-1">
           <div className="flex items-center justify-between gap-2">
             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
               {title}
