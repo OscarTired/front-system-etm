@@ -16,13 +16,15 @@ type Props = {
   // entra o no, se mueve todo el tiempo, ese es el efecto que se
   // pidió acá.
   always?: boolean
+  /** Segundos de espera antes de arrancar el movimiento (default 0). */
+  delay?: number
 }
 
 // Loop continuo real (contenido duplicado + translateX a -50%), no
 // un "va y viene" con pausa en los extremos — así el texto
 // desaparece por la izquierda y reaparece por la derecha sin salto
 // ni corte, igual que un cartel LED de tienda de verdad.
-export function MarqueeText({ children, className, speed = 35, always = false }: Props) {
+export function MarqueeText({ children, className, speed = 35, always = false, delay = 0 }: Props) {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const singleCopyRef = useRef<HTMLDivElement>(null)
@@ -70,6 +72,7 @@ export function MarqueeText({ children, className, speed = 35, always = false }:
             ? ({
                 "--marquee-width": `${copyWidth}px`,
                 animationDuration: `${duration}s`,
+                animationDelay: delay > 0 ? `${delay}s` : undefined,
               } as CSSProperties)
             : undefined
         }

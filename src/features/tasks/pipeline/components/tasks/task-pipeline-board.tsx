@@ -281,7 +281,7 @@ export function TaskPipelineBoard({
             onClickCapture={handleClickCapture}
             className="hide-scrollbar overflow-x-auto overflow-y-hidden cursor-grab active:cursor-grabbing select-none"
           >
-            <div className="flex w-max shrink-0 gap-4">
+            <div className="flex min-w-full w-max gap-4">
               {PIPELINE_PROCESS_ORDER.map(code => (
                 <TaskProcessColumn
                   key={code}
@@ -310,7 +310,7 @@ export function TaskPipelineBoard({
             ref={contentScrollRef}
             className="hide-scrollbar h-full overflow-x-auto overflow-y-auto"
           >
-            <div className="flex h-fit w-max gap-4 pb-4">
+            <div className="flex h-fit min-w-full w-max gap-4 pb-4">
               {PIPELINE_PROCESS_ORDER.map(code => (
                 <TaskProcessColumn
                   key={code}

@@ -22,6 +22,7 @@ import {
 import {
   cn,
 } from "@/shared/utils/utils"
+import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
 
 type Props = {
   label: string
@@ -124,12 +125,14 @@ export function SelectOption({
             />
 
             {cleanDescription && (
-              <p
-                className="truncate whitespace-nowrap text-[11px] font-medium"
-                style={{ color: descriptionColor ?? "var(--muted-foreground)" }}
-              >
-                {cleanDescription}
-              </p>
+              <MarqueeText className="min-w-0" speed={28} delay={1.5}>
+                <span
+                  className="text-[11px] font-medium whitespace-nowrap"
+                  style={{ color: descriptionColor ?? "var(--muted-foreground)" }}
+                >
+                  {cleanDescription}
+                </span>
+              </MarqueeText>
             )}
           </div>
         </div>

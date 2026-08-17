@@ -65,6 +65,8 @@ export function EngineeringPageContent() {
   const [defaultAssigneeId, setDefaultAssigneeId] = useState<
     string | undefined
   >()
+  const [lockProcess, setLockProcess] = useState(false)
+  const [lockAssignee, setLockAssignee] = useState(false)
 
   const filters = useMemo(
     () => (projectId ? { projectId } : {}),
@@ -86,6 +88,8 @@ export function EngineeringPageContent() {
     setEditingTask(null)
     setDefaultProcess(opts?.processCode)
     setDefaultAssigneeId(opts?.assigneeId)
+    setLockProcess(!!opts?.processCode)
+    setLockAssignee(!!opts?.assigneeId)
     setDialogOpen(true)
   }
 
@@ -93,6 +97,8 @@ export function EngineeringPageContent() {
     setEditingTask(task)
     setDefaultProcess(undefined)
     setDefaultAssigneeId(undefined)
+    setLockProcess(false)
+    setLockAssignee(false)
     setDialogOpen(true)
   }
 
@@ -186,6 +192,8 @@ export function EngineeringPageContent() {
         defaultProcessCode={defaultProcess}
         defaultProjectId={projectId || undefined}
         defaultAssigneeId={defaultAssigneeId}
+        lockProcess={lockProcess}
+        lockAssignee={lockAssignee}
       />
     </div>
   )

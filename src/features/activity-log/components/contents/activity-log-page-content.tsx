@@ -15,6 +15,7 @@ import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
+import { TaskAreaSidebar } from "@/features/tasks/pipeline/components/panel/task-area-sidebar"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
 
@@ -246,7 +247,7 @@ export function ActivityLogPageContent({
       )}
     >
       {isCompact ? (
-        /* Móvil: una franja — vista + hoy + fecha + contador numérico */
+        /* Móvil: una franja — vista + hoy + fecha + contador + Mis tareas */
         <div className="flex items-center gap-1.5">
           <div className="min-w-0 shrink">
             <BitacoraViewToggle compact />
@@ -284,6 +285,8 @@ export function ActivityLogPageContent({
           >
             {entryCount}
           </div>
+
+          {departmentQuery === "PRODUCCION" && <TaskAreaPanelTrigger />}
         </div>
       ) : (
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -331,6 +334,84 @@ export function ActivityLogPageContent({
   )
 
   const fillHeight = isAgenda || isMonth
+  // Desktop bitácora PRODUCCIÓN: convocatoria en columna fija al lado
+  // de franjas (sin sheet). Mobile sigue con sheet vía trigger.
+  const showDesktopAreaSidebar =
+    !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
+
+  const mainContent = (
+    <>
+      {isAgenda && (
+        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+          <AgendaWeekView
+            anchorDate={date}
+            logs={rangeLogs}
+            loading={rangeLoading}
+            onSelectDay={handleSelectDay}
+            onLogClick={handleAgendaLogClick}
+          />
+        </div>
+      )}
+
+      {isMonth && (
+        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+          <AgendaMonthView
+            anchorDate={date}
+            logs={rangeLogs}
+            loading={rangeLoading}
+            onSelectDay={handleSelectDay}
+          />
+        </div>
+      )}
+
+      {viewMode === "day" && (
+        <div className="flex w-full flex-col gap-3 pb-4 max-md:mt-2">
+          {!loading &&
+            departmentQuery === "PRODUCCION" &&
+            department !== "REGISTROS" && (
+              <AutoActivitySection
+                logs={logs.filter(log => log.source === "AUTO")}
+              />
+            )}
+
+          {SHIFT_GROUPS.map(group => {
+            const logsBySlot: Record<string, typeof logs> = {}
+
+            if (!loading) {
+              for (const slot of group.slots) {
+                logsBySlot[slot.shift] = logs.filter(
+                  log => log.shift === slot.shift,
+                )
+              }
+            }
+
+            return (
+              <ShiftGroupSection
+                key={group.key}
+                group={group}
+                logsBySlot={logsBySlot}
+                loading={loading}
+                onLogClick={handleOpenPicker}
+                onDeleteLog={handleDeleteLog}
+                beginDrag={beginDrag}
+                registerSlot={registerSlot}
+                draggingLogId={draggingLogId}
+                hoverShift={hoverShift}
+                deletingLogId={pendingDelete?.id ?? null}
+                canCreate={canCreate}
+                canDelete={canDelete}
+                slotState={getState}
+                isLogBusy={isLogBusy}
+                canDuplicateLog={canDuplicateLog}
+                onEditLog={handleEditLog}
+                onDuplicateLog={handleDuplicateLog}
+              />
+            )
+          })}
+        </div>
+      )}
+    </>
+  )
 
   const body = (
     <div
@@ -340,77 +421,28 @@ export function ActivityLogPageContent({
           : "flex w-full flex-col"
       }
     >
-        <div className="mb-1 shrink-0">{toolbar}</div>
+      <div className="mb-1 shrink-0">{toolbar}</div>
 
-        {isAgenda && (
-          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
-            <AgendaWeekView
-              anchorDate={date}
-              logs={rangeLogs}
-              loading={rangeLoading}
-              onSelectDay={handleSelectDay}
-              onLogClick={handleAgendaLogClick}
-            />
+      {showDesktopAreaSidebar ? (
+        <div
+          className={cn(
+            "flex min-h-0 w-full gap-3",
+            fillHeight ? "flex-1" : "",
+          )}
+        >
+          <div
+            className={cn(
+              "min-w-0 flex-1",
+              fillHeight ? "flex min-h-0 flex-col" : "flex flex-col",
+            )}
+          >
+            {mainContent}
           </div>
-        )}
-
-        {isMonth && (
-          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
-            <AgendaMonthView
-              anchorDate={date}
-              logs={rangeLogs}
-              loading={rangeLoading}
-              onSelectDay={handleSelectDay}
-            />
-          </div>
-        )}
-
-        {viewMode === "day" && (
-          <div className="flex w-full flex-col gap-3 pb-4 max-md:mt-2">
-            {!loading &&
-              departmentQuery === "PRODUCCION" &&
-              department !== "REGISTROS" && (
-                <AutoActivitySection
-                  logs={logs.filter(log => log.source === "AUTO")}
-                />
-              )}
-
-            {SHIFT_GROUPS.map(group => {
-              const logsBySlot: Record<string, typeof logs> = {}
-
-              if (!loading) {
-                for (const slot of group.slots) {
-                  logsBySlot[slot.shift] = logs.filter(
-                    log => log.shift === slot.shift,
-                  )
-                }
-              }
-
-              return (
-                <ShiftGroupSection
-                  key={group.key}
-                  group={group}
-                  logsBySlot={logsBySlot}
-                  loading={loading}
-                  onLogClick={handleOpenPicker}
-                  onDeleteLog={handleDeleteLog}
-                  beginDrag={beginDrag}
-                  registerSlot={registerSlot}
-                  draggingLogId={draggingLogId}
-                  hoverShift={hoverShift}
-                  deletingLogId={pendingDelete?.id ?? null}
-                  canCreate={canCreate}
-                  canDelete={canDelete}
-                  slotState={getState}
-                  isLogBusy={isLogBusy}
-                  canDuplicateLog={canDuplicateLog}
-                  onEditLog={handleEditLog}
-                  onDuplicateLog={handleDuplicateLog}
-                />
-              )
-            })}
-          </div>
-        )}
+          <TaskAreaSidebar className="hidden h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
+        </div>
+      ) : (
+        mainContent
+      )}
     </div>
   )
 

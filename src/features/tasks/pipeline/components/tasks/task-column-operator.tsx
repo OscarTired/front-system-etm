@@ -105,6 +105,7 @@ function OperatorRow({
 
   const StatusIcon =
     isWorking ? Zap : Clock
+  // Labels solo en title/aria; UI muestra solo icono (legibilidad + menos ruido).
 
   return (
 
@@ -149,7 +150,7 @@ function OperatorRow({
 
         )}
 
-        <MarqueeText className="min-w-0 flex-1" always>
+        <MarqueeText className="min-w-0 flex-1" always delay={2.5}>
 
           <span
             className="text-xs font-semibold whitespace-nowrap"
@@ -169,21 +170,17 @@ function OperatorRow({
 
       </div>
 
-      {/* Badge de estado */}
+      {/* Badge de estado — solo icono (texto en title) */}
       <div
-        className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1"
+        title={statusLabel}
+        aria-label={statusLabel}
+        className="flex size-7 shrink-0 items-center justify-center rounded-lg"
         style={{
           backgroundColor: `${statusColor}14`,
           color: statusColor,
         }}
       >
-
-        <StatusIcon size={11} className="shrink-0" />
-
-        <span className="text-[10px] font-bold uppercase tracking-wide">
-          {statusLabel}
-        </span>
-
+        <StatusIcon size={12} className="shrink-0" />
       </div>
 
     </div>

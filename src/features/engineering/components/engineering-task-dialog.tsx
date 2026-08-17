@@ -13,6 +13,8 @@ import { UserSelect } from "@/features/users/components/user-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { cn } from "@/shared/utils/utils"
 
 import {
@@ -45,9 +47,13 @@ type Props = {
   defaultProcessCode?: EngineeringProcessCode
   defaultProjectId?: string
   defaultAssigneeId?: string
+  /** Cuando true, el proceso viene del contexto (columna) y no se muestra el grid. */
+  lockProcess?: boolean
+  /** Cuando true, el asignado viene del contexto (fila de usuario) y no se muestra UserSelect editable. */
+  lockAssignee?: boolean
 }
 
-/** Shell/UX alineado a ActivityPickerDialog. */
+/** Shell/UX alineado a ActivityPickerDialog. Chips reutilizan EntityChip (mismo contrato que KanbanCard). */
 export function EngineeringTaskDialog({
   open,
   onClose,
@@ -55,6 +61,8 @@ export function EngineeringTaskDialog({
   defaultProcessCode,
   defaultProjectId,
   defaultAssigneeId,
+  lockProcess = false,
+  lockAssignee = false,
 }: Props) {
   const isEdit = !!task
   const { users } = useUsersDirectory()
@@ -99,6 +107,7 @@ export function EngineeringTaskDialog({
   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
 
   const assignee = assignableUsers.find(u => u.id === assigneeId)
+  const processDef = ENGINEERING_PROCESS_DEFINITIONS[processCode]
 
   const canSave =
     title.trim().length > 0 &&
@@ -142,6 +151,9 @@ export function EngineeringTaskDialog({
     onClose()
   }
 
+  const showProcessGrid = !lockProcess && !isEdit
+  const showAssigneeSelect = !lockAssignee
+
   return (
     <FormDialog
       open={open}
@@ -174,51 +186,68 @@ export function EngineeringTaskDialog({
           </FormField>
         </div>
 
+        {/* Proceso: grid solo en flujo general; si lock o edición → chip de solo lectura */}
         <div className="flex flex-col gap-2">
           <div className="mb-0.5 flex items-center justify-between px-0.5">
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Proceso
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {ENGINEERING_PROCESS_ORDER.map((code, index) => {
-              const def = ENGINEERING_PROCESS_DEFINITIONS[code]
-              const Icon = ENTITY_ICONS[def.icon]
-              const isSelected = processCode === code
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => setProcessCode(code)}
-                  style={{
-                    animationDelay: `${Math.min(index, 8) * 25}ms`,
-                  }}
-                  className={cn(
-                    "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
-                    isSelected
-                      ? "bg-foreground/12"
-                      : "bg-foreground/5 hover:bg-foreground/10",
-                  )}
-                >
-                  <span
-                    className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
+
+          {showProcessGrid ? (
+            <div className="grid grid-cols-3 gap-2">
+              {ENGINEERING_PROCESS_ORDER.map((code, index) => {
+                const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+                const Icon = ENTITY_ICONS[def.icon]
+                const isSelected = processCode === code
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => setProcessCode(code)}
                     style={{
-                      backgroundColor: `${def.color}22`,
-                      color: def.color,
+                      animationDelay: `${Math.min(index, 8) * 25}ms`,
                     }}
+                    className={cn(
+                      "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+                      isSelected
+                        ? "bg-foreground/12"
+                        : "bg-foreground/5 hover:bg-foreground/10",
+                    )}
                   >
-                    {Icon ? <Icon size={15} /> : def.short}
-                  </span>
-                  <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
-                    {def.short}
-                  </span>
-                  <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
-                    {def.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                    <span
+                      className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
+                      style={{
+                        backgroundColor: `${def.color}22`,
+                        color: def.color,
+                      }}
+                    >
+                      {Icon ? <Icon size={15} /> : def.short}
+                    </span>
+                    <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
+                      {def.short}
+                    </span>
+                    <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+                      {def.label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-0.5">
+              <EntityChip
+                label={processDef.label}
+                color={processDef.color}
+                icon={processDef.icon}
+              />
+              {lockProcess && (
+                <span className="text-[11px] text-muted-foreground">
+                  Fijado por contexto
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {isEdit && (
@@ -226,7 +255,7 @@ export function EngineeringTaskDialog({
             <span className="px-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               Estado
             </span>
-            <div className="grid grid-cols-2 gap-2 tablet:grid-cols-4">
+            <div className="flex flex-wrap gap-2">
               {STATUS_OPTIONS.map(opt => {
                 const isSelected = status === opt.value
                 return (
@@ -235,21 +264,15 @@ export function EngineeringTaskDialog({
                     type="button"
                     onClick={() => setStatus(opt.value)}
                     className={cn(
-                      "rounded-xl px-3 py-2.5 text-center text-xs font-semibold transition-colors",
-                      isSelected
-                        ? "ring-1 ring-foreground/20"
-                        : "bg-foreground/5 hover:bg-foreground/10",
+                      "transition-opacity",
+                      isSelected ? "opacity-100" : "opacity-20 hover:opacity-90",
                     )}
-                    style={
-                      isSelected
-                        ? {
-                            backgroundColor: `${opt.color}22`,
-                            color: opt.color,
-                          }
-                        : undefined
-                    }
                   >
-                    {opt.label}
+                    <EntityChip
+                      label={opt.label}
+                      color={opt.color}
+                      className={isSelected ? "ring-none" : undefined}
+                    />
                   </button>
                 )
               })}
@@ -258,16 +281,38 @@ export function EngineeringTaskDialog({
         )}
 
         <FormField label="Asignar a">
-          <UserSelect
-            items={assignableUsers}
-            value={assignee}
-            placeholder="Sin asignar"
-            onChange={u => setAssigneeId(u?.id)}
-          />
-          {assignableUsers.length === 0 && (
-            <p className="text-[11px] text-muted-foreground">
-              No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
-            </p>
+          {showAssigneeSelect ? (
+            <>
+              <UserSelect
+                items={assignableUsers}
+                value={assignee}
+                placeholder="Sin asignar"
+                onChange={u => setAssigneeId(u?.id)}
+              />
+              {assignableUsers.length === 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-2 px-0.5">
+              {assignee ? (
+                <DynamicBadge
+                  label={assignee.name}
+                  color={assignee.color}
+                  icon={assignee.icon}
+                  width="field"
+                />
+              ) : (
+                <span className="text-sm text-muted-foreground">Sin asignar</span>
+              )}
+              {lockAssignee && (
+                <span className="text-[11px] text-muted-foreground">
+                  Fijado por contexto
+                </span>
+              )}
+            </div>
           )}
         </FormField>
 

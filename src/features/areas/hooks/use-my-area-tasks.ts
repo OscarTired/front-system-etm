@@ -29,29 +29,31 @@ export function useMyAreaTasks() {
   const isOperarioWithArea =
     user?.level === "OPERARIO" && operarioAreaCodes.length > 0
 
-  // Cero hardcode: Validamos de forma limpia y escalable mediante permisos 
-  // del sistema (ej: gestión total de roles o administración global)
+  // Admin / permiso global: ve todas las áreas de frente, sin botón
+  // "mostrar / expandir áreas". Supervisor puro sí elige subset.
   const hasGlobalManagementPermission = has(PermissionCode.ROLE_MANAGE)
+  const isAdmin = hasGlobalManagementPermission
+  const isSupervisor = user?.level === "SUPERVISOR" && !isAdmin
 
-  const canChooseFreely = user?.level === "SUPERVISOR" || hasGlobalManagementPermission
+  const canChooseFreely = isSupervisor || isAdmin
 
+  // Admin → siempre todas. Supervisor → las que eligió en store.
+  // Operario → solo las suyas.
   const areas: ProcessCode[] =
     isOperarioWithArea
       ? operarioAreaCodes
-      : canChooseFreely
-        ? supervisorAreas
-        : []
+      : isAdmin
+        ? ALL_PROCESS_CODES
+        : isSupervisor
+          ? supervisorAreas
+          : []
 
   return {
     areas,
-    canChooseAreas: canChooseFreely,
-    // Admin ve TODO (incluida la pantalla de Asignación dedicada),
-    // pero a diferencia de un Supervisor "puro" no tiene por qué
-    // perder el acceso rápido a "Mis tareas" — un Supervisor sí
-    // usa la pantalla de Asignación en vez de este trigger (ver
-    // TaskAreaPanelTrigger), pero para Admin ambos caminos tienen
-    // sentido a la vez.
-    isAdmin: hasGlobalManagementPermission,
+    // Solo supervisor necesita el toggle de elegir áreas.
+    // Admin las ve todas de frente (desktop + móvil).
+    canChooseAreas: isSupervisor,
+    isAdmin,
     supervisorAreas,
     setSupervisorAreas,
     allAreas: ALL_PROCESS_CODES,

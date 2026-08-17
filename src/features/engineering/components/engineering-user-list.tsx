@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Plus } from "lucide-react"
+import { ChevronDown, Plus, Zap } from "lucide-react"
 
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import type { EntityIcon } from "@/shared/constants/entity-icons"
@@ -178,8 +178,12 @@ export function EngineeringUserList({
                               {user.name}
                             </span>
                             {inProgress && (
-                              <span className="shrink-0 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                                Trabajando
+                              <span
+                                title="Trabajando"
+                                aria-label="Trabajando"
+                                className="flex size-5 shrink-0 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                              >
+                                <Zap size={10} />
                               </span>
                             )}
                           </div>
@@ -237,7 +241,7 @@ export function EngineeringUserList({
                                 )}
                                 <EngineeringTaskRow
                                   task={task}
-                                  onClick={() => onEditTask?.(task)}
+                                  onEdit={onEditTask}
                                 />
                               </div>
                             )

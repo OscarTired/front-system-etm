@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Zap } from "lucide-react"
 
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { getBadgeColors } from "@/shared/utils/badge-colors"
@@ -62,8 +62,12 @@ function ActiveAssignees({ tasks }: { tasks: EngineeringTask[] }) {
             icon={t.assignee!.icon}
             width="field"
           />
-          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-            Trabajando
+          <span
+            title="Trabajando"
+            aria-label="Trabajando"
+            className="flex size-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+          >
+            <Zap size={11} />
           </span>
         </div>
       ))}
@@ -169,7 +173,7 @@ export function EngineeringProcessBoard({
                     <EngineeringTaskRow
                       key={task.id}
                       task={task}
-                      onClick={() => onEditTask?.(task)}
+                      onEdit={onEditTask}
                     />
                   ))
                 )}

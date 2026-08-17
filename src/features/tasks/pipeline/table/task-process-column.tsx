@@ -51,7 +51,11 @@ function ColumnHeader({
   const badge = useBadgeColors(definition.color, "subtle")
 
   return (
-    <div className={cn("shrink-0", fullWidth ? "w-full" : "w-72")}>
+    <div
+      className={cn(
+        fullWidth ? "w-full shrink-0" : "min-w-72 w-72 shrink-0 flex-1 basis-72",
+      )}
+    >
       <header
         className="flex items-center gap-2 border-b px-3 py-3"
         style={{ borderColor: definition.color }}
@@ -124,8 +128,10 @@ function ColumnContent({
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col",
-        isMobile || fullWidth ? "w-full" : "h-fit w-72",
+        "flex flex-col",
+        isMobile || fullWidth
+          ? "w-full shrink-0"
+          : "h-fit min-w-72 w-72 shrink-0 flex-1 basis-72",
       )}
     >
       <div className="hide-scrollbar overflow-x-hidden px-2 py-2">
@@ -360,8 +366,10 @@ export function TaskProcessColumn({
   return (
     <section
       className={cn(
-        "flex h-full min-h-0 shrink-0 flex-col overflow-hidden",
-        fullWidth ? "w-full" : "w-72"
+        "flex h-full min-h-0 flex-col overflow-hidden",
+        fullWidth
+          ? "w-full shrink-0"
+          : "min-w-72 w-72 shrink-0 flex-1 basis-72",
       )}
     >
       <ColumnHeader processCode={processCode} tasks={tasks} fullWidth={fullWidth} />
