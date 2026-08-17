@@ -1,0 +1,208 @@
+diff --git a/src/features/engineering/components/engineering-page-content.tsx b/src/features/engineering/components/engineering-page-content.tsx
+index 91b28d91f65d42aecb49b25f16dcd3c604e9de7b..0000000000000000000000000000000000000000 100644
+--- a/src/features/engineering/components/engineering-page-content.tsx
++++ b/src/features/engineering/components/engineering-page-content.tsx
+@@ -36,6 +36,8 @@ export function EngineeringPageContent() {
+   const [defaultAssigneeId, setDefaultAssigneeId] = useState<
+     string | undefined
+   >()
++  const [lockProcess, setLockProcess] = useState(false)
++  const [lockAssignee, setLockAssignee] = useState(false)
+
+   const filters = useMemo(
+     () => (projectId ? { projectId } : {}),
+@@ -56,8 +58,12 @@ export function EngineeringPageContent() {
+   }) {
+     setEditingTask(null)
+     setDefaultProcess(opts?.processCode)
+     setDefaultAssigneeId(opts?.assigneeId)
++    setLockProcess(!!opts?.processCode)
++    setLockAssignee(!!opts?.assigneeId)
+     setDialogOpen(true)
+   }
+
+   function openEdit(task: EngineeringTask) {
+     setEditingTask(task)
+     setDefaultProcess(undefined)
+     setDefaultAssigneeId(undefined)
++    setLockProcess(false)
++    setLockAssignee(false)
+     setDialogOpen(true)
+   }
+@@ -132,6 +138,8 @@ export function EngineeringPageContent() {
+         task={editingTask}
+         defaultProcessCode={defaultProcess}
+         defaultProjectId={projectId || undefined}
+         defaultAssigneeId={defaultAssigneeId}
++        lockProcess={lockProcess}
++        lockAssignee={lockAssignee}
+       />
+     </div>
+   )
+diff --git a/src/features/engineering/components/engineering-task-dialog.tsx b/src/features/engineering/components/engineering-task-dialog.tsx
+index f2530efd98b32750ff803f2ef9cf763771f9af7c..0000000000000000000000000000000000000000 100644
+--- a/src/features/engineering/components/engineering-task-dialog.tsx
++++ b/src/features/engineering/components/engineering-task-dialog.tsx
+@@ -36,6 +36,8 @@ type Props = {
+   defaultProcessCode?: EngineeringProcessCode
+   defaultProjectId?: string
+   defaultAssigneeId?: string
++  lockProcess?: boolean
++  lockAssignee?: boolean
+ }
+
+ export function EngineeringTaskDialog({
+@@ -46,6 +48,8 @@ export function EngineeringTaskDialog({
+   defaultProcessCode,
+   defaultProjectId,
+   defaultAssigneeId,
++  lockProcess = false,
++  lockAssignee = false,
+ }: Props) {
+   const isEdit = !!task
+   const { users } = useUsersDirectory()
+@@ -88,6 +92,12 @@ export function EngineeringTaskDialog({
+   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
+
+   const assignee = assignableUsers.find(u => u.id === assigneeId)
++  const processLocked = !isEdit && lockProcess && !!defaultProcessCode
++  const assigneeLocked = !isEdit && lockAssignee && !!defaultAssigneeId
++  const lockedProcessDef = processLocked
++    ? ENGINEERING_PROCESS_DEFINITIONS[defaultProcessCode!]
++    : null
++  const lockedAssigneeUser = assigneeLocked
++    ? assignableUsers.find(u => u.id === defaultAssigneeId)
++    : null
+
+   const canSave =
+     title.trim().length > 0 &&
+@@ -150,37 +156,48 @@ export function EngineeringTaskDialog({
+             </span>
+           </div>
+-          <div className="grid grid-cols-3 gap-2">
+-            {ENGINEERING_PROCESS_ORDER.map((code, index) => {
+-              const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+-              const Icon = ENTITY_ICONS[def.icon]
+-              const isSelected = processCode === code
+-              return (
+-                <button
+-                  key={code}
+-                  type="button"
+-                  onClick={() => setProcessCode(code)}
+-                  style={{
+-                    animationDelay: `${Math.min(index, 8) * 25}ms`,
+-                  }}
+-                  className={cn(
+-                    "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
+-                    isSelected
+-                      ? "bg-foreground/12"
+-                      : "bg-foreground/5 hover:bg-foreground/10",
+-                  )}
+-                >
+-                  <span
+-                    className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
+-                    style={{
+-                      backgroundColor: `${def.color}22`,
+-                      color: def.color,
+-                    }}
+-                  >
+-                    {Icon ? <Icon size={15} /> : def.short}
+-                  </span>
+-                  <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
+-                    {def.short}
+-                  </span>
+-                  <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+-                    {def.label}
+-                  </span>
+-                </button>
+-              )
+-            })}
+-          </div>
++          {processLocked && lockedProcessDef ? (
++            <div className="flex h-10 items-center rounded-xl bg-foreground/5 px-3">
++              <span
++                className="mr-2 text-xs font-bold"
++                style={{ color: lockedProcessDef.color }}
++              >
++                {lockedProcessDef.short}
++              </span>
++              <span className="truncate text-sm font-medium text-foreground">
++                {lockedProcessDef.label}
++              </span>
++              <span className="ml-auto text-[10px] font-medium text-muted-foreground">
++                Fijo
++              </span>
++            </div>
++          ) : (
++            <div className="grid grid-cols-3 gap-2">
++              {ENGINEERING_PROCESS_ORDER.map((code, index) => {
++                const def = ENGINEERING_PROCESS_DEFINITIONS[code]
++                const Icon = ENTITY_ICONS[def.icon]
++                const isSelected = processCode === code
++                return (
++                  <button
++                    key={code}
++                    type="button"
++                    onClick={() => setProcessCode(code)}
++                    style={{
++                      animationDelay: `${Math.min(index, 8) * 25}ms`,
++                    }}
++                    className={cn(
++                      "animate-comment-in relative flex flex-col items-center gap-1.5 rounded-xl p-3 text-center transition-colors",
++                      isSelected
++                        ? "bg-foreground/12"
++                        : "bg-foreground/5 hover:bg-foreground/10",
++                    )}
++                  >
++                    <span
++                      className="flex size-9 items-center justify-center rounded-full text-[11px] font-bold"
++                      style={{
++                        backgroundColor: `${def.color}22`,
++                        color: def.color,
++                      }}
++                    >
++                      {Icon ? <Icon size={15} /> : def.short}
++                    </span>
++                    <span className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">
++                      {def.short}
++                    </span>
++                    <span className="line-clamp-2 text-[10px] leading-tight text-muted-foreground">
++                      {def.label}
++                    </span>
++                  </button>
++                )
++              })}
++            </div>
++          )}
+@@ -207,13 +224,27 @@ export function EngineeringTaskDialog({
+         )}
+
+         <FormField label="Asignar a">
+-          <UserSelect
+-            items={assignableUsers}
+-            value={assignee}
+-            placeholder="Sin asignar"
+-            onChange={u => setAssigneeId(u?.id)}
+-          />
++          {assigneeLocked && lockedAssigneeUser ? (
++            <div className="flex h-10 items-center rounded-xl bg-foreground/5 px-3">
++              <span className="truncate text-sm font-medium text-foreground">
++                {lockedAssigneeUser.name}
++              </span>
++              <span className="ml-auto text-[10px] font-medium text-muted-foreground">
++                Fijo
++              </span>
++            </div>
++          ) : (
++            <UserSelect
++              items={assignableUsers}
++              value={assignee}
++              placeholder="Sin asignar"
++              onChange={u => setAssigneeId(u?.id)}
++            />
++          )}
+           {assignableUsers.length === 0 && (
+             <p className="text-[11px] text-muted-foreground">
+               No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
+             </p>
+           )}
