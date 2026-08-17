@@ -5,7 +5,7 @@ import { useState } from "react"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
-import { Layers } from "lucide-react"
+import { Settings2 } from "lucide-react"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
 import { PendingInvitesSection } from "./pending-invites-section"
@@ -40,18 +40,15 @@ export function TaskAreaPanelBody({
   const { state, actions } = panel
   const horizontal = orientation === "horizontal"
 
-  const [areasOpen, setAreasOpen] = useState(false)
+  const [areasOpen, setAreasOpen] = useState(
+    () => state.canChooseAreas && state.supervisorAreas.length === 0,
+  )
 
   const effectiveSelected = (code: string) =>
-    state.supervisorAreas.length > 0
-      ? state.supervisorAreas.includes(code as never)
-      : true
+    state.supervisorAreas.includes(code as never)
 
   function toggleArea(code: (typeof state.allAreas)[number]) {
-    const current =
-      state.supervisorAreas.length > 0
-        ? state.supervisorAreas
-        : state.allAreas
+    const current = state.supervisorAreas
     const selected = current.includes(code)
     actions.setSupervisorAreas(
       selected ? current.filter(c => c !== code) : [...current, code],
@@ -85,7 +82,7 @@ export function TaskAreaPanelBody({
                       : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                   )}
                 >
-                  <Layers size={16} />
+                  <Settings2 size={16} />
                 </button>
               )}
               <HistoryToggleButton
@@ -177,8 +174,17 @@ export function TaskAreaPanelBody({
               Cargando…
             </div>
           ) : state.areas.length === 0 ? (
-            <div className="flex h-24 items-center justify-center text-center text-sm text-muted-foreground">
-              No hay áreas asignadas.
+            <div className="flex h-24 flex-col items-center justify-center gap-1 px-4 text-center text-sm text-muted-foreground">
+              {state.canChooseAreas ? (
+                <>
+                  <span>Ningún área seleccionada</span>
+                  <span className="text-xs text-muted-foreground/80">
+                    Usa el selector para elegir áreas
+                  </span>
+                </>
+              ) : (
+                <span>No hay áreas asignadas.</span>
+              )}
             </div>
           ) : (
             <div className="flex min-w-0 w-full flex-col gap-6">

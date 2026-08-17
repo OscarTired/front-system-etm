@@ -35,15 +35,11 @@ export function useMyAreaTasks() {
   const canChooseFreely = isSupervisor || isAdmin
 
   // Operario → solo las suyas.
-  // Admin/supervisor → selección del store; si está vacío, TODAS de frente
-  // (no hace falta abrir el selector para "mostrar" áreas).
-  // El selector sigue disponible para filtrar.
+  // Admin/supervisor → solo lo elegido en el selector (vacío = ninguna).
   const areas: ProcessCode[] = isOperarioWithArea
     ? operarioAreaCodes
     : canChooseFreely
-      ? supervisorAreas.length > 0
-        ? supervisorAreas
-        : ALL_PROCESS_CODES
+      ? supervisorAreas
       : []
 
   return {
