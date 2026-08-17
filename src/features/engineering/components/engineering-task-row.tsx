@@ -47,7 +47,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
     "PROGRESS",
     "COMPLETED",
   ]
-
+ 
   async function handleDelete() {
     if (isCompleted) return
     await remove.mutateAsync(task.id)
