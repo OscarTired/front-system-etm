@@ -1,0 +1,89 @@
+diff --git a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+index d1e1581..2a56485 100644
+--- a/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/team-activity-log-page-content.tsx
+@@ -219,6 +219,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
+ 
+   const viewMode = useTeamBitacoraViewStore(s => s.viewMode)
++  const setViewMode = useTeamBitacoraViewStore(s => s.setViewMode)
+   const isSupervision = viewMode === "supervision"
+   const isMonth = viewMode === "month"
+ 
+@@ -408,9 +409,18 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+     </div>
+   )
+ 
++  // Mes: mismo fill de pantalla que bitácora personal (flex-1 + min-h-0).
++  const fillHeight = isMonth
++
+   const body = (
+-    <>
+-        <div className="mb-1">{toolbar}</div>
++    <div
++      className={
++        fillHeight
++          ? "flex min-h-0 w-full flex-1 flex-col"
++          : "flex w-full flex-col"
++      }
++    >
++        <div className="mb-1 shrink-0">{toolbar}</div>
+ 
+         {isSupervision ? (
+           <TeamSupervisionView
+@@ -420,7 +430,7 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+             focusUserId={selectedUser?.id}
+           />
+         ) : isMonth ? (
+-          <div className="flex min-h-[28rem] w-full flex-1 flex-col pb-4">
++          <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+             <AgendaMonthView
+               anchorDate={viewMonth}
+               logs={logs}
+@@ -428,11 +438,12 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+               onSelectDay={day => {
+                 setDate(day)
+                 setViewMonth(day)
++                setViewMode("day")
+               }}
+             />
+           </div>
+         ) : (
+-          <div className="flex w-full flex-col gap-6 pb-4">
++          <div className="flex w-full flex-col gap-6 pb-4 max-md:mt-2">
+             {loading ? (
+               <div className="flex w-full flex-col gap-8">
+                 {Array.from({ length: 2 }).map((_, s) => (
+@@ -484,13 +495,17 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+             )}
+           </div>
+         )}
+-    </>
++    </div>
+   )
+ 
+-  // embedded: crecer con el contenido (scroll del hub). Sin overflow-hidden.
+-  // standalone: este hijo es dueño del scroll.
++  // embedded: crecer con el contenido (scroll del hub).
++  // Mes: fillHeight → min-h-0 flex-1 como bitácora personal.
+   if (embedded) {
+-    return <div className="w-full">{body}</div>
++    return (
++      <div className={fillHeight ? "flex min-h-0 w-full flex-1 flex-col" : "w-full"}>
++        {body}
++      </div>
++    )
+   }
+   return (
+     <div className="relative flex min-h-0 w-full flex-1 flex-col">
+@@ -498,7 +513,9 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
+         onRefresh={async () => {
+           await queryClient.invalidateQueries({ queryKey: ["activity-log"] })
+         }}
+-      >{body}</AppListScroll>
++      >
++        {body}
++      </AppListScroll>
+     </div>
+   )
+ }
