@@ -38,6 +38,18 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
 
   const listBody = (
     <>
+      {/*
+        Móvil: AppListScroll ya reserva TOP_BAR (56px). En Proyectos/Tareas
+        debajo va EntityToolbar (~40px) y eso se ve como “aire” bajo el chrome.
+        Acá no hay toolbar → sin esta franja el listado queda pegado al topbar.
+      */}
+      {isMobile && (
+        <div
+          className="shrink-0 px-1 py-2.5"
+          aria-hidden
+        />
+      )}
+
       {/* Cabecera interna solo desktop/tablet (en móvil el título va en TopBar) */}
       {!isMobile && (
         <div className="shrink-0 px-3 pb-2.5 pt-2">
