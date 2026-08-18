@@ -1,5 +1,7 @@
 "use client"
 
+import { useDomainInk } from "@/shared/utils/use-badge-colors"
+
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
@@ -96,6 +98,9 @@ export function TaskMobileCard({
 
   const stage = taskAccess.stageLabel(task)
   const status = taskAccess.statusLabel(task)
+  const priorityInk = useDomainInk(task.priority.color)
+  const stageInk = useDomainInk(stage.color)
+  const statusInk = useDomainInk(status.color)
 
   const isCompleted = taskAccess.isCompleted(task)
   const isDimmed = isCompleted || (dimOthers && !expanded)
@@ -237,7 +242,7 @@ export function TaskMobileCard({
                   ) : (
                     <span
                       className="text-[10px] font-semibold"
-                      style={{ color: task.priority.color ?? "#a3a3a3" }}
+                      style={{ color: priorityInk }}
                     >
                       {task.priority.name.charAt(0)}
                     </span>
@@ -245,7 +250,7 @@ export function TaskMobileCard({
                 </span>
                 <span
                   className="hidden min-w-0 truncate md:inline"
-                  style={{ color: task.priority.color ?? undefined }}
+                  style={{ color: priorityInk }}
                 >
                   {task.priority.name}
                 </span>
@@ -363,7 +368,7 @@ export function TaskMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: stage.color }}
+                  style={{ color: stageInk }}
                 >
                   {stage.label}
                 </span>
@@ -381,7 +386,7 @@ export function TaskMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: status.color }}
+                  style={{ color: statusInk }}
                 >
                   {status.label}
                 </span>

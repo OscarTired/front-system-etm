@@ -4,10 +4,6 @@ export type BadgeVariant = "subtle" | "solid"
 
 type Rgb = { r: number; g: number; b: number }
 
-// ---------------------------------------------------------------------------
-// Color math (WCAG + mezcla)
-// ---------------------------------------------------------------------------
-
 function getLuminanceFromRgb(rgb: Rgb) {
   const normalize = (value: number) => {
     const channel = value / 255
@@ -40,7 +36,10 @@ function contrastFromLuminances(lumA: number, lumB: number) {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+/** Texto sobre relleno sólido del propio hex. */
 function getContrastText(hex: string) {
+  // Claros → siempre tinta oscura (evita blanco sobre azul pastel)
+  if (getLuminance(hex) > 0.55) return "#111827"
   const whiteContrast = getContrastRatio(hex, "#FFFFFF")
   const darkContrast = getContrastRatio(hex, "#111827")
   return whiteContrast > darkContrast ? "#FFFFFF" : "#111827"
@@ -75,17 +74,12 @@ function withAlpha(cssColor: string, alpha: number): string {
   return cssColor
 }
 
-/** Distancia euclídea RGB — proxy barato de “se distingue del surface”. */
 function rgbDistance(a: Rgb, b: Rgb) {
   const dr = a.r - b.r
   const dg = a.g - b.g
   const db = a.b - b.b
   return Math.sqrt(dr * dr + dg * dg + db * db)
 }
-
-// ---------------------------------------------------------------------------
-// Tokens de tema (globals.css) — sin hex hardcodeados de marca
-// ---------------------------------------------------------------------------
 
 function readCssNumber(name: string, fallback: number): number {
   if (typeof document === "undefined") return fallback
@@ -97,7 +91,7 @@ function readCssNumber(name: string, fallback: number): number {
 }
 
 function readChipSurfaceRgb(): Rgb {
-  if (typeof document === "undefined") return { r: 16, g: 16, b: 18 }
+  if (typeof document === "undefined") return { r: 245, g: 246, b: 248 }
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue("--chip-surface-rgb")
     .trim()
@@ -105,7 +99,12 @@ function readChipSurfaceRgb(): Rgb {
   if (parts.length >= 3 && parts.every(Number.isFinite)) {
     return { r: parts[0], g: parts[1], b: parts[2] }
   }
-  return { r: 16, g: 16, b: 18 }
+  return { r: 245, g: 246, b: 248 }
+}
+
+function detectTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "light"
+  return document.documentElement.classList.contains("dark") ? "dark" : "light"
 }
 
 function blendOnChipSurface(hex: string, alpha: number): Rgb {
@@ -118,19 +117,10 @@ function blendOnChipSurface(hex: string, alpha: number): Rgb {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Texto legible contra el fondo REAL del chip
-// ---------------------------------------------------------------------------
-
-/**
- * Oscurece el matiz de dominio hasta WCAG ~AA+ contra `backgroundRgb`.
- * Si el matiz no alcanza, cae a #111827 (siempre legible sobre pasteles).
- */
 function getReadableTextFor(hex: string, backgroundRgb: Rgb) {
   const bgLum = getLuminanceFromRgb(backgroundRgb)
   const MIN_CONTRAST = 5.5
-
-  for (const amount of [0.42, 0.52, 0.62, 0.72, 0.82, 0.9, 0.96]) {
+  for (const amount of [0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.92, 0.96]) {
     const candidate = tintTowardBlack(hex, amount)
     if (
       contrastFromLuminances(getLuminanceFromRgb(candidate), bgLum) >=
@@ -147,44 +137,29 @@ function getSubtleText(hex: string) {
   return rgbString(tintTowardWhite(hex, tint))
 }
 
-/** Texto del chip por luminancia del fondo (no por tema a ciegas). */
 function getChipText(hex: string, backgroundRgb: Rgb) {
   const bgLum = getLuminanceFromRgb(backgroundRgb)
-  if (bgLum < 0.45) {
-    return getSubtleText(hex)
-  }
+  if (bgLum < 0.45) return getSubtleText(hex)
   return getReadableTextFor(hex, backgroundRgb)
 }
 
-// ---------------------------------------------------------------------------
-// subtle: identidad de color SIN lavar (causa raíz del pastel en light)
-// ---------------------------------------------------------------------------
-
-/**
- * Alpha base viene de CSS. En superficies claras (light) un alpha fijo
- * deja hex saturados y pasteles igual de “muertos”. Aquí se sube el alpha
- * solo hasta que el fondo se separe del surface lo suficiente para que
- * el matiz se reconozca — sin convertir el chip en solid.
- *
- * Misma idea que ScrollArea robusto: reglas explícitas, un solo sitio,
- * sin parches por pantalla.
- */
-const MIN_SURFACE_SEPARATION = 36
+const MIN_SURFACE_SEPARATION = 40
 const MAX_SUBTLE_ALPHA = 0.72
 
+/**
+ * En light, alpha fijo lava el matiz. Sube alpha hasta que el fondo
+ * se separe del surface lo bastante para reconocer el color.
+ */
 function resolveSubtleAlpha(hex: string, baseAlpha: number): number {
   const surface = readChipSurfaceRgb()
-  const surfaceLum = getLuminanceFromRgb(surface)
-
-  // Dark surface: el alpha del token ya da color; no forzar más.
-  if (surfaceLum < 0.45) {
+  if (getLuminanceFromRgb(surface) < 0.45) {
     return Math.min(baseAlpha, MAX_SUBTLE_ALPHA)
   }
-
   let alpha = baseAlpha
   while (alpha < MAX_SUBTLE_ALPHA) {
-    const bg = blendOnChipSurface(hex, alpha)
-    if (rgbDistance(bg, surface) >= MIN_SURFACE_SEPARATION) break
+    if (rgbDistance(blendOnChipSurface(hex, alpha), surface) >= MIN_SURFACE_SEPARATION) {
+      break
+    }
     alpha = Math.min(MAX_SUBTLE_ALPHA, alpha + 0.04)
   }
   return alpha
@@ -194,17 +169,13 @@ function subtlePalette(hex: string) {
   const base = readCssNumber("--chip-bg-alpha", 0.5)
   const baseHover = readCssNumber("--chip-bg-alpha-hover", 0.58)
   const baseActive = readCssNumber("--chip-bg-alpha-active", 0.66)
-
   const a = resolveSubtleAlpha(hex, base)
-  // Hover/active mantienen la misma “ganancia” relativa sobre el base efectivo
   const boostHover = Math.max(0, baseHover - base)
   const boostActive = Math.max(0, baseActive - base)
   const aHover = Math.min(MAX_SUBTLE_ALPHA, a + boostHover)
   const aActive = Math.min(MAX_SUBTLE_ALPHA, a + boostActive)
-
   const bg = blendOnChipSurface(hex, a)
   const text = getChipText(hex, bg)
-
   return {
     background: rgbString(bg),
     backgroundHover: rgbString(blendOnChipSurface(hex, aHover)),
@@ -214,14 +185,8 @@ function subtlePalette(hex: string) {
     textMuted: withAlpha(text, 0.62),
     shadow: {
       default: "none",
-      hover: `
-            0 0 0 1px ${rgba(hex, 0.14)},
-            0 4px 12px rgba(0,0,0,0.12)
-          `,
-      active: `
-            0 0 0 1px ${rgba(hex, 0.2)},
-            0 8px 20px rgba(0,0,0,0.18)
-          `,
+      hover: `0 0 0 1px ${rgba(hex, 0.14)}, 0 4px 12px rgba(0,0,0,0.12)`,
+      active: `0 0 0 1px ${rgba(hex, 0.2)}, 0 8px 20px rgba(0,0,0,0.18)`,
     },
   }
 }
@@ -242,10 +207,6 @@ function solidPalette(hex: string) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// API pública
-// ---------------------------------------------------------------------------
-
 export function getBadgeColors(
   hex: string,
   variant: BadgeVariant = "subtle",
@@ -255,6 +216,28 @@ export function getBadgeColors(
   return subtlePalette(hex)
 }
 
+/**
+ * Tinta de dominio sobre SUPERFICIE NEUTRA (filas, labels, iconos).
+ * NO usar badge.text aquí: ese color está calculado para el fill del chip.
+ *
+ * - light → oscurece el matiz hasta contraste real sobre el surface
+ * - dark  → hex de dominio (si es casi negro, aclara un poco)
+ */
+export function getDomainInk(
+  hex: string,
+  theme?: "light" | "dark",
+): string {
+  const safe = hex || "#737373"
+  const resolved = theme ?? detectTheme()
+  if (resolved === "dark") {
+    if (getLuminance(safe) < 0.12) {
+      return rgbString(tintTowardWhite(safe, 0.4))
+    }
+    return safe
+  }
+  return getReadableTextFor(safe, readChipSurfaceRgb())
+}
+
 export function getProcessCardTextColor(
   hex: string,
   _theme?: "light" | "dark",
@@ -262,18 +245,9 @@ export function getProcessCardTextColor(
   return getBadgeColors(hex, "subtle").text
 }
 
-/**
- * Superficie glass de dominio (KPI, process cards, pintura).
- * Texto: contraste WCAG contra el stop MÁS CLARO del card (peor caso).
- */
 export function getGlassSurface(hex: string, theme?: "light" | "dark") {
   const resolved: "light" | "dark" =
-    theme === "dark" || theme === "light"
-      ? theme
-      : typeof document !== "undefined" &&
-          document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light"
+    theme === "dark" || theme === "light" ? theme : detectTheme()
 
   const c = getBadgeColors(hex, "subtle", resolved)
 
@@ -288,10 +262,9 @@ export function getGlassSurface(hex: string, theme?: "light" | "dark") {
     }
   }
 
-  const start = blendOnChipSurface(hex, 0.38)
-  const end = blendOnChipSurface(hex, 0.18)
+  const start = blendOnChipSurface(hex, resolveSubtleAlpha(hex, 0.38))
+  const end = blendOnChipSurface(hex, 0.22)
   const text = getChipText(hex, end)
-
   return {
     background: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
     backgroundInset: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,

@@ -6,15 +6,10 @@ import type { EntityForm } from "../entity-dialog.types"
 
 type Props = {
   value: EntityForm
-  /** solid = color real (default). subtle solo si el caller lo pide. */
+  /** solid = color real al editar (default). */
   variant?: "subtle" | "solid"
 }
 
-/**
- * Preview al crear/editar entidad.
- * Default solid: el usuario debe ver el color que está guardando.
- * Los chips de lista no pasan por aquí (usan DynamicBadge subtle vía motor).
- */
 export function EntityPreview({ value, variant = "solid" }: Props) {
   return (
     <div className="flex justify-center py-3">

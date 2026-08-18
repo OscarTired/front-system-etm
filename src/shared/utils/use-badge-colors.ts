@@ -5,6 +5,7 @@ import { useMemo } from "react"
 import { useThemeStore } from "@/shared/theme"
 import {
   getBadgeColors,
+  getDomainInk,
   type BadgeVariant,
 } from "@/shared/utils/badge-colors"
 
@@ -20,5 +21,17 @@ export function useBadgeColors(
   return useMemo(
     () => getBadgeColors(hex, variant, resolved),
     [hex, variant, resolved],
+  )
+}
+
+/**
+ * Color de texto/icono de dominio sobre fila o fondo neutro.
+ * Usar en EntitySelect row, prioridades, etapas, nombres — NO badge.text.
+ */
+export function useDomainInk(hex?: string | null) {
+  const resolved = useThemeStore(s => s.resolved)
+  return useMemo(
+    () => getDomainInk(hex ?? "#737373", resolved),
+    [hex, resolved],
   )
 }

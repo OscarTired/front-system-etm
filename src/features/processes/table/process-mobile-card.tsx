@@ -6,7 +6,7 @@ import { ChevronDown, MessageSquare } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
 import { formatDate } from "@/shared/utils/date-format"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
@@ -58,9 +58,9 @@ function OperatorNameText({
   color?: string | null
   className?: string
 }) {
-  const badge = useBadgeColors(color ?? "#737373", "subtle")
+  const ink = useDomainInk(color)
   return (
-    <span className={className} style={{ color: badge.text }}>
+    <span className={className} style={{ color: ink }}>
       {name}
     </span>
   )
@@ -92,6 +92,8 @@ export function ProcessMobileCard({
     setShowFields(true)
   }, [expanded])
   const statusLabel = workflowAccess.statusLabel(processTask)
+  const priorityInk = useDomainInk(priority.color)
+  const statusInk = useDomainInk(statusLabel.color)
 
   const stepId = workflowAccess.stepId(processTask)
   const processCode = workflowAccess.processCode(processTask)
@@ -338,7 +340,7 @@ export function ProcessMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: priority.color }}
+                  style={{ color: priorityInk }}
                 >
                   {priority.name}
                 </span>
@@ -356,7 +358,7 @@ export function ProcessMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: statusLabel.color }}
+                  style={{ color: statusInk }}
                 >
                   {statusLabel.label}
                 </span>

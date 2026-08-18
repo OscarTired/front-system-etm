@@ -19,9 +19,8 @@ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { SelectOption } from "@/shared/ui/select-option/select-option"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { useDomainInk } from "@/shared/utils/use-badge-colors"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { useThemeStore } from "@/shared/theme"
 import type { User } from "../types/user.types"
 
 type ItemMeta = {
@@ -80,13 +79,7 @@ export function UserSelect(props: Props) {
 
   const primary = values[0]
   const extraCount = Math.max(0, values.length - 1)
-  const nameBadge = useBadgeColors(primary?.color ?? "#737373", "subtle")
-  const themeResolved = useThemeStore(s => s.resolved)
-  // Dark: color de dominio (no lavado). Light: contraste garantizado.
-  const nameInk =
-    themeResolved === "dark"
-      ? (primary?.color ?? "#a3a3a3")
-      : nameBadge.text
+  const nameInk = useDomainInk(primary?.color)
 
   const selectedIds = useMemo(
     () => new Set(values.map(u => u.id)),

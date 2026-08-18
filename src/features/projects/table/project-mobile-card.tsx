@@ -1,5 +1,7 @@
 "use client"
 
+import { useDomainInk } from "@/shared/utils/use-badge-colors"
+
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
@@ -99,6 +101,8 @@ export function ProjectMobileCard({
   const isDimmed = isCompleted || (dimOthers && !expanded)
   // Móvil expandido: acciones en el row; burbuja de conteo cede el sitio
   const actionsOnRow = isMobile && expanded
+  const stageInk = useDomainInk(project.stage.color)
+  const statusInk = useDomainInk(project.status.color)
 
   return (
     <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
@@ -328,7 +332,7 @@ export function ProjectMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: project.stage.color }}
+                  style={{ color: stageInk }}
                 >
                   {project.stage.name}
                 </span>
@@ -346,7 +350,7 @@ export function ProjectMobileCard({
                 </span>
                 <span
                   className="hidden truncate md:inline"
-                  style={{ color: project.status.color }}
+                  style={{ color: statusInk }}
                 >
                   {project.status.name}
                 </span>

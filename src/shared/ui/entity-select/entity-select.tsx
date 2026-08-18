@@ -6,8 +6,7 @@ import { useRef } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
-import { useThemeStore } from "@/shared/theme"
+import { useDomainInk } from "@/shared/utils/use-badge-colors"
 
 import { Input } from "@/components/ui/input"
 import {
@@ -121,12 +120,7 @@ export function EntitySelect<T extends EntityBase>({
     ? ENTITY_ICONS[value.icon]
     : undefined
 
-  const nameBadge = useBadgeColors(value?.color ?? "#737373", "subtle")
-  const themeResolved = useThemeStore(s => s.resolved)
-  const nameInk =
-    themeResolved === "dark"
-      ? (value?.color ?? "#a3a3a3")
-      : nameBadge.text
+  const nameInk = useDomainInk(value?.color)
 
   const dialogTitle = editing
     ? `Editar ${placeholder}`
@@ -330,7 +324,7 @@ export function EntitySelect<T extends EntityBase>({
               : undefined
           }
           showIconPicker={definition.fields.includes("icon")}
-          previewVariant={collection === "colors" ? "solid" : "subtle"}
+          previewVariant="solid"
           fixedIcon={definition.fixedIcon}
           allowedIcons={definition.allowedIcons}
           onClose={closeDialog}
