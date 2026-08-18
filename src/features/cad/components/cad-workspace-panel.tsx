@@ -163,10 +163,14 @@ export function CadWorkspacePanel() {
     }
   }, [body])
 
+  // Regenerar al cambiar params (debounce) — el taller no pulsa Generar.
   useEffect(() => {
-    void generate(body)
+    const t = window.setTimeout(() => {
+      void generate(body)
+    }, 280)
+    return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode])
+  }, [body, mode])
 
   const onDownloadDxf = async () => {
     try {

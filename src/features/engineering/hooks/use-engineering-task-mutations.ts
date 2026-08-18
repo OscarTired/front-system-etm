@@ -3,6 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
+import { sidebarCountsQueryKey } from "@/shared/responsive/layout/hooks/use-sidebar-counts"
+
 import {
   engineeringTaskService,
 } from "../services/engineering-task.service"
@@ -14,8 +16,10 @@ import type {
 export function useEngineeringTaskMutations() {
   const queryClient = useQueryClient()
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["engineering-tasks"] })
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["engineering-tasks"] })
+    void queryClient.invalidateQueries({ queryKey: sidebarCountsQueryKey })
+  }
 
   const create = useMutation({
     mutationFn: (dto: CreateEngineeringTaskDto) =>

@@ -56,10 +56,10 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-70 transition hover:bg-foreground/10 hover:text-foreground hover:opacity-100 data-[state=open]:bg-foreground/10 data-[state=open]:opacity-100"
+          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 opacity-70 transition-colors hover:bg-background hover:text-foreground hover:opacity-100 data-[state=open]:bg-background data-[state=open]:opacity-100"
           aria-label="Acciones de tarea"
         >
-          <MoreHorizontal size={16} />
+          <MoreHorizontal size={15} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-52">
@@ -115,53 +115,62 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
     <div
       data-drag-scroll-ignore
       className={cn(
-        "group flex h-12 min-w-0 w-full items-center gap-1.5 rounded-xl bg-foreground/5 px-2 text-left transition",
-        "hover:bg-foreground/10",
+        "group flex h-11 min-w-0 w-full items-center gap-2 rounded-xl border-0 bg-card/60 px-2.5 text-left",
+        "transition-colors duration-150",
+        "hover:border-border/80 hover:bg-accent/80 dark:hover:bg-foreground/[0.08]",
       )}
     >
-      {/* Menú al inicio del row (antes del identificador) */}
+      {/* 1. Menú de 3 puntos (...) */}
       {menu}
 
+      {/* ÁREA INTERACTIVA COMPLETA DE LA FILA */}
       <button
         type="button"
         onClick={() => onEdit?.(task)}
-        className="flex min-w-0 flex-1 items-center gap-2.5 text-left active:scale-[0.99]"
+        className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left focus:outline-none"
       >
-        <span className="w-7 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
-          {String(task.taskNumber).padStart(2, "0")}
-        </span>
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-sm font-medium text-foreground">
+        {/* LADO IZQUIERDO: Chip código → Título → • → Asignado */}
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {/* Chip de código de proyecto */}
+          {task.project?.projectCode ? (
+            <ProjectCodeChip
+              code={task.project.projectCode}
+              color={task.project.client?.color}
+            />
+          ) : null}
+
+          {/* Título de la tarea */}
+          <p className="min-w-0 truncate text-xs font-medium text-foreground/80 transition-colors group-hover:text-foreground">
             {task.title}
           </p>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-            {task.project?.projectCode ? (
-              <ProjectCodeChip
-                code={task.project.projectCode}
-                color={task.project.client?.color}
-              />
-            ) : null}
-            <span className="min-w-0 truncate text-[11px] text-muted-foreground">
-              {task.assignee?.name ?? "Sin asignar"}
-            </span>
-          </div>
+
+          {/* Separador */}
+          <span className="shrink-0 text-[10px] text-muted-foreground/30">•</span>
+
+          {/* Asignado / Sin asignar */}
+          <span className="shrink-0 truncate text-xs text-muted-foreground/80 transition-colors group-hover:text-muted-foreground">
+            {task.assignee?.name ?? "Sin asignar"}
+          </span>
         </div>
-        <span className="flex shrink-0 items-center gap-1.5">
+
+        {/* LADO DERECHO: Ícono de nota/detalle → Estado */}
+        <div className="flex shrink-0 items-center gap-2">
           {hasNote && (
             <span
               title="Tiene detalle"
               aria-label="Tiene detalle"
-              className="flex size-7 items-center justify-center rounded-lg bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400"
+              className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400"
             >
-              <FileText size={13} strokeWidth={2.25} />
+              <FileText size={12} strokeWidth={2.25} />
             </span>
           )}
+
           <WorkflowStatusChip
             status={task.status}
             compact
             iconOnly={isMobile}
           />
-        </span>
+        </div>
       </button>
     </div>
   )

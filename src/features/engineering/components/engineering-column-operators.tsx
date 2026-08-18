@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 import type { EngineeringTask } from "../types/engineering-task.types"
@@ -81,7 +81,7 @@ function statusMeta(status: EngineeringTask["status"]) {
   }
 }
 
-/** Chip con contraste garantizado light/dark (useBadgeColors). */
+/** Chip con contraste garantizado y alineación perfeccionada. */
 function OperatorChip({
   name,
   color,
@@ -94,6 +94,7 @@ function OperatorChip({
   extra?: number
 }) {
   const badge = useBadgeColors(color || "#64748B", "subtle")
+  const ink = useDomainInk(color || "#64748B")
   const Icon =
     iconName && iconName in ENTITY_ICONS
       ? ENTITY_ICONS[iconName as keyof typeof ENTITY_ICONS]
@@ -101,17 +102,27 @@ function OperatorChip({
 
   return (
     <span
-      className="inline-flex max-w-[9rem] shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5"
-      style={{ backgroundColor: badge.background, color: badge.text }}
+      className="inline-flex h-7 max-w-[10rem] shrink-0 items-center gap-1.5 rounded-lg px-2.5 transition-transform duration-150 active:scale-95"
+      style={{ backgroundColor: badge.background, color: ink }}
     >
       {Icon ? (
-        <Icon size={11} className="shrink-0" style={{ color: badge.text }} />
+        <Icon size={13} className="shrink-0" style={{ color: ink }} />
       ) : (
-        <span className="text-[9px] font-bold">{name.charAt(0)}</span>
+        <span className="text-[10px] font-bold" style={{ color: ink }}>
+          {name.charAt(0)}
+        </span>
       )}
-      <span className="truncate text-[11px] font-semibold">{name}</span>
+      <span className="truncate text-xs font-semibold" style={{ color: ink }}>
+        {name}
+      </span>
       {extra != null && extra > 0 && (
-        <span className="shrink-0 text-[10px] font-bold opacity-80">
+        <span
+          className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold"
+          style={{
+            backgroundColor: "color-mix(in oklab, currentColor 18%, transparent)",
+            color: ink,
+          }}
+        >
           +{extra}
         </span>
       )}
@@ -165,7 +176,7 @@ function OperatorDetailRow({
 }) {
   const badge = useBadgeColors(color, "subtle")
   return (
-    <div className="rounded-lg bg-foreground/5 px-2 py-1.5">
+    <div className="rounded-lg bg-foreground/5 px-2.5 py-2">
       <div className="flex items-center gap-2">
         {Icon ? (
           <Icon size={14} style={{ color: badge.text }} className="shrink-0" />
@@ -188,7 +199,7 @@ function OperatorDetailRow({
         </span>
         <StatusChip status={primaryStatus} />
       </div>
-      <ul className="mt-1 space-y-0.5 pl-6">
+      <ul className="mt-1.5 space-y-1 pl-6">
         {entries.map(e => (
           <EntryLine key={`${e.taskNumber}-${e.title}`} entry={e} />
         ))}
@@ -199,7 +210,7 @@ function OperatorDetailRow({
 
 /**
  * Franja bajo título de proceso.
- * Un chip por operario (si tiene N tareas → +N). Detalle en popover.
+ * Layout mejorado con padding simétrico, divisor interno y mejor hover.
  */
 export function EngineeringColumnOperators({
   tasks,
@@ -212,8 +223,8 @@ export function EngineeringColumnOperators({
 
   if (groups.length === 0) {
     return (
-      <div className="flex items-center gap-1.5 px-0.5 py-0.5 text-[11px] text-muted-foreground">
-        <Users size={12} className="shrink-0 opacity-60" />
+      <div className="flex h-9 items-center gap-2 rounded-xl bg-foreground/[0.03] px-2.5 text-xs text-muted-foreground/70">
+        <Users size={14} className="shrink-0 opacity-60" />
         <span>Sin operario asignado</span>
       </div>
     )
@@ -225,12 +236,20 @@ export function EngineeringColumnOperators({
         <button
           type="button"
           className={cn(
-            "flex w-full min-w-0 items-center gap-1.5 rounded-lg px-0.5 py-0.5 text-left",
-            "transition-colors hover:bg-foreground/[0.04]",
+            "group flex w-full min-w-0 items-center gap-2 rounded-xl bg-foreground/[0.04] p-1.5 text-left backdrop-blur-sm transition-all duration-150",
+            "hover:bg-foreground/[0.08] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           )}
         >
-          <Users size={12} className="shrink-0 text-muted-foreground" />
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+          {/* Ícono de grupo alineado verticalmente */}
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors group-hover:text-foreground">
+            <Users size={15} strokeWidth={2} />
+          </div>
+
+          {/* Divisor vertical discreto */}
+          <div className="h-4 w-px shrink-0 bg-border/40" />
+
+          {/* Lista de chips */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {groups.slice(0, 3).map(g => (
               <OperatorChip
                 key={g.assignee.id}
@@ -241,22 +260,24 @@ export function EngineeringColumnOperators({
               />
             ))}
             {groups.length > 3 && (
-              <span className="shrink-0 text-[11px] font-semibold text-muted-foreground">
+              <span className="shrink-0 px-1 text-xs font-semibold text-muted-foreground">
                 +{groups.length - 3}
               </span>
             )}
           </div>
+
+          {/* Contador de estado activo / trabajando */}
           {workingCount > 0 && (
-            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/22 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <Zap size={10} />
+            <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/20 px-2 py-1 text-[10px] font-bold uppercase text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <Zap size={11} />
               {workingCount}
             </span>
           )}
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" sideOffset={6} className="w-full p-3">
-        <div className="px-1 pb-1.5 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+      <PopoverContent align="start" sideOffset={6} className="w-80 p-3">
+        <div className="px-1 pb-2 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           Asignados en este proceso
         </div>
         <div className="flex flex-col gap-2">

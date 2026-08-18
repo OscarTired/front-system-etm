@@ -46,27 +46,29 @@ function ProcessSectionHeader({
   const def = resolve(code)
   const label = def?.label ?? code
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-border px-1 pb-2">
-      {def ? (
-        <EntityChip
-          label={def.label}
-          color={def.color}
-          icon={def.icon}
-          compact
-        />
-      ) : (
-        <span className="text-xs font-semibold text-muted-foreground">{code}</span>
-      )}
-      <span className="min-w-0 flex-1" />
-      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-        {count}
-      </span>
+    <div className="flex shrink-0 items-center justify-between border-b border-border/60 pb-2.5">
+      <div className="flex items-center gap-2">
+        {def ? (
+          <EntityChip
+            label={def.label}
+            color={def.color}
+            icon={def.icon}
+            compact
+          />
+        ) : (
+          <span className="text-xs font-semibold text-muted-foreground">{code}</span>
+        )}
+        <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+          {count}
+        </span>
+      </div>
+
       {onAdd && (
         <button
           type="button"
           onClick={onAdd}
           aria-label={`Nueva tarea en ${label}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-foreground"
         >
           <Plus size={14} strokeWidth={2.5} />
         </button>
@@ -76,7 +78,7 @@ function ProcessSectionHeader({
 }
 
 /**
- * Ingeniería por proceso — lista vertical (sin carrusel horizontal).
+ * Ingeniería por proceso — Grid adaptativo de alta densidad.
  */
 export function EngineeringProcessBoard({
   tasks,
@@ -90,36 +92,41 @@ export function EngineeringProcessBoard({
     return (
       <div className="flex flex-col gap-4 p-1 animate-pulse">
         <div className="h-16 rounded-2xl bg-foreground/5" />
-        {Array.from({ length: 3 }, (_, i) => (
-          <div
-            key={i}
-            className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3"
-          >
-            <div className="h-4 w-40 rounded bg-foreground/10" />
-            <div className="h-10 rounded-lg bg-foreground/5" />
-            <div className="h-12 rounded-xl bg-foreground/5" />
-            <div className="h-12 rounded-xl bg-foreground/5 opacity-70" />
-          </div>
-        ))}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/40 p-4"
+            >
+              <div className="h-5 w-40 rounded bg-foreground/10" />
+              <div className="h-8 rounded-lg bg-foreground/5" />
+              <div className="h-12 rounded-xl bg-foreground/5" />
+              <div className="h-12 rounded-xl bg-foreground/5 opacity-70" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-      <div className="mb-3 shrink-0">
+      {/* Header de KPIs */}
+      <div className="mb-4 shrink-0">
         <EngineeringKpiHeader tasks={tasks} />
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col gap-5 pb-4">
+      {/* Grid de Procesos */}
+      <ScrollArea className="min-h-0 flex-1 pr-1">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-6">
           {ENGINEERING_PROCESS_ORDER.map(code => {
             const colTasks = byProcess.get(code) ?? []
             return (
               <section
                 key={code}
-                className="flex flex-col gap-2 rounded-2xl bg-foreground/[0.03] p-3"
+                className="flex flex-col gap-3 rounded-2xl border-0 bg-card/60 p-3.5 backdrop-blur-sm transition-colors hover:border-border/80"
               >
+                {/* Cabecera del Proceso */}
                 <ProcessSectionHeader
                   code={code}
                   count={colTasks.length}
@@ -129,12 +136,20 @@ export function EngineeringProcessBoard({
                       : undefined
                   }
                 />
-                <EngineeringColumnOperators tasks={colTasks} />
-                <div className="flex flex-col gap-1.5">
+
+                {/* Filtro de Operadores por Proceso */}
+                {colTasks.length > 0 && (
+                  <EngineeringColumnOperators tasks={colTasks} />
+                )}
+
+                {/* Listado de Tareas */}
+                <div className="flex flex-col gap-2">
                   {colTasks.length === 0 ? (
-                    <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-                      Sin tareas
-                    </p>
+                    <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border/40 bg-background/20">
+                      <p className="text-xs text-muted-foreground/60">
+                        Sin tareas asignadas
+                      </p>
+                    </div>
                   ) : (
                     colTasks.map(task => (
                       <EngineeringTaskRow

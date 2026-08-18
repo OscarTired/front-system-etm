@@ -1078,8 +1078,8 @@ export function DxfCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden"
-      style={{ backgroundColor: "#0a0a0c" }}
+      className="relative h-full w-full overflow-hidden rounded-xl border border-border bg-background"
+      style={{ backgroundColor: "var(--background, #0a0a0c)" }}
     >
       <canvas ref={canvasRef} className="h-full w-full touch-none select-none" style={{ cursor: "default" }} />
 

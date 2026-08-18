@@ -59,18 +59,32 @@ export function SpeedDialFab({ actions, className }: Props) {
     if (chromeHidden) setDialOpen(false)
   }, [chromeHidden])
 
-  // Scroll: cierra el dial si estaba abierto.
-  // No bloqueamos ABRIR tras el scroll: el momentum sigue disparando
-  // "scroll" después del finger-up; un lock por tiempo (p.ej. 450ms)
-  // hacía esperar a que frene del todo + cooldown. El toque al FAB
-  // debe valer en cuanto el usuario deja de tocar la lista.
+  // Scroll: solo cierra si el dedo/pointer SIGUE abajo.
+  // El momentum post finger-up sigue emitiendo "scroll"; no debe
+  // impedir abrir el FAB ni cerrarlo si el usuario ya soltó.
+  const pointerDownRef = useRef(false)
   useEffect(() => {
+    const onDown = () => {
+      pointerDownRef.current = true
+    }
+    const onUp = () => {
+      pointerDownRef.current = false
+    }
     const onScroll = (e: Event) => {
       if (isInsideSheetOrPopover(e.target)) return
+      if (!pointerDownRef.current) return
       setDialOpen(false)
     }
+    window.addEventListener("pointerdown", onDown, true)
+    window.addEventListener("pointerup", onUp, true)
+    window.addEventListener("pointercancel", onUp, true)
     window.addEventListener("scroll", onScroll, true)
-    return () => window.removeEventListener("scroll", onScroll, true)
+    return () => {
+      window.removeEventListener("pointerdown", onDown, true)
+      window.removeEventListener("pointerup", onUp, true)
+      window.removeEventListener("pointercancel", onUp, true)
+      window.removeEventListener("scroll", onScroll, true)
+    }
   }, [])
 
   useEffect(() => {
