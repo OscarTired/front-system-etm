@@ -179,7 +179,7 @@ export function ProjectDialog({
         </div>
 
         {mode === "save" && (
-          <div className="shrink-0 space-y-3 border-b border-border px-5 py-3">
+          <div className="shrink-0 space-y-3 border-0 px-5 py-3">
             <label className="flex flex-col gap-1">
               <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Nombre del proyecto
@@ -213,7 +213,7 @@ export function ProjectDialog({
         )}
 
         {mode === "open" && (
-          <div className="shrink-0 border-b border-border px-5 py-3">
+          <div className="shrink-0 border-0 px-5 py-3">
             <label className="group flex cursor-pointer items-center gap-3 rounded-xl bg-foreground/5 p-3 transition-colors hover:bg-foreground/10">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-muted-foreground group-hover:text-foreground">
                 <HardDrive size={18} />

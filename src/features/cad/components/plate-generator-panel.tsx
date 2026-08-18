@@ -146,7 +146,7 @@ export function PlateGeneratorPanel() {
             type="checkbox"
             checked={withHoles}
             onChange={e => setWithHoles(e.target.checked)}
-            className="size-4 rounded border-foreground/20"
+            className="size-4 rounded border-0"
           />
           Agujeros en esquinas
         </label>
