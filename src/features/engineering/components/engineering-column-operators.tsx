@@ -201,18 +201,42 @@ function OperatorDetailRow({
 
 export function EngineeringColumnOperators({
   tasks,
+  loading,
 }: {
   tasks: EngineeringTask[]
+  loading?: boolean
 }) {
   const entries = getActiveAssigneeEntries(tasks)
   const groups = groupByOperator(entries)
   const workingCount = entries.filter(e => e.status === "PROGRESS").length
 
+  // Estado de carga manteniendo exactamente la misma estructura visual
+  if (loading) {
+    return (
+      <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-xl bg-foreground/[0.04] p-1.5">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70">
+          <Users size={15} strokeWidth={2} />
+        </div>
+        <div className="h-4 w-px shrink-0 bg-border/40" />
+        <div className="flex items-center gap-1.5">
+          <div className="h-7 w-20 animate-pulse rounded-lg bg-foreground/10" />
+          <div className="h-7 w-16 animate-pulse rounded-lg bg-foreground/10 opacity-60" />
+        </div>
+      </div>
+    )
+  }
+
+  // Estado sin operarios respetando el mismo marco e icono
   if (groups.length === 0) {
     return (
-      <div className="flex h-9 items-center gap-2 rounded-xl bg-foreground/[0.03] px-2.5 text-xs text-muted-foreground/70">
-        <Users size={14} className="shrink-0 opacity-60" />
-        <span>Sin operario asignado</span>
+      <div className="flex h-9 w-full min-w-0 items-center gap-2 rounded-xl bg-foreground/[0.03] p-1.5">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60">
+          <Users size={15} strokeWidth={2} />
+        </div>
+        <div className="h-4 w-px shrink-0 bg-border/40" />
+        <span className="text-xs font-medium text-muted-foreground/60">
+          Sin operario asignado
+        </span>
       </div>
     )
   }
@@ -223,8 +247,8 @@ export function EngineeringColumnOperators({
         <button
           type="button"
           className={cn(
-            "group flex w-full min-w-0 items-center gap-2 rounded-xl bg-foreground/[0.04] p-1.5 text-left backdrop-blur-sm transition-all duration-150",
-            "hover:bg-foreground/[0.08] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "group flex h-9 w-full min-w-0 items-center gap-2 rounded-xl bg-foreground/[0.04] p-1.5 text-left backdrop-blur-sm transition-all duration-150",
+            "hover:bg-foreground/[0.08] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           )}
         >
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors group-hover:text-foreground">
