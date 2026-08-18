@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { useCallback, useMemo, useState } from "react"
-import { Trash2, Sun } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -38,6 +38,7 @@ import { canDuplicateActivity } from "../../utils/duplicate-limit"
 import { ActivityPickerDialog } from "../dialogs/activity-picker-dialog"
 import { ActivityLogEditDialog } from "../dialogs/activity-log-edit-dialog"
 import { BitacoraViewToggle } from "../toggles/bitacora-view-toggle"
+import { GoToTodayButton } from "../toggles/go-to-today-button"
 import { AgendaDayView } from "../agenda/agenda-day-view"
 import { AgendaWeekView } from "../agenda/agenda-week-view"
 import { AgendaMonthView } from "../agenda/agenda-month-view"
@@ -250,21 +251,11 @@ export function ActivityLogPageContent({
             <BitacoraViewToggle compact />
           </div>
 
-          <button
-            type="button"
-            onClick={goToToday}
-            disabled={isToday}
-            title="Hoy"
-            aria-label="Hoy"
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-lg transition-all",
-              isToday
-                ? "cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
-                : "bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200",
-            )}
-          >
-            <Sun size={16} strokeWidth={2} />
-          </button>
+          <GoToTodayButton
+            compact
+            isToday={isToday}
+            onGoToToday={goToToday}
+          />
 
           <div className="min-w-0 flex-1 flex justify-center">
             <DateNavigator
@@ -291,19 +282,7 @@ export function ActivityLogPageContent({
           <div className="flex items-center justify-self-start gap-2">
             <BitacoraViewToggle />
 
-            <button
-              type="button"
-              onClick={goToToday}
-              disabled={isToday}
-              className={cn(
-                "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold transition-all",
-                isToday
-                  ? "cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
-                  : "bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200",
-              )}
-            >
-              Hoy
-            </button>
+            <GoToTodayButton isToday={isToday} onGoToToday={goToToday} />
           </div>
 
           <div className="justify-self-center">

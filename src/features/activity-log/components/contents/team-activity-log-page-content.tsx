@@ -1,6 +1,6 @@
 "use client"
 
-import { Sun } from "lucide-react"
+import { } from "lucide-react"
 
 import { ActivityLogDetailIndicators } from "../actions/activity-log-detail-indicators"
 
@@ -29,6 +29,7 @@ import { useTeamActivityLog } from "../../hooks/use-team-activity-log"
 import { useActivityLogMarkedDates } from "../../hooks/use-activity-log-marked-dates"
 import { useTeamBitacoraViewStore } from "../../store/team-bitacora-view-store"
 import { TeamBitacoraViewToggle } from "../toggles/team-bitacora-view-toggle"
+import { GoToTodayButton } from "../toggles/go-to-today-button"
 import { TeamSupervisionView } from "../supervision/team-supervision-view"
 import { AgendaMonthView } from "../agenda/agenda-month-view"
 import { getMonthRangeISO } from "../../utils/week-range"
@@ -330,30 +331,14 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
   const toolbar = (
     <div className="w-full shrink-0 rounded-2xl bg-surface p-2 tablet:p-4">
       <div className="flex flex-col gap-2 tablet:hidden">
-        <UserSelect
-          value={selectedUser}
-          items={users as User[]}
-          placeholder="Todo el equipo"
-          onChange={handleUserChange}
-        />
-
         <div className="flex items-center gap-1.5">
           <div className="flex shrink-0 items-center gap-1">
             <TeamBitacoraViewToggle compact />
-            <button
-              type="button"
-              onClick={goToToday}
-              disabled={isToday}
-              title="Hoy"
-              aria-label="Hoy"
-              className={
-                isToday
-                  ? "flex size-11 shrink-0 items-center justify-center rounded-lg cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
-                  : "flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200"
-              }
-            >
-              <Sun size={16} strokeWidth={2} />
-            </button>
+            <GoToTodayButton
+              compact
+              isToday={isToday}
+              onGoToToday={goToToday}
+            />
           </div>
 
           <div className="min-w-0 flex-1 flex justify-center">
@@ -370,24 +355,20 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
 
           <EntryCountBadge count={logs.length} compact />
         </div>
+
+        <UserSelect
+          value={selectedUser}
+          items={users as User[]}
+          placeholder="Todo el equipo"
+          onChange={handleUserChange}
+        />
       </div>
 
       <div className="hidden tablet:grid tablet:grid-cols-[1fr_auto_1fr] tablet:items-center tablet:gap-4">
         {/* Mismo orden que Prod/Ing: vista | fecha | filtro + contador */}
         <div className="flex items-center gap-2 justify-self-start">
           <TeamBitacoraViewToggle />
-          <button
-            type="button"
-            onClick={goToToday}
-            disabled={isToday}
-            className={
-              isToday
-                ? "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
-                : "flex h-8 items-center rounded-xl px-3.5 text-sm font-semibold bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200"
-            }
-          >
-            Hoy
-          </button>
+          <GoToTodayButton isToday={isToday} onGoToToday={goToToday} />
         </div>
 
         <div className="justify-self-center">
