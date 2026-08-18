@@ -296,21 +296,6 @@ export function ProcessMobileCard({
       </div>
 
       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
-        {/* Misma zona que lápiz en tareas/proyectos: auditoría + materiales */}
-        <div
-          className="flex items-center justify-start gap-1"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <EntityAuditInfo
-            createdAt={task.createdAt}
-            updatedAt={task.updatedAt}
-            createdBy={task.createdBy}
-            updatedBy={task.updatedBy}
-          />
-          <TaskMaterialInfo task={task} alwaysShow />
-        </div>
-
         {showFields ? (
           <div className="flex flex-col gap-2">
             <button
@@ -420,6 +405,21 @@ export function ProcessMobileCard({
             />
           </button>
         )}
+
+        {/* Debajo del selector de campos: auditoría + materiales */}
+        <div
+          className="flex items-center justify-start gap-1"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
+          <TaskMaterialInfo task={task} alwaysShow />
+        </div>
 
         <ProcessExpandedRow processTask={processTask} />
       </CollapsibleHeightSection>
