@@ -1,0 +1,34 @@
+diff --git a/src/features/processes/components/actions/process-row-actions.tsx b/src/features/processes/components/actions/process-row-actions.tsx
+--- a/src/features/processes/components/actions/process-row-actions.tsx
++++ b/src/features/processes/components/actions/process-row-actions.tsx
+@@ -127,18 +127,25 @@
+       : null
+     return (
+       <div className="flex w-full items-center justify-center">
+-        <div className="flex h-8 w-full min-w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2">
++        <div className="flex h-8 w-full min-w-28 items-center justify-center px-1">
+           {prevDef && prev ? (
+-            <>
+-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+-                EN →
++            <span
++              className="inline-flex items-center gap-1 rounded-lg bg-foreground/5 py-0.5 pl-1.5 pr-0.5"
++              title={`Viene de ${prevDef.label}`}
++            >
++              <span
++                aria-hidden
++                className="text-[10px] font-semibold leading-none text-muted-foreground"
++              >
++                →
+               </span>
+               <EntityChip
+                 label={prev.processCode}
+                 color={prevDef.color}
+                 icon={prevDef.icon}
++                compact
+               />
+-            </>
++            </span>
+           ) : (
+             <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+               En cola
