@@ -461,15 +461,27 @@ export function ShiftGroupSection({
                   )
                 })}
 
-                {(loading || logs.length === 0) && state !== "upcoming" && (
+                {/* Loading: mismo shell dashed, pulse inline. */}
+                {loading && (
+                  <div
+                    aria-hidden
+                    className={cn(
+                      "flex min-h-14.5 items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-3",
+                      "animate-pulse pointer-events-none",
+                    )}
+                  >
+                    <span className="h-3 w-28 rounded-md bg-foreground/10" />
+                  </div>
+                )}
+
+                {!loading && logs.length === 0 && state !== "upcoming" && (
                   <button
                     type="button"
-                    disabled={loading || !canCreate}
+                    disabled={!canCreate}
                     onClick={() => onLogClick(slot)}
                     className={cn(
                       "flex items-center justify-center gap-1.5 rounded-xl min-h-14.5 border border-dashed py-3 text-sm font-medium transition-colors",
-                      loading && "animate-pulse pointer-events-none",
-                      canCreate && !loading
+                      canCreate
                         ? "hover:bg-foreground/5 hover:text-muted-foreground"
                         : "cursor-not-allowed opacity-50",
                       slot.required
@@ -482,10 +494,18 @@ export function ShiftGroupSection({
                   </button>
                 )}
 
-                {(loading || logs.length === 0) && state === "upcoming" && (
-                  <p className="py-2 text-center text-xs text-muted-foreground/80">
-                    Todavía no llega esta franja
-                  </p>
+                {/* Upcoming vacío: mismo dashed que el resto, solo texto distinto. */}
+                {!loading && logs.length === 0 && state === "upcoming" && (
+                  <div
+                    className={cn(
+                      "flex min-h-14.5 items-center justify-center rounded-xl border border-dashed border-border py-3",
+                      "pointer-events-none",
+                    )}
+                  >
+                    <p className="text-center text-xs text-muted-foreground/80">
+                      Todavía no llega esta franja
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

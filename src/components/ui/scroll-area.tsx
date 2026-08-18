@@ -159,7 +159,8 @@ const ScrollArea = React.forwardRef<HTMLDivElement, Props>(
         onPointerCancel={dragToScroll ? endDrag : undefined}
         className={cn(
           "min-h-0 min-w-0",
-          orientation === "vertical" && "overflow-y-auto overflow-x-hidden",
+          orientation === "vertical" &&
+            "overflow-y-auto overflow-x-hidden overscroll-y-contain",
           orientation === "horizontal" && "overflow-x-auto overflow-y-hidden",
           orientation === "both" && "overflow-auto",
           dragToScroll && "cursor-grab active:cursor-grabbing",
