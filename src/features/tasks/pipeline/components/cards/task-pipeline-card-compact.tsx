@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react"
 import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import { useThemeStore } from "@/shared/theme"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
