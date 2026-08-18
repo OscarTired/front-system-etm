@@ -23,7 +23,7 @@ export type EngineeringTask = {
     id: string
     projectCode: string
     name: string
-    client: {
+    client?: {
       id: string
       name: string
       color: string

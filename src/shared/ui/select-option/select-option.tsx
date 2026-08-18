@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, type ReactNode } from "react"
 import { Check } from "lucide-react"
 import { CommandItem } from "@/components/ui/command"
 import {
@@ -29,6 +29,8 @@ type Props = {
   icon?: EntityIcon
   color: string
   selected: boolean
+  /** Chip u otro nodo a la izquierda (ej. código de proyecto). */
+  leading?: ReactNode
   swatchColor?: string
   disableCheckAnimation?: boolean
   rightSlot?: React.ReactNode
@@ -45,6 +47,7 @@ export function SelectOption({
   icon,
   color,
   selected,
+  leading,
   swatchColor,
   disableCheckAnimation,
   rightSlot,
@@ -95,7 +98,8 @@ export function SelectOption({
       <div className="flex w-full items-center justify-between gap-3 min-w-0">
         {/* Sección Izquierda: Ícono + Nombre + Descripción */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          {Icon && (
+          {leading}
+          {!leading && Icon && (
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all"
               style={{

@@ -445,28 +445,30 @@ export function ContextPicker({
                   <SelectOption
                     key={project.id}
                     label={
-                      project.client?.name
-                        ? `${displayProjectCode(project.projectCode)} · ${project.client.name} · ${project.name}`
-                        : `${displayProjectCode(project.projectCode)} · ${project.name}`
+                      [project.client?.name, project.name]
+                        .filter(Boolean)
+                        .join(" · ") || project.name
                     }
                     icon="project"
-                    color={
-                      project.client?.color ?? "#64748B"
+                    color={project.client?.color ?? "#64748B"}
+                    leading={
+                      <span
+                        className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+                        style={{
+                          backgroundColor: `${project.client?.color ?? "#64748B"}15`,
+                          color: project.client?.color ?? "#64748B",
+                        }}
+                      >
+                        {displayProjectCode(project.projectCode)}
+                      </span>
                     }
                     selected={
-
                       mode === "both"
-
-                        ? !value.taskId &&
-                          project.id === value.projectId
-
+                        ? !value.taskId && project.id === value.projectId
                         : project.id === value.projectId
-
                     }
                     disableCheckAnimation
-                    onSelect={() =>
-                      selectProject(project.id)
-                    }
+                    onSelect={() => selectProject(project.id)}
                   />
 
                 ))}
