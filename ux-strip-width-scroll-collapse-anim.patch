@@ -1,0 +1,182 @@
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -264,7 +264,7 @@
+ 
+       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+         {showFields ? (
+-          <div className="animate-comment-in flex flex-col gap-2">
++          <div className="flex flex-col gap-2">
+             <button
+               type="button"
+               onClick={() => setShowFields(false)}
+@@ -286,7 +286,7 @@
+           <button
+             type="button"
+             onClick={() => setShowFields(true)}
+-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
++            className="flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
+           >
+             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
+               <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
+diff --git a/src/features/projects/components/expanded-row/project-tasks-list.tsx b/src/features/projects/components/expanded-row/project-tasks-list.tsx
+--- a/src/features/projects/components/expanded-row/project-tasks-list.tsx
++++ b/src/features/projects/components/expanded-row/project-tasks-list.tsx
+@@ -191,30 +191,21 @@
+ 
+       <HorizontalScroll>
+ 
+-        <div className="w-72 shrink-0">
+-
++        {/* Compacto por ANCHO (misma altura h-43.5 desktop). */}
++        <div className="w-48 shrink-0">
+           <ProjectTaskPlaceholder
+-            onClick={() =>
+-              setOpenTaskDialog(true)
+-            }
++            onClick={() => setOpenTaskDialog(true)}
+           />
+-
+         </div>
+ 
+         {completedTasks.length > 0 && (
+-
+-          <div className="w-72 shrink-0">
+-
++          <div className="w-48 shrink-0">
+             <ProjectCompletedTasksCard
+               completedCount={completedTasks.length}
+               expanded={showCompleted}
+-              onClick={() =>
+-                setShowCompleted(v => !v)
+-              }
++              onClick={() => setShowCompleted(v => !v)}
+             />
+-
+           </div>
+-
+         )}
+ 
+         {visibleTasks.map(task => (
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -279,7 +279,7 @@
+ 
+       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+         {showFields ? (
+-          <div className="animate-comment-in flex flex-col gap-2">
++          <div className="flex flex-col gap-2">
+             <button
+               type="button"
+               onClick={() => setShowFields(false)}
+@@ -301,7 +301,7 @@
+           <button
+             type="button"
+             onClick={() => setShowFields(true)}
+-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
++            className="flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
+           >
+             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
+               <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -315,7 +315,7 @@
+ 
+       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+         {showFields ? (
+-          <div className="animate-comment-in flex flex-col gap-2">
++          <div className="flex flex-col gap-2">
+             <button
+               type="button"
+               onClick={() => setShowFields(false)}
+@@ -335,7 +335,7 @@
+           <button
+             type="button"
+             onClick={() => setShowFields(true)}
+-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
++            className="flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
+           >
+             {/* Datos colapsados ADENTRO (CON ICONO/INICIAL DE PRIORIDAD en lugar de nombre) */}
+             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
+diff --git a/src/shared/ui/collapsible-height-section/collapsible-height-section.tsx b/src/shared/ui/collapsible-height-section/collapsible-height-section.tsx
+--- a/src/shared/ui/collapsible-height-section/collapsible-height-section.tsx
++++ b/src/shared/ui/collapsible-height-section/collapsible-height-section.tsx
+@@ -41,22 +41,22 @@
+       setRendered(true)
+       return
+     }
+-    const t = window.setTimeout(() => setRendered(false), 320)
++    const t = window.setTimeout(() => setRendered(false), 220)
+     return () => window.clearTimeout(t)
+   }, [open, unmountOnExit])
+ 
+   return (
+     <div
+       className={cn(
+-        "grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out",
++        "grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out",
+         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+       )}
+     >
+       <div className="min-h-0 overflow-hidden">
+         <div
+           className={cn(
+-            "max-w-full transition-opacity duration-200 ease-out",
+-            open ? "opacity-100 delay-75" : "opacity-0",
++            "max-w-full transition-opacity duration-150 ease-out",
++            open ? "opacity-100" : "opacity-0",
+             className,
+           )}
+         >
+diff --git a/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts b/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts
+deleted file mode 100644
+--- a/src/shared/ui/horizontal-scroll/get-horizontal-mask-style.ts
++++ /dev/null
+@@ -1,9 +0,0 @@
+-import type { CSSProperties } from "react"
+-
+-/** @deprecated Fades eliminados. */
+-export function getHorizontalMaskStyle(
+-  _leftFade = 0,
+-  _rightFade = 0,
+-): CSSProperties {
+-  return {}
+-}
+diff --git a/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx b/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
+--- a/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
++++ b/src/shared/ui/horizontal-scroll/horizontal-scroll.tsx
+@@ -7,15 +7,13 @@
+ 
+ type Props = PropsWithChildren<{ className?: string }>
+ 
+-/** Fila horizontal — ScrollArea nativo + drag opcional con puntero. */
++/** Fila horizontal — solo scroll nativo (sin drag a mano). */
+ export function HorizontalScroll({ children, className }: Props) {
+   return (
+-    <ScrollArea
+-      orientation="horizontal"
+-      dragToScroll
+-      className="h-full min-h-0 w-full"
+-    >
+-      <div className={cn("flex h-full min-h-0 w-max items-start gap-4", className)}>
++    <ScrollArea orientation="horizontal" className="h-full min-h-0 w-full">
++      <div
++        className={cn("flex h-full min-h-0 w-max items-start gap-3", className)}
++      >
+         {children}
+       </div>
+     </ScrollArea>
+diff --git a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts b/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
+deleted file mode 100644
+--- a/src/shared/ui/horizontal-scroll/use-drag-scroll.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/**
+- * @deprecated Usar ScrollArea. Solo reexport del evento de interacción.
+- */
+-export {
+-  PIPELINE_SCROLL_INTERACTION_EVENT,
+-  notifyScrollInteraction,
+-} from "@/shared/ui/scroll/scroll-interaction"

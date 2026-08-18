@@ -191,30 +191,21 @@ export function ProjectTasksList({
 
       <HorizontalScroll>
 
-        <div className="w-72 shrink-0">
-
+        {/* Compacto por ANCHO (misma altura h-43.5 desktop). */}
+        <div className="w-48 shrink-0">
           <ProjectTaskPlaceholder
-            onClick={() =>
-              setOpenTaskDialog(true)
-            }
+            onClick={() => setOpenTaskDialog(true)}
           />
-
         </div>
 
         {completedTasks.length > 0 && (
-
-          <div className="w-72 shrink-0">
-
+          <div className="w-48 shrink-0">
             <ProjectCompletedTasksCard
               completedCount={completedTasks.length}
               expanded={showCompleted}
-              onClick={() =>
-                setShowCompleted(v => !v)
-              }
+              onClick={() => setShowCompleted(v => !v)}
             />
-
           </div>
-
         )}
 
         {visibleTasks.map(task => (

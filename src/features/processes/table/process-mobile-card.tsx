@@ -264,7 +264,7 @@ export function ProcessMobileCard({
 
       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
         {showFields ? (
-          <div className="animate-comment-in flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <button
               type="button"
               onClick={() => setShowFields(false)}
@@ -286,7 +286,7 @@ export function ProcessMobileCard({
           <button
             type="button"
             onClick={() => setShowFields(true)}
-            className="animate-comment-in flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
+            className="flex w-full items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2.5 transition hover:bg-foreground/5"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground">
               <span className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">

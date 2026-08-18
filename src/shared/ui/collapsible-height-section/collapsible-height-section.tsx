@@ -41,22 +41,22 @@ export function CollapsibleHeightSection({
       setRendered(true)
       return
     }
-    const t = window.setTimeout(() => setRendered(false), 320)
+    const t = window.setTimeout(() => setRendered(false), 220)
     return () => window.clearTimeout(t)
   }, [open, unmountOnExit])
 
   return (
     <div
       className={cn(
-        "grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out",
+        "grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out",
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
       )}
     >
       <div className="min-h-0 overflow-hidden">
         <div
           className={cn(
-            "max-w-full transition-opacity duration-200 ease-out",
-            open ? "opacity-100 delay-75" : "opacity-0",
+            "max-w-full transition-opacity duration-150 ease-out",
+            open ? "opacity-100" : "opacity-0",
             className,
           )}
         >
