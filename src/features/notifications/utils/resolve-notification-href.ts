@@ -18,10 +18,10 @@ export function resolveNotificationHref(
     params.set("history", "1")
   }
 
-  // Detectar si la notificación es de tipo comentario o mención para abrir en la pestaña de mensajes
+  // Comentario / mención → pestaña de mensajes
   const notificationType = notification.type?.toUpperCase() ?? ""
-  const isCommentOrMention = 
-    notificationType.includes("COMMENT") || 
+  const isCommentOrMention =
+    notificationType.includes("COMMENT") ||
     notificationType.includes("MENTION") ||
     notificationType.includes("MESSAGE")
 
@@ -39,6 +39,11 @@ export function resolveNotificationHref(
   if (notification.route.module === "projects") {
     if (notification.projectId) params.set("projectId", notification.projectId)
     return `/projects?${params.toString()}`
+  }
+
+  if (notification.route.module === "engineering") {
+    if (notification.taskId) params.set("taskId", notification.taskId)
+    return `/ingenieria?${params.toString()}`
   }
 
   if (notification.taskId) params.set("taskId", notification.taskId)

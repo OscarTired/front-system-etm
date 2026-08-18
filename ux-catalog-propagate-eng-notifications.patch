@@ -1,0 +1,370 @@
+diff --git a/src/features/notifications/types/notification.types.ts b/src/features/notifications/types/notification.types.ts
+index ff2f8c3..d8097ff 100644
+--- a/src/features/notifications/types/notification.types.ts
++++ b/src/features/notifications/types/notification.types.ts
+@@ -11,6 +11,8 @@ export type NotificationType =
+   | "TASK_SUMMONED"
+   | "TASK_INVITE_ACCEPTED"
+   | "TASK_INVITE_DECLINED"
++  /** Asignación de tarea de ingeniería (assigneeId). Requiere emit en back. */
++  | "ENGINEERING_TASK_ASSIGNED"
+ 
+ export type WorkflowStatusValue =
+   | "QUEUE"
+@@ -21,7 +23,7 @@ export type WorkflowStatusValue =
+   | "REVIEWED"
+ 
+ export interface NotificationRoute {
+-  module: "tasks" | "processes" | "projects"
++  module: "tasks" | "processes" | "projects" | "engineering"
+   history: boolean
+   processCode?: ProcessCode
+ }
+diff --git a/src/features/notifications/utils/notification-action-label.ts b/src/features/notifications/utils/notification-action-label.ts
+index 561f437..f083b89 100644
+--- a/src/features/notifications/utils/notification-action-label.ts
++++ b/src/features/notifications/utils/notification-action-label.ts
+@@ -18,6 +18,8 @@ export function getNotificationActionLabel(type: NotificationType): string {
+       return "aceptó la convocatoria"
+     case "TASK_INVITE_DECLINED":
+       return "rechazó la convocatoria"
++    case "ENGINEERING_TASK_ASSIGNED":
++      return "te asignó una tarea de ingeniería"
+     default: {
+       const _exhaustive: never = type
+       return _exhaustive
+@@ -34,6 +36,7 @@ export function isTaskAssignmentNotification(type: NotificationType): boolean {
+     type === "TASK_ASSIGNED" ||
+     type === "TASK_SUMMONED" ||
+     type === "TASK_INVITE_ACCEPTED" ||
+-    type === "TASK_INVITE_DECLINED"
++    type === "TASK_INVITE_DECLINED" ||
++    type === "ENGINEERING_TASK_ASSIGNED"
+   )
+ }
+diff --git a/src/features/notifications/utils/resolve-notification-href.ts b/src/features/notifications/utils/resolve-notification-href.ts
+index 4f50e41..1aada12 100644
+--- a/src/features/notifications/utils/resolve-notification-href.ts
++++ b/src/features/notifications/utils/resolve-notification-href.ts
+@@ -18,10 +18,10 @@ export function resolveNotificationHref(
+     params.set("history", "1")
+   }
+ 
+-  // Detectar si la notificación es de tipo comentario o mención para abrir en la pestaña de mensajes
++  // Comentario / mención → pestaña de mensajes
+   const notificationType = notification.type?.toUpperCase() ?? ""
+-  const isCommentOrMention = 
+-    notificationType.includes("COMMENT") || 
++  const isCommentOrMention =
++    notificationType.includes("COMMENT") ||
+     notificationType.includes("MENTION") ||
+     notificationType.includes("MESSAGE")
+ 
+@@ -41,6 +41,11 @@ export function resolveNotificationHref(
+     return `/projects?${params.toString()}`
+   }
+ 
++  if (notification.route.module === "engineering") {
++    if (notification.taskId) params.set("taskId", notification.taskId)
++    return `/ingenieria?${params.toString()}`
++  }
++
+   if (notification.taskId) params.set("taskId", notification.taskId)
+   return `/tasks?${params.toString()}`
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/priorities/cache/propagate-priority-update.ts b/src/features/priorities/cache/propagate-priority-update.ts
+new file mode 100644
+index 0000000..98d2b91
+--- /dev/null
++++ b/src/features/priorities/cache/propagate-priority-update.ts
+@@ -0,0 +1,22 @@
++import type { QueryClient } from "@tanstack/react-query"
++
++import type { Priority } from "../types/priority.types"
++import type { Task } from "@/features/tasks/types/task.types"
++
++/**
++ * Priority anidado solo en tasks[].
++ */
++export function propagatePriorityUpdate(
++  queryClient: QueryClient,
++  priority: Priority,
++) {
++  queryClient.setQueryData<Priority>(["priority", priority.id], priority)
++
++  queryClient.setQueryData<Task[]>(["tasks"], current =>
++    (current ?? []).map(task =>
++      task.priority?.id === priority.id
++        ? { ...task, priority }
++        : task,
++    ),
++  )
++}
+diff --git a/src/features/priorities/hooks/use-priorities.ts b/src/features/priorities/hooks/use-priorities.ts
+index 25f53d9..fea46e5 100644
+--- a/src/features/priorities/hooks/use-priorities.ts
++++ b/src/features/priorities/hooks/use-priorities.ts
+@@ -1,44 +1,37 @@
+ "use client"
+ 
+-import {
+-  useEntityModule,
+-} from "@/shared/core/entity/use-entity-module"
++import { useQueryClient } from "@tanstack/react-query"
+ 
+-import {
+-  prioritiesService,
+-} from "../services/priorities.service"
++import { useEntityModule } from "@/shared/core/entity/use-entity-module"
++import { prioritiesService } from "../services/priorities.service"
++import { propagatePriorityUpdate } from "../cache/propagate-priority-update"
++import type { Priority } from "../types/priority.types"
++import type { EntityForm } from "@/shared/ui/entity-dialog/entity-dialog.types"
+ 
+ export function usePriorities() {
+-
+-  const {
+-
+-    items,
+-
+-    loading,
+-
+-    create,
+-
+-    update,
+-
+-    remove,
+-
+-  } = useEntityModule(
+-    "priorities",
+-    prioritiesService,
+-  )
++  const queryClient = useQueryClient()
++
++  const { items, loading, create, update, remove } = useEntityModule<
++    Priority,
++    EntityForm,
++    EntityForm
++  >("priorities", prioritiesService)
++
++  const updatePriority = async (input: {
++    id: string
++    dto: EntityForm
++    optimistic?: Partial<Priority>
++  }) => {
++    const priority = await update(input)
++    propagatePriorityUpdate(queryClient, priority)
++    return priority
++  }
+ 
+   return {
+-
+     priorities: items,
+-
+     loading,
+-
+     create,
+-
+-    update,
+-
++    update: updatePriority,
+     remove,
+-
+   }
+-
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/stages/cache/propagate-stage-update.ts b/src/features/stages/cache/propagate-stage-update.ts
+new file mode 100644
+index 0000000..44c8336
+--- /dev/null
++++ b/src/features/stages/cache/propagate-stage-update.ts
+@@ -0,0 +1,38 @@
++import type { QueryClient } from "@tanstack/react-query"
++
++import type { Stage } from "../types/stage.types"
++import type { Project } from "@/features/projects/types/project.types"
++import type { Task } from "@/features/tasks/types/task.types"
++
++/**
++ * Stage vive anidado en projects[] y tasks[].
++ * Sin propagar, filas siguen con color/nombre viejos hasta refetch.
++ */
++export function propagateStageUpdate(
++  queryClient: QueryClient,
++  stage: Stage,
++) {
++  queryClient.setQueryData<Stage>(["stage", stage.id], stage)
++
++  queryClient.setQueryData<Project[]>(["projects"], current =>
++    (current ?? []).map(project =>
++      project.stage?.id === stage.id
++        ? { ...project, stage }
++        : project,
++    ),
++  )
++
++  for (const [key, project] of queryClient.getQueriesData<Project>({
++    queryKey: ["project"],
++  })) {
++    if (project?.stage?.id === stage.id) {
++      queryClient.setQueryData<Project>(key, { ...project, stage })
++    }
++  }
++
++  queryClient.setQueryData<Task[]>(["tasks"], current =>
++    (current ?? []).map(task =>
++      task.stage?.id === stage.id ? { ...task, stage } : task,
++    ),
++  )
++}
+diff --git a/src/features/stages/hooks/use-stages.ts b/src/features/stages/hooks/use-stages.ts
+index 0ed1704..7a9f474 100644
+--- a/src/features/stages/hooks/use-stages.ts
++++ b/src/features/stages/hooks/use-stages.ts
+@@ -1,22 +1,37 @@
+ "use client"
+ 
++import { useQueryClient } from "@tanstack/react-query"
++
+ import { useEntityModule } from "@/shared/core/entity/use-entity-module"
+ import { stagesService } from "../services/stages.service"
++import { propagateStageUpdate } from "../cache/propagate-stage-update"
++import type { Stage } from "../types/stage.types"
++import type { EntityForm } from "@/shared/ui/entity-dialog/entity-dialog.types"
+ 
+ export function useStages() {
+-  const {
+-    items,
+-    loading,
+-    create,
+-    update,
+-    remove,
+-  } = useEntityModule("stages", stagesService)
++  const queryClient = useQueryClient()
++
++  const { items, loading, create, update, remove } = useEntityModule<
++    Stage,
++    EntityForm,
++    EntityForm
++  >("stages", stagesService)
++
++  const updateStage = async (input: {
++    id: string
++    dto: EntityForm
++    optimistic?: Partial<Stage>
++  }) => {
++    const stage = await update(input)
++    propagateStageUpdate(queryClient, stage)
++    return stage
++  }
+ 
+   return {
+     stages: items,
+     loading,
+     create,
+-    update,
++    update: updateStage,
+     remove,
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/features/statuses/cache/propagate-status-update.ts b/src/features/statuses/cache/propagate-status-update.ts
+new file mode 100644
+index 0000000..8373222
+--- /dev/null
++++ b/src/features/statuses/cache/propagate-status-update.ts
+@@ -0,0 +1,37 @@
++import type { QueryClient } from "@tanstack/react-query"
++
++import type { Status } from "../types/status.types"
++import type { Project } from "@/features/projects/types/project.types"
++import type { Task } from "@/features/tasks/types/task.types"
++
++/**
++ * Status anidado en projects[] y tasks[].
++ */
++export function propagateStatusUpdate(
++  queryClient: QueryClient,
++  status: Status,
++) {
++  queryClient.setQueryData<Status>(["status", status.id], status)
++
++  queryClient.setQueryData<Project[]>(["projects"], current =>
++    (current ?? []).map(project =>
++      project.status?.id === status.id
++        ? { ...project, status }
++        : project,
++    ),
++  )
++
++  for (const [key, project] of queryClient.getQueriesData<Project>({
++    queryKey: ["project"],
++  })) {
++    if (project?.status?.id === status.id) {
++      queryClient.setQueryData<Project>(key, { ...project, status })
++    }
++  }
++
++  queryClient.setQueryData<Task[]>(["tasks"], current =>
++    (current ?? []).map(task =>
++      task.status?.id === status.id ? { ...task, status } : task,
++    ),
++  )
++}
+diff --git a/src/features/statuses/hooks/use-statuses.ts b/src/features/statuses/hooks/use-statuses.ts
+index 7bb612d..a8b44ca 100644
+--- a/src/features/statuses/hooks/use-statuses.ts
++++ b/src/features/statuses/hooks/use-statuses.ts
+@@ -1,22 +1,37 @@
+ "use client"
+ 
++import { useQueryClient } from "@tanstack/react-query"
++
+ import { useEntityModule } from "@/shared/core/entity/use-entity-module"
+ import { statusesService } from "../services/statuses.service"
++import { propagateStatusUpdate } from "../cache/propagate-status-update"
++import type { Status } from "../types/status.types"
++import type { EntityForm } from "@/shared/ui/entity-dialog/entity-dialog.types"
+ 
+ export function useStatuses() {
+-  const {
+-    items,
+-    loading,
+-    create,
+-    update,
+-    remove,
+-  } = useEntityModule("statuses", statusesService)
++  const queryClient = useQueryClient()
++
++  const { items, loading, create, update, remove } = useEntityModule<
++    Status,
++    EntityForm,
++    EntityForm
++  >("statuses", statusesService)
++
++  const updateStatus = async (input: {
++    id: string
++    dto: EntityForm
++    optimistic?: Partial<Status>
++  }) => {
++    const status = await update(input)
++    propagateStatusUpdate(queryClient, status)
++    return status
++  }
+ 
+   return {
+     statuses: items,
+     loading,
+     create,
+-    update,
++    update: updateStatus,
+     remove,
+   }
+-}
+\ No newline at end of file
++}

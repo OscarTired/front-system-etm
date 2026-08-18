@@ -18,6 +18,8 @@ export function getNotificationActionLabel(type: NotificationType): string {
       return "aceptó la convocatoria"
     case "TASK_INVITE_DECLINED":
       return "rechazó la convocatoria"
+    case "ENGINEERING_TASK_ASSIGNED":
+      return "te asignó una tarea de ingeniería"
     default: {
       const _exhaustive: never = type
       return _exhaustive
@@ -34,6 +36,7 @@ export function isTaskAssignmentNotification(type: NotificationType): boolean {
     type === "TASK_ASSIGNED" ||
     type === "TASK_SUMMONED" ||
     type === "TASK_INVITE_ACCEPTED" ||
-    type === "TASK_INVITE_DECLINED"
+    type === "TASK_INVITE_DECLINED" ||
+    type === "ENGINEERING_TASK_ASSIGNED"
   )
 }

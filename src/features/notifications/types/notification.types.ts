@@ -11,6 +11,8 @@ export type NotificationType =
   | "TASK_SUMMONED"
   | "TASK_INVITE_ACCEPTED"
   | "TASK_INVITE_DECLINED"
+  /** Asignación de tarea de ingeniería (assigneeId). Requiere emit en back. */
+  | "ENGINEERING_TASK_ASSIGNED"
 
 export type WorkflowStatusValue =
   | "QUEUE"
@@ -21,7 +23,7 @@ export type WorkflowStatusValue =
   | "REVIEWED"
 
 export interface NotificationRoute {
-  module: "tasks" | "processes" | "projects"
+  module: "tasks" | "processes" | "projects" | "engineering"
   history: boolean
   processCode?: ProcessCode
 }
