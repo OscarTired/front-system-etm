@@ -30,7 +30,7 @@ export function ProcessBoardColumnFrame({
     <div className={cn("flex h-full min-h-0 w-full flex-col", className)}>
       <div className="shrink-0">{header}</div>
       {meta ? <div className="shrink-0">{meta}</div> : null}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain themed-scrollbar-y">
+      <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {children}
       </div>
     </div>

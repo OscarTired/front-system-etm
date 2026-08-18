@@ -32,6 +32,9 @@ type Props = {
   statusColor?: string
   statusIcon?: EntityIcon
   taskNumber?: number
+  /** Chip de proyecto (displayProjectCode) — mismo que mobile-card. */
+  projectCodeLabel?: string
+  projectChipColor?: string
   commentCount?: number
   hideCommentBadge?: boolean
   /** Acciones dentro del footer (layout). Compiten por ancho con el status. */
@@ -58,6 +61,8 @@ export function KanbanCardView({
   statusColor,
   statusIcon,
   taskNumber,
+  projectCodeLabel,
+  projectChipColor,
   commentCount = 0,
   hideCommentBadge = false,
   footerActions,
@@ -124,9 +129,22 @@ export function KanbanCardView({
       <div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="text-sm font-semibold text-foreground">
-              #{String(taskNumber ?? 0).padStart(3, "0")}
-            </span>
+            {projectCodeLabel ? (
+              <span
+                title={projectCodeLabel}
+                className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+                style={{
+                  backgroundColor: `${projectChipColor ?? "#64748B"}15`,
+                  color: projectChipColor ?? "#64748B",
+                }}
+              >
+                {projectCodeLabel}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-foreground">
+                #{String(taskNumber ?? 0).padStart(3, "0")}
+              </span>
+            )}
             <span
               className="size-1.5 rounded-full"
               style={{ backgroundColor: priorityColor }}

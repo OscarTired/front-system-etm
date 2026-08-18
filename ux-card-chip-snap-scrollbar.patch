@@ -1,0 +1,229 @@
+diff --git a/src/features/engineering/components/engineering-process-board.tsx b/src/features/engineering/components/engineering-process-board.tsx
+--- a/src/features/engineering/components/engineering-process-board.tsx
++++ b/src/features/engineering/components/engineering-process-board.tsx
+@@ -170,7 +170,7 @@
+       }
+       header={<EngineeringKpiHeader tasks={tasks} />}
+       columnClassName="w-72 min-w-72 shrink-0"
+-      scrollStep={288}
++      scrollStep={300}
+     />
+   )
+ }
+diff --git a/src/features/tasks/components/kanban-card/kanban-card-from-task.tsx b/src/features/tasks/components/kanban-card/kanban-card-from-task.tsx
+--- a/src/features/tasks/components/kanban-card/kanban-card-from-task.tsx
++++ b/src/features/tasks/components/kanban-card/kanban-card-from-task.tsx
+@@ -7,6 +7,7 @@
+ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
+ import { getWorkflowStep } from "@/features/workflow/selectors/get-workflow-step"
+ import type { ProcessCode, Task } from "../../types/task.types"
++import { displayProjectCode } from "@/features/projects/utils/display-project-code"
+ import {
+   getTaskMaterialLabel,
+   getTaskPiecesTotal,
+@@ -60,6 +61,8 @@
+       statusColor={status.color}
+       statusIcon={status.icon}
+       taskNumber={task.taskNumber}
++      projectCodeLabel={displayProjectCode(task.project.projectCode)}
++      projectChipColor={task.project.client.color}
+     />
+   )
+ }
+diff --git a/src/features/tasks/components/kanban-card/kanban-card-view.tsx b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+--- a/src/features/tasks/components/kanban-card/kanban-card-view.tsx
++++ b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+@@ -32,6 +32,9 @@
+   statusColor?: string
+   statusIcon?: EntityIcon
+   taskNumber?: number
++  /** Chip de proyecto (displayProjectCode) — mismo que mobile-card. */
++  projectCodeLabel?: string
++  projectChipColor?: string
+   commentCount?: number
+   hideCommentBadge?: boolean
+   /** Acciones dentro del footer (layout). Compiten por ancho con el status. */
+@@ -58,6 +61,8 @@
+   statusColor,
+   statusIcon,
+   taskNumber,
++  projectCodeLabel,
++  projectChipColor,
+   commentCount = 0,
+   hideCommentBadge = false,
+   footerActions,
+@@ -124,9 +129,22 @@
+       <div>
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2.5">
+-            <span className="text-sm font-semibold text-foreground">
+-              #{String(taskNumber ?? 0).padStart(3, "0")}
+-            </span>
++            {projectCodeLabel ? (
++              <span
++                title={projectCodeLabel}
++                className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
++                style={{
++                  backgroundColor: `${projectChipColor ?? "#64748B"}15`,
++                  color: projectChipColor ?? "#64748B",
++                }}
++              >
++                {projectCodeLabel}
++              </span>
++            ) : (
++              <span className="text-sm font-semibold text-foreground">
++                #{String(taskNumber ?? 0).padStart(3, "0")}
++              </span>
++            )}
+             <span
+               className="size-1.5 rounded-full"
+               style={{ backgroundColor: priorityColor }}
+diff --git a/src/shared/ui/process-board/process-board-column-frame.tsx b/src/shared/ui/process-board/process-board-column-frame.tsx
+--- a/src/shared/ui/process-board/process-board-column-frame.tsx
++++ b/src/shared/ui/process-board/process-board-column-frame.tsx
+@@ -30,7 +30,7 @@
+     <div className={cn("flex h-full min-h-0 w-full flex-col", className)}>
+       <div className="shrink-0">{header}</div>
+       {meta ? <div className="shrink-0">{meta}</div> : null}
+-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain themed-scrollbar-y">
++      <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+         {children}
+       </div>
+     </div>
+diff --git a/src/shared/ui/process-board/process-board.tsx b/src/shared/ui/process-board/process-board.tsx
+--- a/src/shared/ui/process-board/process-board.tsx
++++ b/src/shared/ui/process-board/process-board.tsx
+@@ -12,8 +12,12 @@
+ 
+ type Props<TId extends string = string> = {
+   columns: ProcessBoardColumn<TId>[]
+-  /** Ancho de columna en desktop. Mobile = 100% viewport. */
++  /** Ancho de columna desktop (debe coincidir con scrollStep − gap). */
+   columnClassName?: string
++  /**
++   * Paso de scroll por columna en desktop (px).
++   * w-72 (288) + gap-3 (12) = 300 — snap columna a columna.
++   */
+   scrollStep?: number
+   className?: string
+   header?: ReactNode
+@@ -24,19 +28,16 @@
+ }
+ 
+ /**
+- * Board horizontal compartido (ingeniería, hubs de proceso, etc.).
++ * Board horizontal compartido.
+  *
+- * Ejes:
+- * - X → este componente (ScrollArea + drag + rueda→X + flechas)
+- * - Y → ProcessBoardColumnFrame dentro de cada column.content
+- *
+- * Padre obligatorio:
+- *   className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
++ * Eje X: ScrollArea + drag + rueda→X + flechas.
++ * Snap: CSS scroll-snap + corrección en scrollend (columna completa, no parcial).
++ * Eje Y: ProcessBoardColumnFrame (body).
+  */
+ export function ProcessBoard<TId extends string = string>({
+   columns,
+   columnClassName = "w-72 min-w-72 shrink-0",
+-  scrollStep = 288,
++  scrollStep = 300,
+   className,
+   header,
+   loading,
+@@ -62,11 +63,14 @@
+     canScrollRight &&
+     (isMobile || !arrowsOnHover || hovering)
+ 
++  function stepPx(el: HTMLDivElement) {
++    return isMobile ? el.clientWidth : scrollStep
++  }
++
+   function currentIndex() {
+     const el = containerRef.current
+     if (!el) return 0
+-    if (isMobile) return Math.round(el.scrollLeft / (el.clientWidth || 1))
+-    return Math.round(el.scrollLeft / scrollStep)
++    return Math.round(el.scrollLeft / stepPx(el))
+   }
+ 
+   function goToIndex(index: number) {
+@@ -74,11 +78,46 @@
+     if (!el) return
+     const next = Math.max(0, Math.min(columns.length - 1, index))
+     el.scrollTo({
+-      left: isMobile ? next * el.clientWidth : next * scrollStep,
++      left: next * stepPx(el),
+       behavior: "smooth",
+     })
+   }
+ 
++  function snapToNearest() {
++    const el = containerRef.current
++    if (!el) return
++    const step = stepPx(el)
++    if (step <= 0) return
++    const target = Math.round(el.scrollLeft / step) * step
++    if (Math.abs(el.scrollLeft - target) < 1) return
++    el.scrollTo({ left: target, behavior: "smooth" })
++  }
++
++  // Snap al soltar scroll (drag, rueda, trackpad). Comunidad: CSS snap + scrollend.
++  useEffect(() => {
++    const el = containerRef.current
++    if (!el) return
++
++    const onScrollEnd = () => snapToNearest()
++    el.addEventListener("scrollend", onScrollEnd)
++
++    // Fallback browsers sin scrollend: debounce scroll
++    let timer: ReturnType<typeof setTimeout> | undefined
++    const onScroll = () => {
++      if (typeof (window as unknown as { onscrollend?: unknown }).onscrollend !== "undefined")
++        return
++      clearTimeout(timer)
++      timer = setTimeout(snapToNearest, 100)
++    }
++    el.addEventListener("scroll", onScroll, { passive: true })
++
++    return () => {
++      el.removeEventListener("scrollend", onScrollEnd)
++      el.removeEventListener("scroll", onScroll)
++      clearTimeout(timer)
++    }
++  }, [isMobile, scrollStep, columns.length])
++
+   const prevLen = useRef(columns.length)
+   useEffect(() => {
+     if (prevLen.current === columns.length) return
+@@ -130,20 +169,23 @@
+           mapVerticalWheel
+           className="h-full min-h-0 w-full"
+         >
++          {/*
++            snap-x mandatory + snap-start/always: cada columna es una “página”.
++            Desktop usa gap vía margin en columnas (incluido en scrollStep).
++          */}
+           <div
+             className={cn(
+-              "flex h-full min-h-0",
+-              isMobile ? "snap-x snap-mandatory" : "gap-3",
++              "flex h-full min-h-0 snap-x snap-mandatory",
+             )}
+           >
+-            {columns.map(col => (
++            {columns.map((col, i) => (
+               <div
+                 key={col.id}
+                 className={cn(
+-                  "flex h-full min-h-0 shrink-0 flex-col",
++                  "flex h-full min-h-0 shrink-0 snap-start snap-always flex-col",
+                   isMobile
+-                    ? "w-full min-w-full snap-center"
+-                    : columnClassName,
++                    ? "w-full min-w-full"
++                    : cn(columnClassName, i < columns.length - 1 && "mr-3"),
+                 )}
+               >
+                 {col.content}

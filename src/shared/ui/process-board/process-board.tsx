@@ -12,8 +12,12 @@ import type { ProcessBoardColumn } from "./process-board.types"
 
 type Props<TId extends string = string> = {
   columns: ProcessBoardColumn<TId>[]
-  /** Ancho de columna en desktop. Mobile = 100% viewport. */
+  /** Ancho de columna desktop (debe coincidir con scrollStep − gap). */
   columnClassName?: string
+  /**
+   * Paso de scroll por columna en desktop (px).
+   * w-72 (288) + gap-3 (12) = 300 — snap columna a columna.
+   */
   scrollStep?: number
   className?: string
   header?: ReactNode
@@ -24,19 +28,16 @@ type Props<TId extends string = string> = {
 }
 
 /**
- * Board horizontal compartido (ingeniería, hubs de proceso, etc.).
+ * Board horizontal compartido.
  *
- * Ejes:
- * - X → este componente (ScrollArea + drag + rueda→X + flechas)
- * - Y → ProcessBoardColumnFrame dentro de cada column.content
- *
- * Padre obligatorio:
- *   className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+ * Eje X: ScrollArea + drag + rueda→X + flechas.
+ * Snap: CSS scroll-snap + corrección en scrollend (columna completa, no parcial).
+ * Eje Y: ProcessBoardColumnFrame (body).
  */
 export function ProcessBoard<TId extends string = string>({
   columns,
   columnClassName = "w-72 min-w-72 shrink-0",
-  scrollStep = 288,
+  scrollStep = 300,
   className,
   header,
   loading,
@@ -62,11 +63,14 @@ export function ProcessBoard<TId extends string = string>({
     canScrollRight &&
     (isMobile || !arrowsOnHover || hovering)
 
+  function stepPx(el: HTMLDivElement) {
+    return isMobile ? el.clientWidth : scrollStep
+  }
+
   function currentIndex() {
     const el = containerRef.current
     if (!el) return 0
-    if (isMobile) return Math.round(el.scrollLeft / (el.clientWidth || 1))
-    return Math.round(el.scrollLeft / scrollStep)
+    return Math.round(el.scrollLeft / stepPx(el))
   }
 
   function goToIndex(index: number) {
@@ -74,10 +78,45 @@ export function ProcessBoard<TId extends string = string>({
     if (!el) return
     const next = Math.max(0, Math.min(columns.length - 1, index))
     el.scrollTo({
-      left: isMobile ? next * el.clientWidth : next * scrollStep,
+      left: next * stepPx(el),
       behavior: "smooth",
     })
   }
+
+  function snapToNearest() {
+    const el = containerRef.current
+    if (!el) return
+    const step = stepPx(el)
+    if (step <= 0) return
+    const target = Math.round(el.scrollLeft / step) * step
+    if (Math.abs(el.scrollLeft - target) < 1) return
+    el.scrollTo({ left: target, behavior: "smooth" })
+  }
+
+  // Snap al soltar scroll (drag, rueda, trackpad). Comunidad: CSS snap + scrollend.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const onScrollEnd = () => snapToNearest()
+    el.addEventListener("scrollend", onScrollEnd)
+
+    // Fallback browsers sin scrollend: debounce scroll
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const onScroll = () => {
+      if (typeof (window as unknown as { onscrollend?: unknown }).onscrollend !== "undefined")
+        return
+      clearTimeout(timer)
+      timer = setTimeout(snapToNearest, 100)
+    }
+    el.addEventListener("scroll", onScroll, { passive: true })
+
+    return () => {
+      el.removeEventListener("scrollend", onScrollEnd)
+      el.removeEventListener("scroll", onScroll)
+      clearTimeout(timer)
+    }
+  }, [isMobile, scrollStep, columns.length])
 
   const prevLen = useRef(columns.length)
   useEffect(() => {
@@ -130,20 +169,23 @@ export function ProcessBoard<TId extends string = string>({
           mapVerticalWheel
           className="h-full min-h-0 w-full"
         >
+          {/*
+            snap-x mandatory + snap-start/always: cada columna es una “página”.
+            Desktop usa gap vía margin en columnas (incluido en scrollStep).
+          */}
           <div
             className={cn(
-              "flex h-full min-h-0",
-              isMobile ? "snap-x snap-mandatory" : "gap-3",
+              "flex h-full min-h-0 snap-x snap-mandatory",
             )}
           >
-            {columns.map(col => (
+            {columns.map((col, i) => (
               <div
                 key={col.id}
                 className={cn(
-                  "flex h-full min-h-0 shrink-0 flex-col",
+                  "flex h-full min-h-0 shrink-0 snap-start snap-always flex-col",
                   isMobile
-                    ? "w-full min-w-full snap-center"
-                    : columnClassName,
+                    ? "w-full min-w-full"
+                    : cn(columnClassName, i < columns.length - 1 && "mr-3"),
                 )}
               >
                 {col.content}

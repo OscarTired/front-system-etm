@@ -170,7 +170,7 @@ export function EngineeringProcessBoard({
       }
       header={<EngineeringKpiHeader tasks={tasks} />}
       columnClassName="w-72 min-w-72 shrink-0"
-      scrollStep={288}
+      scrollStep={300}
     />
   )
 }
