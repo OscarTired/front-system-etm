@@ -59,15 +59,14 @@ export function SpeedDialFab({ actions, className }: Props) {
     if (chromeHidden) setDialOpen(false)
   }, [chromeHidden])
 
-  // Scroll activo o recién terminado → no se permite ABRIR el dial.
-  // Si ya está abierto, el scroll lo cierra (UX estándar).
-  const lastScrollAtRef = useRef(0)
-  const SCROLL_LOCK_MS = 450
-
+  // Scroll: cierra el dial si estaba abierto.
+  // No bloqueamos ABRIR tras el scroll: el momentum sigue disparando
+  // "scroll" después del finger-up; un lock por tiempo (p.ej. 450ms)
+  // hacía esperar a que frene del todo + cooldown. El toque al FAB
+  // debe valer en cuanto el usuario deja de tocar la lista.
   useEffect(() => {
     const onScroll = (e: Event) => {
       if (isInsideSheetOrPopover(e.target)) return
-      lastScrollAtRef.current = performance.now()
       setDialOpen(false)
     }
     window.addEventListener("scroll", onScroll, true)
@@ -97,12 +96,6 @@ export function SpeedDialFab({ actions, className }: Props) {
   }, [dialOpen])
 
   function toggleDial() {
-    // En pleno scroll (o <450ms después): no abrir. Solo permitir cerrar.
-    const sinceScroll = performance.now() - lastScrollAtRef.current
-    if (sinceScroll < SCROLL_LOCK_MS) {
-      setDialOpen(false)
-      return
-    }
     setDialOpen(v => !v)
   }
 
