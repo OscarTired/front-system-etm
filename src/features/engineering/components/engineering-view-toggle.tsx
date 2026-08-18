@@ -35,17 +35,17 @@ export function EngineeringViewToggle({ compact = false }: Props) {
             title={option.label}
             aria-pressed={active}
             className={cn(
-              "flex items-center justify-center rounded-md transition",
+              "flex items-center justify-center gap-1.5 rounded-md font-semibold transition",
               compact
-                ? "size-8"
-                : "gap-1.5 px-3 py-0.5 text-sm font-semibold",
+                ? "px-2.5 py-1 text-xs"
+                : "px-3 py-0.5 text-sm",
               active
                 ? "bg-foreground/10 text-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon size={compact ? 15 : 14} />
-            {!compact && <span>{option.label}</span>}
+            <Icon size={compact ? 14 : 14} />
+            <span>{option.label}</span>
           </button>
         )
       })}

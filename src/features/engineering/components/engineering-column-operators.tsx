@@ -161,7 +161,7 @@ export function EngineeringColumnOperators({
       <PopoverContent
         align="start"
         sideOffset={6}
-        className="w-(--radix-popover-trigger-width) max-w-sm p-2"
+        className="w-full p-3"
       >
         <div className="px-1 pb-1.5 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           Asignados en este proceso

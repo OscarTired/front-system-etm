@@ -1,0 +1,50 @@
+diff --git a/src/features/engineering/components/engineering-column-operators.tsx b/src/features/engineering/components/engineering-column-operators.tsx
+--- a/src/features/engineering/components/engineering-column-operators.tsx
++++ b/src/features/engineering/components/engineering-column-operators.tsx
+@@ -161,7 +161,7 @@
+       <PopoverContent
+         align="start"
+         sideOffset={6}
+-        className="w-(--radix-popover-trigger-width) max-w-sm p-2"
++        className="w-full p-3"
+       >
+         <div className="px-1 pb-1.5 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+           Asignados en este proceso
+diff --git a/src/features/engineering/components/engineering-page-content.tsx b/src/features/engineering/components/engineering-page-content.tsx
+--- a/src/features/engineering/components/engineering-page-content.tsx
++++ b/src/features/engineering/components/engineering-page-content.tsx
+@@ -114,7 +114,7 @@
+           onChange={v => setProjectId(v.projectId)}
+         />
+         <div className="flex items-center gap-1.5">
+-          <EngineeringViewToggle compact />
++          <EngineeringViewToggle />
+           <div className="min-w-0 flex-1" />
+           <EntryCountBadge count={tasks.length} compact />
+         </div>
+diff --git a/src/features/engineering/components/engineering-view-toggle.tsx b/src/features/engineering/components/engineering-view-toggle.tsx
+--- a/src/features/engineering/components/engineering-view-toggle.tsx
++++ b/src/features/engineering/components/engineering-view-toggle.tsx
+@@ -35,17 +35,17 @@
+             title={option.label}
+             aria-pressed={active}
+             className={cn(
+-              "flex items-center justify-center rounded-md transition",
++              "flex items-center justify-center gap-1.5 rounded-md font-semibold transition",
+               compact
+-                ? "size-8"
+-                : "gap-1.5 px-3 py-0.5 text-sm font-semibold",
++                ? "px-2.5 py-1 text-xs"
++                : "px-3 py-0.5 text-sm",
+               active
+                 ? "bg-foreground/10 text-foreground"
+                 : "text-muted-foreground hover:text-foreground",
+             )}
+           >
+-            <Icon size={compact ? 15 : 14} />
+-            {!compact && <span>{option.label}</span>}
++            <Icon size={compact ? 14 : 14} />
++            <span>{option.label}</span>
+           </button>
+         )
+       })}

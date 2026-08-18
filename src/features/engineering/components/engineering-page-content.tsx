@@ -114,7 +114,7 @@ export function EngineeringPageContent() {
           onChange={v => setProjectId(v.projectId)}
         />
         <div className="flex items-center gap-1.5">
-          <EngineeringViewToggle compact />
+          <EngineeringViewToggle />
           <div className="min-w-0 flex-1" />
           <EntryCountBadge count={tasks.length} compact />
         </div>
