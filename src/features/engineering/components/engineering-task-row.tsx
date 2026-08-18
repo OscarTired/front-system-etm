@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { FileText, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { cn } from "@/shared/utils/utils"
@@ -24,6 +24,7 @@ type Props = {
 
 export function EngineeringTaskRow({ task, onEdit }: Props) {
   const { isMobile } = useResponsive()
+  const hasNote = Boolean(task.note?.trim())
   const { update, remove } = useEngineeringTaskMutations()
   const isCompleted = task.status === "COMPLETED"
 
@@ -97,7 +98,18 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
             </span>
           </div>
         </div>
-        <WorkflowStatusChip status={task.status} compact iconOnly={isMobile} />
+        <span className="flex shrink-0 items-center gap-1.5">
+          {hasNote && (
+            <span
+              title="Tiene detalle"
+              aria-label="Tiene detalle"
+              className="flex size-7 items-center justify-center rounded-lg bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400"
+            >
+              <FileText size={13} strokeWidth={2.25} />
+            </span>
+          )}
+          <WorkflowStatusChip status={task.status} compact iconOnly={isMobile} />
+        </span>
       </button>
 
       <DropdownMenu>

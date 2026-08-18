@@ -14,6 +14,7 @@ const ORIGIN_STORAGE_KEYS = [
   "process-origin-task-id",
   "task-origin-project-id",
   "process-origin-code",
+  "process-origin-focus-task-id",
 ] as const
 
 type RouterLike = {

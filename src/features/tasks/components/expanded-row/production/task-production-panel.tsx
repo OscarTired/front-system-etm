@@ -232,6 +232,8 @@ export function TaskProductionPanel({
               <button
                 type="button"
                 onClick={() => {
+                  sessionStorage.removeItem("process-origin-code")
+                  sessionStorage.removeItem("process-origin-focus-task-id")
                   sessionStorage.setItem(
                     "process-origin-task-id",
                     task.id,

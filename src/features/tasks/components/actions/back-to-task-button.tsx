@@ -11,6 +11,8 @@ const STORAGE_KEY = "process-origin-task-id"
 
 function readOrigin(): string | null {
   if (typeof sessionStorage === "undefined") return null
+  // Exclusivo: si hay origen proceso→proceso, no mostrar ← Tarea.
+  if (sessionStorage.getItem("process-origin-code")) return null
   return sessionStorage.getItem(STORAGE_KEY)
 }
 
@@ -35,6 +37,8 @@ export function BackToTaskButton() {
 
   const handleClick = () => {
     sessionStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem("process-origin-code")
+    sessionStorage.removeItem("process-origin-focus-task-id")
     setTaskId(null)
     useFocusNavStore.getState().start("Abriendo tarea…")
     router.push(`/tasks?taskId=${taskId}`)

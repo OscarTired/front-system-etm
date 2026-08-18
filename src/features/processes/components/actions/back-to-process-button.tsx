@@ -9,18 +9,36 @@ import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 
-/** Origen al navegar proceso → proceso (chip QUEUE / hub). */
+/** Origen proceso→proceso. Exclusivo vs process-origin-task-id (← Tarea). */
 export const PROCESS_ORIGIN_CODE_KEY = "process-origin-code"
-export const PROCESS_ORIGIN_TASK_KEY = "process-origin-task-id"
+/** taskId a re-enfocar al volver al proceso (NO es la clave de ← Tarea). */
+export const PROCESS_ORIGIN_FOCUS_TASK_KEY = "process-origin-focus-task-id"
+/** Clave de ← Tarea — se limpia al navegar proceso→proceso. */
+export const BACK_TO_TASK_ORIGIN_KEY = "process-origin-task-id"
 
 function readOriginCode(): string | null {
   if (typeof sessionStorage === "undefined") return null
   return sessionStorage.getItem(PROCESS_ORIGIN_CODE_KEY)
 }
 
-function readOriginTask(): string | null {
+function readFocusTask(): string | null {
   if (typeof sessionStorage === "undefined") return null
-  return sessionStorage.getItem(PROCESS_ORIGIN_TASK_KEY)
+  return sessionStorage.getItem(PROCESS_ORIGIN_FOCUS_TASK_KEY)
+}
+
+/** Guarda origen de navegación entre procesos y cancela ← Tarea. */
+export function setProcessNavigationOrigin(
+  fromCode: ProcessCode,
+  taskId: string,
+) {
+  if (typeof sessionStorage === "undefined") return
+  sessionStorage.setItem(PROCESS_ORIGIN_CODE_KEY, fromCode)
+  sessionStorage.setItem(PROCESS_ORIGIN_FOCUS_TASK_KEY, taskId)
+  // Un solo back: proceso cancela tarea.
+  sessionStorage.removeItem(BACK_TO_TASK_ORIGIN_KEY)
+  window.dispatchEvent(new Event("entity-origin-cleared"))
+  // Re-avisar para que BackToProcess relea (cleared solo vacía state;
+  // el efecto también depende de pathname/searchParams al navegar).
 }
 
 export function BackToProcessButton() {
@@ -34,7 +52,7 @@ export function BackToProcessButton() {
     if (!hydrated) return
     setOriginCode(readOriginCode())
 
-    const onCleared = () => setOriginCode(null)
+    const onCleared = () => setOriginCode(readOriginCode())
     window.addEventListener("entity-origin-cleared", onCleared)
     return () => window.removeEventListener("entity-origin-cleared", onCleared)
   }, [hydrated, pathname, searchParams])
@@ -46,9 +64,9 @@ export function BackToProcessButton() {
   const label = def?.label ?? code
 
   const handleClick = () => {
-    const taskId = readOriginTask()
+    const taskId = readFocusTask()
     sessionStorage.removeItem(PROCESS_ORIGIN_CODE_KEY)
-    sessionStorage.removeItem(PROCESS_ORIGIN_TASK_KEY)
+    sessionStorage.removeItem(PROCESS_ORIGIN_FOCUS_TASK_KEY)
     setOriginCode(null)
     useFocusNavStore.getState().start(`Abriendo ${label}…`)
     const qs = new URLSearchParams()
