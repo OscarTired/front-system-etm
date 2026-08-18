@@ -19,7 +19,6 @@ import type {
   CreatePieceBody,
   GeometryModel,
 } from "../types/geometry-model"
-import { GeometrySvgPreview } from "./geometry-svg-preview"
 import { enqueuePendingNestingPieces } from "../pending-nesting-pieces"
 import { nestingPieceToCadRow } from "../utils/nesting-piece-to-cad-row"
 import {
@@ -29,6 +28,16 @@ import {
   type SavedCadTemplate,
 } from "../lib/cad-templates-storage"
 import { dslToPiece, pieceToDsl } from "../lib/cad-spec-dsl"
+import { geometryModelToCanvasPieces } from "../utils/geometry-to-canvas-pieces"
+import dynamic from "next/dynamic"
+
+const DxfCanvas = dynamic(
+  () =>
+    import("@/features/nesting/components/dxf-canvas/dxf-canvas").then(
+      m => m.DxfCanvas,
+    ),
+  { ssr: false },
+)
 
 const TEMPLATES: { key: CadTemplate; label: string }[] = [
   { key: "tira", label: "Tira" },
@@ -98,7 +107,7 @@ function Field({
         step={step}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="h-9 w-full rounded-lg bg-foreground/5 px-3 text-sm tabular-nums text-foreground outline-none focus:bg-foreground/10"
+        className="h-9 w-full rounded-lg bg-foreground/5 px-3 text-sm tabular-nums text-foreground outline-none ring-0 border-0 focus:bg-foreground/10"
       />
     </label>
   )
@@ -212,9 +221,9 @@ export function CadWorkspacePanel() {
     }
   }
 
-  const tira = body.template === "tira" || (!body.template && mode === "tira")
-  const malla = body.template === "malla"
-  const plate = body.template === "plate"
+  const tira = mode === "tira"
+  const malla = mode === "malla"
+  const plate = mode === "plate"
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
@@ -294,7 +303,7 @@ export function CadWorkspacePanel() {
             PARÁMETROS · mm
           </p>
 
-          {tira && body.template !== "malla" && body.template !== "plate" && (
+          {tira && (
             <>
               <div className="grid grid-cols-2 gap-2">
                 <Field
@@ -344,7 +353,7 @@ export function CadWorkspacePanel() {
                       material: e.target.value,
                     } as CreatePieceBody)
                   }
-                  className="h-9 rounded-lg bg-foreground/5 px-3 text-sm outline-none focus:bg-foreground/10"
+                  className="h-9 rounded-lg border-0 bg-foreground/5 px-3 text-sm outline-none ring-0 focus:bg-foreground/10"
                 />
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -456,26 +465,68 @@ export function CadWorkspacePanel() {
                   }}
                 />
               )}
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium tracking-wide text-muted-foreground">
-                  Dobleces X (coma)
-                </span>
-                <input
-                  value={((body as { bends?: { positions: number[] } }).bends
-                    ?.positions ?? []).join(", ")}
-                  onChange={e => {
-                    const positions = e.target.value
-                      .split(/[,;\s]+/)
-                      .map(s => Number(s.trim()))
-                      .filter(n => Number.isFinite(n) && n > 0)
-                    applyBody({
-                      ...body,
-                      bends: positions.length ? { positions } : undefined,
-                    } as CreatePieceBody)
-                  }}
-                  className="h-9 rounded-lg bg-foreground/5 px-3 text-sm tabular-nums outline-none focus:bg-foreground/10"
-                />
-              </label>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium tracking-wide text-muted-foreground">
+                    Dobleces X
+                  </span>
+                  <button
+                    type="button"
+                    className="text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      const prev =
+                        (body as { bends?: { positions: number[] } }).bends
+                          ?.positions ?? []
+                      applyBody({
+                        ...body,
+                        bends: { positions: [...prev, 0] },
+                      } as CreatePieceBody)
+                    }}
+                  >
+                    + agregar
+                  </button>
+                </div>
+                {((body as { bends?: { positions: number[] } }).bends
+                  ?.positions ?? []).map((pos, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={String(pos)}
+                      onChange={e => {
+                        const prev = [
+                          ...((body as { bends?: { positions: number[] } })
+                            .bends?.positions ?? []),
+                        ]
+                        prev[i] = Number(e.target.value) || 0
+                        applyBody({
+                          ...body,
+                          bends: { positions: prev },
+                        } as CreatePieceBody)
+                      }}
+                      className="h-9 min-w-0 flex-1 rounded-lg border-0 bg-foreground/5 px-3 text-sm tabular-nums outline-none ring-0 focus:bg-foreground/10"
+                    />
+                    <button
+                      type="button"
+                      className="rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        const prev = [
+                          ...((body as { bends?: { positions: number[] } })
+                            .bends?.positions ?? []),
+                        ]
+                        prev.splice(i, 1)
+                        applyBody({
+                          ...body,
+                          bends: prev.length ? { positions: prev } : undefined,
+                        } as CreatePieceBody)
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+
             </>
           )}
 
@@ -521,7 +572,7 @@ export function CadWorkspacePanel() {
                       material: e.target.value,
                     } as CreatePieceBody)
                   }
-                  className="h-9 rounded-lg bg-foreground/5 px-3 text-sm outline-none focus:bg-foreground/10"
+                  className="h-9 rounded-lg border-0 bg-foreground/5 px-3 text-sm outline-none ring-0 focus:bg-foreground/10"
                 />
               </label>
             </div>
@@ -590,7 +641,7 @@ export function CadWorkspacePanel() {
                 value={saveName}
                 onChange={e => setSaveName(e.target.value)}
                 placeholder="Nombre…"
-                className="h-9 min-w-0 flex-1 rounded-lg bg-foreground/5 px-3 text-sm outline-none focus:bg-foreground/10"
+                className="h-9 min-w-0 flex-1 rounded-lg border-0 bg-foreground/5 px-3 text-sm outline-none ring-0 focus:bg-foreground/10"
               />
               <button
                 type="button"
@@ -665,8 +716,8 @@ export function CadWorkspacePanel() {
               </button>
             </div>
           )}
-          <div className="min-h-0 flex-1">
-            <GeometrySvgPreview model={model} className="h-full min-h-[280px]" />
+          <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-foreground/[0.03]">
+            <DxfCanvas pieces={geometryModelToCanvasPieces(model)} />
           </div>
         </div>
       </div>
