@@ -26,7 +26,6 @@ import { EngineeringViewToggle } from "./engineering-view-toggle"
 import { EngineeringProcessBoard } from "./engineering-process-board"
 import { EngineeringUserList } from "./engineering-user-list"
 import { EngineeringTaskDialog } from "./engineering-task-dialog"
-import { EngineeringCreateDialAction } from "./engineering-actions"
 
 function EntryCountBadge({
   count,
@@ -150,7 +149,7 @@ export function EngineeringPageContent() {
       <div className="mb-1 shrink-0">
         <AdaptiveActionBar
           pinned={toolbar}
-          actions={isMobile ? [<EngineeringCreateDialAction key="create" />] : []}
+          actions={[]}
         />
       </div>
 

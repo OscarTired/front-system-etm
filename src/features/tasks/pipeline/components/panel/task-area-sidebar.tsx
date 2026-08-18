@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 import { SpeedDialFab } from "@/shared/ui/speed-dial-fab/speed-dial-fab"
 
@@ -102,16 +103,26 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
         />
 
         {state.summonTarget && state.selectedStepIds.size > 0 && (
-          <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
-            <SummonConfirmBar
-              operatorName={state.summonTarget.operator.name}
-              count={state.selectedStepIds.size}
-              mode={state.summonMode}
-              onModeChange={actions.setSummonMode}
-              onConfirm={actions.handleConfirmSummon}
-              onCancel={actions.handleCancelSummon}
-              confirming={state.summoning}
-            />
+          <div
+            className="pointer-events-auto fixed inset-x-0 z-50 px-3"
+            style={{
+              bottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px) + 8px)`,
+            }}
+          >
+            <div className="animate-slide-up-in overflow-hidden rounded-2xl border border-border/60 bg-card shadow-lg shadow-black/40">
+              <div className="flex justify-center pt-2.5">
+                <div className="h-1 w-10 rounded-full bg-foreground/20" />
+              </div>
+              <SummonConfirmBar
+                operatorName={state.summonTarget.operator.name}
+                count={state.selectedStepIds.size}
+                mode={state.summonMode}
+                onModeChange={actions.setSummonMode}
+                onConfirm={actions.handleConfirmSummon}
+                onCancel={actions.handleCancelSummon}
+                confirming={state.summoning}
+              />
+            </div>
           </div>
         )}
       </aside>

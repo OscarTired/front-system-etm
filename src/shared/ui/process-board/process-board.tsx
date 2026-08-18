@@ -37,6 +37,9 @@ export function ProcessBoard<TId extends string = string>({
   const { isMobile } = useResponsive()
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Mobile: una columna full-width + swipe; flechas solo desktop.
+  const arrowsEnabled = showArrows && !isMobile
+
   const { canScrollLeft, canScrollRight } = useProcessBoardOverflow(
     containerRef,
     [columns.length, isMobile, loading],
@@ -105,7 +108,7 @@ export function ProcessBoard<TId extends string = string>({
       {header ? <div className="mb-3 shrink-0">{header}</div> : null}
 
       <div className="flex min-h-0 w-full flex-1 items-stretch gap-1">
-        {showArrows && (
+        {arrowsEnabled && (
           <ProcessBoardNavButton
             direction="left"
             visible={canScrollLeft}
@@ -137,7 +140,7 @@ export function ProcessBoard<TId extends string = string>({
           </div>
         </ScrollArea>
 
-        {showArrows && (
+        {arrowsEnabled && (
           <ProcessBoardNavButton
             direction="right"
             visible={canScrollRight}
