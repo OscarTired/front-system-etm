@@ -6,6 +6,7 @@ import { useRef } from "react"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 
 import { Input } from "@/components/ui/input"
 import {
@@ -119,6 +120,8 @@ export function EntitySelect<T extends EntityBase>({
     ? ENTITY_ICONS[value.icon]
     : undefined
 
+  const nameBadge = useBadgeColors(value?.color ?? "#737373", "subtle")
+
   const dialogTitle = editing
     ? `Editar ${placeholder}`
     : `Crear ${placeholder}`
@@ -206,13 +209,13 @@ export function EntitySelect<T extends EntityBase>({
                     <RowIcon
                       size={14}
                       className="shrink-0"
-                      style={{ color: value?.color ?? "#737373" }}
+                      style={{ color: nameBadge.text }}
                     />
                   )}
 
                   <span
                     className="truncate text-sm font-semibold"
-                    style={{ color: value?.color ?? "#737373" }}
+                    style={{ color: nameBadge.text }}
                   >
                     {value?.name ?? placeholder}
                   </span>

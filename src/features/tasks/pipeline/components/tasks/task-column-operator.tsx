@@ -12,6 +12,7 @@ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import type { WorkflowStep } from "@/features/workflow/types/workflow.types"
@@ -97,8 +98,10 @@ function OperatorRow({
       ? ENTITY_ICONS[operator.icon]
       : null
 
+  const opBadge = useBadgeColors(operator.color ?? "#64748B", "subtle")
   const statusColor =
     isWorking ? "#22C55E" : "#64748B"
+  const stBadge = useBadgeColors(statusColor, "subtle")
 
   const statusLabel =
     isWorking ? "Trabajando" : "En espera"
@@ -124,7 +127,7 @@ function OperatorRow({
       <div
         className="flex min-w-0 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1"
         style={{
-          backgroundColor: `${operator.color ?? "#64748B"}14`,
+          backgroundColor: opBadge.background,
         }}
       >
 
@@ -132,7 +135,7 @@ function OperatorRow({
 
           <OperatorIcon
             size={13}
-            style={{ color: operator.color ?? "#64748B" }}
+            style={{ color: opBadge.text }}
             className="shrink-0"
           />
 
@@ -141,8 +144,8 @@ function OperatorRow({
           <span
             className="flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
             style={{
-              backgroundColor: `${operator.color ?? "#64748B"}30`,
-              color: operator.color ?? "#64748B",
+              backgroundColor: opBadge.background,
+              color: opBadge.text,
             }}
           >
             {operator.name.charAt(0).toUpperCase()}
@@ -154,14 +157,14 @@ function OperatorRow({
 
           <span
             className="text-xs font-semibold whitespace-nowrap"
-            style={{ color: operator.color ?? "#64748B" }}
+            style={{ color: opBadge.text }}
           >
             {operator.name}
           </span>
 
           <span
             className="shrink-0 text-xs font-semibold opacity-60 whitespace-nowrap"
-            style={{ color: operator.color ?? "#64748B" }}
+            style={{ color: opBadge.text }}
           >
             #{taskNumber} · {reference}
           </span>
@@ -176,8 +179,8 @@ function OperatorRow({
         aria-label={statusLabel}
         className="flex size-7 shrink-0 items-center justify-center rounded-lg"
         style={{
-          backgroundColor: `${statusColor}14`,
-          color: statusColor,
+          backgroundColor: stBadge.background,
+          color: stBadge.text,
         }}
       >
         <StatusIcon size={12} className="shrink-0" />

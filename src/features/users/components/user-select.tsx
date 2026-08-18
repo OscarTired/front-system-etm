@@ -19,6 +19,7 @@ import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { SelectOption } from "@/shared/ui/select-option/select-option"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import type { User } from "../types/user.types"
 
@@ -78,6 +79,7 @@ export function UserSelect(props: Props) {
 
   const primary = values[0]
   const extraCount = Math.max(0, values.length - 1)
+  const nameBadge = useBadgeColors(primary?.color ?? "#737373", "subtle")
 
   const selectedIds = useMemo(
     () => new Set(values.map(u => u.id)),
@@ -157,12 +159,12 @@ export function UserSelect(props: Props) {
                 <RowIcon
                   size={14}
                   className="shrink-0"
-                  style={{ color: primary?.color ?? "#737373" }}
+                  style={{ color: nameBadge.text }}
                 />
               )}
               <span
                 className="truncate text-sm font-semibold"
-                style={{ color: primary?.color ?? "#737373" }}
+                style={{ color: nameBadge.text }}
               >
                 {badgeLabel}
               </span>

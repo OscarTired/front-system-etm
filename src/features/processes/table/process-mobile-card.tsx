@@ -6,6 +6,7 @@ import { ChevronDown, MessageSquare } from "lucide-react"
 
 import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { formatDate } from "@/shared/utils/date-format"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
@@ -46,6 +47,25 @@ type Props = {
   dimOthers?: boolean
   onToggle: () => void
 }
+
+
+function OperatorNameText({
+  name,
+  color,
+  className,
+}: {
+  name: string
+  color?: string | null
+  className?: string
+}) {
+  const badge = useBadgeColors(color ?? "#737373", "subtle")
+  return (
+    <span className={className} style={{ color: badge.text }}>
+      {name}
+    </span>
+  )
+}
+
 
 export function ProcessMobileCard({
   processTask,
@@ -187,12 +207,17 @@ export function ProcessMobileCard({
                     size={12}
                   />
                 </span>
-                <span
-                  className="hidden truncate md:inline text-muted-foreground"
-                  style={operator?.color ? { color: operator.color } : undefined}
-                >
-                  {operator?.name ?? "Sin asignar"}
-                </span>
+                {operator ? (
+                  <OperatorNameText
+                    name={operator.name}
+                    color={operator.color}
+                    className="hidden truncate md:inline"
+                  />
+                ) : (
+                  <span className="hidden truncate md:inline text-muted-foreground">
+                    Sin asignar
+                  </span>
+                )}
               </span>
             </div>
           </div>
@@ -347,12 +372,17 @@ export function ProcessMobileCard({
                     size={13}
                   />
                 </span>
-                <span
-                  className="hidden truncate md:inline text-muted-foreground"
-                  style={operator?.color ? { color: operator.color } : undefined}
-                >
-                  {operator?.name ?? "Sin asignar operario"}
-                </span>
+                {operator ? (
+                  <OperatorNameText
+                    name={operator.name}
+                    color={operator.color}
+                    className="hidden truncate md:inline"
+                  />
+                ) : (
+                  <span className="hidden truncate md:inline text-muted-foreground">
+                    Sin asignar operario
+                  </span>
+                )}
               </span>
             </span>
 

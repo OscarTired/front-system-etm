@@ -1,0 +1,234 @@
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -6,6 +6,7 @@
+ 
+ import { CollapsibleHeightSection } from "@/shared/ui/collapsible-height-section"
+ import { cn } from "@/shared/utils/utils"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ import { formatDate } from "@/shared/utils/date-format"
+ import { displayProjectCode } from "@/features/projects/utils/display-project-code"
+ import {
+@@ -47,6 +48,25 @@
+   onToggle: () => void
+ }
+ 
++
++function OperatorNameText({
++  name,
++  color,
++  className,
++}: {
++  name: string
++  color?: string | null
++  className?: string
++}) {
++  const badge = useBadgeColors(color ?? "#737373", "subtle")
++  return (
++    <span className={className} style={{ color: badge.text }}>
++      {name}
++    </span>
++  )
++}
++
++
+ export function ProcessMobileCard({
+   processTask,
+   expanded,
+@@ -187,12 +207,17 @@
+                     size={12}
+                   />
+                 </span>
+-                <span
+-                  className="hidden truncate md:inline text-muted-foreground"
+-                  style={operator?.color ? { color: operator.color } : undefined}
+-                >
+-                  {operator?.name ?? "Sin asignar"}
+-                </span>
++                {operator ? (
++                  <OperatorNameText
++                    name={operator.name}
++                    color={operator.color}
++                    className="hidden truncate md:inline"
++                  />
++                ) : (
++                  <span className="hidden truncate md:inline text-muted-foreground">
++                    Sin asignar
++                  </span>
++                )}
+               </span>
+             </div>
+           </div>
+@@ -347,12 +372,17 @@
+                     size={13}
+                   />
+                 </span>
+-                <span
+-                  className="hidden truncate md:inline text-muted-foreground"
+-                  style={operator?.color ? { color: operator.color } : undefined}
+-                >
+-                  {operator?.name ?? "Sin asignar operario"}
+-                </span>
++                {operator ? (
++                  <OperatorNameText
++                    name={operator.name}
++                    color={operator.color}
++                    className="hidden truncate md:inline"
++                  />
++                ) : (
++                  <span className="hidden truncate md:inline text-muted-foreground">
++                    Sin asignar operario
++                  </span>
++                )}
+               </span>
+             </span>
+ 
+diff --git a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+--- a/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
++++ b/src/features/tasks/pipeline/components/tasks/task-column-operator.tsx
+@@ -12,6 +12,7 @@
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
+ import { cn } from "@/shared/utils/utils"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ 
+ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+ import type { WorkflowStep } from "@/features/workflow/types/workflow.types"
+@@ -97,8 +98,10 @@
+       ? ENTITY_ICONS[operator.icon]
+       : null
+ 
++  const opBadge = useBadgeColors(operator.color ?? "#64748B", "subtle")
+   const statusColor =
+     isWorking ? "#22C55E" : "#64748B"
++  const stBadge = useBadgeColors(statusColor, "subtle")
+ 
+   const statusLabel =
+     isWorking ? "Trabajando" : "En espera"
+@@ -124,7 +127,7 @@
+       <div
+         className="flex min-w-0 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1"
+         style={{
+-          backgroundColor: `${operator.color ?? "#64748B"}14`,
++          backgroundColor: opBadge.background,
+         }}
+       >
+ 
+@@ -132,7 +135,7 @@
+ 
+           <OperatorIcon
+             size={13}
+-            style={{ color: operator.color ?? "#64748B" }}
++            style={{ color: opBadge.text }}
+             className="shrink-0"
+           />
+ 
+@@ -141,8 +144,8 @@
+           <span
+             className="flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
+             style={{
+-              backgroundColor: `${operator.color ?? "#64748B"}30`,
+-              color: operator.color ?? "#64748B",
++              backgroundColor: opBadge.background,
++              color: opBadge.text,
+             }}
+           >
+             {operator.name.charAt(0).toUpperCase()}
+@@ -154,14 +157,14 @@
+ 
+           <span
+             className="text-xs font-semibold whitespace-nowrap"
+-            style={{ color: operator.color ?? "#64748B" }}
++            style={{ color: opBadge.text }}
+           >
+             {operator.name}
+           </span>
+ 
+           <span
+             className="shrink-0 text-xs font-semibold opacity-60 whitespace-nowrap"
+-            style={{ color: operator.color ?? "#64748B" }}
++            style={{ color: opBadge.text }}
+           >
+             #{taskNumber} · {reference}
+           </span>
+@@ -176,8 +179,8 @@
+         aria-label={statusLabel}
+         className="flex size-7 shrink-0 items-center justify-center rounded-lg"
+         style={{
+-          backgroundColor: `${statusColor}14`,
+-          color: statusColor,
++          backgroundColor: stBadge.background,
++          color: stBadge.text,
+         }}
+       >
+         <StatusIcon size={12} className="shrink-0" />
+diff --git a/src/features/users/components/user-select.tsx b/src/features/users/components/user-select.tsx
+--- a/src/features/users/components/user-select.tsx
++++ b/src/features/users/components/user-select.tsx
+@@ -19,6 +19,7 @@
+ import { SelectOption } from "@/shared/ui/select-option/select-option"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { cn } from "@/shared/utils/utils"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import type { User } from "../types/user.types"
+ 
+@@ -78,6 +79,7 @@
+ 
+   const primary = values[0]
+   const extraCount = Math.max(0, values.length - 1)
++  const nameBadge = useBadgeColors(primary?.color ?? "#737373", "subtle")
+ 
+   const selectedIds = useMemo(
+     () => new Set(values.map(u => u.id)),
+@@ -157,12 +159,12 @@
+                 <RowIcon
+                   size={14}
+                   className="shrink-0"
+-                  style={{ color: primary?.color ?? "#737373" }}
++                  style={{ color: nameBadge.text }}
+                 />
+               )}
+               <span
+                 className="truncate text-sm font-semibold"
+-                style={{ color: primary?.color ?? "#737373" }}
++                style={{ color: nameBadge.text }}
+               >
+                 {badgeLabel}
+               </span>
+diff --git a/src/shared/ui/entity-select/entity-select.tsx b/src/shared/ui/entity-select/entity-select.tsx
+--- a/src/shared/ui/entity-select/entity-select.tsx
++++ b/src/shared/ui/entity-select/entity-select.tsx
+@@ -6,6 +6,7 @@
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+ import { cn } from "@/shared/utils/utils"
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ 
+ import { Input } from "@/components/ui/input"
+ import {
+@@ -119,6 +120,8 @@
+     ? ENTITY_ICONS[value.icon]
+     : undefined
+ 
++  const nameBadge = useBadgeColors(value?.color ?? "#737373", "subtle")
++
+   const dialogTitle = editing
+     ? `Editar ${placeholder}`
+     : `Crear ${placeholder}`
+@@ -206,13 +209,13 @@
+                     <RowIcon
+                       size={14}
+                       className="shrink-0"
+-                      style={{ color: value?.color ?? "#737373" }}
++                      style={{ color: nameBadge.text }}
+                     />
+                   )}
+ 
+                   <span
+                     className="truncate text-sm font-semibold"
+-                    style={{ color: value?.color ?? "#737373" }}
++                    style={{ color: nameBadge.text }}
+                   >
+                     {value?.name ?? placeholder}
+                   </span>
