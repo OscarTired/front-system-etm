@@ -92,7 +92,6 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
                     ? {
                         backgroundColor: projectChipBadge.background,
                         color: projectChipBadge.text,
-                        color: task.project.client.color,
                       }
                     : undefined
                 }
