@@ -31,11 +31,18 @@ function arcPath(
 }
 
 function entityToSvg(e: GeometryEntity, key: number): React.ReactNode {
-  const stroke = "currentColor"
+  const layer = "layer" in e ? e.layer : undefined
+  const stroke =
+    layer === "BEND"
+      ? "#22d3ee"
+      : layer === "HOLE"
+        ? "#fb923c"
+        : "currentColor"
   const common = {
     fill: "none" as const,
     stroke,
-    strokeWidth: 1.25,
+    strokeWidth: layer === "BEND" ? 1 : 1.25,
+    strokeDasharray: layer === "BEND" ? "4 3" : undefined,
     vectorEffect: "non-scaling-stroke" as const,
   }
 

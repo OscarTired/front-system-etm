@@ -108,8 +108,8 @@ export const NAVIGATION = [
         //permission: PermissionCode.NESTING_READ,
       },
       {
-        label: "CAD · Placa",
-        href: "/cad/plate",
+        label: "CAD",
+        href: "/cad",
         icon: DraftingCompass,
       },
     ],
