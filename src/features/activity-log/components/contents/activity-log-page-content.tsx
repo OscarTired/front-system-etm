@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 
 import { useCallback, useMemo, useState } from "react"
-import { Trash2 } from "lucide-react"
+import { Trash2, Sun } from "lucide-react"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
@@ -254,14 +254,16 @@ export function ActivityLogPageContent({
             type="button"
             onClick={goToToday}
             disabled={isToday}
+            title="Hoy"
+            aria-label="Hoy"
             className={cn(
-              "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold transition-all",
+              "flex size-11 shrink-0 items-center justify-center rounded-lg transition-all",
               isToday
                 ? "cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
                 : "bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200",
             )}
           >
-            Hoy
+            <Sun size={16} strokeWidth={2} />
           </button>
 
           <div className="min-w-0 flex-1 flex justify-center">

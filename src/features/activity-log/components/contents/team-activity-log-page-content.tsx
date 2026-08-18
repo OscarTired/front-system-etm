@@ -1,5 +1,7 @@
 "use client"
 
+import { Sun } from "lucide-react"
+
 import { ActivityLogDetailIndicators } from "../actions/activity-log-detail-indicators"
 
 import { useQueryClient } from "@tanstack/react-query"
@@ -342,13 +344,15 @@ export function TeamActivityLogPageContent({ embedded = false }: { embedded?: bo
               type="button"
               onClick={goToToday}
               disabled={isToday}
+              title="Hoy"
+              aria-label="Hoy"
               className={
                 isToday
-                  ? "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
-                  : "flex h-8 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200"
+                  ? "flex size-11 shrink-0 items-center justify-center rounded-lg cursor-default bg-amber-500/25 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400/50"
+                  : "flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/25 text-amber-800 hover:bg-amber-500/35 hover:text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:text-amber-200"
               }
             >
-              Hoy
+              <Sun size={16} strokeWidth={2} />
             </button>
           </div>
 
