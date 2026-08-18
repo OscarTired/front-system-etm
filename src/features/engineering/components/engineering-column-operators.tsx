@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
-import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 import type { EngineeringTask } from "../types/engineering-task.types"
@@ -81,7 +81,7 @@ function statusMeta(status: EngineeringTask["status"]) {
   }
 }
 
-/** Chip con contraste garantizado y alineación perfeccionada. */
+/** Chip con contraste garantizado y badge circular con opacidad nativa. */
 function OperatorChip({
   name,
   color,
@@ -94,7 +94,6 @@ function OperatorChip({
   extra?: number
 }) {
   const badge = useBadgeColors(color || "#64748B", "subtle")
-  const ink = useDomainInk(color || "#64748B")
   const Icon =
     iconName && iconName in ENTITY_ICONS
       ? ENTITY_ICONS[iconName as keyof typeof ENTITY_ICONS]
@@ -103,26 +102,16 @@ function OperatorChip({
   return (
     <span
       className="inline-flex h-7 max-w-[10rem] shrink-0 items-center gap-1.5 rounded-lg px-2.5 transition-transform duration-150 active:scale-95"
-      style={{ backgroundColor: badge.background, color: ink }}
+      style={{ backgroundColor: badge.background, color: badge.text }}
     >
       {Icon ? (
-        <Icon size={13} className="shrink-0" style={{ color: ink }} />
+        <Icon size={13} className="shrink-0" style={{ color: badge.text }} />
       ) : (
-        <span className="text-[10px] font-bold" style={{ color: ink }}>
-          {name.charAt(0)}
-        </span>
+        <span className="text-[10px] font-bold">{name.charAt(0)}</span>
       )}
-      <span className="truncate text-xs font-semibold" style={{ color: ink }}>
-        {name}
-      </span>
+      <span className="truncate text-xs font-semibold">{name}</span>
       {extra != null && extra > 0 && (
-        <span
-          className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold"
-          style={{
-            backgroundColor: "color-mix(in oklab, currentColor 18%, transparent)",
-            color: ink,
-          }}
-        >
+        <span className="inline-flex size-4 aspect-square shrink-0 items-center justify-center rounded-full bg-current/20 text-[9px] font-extrabold leading-none">
           +{extra}
         </span>
       )}
@@ -208,10 +197,6 @@ function OperatorDetailRow({
   )
 }
 
-/**
- * Franja bajo título de proceso.
- * Layout mejorado con padding simétrico, divisor interno y mejor hover.
- */
 export function EngineeringColumnOperators({
   tasks,
 }: {
@@ -240,15 +225,12 @@ export function EngineeringColumnOperators({
             "hover:bg-foreground/[0.08] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           )}
         >
-          {/* Ícono de grupo alineado verticalmente */}
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors group-hover:text-foreground">
             <Users size={15} strokeWidth={2} />
           </div>
 
-          {/* Divisor vertical discreto */}
           <div className="h-4 w-px shrink-0 bg-border/40" />
 
-          {/* Lista de chips */}
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {groups.slice(0, 3).map(g => (
               <OperatorChip
@@ -266,7 +248,6 @@ export function EngineeringColumnOperators({
             )}
           </div>
 
-          {/* Contador de estado activo / trabajando */}
           {workingCount > 0 && (
             <span className="flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/20 px-2 py-1 text-[10px] font-bold uppercase text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
               <Zap size={11} />

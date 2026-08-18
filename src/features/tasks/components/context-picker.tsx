@@ -2,8 +2,6 @@
 
 import { ProjectCodeChip } from "@/features/projects/components/project-code-chip"
 
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
-
 import {
   useMemo,
   useRef,
@@ -12,6 +10,7 @@ import {
 
 import {
   ChevronDown,
+  FolderKanban,
   Search,
 } from "lucide-react"
 
@@ -58,7 +57,7 @@ import {
 
 import { 
   displayProjectCode,
- } from "@/features/projects/utils/display-project-code"
+} from "@/features/projects/utils/display-project-code"
 
 export type ContextPickerValue = {
   projectId: string
@@ -149,7 +148,6 @@ export function ContextPicker({
   function projectLabel(project: NonNullable<typeof selectedProject>) {
     const code = displayProjectCode(project.projectCode)
     const client = project.client?.name?.trim()
-    // Código · Cliente · Nombre (cliente visible en picker / bitácora)
     return client
       ? `${code} · ${client} · ${project.name}`
       : `${code} · ${project.name}`
@@ -200,7 +198,6 @@ export function ContextPicker({
             ].some(text => text.toLowerCase().includes(search)),
           )
 
-      // Seleccionado siempre arriba (mismo patrón que UserSelect).
       return [...matched].sort((a, b) => {
         if (a.id === value.projectId) return -1
         if (b.id === value.projectId) return 1
@@ -371,7 +368,10 @@ export function ContextPicker({
                 </span>
               </>
             ) : (
-              <span className="min-w-0 truncate">{label}</span>
+              <>
+                <FolderKanban size={15} className="shrink-0 text-muted-foreground" />
+                <span className="min-w-0 truncate">{label}</span>
+              </>
             )}
           </span>
 
