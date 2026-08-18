@@ -4,6 +4,7 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { cn } from "@/shared/utils/utils"
+import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,6 @@ type Props = {
 }
 
 export function EngineeringTaskRow({ task, onEdit }: Props) {
-  const projectLabel = task.project ? task.project.projectCode : ""
   const { update, remove } = useEngineeringTaskMutations()
   const isCompleted = task.status === "COMPLETED"
 
@@ -73,10 +73,19 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
           <p className="truncate text-sm font-medium text-foreground">
             {task.title}
           </p>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {[projectLabel, task.assignee?.name].filter(Boolean).join(" · ") ||
-              "Sin asignar"}
-          </p>
+          <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+            {task.project?.projectCode ? (
+              <span
+                title={task.project.projectCode}
+                className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide text-muted-foreground"
+              >
+                {displayProjectCode(task.project.projectCode)}
+              </span>
+            ) : null}
+            <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+              {task.assignee?.name ?? "Sin asignar"}
+            </span>
+          </div>
         </div>
         <WorkflowStatusChip status={task.status} compact iconOnly />
       </button>

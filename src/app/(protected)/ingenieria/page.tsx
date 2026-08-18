@@ -1,6 +1,5 @@
 "use client"
 
-import { EngineeringActions } from "@/features/engineering/components/engineering-actions"
 import { EngineeringPageContent } from "@/features/engineering/components/engineering-page-content"
 import { usePageTitle } from "@/shared/responsive/navigation/hooks/use-page-title"
 
@@ -18,9 +17,6 @@ export default function IngenieriaPage() {
           <p className="min-w-0 truncate text-sm text-muted-foreground">
             Tareas y asignación de diseño
           </p>
-        </div>
-        <div className="shrink-0">
-          <EngineeringActions />
         </div>
       </header>
 

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/popover"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { MarqueeText } from "@/shared/ui/marquee-text/marquee-text"
 import { cn } from "@/shared/utils/utils"
 
 import type { EngineeringTask } from "../types/engineering-task.types"
@@ -41,13 +40,22 @@ export function getActiveAssigneeEntries(tasks: EngineeringTask[]): Entry[] {
   })
 }
 
+function statusMeta(status: EngineeringTask["status"]) {
+  const isWorking = status === "PROGRESS"
+  return {
+    isWorking,
+    color: isWorking ? "#22C55E" : "#64748B",
+    label: isWorking ? "Trabajando" : "En espera",
+    Icon: isWorking ? Zap : Clock,
+  }
+}
+
+/** Fila desktop: nombre + tarea truncados, texto e icono de status. */
 function OperatorRow({ entry }: { entry: Entry }) {
   const { assignee, status, taskNumber, title } = entry
-  const isWorking = status === "PROGRESS"
+  const { color: statusColor, label: statusLabel, Icon: StatusIcon } =
+    statusMeta(status)
   const OperatorIcon = assignee.icon ? ENTITY_ICONS[assignee.icon] : null
-  const statusColor = isWorking ? "#22C55E" : "#64748B"
-  const statusLabel = isWorking ? "Trabajando" : "En espera"
-  const StatusIcon = isWorking ? Zap : Clock
   const color = assignee.color ?? "#64748B"
 
   return (
@@ -66,32 +74,27 @@ function OperatorRow({ entry }: { entry: Entry }) {
             {assignee.name.charAt(0).toUpperCase()}
           </span>
         )}
-        <MarqueeText className="min-w-0 flex-1" always delay={2.5}>
-          <span className="text-xs font-semibold whitespace-nowrap" style={{ color }}>
-            {assignee.name}
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold" style={{ color }}>
+          {assignee.name}
+          <span className="opacity-60">
+            {" "}
+            · #{taskNumber} · {title}
           </span>
-          <span
-            className="shrink-0 text-xs font-semibold opacity-60 whitespace-nowrap"
-            style={{ color }}
-          >
-            #{taskNumber} · {title}
-          </span>
-        </MarqueeText>
+        </span>
       </div>
       <div
         title={statusLabel}
-        aria-label={statusLabel}
-        className="flex size-7 shrink-0 items-center justify-center rounded-lg"
+        className="flex h-7 shrink-0 items-center gap-1 rounded-lg px-1.5"
         style={{ backgroundColor: `${statusColor}14`, color: statusColor }}
       >
         <StatusIcon size={12} className="shrink-0" />
+        <span className="text-[10px] font-semibold">{statusLabel}</span>
       </div>
     </div>
   )
 }
 
 function ActiveOperatorsPopover({ entries }: { entries: Entry[] }) {
-  const { isMobile } = useResponsive()
   const workingCount = entries.filter(e => e.status === "PROGRESS").length
 
   return (
@@ -99,15 +102,13 @@ function ActiveOperatorsPopover({ entries }: { entries: Entry[] }) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={cn(
-            "flex h-10 w-full items-center gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left transition-colors hover:bg-muted",
-            isMobile ? "justify-center" : "justify-between",
-          )}
+          className="flex h-10 w-full items-center justify-between gap-2 rounded-lg bg-muted/50 px-2 py-1.5 text-left transition-colors hover:bg-muted"
         >
           <div className="flex min-w-0 items-center gap-1.5">
             <Users size={13} className="shrink-0 text-muted-foreground" />
             <span className="truncate text-xs font-semibold text-foreground">
-              {entries.length} operarios activos
+              {entries.length}{" "}
+              {entries.length === 1 ? "operario activo" : "operarios activos"}
             </span>
           </div>
           {workingCount > 0 && (
@@ -121,7 +122,7 @@ function ActiveOperatorsPopover({ entries }: { entries: Entry[] }) {
       <PopoverContent
         align="start"
         sideOffset={6}
-        className="w-(--radix-popover-trigger-width) p-2"
+        className="w-(--radix-popover-trigger-width) max-w-sm p-2"
       >
         <div className="px-1 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           Asignados en este proceso
@@ -139,7 +140,10 @@ function ActiveOperatorsPopover({ entries }: { entries: Entry[] }) {
   )
 }
 
-/** Franja bajo título de columna — mismo patrón que TaskColumnOperator. */
+/**
+ * Franja bajo título de proceso.
+ * Mobile: siempre popover. Desktop: filas inline (texto + icono status).
+ */
 export function EngineeringColumnOperators({
   tasks,
 }: {
@@ -163,6 +167,21 @@ export function EngineeringColumnOperators({
     )
   }
 
+  // Mobile: popover (evita marquee / filas apretadas).
+  if (isMobile) {
+    return <ActiveOperatorsPopover entries={entries} />
+  }
+
+  // Desktop: lista inline.
   if (entries.length === 1) return <OperatorRow entry={entries[0]} />
-  return <ActiveOperatorsPopover entries={entries} />
+  return (
+    <div className="flex flex-col gap-0.5">
+      {entries.map(entry => (
+        <OperatorRow
+          key={`${entry.assignee.id}-${entry.taskNumber}`}
+          entry={entry}
+        />
+      ))}
+    </div>
+  )
 }
