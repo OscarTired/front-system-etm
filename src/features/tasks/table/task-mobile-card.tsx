@@ -155,7 +155,7 @@ export function TaskMobileCard({
                 }
               : {})}
             className={cn(
-              "shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide transition-opacity md:px-2 md:py-1 md:text-[11px]",
+              "shrink-0 select-none rounded-md px-2 py-1 text-[11px] font-semibold tracking-wide transition-opacity",
               isMobile ? "cursor-default" : "cursor-pointer hover:opacity-80",
               projectChipPressed && "opacity-60 scale-95",
             )}

@@ -120,7 +120,7 @@ export function ProcessMobileCard({
         >
           {/* Código del proyecto YY-NNN — más grande solo en desktop */}
           <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+            className="shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold tracking-wide"
             style={{
               backgroundColor: projectChipBadge.background,
               color: projectChipBadge.text,
@@ -145,9 +145,9 @@ export function ProcessMobileCard({
                   {task.reference}
                 </Link>
               )}
-              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[36rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[40rem]/prow:inline">·</span>
               <span
-                className="hidden size-5 shrink-0 items-center justify-center self-center @[36rem]/prow:inline-flex"
+                className="hidden size-5 shrink-0 items-center justify-center self-center @[40rem]/prow:inline-flex"
                 title={priority.name}
               >
                 <EntityIconBadge
@@ -156,9 +156,9 @@ export function ProcessMobileCard({
                   size={16}
                 />
               </span>
-              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[36rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[40rem]/prow:inline">·</span>
               <span
-                className="hidden size-5 shrink-0 items-center justify-center self-center @[36rem]/prow:inline-flex"
+                className="hidden size-5 shrink-0 items-center justify-center self-center @[40rem]/prow:inline-flex"
                 title={statusLabel.label}
               >
                 <EntityIconBadge
@@ -186,41 +186,33 @@ export function ProcessMobileCard({
                 {project.client.name}
               </span>
 
-              {/* Meta 2ª fila: se oculta si el row no tiene ancho (split). */}
-              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline @[36rem]/prow:hidden">·</span>
-              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:inline-flex @[36rem]/prow:hidden">
+              {/* Meta 2ª fila: mismo umbral que fecha / auditoría (40rem) */}
+              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 items-center gap-1 @[40rem]/prow:inline-flex">
                 <EntityIconBadge
                   icon={priority.icon}
                   color={priority.color}
                   size={12}
                 />
               </span>
-              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline @[36rem]/prow:hidden">·</span>
-              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:inline-flex @[36rem]/prow:hidden">
+              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 items-center gap-1 @[40rem]/prow:inline-flex">
                 <EntityIconBadge
                   icon={statusLabel.icon}
                   color={statusLabel.color}
                   size={12}
                 />
               </span>
-
-              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline">·</span>
-              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:flex">
-                <span className="@[36rem]/prow:hidden">
-                  <EntityIconBadge
-                    icon={operator?.icon}
-                    color={operator?.color ?? "#a3a3a3"}
-                    size={12}
-                  />
-                </span>
+              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+              <span className="hidden min-w-0 items-center gap-1 @[40rem]/prow:flex">
                 {operator ? (
                   <OperatorNameText
                     name={operator.name}
                     color={operator.color}
-                    className="hidden truncate @[36rem]/prow:inline"
+                    className="truncate"
                   />
                 ) : (
-                  <span className="hidden truncate text-muted-foreground @[36rem]/prow:inline">
+                  <span className="truncate text-muted-foreground">
                     Sin asignar
                   </span>
                 )}
@@ -394,8 +386,8 @@ export function ProcessMobileCard({
               </span>
             </span>
 
-            {/* Fecha interna: solo móvil */}
-            <span className="shrink-0 text-xs text-muted-foreground md:hidden">
+            {/* Fecha: visible en selector cuando el row principal la ocultó (<40rem) */}
+            <span className="shrink-0 text-xs text-muted-foreground @[40rem]/prow:hidden">
               {formatDate(task.deliveryDate)}
             </span>
 

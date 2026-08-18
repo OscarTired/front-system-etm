@@ -23,7 +23,7 @@ export function ProjectCodeChip({ code, color, className, title }: Props) {
     <span
       title={title ?? code}
       className={cn(
-        "shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]",
+        "shrink-0 select-none rounded-md px-2 py-1 text-[11px] font-semibold tracking-wide",
         className,
       )}
       style={{
