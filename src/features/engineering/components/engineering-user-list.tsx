@@ -8,6 +8,7 @@ import type { EntityIcon } from "@/shared/constants/entity-icons"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
 import type { User } from "@/features/users/types/user.types"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 import type { EngineeringTask } from "../types/engineering-task.types"
@@ -31,6 +32,7 @@ function UserAvatar({
   color: string
   icon?: EntityIcon
 }) {
+  const badge = useBadgeColors(color || "#64748B", "subtle")
   const Icon = icon ? ENTITY_ICONS[icon] : undefined
   const initial = name.trim().charAt(0).toUpperCase() || "?"
 
@@ -38,11 +40,27 @@ function UserAvatar({
     <div
       className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
       style={{
-        backgroundColor: `${color}28`,
-        color,
+        backgroundColor: badge.background,
+        color: badge.text,
       }}
     >
       {Icon ? <Icon size={15} /> : initial}
+    </div>
+  )
+}
+
+/** Mismo shell que la fila real — pulse inline, sin árbol skeleton aparte. */
+function UserRowSkeleton() {
+  return (
+    <div
+      aria-hidden
+      className="flex items-center gap-3 rounded-2xl bg-foreground/5 px-3 py-2.5 animate-pulse"
+    >
+      <div className="size-9 shrink-0 rounded-full bg-foreground/10" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="h-3.5 w-28 rounded-md bg-foreground/10" />
+        <div className="h-3 w-16 rounded-md bg-foreground/10" />
+      </div>
     </div>
   )
 }
@@ -62,8 +80,20 @@ export function EngineeringUserList({
 
   if (loading) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-        Cargando…
+      <div className="flex flex-col gap-5">
+        {(["ASIGNADOS", "SIN TAREAS"] as const).map(label => (
+          <div key={label} className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 px-1">
+              <span className="h-2 w-2 rounded-full bg-foreground/15" />
+              <span className="h-3 w-20 rounded bg-foreground/10 animate-pulse" />
+            </div>
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: label === "ASIGNADOS" ? 3 : 4 }, (_, i) => (
+                <UserRowSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     )
   }

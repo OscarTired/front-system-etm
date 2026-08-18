@@ -167,16 +167,18 @@ function OperatorDetailRow({
   return (
     <div className="rounded-lg bg-foreground/5 px-2.5 py-2">
       <div className="flex items-center gap-2">
-        {Icon ? (
-          <Icon size={14} style={{ color: badge.text }} className="shrink-0" />
-        ) : (
-          <span
-            className="flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-            style={{ backgroundColor: badge.background, color: badge.text }}
-          >
-            {name.charAt(0)}
-          </span>
-        )}
+        {/* Badge cuadrado redondeado con el fondo del color del operario */}
+        <span
+          className="flex size-5 shrink-0 items-center justify-center rounded-md"
+          style={{ backgroundColor: badge.background, color: badge.text }}
+        >
+          {Icon ? (
+            <Icon size={12} style={{ color: badge.text }} />
+          ) : (
+            <span className="text-[10px] font-bold">{name.charAt(0)}</span>
+          )}
+        </span>
+
         <span
           className="min-w-0 flex-1 truncate text-xs font-semibold"
           style={{ color: badge.text }}

@@ -136,7 +136,18 @@ export function EngineeringProcessBoard({
 
                 {/* Listado de Tareas */}
                 <div className="flex flex-col gap-2">
-                  {colTasks.length === 0 ? (
+                  {loading && colTasks.length === 0 ? (
+                    <>
+                      <div
+                        aria-hidden
+                        className="h-11 rounded-xl bg-foreground/5 animate-pulse"
+                      />
+                      <div
+                        aria-hidden
+                        className="h-11 rounded-xl bg-foreground/5 animate-pulse opacity-70"
+                      />
+                    </>
+                  ) : colTasks.length === 0 ? (
                     <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border/40 bg-background/20">
                       <p className="text-xs text-muted-foreground/60">
                         Sin tareas asignadas
