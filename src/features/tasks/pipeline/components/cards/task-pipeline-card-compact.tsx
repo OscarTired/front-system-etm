@@ -38,6 +38,10 @@ export function TaskPipelineCardCompact({
   const themeResolved = useThemeStore(s => s.resolved)
 
   const task = processTask.task
+  const projectChipBadge = useBadgeColors(
+    task.project?.client?.color ?? "#64748B",
+    "subtle",
+  )
 
   // Status por step (QUEUE si aún no le toca).
   const stepStatus =

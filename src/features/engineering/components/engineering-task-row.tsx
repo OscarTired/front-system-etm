@@ -25,7 +25,10 @@ type Props = {
 }
 
 export function EngineeringTaskRow({ task, onEdit }: Props) {
-  const projectChipBadge = useBadgeColors(task.project.client.color ?? "#64748B", "subtle")
+  const projectChipBadge = useBadgeColors(
+    task.project?.client?.color ?? "#64748B",
+    "subtle",
+  )
   const { isMobile } = useResponsive()
   const hasNote = Boolean(task.note?.trim())
   const { update, remove } = useEngineeringTaskMutations()
@@ -82,7 +85,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
             {task.project?.projectCode ? (
               <span
-                title={task.project.projectCode}
+                title={task.project?.projectCode ?? ""}
                 className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
                 style={
                   task.project.client
@@ -94,7 +97,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
                     : undefined
                 }
               >
-                {displayProjectCode(task.project.projectCode)}
+                {displayProjectCode(task.project?.projectCode ?? "")}
               </span>
             ) : null}
             <span className="min-w-0 truncate text-[11px] text-muted-foreground">
