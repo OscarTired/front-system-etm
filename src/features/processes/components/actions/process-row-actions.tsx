@@ -131,12 +131,17 @@ export function ProcessRowActions({
       ? PROCESS_DEFINITIONS[prev.processCode as ProcessCode]
       : null
 
-    function openTaskRoute() {
-      useFocusNavStore.getState().start("Abriendo tarea…")
-      router.push(`/tasks?taskId=${encodeURIComponent(task.id)}`)
+    /** Navega entre procesos (misma convención que production-process-card). */
+    function openProcessRoute(targetCode: ProcessCode) {
+      const label =
+        PROCESS_DEFINITIONS[targetCode]?.label ?? targetCode
+      useFocusNavStore.getState().start(`Abriendo ${label}…`)
+      router.push(
+        `/processes?code=${targetCode.toLowerCase()}&taskId=${encodeURIComponent(task.id)}`,
+      )
     }
 
-    // Chip completo h-9 w-28 (mismo que Iniciar). Click → ruta a la tarea.
+    // Chip completo h-9 w-28 (mismo que Iniciar). Click → proceso previo.
     if (prevDef && prev) {
       const Icon = ENTITY_ICONS[prevDef.icon]
       return (
@@ -146,7 +151,7 @@ export function ProcessRowActions({
             label={prevDef.label}
             color={prevDef.color}
             Icon={Icon}
-            onClick={openTaskRoute}
+            onClick={() => openProcessRoute(prev.processCode as ProcessCode)}
           />
         </div>
       )
@@ -156,8 +161,8 @@ export function ProcessRowActions({
       <div className="flex w-full items-center justify-center">
         <button
           type="button"
-          onClick={openTaskRoute}
-          title="Abrir tarea"
+          onClick={() => openProcessRoute(processCode)}
+          title={`Abrir ${PROCESS_NAMES[processCode]}`}
           className="inline-flex h-9 w-28 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-foreground/10"
         >
           En cola
@@ -231,7 +236,7 @@ export function ProcessRowActions({
   )
 }
 
-/** Chip de proceso previo: mismo tamaño que "Iniciar", click = ruta a la tarea. */
+/** Chip de proceso previo: mismo tamaño que "Iniciar", click = ruta al proceso. */
 function QueueProcessChip({
   code,
   label,
@@ -250,7 +255,7 @@ function QueueProcessChip({
     <button
       type="button"
       onClick={onClick}
-      title={`Viene de ${label} — abrir tarea`}
+      title={`Viene de ${label} — ir a ese proceso`}
       className="inline-flex h-9 w-28 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors select-none hover:brightness-110 active:brightness-95"
       style={{ color: badge.text, backgroundColor: badge.background }}
     >
