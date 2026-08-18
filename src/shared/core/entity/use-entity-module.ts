@@ -246,36 +246,29 @@ export function useEntityModule<
 
     },
 
-    onSuccess:async updated=>{
-
+    onSuccess: async updated => {
       qc.invalidateQueries({
-        queryKey:sidebarCountsQueryKey,
+        queryKey: sidebarCountsQueryKey,
       })
 
-      if(handlers?.onUpdate){
-
-        qc.setQueryData<T[]>(
-          listKey,
-          current=>
-            handlers.onUpdate!(
-              current??[],
-              updated,
-            ),
+      // Siempre volcar el entity actualizado en la lista YA
+      // (no esperar al refetch de invalidate — causa "no se actualiza de una").
+      if (handlers?.onUpdate) {
+        qc.setQueryData<T[]>(listKey, current =>
+          handlers.onUpdate!(current ?? [], updated),
         )
-
-      }else{
-
-        await qc.invalidateQueries({
-          queryKey:listKey,
-        })
-
+      } else {
+        qc.setQueryData<T[]>(listKey, current =>
+          (current ?? []).map(item =>
+            item.id === updated.id ? updated : item,
+          ),
+        )
       }
 
-      qc.setQueryData<T>(
-        entityKey(updated.id),
-        updated,
-      )
+      qc.setQueryData<T>(entityKey(updated.id), updated)
 
+      // Revalidate en background sin bloquear UI
+      void qc.invalidateQueries({ queryKey: listKey })
     },
 
   })
