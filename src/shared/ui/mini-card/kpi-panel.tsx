@@ -275,13 +275,13 @@ export function KpiCarousel({
                                 {row.label}:
                               </span>
                             )}
-                            <span className="text-xs font-bold" className="text-on-glass-foreground">
+                            <span className="text-xs font-bold text-on-glass-foreground">
                               {row.value}
                             </span>
                           </div>
                         ))
                       ) : (
-                        <span className="text-xs font-bold" className="text-on-glass-foreground">
+                        <span className="text-xs font-bold text-on-glass-foreground">
                           {activeItem?.value ?? ""}
                         </span>
                       )}
