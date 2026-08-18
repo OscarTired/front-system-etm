@@ -30,7 +30,7 @@ export default function LoginPage() {
           Card: tokens de tema (no negro hardcodeado en light).
         */}
         <div
-          className={`overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xl backdrop-blur-xl ${SHORT}:grid ${SHORT}:grid-cols-2 laptop:grid laptop:grid-cols-2`}
+          className={`overflow-hidden rounded-2xl border-0 bg-card shadow-xl backdrop-blur-xl ${SHORT}:grid ${SHORT}:grid-cols-2 laptop:grid laptop:grid-cols-2`}
         >
           {/* LEFT — marca: light = panel suave; dark = panel oscuro de marca */}
           <div
@@ -75,7 +75,7 @@ export default function LoginPage() {
               <div className="h-px w-full bg-border dark:bg-white/10" />
 
               <p className="text-xs text-muted-foreground/80 dark:text-white/40">
-                Sistema interno versión 1.0
+                Sistema interno versión 2.0
               </p>
             </div>
           </div>
