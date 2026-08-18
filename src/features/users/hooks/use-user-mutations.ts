@@ -5,107 +5,47 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 
-import type {
-  UserForm,
-} from "../types/user-form.types"
+import type { UserForm } from "../types/user-form.types"
+import type { User } from "../types/user.types"
+import { usersService } from "../services/users.service"
+import { propagateUserUpdate } from "../cache/propagate-user-update"
 
-import {
-  usersService,
-} from "../services/users.service"
+export function useUserMutations() {
+  const queryClient = useQueryClient()
 
-export function useUserMutations(){
+  const createUser = useMutation({
+    mutationFn: (dto: UserForm) => usersService.create(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  })
 
-  const queryClient=
-    useQueryClient()
+  const updateUser = useMutation({
+    mutationFn: ({
+      id,
+      dto,
+    }: {
+      id: string
+      dto: Partial<UserForm>
+    }) => usersService.update(id, dto),
+    onSuccess: (user: User) => {
+      // Lista de users
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      // Snapshots anidados (pm, operator, assignee, …)
+      propagateUserUpdate(queryClient, user)
+    },
+  })
 
-  const createUser=
-    useMutation({
+  const deleteUser = useMutation({
+    mutationFn: (id: string) => usersService.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  })
 
-      mutationFn:(
-        dto:UserForm,
-      )=>
-
-        usersService.create(
-          dto,
-        ),
-
-      onSuccess:()=>{
-
-        queryClient.invalidateQueries({
-
-          queryKey:[
-            "users",
-          ],
-
-        })
-
-      },
-
-    })
-
-  const updateUser=
-    useMutation({
-
-      mutationFn:({
-        id,
-        dto,
-      }:{
-        id:string
-        dto:Partial<UserForm>
-      })=>
-
-        usersService.update(
-          id,
-          dto,
-        ),
-
-      onSuccess:()=>{
-
-        queryClient.invalidateQueries({
-
-          queryKey:[
-            "users",
-          ],
-
-        })
-
-      },
-
-    })
-
-  const deleteUser=
-    useMutation({
-
-      mutationFn:(
-        id:string,
-      )=>
-
-        usersService.remove(
-          id,
-        ),
-
-      onSuccess:()=>{
-
-        queryClient.invalidateQueries({
-
-          queryKey:[
-            "users",
-          ],
-
-        })
-
-      },
-
-    })
-
-  return{
-
+  return {
     createUser,
-
     updateUser,
-
     deleteUser,
-
   }
-
 }
