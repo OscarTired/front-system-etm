@@ -195,4 +195,18 @@ export const workflowService={
 
   },
 
+
+  /** Transfer atómico: retract previa + ASSIGN al nuevo operario. */
+  async reassign(dto:{ stepId:string; operatorId:string }){
+
+    const res=
+      await api.post<{ success:boolean; count:number }>(
+        "/workflow/reassign",
+        dto,
+      )
+
+    return res.data
+
+  },
+
 }

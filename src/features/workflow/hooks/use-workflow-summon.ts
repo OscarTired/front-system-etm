@@ -38,6 +38,11 @@ export function useWorkflowSummon() {
     onSuccess: invalidateTasks,
   })
 
+  const reassign = useMutation({
+    mutationFn: workflowService.reassign,
+    onSuccess: invalidateTasks,
+  })
+
   return {
     summon: summon.mutateAsync,
     summoning: summon.isPending,
@@ -47,6 +52,8 @@ export function useWorkflowSummon() {
     declining: declineInvite.isPending,
     unsummon: unsummon.mutateAsync,
     unsummoning: unsummon.isPending,
+    reassign: reassign.mutateAsync,
+    reassigning: reassign.isPending,
   }
 
 }
