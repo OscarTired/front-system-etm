@@ -51,7 +51,6 @@ import {
   getBadgeColors,
   getGlassSurface,
 } from "@/shared/utils/badge-colors"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { useThemeStore } from "@/shared/theme"
 
 import {
@@ -149,9 +148,8 @@ export function TaskProductionPanel({
       ? ENTITY_ICONS[status.icon]
       : undefined
 
-  // Acento de dominio solo en icono / barra.
-  // Texto sobre glass → tokens neutros --on-glass-* (legibles en cualquier tint).
-  const summaryAccent = useBadgeColors(status?.color ?? "#737373", "subtle").text
+  // Glass: texto e iconos = tinta neutra on-glass (legible en cualquier tint).
+  // El color de dominio queda en el fondo glass + barra, no en el glyph.
 
   const progressContent = (
 
@@ -164,8 +162,7 @@ export function TaskProductionPanel({
           {StatusIcon && status && (
             <StatusIcon
               size={13}
-              className="shrink-0"
-              style={{ color: summaryAccent }}
+              className="shrink-0 text-on-glass-foreground"
             />
           )}
 
@@ -436,9 +433,9 @@ export function TaskProductionPanel({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
 
                 {StatusIcon ? (
-                  <StatusIcon size={20} style={{ color: summaryAccent }} />
+                  <StatusIcon size={20} className="text-on-glass-foreground" />
                 ) : (
-                  <Activity size={20} style={{ color: summaryAccent }} />
+                  <Activity size={20} className="text-on-glass-foreground" />
                 )}
 
               </div>

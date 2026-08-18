@@ -124,7 +124,7 @@ export function KpiCarousel({
     >
 
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
-        <Icon size={20} style={{ color: textColor }} />
+        <Icon size={20} className="text-on-glass-foreground" />
       </div>
 
       <span className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-on-glass-foreground tablet:block">
@@ -259,11 +259,8 @@ export function KpiCarousel({
                   <div className="flex min-w-0 items-center justify-between gap-2">
 
                     <div className="flex min-w-0 items-center gap-1.5">
-                      <ActiveIcon size={13} style={{ color: activeColors.text }} />
-                      <span
-                        className="truncate text-xs font-bold uppercase tracking-wide"
-                        style={{ color: activeColors.text }}
-                      >
+                      <ActiveIcon size={13} className="text-on-glass-foreground" />
+                      <span className="truncate text-xs font-bold uppercase tracking-wide text-on-glass-foreground">
                         {activeItem?.label ?? summary.label}
                       </span>
                     </div>
@@ -277,13 +274,13 @@ export function KpiCarousel({
                                 {row.label}:
                               </span>
                             )}
-                            <span className="text-xs font-bold" style={{ color: activeColors.text }}>
+                            <span className="text-xs font-bold" className="text-on-glass-foreground">
                               {row.value}
                             </span>
                           </div>
                         ))
                       ) : (
-                        <span className="text-xs font-bold" style={{ color: activeColors.text }}>
+                        <span className="text-xs font-bold" className="text-on-glass-foreground">
                           {activeItem?.value ?? ""}
                         </span>
                       )}

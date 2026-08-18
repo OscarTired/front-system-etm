@@ -245,31 +245,36 @@ export function getProcessCardTextColor(
   return getBadgeColors(hex, "subtle").text
 }
 
+/**
+ * Glass tintado: el hex solo pinta el fondo.
+ * Texto/iconos → tokens neutros --on-glass-* (legibles sobre cualquier tint).
+ * Nunca devolver tinta de dominio aquí: azul-sobre-azul / verde-sobre-verde se lava.
+ */
 export function getGlassSurface(hex: string, theme?: "light" | "dark") {
   const resolved: "light" | "dark" =
     theme === "dark" || theme === "light" ? theme : detectTheme()
 
   const c = getBadgeColors(hex, "subtle", resolved)
 
+  const ink = {
+    text: "var(--on-glass-foreground)",
+    textMuted: "var(--on-glass-muted)",
+    textFaint: "var(--on-glass-faint)",
+  } as const
+
   if (resolved === "dark") {
     return {
       background: `linear-gradient(135deg, ${c.background}, var(--process-card-end))`,
       backgroundInset: `linear-gradient(135deg, ${c.background}, color-mix(in oklab, var(--on-glass-foreground) 4%, var(--process-card-end)))`,
-      text: c.text,
-      textMuted:
-        (c as { textMuted?: string }).textMuted ?? "var(--on-glass-muted)",
-      textFaint: "var(--on-glass-faint)",
+      ...ink,
     }
   }
 
   const start = blendOnChipSurface(hex, resolveSubtleAlpha(hex, 0.38))
   const end = blendOnChipSurface(hex, 0.22)
-  const text = getChipText(hex, end)
   return {
     background: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
     backgroundInset: `linear-gradient(135deg, ${rgbString(start)}, ${rgbString(end)})`,
-    text,
-    textMuted: withAlpha(text, 0.72),
-    textFaint: withAlpha(text, 0.45),
+    ...ink,
   }
 }
