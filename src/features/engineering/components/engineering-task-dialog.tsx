@@ -9,7 +9,7 @@ import {
 import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
 import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { ContextPicker } from "@/features/tasks/components/context-picker"
-import { UserSelect } from "@/features/users/components/user-select"
+import { EngineeringConvocarSelect } from "./engineering-convocar-select"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
@@ -264,13 +264,12 @@ export function EngineeringTaskDialog({
           </div>
         )}
 
-        <FormField label="Asignar a">
+        <FormField label="Convocar">
           {showAssigneeSelect ? (
             <>
-              <UserSelect
-                items={assignableUsers}
+              <EngineeringConvocarSelect
+                users={assignableUsers}
                 value={assignee}
-                placeholder="Sin asignar"
                 onChange={u => setAssigneeId(u?.id)}
               />
               {assignableUsers.length === 0 && (
