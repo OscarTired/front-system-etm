@@ -68,7 +68,7 @@ export function CanvasContextMenu({
           style={{ left: ctxMenu.x, top: ctxMenu.y }}
         />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-48 border-border bg-popover text-foreground">
+      <DropdownMenuContent className="min-w-48 border-0 bg-popover text-foreground">
         {/* Siempre primero: ajustar a plancha */}
         <DropdownMenuItem onClick={() => onFit()}>
           <Maximize2 className="mr-2 h-4 w-4 opacity-70" />

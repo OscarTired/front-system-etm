@@ -77,7 +77,7 @@ export function EntitySelectActionMenu({
         onCloseAutoFocus={(e) => {
           e.preventDefault()
         }}
-        className="z-50 min-w-32 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-xl"
+        className="z-50 min-w-32 rounded-xl border-0 bg-popover p-1 text-popover-foreground shadow-xl"
       >
         {onEdit && (
           <DropdownMenuItem
