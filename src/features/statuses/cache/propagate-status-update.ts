@@ -5,7 +5,7 @@ import type { Project } from "@/features/projects/types/project.types"
 import type { Task } from "@/features/tasks/types/task.types"
 
 /**
- * Status anidado en projects[] y tasks[].
+ * Status vive en project.status y en task.project.status (no en Task raíz).
  */
 export function propagateStatusUpdate(
   queryClient: QueryClient,
@@ -30,8 +30,15 @@ export function propagateStatusUpdate(
   }
 
   queryClient.setQueryData<Task[]>(["tasks"], current =>
-    (current ?? []).map(task =>
-      task.status?.id === status.id ? { ...task, status } : task,
-    ),
+    (current ?? []).map(task => {
+      if (task.project?.status?.id !== status.id) return task
+      return {
+        ...task,
+        project: {
+          ...task.project,
+          status,
+        },
+      }
+    }),
   )
 }

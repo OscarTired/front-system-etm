@@ -1,0 +1,65 @@
+diff --git a/src/features/stages/cache/propagate-stage-update.ts b/src/features/stages/cache/propagate-stage-update.ts
+index 44c8336..6619437 100644
+--- a/src/features/stages/cache/propagate-stage-update.ts
++++ b/src/features/stages/cache/propagate-stage-update.ts
+@@ -5,8 +5,7 @@ import type { Project } from "@/features/projects/types/project.types"
+ import type { Task } from "@/features/tasks/types/task.types"
+ 
+ /**
+- * Stage vive anidado en projects[] y tasks[].
+- * Sin propagar, filas siguen con color/nombre viejos hasta refetch.
++ * Stage vive en project.stage y en task.project.stage (no en Task raíz).
+  */
+ export function propagateStageUpdate(
+   queryClient: QueryClient,
+@@ -31,8 +30,15 @@ export function propagateStageUpdate(
+   }
+ 
+   queryClient.setQueryData<Task[]>(["tasks"], current =>
+-    (current ?? []).map(task =>
+-      task.stage?.id === stage.id ? { ...task, stage } : task,
+-    ),
++    (current ?? []).map(task => {
++      if (task.project?.stage?.id !== stage.id) return task
++      return {
++        ...task,
++        project: {
++          ...task.project,
++          stage,
++        },
++      }
++    }),
+   )
+ }
+diff --git a/src/features/statuses/cache/propagate-status-update.ts b/src/features/statuses/cache/propagate-status-update.ts
+index 8373222..40b369e 100644
+--- a/src/features/statuses/cache/propagate-status-update.ts
++++ b/src/features/statuses/cache/propagate-status-update.ts
+@@ -5,7 +5,7 @@ import type { Project } from "@/features/projects/types/project.types"
+ import type { Task } from "@/features/tasks/types/task.types"
+ 
+ /**
+- * Status anidado en projects[] y tasks[].
++ * Status vive en project.status y en task.project.status (no en Task raíz).
+  */
+ export function propagateStatusUpdate(
+   queryClient: QueryClient,
+@@ -30,8 +30,15 @@ export function propagateStatusUpdate(
+   }
+ 
+   queryClient.setQueryData<Task[]>(["tasks"], current =>
+-    (current ?? []).map(task =>
+-      task.status?.id === status.id ? { ...task, status } : task,
+-    ),
++    (current ?? []).map(task => {
++      if (task.project?.status?.id !== status.id) return task
++      return {
++        ...task,
++        project: {
++          ...task.project,
++          status,
++        },
++      }
++    }),
+   )
+ }
