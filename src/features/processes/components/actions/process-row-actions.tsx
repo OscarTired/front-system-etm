@@ -11,7 +11,7 @@ import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { canCompleteStep } from "@/features/workflow/selectors/can-complete"
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
+import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
 
 type ProcessRowActionsProps = {
@@ -128,16 +128,15 @@ export function ProcessRowActions({
     return (
       <div className="flex w-full items-center justify-center">
         <div className="flex h-8 w-full min-w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2">
-          {prevDef ? (
+          {prevDef && prev ? (
             <>
               <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                 EN →
               </span>
-              <DynamicBadge
-                label={prevDef.label}
+              <EntityChip
+                label={prev.processCode}
                 color={prevDef.color}
                 icon={prevDef.icon}
-                muted
               />
             </>
           ) : (

@@ -116,7 +116,11 @@ export function LevelSelect({
 
             <CommandGroup>
 
-              {options.map(option => (
+              {([...options].sort((a, b) => {
+                if (a.value === value) return -1
+                if (b.value === value) return 1
+                return 0
+              })).map(option => (
 
                 <SelectOption
                   key={option.value}

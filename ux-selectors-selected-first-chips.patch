@@ -1,0 +1,196 @@
+diff --git a/src/features/admin/users/components/dialog/level-select.tsx b/src/features/admin/users/components/dialog/level-select.tsx
+--- a/src/features/admin/users/components/dialog/level-select.tsx
++++ b/src/features/admin/users/components/dialog/level-select.tsx
+@@ -116,7 +116,11 @@
+ 
+             <CommandGroup>
+ 
+-              {options.map(option => (
++              {([...options].sort((a, b) => {
++                if (a.value === value) return -1
++                if (b.value === value) return 1
++                return 0
++              })).map(option => (
+ 
+                 <SelectOption
+                   key={option.value}
+diff --git a/src/features/areas/components/area-multi-select.tsx b/src/features/areas/components/area-multi-select.tsx
+--- a/src/features/areas/components/area-multi-select.tsx
++++ b/src/features/areas/components/area-multi-select.tsx
+@@ -125,7 +125,7 @@
+ 
+             <CommandGroup>
+ 
+-              {areas.map(area => {
++              {withSelectedFirst(areas, new Set(value?.map(a => a.id) ?? [])).map(area => {
+ 
+                 const optionVisuals = getAreaVisuals(area)
+                 const selected = value.some(v => v.id === area.id)
+diff --git a/src/features/areas/components/area-select.tsx b/src/features/areas/components/area-select.tsx
+--- a/src/features/areas/components/area-select.tsx
++++ b/src/features/areas/components/area-select.tsx
+@@ -100,7 +100,7 @@
+ 
+             <CommandGroup>
+ 
+-              {areas.map(area => {
++              {withSelectedFirst(areas, value?.id).map(area => {
+ 
+                 const optionVisuals = getAreaVisuals(area)
+ 
+diff --git a/src/features/engineering/components/engineering-task-row.tsx b/src/features/engineering/components/engineering-task-row.tsx
+--- a/src/features/engineering/components/engineering-task-row.tsx
++++ b/src/features/engineering/components/engineering-task-row.tsx
+@@ -79,8 +79,8 @@
+                 title={task.project.projectCode}
+                 className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+                 style={{
+-                  backgroundColor: `${task.project.client?.color ?? "#64748B"}15`,
+-                  color: task.project.client?.color ?? "#64748B",
++                  backgroundColor: `${task.project.client.color}15`,
++                  color: task.project.client.color,
+                 }}
+               >
+                 {displayProjectCode(task.project.projectCode)}
+diff --git a/src/features/engineering/types/engineering-task.types.ts b/src/features/engineering/types/engineering-task.types.ts
+--- a/src/features/engineering/types/engineering-task.types.ts
++++ b/src/features/engineering/types/engineering-task.types.ts
+@@ -23,9 +23,9 @@
+     id: string
+     projectCode: string
+     name: string
+-    client?: {
+-      id?: string
+-      name?: string
++    client: {
++      id: string
++      name: string
+       color: string
+     }
+   }
+diff --git a/src/features/processes/components/actions/process-row-actions.tsx b/src/features/processes/components/actions/process-row-actions.tsx
+--- a/src/features/processes/components/actions/process-row-actions.tsx
++++ b/src/features/processes/components/actions/process-row-actions.tsx
+@@ -11,7 +11,7 @@
+ import { canCompleteStep } from "@/features/workflow/selectors/can-complete"
+ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
++import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+ import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
+ 
+ type ProcessRowActionsProps = {
+@@ -128,16 +128,15 @@
+     return (
+       <div className="flex w-full items-center justify-center">
+         <div className="flex h-8 w-full min-w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2">
+-          {prevDef ? (
++          {prevDef && prev ? (
+             <>
+               <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                 EN →
+               </span>
+-              <DynamicBadge
+-                label={prevDef.label}
++              <EntityChip
++                label={prev.processCode}
+                 color={prevDef.color}
+                 icon={prevDef.icon}
+-                muted
+               />
+             </>
+           ) : (
+diff --git a/src/features/roles/components/role-multi-select.tsx b/src/features/roles/components/role-multi-select.tsx
+--- a/src/features/roles/components/role-multi-select.tsx
++++ b/src/features/roles/components/role-multi-select.tsx
+@@ -63,18 +63,15 @@
+   const inputRef = useRef<HTMLInputElement>(null)
+ 
+   const filteredItems = useMemo(() => {
+-
+     const search = query.trim().toLowerCase()
+-
+-    if (!search) {
+-      return items
+-    }
+-
+-    return items.filter(
+-      role => role.name.toLowerCase().includes(search),
++    const source = !search
++      ? items
++      : items.filter(role => role.name.toLowerCase().includes(search))
++    return withSelectedFirst(
++      source,
++      new Set(value.map(r => r.id)),
+     )
+-
+-  }, [items, query])
++  }, [items, query, value])
+ 
+   const triggerLabel =
+     value.length === 0
+diff --git a/src/shared/ui/convocar-menu/convocar-menu.tsx b/src/shared/ui/convocar-menu/convocar-menu.tsx
+--- a/src/shared/ui/convocar-menu/convocar-menu.tsx
++++ b/src/shared/ui/convocar-menu/convocar-menu.tsx
+@@ -17,6 +17,7 @@
+ import { SelectOption } from "@/shared/ui/select-option/select-option"
+ import { cn } from "@/shared/utils/utils"
+ import type { User } from "@/features/users/types/user.types"
++import { withSelectedFirst } from "@/shared/utils/with-selected-first"
+ 
+ export type ConvocarOption = {
+   user: User
+@@ -112,7 +113,10 @@
+           >
+             <CommandEmpty>{emptyLabel}</CommandEmpty>
+             <CommandGroup>
+-              {options.map(({ user, description, descriptionColor }) => (
++              {withSelectedFirst(
++              options.map(o => ({ ...o, id: o.user.id })),
++              selectedUserId,
++            ).map(({ user, description, descriptionColor }) => (
+                 <SelectOption
+                   key={user.id}
+                   label={user.name}
+diff --git a/src/shared/utils/with-selected-first.ts b/src/shared/utils/with-selected-first.ts
+new file mode 100644
+--- /dev/null
++++ b/src/shared/utils/with-selected-first.ts
+@@ -0,0 +1,37 @@
++/**
++ * Pone los ítems seleccionados al inicio de la lista (selectores).
++ * Fuente de verdad del orden visual en menús.
++ */
++export function withSelectedFirst<T extends { id: string }>(
++  items: readonly T[],
++  selectedId: string | null | undefined,
++): T[]
++export function withSelectedFirst<T extends { id: string }>(
++  items: readonly T[],
++  selectedIds: ReadonlySet<string> | readonly string[],
++): T[]
++export function withSelectedFirst<T extends { id: string }>(
++  items: readonly T[],
++  selected: string | null | undefined | ReadonlySet<string> | readonly string[],
++): T[] {
++  if (items.length === 0) return []
++
++  const ids: Set<string> =
++    selected == null || selected === ""
++      ? new Set()
++      : typeof selected === "string"
++        ? new Set([selected])
++        : selected instanceof Set
++          ? selected
++          : new Set(selected)
++
++  if (ids.size === 0) return [...items]
++
++  const top: T[] = []
++  const rest: T[] = []
++  for (const item of items) {
++    if (ids.has(item.id)) top.push(item)
++    else rest.push(item)
++  }
++  return top.length === 0 ? [...items] : [...top, ...rest]
++}

@@ -100,7 +100,7 @@ export function AreaSelect({
 
             <CommandGroup>
 
-              {areas.map(area => {
+              {withSelectedFirst(areas, value?.id).map(area => {
 
                 const optionVisuals = getAreaVisuals(area)
 

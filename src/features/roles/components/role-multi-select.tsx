@@ -63,18 +63,15 @@ export function RoleMultiSelect({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const filteredItems = useMemo(() => {
-
     const search = query.trim().toLowerCase()
-
-    if (!search) {
-      return items
-    }
-
-    return items.filter(
-      role => role.name.toLowerCase().includes(search),
+    const source = !search
+      ? items
+      : items.filter(role => role.name.toLowerCase().includes(search))
+    return withSelectedFirst(
+      source,
+      new Set(value.map(r => r.id)),
     )
-
-  }, [items, query])
+  }, [items, query, value])
 
   const triggerLabel =
     value.length === 0

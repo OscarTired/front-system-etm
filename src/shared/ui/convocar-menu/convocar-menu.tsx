@@ -17,6 +17,7 @@ import {
 import { SelectOption } from "@/shared/ui/select-option/select-option"
 import { cn } from "@/shared/utils/utils"
 import type { User } from "@/features/users/types/user.types"
+import { withSelectedFirst } from "@/shared/utils/with-selected-first"
 
 export type ConvocarOption = {
   user: User
@@ -112,7 +113,10 @@ export function ConvocarMenu({
           >
             <CommandEmpty>{emptyLabel}</CommandEmpty>
             <CommandGroup>
-              {options.map(({ user, description, descriptionColor }) => (
+              {withSelectedFirst(
+              options.map(o => ({ ...o, id: o.user.id })),
+              selectedUserId,
+            ).map(({ user, description, descriptionColor }) => (
                 <SelectOption
                   key={user.id}
                   label={user.name}

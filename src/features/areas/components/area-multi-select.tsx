@@ -125,7 +125,7 @@ export function AreaMultiSelect({
 
             <CommandGroup>
 
-              {areas.map(area => {
+              {withSelectedFirst(areas, new Set(value?.map(a => a.id) ?? [])).map(area => {
 
                 const optionVisuals = getAreaVisuals(area)
                 const selected = value.some(v => v.id === area.id)
