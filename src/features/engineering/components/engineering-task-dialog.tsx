@@ -13,9 +13,7 @@ import { ConvocarMenu } from "@/shared/ui/convocar-menu/convocar-menu"
 import { useEngineeringAssignees } from "../hooks/use-engineering-assignees"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
-import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 import { cn } from "@/shared/utils/utils"
 
@@ -201,21 +199,22 @@ export function EngineeringTaskDialog({
             <div className="flex flex-wrap gap-2">
               {ENGINEERING_PROCESS_ORDER.map(code => {
                 const def = ENGINEERING_PROCESS_DEFINITIONS[code]
-                const Icon = ENTITY_ICONS[def.icon]
                 const isSelected = processCode === code
                 return (
                   <button
                     key={code}
                     type="button"
                     onClick={() => setProcessCode(code)}
-                    className="cursor-pointer active:scale-95"
+                    className={cn(
+                      "cursor-pointer active:scale-95 transition-opacity",
+                      !isSelected && "opacity-45",
+                    )}
                   >
-                    <DynamicBadge
+                    <EntityChip
                       label={def.short}
                       color={def.color}
-                      iconComponent={Icon}
-                      muted={!isSelected}
-                      width="process"
+                      icon={def.icon}
+                      compact
                     />
                   </button>
                 )
@@ -251,13 +250,16 @@ export function EngineeringTaskDialog({
                     key={opt.value}
                     type="button"
                     onClick={() => setStatus(opt.value)}
-                    className="cursor-pointer active:scale-95"
+                    className={cn(
+                      "cursor-pointer active:scale-95 transition-opacity",
+                      !isSelected && "opacity-45",
+                    )}
                   >
-                    <DynamicBadge
+                    <EntityChip
                       label={def.label}
                       color={def.color}
                       icon={def.icon}
-                      muted={!isSelected}
+                      compact
                     />
                   </button>
                 )
@@ -285,11 +287,11 @@ export function EngineeringTaskDialog({
           ) : (
             <div className="flex items-center gap-2 px-0.5">
               {assignee ? (
-                <DynamicBadge
+                <EntityChip
                   label={assignee.name}
                   color={assignee.color}
                   icon={assignee.icon}
-                  width="field"
+                  compact
                 />
               ) : (
                 <span className="text-sm text-muted-foreground">Sin asignar</span>
