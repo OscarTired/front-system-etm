@@ -57,8 +57,10 @@ export function dslToPiece(text: string): CreatePieceBody {
       margin: Number(map.get("margin") ?? 12),
       cols: Number(map.get("cols") ?? 8),
       rows: Number(map.get("rows") ?? 6),
-      holeWidth: Number(map.get("holeWidth") ?? 28),
-      holeHeight: Number(map.get("holeHeight") ?? 22),
+      holeWidth: map.has("holeWidth") ? Number(map.get("holeWidth")) : undefined,
+      holeHeight: map.has("holeHeight") ? Number(map.get("holeHeight")) : undefined,
+      minGap: map.has("minGap") ? Number(map.get("minGap")) : 2,
+      fit: "auto",
       gapX: map.has("gapX") ? Number(map.get("gapX")) : undefined,
       gapY: map.has("gapY") ? Number(map.get("gapY")) : undefined,
       thicknessMm: map.has("thicknessMm")

@@ -94,10 +94,13 @@ export type CreateMallaBody = {
   margin: number
   cols: number
   rows: number
-  holeWidth: number
-  holeHeight: number
+  /** Opcional: si no va, el motor calcula el hueco. */
+  holeWidth?: number
+  holeHeight?: number
+  minGap?: number
   gapX?: number
   gapY?: number
+  fit?: "auto" | "strict"
   thicknessMm?: number
   material?: string
   name?: string

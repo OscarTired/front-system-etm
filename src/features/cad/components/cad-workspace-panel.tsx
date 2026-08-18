@@ -65,8 +65,8 @@ const DEFAULT_MALLA: CreatePieceBody = {
   margin: 12,
   cols: 8,
   rows: 6,
-  holeWidth: 28,
-  holeHeight: 22,
+  minGap: 2,
+  fit: "auto",
   thicknessMm: 1.5,
   material: "AlMg3",
   name: "malla",
@@ -533,6 +533,9 @@ export function CadWorkspacePanel() {
 
           {malla && (
             <div className="grid grid-cols-2 gap-2">
+              <p className="col-span-2 text-[11px] text-muted-foreground">
+                Huecos y gaps los calcula el motor (fit auto).
+              </p>
               {(
                 [
                   ["width", "Ancho"],
@@ -540,8 +543,7 @@ export function CadWorkspacePanel() {
                   ["margin", "Margen"],
                   ["cols", "Columnas"],
                   ["rows", "Filas"],
-                  ["holeWidth", "Hueco W"],
-                  ["holeHeight", "Hueco H"],
+                  ["minGap", "Gap mín"],
                   ["thicknessMm", "Espesor"],
                 ] as const
               ).map(([key, label]) => (

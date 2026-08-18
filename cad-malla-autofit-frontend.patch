@@ -1,0 +1,72 @@
+diff --git a/src/features/cad/components/cad-workspace-panel.tsx b/src/features/cad/components/cad-workspace-panel.tsx
+index 42a3cdf..c3b3304 100644
+--- a/src/features/cad/components/cad-workspace-panel.tsx
++++ b/src/features/cad/components/cad-workspace-panel.tsx
+@@ -64,8 +64,8 @@ const DEFAULT_MALLA: CreatePieceBody = {
+   margin: 12,
+   cols: 8,
+   rows: 6,
+-  holeWidth: 28,
+-  holeHeight: 22,
++  minGap: 2,
++  fit: "auto",
+   thicknessMm: 1.5,
+   material: "AlMg3",
+   name: "malla",
+@@ -532,6 +532,9 @@ export function CadWorkspacePanel() {
+ 
+           {malla && (
+             <div className="grid grid-cols-2 gap-2">
++              <p className="col-span-2 text-[11px] text-muted-foreground">
++                Huecos y gaps los calcula el motor (fit auto).
++              </p>
+               {(
+                 [
+                   ["width", "Ancho"],
+@@ -539,8 +542,7 @@ export function CadWorkspacePanel() {
+                   ["margin", "Margen"],
+                   ["cols", "Columnas"],
+                   ["rows", "Filas"],
+-                  ["holeWidth", "Hueco W"],
+-                  ["holeHeight", "Hueco H"],
++                  ["minGap", "Gap mín"],
+                   ["thicknessMm", "Espesor"],
+                 ] as const
+               ).map(([key, label]) => (
+diff --git a/src/features/cad/lib/cad-spec-dsl.ts b/src/features/cad/lib/cad-spec-dsl.ts
+index 3523447..6999be0 100644
+--- a/src/features/cad/lib/cad-spec-dsl.ts
++++ b/src/features/cad/lib/cad-spec-dsl.ts
+@@ -57,8 +57,10 @@ export function dslToPiece(text: string): CreatePieceBody {
+       margin: Number(map.get("margin") ?? 12),
+       cols: Number(map.get("cols") ?? 8),
+       rows: Number(map.get("rows") ?? 6),
+-      holeWidth: Number(map.get("holeWidth") ?? 28),
+-      holeHeight: Number(map.get("holeHeight") ?? 22),
++      holeWidth: map.has("holeWidth") ? Number(map.get("holeWidth")) : undefined,
++      holeHeight: map.has("holeHeight") ? Number(map.get("holeHeight")) : undefined,
++      minGap: map.has("minGap") ? Number(map.get("minGap")) : 2,
++      fit: "auto",
+       gapX: map.has("gapX") ? Number(map.get("gapX")) : undefined,
+       gapY: map.has("gapY") ? Number(map.get("gapY")) : undefined,
+       thicknessMm: map.has("thicknessMm")
+diff --git a/src/features/cad/types/geometry-model.ts b/src/features/cad/types/geometry-model.ts
+index 86a0785..54a73a5 100644
+--- a/src/features/cad/types/geometry-model.ts
++++ b/src/features/cad/types/geometry-model.ts
+@@ -94,10 +94,13 @@ export type CreateMallaBody = {
+   margin: number
+   cols: number
+   rows: number
+-  holeWidth: number
+-  holeHeight: number
++  /** Opcional: si no va, el motor calcula el hueco. */
++  holeWidth?: number
++  holeHeight?: number
++  minGap?: number
+   gapX?: number
+   gapY?: number
++  fit?: "auto" | "strict"
+   thicknessMm?: number
+   material?: string
+   name?: string
