@@ -7,6 +7,7 @@ import {
   useTeamBitacoraViewStore,
   type TeamBitacoraViewMode,
 } from "../../store/team-bitacora-view-store"
+import { useSwipeSegment } from "./use-swipe-segment"
 
 const OPTIONS: {
   key: TeamBitacoraViewMode
@@ -18,6 +19,8 @@ const OPTIONS: {
   { key: "supervision", label: "Supervisión", Icon: Eye },
 ]
 
+const KEYS = OPTIONS.map(o => o.key) as TeamBitacoraViewMode[]
+
 type Props = {
   compact?: boolean
 }
@@ -25,9 +28,15 @@ type Props = {
 export function TeamBitacoraViewToggle({ compact = false }: Props) {
   const value = useTeamBitacoraViewStore(s => s.viewMode)
   const onChange = useTeamBitacoraViewStore(s => s.setViewMode)
+  const swipe = useSwipeSegment(KEYS, value, onChange)
 
   return (
-    <div className="inline-flex items-center rounded-lg bg-foreground/5 p-0.5">
+    <div
+      className="inline-flex touch-pan-y items-center rounded-lg bg-foreground/5 p-0.5"
+      {...swipe}
+      role="group"
+      aria-label="Vista de bitácora del equipo"
+    >
       {OPTIONS.map(option => {
         const Icon = option.Icon
         const active = value === option.key
@@ -43,14 +52,14 @@ export function TeamBitacoraViewToggle({ compact = false }: Props) {
             className={cn(
               "flex items-center justify-center rounded-md transition",
               compact
-                ? "size-8"
+                ? "size-11"
                 : "gap-1.5 px-3 py-0.5 text-sm font-semibold",
               active
                 ? "bg-foreground/10 text-foreground"
-                : "text-muted-foreground hover:text-muted-foreground",
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon size={compact ? 15 : 14} />
+            <Icon size={compact ? 16 : 14} />
             {!compact && <span>{option.label}</span>}
           </button>
         )
