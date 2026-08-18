@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import { cadPieceApi } from "../api/cad-piece.api"
 import type {
   CadTemplate,
+  CreateMallaBody,
   CreatePieceBody,
   GeometryModel,
 } from "../types/geometry-model"
@@ -548,15 +549,17 @@ export function CadWorkspacePanel() {
                   key={key}
                   label={label}
                   step={key === "cols" || key === "rows" ? "1" : "0.1"}
-                  value={String((body as Record<string, number>)[key] ?? 0)}
+                  value={String(
+                    (body as CreateMallaBody)[key] ?? 0,
+                  )}
                   onChange={v =>
                     applyBody({
-                      ...body,
+                      ...(body as CreateMallaBody),
                       [key]: num(
                         v,
                         key === "cols" || key === "rows" ? 1 : 0,
                       ),
-                    } as CreatePieceBody)
+                    })
                   }
                 />
               ))}
