@@ -130,7 +130,7 @@ export function ProcessMobileCard({
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col items-start">
-            {/* ≥40rem: referencia · prio · estado. <40rem: solo nombre */}
+            {/* md+: referencia · iconos prio/estado. Mobile: solo nombre */}
             <div className="flex min-w-0 max-w-full items-center gap-1.5">
               {isMobile ? (
                 <span className="max-w-full truncate text-sm font-semibold leading-none text-foreground">
@@ -145,9 +145,9 @@ export function ProcessMobileCard({
                   {task.reference}
                 </Link>
               )}
-              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
-                className="hidden size-5 shrink-0 items-center justify-center self-center @[40rem]/prow:inline-flex"
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={priority.name}
               >
                 <EntityIconBadge
@@ -156,9 +156,9 @@ export function ProcessMobileCard({
                   size={16}
                 />
               </span>
-              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
               <span
-                className="hidden size-5 shrink-0 items-center justify-center self-center @[40rem]/prow:inline-flex"
+                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
                 title={statusLabel.label}
               >
                 <EntityIconBadge
@@ -186,17 +186,41 @@ export function ProcessMobileCard({
                 {project.client.name}
               </span>
 
-              {/* 2ª fila: cliente + operario (prio/estado solo en título, sin duplicar) */}
-              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
-              <span className="hidden min-w-0 items-center gap-1 @[40rem]/prow:flex">
+              {/* Mobile: iconos prio/estado · operario-icon | md+: operario nombre (como tasks/projects) */}
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={priority.icon}
+                  color={priority.color}
+                  size={12}
+                />
+              </span>
+              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
+              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
+                <EntityIconBadge
+                  icon={statusLabel.icon}
+                  color={statusLabel.color}
+                  size={12}
+                />
+              </span>
+
+              <span className="shrink-0 text-muted-foreground/80">·</span>
+              <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+                <span className="md:hidden">
+                  <EntityIconBadge
+                    icon={operator?.icon}
+                    color={operator?.color ?? "#a3a3a3"}
+                    size={12}
+                  />
+                </span>
                 {operator ? (
                   <OperatorNameText
                     name={operator.name}
                     color={operator.color}
-                    className="truncate"
+                    className="hidden truncate md:inline"
                   />
                 ) : (
-                  <span className="truncate text-muted-foreground">
+                  <span className="hidden truncate text-muted-foreground md:inline">
                     Sin asignar
                   </span>
                 )}
