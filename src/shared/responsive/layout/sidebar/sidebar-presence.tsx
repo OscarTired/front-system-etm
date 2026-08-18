@@ -218,7 +218,7 @@ export function SidebarPresence({
   }
 
   const panelBody = (
-    <Command className="bg-transparent flex flex-col h-full" shouldFilter={false}>
+    <Command className="flex h-full min-h-0 flex-col bg-transparent" shouldFilter={false}>
       <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-popover shrink-0">
         <Search size={14} className="text-muted-foreground shrink-0" />
         <Input
@@ -230,12 +230,17 @@ export function SidebarPresence({
         />
       </div>
 
-      <CommandList className={cn(
-        "select-none flex-1 transition-all duration-200 ease-in-out",
-        // Sheet mobile: un solo scroller (body del popover). Desktop: tope.
-        "max-h-none overflow-visible tablet:overflow-y-auto",
-        !isTopbar && (expanded || query.trim() ? "tablet:max-h-96" : "tablet:max-h-60"),
-      )}>
+      <CommandList
+        className={cn(
+          // CommandList ya envuelve ScrollArea: no pisar overflow-y-auto.
+          "min-h-0 flex-1 select-none",
+          isTopbar
+            ? "max-h-[min(60dvh,28rem)]"
+            : expanded || query.trim()
+              ? "max-h-96"
+              : "max-h-60",
+        )}
+      >
         <CommandEmpty>
           {allUsers.length === 0 ? "Sin miembros" : "Sin resultados"}
         </CommandEmpty>
@@ -319,7 +324,7 @@ export function SidebarPresence({
             align="start"
             sideOffset={8}
             floatingClassName="w-72"
-            className="z-40 w-full min-w-90 max-w-lg p-2 shadow-sm shadow-black/15 dark:shadow-black/40 rounded-xl overflow-hidden bg-popover text-foreground border-none select-none flex flex-col"
+            className="z-40 flex max-h-[min(28rem,75dvh)] w-full min-w-90 max-w-lg flex-col overflow-hidden rounded-xl border-none bg-popover p-2 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40 select-none"
           >
             {panelBody}
           </PopoverContent>
