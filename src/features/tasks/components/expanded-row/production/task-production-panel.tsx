@@ -149,11 +149,9 @@ export function TaskProductionPanel({
       ? ENTITY_ICONS[status.icon]
       : undefined
 
-  const summaryBadge = useBadgeColors(status?.color ?? "#737373", "subtle")
-  const summaryTextColor = summaryBadge.text
-  // Labels/iconos secundarios sobre glass: mismo contrato que chips (textMuted),
-  // no token --on-glass-muted (se lava en light sobre pastel).
-  const summaryMuted = summaryBadge.textMuted ?? summaryTextColor
+  // Acento de dominio solo en icono / barra.
+  // Texto sobre glass → tokens neutros --on-glass-* (legibles en cualquier tint).
+  const summaryAccent = useBadgeColors(status?.color ?? "#737373", "subtle").text
 
   const progressContent = (
 
@@ -167,23 +165,19 @@ export function TaskProductionPanel({
             <StatusIcon
               size={13}
               className="shrink-0"
-              style={{ color: summaryTextColor }}
+              style={{ color: summaryAccent }}
             />
           )}
 
-          <span
-            className="truncate text-xs font-bold uppercase tracking-wide"
-            style={{
-              color: status ? summaryTextColor : undefined,
-            }}
-          >
+          <span className="truncate text-xs font-bold uppercase tracking-wide text-on-glass-foreground">
             {status?.name ?? "Sin estado"}
           </span>
 
         </div>
 
-        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground">
-          {workflowView.completedSteps}/{workflowView.totalSteps} · <span className="text-cyan-700 dark:text-primary">{workflowView.progress}%</span>
+        <span className="shrink-0 whitespace-nowrap text-xs font-semibold text-on-glass-muted">
+          {workflowView.completedSteps}/{workflowView.totalSteps} ·{" "}
+          <span className="text-on-glass-foreground">{workflowView.progress}%</span>
         </span>
 
       </div>
@@ -442,39 +436,40 @@ export function TaskProductionPanel({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground/5">
 
                 {StatusIcon ? (
-                  <StatusIcon size={20} style={{ color: summaryTextColor }} />
+                  <StatusIcon size={20} style={{ color: summaryAccent }} />
                 ) : (
-                  <Activity size={20} style={{ color: summaryTextColor }} />
+                  <Activity size={20} style={{ color: summaryAccent }} />
                 )}
 
               </div>
 
-              <span
-                className="hidden min-w-0 shrink truncate text-xs font-bold uppercase tracking-[0.18em] sm:block"
-                style={{ color: summaryTextColor }}
-              >
+              <span className="hidden min-w-0 shrink truncate text-xs font-bold uppercase tracking-[0.18em] text-on-glass-foreground sm:block">
                 {status?.name ?? "Producción"}
               </span>
 
               <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] " style={{ color: summaryMuted }}>Listas</p>
-                  <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
+                  <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-on-glass-muted sm:text-xs">
+                    Listas
+                  </p>
+                  <p className="text-lg font-bold leading-tight text-on-glass-foreground">
                     {workflowView.completedSteps}/{workflowView.totalSteps}
                   </p>
                 </div>
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em]" style={{ color: summaryMuted }}>Avance</p>
-                  <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
+                  <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-on-glass-muted sm:text-xs">
+                    Avance
+                  </p>
+                  <p className="text-lg font-bold leading-tight text-on-glass-foreground">
                     {workflowView.progress}%
                   </p>
                 </div>
 
               </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5" style={{ color: summaryMuted }}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-on-glass-muted">
                 <MoreHorizontal size={18} />
               </div>
 

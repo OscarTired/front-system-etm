@@ -127,10 +127,7 @@ export function KpiCarousel({
         <Icon size={20} style={{ color: textColor }} />
       </div>
 
-      <span
-        className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] tablet:block"
-        style={{ color: textColor }}
-      >
+      <span className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-on-glass-foreground tablet:block">
         {summary.label}
       </span>
 
@@ -144,10 +141,7 @@ export function KpiCarousel({
               {value.label}
             </p>
 
-            <p
-              className="text-base font-bold leading-tight sm:text-lg"
-              style={{ color: textColor }}
-            >
+            <p className="text-base font-bold leading-tight text-on-glass-foreground sm:text-lg">
               {value.value}
             </p>
 

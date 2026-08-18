@@ -113,9 +113,10 @@
   --chip-bg-alpha-active: 0.64;
   --chip-text-tint: 0.72;
   --process-card-end: oklch(0.94 0.012 260);
-  --on-glass-foreground: oklch(0.18 0.014 260);
-  --on-glass-muted: oklch(0.22 0.012 260 / 0.72);
-  --on-glass-faint: oklch(0.22 0.012 260 / 0.45);
+  /* Tinta neutra sobre glass pastel: contraste estable (no tinta de dominio). */
+  --on-glass-foreground: oklch(0.16 0.016 260);
+  --on-glass-muted: oklch(0.28 0.012 260 / 0.88);
+  --on-glass-faint: oklch(0.32 0.01 260 / 0.55);
 }
 
 html, body {
@@ -172,9 +173,9 @@ html, body {
   --chip-bg-alpha-active: 0.68;
   --chip-text-tint: 0.38;
   --process-card-end: oklch(0.14 0.012 260);
-  --on-glass-foreground: oklch(0.96 0.005 260);
-  --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
-  --on-glass-faint: oklch(0.96 0.005 260 / 0.38);
+  --on-glass-foreground: oklch(0.97 0.005 260);
+  --on-glass-muted: oklch(0.92 0.005 260 / 0.78);
+  --on-glass-faint: oklch(0.90 0.005 260 / 0.48);
 }
 
 @layer base {
