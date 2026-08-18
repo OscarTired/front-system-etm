@@ -45,58 +45,36 @@ export function ProcessMiniCard({
       className={cn(
         "flex h-full select-none flex-col overflow-hidden rounded-xl",
         isLarge
-          ? "justify-center gap-5 p-6"
+          ? "justify-center gap-4 p-4"
           : isMobile
-            ? "gap-3 p-4"
-            : "min-h-43.5 p-5",
+            ? "gap-2.5 p-3"
+            : "min-h-36 p-3",
       )}
       style={{ background: glass.background }}
     >
       <div
         className={cn(
           "flex min-w-0 items-center justify-between gap-2",
-          !isLarge && !isMobile && "mb-3",
+          !isLarge && !isMobile && "mb-1.5",
         )}
       >
         <span
           className={cn(
-            "min-w-0 truncate font-bold uppercase tracking-[0.18em]",
-            isLarge ? "text-sm" : "text-xs",
+            "min-w-0 truncate font-bold uppercase tracking-[0.14em]",
+            isLarge ? "text-xs" : "text-[10px]",
           )}
           style={{ color: titleColor }}
         >
           {label}
         </span>
         <Icon
-          size={isLarge ? 26 : 20}
+          size={isLarge ? 20 : 15}
           className="shrink-0"
           style={{ color: titleColor }}
         />
       </div>
 
       {isLarge ? (
-        <div className="flex min-w-0 flex-col gap-4">
-          {rows.map(row => (
-            <div
-              key={row.label}
-              className="flex min-w-0 items-baseline justify-between gap-2"
-            >
-              <p
-                className="min-w-0 shrink truncate text-[11px] font-bold uppercase tracking-[0.14em]"
-                style={{ color: labelColor }}
-              >
-                {row.label}
-              </p>
-              <div
-                className="min-w-0 truncate text-right text-base font-semibold leading-tight"
-                style={{ color: valueColor }}
-              >
-                {row.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : isMobile ? (
         <div className="flex min-w-0 flex-col gap-2.5">
           {rows.map(row => (
             <div
@@ -104,7 +82,7 @@ export function ProcessMiniCard({
               className="flex min-w-0 items-baseline justify-between gap-2"
             >
               <p
-                className="min-w-0 shrink truncate text-[11px] font-bold uppercase tracking-[0.14em]"
+                className="min-w-0 shrink truncate text-[10px] font-bold uppercase tracking-[0.12em]"
                 style={{ color: labelColor }}
               >
                 {row.label}
@@ -118,24 +96,46 @@ export function ProcessMiniCard({
             </div>
           ))}
         </div>
+      ) : isMobile ? (
+        <div className="flex min-w-0 flex-col gap-2">
+          {rows.map(row => (
+            <div
+              key={row.label}
+              className="flex min-w-0 items-baseline justify-between gap-2"
+            >
+              <p
+                className="min-w-0 shrink truncate text-[10px] font-bold uppercase tracking-[0.12em]"
+                style={{ color: labelColor }}
+              >
+                {row.label}
+              </p>
+              <div
+                className="min-w-0 truncate text-right text-xs font-semibold leading-tight"
+                style={{ color: valueColor }}
+              >
+                {row.value}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div
-          className="grid min-w-0 flex-1 content-center gap-x-4 gap-y-2.5"
+          className="grid min-w-0 flex-1 content-center gap-x-3 gap-y-1.5"
           style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(6.5rem, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(5rem, 1fr))",
           }}
         >
           {rows.map(row => (
             <div key={row.label} className="min-w-0">
               <p
-                className="truncate text-xs font-bold uppercase tracking-[0.16em]"
+                className="truncate text-[10px] font-bold uppercase tracking-[0.12em]"
                 style={{ color: labelColor }}
               >
                 {row.label}
               </p>
               <div
                 className={cn(
-                  "mt-1.5 min-w-0 truncate text-lg leading-tight",
+                  "mt-0.5 min-w-0 truncate text-sm leading-tight",
                   row.editable === false ? "font-semibold" : "font-bold",
                 )}
                 style={{ color: valueColor }}
@@ -144,7 +144,7 @@ export function ProcessMiniCard({
               </div>
               {row.secondary && (
                 <p
-                  className="mt-1 truncate text-xs leading-tight"
+                  className="mt-0.5 truncate text-[10px] leading-tight"
                   style={{ color: labelColor }}
                 >
                   {row.secondary}
