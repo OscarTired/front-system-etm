@@ -185,25 +185,23 @@ export function ContextPicker({
             !isProjectCompleted(project),
         )
 
-      if (!search) {
-        return availableProjects
-      }
+      const matched = !search
+        ? availableProjects
+        : availableProjects.filter(project =>
+            [
+              project.projectCode,
+              project.name,
+              project.client?.name ?? "",
+              project.pm?.name ?? "",
+            ].some(text => text.toLowerCase().includes(search)),
+          )
 
-      return availableProjects.filter(
-        project =>
-          [
-            project.projectCode,
-            project.name,
-            project.client?.name ?? "",
-            project.pm?.name ?? "",
-          ].some(
-            text =>
-              text
-                .toLowerCase()
-                .includes(search),
-          ),
-      )
-
+      // Seleccionado siempre arriba (mismo patrón que UserSelect).
+      return [...matched].sort((a, b) => {
+        if (a.id === value.projectId) return -1
+        if (b.id === value.projectId) return 1
+        return 0
+      })
     }, [
       showProjects,
       projects,
@@ -230,31 +228,29 @@ export function ContextPicker({
             )
           : tasks
 
-      if (!search) {
-        return scopedTasks
-      }
+      const matched = !search
+        ? scopedTasks
+        : scopedTasks.filter(task =>
+            [
+              String(task.taskNumber),
+              task.reference,
+              task.project.projectCode,
+              task.project.name,
+            ].some(text => text.toLowerCase().includes(search)),
+          )
 
-      return scopedTasks.filter(
-        task =>
-          [
-            String(task.taskNumber),
-            task.reference,
-            task.project.projectCode,
-            task.project.name,
-          ].some(
-            text =>
-              text
-                .toLowerCase()
-                .includes(search),
-          ),
-      )
-
+      return [...matched].sort((a, b) => {
+        if (a.id === value.taskId) return -1
+        if (b.id === value.taskId) return 1
+        return 0
+      })
     }, [
       showTasks,
       tasks,
       search,
       mode,
       taskProjectId,
+      value.taskId,
     ])
 
   function selectProject(projectId: string) {
@@ -353,10 +349,30 @@ export function ContextPicker({
           )}
         >
 
-          <span className="min-w-0 truncate">
-
-            {label}
-
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {selectedProject ? (
+              <>
+                <span
+                  className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+                  style={{
+                    backgroundColor: `${selectedProject.client?.color ?? "#64748B"}15`,
+                    color: selectedProject.client?.color ?? "#64748B",
+                  }}
+                >
+                  {displayProjectCode(selectedProject.projectCode)}
+                </span>
+                <span className="min-w-0 truncate">
+                  {[
+                    selectedProject.client?.name?.trim(),
+                    selectedProject.name,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </>
+            ) : (
+              <span className="min-w-0 truncate">{label}</span>
+            )}
           </span>
 
           <ChevronDown

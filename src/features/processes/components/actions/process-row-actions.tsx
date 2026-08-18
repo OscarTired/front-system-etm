@@ -10,6 +10,8 @@ import { useWorkflowRequirements } from "@/features/workflow/hooks/use-workflow-
 import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { canCompleteStep } from "@/features/workflow/selectors/can-complete"
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
+import { DynamicBadge } from "@/shared/ui/badge/dynamic-badge"
 import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
 
 type ProcessRowActionsProps = {
@@ -117,10 +119,32 @@ export function ProcessRowActions({
   }
 
   if (status === "QUEUE") {
+    const currentIndex = task.workflowSteps.findIndex(s => s.id === stepId)
+    const prev =
+      currentIndex > 0 ? task.workflowSteps[currentIndex - 1] : null
+    const prevDef = prev
+      ? PROCESS_DEFINITIONS[prev.processCode as ProcessCode]
+      : null
     return (
       <div className="flex w-full items-center justify-center">
-        <div className="flex h-8 w-full min-w-28 items-center justify-center rounded-lg border-2 border-dashed border-border bg-transparent">
-          <div className="h-1.5 w-1.5 rounded-full bg-foreground/20" />
+        <div className="flex h-8 w-full min-w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2">
+          {prevDef ? (
+            <>
+              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                EN →
+              </span>
+              <DynamicBadge
+                label={prevDef.label}
+                color={prevDef.color}
+                icon={prevDef.icon}
+                muted
+              />
+            </>
+          ) : (
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              En cola
+            </span>
+          )}
         </div>
       </div>
     )

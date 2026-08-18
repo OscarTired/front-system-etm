@@ -77,7 +77,11 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
             {task.project?.projectCode ? (
               <span
                 title={task.project.projectCode}
-                className="shrink-0 rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide text-muted-foreground"
+                className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+                style={{
+                  backgroundColor: `${task.project.client?.color ?? "#64748B"}15`,
+                  color: task.project.client?.color ?? "#64748B",
+                }}
               >
                 {displayProjectCode(task.project.projectCode)}
               </span>
