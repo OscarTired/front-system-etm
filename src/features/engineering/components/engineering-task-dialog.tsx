@@ -18,10 +18,10 @@ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workf
 import { cn } from "@/shared/utils/utils"
 
 import {
-  ENGINEERING_PROCESS_DEFINITIONS,
   ENGINEERING_PROCESS_ORDER,
   type EngineeringProcessCode,
 } from "../constants/engineering-process-definitions"
+import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
 import type {
   EngineeringTask,
   EngineeringTaskStatus,
@@ -68,6 +68,7 @@ export function EngineeringTaskDialog({
   const { users } = useUsersDirectory()
   const convocableOptions = useEngineeringAssignees()
   const { create, update } = useEngineeringTaskMutations()
+  const { resolve: resolveProcess } = useEngineeringProcessCatalog()
 
   const assignableUsers = useMemo(
     () => (users as User[]).filter(isEngineeringUser),
@@ -108,7 +109,7 @@ export function EngineeringTaskDialog({
   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
 
   const assignee = assignableUsers.find(u => u.id === assigneeId)
-  const processDef = ENGINEERING_PROCESS_DEFINITIONS[processCode]
+  const processDef = resolveProcess(processCode)
 
   const canSave =
     title.trim().length > 0 &&
@@ -198,7 +199,8 @@ export function EngineeringTaskDialog({
           {showProcessGrid ? (
             <div className="flex flex-wrap gap-2">
               {ENGINEERING_PROCESS_ORDER.map(code => {
-                const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+                const def = resolveProcess(code)
+                if (!def) return null
                 const isSelected = processCode === code
                 return (
                   <button
@@ -211,7 +213,7 @@ export function EngineeringTaskDialog({
                     )}
                   >
                     <EntityChip
-                      label={def.short}
+                      label={def.label}
                       color={def.color}
                       icon={def.icon}
                       compact
@@ -222,11 +224,15 @@ export function EngineeringTaskDialog({
             </div>
           ) : (
             <div className="flex items-center gap-2 px-0.5">
-              <EntityChip
-                label={processDef.label}
-                color={processDef.color}
-                icon={processDef.icon}
-              />
+              {processDef ? (
+                <EntityChip
+                  label={processDef.label}
+                  color={processDef.color}
+                  icon={processDef.icon}
+                />
+              ) : (
+                <span className="text-sm text-muted-foreground">{processCode}</span>
+              )}
               {lockProcess && (
                 <span className="text-[11px] text-muted-foreground">
                   Fijado por contexto

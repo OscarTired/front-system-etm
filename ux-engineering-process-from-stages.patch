@@ -1,0 +1,338 @@
+diff --git a/src/features/engineering/components/engineering-process-board.tsx b/src/features/engineering/components/engineering-process-board.tsx
+index 4b2ce1e..c8e6766 100644
+--- a/src/features/engineering/components/engineering-process-board.tsx
++++ b/src/features/engineering/components/engineering-process-board.tsx
+@@ -3,14 +3,14 @@
+ import { useMemo } from "react"
+ import { Plus } from "lucide-react"
+ 
+-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
++import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+ import { ScrollArea } from "@/components/ui/scroll-area"
+ 
+ import {
+-  ENGINEERING_PROCESS_DEFINITIONS,
+   ENGINEERING_PROCESS_ORDER,
+   type EngineeringProcessCode,
+ } from "../constants/engineering-process-definitions"
++import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
+ import type { EngineeringTask } from "../types/engineering-task.types"
+ import { EngineeringTaskRow } from "./engineering-task-row"
+ import { EngineeringKpiHeader } from "./engineering-kpi-header"
+@@ -42,19 +42,22 @@ function ProcessSectionHeader({
+   count: number
+   onAdd?: () => void
+ }) {
+-  const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+-  const Icon = ENTITY_ICONS[def.icon]
++  const { resolve } = useEngineeringProcessCatalog()
++  const def = resolve(code)
++  const label = def?.label ?? code
+   return (
+     <div className="flex shrink-0 items-center gap-2 border-b border-border px-1 pb-2">
+-      <span
+-        className="flex size-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
+-        style={{ color: def.color, backgroundColor: `${def.color}22` }}
+-      >
+-        {Icon ? <Icon size={14} /> : code}
+-      </span>
+-      <span className="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-foreground">
+-        {def.label}
+-      </span>
++      {def ? (
++        <EntityChip
++          label={def.label}
++          color={def.color}
++          icon={def.icon}
++          compact
++        />
++      ) : (
++        <span className="text-xs font-semibold text-muted-foreground">{code}</span>
++      )}
++      <span className="min-w-0 flex-1" />
+       <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+         {count}
+       </span>
+@@ -62,7 +65,7 @@ function ProcessSectionHeader({
+         <button
+           type="button"
+           onClick={onAdd}
+-          aria-label={`Nueva tarea en ${def.label}`}
++          aria-label={`Nueva tarea en ${label}`}
+           className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+         >
+           <Plus size={14} strokeWidth={2.5} />
+diff --git a/src/features/engineering/components/engineering-task-dialog.tsx b/src/features/engineering/components/engineering-task-dialog.tsx
+index 464601c..fa3c9ad 100644
+--- a/src/features/engineering/components/engineering-task-dialog.tsx
++++ b/src/features/engineering/components/engineering-task-dialog.tsx
+@@ -18,10 +18,10 @@ import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workf
+ import { cn } from "@/shared/utils/utils"
+ 
+ import {
+-  ENGINEERING_PROCESS_DEFINITIONS,
+   ENGINEERING_PROCESS_ORDER,
+   type EngineeringProcessCode,
+ } from "../constants/engineering-process-definitions"
++import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
+ import type {
+   EngineeringTask,
+   EngineeringTaskStatus,
+@@ -68,6 +68,7 @@ export function EngineeringTaskDialog({
+   const { users } = useUsersDirectory()
+   const convocableOptions = useEngineeringAssignees()
+   const { create, update } = useEngineeringTaskMutations()
++  const { resolve: resolveProcess } = useEngineeringProcessCatalog()
+ 
+   const assignableUsers = useMemo(
+     () => (users as User[]).filter(isEngineeringUser),
+@@ -108,7 +109,7 @@ export function EngineeringTaskDialog({
+   }, [open, task, defaultProcessCode, defaultProjectId, defaultAssigneeId])
+ 
+   const assignee = assignableUsers.find(u => u.id === assigneeId)
+-  const processDef = ENGINEERING_PROCESS_DEFINITIONS[processCode]
++  const processDef = resolveProcess(processCode)
+ 
+   const canSave =
+     title.trim().length > 0 &&
+@@ -198,7 +199,8 @@ export function EngineeringTaskDialog({
+           {showProcessGrid ? (
+             <div className="flex flex-wrap gap-2">
+               {ENGINEERING_PROCESS_ORDER.map(code => {
+-                const def = ENGINEERING_PROCESS_DEFINITIONS[code]
++                const def = resolveProcess(code)
++                if (!def) return null
+                 const isSelected = processCode === code
+                 return (
+                   <button
+@@ -211,7 +213,7 @@ export function EngineeringTaskDialog({
+                     )}
+                   >
+                     <EntityChip
+-                      label={def.short}
++                      label={def.label}
+                       color={def.color}
+                       icon={def.icon}
+                       compact
+@@ -222,11 +224,15 @@ export function EngineeringTaskDialog({
+             </div>
+           ) : (
+             <div className="flex items-center gap-2 px-0.5">
+-              <EntityChip
+-                label={processDef.label}
+-                color={processDef.color}
+-                icon={processDef.icon}
+-              />
++              {processDef ? (
++                <EntityChip
++                  label={processDef.label}
++                  color={processDef.color}
++                  icon={processDef.icon}
++                />
++              ) : (
++                <span className="text-sm text-muted-foreground">{processCode}</span>
++              )}
+               {lockProcess && (
+                 <span className="text-[11px] text-muted-foreground">
+                   Fijado por contexto
+diff --git a/src/features/engineering/components/engineering-user-list.tsx b/src/features/engineering/components/engineering-user-list.tsx
+index 10d1b88..c976dc0 100644
+--- a/src/features/engineering/components/engineering-user-list.tsx
++++ b/src/features/engineering/components/engineering-user-list.tsx
+@@ -11,9 +11,7 @@ import type { User } from "@/features/users/types/user.types"
+ import { cn } from "@/shared/utils/utils"
+ 
+ import type { EngineeringTask } from "../types/engineering-task.types"
+-import {
+-  ENGINEERING_PROCESS_DEFINITIONS,
+-} from "../constants/engineering-process-definitions"
++import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
+ import { EngineeringTaskRow } from "./engineering-task-row"
+ 
+ type Props = {
+@@ -58,6 +56,7 @@ export function EngineeringUserList({
+   onCreateForUser,
+ }: Props) {
+   const { has } = usePermissions()
++  const { resolve: resolveProcess } = useEngineeringProcessCatalog()
+   const canCreate = has(PermissionCode.TASK_CREATE)
+   const [expandedId, setExpandedId] = useState<string | null>(null)
+ 
+@@ -227,8 +226,11 @@ export function EngineeringUserList({
+                           </p>
+                         ) : (
+                           assigned.map(task => {
+-                            const def =
+-                              ENGINEERING_PROCESS_DEFINITIONS[task.processCode]
++                            const def = resolveProcess(
++                              task.processCode as Parameters<
++                                typeof resolveProcess
++                              >[0],
++                            )
+                             return (
+                               <div key={task.id} className="flex flex-col gap-1">
+                                 {def && (
+@@ -236,7 +238,7 @@ export function EngineeringUserList({
+                                     className="px-1 text-[10px] font-semibold"
+                                     style={{ color: def.color }}
+                                   >
+-                                    {def.short} · {def.label}
++                                    {def.label}
+                                   </span>
+                                 )}
+                                 <EngineeringTaskRow
+diff --git a/src/features/engineering/constants/engineering-process-definitions.ts b/src/features/engineering/constants/engineering-process-definitions.ts
+index 06e3239..d84457b 100644
+--- a/src/features/engineering/constants/engineering-process-definitions.ts
++++ b/src/features/engineering/constants/engineering-process-definitions.ts
+@@ -1,9 +1,8 @@
+-import type { EntityIcon } from "@/shared/constants/entity-icons"
+-
+ /**
+  * Columnas del carrusel de Ingeniería.
+- * Codes alineados al seed de Stage (proyecto), sin PRODUCTION/WIRING/COMPLETED.
+- * El stage del proyecto NO bloquea crear/asignar en estas columnas.
++ * Codes alineados al seed de Stage (proyecto).
++ * Color / nombre / icono: catálogo stages (backend) vía useEngineeringProcessCatalog.
++ * NO hardcodear color aquí — el back es la fuente de verdad.
+  */
+ export type EngineeringProcessCode =
+   | "MECHANICAL_DESIGN"
+@@ -16,15 +15,6 @@ export type EngineeringProcessCode =
+   | "WELDING"
+   | "PROCUREMENT"
+ 
+-export type EngineeringProcessDefinition = {
+-  code: EngineeringProcessCode
+-  /** Código corto UI (badge) */
+-  short: string
+-  label: string
+-  icon: EntityIcon
+-  color: string
+-}
+-
+ export const ENGINEERING_PROCESS_ORDER: EngineeringProcessCode[] = [
+   "MECHANICAL_DESIGN",
+   "ELECTRICAL_DESIGN",
+@@ -36,72 +26,3 @@ export const ENGINEERING_PROCESS_ORDER: EngineeringProcessCode[] = [
+   "WELDING",
+   "PROCUREMENT",
+ ]
+-
+-export const ENGINEERING_PROCESS_DEFINITIONS: Record<
+-  EngineeringProcessCode,
+-  EngineeringProcessDefinition
+-> = {
+-  MECHANICAL_DESIGN: {
+-    code: "MECHANICAL_DESIGN",
+-    short: "DM",
+-    label: "D - Mecánico",
+-    icon: "pencil",
+-    color: "#2563EB",
+-  },
+-  ELECTRICAL_DESIGN: {
+-    code: "ELECTRICAL_DESIGN",
+-    short: "DE",
+-    label: "D - Eléctrico",
+-    icon: "bolt",
+-    color: "#EAB308",
+-  },
+-  MECHANICAL_PLAN: {
+-    code: "MECHANICAL_PLAN",
+-    short: "PM",
+-    label: "P - Mecánico",
+-    icon: "drafting",
+-    color: "#3B82F6",
+-  },
+-  ELECTRICAL_PLAN: {
+-    code: "ELECTRICAL_PLAN",
+-    short: "PE",
+-    label: "P - Eléctrico",
+-    icon: "drafting",
+-    color: "#FACC15",
+-  },
+-  LM_GEOS: {
+-    code: "LM_GEOS",
+-    short: "LM",
+-    label: "LM y Geos",
+-    icon: "measure",
+-    color: "#64748B",
+-  },
+-  CAM: {
+-    code: "CAM",
+-    short: "CAM",
+-    label: "CAM",
+-    icon: "cog",
+-    color: "#0EA5E9",
+-  },
+-  BENDING: {
+-    code: "BENDING",
+-    short: "DOB",
+-    label: "P - Doblez",
+-    icon: "fold",
+-    color: "#F97316",
+-  },
+-  WELDING: {
+-    code: "WELDING",
+-    short: "SOL",
+-    label: "P - Soldadura",
+-    icon: "flame",
+-    color: "#EF4444",
+-  },
+-  PROCUREMENT: {
+-    code: "PROCUREMENT",
+-    short: "LP",
+-    label: "Lista Procura",
+-    icon: "boxes",
+-    color: "#10B981",
+-  },
+-}
+diff --git a/src/features/engineering/hooks/use-engineering-process-catalog.ts b/src/features/engineering/hooks/use-engineering-process-catalog.ts
+new file mode 100644
+index 0000000..1cca741
+--- /dev/null
++++ b/src/features/engineering/hooks/use-engineering-process-catalog.ts
+@@ -0,0 +1,43 @@
++"use client"
++
++import { useMemo } from "react"
++
++import { useStages } from "@/features/stages/hooks/use-stages"
++import type { EntityIcon } from "@/shared/constants/entity-icons"
++import type { EngineeringProcessCode } from "../constants/engineering-process-definitions"
++
++export type EngineeringProcessView = {
++  code: EngineeringProcessCode
++  /** Nombre del stage (backend) */
++  label: string
++  color: string
++  icon?: EntityIcon
++}
++
++/**
++ * Resuelve columnas de ingeniería contra el catálogo Stage del backend.
++ * Sin fallback de color: si el stage no existe, retorna null.
++ */
++export function useEngineeringProcessCatalog() {
++  const { stages, loading } = useStages()
++
++  const byCode = useMemo(() => {
++    const map = new Map<string, EngineeringProcessView>()
++    for (const s of stages) {
++      if (!s.code) continue
++      map.set(s.code, {
++        code: s.code as EngineeringProcessCode,
++        label: s.name,
++        color: s.color,
++        icon: s.icon,
++      })
++    }
++    return map
++  }, [stages])
++
++  function resolve(code: EngineeringProcessCode): EngineeringProcessView | null {
++    return byCode.get(code) ?? null
++  }
++
++  return { resolve, byCode, loading }
++}

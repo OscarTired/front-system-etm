@@ -3,14 +3,14 @@
 import { useMemo } from "react"
 import { Plus } from "lucide-react"
 
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 import {
-  ENGINEERING_PROCESS_DEFINITIONS,
   ENGINEERING_PROCESS_ORDER,
   type EngineeringProcessCode,
 } from "../constants/engineering-process-definitions"
+import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
 import type { EngineeringTask } from "../types/engineering-task.types"
 import { EngineeringTaskRow } from "./engineering-task-row"
 import { EngineeringKpiHeader } from "./engineering-kpi-header"
@@ -42,19 +42,22 @@ function ProcessSectionHeader({
   count: number
   onAdd?: () => void
 }) {
-  const def = ENGINEERING_PROCESS_DEFINITIONS[code]
-  const Icon = ENTITY_ICONS[def.icon]
+  const { resolve } = useEngineeringProcessCatalog()
+  const def = resolve(code)
+  const label = def?.label ?? code
   return (
     <div className="flex shrink-0 items-center gap-2 border-b border-border px-1 pb-2">
-      <span
-        className="flex size-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
-        style={{ color: def.color, backgroundColor: `${def.color}22` }}
-      >
-        {Icon ? <Icon size={14} /> : code}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-foreground">
-        {def.label}
-      </span>
+      {def ? (
+        <EntityChip
+          label={def.label}
+          color={def.color}
+          icon={def.icon}
+          compact
+        />
+      ) : (
+        <span className="text-xs font-semibold text-muted-foreground">{code}</span>
+      )}
+      <span className="min-w-0 flex-1" />
       <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
         {count}
       </span>
@@ -62,7 +65,7 @@ function ProcessSectionHeader({
         <button
           type="button"
           onClick={onAdd}
-          aria-label={`Nueva tarea en ${def.label}`}
+          aria-label={`Nueva tarea en ${label}`}
           className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
         >
           <Plus size={14} strokeWidth={2.5} />

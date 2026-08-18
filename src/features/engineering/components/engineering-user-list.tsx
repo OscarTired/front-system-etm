@@ -11,9 +11,7 @@ import type { User } from "@/features/users/types/user.types"
 import { cn } from "@/shared/utils/utils"
 
 import type { EngineeringTask } from "../types/engineering-task.types"
-import {
-  ENGINEERING_PROCESS_DEFINITIONS,
-} from "../constants/engineering-process-definitions"
+import { useEngineeringProcessCatalog } from "../hooks/use-engineering-process-catalog"
 import { EngineeringTaskRow } from "./engineering-task-row"
 
 type Props = {
@@ -58,6 +56,7 @@ export function EngineeringUserList({
   onCreateForUser,
 }: Props) {
   const { has } = usePermissions()
+  const { resolve: resolveProcess } = useEngineeringProcessCatalog()
   const canCreate = has(PermissionCode.TASK_CREATE)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -227,8 +226,11 @@ export function EngineeringUserList({
                           </p>
                         ) : (
                           assigned.map(task => {
-                            const def =
-                              ENGINEERING_PROCESS_DEFINITIONS[task.processCode]
+                            const def = resolveProcess(
+                              task.processCode as Parameters<
+                                typeof resolveProcess
+                              >[0],
+                            )
                             return (
                               <div key={task.id} className="flex flex-col gap-1">
                                 {def && (
@@ -236,7 +238,7 @@ export function EngineeringUserList({
                                     className="px-1 text-[10px] font-semibold"
                                     style={{ color: def.color }}
                                   >
-                                    {def.short} · {def.label}
+                                    {def.label}
                                   </span>
                                 )}
                                 <EngineeringTaskRow
