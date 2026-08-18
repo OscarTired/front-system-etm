@@ -91,16 +91,19 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
           <div className="px-3">{areasList}</div>
         </AppListScroll>
 
-        <SpeedDialFab
-          actions={[
-            <HistoryToggleButton
-              key="history"
-              count={state.completedCount}
-              active={state.showHistory}
-              onClick={() => actions.setShowHistory(v => !v)}
-            />,
-          ]}
-        />
+        {/* FAB detrás de la barra de convocar → se oculta mientras hay confirmación. */}
+        {!(state.summonTarget && state.selectedStepIds.size > 0) && (
+          <SpeedDialFab
+            actions={[
+              <HistoryToggleButton
+                key="history"
+                count={state.completedCount}
+                active={state.showHistory}
+                onClick={() => actions.setShowHistory(v => !v)}
+              />,
+            ]}
+          />
+        )}
 
         {state.summonTarget && state.selectedStepIds.size > 0 && (
           <div
