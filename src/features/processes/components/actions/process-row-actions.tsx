@@ -15,6 +15,10 @@ import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
+import {
+  PROCESS_ORIGIN_CODE_KEY,
+  PROCESS_ORIGIN_TASK_KEY,
+} from "@/features/processes/components/actions/back-to-process-button"
 import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
 
@@ -131,10 +135,12 @@ export function ProcessRowActions({
       ? PROCESS_DEFINITIONS[prev.processCode as ProcessCode]
       : null
 
-    /** Navega entre procesos (misma convención que production-process-card). */
+    /** Navega entre procesos; guarda origen para BackToProcessButton. */
     function openProcessRoute(targetCode: ProcessCode) {
       const label =
         PROCESS_DEFINITIONS[targetCode]?.label ?? targetCode
+      sessionStorage.setItem(PROCESS_ORIGIN_CODE_KEY, processCode)
+      sessionStorage.setItem(PROCESS_ORIGIN_TASK_KEY, task.id)
       useFocusNavStore.getState().start(`Abriendo ${label}…`)
       router.push(
         `/processes?code=${targetCode.toLowerCase()}&taskId=${encodeURIComponent(task.id)}`,

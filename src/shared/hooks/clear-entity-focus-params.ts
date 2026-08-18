@@ -13,6 +13,7 @@ const FOCUS_PARAM_KEYS = ["taskId", "projectId", "focus"] as const
 const ORIGIN_STORAGE_KEYS = [
   "process-origin-task-id",
   "task-origin-project-id",
+  "process-origin-code",
 ] as const
 
 type RouterLike = {
@@ -27,7 +28,7 @@ function clearOriginButtons() {
   for (const key of ORIGIN_STORAGE_KEYS) {
     sessionStorage.removeItem(key)
   }
-  // Avisa a BackToTask / BackToProject para que se desmonten sin
+  // Avisa a BackToTask / BackToProject / BackToProcess para que se desmonten sin
   // depender solo del click del propio botón.
   window.dispatchEvent(new Event("entity-origin-cleared"))
 }

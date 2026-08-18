@@ -4,6 +4,7 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
 import { cn } from "@/shared/utils/utils"
+import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ type Props = {
 }
 
 export function EngineeringTaskRow({ task, onEdit }: Props) {
+  const { isMobile } = useResponsive()
   const { update, remove } = useEngineeringTaskMutations()
   const isCompleted = task.status === "COMPLETED"
 
@@ -95,7 +97,7 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
             </span>
           </div>
         </div>
-        <WorkflowStatusChip status={task.status} compact iconOnly />
+        <WorkflowStatusChip status={task.status} compact iconOnly={isMobile} />
       </button>
 
       <DropdownMenu>

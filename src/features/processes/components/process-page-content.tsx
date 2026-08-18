@@ -25,6 +25,7 @@ import { useTasks } from "@/features/tasks/hooks/use-tasks"
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 
 import { BackToTaskButton } from "@/features/tasks/components/actions/back-to-task-button"
+import { BackToProcessButton } from "@/features/processes/components/actions/back-to-process-button"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 
 import { useProductionSheet } from "@/features/reports/hooks/use-production-sheet"
@@ -121,6 +122,7 @@ export function ProcessPageContent({
               <AdaptiveActionBar
                 pinned={
                   <>
+                    <BackToProcessButton />
                     <BackToTaskButton />
                     <EntityToolbarSearch value={search} onChange={setSearch} />
                     {isMobile && (
