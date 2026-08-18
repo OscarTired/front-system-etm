@@ -38,7 +38,6 @@ function contrastFromLuminances(lumA: number, lumB: number) {
 
 /** Texto sobre relleno sólido del propio hex. */
 function getContrastText(hex: string) {
-  // Claros → siempre tinta oscura (evita blanco sobre azul pastel)
   if (getLuminance(hex) > 0.55) return "#111827"
   const whiteContrast = getContrastRatio(hex, "#FFFFFF")
   const darkContrast = getContrastRatio(hex, "#111827")
@@ -137,19 +136,24 @@ function getSubtleText(hex: string) {
   return rgbString(tintTowardWhite(hex, tint))
 }
 
+/**
+ * Texto del chip subtle — solo tinta, fill intacto.
+ * Fill oscuro: claro del matiz (legible y cercano al blanco si la variable lo indica).
+ * Fill claro: oscuro del matiz.
+ */
 function getChipText(hex: string, backgroundRgb: Rgb) {
   const bgLum = getLuminanceFromRgb(backgroundRgb)
-  if (bgLum < 0.45) return getSubtleText(hex)
+  if (bgLum < 0.45) {
+    // SIN TOPE Math.min(..., 0.5): el token CSS --chip-text-tint manda libremente.
+    const tint = readCssNumber("--chip-text-tint", 0.72)
+    return rgbString(tintTowardWhite(hex, tint))
+  }
   return getReadableTextFor(hex, backgroundRgb)
 }
 
 const MIN_SURFACE_SEPARATION = 40
 const MAX_SUBTLE_ALPHA = 0.72
 
-/**
- * En light, alpha fijo lava el matiz. Sube alpha hasta que el fondo
- * se separe del surface lo bastante para reconocer el color.
- */
 function resolveSubtleAlpha(hex: string, baseAlpha: number): number {
   const surface = readChipSurfaceRgb()
   if (getLuminanceFromRgb(surface) < 0.45) {
@@ -216,13 +220,6 @@ export function getBadgeColors(
   return subtlePalette(hex)
 }
 
-/**
- * Tinta de dominio sobre SUPERFICIE NEUTRA (filas, labels, iconos).
- * NO usar badge.text aquí: ese color está calculado para el fill del chip.
- *
- * - light → oscurece el matiz hasta contraste real sobre el surface
- * - dark  → hex de dominio (si es casi negro, aclara un poco)
- */
 export function getDomainInk(
   hex: string,
   theme?: "light" | "dark",
@@ -245,11 +242,6 @@ export function getProcessCardTextColor(
   return getBadgeColors(hex, "subtle").text
 }
 
-/**
- * Glass tintado: el hex solo pinta el fondo.
- * Texto/iconos → tokens neutros --on-glass-* (legibles sobre cualquier tint).
- * Nunca devolver tinta de dominio aquí: azul-sobre-azul / verde-sobre-verde se lava.
- */
 export function getGlassSurface(hex: string, theme?: "light" | "dark") {
   const resolved: "light" | "dark" =
     theme === "dark" || theme === "light" ? theme : detectTheme()

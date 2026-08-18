@@ -113,20 +113,17 @@
   --chip-bg-alpha-active: 0.64;
   --chip-text-tint: 0.72;
   --process-card-end: oklch(0.94 0.012 260);
-  /* Tinta neutra sobre glass pastel: contraste estable (no tinta de dominio). */
-  --on-glass-foreground: oklch(0.16 0.016 260);
-  --on-glass-muted: oklch(0.28 0.012 260 / 0.88);
-  --on-glass-faint: oklch(0.32 0.01 260 / 0.55);
+  --on-glass-foreground: oklch(0.18 0.014 260);
+  --on-glass-muted: oklch(0.22 0.012 260 / 0.72);
+  --on-glass-faint: oklch(0.22 0.012 260 / 0.45);
+
+  --selection-bg: oklch(0.14 0.014 260 / 0.15);
 }
 
 html, body {
   background-color: var(--background);
   overflow-x: hidden;
   overscroll-behavior-x: none;
-  /* Sin scrollbar-gutter: body es position:fixed + overflow hidden
-     (AppShell). Reservar gutter dejaba una franja permanente a la
-     derecha del color del sidebar. El scroll vive en contenedores
-     internos, no en el documento. */
 }
 
 .dark {
@@ -167,15 +164,20 @@ html, body {
   --chrome: oklch(0.12 0.005 260 / 0.85);
   --overlay: oklch(0.05 0 0 / 0.55);
   --chip-surface-rgb: 16 16 18;
-  /* Más color en dark (tint bajo = menos lavado hacia blanco) */
+
   --chip-bg-alpha: 0.52;
   --chip-bg-alpha-hover: 0.60;
   --chip-bg-alpha-active: 0.68;
-  --chip-text-tint: 0.38;
+
+  /* Sube a 0.72 (o hasta 0.80) para que la letra en .dark sea casi blanca */
+  --chip-text-tint: 0.72;
+
   --process-card-end: oklch(0.14 0.012 260);
-  --on-glass-foreground: oklch(0.97 0.005 260);
-  --on-glass-muted: oklch(0.92 0.005 260 / 0.78);
-  --on-glass-faint: oklch(0.90 0.005 260 / 0.48);
+  --on-glass-foreground: oklch(0.96 0.005 260);
+  --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
+  --on-glass-faint: oklch(0.96 0.005 260 / 0.38);
+
+  --selection-bg: oklch(0.97 0.005 260 / 0.18);
 }
 
 @layer base {
@@ -193,11 +195,6 @@ html, body {
 }
 
 @layer base {
-  /*
-   * Sin “anillo rectangular” de foco nativo en todo el ERP.
-   * El diseño usa hover/active/bg; el outline del browser se veía
-   * como un rectángulo blanco/gris en cards, rows y botones.
-   */
   *,
   *::before,
   *::after {
@@ -224,7 +221,6 @@ html, body {
   select:focus,
   select:focus-visible {
     outline: none !important;
-    /* Anula ring utilitario de Tailwind en foco (ring-offset incluido) */
     --tw-ring-shadow: 0 0 #0000 !important;
     --tw-ring-offset-shadow: 0 0 #0000 !important;
   }
@@ -239,9 +235,6 @@ html, body {
   display: none;
 }
 
-/* Scrollbar delgado y visible, para contenedores con overflow nativo
-   (no-Radix) donde SÍ queremos que la barra sea un affordance visible,
-   como la fila de tabs de plancha en Nesting. */
 .themed-scrollbar-x {
   scrollbar-width: thin;
   scrollbar-color: rgb(82 82 91 / 0.7) transparent;
@@ -264,8 +257,6 @@ html, body {
   background-color: rgb(115 115 122 / 0.9);
 }
 
-/* Misma idea que .themed-scrollbar-x pero para contenedores con
-   overflow-y nativo (listas, paneles, tablas). */
 .themed-scrollbar-y {
   scrollbar-width: thin;
   scrollbar-color: rgb(82 82 91 / 0.7) transparent;
@@ -288,15 +279,6 @@ html, body {
   background-color: rgb(115 115 122 / 0.9);
 }
 
-/* Elimina el delay clásico de ~300ms que algunos navegadores mobile
-   aplican a cada tap (esperando ver si es un doble-tap para hacer
-   zoom) — sin esto, TODA la app se siente con lag al tocar,
-   independientemente de cuánto se optimice cada componente.
-   Va dentro de @layer base: así cualquier utility de Tailwind
-   (ej. touch-none en un handle de drag) puede pisarla cuando hace
-   falta — código sin capa le gana a TODO layer sin importar
-   especificidad, y esta regla se estaba comiendo el touch-none del
-   DragCell por eso mismo. */
 @layer base {
   button,
   a,
@@ -308,13 +290,6 @@ html, body {
   }
 }
 
-/* Evita que el texto de botones se seleccione al tocar, lo que en
-   mobile se ve como un recuadro gris/blanco superpuesto sobre el
-   texto (muy notorio en fondos oscuros, ej. dialogs de confirmación).
-   También quitamos el tap-highlight nativo de WebKit/Chrome, que es
-   ese mismo flash gris pero a nivel de todo el elemento.
-   Los inputs quedan fuera a propósito: ahí sí queremos que el
-   usuario pueda seleccionar/copiar texto. */
 button,
 [role="button"] {
   user-select: none;
@@ -322,15 +297,11 @@ button,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Chrome, Edge, Safari */
-
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
-/* Firefox */
 
 input[type="number"] {
   -moz-appearance: textfield;
@@ -338,12 +309,12 @@ input[type="number"] {
 }
 
 ::selection {
-  background: rgb(255 255 255 / 12%);
+  background-color: var(--selection-bg);
   color: inherit;
 }
 
 ::-moz-selection {
-  background: rgb(255 255 255 / 12%);
+  background-color: var(--selection-bg);
   color: inherit;
 }
 
@@ -366,12 +337,6 @@ input[type="number"] {
   animation: history-bounce .35s ease-out;
 }
 
-/* A diferencia de history-bounce (un solo pop al activarse), esto
-   es un loop infinito que alterna color/fondo — para el badge de
-   "Mis tareas" mientras haya tareas pendientes, no un evento
-   puntual. */
-/* Solo opacidad: el color lo ponen las clases (como HistoryToggle).
-   Antes hardcodeaba blanco/emerald → ilegible en light. */
 @keyframes badge-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.72; }
@@ -434,11 +399,6 @@ input:focus-visible {
   animation: comment-out 0.2s ease-in;
 }
 
-/* Loop continuo real: --marquee-width lo mide MarqueeText en JS (el
-   ancho de UNA copia del contenido, ya que el elemento tiene dos
-   copias seguidas). Trasladar exactamente ese ancho hace que la
-   segunda copia quede pixel-perfect donde estaba la primera al
-   volver a 0% — de ahí el efecto "sin corte" del cartel LED. */
 @keyframes marquee-loop {
   from {
     transform: translateX(0);
@@ -454,11 +414,6 @@ input:focus-visible {
   animation-iteration-count: infinite;
 }
 
-/* Al entrar en modo selección (TaskAreaPanel > Convocar), este slot
-   arranca en 0 de ancho y crece hasta su tamaño real — como el slot
-   vive al lado de la card en un flex row, la card (flex-1) se ve
-   "empujada"/encogida en el mismo movimiento, sin tener que animar
-   su ancho por separado. */
 @keyframes checkbox-reveal {
   from {
     width: 0;
@@ -474,9 +429,6 @@ input:focus-visible {
   animation: checkbox-reveal 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Entrada para barras/paneles fijos al fondo (ej. SummonConfirmBar)
-   — sin esto aparecían de golpe, sin transición, mientras que el
-   resto de los overlays de la app (dialogs, popovers) sí animan. */
 @keyframes slide-up-in {
   from {
     transform: translateY(100%);
@@ -492,11 +444,6 @@ input:focus-visible {
   animation: slide-up-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Fade puro (solo opacity) — para elementos que YA usan `transform`
-   para su propio posicionamiento (ej. -translate-y-1/2 para
-   centrarse verticalmente). animate-comment-in anima `transform`
-   directo y pisaría/rompería ese centrado al terminar; esto no
-   toca `transform` para nada. */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -541,14 +488,6 @@ input:focus-visible {
   }
 }
 
-/* (La ScrollArea ya no usa Radix — ver src/components/ui/scroll-area.tsx —
-   así que ya no hace falta ocultar el scrollbar nativo del viewport
-   de Radix acá; el scroll nativo usa .themed-scrollbar-x/-y arriba). */
-
-/* Spinner de rayitas radiales (ver shared/ui/spinner) — cada rayita
-   se atenúa en secuencia vía animation-delay negativo, dando el
-   efecto de "chase" característico del activity indicator estilo
-   iOS/Gemini/Claude, en vez de un círculo girando rígido. */
 @keyframes spinnerBladeFade {
   0% {
     opacity: 1;
@@ -570,10 +509,6 @@ input:focus-visible {
   }
 }
 
-/* Sonner: sin transform en hover. El stacking interno de Sonner
-   pelea con translateY y hace que los toasts “se escondan” o salten.
-   Sombra discreta al estilo IconAction (shadow-sm), no la sombra
-   grande que además se recorta en overflow-hidden del shell. */
 [data-sonner-toast] {
   transition:
     box-shadow .16s ease,
@@ -611,13 +546,11 @@ input:focus-visible {
   background-color: color-mix(in oklch, var(--foreground) 25%, transparent);
 }
 
-/* ── Vaul drawer: body nunca se queda en black tras cerrar ── */
 html,
 body {
   background-color: var(--background);
 }
 
-/* Vaul hardcodea background: black en body al escalar; forzar tema */
 body[style*="background"] {
   background-color: var(--background) !important;
 }
