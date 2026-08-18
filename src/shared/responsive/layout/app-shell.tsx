@@ -8,6 +8,7 @@ import { AppSidebar } from "./app-sidebar"
 import { SidebarShowButton } from "./sidebar/sidebar-show-button"
 import { ThemeToggle } from "@/shared/theme"
 import { useSidebarStore } from "@/shared/stores/sidebar-store"
+import { BREAKPOINTS } from "@/shared/responsive/breakpoints"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
 import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
@@ -42,6 +43,19 @@ const DRAWER_WIDTH_PX = 248
 const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
 
 function DesktopShell({ children }: Props) {
+  const collapseIfOpen = useSidebarStore(s => s.collapseIfOpen)
+
+  // Pantalla dividida / viewport < desktop: sidebar solo iconos.
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${BREAKPOINTS.desktop - 1}px)`)
+    const apply = () => {
+      if (mq.matches) collapseIfOpen()
+    }
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [collapseIfOpen])
+
   const visualState = useSidebarStore(state => state.visualState)
   const notifyClipTransitionEnd = useSidebarStore(
     state => state.notifyClipTransitionEnd,

@@ -27,6 +27,8 @@ type SidebarStore = {
 
   toggleCollapsed: () => void
   toggleClosed: () => void
+  /** Split / viewport angosto: pasar a iconos sin toggle. */
+  collapseIfOpen: () => void
   notifyContentTransitionEnd: () => void
   notifyClipTransitionEnd: () => void
 }
@@ -74,6 +76,16 @@ export const useSidebarStore = create<SidebarStore>()(set => ({
         mode: next,
         lastVisibleMode: next,
         visualState: nextVisualState(next, state.visualState),
+      }
+    }),
+
+  collapseIfOpen: () =>
+    set(state => {
+      if (state.mode !== "open") return state
+      return {
+        mode: "collapsed",
+        lastVisibleMode: "collapsed",
+        visualState: nextVisualState("collapsed", state.visualState),
       }
     }),
 

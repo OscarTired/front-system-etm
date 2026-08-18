@@ -1,0 +1,156 @@
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index 81dd8be..839e086 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -105,7 +105,7 @@ export function ProcessMobileCard({
+   const isDimmed = isCompleted || (dimOthers && !expanded)
+ 
+   return (
+-    <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
++    <div className={cn("@container/prow overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
+       <div className="flex items-center gap-1 px-1">
+         <div
+           role="button"
+@@ -145,9 +145,9 @@ export function ProcessMobileCard({
+                   {task.reference}
+                 </Link>
+               )}
+-              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
++              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[36rem]/prow:inline">·</span>
+               <span
+-                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
++                className="hidden size-5 shrink-0 items-center justify-center self-center @[36rem]/prow:inline-flex"
+                 title={priority.name}
+               >
+                 <EntityIconBadge
+@@ -156,9 +156,9 @@ export function ProcessMobileCard({
+                   size={16}
+                 />
+               </span>
+-              <span className="hidden shrink-0 self-center text-muted-foreground/80 md:inline">·</span>
++              <span className="hidden shrink-0 self-center text-muted-foreground/80 @[36rem]/prow:inline">·</span>
+               <span
+-                className="hidden size-5 shrink-0 items-center justify-center self-center md:inline-flex"
++                className="hidden size-5 shrink-0 items-center justify-center self-center @[36rem]/prow:inline-flex"
+                 title={statusLabel.label}
+               >
+                 <EntityIconBadge
+@@ -186,16 +186,17 @@ export function ProcessMobileCard({
+                 {project.client.name}
+               </span>
+ 
+-              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
+-              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
++              {/* Meta 2ª fila: se oculta si el row no tiene ancho (split). */}
++              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline @[36rem]/prow:hidden">·</span>
++              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:inline-flex @[36rem]/prow:hidden">
+                 <EntityIconBadge
+                   icon={priority.icon}
+                   color={priority.color}
+                   size={12}
+                 />
+               </span>
+-              <span className="shrink-0 text-muted-foreground/80 md:hidden">·</span>
+-              <span className="inline-flex shrink-0 items-center gap-1 md:hidden">
++              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline @[36rem]/prow:hidden">·</span>
++              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:inline-flex @[36rem]/prow:hidden">
+                 <EntityIconBadge
+                   icon={statusLabel.icon}
+                   color={statusLabel.color}
+@@ -203,9 +204,9 @@ export function ProcessMobileCard({
+                 />
+               </span>
+ 
+-              <span className="shrink-0 text-muted-foreground/80">·</span>
+-              <span className="flex shrink-0 items-center gap-1">
+-                <span className="md:hidden">
++              <span className="hidden shrink-0 text-muted-foreground/80 @[22rem]/prow:inline">·</span>
++              <span className="hidden shrink-0 items-center gap-1 @[22rem]/prow:flex">
++                <span className="@[36rem]/prow:hidden">
+                   <EntityIconBadge
+                     icon={operator?.icon}
+                     color={operator?.color ?? "#a3a3a3"}
+@@ -216,10 +217,10 @@ export function ProcessMobileCard({
+                   <OperatorNameText
+                     name={operator.name}
+                     color={operator.color}
+-                    className="hidden truncate md:inline"
++                    className="hidden truncate @[36rem]/prow:inline"
+                   />
+                 ) : (
+-                  <span className="hidden truncate md:inline text-muted-foreground">
++                  <span className="hidden truncate text-muted-foreground @[36rem]/prow:inline">
+                     Sin asignar
+                   </span>
+                 )}
+@@ -243,7 +244,7 @@ export function ProcessMobileCard({
+           )}
+ 
+           {/* Fecha entrega — después de mensajes */}
+-          <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground md:inline">
++          <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground @[40rem]/prow:inline">
+             {formatDate(task.deliveryDate)}
+           </span>
+         </div>
+diff --git a/src/shared/responsive/layout/app-shell.tsx b/src/shared/responsive/layout/app-shell.tsx
+index 88a9a49..af85029 100644
+--- a/src/shared/responsive/layout/app-shell.tsx
++++ b/src/shared/responsive/layout/app-shell.tsx
+@@ -8,6 +8,7 @@ import { AppSidebar } from "./app-sidebar"
+ import { SidebarShowButton } from "./sidebar/sidebar-show-button"
+ import { ThemeToggle } from "@/shared/theme"
+ import { useSidebarStore } from "@/shared/stores/sidebar-store"
++import { BREAKPOINTS } from "@/shared/responsive/breakpoints"
+ import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+ import { useMobileNavStore } from "@/shared/responsive/navigation/mobile-nav-store"
+ import { isImmersiveRoute } from "@/shared/responsive/navigation/immersive-routes"
+@@ -42,6 +43,19 @@ const DRAWER_WIDTH_PX = 248
+ const PANEL_TRANSITION = "transform 280ms ease-out, border-radius 280ms ease-out"
+ 
+ function DesktopShell({ children }: Props) {
++  const collapseIfOpen = useSidebarStore(s => s.collapseIfOpen)
++
++  // Pantalla dividida / viewport < desktop: sidebar solo iconos.
++  useEffect(() => {
++    const mq = window.matchMedia(`(max-width: ${BREAKPOINTS.desktop - 1}px)`)
++    const apply = () => {
++      if (mq.matches) collapseIfOpen()
++    }
++    apply()
++    mq.addEventListener("change", apply)
++    return () => mq.removeEventListener("change", apply)
++  }, [collapseIfOpen])
++
+   const visualState = useSidebarStore(state => state.visualState)
+   const notifyClipTransitionEnd = useSidebarStore(
+     state => state.notifyClipTransitionEnd,
+diff --git a/src/shared/stores/sidebar-store.ts b/src/shared/stores/sidebar-store.ts
+index 077ed70..15ca329 100644
+--- a/src/shared/stores/sidebar-store.ts
++++ b/src/shared/stores/sidebar-store.ts
+@@ -27,6 +27,8 @@ type SidebarStore = {
+ 
+   toggleCollapsed: () => void
+   toggleClosed: () => void
++  /** Split / viewport angosto: pasar a iconos sin toggle. */
++  collapseIfOpen: () => void
+   notifyContentTransitionEnd: () => void
+   notifyClipTransitionEnd: () => void
+ }
+@@ -77,6 +79,16 @@ export const useSidebarStore = create<SidebarStore>()(set => ({
+       }
+     }),
+ 
++  collapseIfOpen: () =>
++    set(state => {
++      if (state.mode !== "open") return state
++      return {
++        mode: "collapsed",
++        lastVisibleMode: "collapsed",
++        visualState: nextVisualState("collapsed", state.visualState),
++      }
++    }),
++
+   toggleClosed: () =>
+     set(state => {
+       const next: SidebarMode =
