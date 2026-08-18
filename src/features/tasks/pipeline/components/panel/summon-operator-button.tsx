@@ -1,25 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { Users } from "lucide-react"
+import { useMemo } from "react"
 
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover"
-
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandList,
-} from "@/components/ui/command"
-
-import { SelectOption } from "@/shared/ui/select-option/select-option"
-
+import { ConvocarMenu } from "@/shared/ui/convocar-menu/convocar-menu"
 import { useAreaOperators } from "@/features/areas/hooks/use-area-operators"
-import { cn } from "@/shared/utils/utils"
 
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 import type { User } from "@/features/users/types/user.types"
@@ -27,12 +11,7 @@ import type { User } from "@/features/users/types/user.types"
 type Props = {
   processCode: ProcessCode
   active?: boolean
-  // El operario ya elegido para ESTA convocatoria — si se reabre el
-  // popover (para cambiarlo), se ve marcado con el check clásico en
-  // vez de perderse esa info.
   selectedOperatorId?: string
-  // undefined = deseleccionar (tocar al que ya estaba elegido lo
-  // destilda) — mismo patrón que UserSelect.
   onSelect: (operator: User | undefined) => void
 }
 
@@ -50,94 +29,36 @@ const STATUS_LABEL: Record<string, string> = {
   INVITED: "Ya convocado",
 }
 
-// Mismo patrón clásico que UserSelect/EntitySelect (Popover +
-// Command + SelectOption) en vez de una lista armada a mano — así
-// se ve igual de consistente que el resto de la app, con su propio
-// check de selección incluido, no uno reinventado acá.
-export function SummonOperatorButton({ processCode, active, selectedOperatorId, onSelect }: Props) {
-
-  const [open, setOpen] = useState(false)
-
+/** Convocar operarios de un área — menú compartido. */
+export function SummonOperatorButton({
+  processCode,
+  active,
+  selectedOperatorId,
+  onSelect,
+}: Props) {
   const operators = useAreaOperators(processCode)
 
-  return (
-
-    <Popover open={open} onOpenChange={setOpen}>
-
-      <PopoverTrigger asChild>
-
-        <button
-          type="button"
-          className={cn(
-            // min-w fijo: antes el texto cambiaba entre "Convocar" y
-            // "Seleccionando..." (dos anchos distintos) sin ningún
-            // espacio reservado, así que el botón (y todo lo que
-            // tenía al lado) saltaba de ancho cada vez que
-            // cambiabas de estado. Con un ancho mínimo fijo, el
-            // contenido cambia adentro de una caja que ya está.
-            "flex min-w-30 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
-            active
-              ? "bg-foreground/20 text-foreground shadow-sm"
-              : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10",
-          )}
-        >
-          <Users size={13} className="shrink-0" />
-          <span className="truncate">
-            {active ? "Seleccionando…" : "Convocar"}
-          </span>
-        </button>
-
-      </PopoverTrigger>
-
-      <PopoverContent side="bottom" align="end" floatingClassName="w-72" className="p-2">
-
-        <Command>
-
-          <CommandList className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
-
-            <CommandEmpty>
-              No hay operarios en esta área todavía.
-            </CommandEmpty>
-
-            <CommandGroup>
-
-              {operators.map(({ user, availability }) => (
-
-                <SelectOption
-                  key={user.id}
-                  label={user.name}
-                  icon={user.icon}
-                  color={user.color ?? "#64748B"}
-                  selected={selectedOperatorId === user.id}
-                  description={
-                    availability.state === "FREE"
-                      ? "Libre"
-                      : `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`
-                  }
-                  descriptionColor={STATUS_COLOR[availability.state]}
-                  onSelect={() => {
-
-                    const isDeselecting =
-                      selectedOperatorId === user.id
-
-                    onSelect(isDeselecting ? undefined : user)
-                    setOpen(false)
-
-                  }}
-                />
-
-              ))}
-
-            </CommandGroup>
-
-          </CommandList>
-
-        </Command>
-
-      </PopoverContent>
-
-    </Popover>
-
+  const options = useMemo(
+    () =>
+      operators.map(({ user, availability }) => ({
+        user,
+        description:
+          availability.state === "FREE"
+            ? "Libre"
+            : `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`,
+        descriptionColor: STATUS_COLOR[availability.state],
+      })),
+    [operators],
   )
 
+  return (
+    <ConvocarMenu
+      options={options}
+      selectedUserId={selectedOperatorId}
+      onSelect={onSelect}
+      active={active}
+      emptyLabel="No hay operarios en esta área todavía."
+      variant="compact"
+    />
+  )
 }

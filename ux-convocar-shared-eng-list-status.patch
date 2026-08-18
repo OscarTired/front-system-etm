@@ -1,0 +1,776 @@
+diff --git a/src/features/engineering/components/engineering-convocar-select.tsx b/src/features/engineering/components/engineering-convocar-select.tsx
+--- a/src/features/engineering/components/engineering-convocar-select.tsx
++++ b/src/features/engineering/components/engineering-convocar-select.tsx
+@@ -1,98 +0,0 @@
+-"use client"
+-
+-import { useState } from "react"
+-import { Users } from "lucide-react"
+-
+-import {
+-  Popover,
+-  PopoverTrigger,
+-  PopoverContent,
+-} from "@/components/ui/popover"
+-import {
+-  Command,
+-  CommandEmpty,
+-  CommandGroup,
+-  CommandList,
+-} from "@/components/ui/command"
+-import { SelectOption } from "@/shared/ui/select-option/select-option"
+-import { cn } from "@/shared/utils/utils"
+-import type { User } from "@/features/users/types/user.types"
+-
+-type Props = {
+-  users: User[]
+-  value?: User
+-  onChange: (user: User | undefined) => void
+-  disabled?: boolean
+-  emptyHint?: string
+-}
+-
+-/**
+- * Menú Convocar en el dialog de ingeniería.
+- * Mismo contrato que SummonOperatorButton (Popover + Command + SelectOption).
+- */
+-export function EngineeringConvocarSelect({
+-  users,
+-  value,
+-  onChange,
+-  disabled,
+-  emptyHint = "No hay usuarios con rol Ingeniería.",
+-}: Props) {
+-  const [open, setOpen] = useState(false)
+-
+-  return (
+-    <Popover open={open} onOpenChange={setOpen}>
+-      <PopoverTrigger asChild>
+-        <button
+-          type="button"
+-          disabled={disabled}
+-          className={cn(
+-            "flex w-full min-w-0 items-center justify-between gap-2 rounded-xl bg-foreground/5 px-3 py-2.5 text-left text-sm transition",
+-            "hover:bg-foreground/10 disabled:opacity-50",
+-            value ? "text-foreground" : "text-muted-foreground",
+-          )}
+-        >
+-          <span className="flex min-w-0 items-center gap-2">
+-            <Users size={15} className="shrink-0 text-muted-foreground" />
+-            <span className="truncate font-medium">
+-              {value ? value.name : "Convocar…"}
+-            </span>
+-          </span>
+-          {value && (
+-            <span className="shrink-0 text-[11px] text-muted-foreground">
+-              Cambiar
+-            </span>
+-          )}
+-        </button>
+-      </PopoverTrigger>
+-
+-      <PopoverContent
+-        side="bottom"
+-        align="start"
+-        floatingClassName="w-[var(--radix-popover-trigger-width)] min-w-64"
+-        className="p-2"
+-      >
+-        <Command>
+-          <CommandList className="max-h-64 min-w-0 w-full overflow-y-auto">
+-            <CommandEmpty>{emptyHint}</CommandEmpty>
+-            <CommandGroup>
+-              {users.map(user => (
+-                <SelectOption
+-                  key={user.id}
+-                  label={user.name}
+-                  icon={user.icon}
+-                  color={user.color ?? "#64748B"}
+-                  selected={value?.id === user.id}
+-                  onSelect={() => {
+-                    const deselect = value?.id === user.id
+-                    onChange(deselect ? undefined : user)
+-                    setOpen(false)
+-                  }}
+-                />
+-              ))}
+-            </CommandGroup>
+-          </CommandList>
+-        </Command>
+-      </PopoverContent>
+-    </Popover>
+-  )
+-}
+diff --git a/src/features/engineering/components/engineering-process-board.tsx b/src/features/engineering/components/engineering-process-board.tsx
+--- a/src/features/engineering/components/engineering-process-board.tsx
++++ b/src/features/engineering/components/engineering-process-board.tsx
+@@ -3,19 +3,8 @@
+ import { useMemo } from "react"
+ import { Plus } from "lucide-react"
+ 
+-import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
+-import { getBadgeColors } from "@/shared/utils/badge-colors"
+-import { useThemeStore } from "@/shared/theme"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+-import { cn } from "@/shared/utils/utils"
+-import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+-import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+-import {
+-  ProcessBoard,
+-  ProcessBoardColumnFrame,
+-  ProcessBoardSkeleton,
+-  type ProcessBoardColumn,
+-} from "@/shared/ui/process-board"
++import { ScrollArea } from "@/components/ui/scroll-area"
+ 
+ import {
+   ENGINEERING_PROCESS_DEFINITIONS,
+@@ -24,8 +13,8 @@
+ } from "../constants/engineering-process-definitions"
+ import type { EngineeringTask } from "../types/engineering-task.types"
+ import { EngineeringTaskRow } from "./engineering-task-row"
+-import { EngineeringColumnOperators } from "./engineering-column-operators"
+ import { EngineeringKpiHeader } from "./engineering-kpi-header"
++import { EngineeringColumnOperators } from "./engineering-column-operators"
+ 
+ type Props = {
+   tasks: EngineeringTask[]
+@@ -38,60 +27,43 @@
+   const map = new Map<EngineeringProcessCode, EngineeringTask[]>()
+   for (const code of ENGINEERING_PROCESS_ORDER) map.set(code, [])
+   for (const t of tasks) {
+-    const list = map.get(t.processCode)
++    const list = map.get(t.processCode as EngineeringProcessCode)
+     if (list) list.push(t)
+-    else map.set(t.processCode, [t])
+   }
+   return map
+ }
+ 
+-function ProcessColumnHeader({
++function ProcessSectionHeader({
+   code,
+   count,
+-  centered = false,
+   onAdd,
+ }: {
+   code: EngineeringProcessCode
+   count: number
+-  centered?: boolean
+   onAdd?: () => void
+ }) {
+-  const theme = useThemeStore(s => s.resolved)
+   const def = ENGINEERING_PROCESS_DEFINITIONS[code]
+   const Icon = ENTITY_ICONS[def.icon]
+-  const badge = getBadgeColors(def.color, "subtle", theme)
+-  const { has } = usePermissions()
+-  const canCreate = has(PermissionCode.TASK_CREATE)
+-
+   return (
+-    <div
+-      className={cn(
+-        "flex h-10 shrink-0 items-center gap-2 border-b px-2",
+-        centered && "justify-center",
+-      )}
+-      style={{ borderColor: def.color }}
+-    >
++    <div className="flex shrink-0 items-center gap-2 border-b border-border px-1 pb-2">
+       <span
+-        className="flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
+-        style={{ color: badge.text, backgroundColor: badge.background }}
++        className="flex size-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
++        style={{ color: def.color, backgroundColor: `${def.color}22` }}
+       >
+-        {def.short}
++        {Icon ? <Icon size={14} /> : code}
+       </span>
+-      {Icon && (
+-        <Icon size={14} style={{ color: def.color }} className="shrink-0" />
+-      )}
+-      <span className="min-w-0 flex-1 truncate text-sm font-bold uppercase tracking-wide text-foreground">
++      <span className="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-foreground">
+         {def.label}
+       </span>
+-      <span className="shrink-0 text-xs font-semibold text-muted-foreground">
++      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+         {count}
+       </span>
+-      {canCreate && onAdd && (
++      {onAdd && (
+         <button
+           type="button"
+           onClick={onAdd}
+-          title="Nueva tarea en este proceso"
+-          className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground transition hover:bg-foreground/10 active:scale-95"
++          aria-label={`Nueva tarea en ${def.label}`}
++          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
+         >
+           <Plus size={14} strokeWidth={2.5} />
+         </button>
+@@ -101,9 +73,7 @@
+ }
+ 
+ /**
+- * Board de procesos de ingeniería.
+- * Layout 100% vía ProcessBoard + ProcessBoardColumnFrame (shared).
+- * Sin hacks de scroll/altura locales.
++ * Ingeniería por proceso — lista vertical (sin carrusel horizontal).
+  */
+ export function EngineeringProcessBoard({
+   tasks,
+@@ -111,66 +81,72 @@
+   onCreateInProcess,
+   onEditTask,
+ }: Props) {
+-  const { isMobile } = useResponsive()
+   const byProcess = useMemo(() => groupByProcess(tasks), [tasks])
+ 
+-  const columns: ProcessBoardColumn<EngineeringProcessCode>[] = useMemo(
+-    () =>
+-      ENGINEERING_PROCESS_ORDER.map(code => {
+-        const colTasks = byProcess.get(code) ?? []
+-        return {
+-          id: code,
+-          content: (
+-            <ProcessBoardColumnFrame
+-              header={
+-                <ProcessColumnHeader
++  if (loading) {
++    return (
++      <div className="flex flex-col gap-4 p-1 animate-pulse">
++        <div className="h-16 rounded-2xl bg-foreground/5" />
++        {Array.from({ length: 3 }, (_, i) => (
++          <div
++            key={i}
++            className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3"
++          >
++            <div className="h-4 w-40 rounded bg-foreground/10" />
++            <div className="h-10 rounded-lg bg-foreground/5" />
++            <div className="h-12 rounded-xl bg-foreground/5" />
++            <div className="h-12 rounded-xl bg-foreground/5 opacity-70" />
++          </div>
++        ))}
++      </div>
++    )
++  }
++
++  return (
++    <div className="flex h-full min-h-0 w-full flex-1 flex-col">
++      <div className="mb-3 shrink-0">
++        <EngineeringKpiHeader tasks={tasks} />
++      </div>
++
++      <ScrollArea className="min-h-0 flex-1">
++        <div className="flex flex-col gap-5 pb-4">
++          {ENGINEERING_PROCESS_ORDER.map(code => {
++            const colTasks = byProcess.get(code) ?? []
++            return (
++              <section
++                key={code}
++                className="flex flex-col gap-2 rounded-2xl bg-foreground/[0.03] p-3"
++              >
++                <ProcessSectionHeader
+                   code={code}
+                   count={colTasks.length}
+-                  centered={isMobile}
+                   onAdd={
+                     onCreateInProcess
+                       ? () => onCreateInProcess(code)
+                       : undefined
+                   }
+                 />
+-              }
+-              meta={<EngineeringColumnOperators tasks={colTasks} />}
+-            >
+-              <div className="flex flex-col gap-1.5 px-0.5 pb-2 pt-1">
+-                {colTasks.length === 0 ? (
+-                  <p className="px-2 py-8 text-center text-xs text-muted-foreground">
+-                    Sin tareas
+-                  </p>
+-                ) : (
+-                  colTasks.map(task => (
+-                    <EngineeringTaskRow
+-                      key={task.id}
+-                      task={task}
+-                      onEdit={onEditTask}
+-                    />
+-                  ))
+-                )}
+-              </div>
+-            </ProcessBoardColumnFrame>
+-          ),
+-        }
+-      }),
+-    [byProcess, isMobile, onCreateInProcess, onEditTask],
+-  )
+-
+-  return (
+-    <ProcessBoard
+-      columns={columns}
+-      loading={loading}
+-      loadingFallback={
+-        <ProcessBoardSkeleton
+-          accentColor="#16A34A"
+-          columnCount={ENGINEERING_PROCESS_ORDER.length}
+-          showOperatorsRow
+-        />
+-      }
+-      header={<EngineeringKpiHeader tasks={tasks} />}
+-      columnClassName="w-72 min-w-72 shrink-0"
+-    />
++                <EngineeringColumnOperators tasks={colTasks} />
++                <div className="flex flex-col gap-1.5">
++                  {colTasks.length === 0 ? (
++                    <p className="px-2 py-6 text-center text-xs text-muted-foreground">
++                      Sin tareas
++                    </p>
++                  ) : (
++                    colTasks.map(task => (
++                      <EngineeringTaskRow
++                        key={task.id}
++                        task={task}
++                        onEdit={onEditTask}
++                      />
++                    ))
++                  )}
++                </div>
++              </section>
++            )
++          })}
++        </div>
++      </ScrollArea>
++    </div>
+   )
+ }
+diff --git a/src/features/engineering/components/engineering-task-dialog.tsx b/src/features/engineering/components/engineering-task-dialog.tsx
+--- a/src/features/engineering/components/engineering-task-dialog.tsx
++++ b/src/features/engineering/components/engineering-task-dialog.tsx
+@@ -9,7 +9,8 @@
+ import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
+ import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
+ import { ContextPicker } from "@/features/tasks/components/context-picker"
+-import { EngineeringConvocarSelect } from "./engineering-convocar-select"
++import { ConvocarMenu } from "@/shared/ui/convocar-menu/convocar-menu"
++import { useEngineeringAssignees } from "../hooks/use-engineering-assignees"
+ import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
+ import type { User } from "@/features/users/types/user.types"
+ import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+@@ -67,6 +68,7 @@
+ }: Props) {
+   const isEdit = !!task
+   const { users } = useUsersDirectory()
++  const convocableOptions = useEngineeringAssignees()
+   const { create, update } = useEngineeringTaskMutations()
+ 
+   const assignableUsers = useMemo(
+@@ -267,12 +269,14 @@
+         <FormField label="Convocar">
+           {showAssigneeSelect ? (
+             <>
+-              <EngineeringConvocarSelect
+-                users={assignableUsers}
+-                value={assignee}
+-                onChange={u => setAssigneeId(u?.id)}
++              <ConvocarMenu
++                options={convocableOptions}
++                selectedUserId={assigneeId}
++                onSelect={u => setAssigneeId(u?.id)}
++                variant="field"
++                emptyLabel="No hay usuarios con rol Ingeniería."
+               />
+-              {assignableUsers.length === 0 && (
++              {convocableOptions.length === 0 && (
+                 <p className="text-[11px] text-muted-foreground">
+                   No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
+                 </p>
+diff --git a/src/features/engineering/hooks/use-engineering-assignees.ts b/src/features/engineering/hooks/use-engineering-assignees.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/engineering/hooks/use-engineering-assignees.ts
+@@ -0,0 +1,76 @@
++"use client"
++
++import { useMemo } from "react"
++
++import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
++import type { User } from "@/features/users/types/user.types"
++import type { ConvocarOption } from "@/shared/ui/convocar-menu/convocar-menu"
++
++import { useEngineeringTasks } from "./use-engineering-tasks"
++import { isEngineeringUser } from "../utils/is-engineering-user"
++import type { EngineeringTask } from "../types/engineering-task.types"
++
++const STATUS_COLOR = {
++  FREE: "#10B981",
++  WORKING: "#F59E0B",
++  PENDING: "#2563EB",
++  QUEUE: "#64748B",
++} as const
++
++function engTaskLabel(task: EngineeringTask) {
++  const num = String(task.taskNumber).padStart(2, "0")
++  return `${num} ${task.title}`
++}
++
++/**
++ * Ingenieros convocables con disponibilidad derivada de tareas activas.
++ * Mismo espíritu que useAreaOperators (planta).
++ */
++export function useEngineeringAssignees(): ConvocarOption[] {
++  const { users } = useUsersDirectory()
++  const { tasks } = useEngineeringTasks()
++
++  return useMemo(() => {
++    const candidates = (users as User[]).filter(isEngineeringUser)
++
++    return candidates.map(user => {
++      // Primera tarea activa asignada (no COMPLETED)
++      const active = tasks.find(
++        t =>
++          t.assigneeId === user.id &&
++          t.status !== "COMPLETED",
++      )
++
++      if (!active) {
++        return {
++          user,
++          description: "Libre",
++          descriptionColor: STATUS_COLOR.FREE,
++        }
++      }
++
++      if (active.status === "PROGRESS") {
++        return {
++          user,
++          description: `Trabajando · ${engTaskLabel(active)}`,
++          descriptionColor: STATUS_COLOR.WORKING,
++        }
++      }
++
++      if (active.status === "PENDING") {
++        return {
++          user,
++          description: `Pendiente · ${engTaskLabel(active)}`,
++          descriptionColor: STATUS_COLOR.PENDING,
++        }
++      }
++
++      // QUEUE
++      return {
++        user,
++        description: `En cola · ${engTaskLabel(active)}`,
++        descriptionColor: STATUS_COLOR.QUEUE,
++      }
++    })
++  }, [users, tasks])
++}
+diff --git a/src/features/tasks/pipeline/components/panel/summon-operator-button.tsx b/src/features/tasks/pipeline/components/panel/summon-operator-button.tsx
+--- a/src/features/tasks/pipeline/components/panel/summon-operator-button.tsx
++++ b/src/features/tasks/pipeline/components/panel/summon-operator-button.tsx
+@@ -1,25 +1,9 @@
+ "use client"
+ 
+-import { useState } from "react"
+-import { Users } from "lucide-react"
+-
+-import {
+-  Popover,
+-  PopoverTrigger,
+-  PopoverContent,
+-} from "@/components/ui/popover"
+-
+-import {
+-  Command,
+-  CommandEmpty,
+-  CommandGroup,
+-  CommandList,
+-} from "@/components/ui/command"
+-
+-import { SelectOption } from "@/shared/ui/select-option/select-option"
++import { useMemo } from "react"
+ 
++import { ConvocarMenu } from "@/shared/ui/convocar-menu/convocar-menu"
+ import { useAreaOperators } from "@/features/areas/hooks/use-area-operators"
+-import { cn } from "@/shared/utils/utils"
+ 
+ import type { ProcessCode } from "@/features/tasks/types/task.types"
+ import type { User } from "@/features/users/types/user.types"
+@@ -27,12 +11,7 @@
+ type Props = {
+   processCode: ProcessCode
+   active?: boolean
+-  // El operario ya elegido para ESTA convocatoria — si se reabre el
+-  // popover (para cambiarlo), se ve marcado con el check clásico en
+-  // vez de perderse esa info.
+   selectedOperatorId?: string
+-  // undefined = deseleccionar (tocar al que ya estaba elegido lo
+-  // destilda) — mismo patrón que UserSelect.
+   onSelect: (operator: User | undefined) => void
+ }
+ 
+@@ -50,94 +29,36 @@
+   INVITED: "Ya convocado",
+ }
+ 
+-// Mismo patrón clásico que UserSelect/EntitySelect (Popover +
+-// Command + SelectOption) en vez de una lista armada a mano — así
+-// se ve igual de consistente que el resto de la app, con su propio
+-// check de selección incluido, no uno reinventado acá.
+-export function SummonOperatorButton({ processCode, active, selectedOperatorId, onSelect }: Props) {
+-
+-  const [open, setOpen] = useState(false)
+-
++/** Convocar operarios de un área — menú compartido. */
++export function SummonOperatorButton({
++  processCode,
++  active,
++  selectedOperatorId,
++  onSelect,
++}: Props) {
+   const operators = useAreaOperators(processCode)
+ 
+-  return (
+-
+-    <Popover open={open} onOpenChange={setOpen}>
+-
+-      <PopoverTrigger asChild>
+-
+-        <button
+-          type="button"
+-          className={cn(
+-            // min-w fijo: antes el texto cambiaba entre "Convocar" y
+-            // "Seleccionando..." (dos anchos distintos) sin ningún
+-            // espacio reservado, así que el botón (y todo lo que
+-            // tenía al lado) saltaba de ancho cada vez que
+-            // cambiabas de estado. Con un ancho mínimo fijo, el
+-            // contenido cambia adentro de una caja que ya está.
+-            "flex min-w-30 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
+-            active
+-              ? "bg-foreground/20 text-foreground shadow-sm"
+-              : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10",
+-          )}
+-        >
+-          <Users size={13} className="shrink-0" />
+-          <span className="truncate">
+-            {active ? "Seleccionando…" : "Convocar"}
+-          </span>
+-        </button>
+-
+-      </PopoverTrigger>
+-
+-      <PopoverContent side="bottom" align="end" floatingClassName="w-72" className="p-2">
+-
+-        <Command>
+-
+-          <CommandList className="max-h-none min-w-0 w-full overflow-visible tablet:max-h-64 tablet:overflow-y-auto">
+-
+-            <CommandEmpty>
+-              No hay operarios en esta área todavía.
+-            </CommandEmpty>
+-
+-            <CommandGroup>
+-
+-              {operators.map(({ user, availability }) => (
+-
+-                <SelectOption
+-                  key={user.id}
+-                  label={user.name}
+-                  icon={user.icon}
+-                  color={user.color ?? "#64748B"}
+-                  selected={selectedOperatorId === user.id}
+-                  description={
+-                    availability.state === "FREE"
+-                      ? "Libre"
+-                      : `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`
+-                  }
+-                  descriptionColor={STATUS_COLOR[availability.state]}
+-                  onSelect={() => {
+-
+-                    const isDeselecting =
+-                      selectedOperatorId === user.id
+-
+-                    onSelect(isDeselecting ? undefined : user)
+-                    setOpen(false)
+-
+-                  }}
+-                />
+-
+-              ))}
+-
+-            </CommandGroup>
+-
+-          </CommandList>
+-
+-        </Command>
+-
+-      </PopoverContent>
+-
+-    </Popover>
+-
++  const options = useMemo(
++    () =>
++      operators.map(({ user, availability }) => ({
++        user,
++        description:
++          availability.state === "FREE"
++            ? "Libre"
++            : `${STATUS_LABEL[availability.state]} · ${availability.taskLabel}`,
++        descriptionColor: STATUS_COLOR[availability.state],
++      })),
++    [operators],
+   )
+ 
+-}
+\ No newline at end of file
++  return (
++    <ConvocarMenu
++      options={options}
++      selectedUserId={selectedOperatorId}
++      onSelect={onSelect}
++      active={active}
++      emptyLabel="No hay operarios en esta área todavía."
++      variant="compact"
++    />
++  )
++}
+diff --git a/src/shared/ui/convocar-menu/convocar-menu.tsx b/src/shared/ui/convocar-menu/convocar-menu.tsx
+new file mode 100644
+--- /dev/null
++++ b/src/shared/ui/convocar-menu/convocar-menu.tsx
+@@ -0,0 +1,137 @@
++"use client"
++
++import { useState } from "react"
++import { Users } from "lucide-react"
++
++import {
++  Popover,
++  PopoverTrigger,
++  PopoverContent,
++} from "@/components/ui/popover"
++import {
++  Command,
++  CommandEmpty,
++  CommandGroup,
++  CommandList,
++} from "@/components/ui/command"
++import { SelectOption } from "@/shared/ui/select-option/select-option"
++import { cn } from "@/shared/utils/utils"
++import type { User } from "@/features/users/types/user.types"
++
++export type ConvocarOption = {
++  user: User
++  description?: string
++  descriptionColor?: string
++}
++
++type Props = {
++  options: ConvocarOption[]
++  selectedUserId?: string
++  onSelect: (user: User | undefined) => void
++  active?: boolean
++  emptyLabel?: string
++  variant?: "compact" | "field"
++  className?: string
++  disabled?: boolean
++}
++
++/**
++ * Menú Convocar compartido (planta + ingeniería).
++ * Popover + Command + SelectOption.
++ */
++export function ConvocarMenu({
++  options,
++  selectedUserId,
++  onSelect,
++  active = false,
++  emptyLabel = "No hay personas disponibles.",
++  variant = "compact",
++  className,
++  disabled,
++}: Props) {
++  const [open, setOpen] = useState(false)
++  const selected = options.find(o => o.user.id === selectedUserId)?.user
++
++  return (
++    <Popover open={open} onOpenChange={setOpen}>
++      <PopoverTrigger asChild>
++        <button
++          type="button"
++          disabled={disabled}
++          className={cn(
++            "flex items-center gap-1.5 font-medium transition-colors disabled:opacity-50",
++            variant === "compact" &&
++              "min-w-30 justify-center rounded-lg px-2.5 py-1 text-xs",
++            variant === "field" &&
++              "w-full min-w-0 justify-between rounded-xl px-3 py-2.5 text-sm",
++            active
++              ? "bg-foreground/20 text-foreground shadow-sm"
++              : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10",
++            variant === "field" && selected && "text-foreground",
++            className,
++          )}
++        >
++          <span className="flex min-w-0 items-center gap-1.5">
++            <Users size={variant === "field" ? 15 : 13} className="shrink-0" />
++            <span className="truncate">
++              {variant === "field"
++                ? selected
++                  ? selected.name
++                  : "Convocar…"
++                : active
++                  ? "Seleccionando…"
++                  : "Convocar"}
++            </span>
++          </span>
++          {variant === "field" && selected && (
++            <span className="shrink-0 text-[11px] text-muted-foreground">
++              Cambiar
++            </span>
++          )}
++        </button>
++      </PopoverTrigger>
++
++      <PopoverContent
++        side="bottom"
++        align={variant === "field" ? "start" : "end"}
++        floatingClassName={
++          variant === "field"
++            ? "w-[var(--radix-popover-trigger-width)] min-w-64"
++            : "w-72"
++        }
++        className="p-2"
++      >
++        <Command>
++          <CommandList
++            className={cn(
++              "min-w-0 w-full",
++              variant === "field"
++                ? "max-h-64 overflow-y-auto"
++                : "max-h-none overflow-visible tablet:max-h-64 tablet:overflow-y-auto",
++            )}
++          >
++            <CommandEmpty>{emptyLabel}</CommandEmpty>
++            <CommandGroup>
++              {options.map(({ user, description, descriptionColor }) => (
++                <SelectOption
++                  key={user.id}
++                  label={user.name}
++                  icon={user.icon}
++                  color={user.color ?? "#64748B"}
++                  selected={selectedUserId === user.id}
++                  description={description}
++                  descriptionColor={descriptionColor}
++                  onSelect={() => {
++                    const deselect = selectedUserId === user.id
++                    onSelect(deselect ? undefined : user)
++                    setOpen(false)
++                  }}
++                />
++              ))}
++            </CommandGroup>
++          </CommandList>
++        </Command>
++      </PopoverContent>
++    </Popover>
++  )
++}

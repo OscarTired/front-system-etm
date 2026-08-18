@@ -9,7 +9,8 @@ import {
 import { FormDialog } from "@/shared/ui/dialogs/form-dialog/form-dialog"
 import { FormField } from "@/shared/ui/dialogs/form-dialog/form-field"
 import { ContextPicker } from "@/features/tasks/components/context-picker"
-import { EngineeringConvocarSelect } from "./engineering-convocar-select"
+import { ConvocarMenu } from "@/shared/ui/convocar-menu/convocar-menu"
+import { useEngineeringAssignees } from "../hooks/use-engineering-assignees"
 import { useUsersDirectory } from "@/features/users/hooks/use-users-directory"
 import type { User } from "@/features/users/types/user.types"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
@@ -67,6 +68,7 @@ export function EngineeringTaskDialog({
 }: Props) {
   const isEdit = !!task
   const { users } = useUsersDirectory()
+  const convocableOptions = useEngineeringAssignees()
   const { create, update } = useEngineeringTaskMutations()
 
   const assignableUsers = useMemo(
@@ -267,12 +269,14 @@ export function EngineeringTaskDialog({
         <FormField label="Convocar">
           {showAssigneeSelect ? (
             <>
-              <EngineeringConvocarSelect
-                users={assignableUsers}
-                value={assignee}
-                onChange={u => setAssigneeId(u?.id)}
+              <ConvocarMenu
+                options={convocableOptions}
+                selectedUserId={assigneeId}
+                onSelect={u => setAssigneeId(u?.id)}
+                variant="field"
+                emptyLabel="No hay usuarios con rol Ingeniería."
               />
-              {assignableUsers.length === 0 && (
+              {convocableOptions.length === 0 && (
                 <p className="text-[11px] text-muted-foreground">
                   No hay usuarios con rol Ingeniería. Asígnalo en Acceso.
                 </p>
