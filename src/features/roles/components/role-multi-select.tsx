@@ -35,6 +35,7 @@ import {
   SelectOption,
 } from "@/shared/ui/select-option/select-option"
 
+import { withSelectedFirst } from "@/shared/utils/with-selected-first"
 import type {
   Role,
 } from "../types/role.types"

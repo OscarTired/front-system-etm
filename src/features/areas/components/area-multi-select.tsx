@@ -22,6 +22,7 @@ import {
   SelectOption,
 } from "@/shared/ui/select-option/select-option"
 
+import { withSelectedFirst } from "@/shared/utils/with-selected-first"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 
