@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/entity-select/actions/entity-select-actions"
 import {
   useBadgeColors,
+  useDomainInk,
 } from "@/shared/utils/use-badge-colors"
 import {
   useResponsive,
@@ -76,6 +77,8 @@ export function SelectOption({
   const Icon = icon ? ENTITY_ICONS[icon] : undefined
   const resolvedColor = swatchColor ?? color
   const badge = useBadgeColors(resolvedColor, "solid")
+  // Lista neutra: mismo camino que nombres (domainInk), no hex crudo.
+  const ink = useDomainInk(resolvedColor)
   const isColor = variant === "color"
 
   const actions = {
@@ -113,7 +116,7 @@ export function SelectOption({
                 size={18}
                 strokeWidth={2}
                 style={{
-                  color: isColor ? badge.text : resolvedColor,
+                  color: isColor ? badge.text : ink,
                 }}
               />
             </div>
@@ -170,7 +173,7 @@ export function SelectOption({
               size={16}
               strokeWidth={2.5}
               style={{
-                color: isColor ? badge.text : resolvedColor,
+                color: isColor ? badge.text : ink,
               }}
               className={cn(
                 "transition-all duration-200",

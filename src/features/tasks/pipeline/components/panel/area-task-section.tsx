@@ -6,6 +6,7 @@ import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-defi
 import { TaskProcessColumn } from "@/features/tasks/pipeline/table/task-process-column"
 import { SummonOperatorButton } from "./summon-operator-button"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 import type { TaskAreaPanelReturn } from "../../hooks/use-task-area-panel"
 
@@ -24,6 +25,7 @@ export function AreaTaskSection({
   const { state, actions } = panel
   const definition = PROCESS_DEFINITIONS[code]
   const Icon = ENTITY_ICONS[definition.icon]
+  const badge = useBadgeColors(definition.color, "subtle")
   const isSummoningThis = state.summonTarget?.processCode === code
   const allTasksForCode = state.columns.get(code) ?? []
 
@@ -39,8 +41,8 @@ export function AreaTaskSection({
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
             style={{
-              color: definition.color,
-              backgroundColor: `${definition.color}22`,
+              color: badge.text,
+              backgroundColor: badge.background,
             }}
           >
             {Icon ? <Icon size={12} /> : code}

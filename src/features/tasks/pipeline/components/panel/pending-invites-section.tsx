@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react"
 
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useWorkflowSummon } from "@/features/workflow/hooks/use-workflow-summon"
@@ -27,6 +28,21 @@ type Invite = {
 // — a diferencia del resto de "Mis tareas", esto no depende de qué
 // área tenga elegida ahora mismo, es sobre lo que le llegó a él en
 // particular.
+
+function InviteProcessAvatar({ processCode }: { processCode: keyof typeof PROCESS_DEFINITIONS }) {
+  const definition = PROCESS_DEFINITIONS[processCode]
+  const Icon = ENTITY_ICONS[definition.icon]
+  const badge = useBadgeColors(definition.color, "subtle")
+  return (
+    <div
+      className="flex size-9 shrink-0 items-center justify-center rounded-full"
+      style={{ backgroundColor: badge.background, color: badge.text }}
+    >
+      <Icon size={16} />
+    </div>
+  )
+}
+
 export function PendingInvitesSection({ tasks, currentUserId }: Props) {
 
   const { acceptInvite, declineInvite, accepting, declining } = useWorkflowSummon()
@@ -60,8 +76,6 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
         {invites.map(invite => {
 
           const definition = PROCESS_DEFINITIONS[invite.processCode]
-          const Icon = ENTITY_ICONS[definition.icon]
-
           return (
 
             <div
@@ -69,12 +83,7 @@ export function PendingInvitesSection({ tasks, currentUserId }: Props) {
               className="animate-comment-in flex items-center gap-3 rounded-xl bg-foreground/5 p-3"
             >
 
-              <div
-                className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: `${definition.color}22`, color: definition.color }}
-              >
-                <Icon size={16} />
-              </div>
+              <InviteProcessAvatar processCode={invite.processCode} />
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
