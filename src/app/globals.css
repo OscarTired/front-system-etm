@@ -107,10 +107,10 @@
   --overlay: oklch(0.2 0.01 260 / 0.45);
   /* Chips light: fondo suave + texto saturado (no pastel lavado). */
   --chip-surface-rgb: 245 246 248;
-  --chip-bg-alpha: 0.36;
-  --chip-bg-alpha-hover: 0.44;
-  --chip-bg-alpha-active: 0.52;
-  /* En light, chip-text-tint no aclara el texto (eso es dark). */
+  /* Más opaco / tenue, texto legible vía getReadableTextFor */
+  --chip-bg-alpha: 0.48;
+  --chip-bg-alpha-hover: 0.56;
+  --chip-bg-alpha-active: 0.64;
   --chip-text-tint: 0.72;
   --process-card-end: oklch(0.94 0.012 260);
   --on-glass-foreground: oklch(0.18 0.014 260);
@@ -166,10 +166,11 @@ html, body {
   --chrome: oklch(0.12 0.005 260 / 0.85);
   --overlay: oklch(0.05 0 0 / 0.55);
   --chip-surface-rgb: 16 16 18;
-  --chip-bg-alpha: 0.48;
-  --chip-bg-alpha-hover: 0.58;
-  --chip-bg-alpha-active: 0.68;
-  --chip-text-tint: 0.72;
+  /* Tenue pero legible en dark */
+  --chip-bg-alpha: 0.42;
+  --chip-bg-alpha-hover: 0.52;
+  --chip-bg-alpha-active: 0.62;
+  --chip-text-tint: 0.78;
   --process-card-end: oklch(0.14 0.012 260);
   --on-glass-foreground: oklch(0.96 0.005 260);
   --on-glass-muted: oklch(0.96 0.005 260 / 0.62);
