@@ -53,3 +53,25 @@ export type CreatePlateBody = {
   height: number
   holes?: PlateHolesInput
 }
+
+/** Spec plantilla tira (mirror backend). */
+export type TiraHolesInput = {
+  diameter: number
+  insetFromEnd: number
+  countPerEnd: 1 | 2
+  spacing?: number
+}
+
+export type TiraBendsInput = {
+  positions: number[]
+}
+
+export type CreateTiraBody = {
+  length: number
+  width: number
+  endRadius?: number
+  holes?: TiraHolesInput
+  bends?: TiraBendsInput
+  thicknessMm?: number
+  name?: string
+}
