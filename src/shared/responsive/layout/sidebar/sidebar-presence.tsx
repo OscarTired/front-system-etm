@@ -218,9 +218,12 @@ export function SidebarPresence({
   }
 
   const panelBody = (
-    <Command className="flex h-full min-h-0 flex-col bg-transparent" shouldFilter={false}>
-      <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 px-2 pb-2 bg-popover shrink-0">
-        <Search size={14} className="text-muted-foreground shrink-0" />
+    <Command
+      className="flex h-full min-h-0 flex-col bg-transparent"
+      shouldFilter={false}
+    >
+      <div className="mb-2 flex shrink-0 items-center gap-2 bg-popover px-2 pb-2">
+        <Search size={14} className="shrink-0 text-muted-foreground" />
         <Input
           ref={inputRef}
           value={query}
@@ -232,10 +235,10 @@ export function SidebarPresence({
 
       <CommandList
         className={cn(
-          // CommandList ya envuelve ScrollArea: no pisar overflow-y-auto.
+          // Un scroller: lista + toggle al final (sin footer flotante).
           "min-h-0 flex-1 select-none",
           isTopbar
-            ? "max-h-[min(60dvh,28rem)]"
+            ? "max-h-[min(70dvh,32rem)]"
             : expanded || query.trim()
               ? "max-h-96"
               : "max-h-60",
@@ -251,7 +254,7 @@ export function SidebarPresence({
               key={user.id}
               value={user.name}
               onSelect={() => {}}
-              className="p-0 rounded-lg bg-transparent hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-foreground pointer-events-none data-[selected=true]:bg-transparent"
+              className="pointer-events-none rounded-lg bg-transparent p-0 hover:bg-transparent focus:bg-transparent aria-selected:bg-transparent aria-selected:text-foreground data-[selected=true]:bg-transparent"
             >
               <div className="w-full pointer-events-auto">
                 <UserRow user={user} />
@@ -259,40 +262,40 @@ export function SidebarPresence({
             </CommandItem>
           ))}
         </CommandGroup>
-      </CommandList>
 
-      {showToggle && (
-        <div className="pt-2 mt-1 shrink-0">
-          {!expanded ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.currentTarget.blur()
-                setExpanded(true)
-              }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-muted-foreground bg-transparent"
-            >
-              Ver todos
-              <span className="text-muted-foreground/80">
-                ({allUsers.length})
-              </span>
-              <ChevronDown size={13} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.currentTarget.blur()
-                setExpanded(false)
-              }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-foreground bg-foreground/5"
-            >
-              Mostrar menos
-              <ChevronUp size={13} />
-            </button>
-          )}
-        </div>
-      )}
+        {showToggle && (
+          <div className="px-1 pb-1 pt-2">
+            {!expanded ? (
+              <button
+                type="button"
+                onClick={e => {
+                  e.currentTarget.blur()
+                  setExpanded(true)
+                }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-muted-foreground"
+              >
+                Ver todos
+                <span className="text-muted-foreground/80">
+                  ({allUsers.length})
+                </span>
+                <ChevronDown size={13} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={e => {
+                  e.currentTarget.blur()
+                  setExpanded(false)
+                }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2 py-2 text-xs font-medium text-foreground"
+              >
+                Mostrar menos
+                <ChevronUp size={13} />
+              </button>
+            )}
+          </div>
+        )}
+      </CommandList>
     </Command>
   )
 
@@ -305,7 +308,7 @@ export function SidebarPresence({
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
               size="large"
-              className="flex flex-col overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
+              className="flex max-h-[min(85dvh,40rem)] flex-col overflow-hidden rounded-2xl bg-popover p-0 text-foreground shadow-sm shadow-black/15 dark:shadow-black/40"
             >
               <FormDialogHeader title="Usuarios en línea" icon={Users} />
               <div className="flex min-h-0 flex-1 flex-col p-2">
