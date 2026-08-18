@@ -18,6 +18,7 @@ export default function IngenieriaPage() {
             Tareas y asignación de diseño
           </p>
         </div>
+        <div aria-hidden className="h-10 w-10 shrink-0" />
       </header>
 
       <section className="flex min-h-0 w-full flex-1 flex-col">

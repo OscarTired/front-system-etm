@@ -47,8 +47,11 @@ function DesktopShell({ children }: Props) {
     state => state.notifyClipTransitionEnd,
   )
 
+  // Radius en paralelo al width (moving-out), no en fase posterior.
   const borderRadius =
-    visualState === "hidden" || visualState === "curve-closing"
+    visualState === "hidden" ||
+    visualState === "curve-closing" ||
+    visualState === "moving-out"
       ? CURVE_SQUARE
       : CURVE_ROUNDED
 

@@ -181,7 +181,7 @@ export function EngineeringPageContent() {
   const useListScroll = viewMode !== "processes"
 
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col select-none overflow-hidden">
+    <div className="relative flex h-full min-h-0 w-full flex-col select-none overflow-hidden">
       {useListScroll ? (
         <AppListScroll
           onRefresh={async () => {

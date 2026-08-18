@@ -7,15 +7,11 @@ export type SidebarMode = "open" | "collapsed" | "closed"
 /**
  * Estado visual del shell desktop.
  *
- * Desacoplado de `mode`: `mode` es la INTENCIÓN funcional del usuario.
- * `visualState` es lo que la UI está haciendo ahora mismo, y es lo único
- * que AppSidebar / AppShell deben leer para renderizar.
+ * Cierre/apertura: una sola fase de ~300ms (width + radius en paralelo).
+ * Ya no hay `curve-closing` en serie después de width→0.
  *
- * Transiciones dirigidas por:
- *   - cambios en `mode`
- *   - `notifyContentTransitionEnd` / `notifyClipTransitionEnd` (transitionend)
- *
- * Sin timers.
+ * `curve-closing` se mantiene en el tipo solo por compatibilidad con
+ * transitionend residuales; el flujo nuevo no lo usa como paso obligatorio.
  */
 export type SidebarVisualState =
   | "visible"
@@ -42,13 +38,17 @@ function nextVisualState(
   if (nextMode === "closed") {
     if (current === "hidden") return "hidden"
     if (current === "moving-out") return "moving-out"
-    if (current === "curve-closing") return "curve-closing"
-    // visible | moving-in → empezar cierre de contenido
+    // visible | moving-in | curve-closing → un solo cierre (width+radius)
     return "moving-out"
   }
 
   // open | collapsed
-  if (current === "hidden" || current === "curve-closing") {
+  if (
+    current === "hidden" ||
+    current === "curve-closing" ||
+    current === "moving-out"
+  ) {
+    // Reabrir desde cualquier fase de cierre
     return "moving-in"
   }
 
@@ -56,15 +56,10 @@ function nextVisualState(
     return "moving-in"
   }
 
-  if (current === "moving-out") {
-    // Usuario reabrió a mitad del cierre: volver a entrar
-    return "moving-in"
-  }
-
   return "visible"
 }
 
-export const useSidebarStore = create<SidebarStore>()((set) => ({
+export const useSidebarStore = create<SidebarStore>()(set => ({
   mode: "open",
   lastVisibleMode: "open",
   visualState: "visible",
@@ -99,10 +94,14 @@ export const useSidebarStore = create<SidebarStore>()((set) => ({
 
   notifyContentTransitionEnd: () =>
     set(state => {
-      // Solo avanzar una fase; ignorar transitionend espurios
-      // (p.ej. width+transform, o reflows por rows expandidos).
-      if (state.mode === "closed" && state.visualState === "moving-out") {
-        return { visualState: "curve-closing" }
+      // Cierre: width terminó → hidden en el mismo ciclo de 300ms
+      // (radius ya iba en paralelo desde moving-out).
+      if (
+        state.mode === "closed" &&
+        (state.visualState === "moving-out" ||
+          state.visualState === "curve-closing")
+      ) {
+        return { visualState: "hidden" }
       }
       if (state.mode !== "closed" && state.visualState === "moving-in") {
         return { visualState: "visible" }
@@ -112,7 +111,12 @@ export const useSidebarStore = create<SidebarStore>()((set) => ({
 
   notifyClipTransitionEnd: () =>
     set(state => {
-      if (state.mode === "closed" && state.visualState === "curve-closing") {
+      // Fallback si solo llega el transitionend del radius
+      if (
+        state.mode === "closed" &&
+        (state.visualState === "curve-closing" ||
+          state.visualState === "moving-out")
+      ) {
         return { visualState: "hidden" }
       }
       return state
