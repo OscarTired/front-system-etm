@@ -3,6 +3,7 @@
 import { getActivityIcon } from "../../constants/activity-icons"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { cn } from "@/shared/utils/utils"
+import { ActivityLogDetailIndicators } from "./activity-log-detail-indicators"
 import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 
 type Props = {
@@ -126,6 +127,7 @@ export function ActivityLogChip({
                   Auto
                 </span>
               )}
+              <ActivityLogDetailIndicators log={log} compact />
             </div>
             {subtitle && (
               <p className="mt-0.5 truncate text-[10px] font-medium text-muted-foreground md:hidden">

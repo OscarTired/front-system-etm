@@ -1,5 +1,7 @@
 "use client"
 
+import { ActivityLogDetailIndicators } from "../actions/activity-log-detail-indicators"
+
 import { useQueryClient } from "@tanstack/react-query"
 
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
@@ -118,6 +120,7 @@ function ActivityLogCard({
             </span>
 
             <div className="flex shrink-0 items-center gap-2">
+              <ActivityLogDetailIndicators log={log} compact />
               <span className="rounded-md bg-foreground/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {SHIFT_HOURS_LABEL[effectiveShift]}
               </span>
