@@ -34,6 +34,7 @@ import { useSortStore } from "@/shared/sorting/store/sort-store"
 import { TaskDialog } from "@/features/tasks/components/dialog/task-dialog"
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { usePermissions } from "@/features/permissions/hooks/use-permissions"
+import { ProjectCodeChip } from "@/features/projects/components/project-code-chip"
 import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 
 
@@ -114,15 +115,10 @@ export function ProjectMobileCard({
           onClick={onToggle}
           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-1 text-left"
         >
-          <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
-            style={{
-              backgroundColor: `${project.client.color}15`,
-              color: project.client.color,
-            }}
-          >
-            {displayProjectCode(project.projectCode)}
-          </span>
+          <ProjectCodeChip
+            code={project.projectCode}
+            color={project.client.color}
+          />
 
           <div className="min-w-0 flex-1">
             {/* md+: Nombre · solo iconos etapa/estado (16px, centrados). Mobile: solo nombre */}

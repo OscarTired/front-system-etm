@@ -1,5 +1,9 @@
 "use client"
 
+import { ProjectCodeChip } from "@/features/projects/components/project-code-chip"
+
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+
 import {
   useMemo,
   useRef,
@@ -352,15 +356,11 @@ export function ContextPicker({
           <span className="flex min-w-0 flex-1 items-center gap-2">
             {selectedProject ? (
               <>
-                <span
-                  className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
-                  style={{
-                    backgroundColor: `${selectedProject.client?.color ?? "#64748B"}15`,
-                    color: selectedProject.client?.color ?? "#64748B",
-                  }}
-                >
-                  {displayProjectCode(selectedProject.projectCode)}
-                </span>
+                <ProjectCodeChip
+                  code={selectedProject.projectCode}
+                  color={selectedProject.client?.color}
+                  className="tabular-nums"
+                />
                 <span className="min-w-0 truncate">
                   {[
                     selectedProject.client?.name?.trim(),
@@ -452,15 +452,11 @@ export function ContextPicker({
                     icon="project"
                     color={project.client?.color ?? "#64748B"}
                     leading={
-                      <span
-                        className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
-                        style={{
-                          backgroundColor: `${project.client?.color ?? "#64748B"}15`,
-                          color: project.client?.color ?? "#64748B",
-                        }}
-                      >
-                        {displayProjectCode(project.projectCode)}
-                      </span>
+                      <ProjectCodeChip
+                        code={project.projectCode}
+                        color={project.client?.color}
+                        className="tabular-nums"
+                      />
                     }
                     selected={
                       mode === "both"

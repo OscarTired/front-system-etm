@@ -78,6 +78,7 @@ export function TaskMobileCard({
 
 
   const isTarget = searchParams.get("taskId") === task.id
+  const projectChipBadge = useBadgeColors(task.project.client.color, "subtle")
 
   useEffect(() => {
     if (!expanded) {
@@ -159,8 +160,8 @@ export function TaskMobileCard({
               projectChipPressed && "opacity-60 scale-95",
             )}
             style={{
-              backgroundColor: `${task.project.client.color}15`,
-              color: task.project.client.color,
+              backgroundColor: projectChipBadge.background,
+              color: projectChipBadge.text,
             }}
           >
             {displayProjectCode(task.project.projectCode)}

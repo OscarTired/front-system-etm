@@ -1,0 +1,253 @@
+diff --git a/src/features/engineering/components/engineering-task-row.tsx b/src/features/engineering/components/engineering-task-row.tsx
+index 212259c..1c92624 100644
+--- a/src/features/engineering/components/engineering-task-row.tsx
++++ b/src/features/engineering/components/engineering-task-row.tsx
+@@ -1,5 +1,7 @@
+ "use client"
+ 
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
++
+ import { FileText, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+ 
+ import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
+@@ -23,6 +25,7 @@ type Props = {
+ }
+ 
+ export function EngineeringTaskRow({ task, onEdit }: Props) {
++  const projectChipBadge = useBadgeColors(task.project.client.color ?? "#64748B", "subtle")
+   const { isMobile } = useResponsive()
+   const hasNote = Boolean(task.note?.trim())
+   const { update, remove } = useEngineeringTaskMutations()
+@@ -84,7 +87,8 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
+                 style={
+                   task.project.client
+                     ? {
+-                        backgroundColor: `${task.project.client.color}15`,
++                        backgroundColor: projectChipBadge.background,
++                        color: projectChipBadge.text,
+                         color: task.project.client.color,
+                       }
+                     : undefined
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index 83ef1a0..944a4c8 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -76,6 +76,7 @@ export function ProcessMobileCard({
+   const [showFields, setShowFields] = useState(false)
+ 
+   const { isMobile } = useResponsive()
++  const projectChipBadge = useBadgeColors(project.client.color, "subtle")
+ 
+   const task = processAccess.task(processTask)
+   const project = processAccess.project(processTask)
+@@ -119,8 +120,8 @@ export function ProcessMobileCard({
+           <span
+             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+             style={{
+-              backgroundColor: `${project.client.color}15`,
+-              color: project.client.color,
++              backgroundColor: projectChipBadge.background,
++              color: projectChipBadge.text,
+             }}
+           >
+             {displayProjectCode(project.projectCode)}
+diff --git a/src/features/projects/components/project-code-chip.tsx b/src/features/projects/components/project-code-chip.tsx
+new file mode 100644
+index 0000000..75b7fa3
+--- /dev/null
++++ b/src/features/projects/components/project-code-chip.tsx
+@@ -0,0 +1,37 @@
++"use client"
++
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
++import { cn } from "@/shared/utils/utils"
++import { displayProjectCode } from "@/features/projects/utils/display-project-code"
++
++type Props = {
++  code: string
++  /** Color de dominio (cliente). Nunca usar `${hex}15` a mano. */
++  color?: string | null
++  className?: string
++  title?: string
++}
++
++/**
++ * Chip de código de proyecto — un solo contrato:
++ * useBadgeColors("subtle") = mismo motor que EntityChip / DynamicBadge.
++ */
++export function ProjectCodeChip({ code, color, className, title }: Props) {
++  const badge = useBadgeColors(color || "#64748B", "subtle")
++
++  return (
++    <span
++      title={title ?? code}
++      className={cn(
++        "shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]",
++        className,
++      )}
++      style={{
++        backgroundColor: badge.background,
++        color: badge.text,
++      }}
++    >
++      {displayProjectCode(code)}
++    </span>
++  )
++}
+diff --git a/src/features/projects/table/project-mobile-card.tsx b/src/features/projects/table/project-mobile-card.tsx
+index 8c9cbb4..b37b3d5 100644
+--- a/src/features/projects/table/project-mobile-card.tsx
++++ b/src/features/projects/table/project-mobile-card.tsx
+@@ -34,6 +34,7 @@ import { useSortStore } from "@/shared/sorting/store/sort-store"
+ import { TaskDialog } from "@/features/tasks/components/dialog/task-dialog"
+ import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
+ import { usePermissions } from "@/features/permissions/hooks/use-permissions"
++import { ProjectCodeChip } from "@/features/projects/components/project-code-chip"
+ import { displayProjectCode } from "@/features/projects/utils/display-project-code"
+ 
+ 
+@@ -114,15 +115,10 @@ export function ProjectMobileCard({
+           onClick={onToggle}
+           className="flex min-w-0 flex-1 items-center gap-2.5 py-3 pr-1 text-left"
+         >
+-          <span
+-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+-            style={{
+-              backgroundColor: `${project.client.color}15`,
+-              color: project.client.color,
+-            }}
+-          >
+-            {displayProjectCode(project.projectCode)}
+-          </span>
++          <ProjectCodeChip
++            code={project.projectCode}
++            color={project.client.color}
++          />
+ 
+           <div className="min-w-0 flex-1">
+             {/* md+: Nombre · solo iconos etapa/estado (16px, centrados). Mobile: solo nombre */}
+diff --git a/src/features/tasks/components/context-picker.tsx b/src/features/tasks/components/context-picker.tsx
+index 3f030e7..4f4ea82 100644
+--- a/src/features/tasks/components/context-picker.tsx
++++ b/src/features/tasks/components/context-picker.tsx
+@@ -1,5 +1,9 @@
+ "use client"
+ 
++import { ProjectCodeChip } from "@/features/projects/components/project-code-chip"
++
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
++
+ import {
+   useMemo,
+   useRef,
+@@ -352,15 +356,11 @@ export function ContextPicker({
+           <span className="flex min-w-0 flex-1 items-center gap-2">
+             {selectedProject ? (
+               <>
+-                <span
+-                  className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+-                  style={{
+-                    backgroundColor: `${selectedProject.client?.color ?? "#64748B"}15`,
+-                    color: selectedProject.client?.color ?? "#64748B",
+-                  }}
+-                >
+-                  {displayProjectCode(selectedProject.projectCode)}
+-                </span>
++                <ProjectCodeChip
++                  code={selectedProject.projectCode}
++                  color={selectedProject.client?.color}
++                  className="tabular-nums"
++                />
+                 <span className="min-w-0 truncate">
+                   {[
+                     selectedProject.client?.name?.trim(),
+@@ -452,15 +452,11 @@ export function ContextPicker({
+                     icon="project"
+                     color={project.client?.color ?? "#64748B"}
+                     leading={
+-                      <span
+-                        className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums tracking-wide"
+-                        style={{
+-                          backgroundColor: `${project.client?.color ?? "#64748B"}15`,
+-                          color: project.client?.color ?? "#64748B",
+-                        }}
+-                      >
+-                        {displayProjectCode(project.projectCode)}
+-                      </span>
++                      <ProjectCodeChip
++                        code={project.projectCode}
++                        color={project.client?.color}
++                        className="tabular-nums"
++                      />
+                     }
+                     selected={
+                       mode === "both"
+diff --git a/src/features/tasks/components/kanban-card/kanban-card-view.tsx b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+index 577c2d1..c472ce9 100644
+--- a/src/features/tasks/components/kanban-card/kanban-card-view.tsx
++++ b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+@@ -1,5 +1,7 @@
+ "use client"
+ 
++import { useBadgeColors } from "@/shared/utils/use-badge-colors"
++
+ import {
+   useLayoutEffect,
+   useRef,
+@@ -68,6 +70,7 @@ export function KanbanCardView({
+   footerActions,
+   dragPreview = false,
+ }: Props) {
++  const projectChipBadge = useBadgeColors(projectChipColor ?? "#64748B", "subtle")
+   const isFinalized = statusName === "Finalizado"
+   const placeholderColor = "#64748B"
+ 
+@@ -134,8 +137,8 @@ export function KanbanCardView({
+                 title={projectCodeLabel}
+                 className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+                 style={{
+-                  backgroundColor: `${projectChipColor ?? "#64748B"}15`,
+-                  color: projectChipColor ?? "#64748B",
++                  backgroundColor: projectChipBadge.background,
++                  color: projectChipBadge.text,
+                 }}
+               >
+                 {projectCodeLabel}
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+index 1d7fd74..50be4b3 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -62,8 +62,8 @@ export function TaskPipelineCardCompact({
+         title={task.project.projectCode}
+         className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
+         style={{
+-          backgroundColor: `${task.project.client.color}15`,
+-          color: task.project.client.color,
++          backgroundColor: projectChipBadge.background,
++          color: projectChipBadge.text,
+         }}
+       >
+         {displayProjectCode(task.project.projectCode)}
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+index bf48ee8..7614854 100644
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -78,6 +78,7 @@ export function TaskMobileCard({
+ 
+ 
+   const isTarget = searchParams.get("taskId") === task.id
++  const projectChipBadge = useBadgeColors(task.project.client.color, "subtle")
+ 
+   useEffect(() => {
+     if (!expanded) {
+@@ -159,8 +160,8 @@ export function TaskMobileCard({
+               projectChipPressed && "opacity-60 scale-95",
+             )}
+             style={{
+-              backgroundColor: `${task.project.client.color}15`,
+-              color: task.project.client.color,
++              backgroundColor: projectChipBadge.background,
++              color: projectChipBadge.text,
+             }}
+           >
+             {displayProjectCode(task.project.projectCode)}

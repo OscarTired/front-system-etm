@@ -76,6 +76,7 @@ export function ProcessMobileCard({
   const [showFields, setShowFields] = useState(false)
 
   const { isMobile } = useResponsive()
+  const projectChipBadge = useBadgeColors(project.client.color, "subtle")
 
   const task = processAccess.task(processTask)
   const project = processAccess.project(processTask)
@@ -119,8 +120,8 @@ export function ProcessMobileCard({
           <span
             className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
             style={{
-              backgroundColor: `${project.client.color}15`,
-              color: project.client.color,
+              backgroundColor: projectChipBadge.background,
+              color: projectChipBadge.text,
             }}
           >
             {displayProjectCode(project.projectCode)}

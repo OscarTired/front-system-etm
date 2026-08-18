@@ -1,5 +1,7 @@
 "use client"
 
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+
 import {
   useLayoutEffect,
   useRef,
@@ -68,6 +70,7 @@ export function KanbanCardView({
   footerActions,
   dragPreview = false,
 }: Props) {
+  const projectChipBadge = useBadgeColors(projectChipColor ?? "#64748B", "subtle")
   const isFinalized = statusName === "Finalizado"
   const placeholderColor = "#64748B"
 
@@ -134,8 +137,8 @@ export function KanbanCardView({
                 title={projectCodeLabel}
                 className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
                 style={{
-                  backgroundColor: `${projectChipColor ?? "#64748B"}15`,
-                  color: projectChipColor ?? "#64748B",
+                  backgroundColor: projectChipBadge.background,
+                  color: projectChipBadge.text,
                 }}
               >
                 {projectCodeLabel}

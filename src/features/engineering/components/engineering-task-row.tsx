@@ -1,5 +1,7 @@
 "use client"
 
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+
 import { FileText, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
 import { WorkflowStatusChip } from "@/features/workflow/components/workflow-status-chip"
@@ -23,6 +25,7 @@ type Props = {
 }
 
 export function EngineeringTaskRow({ task, onEdit }: Props) {
+  const projectChipBadge = useBadgeColors(task.project.client.color ?? "#64748B", "subtle")
   const { isMobile } = useResponsive()
   const hasNote = Boolean(task.note?.trim())
   const { update, remove } = useEngineeringTaskMutations()
@@ -84,7 +87,8 @@ export function EngineeringTaskRow({ task, onEdit }: Props) {
                 style={
                   task.project.client
                     ? {
-                        backgroundColor: `${task.project.client.color}15`,
+                        backgroundColor: projectChipBadge.background,
+                        color: projectChipBadge.text,
                         color: task.project.client.color,
                       }
                     : undefined

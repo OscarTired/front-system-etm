@@ -62,8 +62,8 @@ export function TaskPipelineCardCompact({
         title={task.project.projectCode}
         className="shrink-0 select-none rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide md:px-2 md:py-1 md:text-[11px]"
         style={{
-          backgroundColor: `${task.project.client.color}15`,
-          color: task.project.client.color,
+          backgroundColor: projectChipBadge.background,
+          color: projectChipBadge.text,
         }}
       >
         {displayProjectCode(task.project.projectCode)}
