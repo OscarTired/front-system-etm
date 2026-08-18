@@ -94,7 +94,10 @@ function OperatorChip({
   extra?: number
 }) {
   const badge = useBadgeColors(color || "#64748B", "subtle")
-  const Icon = iconName ? ENTITY_ICONS[iconName] : null
+  const Icon =
+    iconName && iconName in ENTITY_ICONS
+      ? ENTITY_ICONS[iconName as keyof typeof ENTITY_ICONS]
+      : null
 
   return (
     <span
@@ -259,9 +262,10 @@ export function EngineeringColumnOperators({
         <div className="flex flex-col gap-2">
           {groups.map(g => {
             const color = g.assignee.color ?? "#64748B"
-            const Icon = g.assignee.icon
-              ? ENTITY_ICONS[g.assignee.icon]
-              : null
+            const Icon =
+              g.assignee.icon && g.assignee.icon in ENTITY_ICONS
+                ? ENTITY_ICONS[g.assignee.icon as keyof typeof ENTITY_ICONS]
+                : null
             return (
               <OperatorDetailRow
                 key={g.assignee.id}
