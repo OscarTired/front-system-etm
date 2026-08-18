@@ -1,6 +1,8 @@
 "use client"
 
+import type { ComponentType } from "react"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 import { PermissionCode } from "@/shared/core/enums/permission-code.enum"
 import { WorkflowAction } from "@/shared/ui/actions/workflow-action"
@@ -11,7 +13,9 @@ import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { canCompleteStep } from "@/features/workflow/selectors/can-complete"
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
-import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
+import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
+import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
 
 type ProcessRowActionsProps = {
@@ -38,6 +42,7 @@ export function ProcessRowActions({
 }: ProcessRowActionsProps) {
   const { startStep, pauseStep, resumeStep, completeStep, reviewStep } = useWorkflow()
   const { has } = usePermissions()
+  const router = useRouter()
   const { data: requirements } = useWorkflowRequirements()
 
   const currentStep = task.workflowSteps.find((s) => s.id === stepId)
@@ -125,32 +130,38 @@ export function ProcessRowActions({
     const prevDef = prev
       ? PROCESS_DEFINITIONS[prev.processCode as ProcessCode]
       : null
-    // Mismo footprint que WorkflowAction compact ("Iniciar"): h-9 w-28
+
+    function openTaskRoute() {
+      useFocusNavStore.getState().start("Abriendo tarea…")
+      router.push(`/tasks?taskId=${encodeURIComponent(task.id)}`)
+    }
+
+    // Chip completo h-9 w-28 (mismo que Iniciar). Click → ruta a la tarea.
+    if (prevDef && prev) {
+      const Icon = ENTITY_ICONS[prevDef.icon]
+      return (
+        <div className="flex w-full items-center justify-center">
+          <QueueProcessChip
+            code={prev.processCode}
+            label={prevDef.label}
+            color={prevDef.color}
+            Icon={Icon}
+            onClick={openTaskRoute}
+          />
+        </div>
+      )
+    }
+
     return (
       <div className="flex w-full items-center justify-center">
-        {prevDef && prev ? (
-          <span
-            className="inline-flex h-9 w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2"
-            title={`Viene de ${prevDef.label}`}
-          >
-            <span
-              aria-hidden
-              className="text-xs font-semibold leading-none text-muted-foreground"
-            >
-              →
-            </span>
-            <EntityChip
-              label={prev.processCode}
-              color={prevDef.color}
-              icon={prevDef.icon}
-              compact
-            />
-          </span>
-        ) : (
-          <span className="inline-flex h-9 w-28 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            En cola
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={openTaskRoute}
+          title="Abrir tarea"
+          className="inline-flex h-9 w-28 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-foreground/10"
+        >
+          En cola
+        </button>
       </div>
     )
   }
@@ -217,5 +228,34 @@ export function ProcessRowActions({
         />
       )}
     </div>
+  )
+}
+
+/** Chip de proceso previo: mismo tamaño que "Iniciar", click = ruta a la tarea. */
+function QueueProcessChip({
+  code,
+  label,
+  color,
+  Icon,
+  onClick,
+}: {
+  code: string
+  label: string
+  color: string
+  Icon?: ComponentType<{ size?: number; className?: string }>
+  onClick: () => void
+}) {
+  const badge = useBadgeColors(color, "subtle")
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`Viene de ${label} — abrir tarea`}
+      className="inline-flex h-9 w-28 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors select-none hover:brightness-110 active:brightness-95"
+      style={{ color: badge.text, backgroundColor: badge.background }}
+    >
+      {Icon ? <Icon size={14} className="shrink-0" /> : null}
+      <span className="leading-none">{code}</span>
+    </button>
   )
 }
