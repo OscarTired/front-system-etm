@@ -76,10 +76,12 @@ export function ProcessMobileCard({
   const [showFields, setShowFields] = useState(false)
 
   const { isMobile } = useResponsive()
-  const projectChipBadge = useBadgeColors(project.client.color, "subtle")
-
   const task = processAccess.task(processTask)
   const project = processAccess.project(processTask)
+  const projectChipBadge = useBadgeColors(
+    project.client?.color ?? "#64748B",
+    "subtle",
+  )
   const priority = processAccess.priority(processTask)
   const operator = processAccess.operator(processTask)
 

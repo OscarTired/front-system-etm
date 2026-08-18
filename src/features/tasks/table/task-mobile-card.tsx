@@ -1,6 +1,6 @@
 "use client"
 
-import { useDomainInk } from "@/shared/utils/use-badge-colors"
+import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
 
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"

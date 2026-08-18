@@ -1,0 +1,31 @@
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index 944a4c8..81dd8be 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -76,10 +76,12 @@ export function ProcessMobileCard({
+   const [showFields, setShowFields] = useState(false)
+ 
+   const { isMobile } = useResponsive()
+-  const projectChipBadge = useBadgeColors(project.client.color, "subtle")
+-
+   const task = processAccess.task(processTask)
+   const project = processAccess.project(processTask)
++  const projectChipBadge = useBadgeColors(
++    project.client?.color ?? "#64748B",
++    "subtle",
++  )
+   const priority = processAccess.priority(processTask)
+   const operator = processAccess.operator(processTask)
+ 
+diff --git a/src/features/tasks/table/task-mobile-card.tsx b/src/features/tasks/table/task-mobile-card.tsx
+index 047fdaf..1ecd2fc 100644
+--- a/src/features/tasks/table/task-mobile-card.tsx
++++ b/src/features/tasks/table/task-mobile-card.tsx
+@@ -1,6 +1,6 @@
+ "use client"
+ 
+-import { useDomainInk } from "@/shared/utils/use-badge-colors"
++import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
+ 
+ import { useCallback, useEffect, useState } from "react"
+ import { useRouter } from "next/navigation"
