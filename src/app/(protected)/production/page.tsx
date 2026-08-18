@@ -10,7 +10,7 @@ export default function AssignmentPage() {
   const { isMobile } = useResponsive()
 
   return (
-    <main className="relative flex h-full min-h-0 flex-col bg-background px-3 pt-0 pb-2 text-foreground select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
+    <main className="relative flex h-full min-h-0 flex-col bg-background px-2 pt-0 pb-1 text-foreground select-none tablet:px-4 desktop:px-5 desktop:pt-1 desktop:pb-3">
       {/* Título de página solo desktop; móvil usa TopBar + usePageTitle */}
       {!isMobile && (
         <header className="mb-1 hidden shrink-0 flex-wrap items-center justify-between gap-2 desktop:flex">

@@ -7,7 +7,6 @@ import { taskAccess } from "../../access/task-access"
 import { WORKFLOW_STATUS_DEFINITIONS } from "@/features/workflow/constants/workflow-status-definitions"
 import { getWorkflowStep } from "@/features/workflow/selectors/get-workflow-step"
 import type { ProcessCode, Task } from "../../types/task.types"
-import { displayProjectCode } from "@/features/projects/utils/display-project-code"
 import {
   getTaskMaterialLabel,
   getTaskPiecesTotal,
@@ -61,8 +60,6 @@ export function KanbanCardFromTask({
       statusColor={status.color}
       statusIcon={status.icon}
       taskNumber={task.taskNumber}
-      projectCodeLabel={displayProjectCode(task.project.projectCode)}
-      projectChipColor={task.project.client.color}
     />
   )
 }

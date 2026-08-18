@@ -166,11 +166,11 @@ export function EngineeringProcessBoard({
         <ProcessBoardSkeleton
           accentColor="#16A34A"
           columnCount={ENGINEERING_PROCESS_ORDER.length}
+          showOperatorsRow
         />
       }
       header={<EngineeringKpiHeader tasks={tasks} />}
       columnClassName="w-72 min-w-72 shrink-0"
-      scrollStep={300}
     />
   )
 }

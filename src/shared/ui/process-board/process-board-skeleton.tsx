@@ -6,18 +6,17 @@ import { cn } from "@/shared/utils/utils"
 const ROWS = [1, 0.85, 0.7, 0.55, 0.4]
 
 type Props = {
-  /** Color del KPI skeleton (hex). */
   accentColor?: string
   columnCount?: number
+  /** Muestra franja de operarios bajo el header (ingeniería). */
+  showOperatorsRow?: boolean
 }
 
-/**
- * Skeleton inline del shell ProcessBoard (KPI + columnas).
- * Sin padding extra: se adapta al contenedor.
- */
+/** Skeleton del shell ProcessBoard — misma estructura que el board real. */
 export function ProcessBoardSkeleton({
   accentColor = "#16A34A",
   columnCount = 4,
+  showOperatorsRow = false,
 }: Props) {
   const { isMobile } = useResponsive()
   const cols = isMobile ? 1 : columnCount
@@ -62,6 +61,12 @@ export function ProcessBoardSkeleton({
                 <span className="h-3.5 w-28 rounded bg-foreground/10" />
                 <span className="ml-auto h-3.5 w-4 rounded bg-foreground/5" />
               </div>
+              {showOperatorsRow && (
+                <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border/50 px-1">
+                  <span className="h-7 flex-1 rounded-lg bg-foreground/5" />
+                  <span className="size-7 shrink-0 rounded-lg bg-foreground/5" />
+                </div>
+              )}
               <div className="flex min-h-0 flex-1 flex-col gap-1.5 px-0.5 pt-1">
                 {ROWS.map((o, j) => (
                   <div

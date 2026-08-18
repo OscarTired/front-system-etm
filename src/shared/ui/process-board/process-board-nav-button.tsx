@@ -11,6 +11,7 @@ type Props = {
   label: string
 }
 
+/** Flecha al costado del track — no overlay, sin delay de hover. */
 export function ProcessBoardNavButton({
   direction,
   visible,
@@ -24,18 +25,17 @@ export function ProcessBoardNavButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      tabIndex={-1}
-      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      tabIndex={visible ? 0 : -1}
+      disabled={!visible}
       className={cn(
-        "absolute top-5.5 z-20 -translate-y-1/2",
-        direction === "left" ? "left-2" : "right-2",
-        "flex h-7 w-8 items-center justify-center",
-        "rounded-lg border border-border/60 bg-card/80 text-foreground backdrop-blur-xl",
-        "transition-opacity duration-200",
-        visible ? "opacity-100" : "pointer-events-none opacity-0",
+        "flex h-9 w-8 shrink-0 items-center justify-center self-center",
+        "rounded-lg border border-border/60 bg-card text-foreground",
+        "transition-opacity duration-150",
+        "disabled:pointer-events-none",
+        visible ? "opacity-100" : "opacity-0",
       )}
     >
-      <Icon size={13} strokeWidth={2.5} />
+      <Icon size={14} strokeWidth={2.5} />
     </button>
   )
 }

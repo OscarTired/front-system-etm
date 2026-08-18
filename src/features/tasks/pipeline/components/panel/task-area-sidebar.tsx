@@ -5,15 +5,11 @@ import { useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/shared/utils/utils"
 import { HistoryToggleButton } from "@/shared/history/components/history-toggle-button"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
-import { Popover, PopoverContent } from "@/components/ui/popover"
 import { AppListScroll } from "@/shared/ui/vertical-scroll/app-list-scroll"
 import { SpeedDialFab } from "@/shared/ui/speed-dial-fab/speed-dial-fab"
 
 import { PendingInvitesSection } from "@/features/tasks/pipeline/components/panel/pending-invites-section"
-import {
-  SummonConfirmBar,
-  SummonConfirmBarContent,
-} from "@/features/tasks/pipeline/components/panel/summon-confirm-bar"
+import { SummonConfirmBar } from "@/features/tasks/pipeline/components/panel/summon-confirm-bar"
 import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area-task-section"
 import { AreaFilterChips } from "@/features/tasks/pipeline/components/panel/area-filter-chips"
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
@@ -63,7 +59,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
         )}
       </div>
     ) : (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {state.currentUserId && (
           <PendingInvitesSection
             tasks={state.allTasks}
@@ -105,26 +101,19 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
           ]}
         />
 
-        <Popover
-          open={!!(state.summonTarget && state.selectedStepIds.size > 0)}
-          onOpenChange={open => {
-            if (!open) actions.handleCancelSummon()
-          }}
-        >
-          <PopoverContent>
-            {state.summonTarget && (
-              <SummonConfirmBarContent
-                operatorName={state.summonTarget.operator.name}
-                count={state.selectedStepIds.size}
-                mode={state.summonMode}
-                onModeChange={actions.setSummonMode}
-                onConfirm={actions.handleConfirmSummon}
-                onCancel={actions.handleCancelSummon}
-                confirming={state.summoning}
-              />
-            )}
-          </PopoverContent>
-        </Popover>
+        {state.summonTarget && state.selectedStepIds.size > 0 && (
+          <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+            <SummonConfirmBar
+              operatorName={state.summonTarget.operator.name}
+              count={state.selectedStepIds.size}
+              mode={state.summonMode}
+              onModeChange={actions.setSummonMode}
+              onConfirm={actions.handleConfirmSummon}
+              onCancel={actions.handleCancelSummon}
+              confirming={state.summoning}
+            />
+          </div>
+        )}
       </aside>
     )
   }

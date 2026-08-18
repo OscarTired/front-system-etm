@@ -91,7 +91,7 @@ export function EngineeringKpiHeader({ tasks }: Props) {
     <KpiCarousel
       cards={cards}
       items={items}
-      defaultExpanded={isMobile}
+      defaultExpanded={false}
       summary={{
         icon: CheckCircle2,
         color: "#16A34A",
