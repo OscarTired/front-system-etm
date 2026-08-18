@@ -149,8 +149,11 @@ export function TaskProductionPanel({
       ? ENTITY_ICONS[status.icon]
       : undefined
 
-  const summaryTextColor =
-    useBadgeColors(status?.color ?? "#737373", "subtle").text
+  const summaryBadge = useBadgeColors(status?.color ?? "#737373", "subtle")
+  const summaryTextColor = summaryBadge.text
+  // Labels/iconos secundarios sobre glass: mismo contrato que chips (textMuted),
+  // no token --on-glass-muted (se lava en light sobre pastel).
+  const summaryMuted = summaryBadge.textMuted ?? summaryTextColor
 
   const progressContent = (
 
@@ -447,7 +450,7 @@ export function TaskProductionPanel({
               </div>
 
               <span
-                className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] tablet:block"
+                className="hidden min-w-0 shrink truncate text-xs font-bold uppercase tracking-[0.18em] sm:block"
                 style={{ color: summaryTextColor }}
               >
                 {status?.name ?? "Producción"}
@@ -456,14 +459,14 @@ export function TaskProductionPanel({
               <div className="flex min-w-0 flex-1 items-center justify-end gap-4 tablet:gap-8">
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-on-glass-muted">Listas</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] " style={{ color: summaryMuted }}>Listas</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.completedSteps}/{workflowView.totalSteps}
                   </p>
                 </div>
 
                 <div className="min-w-0 text-right">
-                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-on-glass-muted">Avance</p>
+                  <p className="truncate text-xs font-bold uppercase tracking-[0.14em]" style={{ color: summaryMuted }}>Avance</p>
                   <p className="text-lg font-bold leading-tight" style={{ color: summaryTextColor }}>
                     {workflowView.progress}%
                   </p>
@@ -471,7 +474,7 @@ export function TaskProductionPanel({
 
               </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-on-glass-muted">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5" style={{ color: summaryMuted }}>
                 <MoreHorizontal size={18} />
               </div>
 
