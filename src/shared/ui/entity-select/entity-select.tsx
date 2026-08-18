@@ -128,15 +128,18 @@ export function EntitySelect<T extends EntityBase>({
 
   async function handleSubmit(dto: EntityForm) {
     if (editing) {
+      const editedId = editing.id
+      const wasSelected = value?.id === editedId
       const result = await onEdit({
-        id: editing.id,
+        id: editedId,
         dto,
       })
 
-      // Solo actualizar la selección si el item editado YA era el
-      // valor elegido. Editar desde el menú del dropdown no debe
-      // auto-asignar ese item como opción seleccionada.
-      if (value?.id === editing.id) {
+      // Contrato de selección:
+      // - Si el ítem editado YA estaba elegido → se mantiene elegido (datos nuevos).
+      // - Si NO estaba elegido → no se cambia la selección.
+      // - Crear nunca auto-selecciona.
+      if (wasSelected) {
         onChange(result)
       }
     } else {

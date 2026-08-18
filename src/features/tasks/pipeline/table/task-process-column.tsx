@@ -68,7 +68,7 @@ function ColumnHeader({
         </span>
 
         {Icon && (
-          <Icon size={15} style={{ color: definition.color }} />
+          <Icon size={15} style={{ color: badge.text }} />
         )}
 
         <span className="text-sm font-bold uppercase tracking-wide text-foreground">

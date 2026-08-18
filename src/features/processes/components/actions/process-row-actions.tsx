@@ -1,6 +1,5 @@
 "use client"
 
-import type { ComponentType } from "react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -13,10 +12,9 @@ import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 import { canCompleteStep } from "@/features/workflow/selectors/can-complete"
 import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
-import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { useFocusNavStore } from "@/shared/focus/store/focus-nav-store"
 import { setProcessNavigationOrigin } from "@/features/processes/components/actions/back-to-process-button"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { EntityChip } from "@/shared/ui/entity-chip/entity-chip"
 import type { WorkflowStatus } from "@/features/workflow/types/workflow.types"
 
 type ProcessRowActionsProps = {
@@ -145,14 +143,13 @@ export function ProcessRowActions({
 
     // Chip completo h-9 w-28 (mismo que Iniciar). Click → proceso previo.
     if (prevDef && prev) {
-      const Icon = ENTITY_ICONS[prevDef.icon]
       return (
         <div className="flex w-full items-center justify-center">
           <QueueProcessChip
             code={prev.processCode}
             label={prevDef.label}
             color={prevDef.color}
-            Icon={Icon}
+            icon={prevDef.icon}
             onClick={() => openProcessRoute(prev.processCode as ProcessCode)}
           />
         </div>
@@ -243,26 +240,24 @@ function QueueProcessChip({
   code,
   label,
   color,
-  Icon,
+  icon,
   onClick,
 }: {
   code: string
   label: string
   color: string
-  Icon?: ComponentType<{ size?: number; className?: string }>
+  icon?: import("@/shared/constants/entity-icons").EntityIcon
   onClick: () => void
 }) {
-  const badge = useBadgeColors(color, "subtle")
+  // Mismo contrato que status (EntityChip + useBadgeColors), no estilo a mano.
   return (
     <button
       type="button"
       onClick={onClick}
       title={`Viene de ${label} — ir a ese proceso`}
-      className="inline-flex h-9 w-28 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors select-none hover:brightness-110 active:brightness-95"
-      style={{ color: badge.text, backgroundColor: badge.background }}
+      className="inline-flex h-9 w-28 items-center justify-center transition-transform select-none hover:brightness-110 active:brightness-95"
     >
-      {Icon ? <Icon size={14} className="shrink-0" /> : null}
-      <span className="leading-none">{code}</span>
+      <EntityChip label={code} color={color} icon={icon} />
     </button>
   )
 }

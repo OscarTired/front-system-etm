@@ -153,6 +153,9 @@ export function SelectOption({
                   ? "translate-x-0 opacity-100"
                   : "translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100",
               )}
+              onPointerDown={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <EntitySelectActionMenu
                 onEdit={actions.edit}

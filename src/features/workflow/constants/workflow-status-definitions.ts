@@ -30,7 +30,7 @@ export const WORKFLOW_STATUS_DEFINITIONS:
       status:"PENDING",
       label:"Pendiente",
       icon:"clock",
-      color:"#2563EB",
+      color:"#1D4ED8",
     },
 
     PROGRESS:{
