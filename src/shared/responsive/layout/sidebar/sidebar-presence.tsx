@@ -233,15 +233,12 @@ export function SidebarPresence({
         />
       </div>
 
+      {/* Lista: único scroller. min-h-0 evita empujar/solapar el footer. */}
       <CommandList
         className={cn(
-          // Un scroller: lista + toggle al final (sin footer flotante).
-          "min-h-0 flex-1 select-none",
-          isTopbar
-            ? "max-h-[min(70dvh,32rem)]"
-            : expanded || query.trim()
-              ? "max-h-96"
-              : "max-h-60",
+          "min-h-0 w-full flex-1 select-none",
+          !isTopbar &&
+            (expanded || query.trim() ? "max-h-96" : "max-h-60"),
         )}
       >
         <CommandEmpty>
@@ -262,40 +259,41 @@ export function SidebarPresence({
             </CommandItem>
           ))}
         </CommandGroup>
-
-        {showToggle && (
-          <div className="px-1 pb-1 pt-2">
-            {!expanded ? (
-              <button
-                type="button"
-                onClick={e => {
-                  e.currentTarget.blur()
-                  setExpanded(true)
-                }}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-muted-foreground"
-              >
-                Ver todos
-                <span className="text-muted-foreground/80">
-                  ({allUsers.length})
-                </span>
-                <ChevronDown size={13} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={e => {
-                  e.currentTarget.blur()
-                  setExpanded(false)
-                }}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2 py-2 text-xs font-medium text-foreground"
-              >
-                Mostrar menos
-                <ChevronUp size={13} />
-              </button>
-            )}
-          </div>
-        )}
       </CommandList>
+
+      {/* Footer fijo (como antes): sibling flex, no absolute → no solapa. */}
+      {showToggle && (
+        <div className="shrink-0 border-t border-border/40 bg-popover px-1 pt-2">
+          {!expanded ? (
+            <button
+              type="button"
+              onClick={e => {
+                e.currentTarget.blur()
+                setExpanded(true)
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-muted-foreground"
+            >
+              Ver todos
+              <span className="text-muted-foreground/80">
+                ({allUsers.length})
+              </span>
+              <ChevronDown size={13} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={e => {
+                e.currentTarget.blur()
+                setExpanded(false)
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2 py-2 text-xs font-medium text-foreground"
+            >
+              Mostrar menos
+              <ChevronUp size={13} />
+            </button>
+          )}
+        </div>
+      )}
     </Command>
   )
 
