@@ -71,6 +71,12 @@ export function TaskWorkflowOverlay({
   const [variant, setVariant] =
     useState<WorkflowFormVariant | null>(null)
 
+  /** Selector PROGRESS/PAUSED → cambiar operario sin cerrar overlay. */
+  const [changeOperator, setChangeOperator] = useState(false)
+
+  /** Bloquea taps al abrir (long-press residual). */
+  const [pointerGuard, setPointerGuard] = useState(false)
+
   // displayVariant se congela cuando visible pasa a false —
   // el overlay se desvanece mostrando el último estado,
   // sin flash de pantalla anterior.
@@ -136,15 +142,20 @@ export function TaskWorkflowOverlay({
     }
 
     setVariant(null)
+    setChangeOperator(false)
     setSavedFields(new Set())
     setAnyFieldSaving(false)
     savingFields.current.clear()
     setBackCount(0)
     setOperatorSaving(false)
+    setPointerGuard(true)
+    const guardTimer = window.setTimeout(() => setPointerGuard(false), 400)
 
     if (skipsSelector) {
       setVariant("start")
     }
+
+    return () => window.clearTimeout(guardTimer)
 
   }, [visible]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -280,20 +291,34 @@ export function TaskWorkflowOverlay({
   }
 
   function handleClose() {
+    setChangeOperator(false)
     onClose()
   }
 
   function handleBack() {
-
-    setVariant(null)
-    setSavedFields(new Set())
-    setBackCount(c => c + 1)
-
+    if (changeOperator) {
+      setChangeOperator(false)
+      return
+    }
+    if (displayVariant) {
+      setVariant(null)
+      setSavedFields(new Set())
+      setBackCount(c => c + 1)
+      return
+    }
+    // Selector de acciones (Pausar/Completar): Volver → cambiar operario
+    setChangeOperator(true)
   }
 
+  const canChangeOperator =
+    !displayVariant &&
+    (status === "PROGRESS" || status === "PAUSED" || status === "PENDING")
+
   const showBackButton =
-    Boolean(displayVariant) &&
-    !(displayVariant === "start" && skipsSelector)
+    changeOperator ||
+    canChangeOperator ||
+    (Boolean(displayVariant) &&
+      !(displayVariant === "start" && skipsSelector))
 
   return (
 
@@ -318,7 +343,9 @@ export function TaskWorkflowOverlay({
       className={cn(
         "absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-background transition-opacity duration-150",
         visible
-          ? "pointer-events-auto opacity-100"
+          ? pointerGuard
+            ? "pointer-events-none opacity-100"
+            : "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0",
       )}
     >
@@ -415,7 +442,28 @@ export function TaskWorkflowOverlay({
 
         )}
 
-        <div className="flex flex-col gap-2">
+        {changeOperator && (
+          <div className="flex flex-col gap-3">
+            <p className="text-center text-xs font-medium text-muted-foreground">
+              Cambiar operario
+            </p>
+            <div className="flex items-center justify-center rounded-lg bg-foreground/5 px-3 py-2">
+              <ProcessOperatorCell
+                processTask={processTask}
+                onSavingChange={setOperatorSaving}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setChangeOperator(false)}
+              className="h-9 w-full rounded-lg bg-foreground/5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-foreground/10"
+            >
+              Listo
+            </button>
+          </div>
+        )}
+
+        <div className={cn("flex flex-col gap-2", changeOperator && "hidden")}>
 
           {displayVariant === "start" && (
 
