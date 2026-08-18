@@ -107,7 +107,7 @@ export function TaskMobileCard({
   const isDimmed = isCompleted || (dimOthers && !expanded)
 
   return (
-    <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
+    <div className={cn("@container/trow overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell hidden={!isManualMode} />
 
@@ -279,19 +279,21 @@ export function TaskMobileCard({
           </span>
         </div>
 
-        {/* Info auditoría: solo desktop (en móvil vive dentro del expand / actions) */}
-        <div
-          className="hidden shrink-0 items-center md:flex"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <EntityAuditInfo
-            createdAt={task.createdAt}
-            updatedAt={task.updatedAt}
-            createdBy={task.createdBy}
-            updatedBy={task.updatedBy}
-          />
-        </div>
+        {/* Auditoría en row solo colapsado + ancho; si no, junto al lápiz al expandir */}
+        {!expanded && (
+          <div
+            className="hidden shrink-0 items-center @[40rem]/trow:flex"
+            onClick={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <EntityAuditInfo
+              createdAt={task.createdAt}
+              updatedAt={task.updatedAt}
+              createdBy={task.createdBy}
+              updatedBy={task.updatedBy}
+            />
+          </div>
+        )}
 
         {isMobile && expanded && (
           <div
@@ -299,7 +301,7 @@ export function TaskMobileCard({
             onClick={e => e.stopPropagation()}
             onPointerDown={e => e.stopPropagation()}
           >
-            <TaskRowActions task={task} className="gap-0.5" showAudit={isMobile} />
+            <TaskRowActions task={task} className="gap-0.5" showAudit />
           </div>
         )}
 
@@ -431,7 +433,7 @@ export function TaskMobileCard({
         {/* Desktop: acciones en el panel. Móvil: van en el row al expandir. */}
         {!isMobile && (
           <div className="flex items-center justify-start gap-1">
-            <TaskRowActions task={task} showAudit={isMobile} />
+            <TaskRowActions task={task} showAudit />
           </div>
         )}
 

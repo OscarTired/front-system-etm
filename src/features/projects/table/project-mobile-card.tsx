@@ -106,7 +106,7 @@ export function ProjectMobileCard({
   const statusInk = useDomainInk(project.status.color)
 
   return (
-    <div className={cn("overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
+    <div className={cn("@container/prow overflow-hidden rounded-xl bg-foreground/5", isDimmed && "opacity-50")}>
       <div className="flex items-center gap-1 px-1">
         <DragCell hidden={!isManualMode} />
 
@@ -229,19 +229,21 @@ export function ProjectMobileCard({
           </span>
         </button>
 
-        {/* Info auditoría: solo desktop (en móvil vive dentro del expand / actions) */}
-        <div
-          className="hidden shrink-0 items-center md:flex"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <EntityAuditInfo
-            createdAt={project.createdAt}
-            updatedAt={project.updatedAt}
-            createdBy={project.createdBy}
-            updatedBy={project.updatedBy}
-          />
-        </div>
+        {/* Auditoría en row solo colapsado + ancho; si no, junto al lápiz al expandir */}
+        {!expanded && (
+          <div
+            className="hidden shrink-0 items-center @[40rem]/prow:flex"
+            onClick={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <EntityAuditInfo
+              createdAt={project.createdAt}
+              updatedAt={project.updatedAt}
+              createdBy={project.createdBy}
+              updatedBy={project.updatedBy}
+            />
+          </div>
+        )}
 
         {/* Móvil expandido: lápiz / borrar + nueva tarea en el row */}
         {actionsOnRow && (
@@ -249,7 +251,7 @@ export function ProjectMobileCard({
             className="flex shrink-0 items-center gap-0.5 pr-0.5"
             onClick={e => e.stopPropagation()}
           >
-            <ProjectRowActions project={project} className="gap-0.5" showAudit={isMobile} />
+            <ProjectRowActions project={project} className="gap-0.5" showAudit />
             <IconAction
               icon={Plus}
               disabled={!canCreateTask}
@@ -390,7 +392,7 @@ export function ProjectMobileCard({
         {/* Desktop: acciones en el panel expandido. Móvil: ya están en el row. */}
         {!isMobile && (
           <div className="flex items-center justify-start gap-1">
-            <ProjectRowActions project={project} showAudit={isMobile} />
+            <ProjectRowActions project={project} showAudit />
           </div>
         )}
 

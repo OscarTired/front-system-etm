@@ -263,20 +263,22 @@ export function ProcessMobileCard({
           </div>
         )}
 
-        {/* Info + materiales: siempre en el row (colapsado o expandido) */}
-        <div
-          className="flex shrink-0 items-center gap-1 pr-0.5"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <EntityAuditInfo
-            createdAt={task.createdAt}
-            updatedAt={task.updatedAt}
-            createdBy={task.createdBy}
-            updatedBy={task.updatedBy}
-          />
-          <TaskMaterialInfo task={task} alwaysShow />
-        </div>
+        {/* Info + materiales: solo colapsado y con ancho; al expandir van junto a la zona de acciones */}
+        {!expanded && (
+          <div
+            className="hidden shrink-0 items-center gap-1 pr-0.5 @[40rem]/prow:flex"
+            onClick={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            <EntityAuditInfo
+              createdAt={task.createdAt}
+              updatedAt={task.updatedAt}
+              createdBy={task.createdBy}
+              updatedBy={task.updatedBy}
+            />
+            <TaskMaterialInfo task={task} alwaysShow />
+          </div>
+        )}
 
         <button
           type="button"
@@ -294,6 +296,21 @@ export function ProcessMobileCard({
       </div>
 
       <CollapsibleHeightSection open={expanded} className="space-y-3 px-3 pb-3 pt-3">
+        {/* Misma zona que lápiz en tareas/proyectos: auditoría + materiales */}
+        <div
+          className="flex items-center justify-start gap-1"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <EntityAuditInfo
+            createdAt={task.createdAt}
+            updatedAt={task.updatedAt}
+            createdBy={task.createdBy}
+            updatedBy={task.updatedBy}
+          />
+          <TaskMaterialInfo task={task} alwaysShow />
+        </div>
+
         {showFields ? (
           <div className="flex flex-col gap-2">
             <button
