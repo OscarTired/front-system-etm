@@ -1,0 +1,38 @@
+diff --git a/src/features/processes/table/process-mobile-card.tsx b/src/features/processes/table/process-mobile-card.tsx
+index 91801a0..ad69f48 100644
+--- a/src/features/processes/table/process-mobile-card.tsx
++++ b/src/features/processes/table/process-mobile-card.tsx
+@@ -130,7 +130,7 @@ export function ProcessMobileCard({
+           </span>
+ 
+           <div className="flex min-w-0 flex-1 flex-col items-start">
+-            {/* md+: referencia · solo iconos prio/estado (16px). Mobile: solo nombre */}
++            {/* ≥40rem: referencia · prio · estado. <40rem: solo nombre */}
+             <div className="flex min-w-0 max-w-full items-center gap-1.5">
+               {isMobile ? (
+                 <span className="max-w-full truncate text-sm font-semibold leading-none text-foreground">
+@@ -186,23 +186,7 @@ export function ProcessMobileCard({
+                 {project.client.name}
+               </span>
+ 
+-              {/* Meta 2ª fila: mismo umbral que fecha / auditoría (40rem) */}
+-              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+-              <span className="hidden shrink-0 items-center gap-1 @[40rem]/prow:inline-flex">
+-                <EntityIconBadge
+-                  icon={priority.icon}
+-                  color={priority.color}
+-                  size={12}
+-                />
+-              </span>
+-              <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+-              <span className="hidden shrink-0 items-center gap-1 @[40rem]/prow:inline-flex">
+-                <EntityIconBadge
+-                  icon={statusLabel.icon}
+-                  color={statusLabel.color}
+-                  size={12}
+-                />
+-              </span>
++              {/* 2ª fila: cliente + operario (prio/estado solo en título, sin duplicar) */}
+               <span className="hidden shrink-0 text-muted-foreground/80 @[40rem]/prow:inline">·</span>
+               <span className="hidden min-w-0 items-center gap-1 @[40rem]/prow:flex">
+                 {operator ? (
