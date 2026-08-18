@@ -1,0 +1,58 @@
+diff --git a/src/features/processes/components/actions/process-row-actions.tsx b/src/features/processes/components/actions/process-row-actions.tsx
+--- a/src/features/processes/components/actions/process-row-actions.tsx
++++ b/src/features/processes/components/actions/process-row-actions.tsx
+@@ -125,33 +125,32 @@
+     const prevDef = prev
+       ? PROCESS_DEFINITIONS[prev.processCode as ProcessCode]
+       : null
++    // Mismo footprint que WorkflowAction compact ("Iniciar"): h-9 w-28
+     return (
+       <div className="flex w-full items-center justify-center">
+-        <div className="flex h-8 w-full min-w-28 items-center justify-center px-1">
+-          {prevDef && prev ? (
++        {prevDef && prev ? (
++          <span
++            className="inline-flex h-9 w-28 items-center justify-center gap-1.5 rounded-lg bg-foreground/5 px-2"
++            title={`Viene de ${prevDef.label}`}
++          >
+             <span
+-              className="inline-flex items-center gap-1 rounded-lg bg-foreground/5 py-0.5 pl-1.5 pr-0.5"
+-              title={`Viene de ${prevDef.label}`}
++              aria-hidden
++              className="text-xs font-semibold leading-none text-muted-foreground"
+             >
+-              <span
+-                aria-hidden
+-                className="text-[10px] font-semibold leading-none text-muted-foreground"
+-              >
+-                →
+-              </span>
+-              <EntityChip
+-                label={prev.processCode}
+-                color={prevDef.color}
+-                icon={prevDef.icon}
+-                compact
+-              />
++              →
+             </span>
+-          ) : (
+-            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+-              En cola
+-            </span>
+-          )}
+-        </div>
++            <EntityChip
++              label={prev.processCode}
++              color={prevDef.color}
++              icon={prevDef.icon}
++              compact
++            />
++          </span>
++        ) : (
++          <span className="inline-flex h-9 w-28 items-center justify-center rounded-lg bg-foreground/5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
++            En cola
++          </span>
++        )}
+       </div>
+     )
+   }
