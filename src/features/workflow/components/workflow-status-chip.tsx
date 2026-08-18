@@ -38,6 +38,7 @@ export function WorkflowStatusChip({
       icon={def.icon}
       compact={compact}
       iconOnly={iconOnly}
+      variant={iconOnly ? "solid" : "subtle"}
       className={className}
     />
   )

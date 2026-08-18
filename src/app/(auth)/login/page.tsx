@@ -21,7 +21,7 @@ export default function LoginPage() {
     >
       {/* Theme: esquina superior derecha, fuera del card (no compite con Entrar) */}
       <div className="absolute right-4 top-4 z-10 tablet:right-6 tablet:top-6">
-        <ThemeToggle variant="icon" className="size-10 rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-chrome hover:text-foreground" />
+        <ThemeToggle variant="icon" className="size-10 rounded-full bg-chrome text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl hover:bg-chrome hover:text-foreground" />
       </div>
 
       <div className="w-full max-w-4xl">

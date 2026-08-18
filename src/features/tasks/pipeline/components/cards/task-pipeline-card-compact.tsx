@@ -101,6 +101,7 @@ export function TaskPipelineCardCompact({
         icon={status.icon}
         compact
         iconOnly
+        variant="solid"
       />
     </div>
   )

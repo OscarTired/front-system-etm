@@ -223,6 +223,7 @@ export function KanbanCardView({
             color={statusColor}
             icon={statusIcon}
             iconOnly
+            variant="solid"
           />
           {hasFooterActions && (
             <div

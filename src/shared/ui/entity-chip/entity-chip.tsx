@@ -6,6 +6,7 @@ import {
 } from "@/shared/constants/entity-icons"
 
 import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import type { BadgeVariant } from "@/shared/utils/badge-colors"
 import { cn } from "@/shared/utils/utils"
 
 type Props = {
@@ -15,6 +16,12 @@ type Props = {
   compact?: boolean
   /** Solo icono; misma altura fija que el chip con texto */
   iconOnly?: boolean
+  /**
+   * subtle = chip de lista (default).
+   * solid = color de dominio lleno — iconOnly de estado (reloj) necesita
+   * el mismo peso visual que un chip con label (SD), sin retocar el motor.
+   */
+  variant?: BadgeVariant
   className?: string
 }
 
@@ -24,10 +31,11 @@ export function EntityChip({
   icon,
   compact = false,
   iconOnly = false,
+  variant = "subtle",
   className,
 }: Props) {
   const Icon = icon && ENTITY_ICONS[icon]
-  const badge = useBadgeColors(color ?? "#64748B", "subtle")
+  const badge = useBadgeColors(color ?? "#64748B", variant)
   const iconSize = compact ? 12 : 15
 
   return (
@@ -35,8 +43,7 @@ export function EntityChip({
       title={label}
       aria-label={label}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold leading-none",
-        // Altura fija: iconOnly y con label miden exactamente igual
+        "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold leading-none shadow-sm",
         compact ? "h-7 gap-1.5 text-xs" : "h-8 gap-2 text-sm",
         iconOnly
           ? compact

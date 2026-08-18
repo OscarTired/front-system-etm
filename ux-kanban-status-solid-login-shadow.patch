@@ -1,0 +1,97 @@
+diff --git a/src/app/(auth)/login/page.tsx b/src/app/(auth)/login/page.tsx
+index 1d9fae4..c62f993 100644
+--- a/src/app/(auth)/login/page.tsx
++++ b/src/app/(auth)/login/page.tsx
+@@ -21,7 +21,7 @@ export default function LoginPage() {
+     >
+       {/* Theme: esquina superior derecha, fuera del card (no compite con Entrar) */}
+       <div className="absolute right-4 top-4 z-10 tablet:right-6 tablet:top-6">
+-        <ThemeToggle variant="icon" className="size-10 rounded-full bg-chrome text-muted-foreground shadow-lg shadow-black/20 backdrop-blur-xl hover:bg-chrome hover:text-foreground" />
++        <ThemeToggle variant="icon" className="size-10 rounded-full bg-chrome text-muted-foreground shadow-sm shadow-black/15 dark:shadow-black/40 backdrop-blur-xl hover:bg-chrome hover:text-foreground" />
+       </div>
+ 
+       <div className="w-full max-w-4xl">
+diff --git a/src/features/tasks/components/kanban-card/kanban-card-view.tsx b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+index 8c1fd85..577c2d1 100644
+--- a/src/features/tasks/components/kanban-card/kanban-card-view.tsx
++++ b/src/features/tasks/components/kanban-card/kanban-card-view.tsx
+@@ -223,6 +223,7 @@ export function KanbanCardView({
+             color={statusColor}
+             icon={statusIcon}
+             iconOnly
++            variant="solid"
+           />
+           {hasFooterActions && (
+             <div
+diff --git a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+index 30b2390..1d7fd74 100644
+--- a/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
++++ b/src/features/tasks/pipeline/components/cards/task-pipeline-card-compact.tsx
+@@ -101,6 +101,7 @@ export function TaskPipelineCardCompact({
+         icon={status.icon}
+         compact
+         iconOnly
++        variant="solid"
+       />
+     </div>
+   )
+diff --git a/src/features/workflow/components/workflow-status-chip.tsx b/src/features/workflow/components/workflow-status-chip.tsx
+index 85833db..b8ff163 100644
+--- a/src/features/workflow/components/workflow-status-chip.tsx
++++ b/src/features/workflow/components/workflow-status-chip.tsx
+@@ -38,6 +38,7 @@ export function WorkflowStatusChip({
+       icon={def.icon}
+       compact={compact}
+       iconOnly={iconOnly}
++      variant={iconOnly ? "solid" : "subtle"}
+       className={className}
+     />
+   )
+diff --git a/src/shared/ui/entity-chip/entity-chip.tsx b/src/shared/ui/entity-chip/entity-chip.tsx
+index 2c81eb3..db3d793 100644
+--- a/src/shared/ui/entity-chip/entity-chip.tsx
++++ b/src/shared/ui/entity-chip/entity-chip.tsx
+@@ -6,6 +6,7 @@ import {
+ } from "@/shared/constants/entity-icons"
+ 
+ import { useBadgeColors } from "@/shared/utils/use-badge-colors"
++import type { BadgeVariant } from "@/shared/utils/badge-colors"
+ import { cn } from "@/shared/utils/utils"
+ 
+ type Props = {
+@@ -15,6 +16,12 @@ type Props = {
+   compact?: boolean
+   /** Solo icono; misma altura fija que el chip con texto */
+   iconOnly?: boolean
++  /**
++   * subtle = chip de lista (default).
++   * solid = color de dominio lleno — iconOnly de estado (reloj) necesita
++   * el mismo peso visual que un chip con label (SD), sin retocar el motor.
++   */
++  variant?: BadgeVariant
+   className?: string
+ }
+ 
+@@ -24,10 +31,11 @@ export function EntityChip({
+   icon,
+   compact = false,
+   iconOnly = false,
++  variant = "subtle",
+   className,
+ }: Props) {
+   const Icon = icon && ENTITY_ICONS[icon]
+-  const badge = useBadgeColors(color ?? "#64748B", "subtle")
++  const badge = useBadgeColors(color ?? "#64748B", variant)
+   const iconSize = compact ? 12 : 15
+ 
+   return (
+@@ -35,8 +43,7 @@ export function EntityChip({
+       title={label}
+       aria-label={label}
+       className={cn(
+-        "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold leading-none",
+-        // Altura fija: iconOnly y con label miden exactamente igual
++        "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold leading-none shadow-sm",
+         compact ? "h-7 gap-1.5 text-xs" : "h-8 gap-2 text-sm",
+         iconOnly
+           ? compact
