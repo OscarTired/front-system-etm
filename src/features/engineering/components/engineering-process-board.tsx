@@ -50,8 +50,8 @@ function ProcessSectionHeader({
   const label = def?.label ?? code
 
   return (
-    <div className="flex shrink-0 items-center justify-between border-b border-border/60 pb-2.5">
-      <div className="flex items-center gap-2">
+    <div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60">
+      <div className="flex items-center gap-1.5">
         {def ? (
           <EntityChip
             label={def.label}
@@ -60,14 +60,14 @@ function ProcessSectionHeader({
             compact
           />
         ) : (
-          <span className="text-xs font-semibold text-muted-foreground">
-            {code}
-          </span>
+          <span
+            aria-hidden
+            className="inline-flex h-7 w-[6.75rem] animate-pulse rounded-lg bg-foreground/10"
+          />
         )}
-
-        {/* Badge de contador con el mismo tamaño y estilo integrado que los chips */}
-        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-lg bg-foreground/10 px-2 text-xs font-bold tabular-nums text-foreground/80">
-          {count}
+        {/* Misma altura que EntityChip compact (h-7) */}
+        <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-foreground/10 px-2 text-xs font-bold tabular-nums text-foreground/80">
+          {def ? count : null}
         </span>
       </div>
 
@@ -76,7 +76,7 @@ function ProcessSectionHeader({
           type="button"
           onClick={onAdd}
           aria-label={`Nueva tarea en ${label}`}
-          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/10 hover:text-foreground"
         >
           <Plus size={14} strokeWidth={2.5} />
         </button>
@@ -110,14 +110,14 @@ export function EngineeringProcessBoard({
 
       {/* Grid de Procesos */}
       <ScrollArea className="min-h-0 flex-1 pr-1">
-        <div className="grid grid-cols-1 gap-4 pb-6 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 pb-4 xl:grid-cols-2">
           {ENGINEERING_PROCESS_ORDER.map(code => {
             const colTasks = byProcess.get(code) ?? []
 
             return (
               <section
                 key={code}
-                className="flex flex-col gap-3 rounded-2xl border-0 bg-card/60 p-3.5 backdrop-blur-sm transition-colors hover:border-border/80"
+                className="flex flex-col gap-2 rounded-2xl border-0 bg-card/60 p-3 backdrop-blur-sm"
               >
                 {/* Cabecera del Proceso */}
                 <ProcessSectionHeader
@@ -135,7 +135,7 @@ export function EngineeringProcessBoard({
                 <EngineeringColumnOperators tasks={colTasks} />
 
                 {/* Listado de Tareas */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {loading && colTasks.length === 0 ? (
                     <>
                       <div
