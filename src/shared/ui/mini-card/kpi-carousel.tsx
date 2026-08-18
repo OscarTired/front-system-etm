@@ -179,8 +179,12 @@ export function KpiCarousel({
         {currentItems.map((item, index) => {
 
           const ItemIcon = item.icon
-          const colors = getBadgeColors(item.color, "subtle", theme)
           const isSelected = selectedIndex === index
+          const colors = getBadgeColors(
+            item.color,
+            isSelected ? "solid" : "subtle",
+            theme,
+          )
 
           return (
 
@@ -195,22 +199,34 @@ export function KpiCarousel({
 
                 <div
                   className="flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-200"
-                  style={{
-                    backgroundColor: colors.background,
-                    // Anillo = tono más oscuro del fill (no blanco/text claro)
-                    border: isSelected
-                      ? `2px solid color-mix(in srgb, ${item.color} 72%, black)`
-                      : "2px solid transparent",
-                    boxShadow: "none",
-                  }}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: colors.background,
+                          border: `2px solid color-mix(in srgb, ${item.color} 72%, black)`,
+                        }
+                      : {
+                          backgroundColor: "color-mix(in srgb, var(--on-glass-foreground) 10%, transparent)",
+                          border: "2px solid transparent",
+                        }
+                  }
                 >
-                  <ItemIcon size={16} style={{ color: colors.text }} />
+                  <ItemIcon
+                    size={16}
+                    style={{
+                      color: isSelected
+                        ? colors.text
+                        : "var(--on-glass-foreground)",
+                    }}
+                  />
                 </div>
 
                 <span
                   className="text-[10px] font-bold uppercase tracking-wide"
                   style={{
-                    color: isSelected ? colors.text : "var(--on-glass-faint)"
+                    color: isSelected
+                      ? "var(--on-glass-foreground)"
+                      : "var(--on-glass-muted)",
                   }}
                 >
                   {item.label}
