@@ -15,7 +15,7 @@ import { nestingPieceToCadRow } from "../utils/nesting-piece-to-cad-row"
 const DEFAULT: CreateTiraBody = {
   length: 211.25,
   width: 13.6,
-  endRadius: 7,
+  endRadius: 6.8,
   holes: { diameter: 4, insetFromEnd: 8, countPerEnd: 1 },
   bends: { positions: [20.16, 51.97, 159.28, 191.1] },
   thicknessMm: 1.5,

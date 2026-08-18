@@ -50,7 +50,7 @@ const DEFAULT_TIRA: CreatePieceBody = {
   template: "tira",
   length: 211.25,
   width: 13.6,
-  endRadius: 3,
+  endRadius: 6.8,
   holes: { diameter: 4, insetFromEnd: 8, countPerEnd: 1 },
   bends: { positions: [20.16, 51.97, 159.28, 191.1] },
   thicknessMm: 1.5,
