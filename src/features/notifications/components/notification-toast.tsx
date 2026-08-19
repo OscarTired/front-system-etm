@@ -18,6 +18,7 @@ type Props = {
   onDismiss?: () => void
 }
 
+/** Mismo ancho/huella que success·error·nesting; texto largo → truncate 1 línea. */
 export function NotificationToast({
   notification,
   onNavigate,
@@ -46,7 +47,7 @@ export function NotificationToast({
         "bg-card p-3.5 text-left text-foreground shadow-sm shadow-black/15 dark:shadow-black/40",
       )}
     >
-      {onDismiss && (
+      {onDismiss ? (
         <button
           type="button"
           aria-label="Cerrar"
@@ -54,11 +55,11 @@ export function NotificationToast({
             e.stopPropagation()
             onDismiss()
           }}
-          className="absolute -right-1.5 -top-1.5 z-10 flex size-6 items-center justify-center rounded-full border border-border bg-muted text-foreground opacity-100 transition-colors hover:bg-muted/80"
+          className="absolute -right-1.5 -top-1.5 z-10 flex size-6 items-center justify-center rounded-full border border-border bg-muted text-foreground transition-colors hover:bg-muted/80"
         >
           <X size={12} strokeWidth={2.5} />
         </button>
-      )}
+      ) : null}
 
       <button
         type="button"
@@ -77,7 +78,6 @@ export function NotificationToast({
               actor.name.charAt(0).toUpperCase()
             )}
           </div>
-
           <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-popover ring-1 ring-border">
             {isMention ? (
               <AtSign size={9} strokeWidth={3} className="text-primary" />
@@ -92,42 +92,36 @@ export function NotificationToast({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <p className="truncate text-sm leading-5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-sm leading-5">
               <span className="font-semibold text-foreground">
                 {actor.name}
               </span>
-              <span className="ml-1 text-muted-foreground">
-                {actionLabel}
-              </span>
+              <span className="ml-1 text-muted-foreground">{actionLabel}</span>
             </p>
-
-            {status && (
+            {status ? (
               <div className="origin-top-right scale-85 shrink-0">
                 <DynamicBadge
                   compact
                   label={status.label}
                   color={status.color}
+                  icon={status.icon}
                 />
               </div>
-            )}
+            ) : null}
           </div>
 
-          {contextLabel && (
-            <p className="mt-1 truncate text-xs text-muted-foreground">
+          {contextLabel ? (
+            <p className="mt-0.5 truncate text-xs leading-4 text-muted-foreground">
               {contextLabel}
             </p>
-          )}
+          ) : null}
 
-          {workflowStep && (
-            <span className="mt-1 inline-flex text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              {workflowStep.processCode}
-            </span>
-          )}
-
-          <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-muted-foreground">
-            {notification.messageSnippet}
-          </p>
+          {notification.messageSnippet ? (
+            <p className="mt-1 truncate text-sm leading-5 text-muted-foreground">
+              {notification.messageSnippet}
+            </p>
+          ) : null}
         </div>
       </button>
     </div>

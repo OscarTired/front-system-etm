@@ -151,9 +151,10 @@ export function RealtimeProvider({
                 {
                   id: `notification:${notification.id}`,
                   duration: Infinity,
-                  // Sin chrome de Sonner: evita X flotante y salto de layout.
+                  // unstyled + ancho fijo = misma huella que success/error/nesting.
                   unstyled: true,
-                  className: "w-auto border-0 bg-transparent p-0 shadow-none",
+                  className:
+                    "!w-[min(100vw-2rem,22rem)] !max-w-[min(100vw-2rem,22rem)] border-0 bg-transparent p-0 shadow-none",
                 },
               )
 
