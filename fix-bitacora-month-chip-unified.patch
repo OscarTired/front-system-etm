@@ -1,0 +1,322 @@
+diff --git a/src/features/activity-log/components/actions/activity-log-chip.tsx b/src/features/activity-log/components/actions/activity-log-chip.tsx
+index 58a8502..de5939b 100644
+--- a/src/features/activity-log/components/actions/activity-log-chip.tsx
++++ b/src/features/activity-log/components/actions/activity-log-chip.tsx
+@@ -7,9 +7,7 @@ import { ActivityLogDetailIndicators } from "./activity-log-detail-indicators"
+ import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+ 
+ type Props = {
+-  /** Obligatorio salvo en estado loading. */
+   log?: ActivityLog
+-  /** Mismo layout del chip; solo pulse + slots vacíos. */
+   loading?: boolean
+   compact?: boolean
+   onClick?: () => void
+@@ -23,6 +21,7 @@ function formatTime(iso: string): string {
+   })
+ }
+ 
++/** solid: texto/icono de contraste (blanco sobre fills saturados). Lucide via getActivityIcon. */
+ export function ActivityLogChip({
+   log,
+   loading = false,
+@@ -37,33 +36,59 @@ export function ActivityLogChip({
+     ? log.project.name
+     : log?.note?.trim() || null
+ 
+-  // Tokens de tema (misma ruta que DynamicBadge): texto legible en light/dark.
+-  // Evita `${hex}14` hardcode que en light deja pasteles ilegibles.
+-  const badge = useBadgeColors(color, "subtle")
++  const badge = useBadgeColors(color, "solid")
++
++  if (compact) {
++    if (loading || !log) {
++      return (
++        <div
++          className={cn(
++            "flex h-6 w-full min-w-0 items-center gap-1 rounded-md px-1.5 animate-pulse bg-foreground/8",
++            className,
++          )}
++          aria-hidden
++        >
++          <span className="size-3 shrink-0 rounded-sm bg-foreground/12" />
++          <span className="h-2 w-3/5 rounded bg-foreground/10" />
++        </div>
++      )
++    }
++
++    return (
++      <button
++        type="button"
++        onClick={onClick}
++        title={`${formatTime(log.loggedAt)} · ${label}${subtitle ? ` — ${subtitle}` : ""}`}
++        className={cn(
++          "group flex h-6 w-full min-w-0 items-center gap-1 rounded-md px-1.5 text-left",
++          "outline-none transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]",
++          className,
++        )}
++        style={{ backgroundColor: badge.background, color: badge.text }}
++      >
++        {Icon ? (
++          <Icon size={11} strokeWidth={2.5} className="block shrink-0" style={{ color: badge.text }} />
++        ) : null}
++        <span className="min-w-0 flex-1 truncate text-[10px] font-semibold leading-none tracking-tight">
++          {label}
++        </span>
++      </button>
++    )
++  }
+ 
+   const shellClass = cn(
+     "group relative flex w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
+-    "border-0 outline-none ring-0 shadow-none",
+-    "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
++    "border-0 outline-none ring-0 shadow-none focus:outline-none focus-visible:outline-none",
+     !loading && "transition-all duration-200 hover:brightness-110 active:scale-[0.99]",
+     loading && "pointer-events-none animate-pulse",
+-    !compact && "md:flex-col md:items-stretch md:gap-0",
++    "md:flex-col md:items-stretch md:gap-0",
+     className,
+   )
+ 
+   if (loading || !log) {
+     return (
+-      <div
+-        className={shellClass}
+-        style={{ backgroundColor: "var(--muted)" }}
+-        aria-hidden
+-      >
+-        <div
+-          className={cn(
+-            "flex w-full min-w-0 items-center gap-2",
+-            !compact && "md:justify-between",
+-          )}
+-        >
++      <div className={shellClass} style={{ backgroundColor: "var(--muted)" }} aria-hidden>
++        <div className="flex w-full min-w-0 items-center gap-2 md:justify-between">
+           <div className="flex min-w-0 flex-1 items-center gap-2">
+             <div className="size-7 shrink-0 rounded-lg bg-foreground/10 md:size-6" />
+             <div className="min-w-0 flex-1 space-y-1.5">
+@@ -71,13 +96,7 @@ export function ActivityLogChip({
+               <div className="h-2.5 w-3/5 rounded bg-foreground/10 md:hidden" />
+             </div>
+           </div>
+-          <div className="h-2.5 w-8 shrink-0 rounded bg-foreground/10 md:hidden" />
+         </div>
+-        {!compact && (
+-          <div className="mt-2 hidden w-full border-t border-border pt-1.5 md:block">
+-            <div className="h-2.5 w-12 rounded bg-foreground/10" />
+-          </div>
+-        )}
+       </div>
+     )
+   }
+@@ -87,73 +106,53 @@ export function ActivityLogChip({
+       type="button"
+       onClick={onClick}
+       title={`${formatTime(log.loggedAt)} ${label}${subtitle ? ` — ${subtitle}` : ""}`}
+-      style={{
+-        backgroundColor: badge.background,
+-        color: badge.text,
+-      }}
+       className={shellClass}
++      style={{ backgroundColor: badge.background, color: badge.text }}
+     >
+-      <div
+-        className={cn(
+-          "flex w-full min-w-0 items-center gap-2",
+-          !compact && "md:justify-between",
+-        )}
+-      >
++      <div className="flex w-full min-w-0 items-center gap-2 md:justify-between">
+         <div className="flex min-w-0 flex-1 items-center gap-2">
+           <div
+             className="flex size-7 shrink-0 items-center justify-center rounded-lg pointer-events-none select-none md:size-6"
+-            style={{
+-              backgroundColor: badge.backgroundHover,
+-              boxShadow: `inset 0 0 0 1px ${color}40`,
+-            }}
++            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+           >
+             {Icon && (
+-              <Icon size={15} strokeWidth={2.5} className="block shrink-0" />
++              <Icon size={15} strokeWidth={2.5} className="block shrink-0" style={{ color: badge.text }} />
+             )}
+           </div>
+-
+           <div className="min-w-0 flex-1">
+             <div className="flex min-w-0 items-center gap-1.5">
+-              <span
+-                className={cn(
+-                  "truncate font-bold tracking-wide text-xs",
+-                  compact && "text-[11px]",
+-                )}
+-              >
+-                {label}
+-              </span>
++              <span className="truncate text-xs font-bold tracking-wide">{label}</span>
+               <ActivityLogDetailIndicators log={log} compact />
+             </div>
+             {subtitle && (
+-              <p className="mt-0.5 truncate text-[10px] font-medium text-muted-foreground md:hidden">
++              <p className="mt-0.5 truncate text-[10px] font-medium md:hidden" style={{ color: badge.textMuted }}>
+                 {subtitle}
+               </p>
+             )}
+           </div>
+         </div>
+-
+-        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground md:hidden">
++        <span className="shrink-0 text-[10px] tabular-nums md:hidden" style={{ color: badge.textMuted }}>
+           {formatTime(log.loggedAt)}
+         </span>
+       </div>
+-
+-      {!compact && (
+-        <div className="mt-2 hidden w-full flex-col gap-1 border-t border-border pt-1.5 md:flex">
+-          <span className="text-[10px] tabular-nums text-muted-foreground">
+-            {formatTime(log.loggedAt)}
++      <div
++        className="mt-2 hidden w-full flex-col gap-1 border-t pt-1.5 md:flex"
++        style={{ borderColor: "rgba(255,255,255,0.18)" }}
++      >
++        <span className="text-[10px] tabular-nums" style={{ color: badge.textMuted }}>
++          {formatTime(log.loggedAt)}
++        </span>
++        {log.project && (
++          <span className="truncate text-[10px] font-medium" style={{ color: badge.textMuted }}>
++            {log.project.name}
+           </span>
+-          {log.project && (
+-            <span className="flex items-center gap-1 truncate text-[10px] font-medium text-muted-foreground">
+-              <span className="opacity-70">📁</span> {log.project.name}
+-            </span>
+-          )}
+-          {log.note && (
+-            <p className="line-clamp-2 text-[11px] font-normal leading-relaxed text-muted-foreground">
+-              {log.note}
+-            </p>
+-          )}
+-        </div>
+-      )}
++        )}
++        {log.note && (
++          <p className="line-clamp-2 text-[11px] font-normal leading-relaxed" style={{ color: badge.textMuted }}>
++            {log.note}
++          </p>
++        )}
++      </div>
+     </button>
+   )
+ }
+diff --git a/src/features/activity-log/components/agenda/agenda-month-view.tsx b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+index 8724557..a7ecf09 100644
+--- a/src/features/activity-log/components/agenda/agenda-month-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+@@ -1,7 +1,5 @@
+ "use client"
+ 
+-import { ScrollArea } from "@/components/ui/scroll-area"
+-
+ import { useMemo } from "react"
+ 
+ import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
+@@ -124,7 +122,9 @@ export function AgendaMonthView({
+   loading,
+   onSelectDay,
+ }: Props) {
+-  const { isCompact } = useResponsive()
++  const { isCompact, isMobile } = useResponsive()
++  /** Panel a altura: no móvil puro — llena el espacio; scroll en Mis tareas. */
++  const fillPanel = !isMobile
+   const cells = useMemo(() => getMonthGrid(anchorDate), [anchorDate])
+   const byDay = useMemo(() => groupLogsByDay(logs), [logs])
+ 
+@@ -140,18 +140,20 @@ export function AgendaMonthView({
+   return (
+     <div
+       className={
+-        isCompact
+-          ? "flex w-full flex-col rounded-2xl bg-card"
+-          : "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card"
++        fillPanel
++          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card"
++          : "flex w-full flex-col rounded-2xl border border-border/60 bg-card"
+       }
+     >
+-      <div className="grid shrink-0 grid-cols-7 border-b border-border">
++      <div className="grid shrink-0 grid-cols-7 overflow-hidden rounded-t-2xl border-b border-border">
+         {WEEKDAY_LABELS.map((label, i) => (
+           <div
+             key={label}
+             className={cn(
+               "flex items-center justify-center py-2",
+               i >= 5 && "bg-foreground/5",
++              i === 0 && "rounded-tl-2xl",
++              i === 6 && "rounded-tr-2xl",
+             )}
+           >
+             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground tablet:text-[11px]">
+@@ -163,14 +165,14 @@ export function AgendaMonthView({
+ 
+       <div
+         className={
+-          isCompact
+-            ? "grid w-full"
+-            : "grid min-h-0 w-full flex-1"
++          fillPanel
++            ? "grid min-h-0 w-full flex-1"
++            : "grid w-full"
+         }
+         style={{
+-          gridTemplateRows: isCompact
+-            ? "repeat(6, minmax(4.5rem, auto))"
+-            : "repeat(6, minmax(min-content, 1fr))",
++          gridTemplateRows: fillPanel
++            ? "repeat(6, minmax(min-content, 1fr))"
++            : "repeat(6, minmax(4.5rem, auto))",
+         }}
+       >
+         {Array.from({ length: 6 }).map((_, week) => (
+@@ -212,6 +214,8 @@ export function AgendaMonthView({
+                     isToday && "bg-amber-500/10",
+                     !isFuture && inMonth && "hover:bg-foreground/5",
+                     isFuture && "cursor-default",
++                    week === 5 && dayIndex === 0 && "rounded-bl-2xl",
++                    week === 5 && dayIndex === 6 && "rounded-br-2xl",
+                   )}
+                 >
+                   {loading ? (
+@@ -258,8 +262,7 @@ export function AgendaMonthView({
+                       )}
+ 
+                       {!isCompact && hasLogs && (
+-                        <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
+-                        <div className="flex min-w-0 w-full flex-col gap-0.5">
++                        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-0.5 overflow-hidden">
+                           {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
+                             <MonthEventCard key={log.id} log={log} />
+                           ))}
+@@ -269,7 +272,6 @@ export function AgendaMonthView({
+                             </span>
+                           )}
+                         </div>
+-                        </ScrollArea>
+                       )}
+                     </>
+                   )}
+diff --git a/src/features/activity-log/components/contents/activity-log-page-content.tsx b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+index 3f9f3d3..7d880db 100644
+--- a/src/features/activity-log/components/contents/activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+@@ -309,7 +309,9 @@ export function ActivityLogPageContent({
+ 
+   const isDay = viewMode === "day"
+   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
+-  const fillHeight = !isCompact && (isAgenda || isMonth || isDay)
++  const fillHeight =
++    (isMonth && !isMobile) ||
++    (!isCompact && (isAgenda || isDay))
+   const showDesktopAreaSidebar =
+     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
+ 

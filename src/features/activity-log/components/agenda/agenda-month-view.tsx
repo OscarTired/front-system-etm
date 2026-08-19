@@ -1,7 +1,5 @@
 "use client"
 
-import { ScrollArea } from "@/components/ui/scroll-area"
-
 import { useMemo } from "react"
 
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
@@ -124,7 +122,9 @@ export function AgendaMonthView({
   loading,
   onSelectDay,
 }: Props) {
-  const { isCompact } = useResponsive()
+  const { isCompact, isMobile } = useResponsive()
+  /** Panel a altura: no móvil puro — llena el espacio; scroll en Mis tareas. */
+  const fillPanel = !isMobile
   const cells = useMemo(() => getMonthGrid(anchorDate), [anchorDate])
   const byDay = useMemo(() => groupLogsByDay(logs), [logs])
 
@@ -140,18 +140,20 @@ export function AgendaMonthView({
   return (
     <div
       className={
-        isCompact
-          ? "flex w-full flex-col rounded-2xl bg-card"
-          : "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card"
+        fillPanel
+          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card"
+          : "flex w-full flex-col rounded-2xl border border-border/60 bg-card"
       }
     >
-      <div className="grid shrink-0 grid-cols-7 border-b border-border">
+      <div className="grid shrink-0 grid-cols-7 overflow-hidden rounded-t-2xl border-b border-border">
         {WEEKDAY_LABELS.map((label, i) => (
           <div
             key={label}
             className={cn(
               "flex items-center justify-center py-2",
               i >= 5 && "bg-foreground/5",
+              i === 0 && "rounded-tl-2xl",
+              i === 6 && "rounded-tr-2xl",
             )}
           >
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground tablet:text-[11px]">
@@ -163,14 +165,14 @@ export function AgendaMonthView({
 
       <div
         className={
-          isCompact
-            ? "grid w-full"
-            : "grid min-h-0 w-full flex-1"
+          fillPanel
+            ? "grid min-h-0 w-full flex-1"
+            : "grid w-full"
         }
         style={{
-          gridTemplateRows: isCompact
-            ? "repeat(6, minmax(4.5rem, auto))"
-            : "repeat(6, minmax(min-content, 1fr))",
+          gridTemplateRows: fillPanel
+            ? "repeat(6, minmax(min-content, 1fr))"
+            : "repeat(6, minmax(4.5rem, auto))",
         }}
       >
         {Array.from({ length: 6 }).map((_, week) => (
@@ -212,6 +214,8 @@ export function AgendaMonthView({
                     isToday && "bg-amber-500/10",
                     !isFuture && inMonth && "hover:bg-foreground/5",
                     isFuture && "cursor-default",
+                    week === 5 && dayIndex === 0 && "rounded-bl-2xl",
+                    week === 5 && dayIndex === 6 && "rounded-br-2xl",
                   )}
                 >
                   {loading ? (
@@ -258,8 +262,7 @@ export function AgendaMonthView({
                       )}
 
                       {!isCompact && hasLogs && (
-                        <ScrollArea className="min-h-0 min-w-0 w-full flex-1">
-                        <div className="flex min-w-0 w-full flex-col gap-0.5">
+                        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-0.5 overflow-hidden">
                           {dayLogs.slice(0, MAX_EVENTS_DESKTOP).map(log => (
                             <MonthEventCard key={log.id} log={log} />
                           ))}
@@ -269,7 +272,6 @@ export function AgendaMonthView({
                             </span>
                           )}
                         </div>
-                        </ScrollArea>
                       )}
                     </>
                   )}

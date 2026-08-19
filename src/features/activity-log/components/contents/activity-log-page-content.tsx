@@ -309,7 +309,9 @@ export function ActivityLogPageContent({
 
   const isDay = viewMode === "day"
   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
-  const fillHeight = !isCompact && (isAgenda || isMonth || isDay)
+  const fillHeight =
+    (isMonth && !isMobile) ||
+    (!isCompact && (isAgenda || isDay))
   const showDesktopAreaSidebar =
     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
 
