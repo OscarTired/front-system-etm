@@ -134,6 +134,7 @@ export function RealtimeProvider({
                 (id) => (
                   <NotificationToast
                     notification={notification}
+                    onDismiss={() => toast.dismiss(id)}
                     onNavigate={async () => {
                       if (!notification.read) {
                         await markAsRead(notification.id)
@@ -150,6 +151,9 @@ export function RealtimeProvider({
                 {
                   id: `notification:${notification.id}`,
                   duration: Infinity,
+                  // Sin chrome de Sonner: evita X flotante y salto de layout.
+                  unstyled: true,
+                  className: "w-auto border-0 bg-transparent p-0 shadow-none",
                 },
               )
 

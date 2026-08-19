@@ -79,6 +79,7 @@ export function TaskActions(){
         icon={Plus}
         disabled={!canCreate}
         onClick={handleOpen}
+        iconOnly
       />
 
       {dialog}

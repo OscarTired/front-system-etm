@@ -46,6 +46,7 @@ export function UserActions() {
           icon={Plus}
           disabled={!canCreate}
           onClick={handleOpen}
+          iconOnly
         />
       </div>
 

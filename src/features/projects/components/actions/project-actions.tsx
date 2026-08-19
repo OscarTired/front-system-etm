@@ -78,6 +78,7 @@ export function ProjectActions(){
         icon={Plus}
         disabled={!canCreate}
         onClick={handleOpen}
+        iconOnly
       />
 
       {dialog}
