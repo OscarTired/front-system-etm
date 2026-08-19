@@ -75,35 +75,8 @@ function unlockSheetArtifacts() {
   })
 }
 
-function armGhostClickShield(ms = 400) {
-  if (typeof document === "undefined") return
-  const existing = document.getElementById("etm-ghost-click-shield")
-  if (existing) existing.remove()
-  const shield = document.createElement("div")
-  shield.id = "etm-ghost-click-shield"
-  shield.setAttribute("aria-hidden", "true")
-  Object.assign(shield.style, {
-    position: "fixed",
-    inset: "0",
-    zIndex: "9999",
-    pointerEvents: "auto",
-    background: "transparent",
-    touchAction: "none",
-  })
-  const block = (e: Event) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-  shield.addEventListener("pointerdown", block, true)
-  shield.addEventListener("pointerup", block, true)
-  shield.addEventListener("click", block, true)
-  document.body.appendChild(shield)
-  window.setTimeout(() => shield.remove(), ms)
-}
-
 function scheduleUnlock() {
   unlockSheetArtifacts()
-  armGhostClickShield(400)
   requestAnimationFrame(unlockSheetArtifacts)
   window.setTimeout(unlockSheetArtifacts, 50)
   window.setTimeout(unlockSheetArtifacts, 320)
