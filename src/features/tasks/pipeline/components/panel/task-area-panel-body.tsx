@@ -45,13 +45,18 @@ export function TaskAreaPanelBody({
       )}
     >
       {showHeader && (
-        <div className="shrink-0 px-3 pb-2.5 pt-1">
+        <div
+          className={cn(
+            "shrink-0 px-3 pb-2.5 pt-3",
+            // Sheet: X absoluta — no solapar HISTORIAL
+            orientation === "vertical" && "pr-12",
+          )}
+        >
           <div className="flex items-center justify-between gap-2">
             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
               {title}
             </h2>
             <div className="flex shrink-0 items-center gap-1">
-              
               <HistoryToggleButton
                 count={state.completedCount}
                 active={state.showHistory}

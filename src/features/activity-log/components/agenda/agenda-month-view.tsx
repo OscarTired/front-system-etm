@@ -141,8 +141,8 @@ export function AgendaMonthView({
     <div
       className={
         fillPanel
-          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card"
-          : "flex w-full flex-col rounded-2xl border border-border/60 bg-card"
+          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card"
+          : "flex w-full flex-col rounded-2xl bg-card"
       }
     >
       <div className="grid shrink-0 grid-cols-7 overflow-hidden rounded-t-2xl border-b border-border">

@@ -1,0 +1,40 @@
+diff --git a/src/features/activity-log/components/agenda/agenda-month-view.tsx b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+index a7ecf09..a689e28 100644
+--- a/src/features/activity-log/components/agenda/agenda-month-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+@@ -141,8 +141,8 @@ export function AgendaMonthView({
+     <div
+       className={
+         fillPanel
+-          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card"
+-          : "flex w-full flex-col rounded-2xl border border-border/60 bg-card"
++          ? "isolate flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card"
++          : "flex w-full flex-col rounded-2xl bg-card"
+       }
+     >
+       <div className="grid shrink-0 grid-cols-7 overflow-hidden rounded-t-2xl border-b border-border">
+diff --git a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+index 263b1ff..c22803a 100644
+--- a/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
++++ b/src/features/tasks/pipeline/components/panel/task-area-panel-body.tsx
+@@ -45,13 +45,18 @@ export function TaskAreaPanelBody({
+       )}
+     >
+       {showHeader && (
+-        <div className="shrink-0 px-3 pb-2.5 pt-1">
++        <div
++          className={cn(
++            "shrink-0 px-3 pb-2.5 pt-3",
++            // Sheet: X absoluta — no solapar HISTORIAL
++            orientation === "vertical" && "pr-12",
++          )}
++        >
+           <div className="flex items-center justify-between gap-2">
+             <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
+               {title}
+             </h2>
+             <div className="flex shrink-0 items-center gap-1">
+-              
+               <HistoryToggleButton
+                 count={state.completedCount}
+                 active={state.showHistory}
