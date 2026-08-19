@@ -8,8 +8,6 @@ import { cn } from "@/shared/utils/utils"
 import { workflowAccess } from "@/features/workflow/access/workflow-access"
 import { ProcessOperatorCell } from "@/features/processes/components/cells/process-operator-cell"
 
-import { PIPELINE_SCROLL_INTERACTION_EVENT } from "@/shared/ui/scroll/scroll-interaction"
-
 import { WorkflowActionButtons } from "../workflow/workflow-action-buttons"
 import { WorkflowNumericField, type WorkflowNumericFieldKey } from "../workflow/workflow-numeric-field"
 
@@ -159,30 +157,27 @@ export function TaskWorkflowOverlay({
 
   }, [visible]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cerrar solo con X o press fuera del panel (no scroll).
   useEffect(() => {
+    if (!visible) return
 
-    if (!visible) {
-      return
-    }
-
-    function handleScrollInteraction() {
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node | null
+      if (!target) return
+      const root = document.querySelector("[data-workflow-overlay-root]")
+      if (root && root.contains(target)) return
       onClose()
     }
 
-    window.addEventListener(
-      PIPELINE_SCROLL_INTERACTION_EVENT,
-      handleScrollInteraction,
-    )
+    // Evita que el soltar del long-press cuente como "fuera".
+    const timer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", handlePointerDown, true)
+    }, 450)
 
     return () => {
-
-      window.removeEventListener(
-        PIPELINE_SCROLL_INTERACTION_EVENT,
-        handleScrollInteraction,
-      )
-
+      window.clearTimeout(timer)
+      document.removeEventListener("pointerdown", handlePointerDown, true)
     }
-
   }, [visible, onClose])
 
   const fields =
@@ -323,6 +318,7 @@ export function TaskWorkflowOverlay({
   return (
 
     <div
+      data-workflow-overlay-root
       data-drag-scroll-ignore
       onMouseDown={event => event.stopPropagation()}
       onClick={event => event.stopPropagation()}
