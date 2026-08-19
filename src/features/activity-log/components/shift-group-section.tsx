@@ -64,6 +64,7 @@ function DayLogShell({
   const badge = useBadgeColors(color, "solid")
   return (
     <div
+      data-activity-log-card
       className={className}
       style={
         {
