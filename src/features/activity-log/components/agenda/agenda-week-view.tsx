@@ -70,7 +70,7 @@ export function AgendaWeekView({
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
                   "flex min-w-[2.85rem] flex-1 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 transition-colors",
-                  isAnchor && "bg-foreground/10",
+                  isAnchor && "bg-foreground/12 ring-1 ring-foreground/20",
                   isToday && !isAnchor && "bg-amber-500/10",
                 )}
               >
@@ -193,21 +193,21 @@ export function AgendaWeekView({
                 type="button"
                 onClick={() => onSelectDay?.(day)}
                 className={cn(
-                  "sticky top-0 z-20 border-b border-border px-3 py-3 text-center transition-[filter] duration-200",
-                  isToday
-                    ? "bg-muted"
-                    : isAnchor
-                      ? "bg-muted"
-                      : isWeekend
-                        ? "bg-card"
-                        : "bg-card",
-                  "hover:brightness-110",
+                  "sticky top-0 z-20 border-b border-border px-3 py-3 text-center transition-colors duration-150",
+                  isAnchor && "bg-primary/8",
+                  isToday && !isAnchor && "bg-muted",
+                  !isToday && !isAnchor && "bg-card",
+                  "hover:bg-foreground/5",
                 )}
               >
                 <div
                   className={cn(
                     "text-[11px] font-bold uppercase tracking-widest",
-                    isToday ? "text-amber-800 dark:text-amber-400" : "text-muted-foreground",
+                    isToday
+                      ? "text-amber-800 dark:text-amber-400"
+                      : isAnchor
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                   )}
                 >
                   {WEEKDAY_LABELS[i]}
@@ -215,15 +215,15 @@ export function AgendaWeekView({
                 <div className="mt-1.5 flex justify-center">
                   <span
                     className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold tabular-nums transition-all duration-200",
+                      "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold tabular-nums transition-all duration-150",
                       isToday &&
-                        "bg-amber-400 text-background shadow-[0_0_15px_rgba(251,191,36,0.4)]",
+                        "bg-amber-400 text-background shadow-[0_0_12px_rgba(251,191,36,0.35)]",
                       !isToday &&
                         isAnchor &&
-                        "bg-foreground/20 text-foreground shadow-sm",
+                        "bg-foreground text-background shadow-sm",
                       !isToday &&
                         !isAnchor &&
-                        "text-muted-foreground hover:text-foreground",
+                        "text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
                     )}
                   >
                     {day.getDate()}
@@ -277,6 +277,7 @@ export function AgendaWeekView({
                     logsForDayAndShift(logs, iso, slot.shift),
                   )
                   const isToday = iso === todayISO
+                  const isAnchor = iso === anchorISO
                   const isWeekend = dayIndex >= 5
                   const empty = loading || cellLogs.length === 0
 
@@ -287,11 +288,9 @@ export function AgendaWeekView({
                         "flex min-h-0 min-w-0 flex-col p-2 transition-colors duration-150",
                         empty ? "justify-center" : "justify-start",
                         !isLast && "border-b border-border",
-                        isToday
-                          ? "bg-muted"
-                          : isWeekend
-                            ? "bg-card"
-                            : "bg-card",
+                        isAnchor && "bg-primary/6",
+                        isToday && !isAnchor && "bg-muted",
+                        !isToday && !isAnchor && "bg-card",
                       )}
                     >
                       {!loading && cellLogs.length > 0 ? (

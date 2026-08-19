@@ -211,7 +211,10 @@ export function ShiftGroupSection({
                   const busy =
                     isLogBusy?.(log.id) ?? log.id.startsWith("optimistic-")
                   const allowDup = canDuplicateLog?.(log) ?? true
-                  const actionsEnabled = isManual && !busy
+                  // Solo el día actual muta (canCreate/canDelete ya vienen false en pasados).
+                  const actionsEnabled = isManual && !busy && canCreate
+                  const showMutateActions =
+                    isManual && (canCreate || canDelete)
 
                   return (
                     <div
@@ -308,7 +311,8 @@ export function ShiftGroupSection({
                           })}
                         </span>
 
-                        {/* Desktop: reserva ancho solo en hover */}
+                        {/* Desktop: solo día actual; reserva ancho en hover */}
+                        {showMutateActions && (
                         <div
                           className={cn(
                             "hidden tablet:grid",
@@ -318,7 +322,7 @@ export function ShiftGroupSection({
                         >
                           <div className="min-w-0 overflow-hidden">
                             <div className="flex items-center gap-0.5 pl-1">
-                              {isManual && onEditLog && (
+                              {isManual && canCreate && onEditLog && (
                                 <button
                                   type="button"
                                   disabled={busy}
@@ -352,11 +356,10 @@ export function ShiftGroupSection({
                                   <Copy size={14} />
                                 </button>
                               )}
-                              {(isManual || canDelete) && (
+                              {canDelete && (
                                 <button
                                   type="button"
                                   disabled={
-                                    !canDelete ||
                                     busy ||
                                     deletingLogId === log.id
                                   }
@@ -372,9 +375,10 @@ export function ShiftGroupSection({
                             </div>
                           </div>
                         </div>
+                        )}
 
-                        {/* Móvil: ⋮ → bottom sheet (Dialog local; cierra al tocar el overlay) */}
-                        {isManual && (
+                        {/* Móvil: ⋮ → bottom sheet; solo día actual */}
+                        {showMutateActions && (
                           <div className="tablet:hidden">
                             <Dialog.Root
                               open={menuOpenLogId === log.id}
@@ -426,7 +430,7 @@ export function ShiftGroupSection({
                                     <div className="h-1.5 w-9 rounded-full bg-foreground/15" />
                                   </div>
                                   <div className="flex flex-col gap-0.5 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                                    {onEditLog && (
+                                    {canCreate && onEditLog && (
                                       <button
                                         type="button"
                                         disabled={busy}

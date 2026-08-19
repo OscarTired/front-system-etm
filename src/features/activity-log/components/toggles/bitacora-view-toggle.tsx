@@ -34,7 +34,11 @@ export function BitacoraViewToggle({ compact = false }: Props) {
 
   return (
     <div
-      className="inline-flex touch-pan-y items-center rounded-lg bg-foreground/5 p-0.5"
+      className={cn(
+        "inline-flex touch-pan-y items-center bg-foreground/5 p-0.5",
+        // Desktop: misma altura que GoToTodayButton (h-8) y DateInput (h-9 en navigator).
+        compact ? "rounded-lg" : "h-8 rounded-xl",
+      )}
       {...swipe}
       role="group"
       aria-label="Vista de bitácora"
@@ -52,11 +56,11 @@ export function BitacoraViewToggle({ compact = false }: Props) {
             aria-label={option.label}
             aria-pressed={active}
             className={cn(
-              "flex items-center justify-center rounded-md transition",
-              // compact: área táctil ~44px (size-11), no size-8
+              "flex items-center justify-center transition",
+              // compact: área táctil ~44px (size-11), alinea con Hoy compact
               compact
-                ? "size-11"
-                : "gap-1.5 px-3 py-0.5 text-sm font-semibold",
+                ? "size-11 rounded-md"
+                : "h-full gap-1.5 rounded-lg px-3 text-sm font-semibold",
               active
                 ? "bg-foreground/10 text-foreground"
                 : "text-muted-foreground hover:text-foreground",
