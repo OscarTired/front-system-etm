@@ -49,8 +49,9 @@ export function AgendaWeekView({
   const anchorISO = toISODateString(anchorDate)
 
   if (isCompact) {
+    // Altura natural: el scroller es AppListScroll (fillHeight=false en compact).
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-card">
+      <div className="flex w-full flex-col rounded-2xl border-0 bg-card">
         <div
           className={cn(
             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
@@ -97,7 +98,7 @@ export function AgendaWeekView({
           })}
         </div>
 
-        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-border">
+        <div className="flex w-full flex-col divide-y divide-border">
           {SHIFT_GROUPS.map((group, index) => {
             const GroupIcon = group.icon
             const iconColorClass =
@@ -109,7 +110,7 @@ export function AgendaWeekView({
             return (
               <section
                 key={group.key}
-                className="flex min-h-0 flex-1 flex-col justify-center px-3 py-3.5"
+                className="flex flex-col px-3 py-3.5"
               >
                 <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <GroupIcon

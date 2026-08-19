@@ -122,12 +122,6 @@ export function ActivityLogChip({
               >
                 {label}
               </span>
-              {/* Compact (semana/mes): el icono ya identifica; no repetir AUTO. */}
-              {log.source === "AUTO" && !compact && (
-                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
-                  Auto
-                </span>
-              )}
               <ActivityLogDetailIndicators log={log} compact />
             </div>
             {subtitle && (

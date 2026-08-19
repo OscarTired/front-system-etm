@@ -309,14 +309,20 @@ export function ActivityLogPageContent({
 
   const isDay = viewMode === "day"
   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
-  const fillHeight = isAgenda || isMonth || (isDay && !isMobile)
+  const fillHeight = !isCompact && (isAgenda || isMonth || isDay)
   const showDesktopAreaSidebar =
     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
 
   const mainContent = (
     <>
       {isAgenda && (
-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+        <div
+          className={
+            fillHeight
+              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
+              : "flex w-full flex-col max-md:mt-2"
+          }
+        >
           <AgendaWeekView
             anchorDate={date}
             logs={rangeLogs}
@@ -328,7 +334,13 @@ export function ActivityLogPageContent({
       )}
 
       {isMonth && (
-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+        <div
+          className={
+            fillHeight
+              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
+              : "flex w-full flex-col max-md:mt-2"
+          }
+        >
           <AgendaMonthView
             anchorDate={date}
             logs={rangeLogs}
@@ -341,9 +353,9 @@ export function ActivityLogPageContent({
       {isDay && (
         <div
           className={
-            isMobile
-              ? "flex w-full flex-col max-md:mt-2"
-              : "flex min-h-0 flex-1 flex-col max-md:mt-2"
+            fillHeight
+              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
+              : "flex w-full flex-col max-md:mt-2"
           }
         >
           <AgendaDayView
@@ -389,7 +401,7 @@ export function ActivityLogPageContent({
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {mainContent}
           </div>
-          <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
+          <TaskAreaSidebar className="flex h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card" />
         </div>
       ) : (
         mainContent

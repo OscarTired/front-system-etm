@@ -1,0 +1,190 @@
+diff --git a/src/features/activity-log/components/actions/activity-log-chip.tsx b/src/features/activity-log/components/actions/activity-log-chip.tsx
+index d3d7e17..58a8502 100644
+--- a/src/features/activity-log/components/actions/activity-log-chip.tsx
++++ b/src/features/activity-log/components/actions/activity-log-chip.tsx
+@@ -122,12 +122,6 @@ export function ActivityLogChip({
+               >
+                 {label}
+               </span>
+-              {/* Compact (semana/mes): el icono ya identifica; no repetir AUTO. */}
+-              {log.source === "AUTO" && !compact && (
+-                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
+-                  Auto
+-                </span>
+-              )}
+               <ActivityLogDetailIndicators log={log} compact />
+             </div>
+             {subtitle && (
+diff --git a/src/features/activity-log/components/agenda/agenda-day-view.tsx b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+index 1f4fc6b..4018125 100644
+--- a/src/features/activity-log/components/agenda/agenda-day-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+@@ -39,7 +39,7 @@ type Props = {
+ /**
+  * Día:
+  * - Desktop: panel h-full + ScrollArea (sidebar Mis tareas).
+- * - Mobile: altura natural → solo AppListScroll (sin ScrollArea anidado).
++ * - Compact (móvil/tablet): altura natural → solo AppListScroll.
+  */
+ export function AgendaDayView({
+   logs,
+@@ -60,7 +60,7 @@ export function AgendaDayView({
+   onEditLog,
+   onDuplicateLog,
+ }: Props) {
+-  const { isMobile } = useResponsive()
++  const { isCompact } = useResponsive()
+ 
+   const autoLogs = logs.filter(log => log.source === "AUTO")
+   const showAuto = showAutoSection && autoLogs.length > 0
+@@ -109,7 +109,7 @@ export function AgendaDayView({
+     </>
+   )
+ 
+-  if (isMobile) {
++  if (isCompact) {
+     return (
+       <div className="flex w-full flex-col gap-3 pb-1">{body}</div>
+     )
+diff --git a/src/features/activity-log/components/agenda/agenda-month-view.tsx b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+index 66dfb71..8724557 100644
+--- a/src/features/activity-log/components/agenda/agenda-month-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-month-view.tsx
+@@ -134,12 +134,17 @@ export function AgendaMonthView({
+   const viewYear = anchorDate.getFullYear()
+ 
+   /**
+-   * Misma cadena que semana: root flex-1/h-full/min-h-0.
+-   * Filas minmax(min-content, 1fr): llenan el alto libre y crecen
+-   * si hay más eventos de los que caben en 1fr.
++   * Desktop (fillHeight): panel h-full.
++   * Compact: altura natural + scroll de página.
+    */
+   return (
+-    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
++    <div
++      className={
++        isCompact
++          ? "flex w-full flex-col rounded-2xl bg-card"
++          : "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card"
++      }
++    >
+       <div className="grid shrink-0 grid-cols-7 border-b border-border">
+         {WEEKDAY_LABELS.map((label, i) => (
+           <div
+@@ -157,8 +162,16 @@ export function AgendaMonthView({
+       </div>
+ 
+       <div
+-        className="grid min-h-0 w-full flex-1"
+-        style={{ gridTemplateRows: "repeat(6, minmax(min-content, 1fr))" }}
++        className={
++          isCompact
++            ? "grid w-full"
++            : "grid min-h-0 w-full flex-1"
++        }
++        style={{
++          gridTemplateRows: isCompact
++            ? "repeat(6, minmax(4.5rem, auto))"
++            : "repeat(6, minmax(min-content, 1fr))",
++        }}
+       >
+         {Array.from({ length: 6 }).map((_, week) => (
+           <div
+diff --git a/src/features/activity-log/components/agenda/agenda-week-view.tsx b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+index a4f635f..2f3a284 100644
+--- a/src/features/activity-log/components/agenda/agenda-week-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-week-view.tsx
+@@ -49,8 +49,9 @@ export function AgendaWeekView({
+   const anchorISO = toISODateString(anchorDate)
+ 
+   if (isCompact) {
++    // Altura natural: el scroller es AppListScroll (fillHeight=false en compact).
+     return (
+-      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border-0 bg-card">
++      <div className="flex w-full flex-col rounded-2xl border-0 bg-card">
+         <div
+           className={cn(
+             "flex shrink-0 gap-1 overflow-x-auto border-0 px-2 py-2.5",
+@@ -97,7 +98,7 @@ export function AgendaWeekView({
+           })}
+         </div>
+ 
+-        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col divide-y divide-border">
++        <div className="flex w-full flex-col divide-y divide-border">
+           {SHIFT_GROUPS.map((group, index) => {
+             const GroupIcon = group.icon
+             const iconColorClass =
+@@ -109,7 +110,7 @@ export function AgendaWeekView({
+             return (
+               <section
+                 key={group.key}
+-                className="flex min-h-0 flex-1 flex-col justify-center px-3 py-3.5"
++                className="flex flex-col px-3 py-3.5"
+               >
+                 <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                   <GroupIcon
+diff --git a/src/features/activity-log/components/contents/activity-log-page-content.tsx b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+index 3125720..3f9f3d3 100644
+--- a/src/features/activity-log/components/contents/activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+@@ -309,14 +309,20 @@ export function ActivityLogPageContent({
+ 
+   const isDay = viewMode === "day"
+   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
+-  const fillHeight = isAgenda || isMonth || (isDay && !isMobile)
++  const fillHeight = !isCompact && (isAgenda || isMonth || isDay)
+   const showDesktopAreaSidebar =
+     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
+ 
+   const mainContent = (
+     <>
+       {isAgenda && (
+-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
++        <div
++          className={
++            fillHeight
++              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
++              : "flex w-full flex-col max-md:mt-2"
++          }
++        >
+           <AgendaWeekView
+             anchorDate={date}
+             logs={rangeLogs}
+@@ -328,7 +334,13 @@ export function ActivityLogPageContent({
+       )}
+ 
+       {isMonth && (
+-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
++        <div
++          className={
++            fillHeight
++              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
++              : "flex w-full flex-col max-md:mt-2"
++          }
++        >
+           <AgendaMonthView
+             anchorDate={date}
+             logs={rangeLogs}
+@@ -341,9 +353,9 @@ export function ActivityLogPageContent({
+       {isDay && (
+         <div
+           className={
+-            isMobile
+-              ? "flex w-full flex-col max-md:mt-2"
+-              : "flex min-h-0 flex-1 flex-col max-md:mt-2"
++            fillHeight
++              ? "flex min-h-0 flex-1 flex-col max-md:mt-2"
++              : "flex w-full flex-col max-md:mt-2"
+           }
+         >
+           <AgendaDayView
+@@ -389,7 +401,7 @@ export function ActivityLogPageContent({
+           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+             {mainContent}
+           </div>
+-          <TaskAreaSidebar className="hidden h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card tablet:flex" />
++          <TaskAreaSidebar className="flex h-full min-h-0 w-[min(40vw,26rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-card" />
+         </div>
+       ) : (
+         mainContent

@@ -39,7 +39,7 @@ type Props = {
 /**
  * Día:
  * - Desktop: panel h-full + ScrollArea (sidebar Mis tareas).
- * - Mobile: altura natural → solo AppListScroll (sin ScrollArea anidado).
+ * - Compact (móvil/tablet): altura natural → solo AppListScroll.
  */
 export function AgendaDayView({
   logs,
@@ -60,7 +60,7 @@ export function AgendaDayView({
   onEditLog,
   onDuplicateLog,
 }: Props) {
-  const { isMobile } = useResponsive()
+  const { isCompact } = useResponsive()
 
   const autoLogs = logs.filter(log => log.source === "AUTO")
   const showAuto = showAutoSection && autoLogs.length > 0
@@ -109,7 +109,7 @@ export function AgendaDayView({
     </>
   )
 
-  if (isMobile) {
+  if (isCompact) {
     return (
       <div className="flex w-full flex-col gap-3 pb-1">{body}</div>
     )
