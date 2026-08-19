@@ -309,7 +309,7 @@ export function ActivityLogPageContent({
 
   const isDay = viewMode === "day"
   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
-  const fillHeight = isAgenda || isMonth
+  const fillHeight = isAgenda || isMonth || isDay
   const showDesktopAreaSidebar =
     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
 
@@ -339,7 +339,7 @@ export function ActivityLogPageContent({
       )}
 
       {isDay && (
-        <div className="flex w-full flex-col max-md:mt-2">
+        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
           <AgendaDayView
             logs={logs}
             loading={loading}

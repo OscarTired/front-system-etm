@@ -1,5 +1,7 @@
 "use client"
 
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 import type { ActivityLog } from "../../types/activity-log.types"
 import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
 import { SHIFT_GROUPS } from "../../constants/shift-definitions"
@@ -33,9 +35,9 @@ type Props = {
 }
 
 /**
- * Vista día — stack vertical por franja.
- * Altura natural: el único scroller es AppListScroll de página.
- * (ScrollArea interno + página = scroll roto en Android.)
+ * Vista día — panel como semana/mes.
+ * Un solo scroller interno. El padre da h-full (fillHeight);
+ * AppListScroll no compite porque el hijo no desborda.
  */
 export function AgendaDayView({
   logs,
@@ -60,46 +62,50 @@ export function AgendaDayView({
   const showAuto = showAutoSection && autoLogs.length > 0
 
   return (
-    <div className="flex w-full flex-col gap-3 pb-1">
-      {showAuto && (
-        <div className="shrink-0">
-          <AutoActivitySection logs={autoLogs} />
-        </div>
-      )}
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
+      <ScrollArea className="h-full min-h-0 min-w-0 flex-1 rounded-2xl">
+        <div className="flex flex-col gap-3 p-2 pb-3">
+          {showAuto && (
+            <div className="shrink-0">
+              <AutoActivitySection logs={autoLogs} />
+            </div>
+          )}
 
-      {SHIFT_GROUPS.map(group => {
-        const logsBySlot: Record<string, ActivityLog[]> = {}
-        if (!loading) {
-          for (const slot of group.slots) {
-            logsBySlot[slot.shift] = logs.filter(
-              log => log.shift === slot.shift,
+          {SHIFT_GROUPS.map(group => {
+            const logsBySlot: Record<string, ActivityLog[]> = {}
+            if (!loading) {
+              for (const slot of group.slots) {
+                logsBySlot[slot.shift] = logs.filter(
+                  log => log.shift === slot.shift,
+                )
+              }
+            }
+
+            return (
+              <ShiftGroupSection
+                key={group.key}
+                group={group}
+                logsBySlot={logsBySlot}
+                loading={loading}
+                onLogClick={onLogClick}
+                onDeleteLog={onDeleteLog}
+                beginDrag={beginDrag}
+                registerSlot={registerSlot}
+                draggingLogId={draggingLogId}
+                hoverShift={hoverShift}
+                deletingLogId={deletingLogId}
+                canCreate={canCreate}
+                canDelete={canDelete}
+                slotState={slotState}
+                isLogBusy={isLogBusy}
+                canDuplicateLog={canDuplicateLog}
+                onEditLog={onEditLog}
+                onDuplicateLog={onDuplicateLog}
+              />
             )
-          }
-        }
-
-        return (
-          <ShiftGroupSection
-            key={group.key}
-            group={group}
-            logsBySlot={logsBySlot}
-            loading={loading}
-            onLogClick={onLogClick}
-            onDeleteLog={onDeleteLog}
-            beginDrag={beginDrag}
-            registerSlot={registerSlot}
-            draggingLogId={draggingLogId}
-            hoverShift={hoverShift}
-            deletingLogId={deletingLogId}
-            canCreate={canCreate}
-            canDelete={canDelete}
-            slotState={slotState}
-            isLogBusy={isLogBusy}
-            canDuplicateLog={canDuplicateLog}
-            onEditLog={onEditLog}
-            onDuplicateLog={onDuplicateLog}
-          />
-        )
-      })}
+          })}
+        </div>
+      </ScrollArea>
     </div>
   )
 }

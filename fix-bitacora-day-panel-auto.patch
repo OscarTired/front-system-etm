@@ -1,0 +1,150 @@
+diff --git a/src/features/activity-log/components/actions/activity-log-chip.tsx b/src/features/activity-log/components/actions/activity-log-chip.tsx
+index 9d65551..d3d7e17 100644
+--- a/src/features/activity-log/components/actions/activity-log-chip.tsx
++++ b/src/features/activity-log/components/actions/activity-log-chip.tsx
+@@ -122,7 +122,8 @@ export function ActivityLogChip({
+               >
+                 {label}
+               </span>
+-              {log.source === "AUTO" && (
++              {/* Compact (semana/mes): el icono ya identifica; no repetir AUTO. */}
++              {log.source === "AUTO" && !compact && (
+                 <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                   Auto
+                 </span>
+diff --git a/src/features/activity-log/components/agenda/agenda-day-view.tsx b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+index 81f8a2d..19806f6 100644
+--- a/src/features/activity-log/components/agenda/agenda-day-view.tsx
++++ b/src/features/activity-log/components/agenda/agenda-day-view.tsx
+@@ -1,5 +1,7 @@
+ "use client"
+ 
++import { ScrollArea } from "@/components/ui/scroll-area"
++
+ import type { ActivityLog } from "../../types/activity-log.types"
+ import type { ShiftSlotDefinition } from "../../constants/shift-definitions"
+ import { SHIFT_GROUPS } from "../../constants/shift-definitions"
+@@ -33,9 +35,9 @@ type Props = {
+ }
+ 
+ /**
+- * Vista día — stack vertical por franja.
+- * Altura natural: el único scroller es AppListScroll de página.
+- * (ScrollArea interno + página = scroll roto en Android.)
++ * Vista día — panel como semana/mes.
++ * Un solo scroller interno. El padre da h-full (fillHeight);
++ * AppListScroll no compite porque el hijo no desborda.
+  */
+ export function AgendaDayView({
+   logs,
+@@ -60,46 +62,50 @@ export function AgendaDayView({
+   const showAuto = showAutoSection && autoLogs.length > 0
+ 
+   return (
+-    <div className="flex w-full flex-col gap-3 pb-1">
+-      {showAuto && (
+-        <div className="shrink-0">
+-          <AutoActivitySection logs={autoLogs} />
+-        </div>
+-      )}
++    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl bg-card">
++      <ScrollArea className="h-full min-h-0 min-w-0 flex-1 rounded-2xl">
++        <div className="flex flex-col gap-3 p-2 pb-3">
++          {showAuto && (
++            <div className="shrink-0">
++              <AutoActivitySection logs={autoLogs} />
++            </div>
++          )}
+ 
+-      {SHIFT_GROUPS.map(group => {
+-        const logsBySlot: Record<string, ActivityLog[]> = {}
+-        if (!loading) {
+-          for (const slot of group.slots) {
+-            logsBySlot[slot.shift] = logs.filter(
+-              log => log.shift === slot.shift,
+-            )
+-          }
+-        }
++          {SHIFT_GROUPS.map(group => {
++            const logsBySlot: Record<string, ActivityLog[]> = {}
++            if (!loading) {
++              for (const slot of group.slots) {
++                logsBySlot[slot.shift] = logs.filter(
++                  log => log.shift === slot.shift,
++                )
++              }
++            }
+ 
+-        return (
+-          <ShiftGroupSection
+-            key={group.key}
+-            group={group}
+-            logsBySlot={logsBySlot}
+-            loading={loading}
+-            onLogClick={onLogClick}
+-            onDeleteLog={onDeleteLog}
+-            beginDrag={beginDrag}
+-            registerSlot={registerSlot}
+-            draggingLogId={draggingLogId}
+-            hoverShift={hoverShift}
+-            deletingLogId={deletingLogId}
+-            canCreate={canCreate}
+-            canDelete={canDelete}
+-            slotState={slotState}
+-            isLogBusy={isLogBusy}
+-            canDuplicateLog={canDuplicateLog}
+-            onEditLog={onEditLog}
+-            onDuplicateLog={onDuplicateLog}
+-          />
+-        )
+-      })}
++            return (
++              <ShiftGroupSection
++                key={group.key}
++                group={group}
++                logsBySlot={logsBySlot}
++                loading={loading}
++                onLogClick={onLogClick}
++                onDeleteLog={onDeleteLog}
++                beginDrag={beginDrag}
++                registerSlot={registerSlot}
++                draggingLogId={draggingLogId}
++                hoverShift={hoverShift}
++                deletingLogId={deletingLogId}
++                canCreate={canCreate}
++                canDelete={canDelete}
++                slotState={slotState}
++                isLogBusy={isLogBusy}
++                canDuplicateLog={canDuplicateLog}
++                onEditLog={onEditLog}
++                onDuplicateLog={onDuplicateLog}
++              />
++            )
++          })}
++        </div>
++      </ScrollArea>
+     </div>
+   )
+ }
+diff --git a/src/features/activity-log/components/contents/activity-log-page-content.tsx b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+index d4d9598..2194718 100644
+--- a/src/features/activity-log/components/contents/activity-log-page-content.tsx
++++ b/src/features/activity-log/components/contents/activity-log-page-content.tsx
+@@ -309,7 +309,7 @@ export function ActivityLogPageContent({
+ 
+   const isDay = viewMode === "day"
+   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
+-  const fillHeight = isAgenda || isMonth
++  const fillHeight = isAgenda || isMonth || isDay
+   const showDesktopAreaSidebar =
+     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
+ 
+@@ -339,7 +339,7 @@ export function ActivityLogPageContent({
+       )}
+ 
+       {isDay && (
+-        <div className="flex w-full flex-col max-md:mt-2">
++        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+           <AgendaDayView
+             logs={logs}
+             loading={loading}
