@@ -7,7 +7,7 @@ import { WorkflowAction } from "@/shared/ui/actions/workflow-action"
 import { useWorkflowStepActions } from "@/features/processes/hooks/use-workflow-step-actions"
 
 import type { ProcessTask } from "@/features/processes/types/process.types"
-import type { WorkflowFormVariant } from "../tasks/task-workflow-overlay"
+import type { WorkflowFormVariant } from "@/features/tasks/pipeline/hooks/use-task-workflow-form"
 
 type BaseProps = {
   processTask: ProcessTask

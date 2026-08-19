@@ -5,9 +5,7 @@ import {
   type WorkflowFieldType,
 } from "../config/workflow-form-fields"
 
-import type {
-  WorkflowFormVariant,
-} from "../components/tasks/task-workflow-overlay"
+import type { WorkflowFormVariant } from "@/features/tasks/pipeline/hooks/use-task-workflow-form"
 
 export function getWorkflowFormFields(
   processCode: ProcessCode,
