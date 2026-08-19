@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { getActivityIcon } from "../../constants/activity-icons"
 import type { ActivityLog } from "../../types/activity-log.types"
 import { cn } from "@/shared/utils/utils"
@@ -21,8 +22,7 @@ function formatTime(iso: string): string {
   })
 }
 
-/** solid: texto/icono de contraste (blanco sobre fills saturados). Lucide via getActivityIcon. */
-export function ActivityLogChip({
+export const ActivityLogChip = memo(function ActivityLogChip({
   log,
   loading = false,
   compact = false,
@@ -44,7 +44,7 @@ export function ActivityLogChip({
         <div
           className={cn(
             "flex h-6 w-full min-w-0 items-center gap-1 rounded-md px-1.5 animate-pulse bg-foreground/8",
-            className,
+            className
           )}
           aria-hidden
         >
@@ -60,15 +60,17 @@ export function ActivityLogChip({
         onClick={onClick}
         title={`${formatTime(log.loggedAt)} · ${label}${subtitle ? ` — ${subtitle}` : ""}`}
         className={cn(
-          "group flex h-6 w-full min-w-0 items-center gap-1 rounded-md px-1.5 text-left",
-          "outline-none transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]",
-          className,
+          "inline-flex h-6 w-full min-w-0 select-none items-center gap-1 rounded-md px-1.5 text-left",
+          "transition-colors duration-150 ease-in-out",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+          "hover:opacity-90",
+          className
         )}
         style={{ backgroundColor: badge.background, color: badge.text }}
       >
-        {Icon ? (
+        {Icon && (
           <Icon size={11} strokeWidth={2.5} className="block shrink-0" style={{ color: badge.text }} />
-        ) : null}
+        )}
         <span className="min-w-0 flex-1 truncate text-[10px] font-semibold leading-none tracking-tight">
           {label}
         </span>
@@ -77,12 +79,13 @@ export function ActivityLogChip({
   }
 
   const shellClass = cn(
-    "group relative flex w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
-    "border-0 outline-none ring-0 shadow-none focus:outline-none focus-visible:outline-none",
-    !loading && "transition-all duration-200 hover:brightness-110 active:scale-[0.99]",
+    "group relative inline-flex w-full min-w-0 select-none items-center gap-2.5 rounded-xl px-2.5 py-2 text-left",
+    "transition-colors duration-150 ease-in-out",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+    !loading && "hover:opacity-90",
     loading && "pointer-events-none animate-pulse",
     "md:flex-col md:items-stretch md:gap-0",
-    className,
+    className
   )
 
   if (loading || !log) {
@@ -155,4 +158,4 @@ export function ActivityLogChip({
       </div>
     </button>
   )
-}
+})

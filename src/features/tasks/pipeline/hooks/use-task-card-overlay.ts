@@ -1,65 +1,32 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
-
-import {
-  useLongPress,
-} from "./use-long-press"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useLongPress } from "./use-long-press"
 
 type Props = {
   enabled: boolean
-  onOpenChange?: (
-    open: boolean,
-  ) => void
+  onOpenChange?: (open: boolean) => void
 }
 
-export function useTaskCardOverlay({
-  enabled,
-  onOpenChange,
-}: Props) {
-  const [
-    overlayOpen,
-    setOverlayOpenState,
-  ] =
-    useState(false)
+export function useTaskCardOverlay({ enabled, onOpenChange }: Props) {
+  const [overlayOpen, setOverlayOpenState] = useState(false)
 
-  const overlayOpenRef =
-    useRef(overlayOpen)
+  const overlayOpenRef = useRef(overlayOpen)
+  const onOpenChangeRef = useRef(onOpenChange)
+  const lastInteractionTimeRef = useRef(0)
 
-  const onOpenChangeRef =
-    useRef(onOpenChange)
+  overlayOpenRef.current = overlayOpen
+  onOpenChangeRef.current = onOpenChange
 
-  overlayOpenRef.current =
-    overlayOpen
+  const setOverlayOpen = useCallback((open: boolean) => {
+    lastInteractionTimeRef.current = Date.now()
+    setOverlayOpenState(open)
+    onOpenChangeRef.current?.(open)
+  }, [])
 
-  onOpenChangeRef.current =
-    onOpenChange
-
-  const setOverlayOpen =
-    useCallback(
-      (open: boolean) => {
-        setOverlayOpenState(open)
-
-        onOpenChangeRef.current?.(
-          open,
-        )
-      },
-      [],
-    )
-
-  const closeOverlay =
-    useCallback(
-      () =>
-        setOverlayOpen(false),
-      [
-        setOverlayOpen,
-      ],
-    )
+  const closeOverlay = useCallback(() => {
+    setOverlayOpen(false)
+  }, [setOverlayOpen])
 
   useEffect(() => {
     return () => {
@@ -69,22 +36,23 @@ export function useTaskCardOverlay({
     }
   }, [])
 
-  const {
-    bind,
-    pressed,
-  } =
-    useLongPress({
-      onLongPress: () => {
-        if (enabled) {
-          setOverlayOpen(true)
-        }
-      },
-    })
+  const { bind, pressed } = useLongPress({
+    onLongPress: () => {
+      if (enabled) {
+        setOverlayOpen(true)
+      }
+    },
+  })
+
+  const wasRecentlyInteracted = useCallback(() => {
+    return Date.now() - lastInteractionTimeRef.current < 400
+  }, [])
 
   return {
     bind,
     pressed,
     overlayOpen,
     closeOverlay,
+    wasRecentlyInteracted,
   }
 }

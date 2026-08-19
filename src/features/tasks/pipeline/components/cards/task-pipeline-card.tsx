@@ -1,67 +1,31 @@
 "use client"
 
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react"
-
-import {
-  MessageSquare,
-} from "lucide-react"
+import { useCallback, useMemo, useState } from "react"
+import { MessageSquare } from "lucide-react"
 
 import { TaskMaterialInfo } from "@/features/tasks/components/task-material-info"
 import { CHROME_ICON_BTN } from "@/shared/ui/actions/icon-action"
 import { EntityAuditInfo } from "@/shared/ui/entity-audit-info/entity-audit-info"
+import { cn } from "@/shared/utils/utils"
 
-import {
-  cn,
-} from "@/shared/utils/utils"
+import { KanbanCardFromTask } from "@/features/tasks/components/kanban-card/kanban-card-from-task"
+import { CommentHistoryDialog } from "@/features/comments/components/comment-history-dialog"
+import type { ProcessCode, Task } from "@/features/tasks/types/task.types"
+import { isWorkflowCompleted } from "@/features/workflow/selectors/is-completed"
 
-import {
-  KanbanCardFromTask,
-} from "@/features/tasks/components/kanban-card/kanban-card-from-task"
-
-import {
-  CommentHistoryDialog,
-} from "@/features/comments/components/comment-history-dialog"
-
-import type {
-  ProcessCode,
-  Task,
-} from "@/features/tasks/types/task.types"
-
-import {
-  isWorkflowCompleted,
-} from "@/features/workflow/selectors/is-completed"
-
-import {
-  getProcessTask,
-} from "../../utils/get-process-task"
-
-import {
-  useTaskCardOverlay,
-} from "../../hooks/use-task-card-overlay"
-
-import {
-  TaskPipelineCardCompact,
-} from "./task-pipeline-card-compact"
-
-import {
-  TaskWorkflowOverlay,
-} from "../tasks/task-workflow-overlay"
+import { getProcessTask } from "../../utils/get-process-task"
+import { useTaskCardOverlay } from "../../hooks/use-task-card-overlay"
+import { TaskPipelineCardCompact } from "./task-pipeline-card-compact"
+import { TaskWorkflowOverlay } from "../tasks/task-workflow-overlay"
 
 type Props = {
   task: Task
   processCode: ProcessCode
   expanded: boolean
-  /** Otro card activo expandido → opacar hermanos activos (no históricos) */
   dimOthers?: boolean
   onToggle: () => void
   overlayLocked: boolean
-  onOverlayOpenChange: (
-    isOpen: boolean,
-  ) => void
+  onOverlayOpenChange: (isOpen: boolean) => void
 }
 
 export function TaskPipelineCard({
@@ -73,125 +37,73 @@ export function TaskPipelineCard({
   overlayLocked,
   onOverlayOpenChange,
 }: Props) {
-  const processTask =
-    useMemo(
-      () =>
-        getProcessTask(
-          task,
-          processCode,
-        ),
-      [
-        task,
-        processCode,
-      ],
-    )
+  const processTask = useMemo(
+    () => getProcessTask(task, processCode),
+    [task, processCode]
+  )
 
-  const stepStatus =
-    processTask.workflowStep?.status ??
-    "QUEUE"
-
-  const finalized =
-    isWorkflowCompleted(
-      task.workflowSteps,
-    )
-
-  const isFutureStage =
-    stepStatus === "QUEUE"
-
-  const isCompletedStage =
-    stepStatus === "REVIEWED"
+  const stepStatus = processTask.workflowStep?.status ?? "QUEUE"
+  const finalized = isWorkflowCompleted(task.workflowSteps)
+  const isFutureStage = stepStatus === "QUEUE"
+  const isCompletedStage = stepStatus === "REVIEWED"
 
   const isDimmed =
-    isFutureStage ||
-    isCompletedStage ||
-    (dimOthers && !expanded)
+    isFutureStage || isCompletedStage || (dimOthers && !expanded)
 
-  const isReachedStage =
-    !isFutureStage &&
-    !isCompletedStage
+  const isReachedStage = !isFutureStage && !isCompletedStage
 
-  const handleOverlayOpenChange =
-    useCallback(
-      (isOpen: boolean) => {
-        onOverlayOpenChange(isOpen)
-      },
-      [
-        onOverlayOpenChange,
-      ],
-    )
+  const handleOverlayOpenChange = useCallback(
+    (isOpen: boolean) => {
+      onOverlayOpenChange(isOpen)
+    },
+    [onOverlayOpenChange]
+  )
 
-  const {
-    bind,
-    pressed,
-    overlayOpen,
-    closeOverlay,
-  } =
+  const { bind, pressed, overlayOpen, closeOverlay, wasRecentlyInteracted } =
     useTaskCardOverlay({
-      enabled:
-        expanded &&
-        !finalized &&
-        isReachedStage &&
-        !overlayLocked,
-      onOpenChange:
-        handleOverlayOpenChange,
+      enabled: expanded && !finalized && isReachedStage && !overlayLocked,
+      onOpenChange: handleOverlayOpenChange,
     })
 
-  const longPressEnabled =
-    expanded &&
-    !finalized &&
-    isReachedStage
-
-  const [
-    commentsOpen,
-    setCommentsOpen,
-  ] = useState(false)
-
-  // Verificamos si la tarea ya está finalizada o si el paso actual ya fue revisado/completado
+  const longPressEnabled = expanded && !finalized && isReachedStage
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const isFinished = finalized || stepStatus === "REVIEWED"
 
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (overlayOpen || overlayLocked || wasRecentlyInteracted()) return
+
+    const target = event.target as HTMLElement | null
+    if (
+      target?.closest(
+        "button, a, input, textarea, [role='button'], [data-radix-collection-item]"
+      )
+    ) {
+      return
+    }
+
+    onToggle()
+  }
+
   return (
-    <div
-      {...(
-        longPressEnabled
-          ? bind
-          : {}
-      )}
-      className="relative"
-    >
+    <div {...(longPressEnabled ? bind : {})} className="relative">
       <div
         role="presentation"
-        onClick={event => {
-          if (overlayOpen || overlayLocked) return
-          const target = event.target as HTMLElement | null
-          // No toggle si el click viene de un control interactivo del footer
-          if (
-            target?.closest(
-              "button, a, input, textarea, [role='button'], [data-radix-collection-item]",
-            )
-          ) {
-            return
-          }
-          onToggle()
-        }}
+        onClick={handleCardClick}
         className={cn(
           "block w-full cursor-pointer text-left",
-          (overlayOpen || overlayLocked) && "pointer-events-none",
+          (overlayOpen || overlayLocked) && "pointer-events-none"
         )}
       >
         <div
           className={cn(
             "overflow-hidden rounded-xl transition duration-200 ease-out",
-            // Elevación suave (IconAction), no shadow-sm shadow-black/15 dark:shadow-black/40/lg que se
-            // recorta a los lados con overflow del shell.
             expanded && "shadow-sm shadow-black/15 dark:shadow-black/40",
             longPressEnabled &&
               pressed &&
               !overlayOpen &&
               "scale-[0.98] shadow-sm shadow-black/15 dark:shadow-black/40",
-            isDimmed &&
-              "opacity-50",
-            overlayLocked &&
-              "opacity-40",
+            isDimmed && "opacity-50",
+            overlayLocked && "opacity-40"
           )}
         >
           {expanded ? (
@@ -203,8 +115,8 @@ export function TaskPipelineCard({
                 footerActions={
                   <div
                     className="flex items-center gap-1"
-                    onClick={e => e.stopPropagation()}
-                    onPointerDown={e => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
                     <EntityAuditInfo
                       createdAt={task.createdAt}
@@ -216,7 +128,7 @@ export function TaskPipelineCard({
                     {processTask.workflowStep && (
                       <button
                         type="button"
-                        onClick={event => {
+                        onClick={(event) => {
                           event.stopPropagation()
                           setCommentsOpen(true)
                         }}
@@ -244,26 +156,22 @@ export function TaskPipelineCard({
             </div>
           ) : (
             <div key="compact" className="animate-comment-in">
-              <TaskPipelineCardCompact
-                processTask={processTask}
-              />
+              <TaskPipelineCardCompact processTask={processTask} />
             </div>
           )}
         </div>
       </div>
 
-      {!finalized &&
-        isReachedStage && (
-          <TaskWorkflowOverlay
-            processTask={processTask}
-            processCode={processCode}
-            visible={overlayOpen}
-            onClose={closeOverlay}
-          />
-        )}
+      {!finalized && isReachedStage && (
+        <TaskWorkflowOverlay
+          processTask={processTask}
+          processCode={processCode}
+          visible={overlayOpen}
+          onClose={closeOverlay}
+        />
+      )}
 
       {processTask.workflowStep && (
-
         <CommentHistoryDialog
           target={{
             scope: "workflowStep",
@@ -273,7 +181,6 @@ export function TaskPipelineCard({
           onOpenChange={setCommentsOpen}
           readOnly={isFinished}
         />
-
       )}
     </div>
   )
