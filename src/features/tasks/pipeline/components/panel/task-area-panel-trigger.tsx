@@ -12,8 +12,9 @@ import { TaskAreaPanel } from "./task-area-panel"
 
 /**
  * Trigger + sheet de "Mis tareas".
- * Solo en compact/mobile: en desktop bitácora la columna lateral
- * (TaskAreaSidebar) reemplaza al sheet.
+ * Solo tablet (compact y no mobile shell):
+ * - Mobile: bottom nav Asignación — no duplicar (rompe layout).
+ * - Desktop: TaskAreaSidebar en bitácora.
  */
 export function TaskAreaPanelTrigger() {
   const [open, setOpen] = useState(false)
@@ -36,8 +37,8 @@ export function TaskAreaPanelTrigger() {
     return null
   }
 
-  // Desktop: la bitácora monta TaskAreaSidebar; no hace falta trigger.
-  if (!isMobile && !isCompact) {
+  // Mobile → bottom nav. Desktop → sidebar. Solo tablet necesita sheet.
+  if (isMobile || !isCompact) {
     return null
   }
 
