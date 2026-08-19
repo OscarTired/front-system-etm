@@ -215,8 +215,8 @@ export function UserSelect(props: Props) {
           {multi && values.length > 0 && (
             <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
               {values.length === 1
-                ? "1 operario · tocá para agregar más"
-                : `${values.length} operarios · el primero es primary`}
+                ? "1 operario · Elige otro para agregar más"
+                : `${values.length} operarios · El primero es el principal`}
             </p>
           )}
 
