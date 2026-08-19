@@ -36,7 +36,7 @@ export function AreaTaskSection({
         column && "h-full min-h-0 w-64 shrink-0",
       )}
     >
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border pb-2">
+      <div className="flex shrink-0 items-center justify-between gap-2 pb-2">
         <div className="flex min-w-0 items-center gap-2">
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"

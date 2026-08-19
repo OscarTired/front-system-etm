@@ -15,16 +15,6 @@ import { AreaTaskSection } from "@/features/tasks/pipeline/components/panel/area
 import { AreaFilterChips } from "@/features/tasks/pipeline/components/panel/area-filter-chips"
 import { useTaskAreaPanel } from "@/features/tasks/pipeline/hooks/use-task-area-panel"
 
-/**
- * Asignación (/production) y sidebar de bitácora (desktop).
- *
- * Causa raíz de “contenido cortado” en desktop:
- * AppListScroll anidado dentro de otro AppListScroll (página bitácora)
- * rompe el presupuesto de altura. Desktop usa el contrato EntityTable:
- * shell overflow-hidden + cuerpo min-h-0 flex-1 overflow-y-auto.
- *
- * Mobile: AppListScroll de página (chrome topbar/bottomnav + PTR).
- */
 export function TaskAreaSidebar({ className }: { className?: string }) {
   const queryClient = useQueryClient()
   const { isMobile } = useResponsive()
@@ -32,6 +22,8 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
   const { state, actions } = panel
 
   if (!state.hasAreaPanel) return null
+
+  const hasSelectedAreas = state.areas.length > 0
 
   const areaChips = state.canChooseAreas ? (
     <AreaFilterChips
@@ -46,7 +38,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
       <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
         Cargando…
       </div>
-    ) : state.areas.length === 0 ? (
+    ) : !hasSelectedAreas ? (
       <div className="flex h-24 flex-col items-center justify-center gap-1 px-4 text-center text-sm text-muted-foreground">
         {state.canChooseAreas ? (
           <>
@@ -91,18 +83,19 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
           <div className="px-3">{areasList}</div>
         </AppListScroll>
 
-        {/* FAB detrás de la barra de convocar → se oculta mientras hay confirmación. */}
         {!(state.summonTarget && state.selectedStepIds.size > 0) && (
-          <SpeedDialFab
-            actions={[
-              <HistoryToggleButton
-                key="history"
-                count={state.completedCount}
-                active={state.showHistory}
-                onClick={() => actions.setShowHistory(v => !v)}
-              />,
-            ]}
-          />
+          <div className={cn(!hasSelectedAreas && "invisible pointer-events-none")}>
+            <SpeedDialFab
+              actions={[
+                <HistoryToggleButton
+                  key="history"
+                  count={state.completedCount}
+                  active={state.showHistory}
+                  onClick={() => actions.setShowHistory(v => !v)}
+                />,
+              ]}
+            />
+          </div>
         )}
 
         {state.summonTarget && state.selectedStepIds.size > 0 && (
@@ -112,7 +105,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
               bottom: `calc(${BOTTOM_NAV_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px) + 8px)`,
             }}
           >
-            <div className="animate-slide-up-in overflow-hidden rounded-2xl border border-border/60 bg-card shadow-lg shadow-black/40">
+            <div className="animate-slide-up-in overflow-hidden rounded-2xl bg-card shadow-lg shadow-black/40">
               <div className="flex justify-center pt-2.5">
                 <div className="h-1 w-10 rounded-full bg-foreground/20" />
               </div>
@@ -132,7 +125,7 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
     )
   }
 
-  // Desktop / tablet: sin AppListScroll anidado.
+  // Desktop / tablet
   return (
     <aside
       className={cn(
@@ -140,16 +133,19 @@ export function TaskAreaSidebar({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="shrink-0 border-b border-border/60 px-3 pb-2.5 pt-2">
+      <div className="shrink-0 px-3 pb-2.5 pt-2">
         <div className="flex items-center justify-between gap-2">
           <h2 className="min-w-0 truncate text-sm font-bold tracking-wide text-foreground">
             Mis tareas
           </h2>
-          <HistoryToggleButton
-            count={state.completedCount}
-            active={state.showHistory}
-            onClick={() => actions.setShowHistory(v => !v)}
-          />
+          {/* Mantiene el ancho y alto del botón en el DOM pero lo oculta visualmente */}
+          <div className={cn(!hasSelectedAreas && "invisible pointer-events-none")}>
+            <HistoryToggleButton
+              count={state.completedCount}
+              active={state.showHistory}
+              onClick={() => actions.setShowHistory(v => !v)}
+            />
+          </div>
         </div>
         {areaChips && <div className="mt-2.5">{areaChips}</div>}
       </div>
