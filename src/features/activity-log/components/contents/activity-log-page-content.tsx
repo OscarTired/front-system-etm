@@ -15,6 +15,7 @@ import { DateNavigator } from "@/shared/ui/date-picker/components/date-navigator
 import { toISODateString } from "@/shared/ui/date-picker/utils/date-format"
 import { ActionDialog } from "@/shared/ui/dialogs/action-dialog/action-dialog"
 import { TaskAreaSidebar } from "@/features/tasks/pipeline/components/panel/task-area-sidebar"
+import { TaskAreaPanelTrigger } from "@/features/tasks/pipeline/components/panel/task-area-panel-trigger"
 import { useResponsive } from "@/shared/responsive/hooks/use-responsive"
 import { cn } from "@/shared/utils/utils"
 
@@ -276,6 +277,8 @@ export function ActivityLogPageContent({
             {entryCount}
           </div>
 
+          {/* Compact: Mis tareas = sheet desde la derecha */}
+          <TaskAreaPanelTrigger />
         </div>
       ) : (
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
