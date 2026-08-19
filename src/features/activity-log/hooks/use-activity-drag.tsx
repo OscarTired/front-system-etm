@@ -9,12 +9,13 @@ import {
 } from "react"
 
 import { getActivityIcon } from "../constants/activity-icons"
-import { getBadgeColors } from "@/shared/utils/badge-colors"
 import type { ActivityLog, DayShift } from "../types/activity-log.types"
 import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
 import {
   autoScrollAtPointer,
   findVerticalScrollParent,
+  overlayLeftBesidePointer,
+  overlayTopAbovePointer,
 } from "@/shared/dnd/pointer-drag-utils"
 import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 
@@ -39,14 +40,8 @@ type SlotRect = {
 export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
   const [draggingLog, setDraggingLog] = useState<ActivityLog | null>(null)
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 })
-  /** Card en pantalla + puntero al activar → overlay alineado, sin desfase del handle. */
-  const originRef = useRef({
-    pointerX: 0,
-    pointerY: 0,
-    cardLeft: 0,
-    cardTop: 0,
-  })
-  const [overlayHeight, setOverlayHeight] = useState(48)
+  /** Left del card al activar — misma preferredLeft que useRowDragReorder. */
+  const preferredLeftRef = useRef(0)
   const [hoverShift, setHoverShift] = useState<DayShift | null>(null)
   const [isDuplicateMode, setIsDuplicateMode] = useState(false)
 
@@ -142,22 +137,11 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
             ? row.querySelector("[data-activity-log-card]")
             : null) ?? target.closest("[data-activity-log-card]")
         if (card instanceof HTMLElement) {
-          const rect = card.getBoundingClientRect()
-          originRef.current = {
-            pointerX: clientX,
-            pointerY: clientY,
-            cardLeft: rect.left,
-            cardTop: rect.top,
-          }
-          setOverlayHeight(Math.max(rect.height, 40))
+          preferredLeftRef.current = card.getBoundingClientRect().left
+        } else if (row instanceof HTMLElement) {
+          preferredLeftRef.current = row.getBoundingClientRect().left
         } else {
-          originRef.current = {
-            pointerX: clientX,
-            pointerY: clientY,
-            cardLeft: clientX - 16,
-            cardTop: clientY - 20,
-          }
-          setOverlayHeight(48)
+          preferredLeftRef.current = clientX
         }
 
         updateCachedRects(isDuplicate ? null : log.shift)
@@ -299,63 +283,53 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     }
   }, [draggingLog, endDrag, findShiftAt, updateCachedRects])
 
-  const overlay = draggingLog && (() => {
-    const o = originRef.current
-    const left = o.cardLeft + (pointerPos.x - o.pointerX)
-    const top = o.cardTop + (pointerPos.y - o.pointerY)
-    const badge = getBadgeColors(draggingLog.activityType.color, "solid")
-    const Icon = getActivityIcon(draggingLog.activityType.icon)
-
-    return (
-      <div
-        style={{
-          position: "fixed",
-          left: Math.max(8, left),
-          top: Math.max(8, top),
-          height: overlayHeight,
-          width: "max-content",
-          maxWidth: "min(90vw, 20rem)",
-          pointerEvents: "none",
-          zIndex: 10000,
-        }}
-      >
-        <div
-          className="flex h-full w-max max-w-full items-center gap-2.5 rounded-xl px-2.5 shadow-[0_28px_70px_rgba(0,0,0,.45)]"
-          style={{
-            backgroundColor: badge.background,
-            color: badge.text,
-          }}
-        >
-          <span className="shrink-0 opacity-60" style={{ color: badge.text }}>
-            ≡
-          </span>
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
-          >
-            <Icon size={14} strokeWidth={2.5} style={{ color: badge.text }} />
-          </div>
-          <span
-            className="min-w-0 max-w-[12rem] truncate text-sm font-semibold tracking-wide"
-            style={{ color: badge.text }}
-          >
-            {draggingLog.activityType.label}
-          </span>
-          {isDuplicateMode && (
-            <span
-              className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                color: badge.text,
-              }}
-            >
-              Copiar
+  const overlay = draggingLog && (
+    <div
+      style={{
+        position: "fixed",
+        left: overlayLeftBesidePointer(pointerPos.x, {
+          isMobile: isMobileRef.current,
+          preferredLeft: preferredLeftRef.current,
+          width: 256,
+        }),
+        width: 256,
+        top: overlayTopAbovePointer(pointerPos.y),
+        pointerEvents: "none",
+        zIndex: 10000,
+      }}
+    >
+      {/* Misma cáscara que useRowDragReorder — fuente de verdad del ghost. */}
+      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+        <span className="shrink-0 text-foreground/35">≡</span>
+        <div className="min-w-0 flex-1 overflow-hidden text-right">
+          <div className="flex items-center justify-end gap-2">
+            {isDuplicateMode && (
+              <span className="shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                Copiar
+              </span>
+            )}
+            <span className="min-w-0 truncate text-xs font-medium text-foreground">
+              {draggingLog.activityType.label}
             </span>
-          )}
+            {(() => {
+              const Icon = getActivityIcon(draggingLog.activityType.icon)
+              return (
+                <div
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: `${draggingLog.activityType.color}22`,
+                    color: draggingLog.activityType.color,
+                  }}
+                >
+                  <Icon size={12} />
+                </div>
+              )
+            })()}
+          </div>
         </div>
       </div>
-    )
-  })()
+    </div>
+  )
 
   return {
     beginDrag,

@@ -98,8 +98,8 @@ export function overlayTopAbovePointer(clientY: number): number {
 
 /**
  * left del overlay.
- * - Móvil: a la DERECHA del dedo (si cabe); si no, a la izquierda.
- * - Desktop: respeta preferredLeft (alineado a la fila) o puntero + 14.
+ * - Si hay preferredLeft (left del row/card), alinea ahí — desktop y móvil.
+ * - Sin preferredLeft: desktop = puntero+14; móvil = al lado del dedo.
  */
 export function overlayLeftBesidePointer(
   clientX: number,
@@ -113,18 +113,20 @@ export function overlayLeftBesidePointer(
   const gap = 16
   const margin = 8
 
+  if (typeof opts?.preferredLeft === "number") {
+    return Math.max(
+      margin,
+      Math.min(opts.preferredLeft, window.innerWidth - width - margin),
+    )
+  }
+
   if (!opts?.isMobile) {
-    if (typeof opts?.preferredLeft === "number") {
-      return opts.preferredLeft
-    }
     return clientX + 14
   }
 
-  // Móvil: preferir derecha del dedo
   const right = clientX + gap
   if (right + width <= window.innerWidth - margin) {
     return right
   }
-  // Flip a la izquierda del dedo
   return Math.max(margin, clientX - width - gap)
 }
