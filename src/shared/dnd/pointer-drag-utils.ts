@@ -3,8 +3,11 @@
  * Una sola fuente: clearance del dedo + auto-scroll en bordes + posición overlay.
  */
 
-/** Eleva el ghost por encima del dedo (móvil y desktop). */
-export const DRAG_OVERLAY_CLEARANCE_PX = 56
+/** Offset del ≡ / centro del chip respecto al puntero (agarre en el grip). */
+export const DRAG_OVERLAY_GRAB_X_PX = 16
+export const DRAG_OVERLAY_GRAB_Y_PX = 20
+/** @deprecated Usar GRAB_Y; se mantiene por imports legacy. */
+export const DRAG_OVERLAY_CLEARANCE_PX = 20
 
 /** Ancho típico del chip de overlay. */
 export const DRAG_OVERLAY_WIDTH_PX = 256
@@ -91,42 +94,26 @@ export function autoScrollAtPointer(
   return false
 }
 
-/** top del overlay: por encima del dedo. */
+/** top del overlay anclado al puntero. */
 export function overlayTopAbovePointer(clientY: number): number {
-  return Math.max(8, clientY - DRAG_OVERLAY_CLEARANCE_PX)
+  return Math.max(8, clientY - DRAG_OVERLAY_GRAB_Y_PX)
 }
 
 /**
- * left del overlay.
- * - Si hay preferredLeft (left del row/card), alinea ahí — desktop y móvil.
- * - Sin preferredLeft: desktop = puntero+14; móvil = al lado del dedo.
+ * left del overlay anclado al puntero (≡ bajo el grip).
+ * preferredLeft se ignora (row full-width = desfase).
  */
 export function overlayLeftBesidePointer(
   clientX: number,
   opts?: {
     isMobile?: boolean
+    /** @deprecated Ignorado. */
     preferredLeft?: number
     width?: number
   },
 ): number {
   const width = opts?.width ?? DRAG_OVERLAY_WIDTH_PX
-  const gap = 16
   const margin = 8
-
-  if (typeof opts?.preferredLeft === "number") {
-    return Math.max(
-      margin,
-      Math.min(opts.preferredLeft, window.innerWidth - width - margin),
-    )
-  }
-
-  if (!opts?.isMobile) {
-    return clientX + 14
-  }
-
-  const right = clientX + gap
-  if (right + width <= window.innerWidth - margin) {
-    return right
-  }
-  return Math.max(margin, clientX - width - gap)
+  const left = clientX - DRAG_OVERLAY_GRAB_X_PX
+  return Math.max(margin, Math.min(left, window.innerWidth - width - margin))
 }

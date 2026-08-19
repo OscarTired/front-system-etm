@@ -7,6 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react"
+import { createPortal } from "react-dom"
 
 import { DndRowProvider } from "@/shared/ui/entity-table-common/dnd-row-context"
 import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refresh-store"
@@ -55,6 +56,7 @@ export function useRowDragReorder<T>({
   const [isActuallyDragging, setIsActuallyDragging] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
   const [labelTop, setLabelTop] = useState(0)
+  const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 })
 
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -150,7 +152,7 @@ export function useRowDragReorder<T>({
       offsetY,
     })
 
-    // Ghost por encima del dedo (no debajo / bajo el dedo)
+    setPointerPos({ x: e.clientX, y: e.clientY })
     setLabelTop(overlayTopAbovePointer(e.clientY))
   }
 
@@ -225,6 +227,7 @@ export function useRowDragReorder<T>({
         capture()
         const newIndex = getInsertIndex(e.clientY, dragId)
         setInsertIndex(newIndex)
+        setPointerPos({ x: e.clientX, y: e.clientY })
         setLabelTop(overlayTopAbovePointer(e.clientY))
       })
     }
@@ -324,46 +327,48 @@ export function useRowDragReorder<T>({
   }
 
   const overlay =
-    drag && isActuallyDragging ? (
-      <>
-        {!isOutOfBounds && !isAtOriginalPosition && (
-          <div
-            style={{
-              position: "fixed",
-              left: drag.left,
-              width: drag.width,
-              top: lineTop,
-              pointerEvents: "none",
-              zIndex: 9999,
-            }}
-          >
-            <div className="h-0.5 w-full rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
-          </div>
-        )}
+    drag && isActuallyDragging
+      ? createPortal(
+          <>
+            {!isOutOfBounds && !isAtOriginalPosition && (
+              <div
+                style={{
+                  position: "fixed",
+                  left: drag.left,
+                  width: drag.width,
+                  top: lineTop,
+                  pointerEvents: "none",
+                  zIndex: 9999,
+                }}
+              >
+                <div className="h-0.5 w-full rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+              </div>
+            )}
 
-        <div
-          style={{
-            position: "fixed",
-            left: overlayLeftBesidePointer(lastClientX.current, {
-              isMobile: isMobileRef.current,
-              preferredLeft: drag.left,
-              width: 256,
-            }),
-            width: 256,
-            top: labelTop,
-            pointerEvents: "none",
-            zIndex: 10000,
-          }}
-        >
-          <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
-            <span className="shrink-0 text-foreground/35">≡</span>
-            <div className="min-w-0 flex-1 overflow-hidden text-right">
-              {renderDragLabel(drag.item)}
+            <div
+              style={{
+                position: "fixed",
+                left: overlayLeftBesidePointer(pointerPos.x, {
+                  isMobile: isMobileRef.current,
+                  width: 256,
+                }),
+                width: 256,
+                top: overlayTopAbovePointer(pointerPos.y),
+                pointerEvents: "none",
+                zIndex: 10000,
+              }}
+            >
+              <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+                <span className="shrink-0 text-foreground/35">≡</span>
+                <div className="min-w-0 flex-1 overflow-hidden text-right">
+                  {renderDragLabel(drag.item)}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </>
-    ) : null
+          </>,
+          document.body,
+        )
+      : null
 
   return {
     renderRow,

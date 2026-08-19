@@ -7,6 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react"
+import { createPortal } from "react-dom"
 
 import { getActivityIcon } from "../constants/activity-icons"
 import type { ActivityLog, DayShift } from "../types/activity-log.types"
@@ -40,8 +41,6 @@ type SlotRect = {
 export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
   const [draggingLog, setDraggingLog] = useState<ActivityLog | null>(null)
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 })
-  /** Left del card al activar — misma preferredLeft que useRowDragReorder. */
-  const preferredLeftRef = useRef(0)
   const [hoverShift, setHoverShift] = useState<DayShift | null>(null)
   const [isDuplicateMode, setIsDuplicateMode] = useState(false)
 
@@ -129,19 +128,6 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
           target.setPointerCapture(pointerId)
         } catch {
           /* ignore */
-        }
-
-        const row = target.closest("[data-activity-log-row]")
-        const card =
-          (row instanceof HTMLElement
-            ? row.querySelector("[data-activity-log-card]")
-            : null) ?? target.closest("[data-activity-log-card]")
-        if (card instanceof HTMLElement) {
-          preferredLeftRef.current = card.getBoundingClientRect().left
-        } else if (row instanceof HTMLElement) {
-          preferredLeftRef.current = row.getBoundingClientRect().left
-        } else {
-          preferredLeftRef.current = clientX
         }
 
         updateCachedRects(isDuplicate ? null : log.shift)
@@ -283,53 +269,54 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     }
   }, [draggingLog, endDrag, findShiftAt, updateCachedRects])
 
-  const overlay = draggingLog && (
-    <div
-      style={{
-        position: "fixed",
-        left: overlayLeftBesidePointer(pointerPos.x, {
-          isMobile: isMobileRef.current,
-          preferredLeft: preferredLeftRef.current,
+  const overlay =
+    draggingLog &&
+    createPortal(
+      <div
+        style={{
+          position: "fixed",
+          left: overlayLeftBesidePointer(pointerPos.x, {
+            isMobile: isMobileRef.current,
+            width: 256,
+          }),
           width: 256,
-        }),
-        width: 256,
-        top: overlayTopAbovePointer(pointerPos.y),
-        pointerEvents: "none",
-        zIndex: 10000,
-      }}
-    >
-      {/* Misma cáscara que useRowDragReorder — fuente de verdad del ghost. */}
-      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
-        <span className="shrink-0 text-foreground/35">≡</span>
-        <div className="min-w-0 flex-1 overflow-hidden text-right">
-          <div className="flex items-center justify-end gap-2">
-            {isDuplicateMode && (
-              <span className="shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                Copiar
+          top: overlayTopAbovePointer(pointerPos.y),
+          pointerEvents: "none",
+          zIndex: 10000,
+        }}
+      >
+        <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+          <span className="shrink-0 text-foreground/35">≡</span>
+          <div className="min-w-0 flex-1 overflow-hidden text-right">
+            <div className="flex items-center justify-end gap-2">
+              {isDuplicateMode && (
+                <span className="shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  Copiar
+                </span>
+              )}
+              <span className="min-w-0 truncate text-xs font-medium text-foreground">
+                {draggingLog.activityType.label}
               </span>
-            )}
-            <span className="min-w-0 truncate text-xs font-medium text-foreground">
-              {draggingLog.activityType.label}
-            </span>
-            {(() => {
-              const Icon = getActivityIcon(draggingLog.activityType.icon)
-              return (
-                <div
-                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: `${draggingLog.activityType.color}22`,
-                    color: draggingLog.activityType.color,
-                  }}
-                >
-                  <Icon size={12} />
-                </div>
-              )
-            })()}
+              {(() => {
+                const Icon = getActivityIcon(draggingLog.activityType.icon)
+                return (
+                  <div
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: `${draggingLog.activityType.color}22`,
+                      color: draggingLog.activityType.color,
+                    }}
+                  >
+                    <Icon size={12} />
+                  </div>
+                )
+              })()}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  )
+      </div>,
+      document.body,
+    )
 
   return {
     beginDrag,
