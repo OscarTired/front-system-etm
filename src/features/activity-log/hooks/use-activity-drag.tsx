@@ -14,8 +14,6 @@ import { usePullToRefreshStore } from "@/shared/ui/pull-to-refresh/pull-to-refre
 import {
   autoScrollAtPointer,
   findVerticalScrollParent,
-  overlayLeftBesidePointer,
-  overlayTopAbovePointer,
 } from "@/shared/dnd/pointer-drag-utils"
 import { BOTTOM_NAV_HEIGHT_PX } from "@/shared/responsive/layout/chrome-constants"
 
@@ -40,6 +38,8 @@ type SlotRect = {
 export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
   const [draggingLog, setDraggingLog] = useState<ActivityLog | null>(null)
   const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 })
+  const [grabOffset, setGrabOffset] = useState({ x: 0, y: 0 })
+  const [overlaySize, setOverlaySize] = useState({ width: 256, height: 48 })
   const [hoverShift, setHoverShift] = useState<DayShift | null>(null)
   const [isDuplicateMode, setIsDuplicateMode] = useState(false)
 
@@ -127,6 +127,23 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
           target.setPointerCapture(pointerId)
         } catch {
           /* ignore */
+        }
+
+        const row =
+          target.closest("[data-activity-log-row]") ?? target.parentElement
+        if (row instanceof HTMLElement) {
+          const rect = row.getBoundingClientRect()
+          setOverlaySize({
+            width: Math.max(rect.width, 160),
+            height: Math.max(rect.height, 40),
+          })
+          setGrabOffset({
+            x: clientX - rect.left,
+            y: clientY - rect.top,
+          })
+        } else {
+          setOverlaySize({ width: 256, height: 48 })
+          setGrabOffset({ x: 24, y: 20 })
         }
 
         updateCachedRects(isDuplicate ? null : log.shift)
@@ -272,42 +289,43 @@ export function useActivityDrag({ onDrop, isShiftAvailable }: Props) {
     <div
       style={{
         position: "fixed",
-        left: overlayLeftBesidePointer(pointerPos.x, {
-          isMobile: isMobileRef.current,
-          width: 256,
-        }),
-        width: 256,
-        top: overlayTopAbovePointer(pointerPos.y),
+        left: Math.max(8, pointerPos.x - grabOffset.x),
+        top: Math.max(8, pointerPos.y - grabOffset.y),
+        width: overlaySize.width,
+        height: overlaySize.height,
         pointerEvents: "none",
         zIndex: 10000,
       }}
     >
-      <div className="flex w-64 max-w-full items-center gap-3 rounded-xl bg-popover px-3 py-2 shadow-[0_28px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
-        <span className="shrink-0 text-foreground/35">≡</span>
+      <div
+        className="flex h-full w-full items-center gap-2.5 rounded-xl px-2.5 shadow-[0_28px_70px_rgba(0,0,0,.45)]"
+        style={{
+          backgroundColor: draggingLog.activityType.color,
+          color: "#fff",
+        }}
+      >
+        <span className="shrink-0 opacity-70">≡</span>
+        {(() => {
+          const Icon = getActivityIcon(draggingLog.activityType.icon)
+          return (
+            <div
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+            >
+              <Icon size={14} strokeWidth={2.5} />
+            </div>
+          )
+        })()}
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center gap-2">
+            <span className="min-w-0 truncate text-sm font-semibold tracking-wide">
+              {draggingLog.activityType.label}
+            </span>
             {isDuplicateMode && (
-              <span className="shrink-0 rounded-md bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+              <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
                 Copiar
               </span>
             )}
-            <span className="min-w-0 truncate text-xs font-medium text-foreground">
-              {draggingLog.activityType.label}
-            </span>
-            {(() => {
-              const Icon = getActivityIcon(draggingLog.activityType.icon)
-              return (
-                <div
-                  className="flex size-6 shrink-0 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: `${draggingLog.activityType.color}22`,
-                    color: draggingLog.activityType.color,
-                  }}
-                >
-                  <Icon size={12} />
-                </div>
-              )
-            })()}
           </div>
         </div>
       </div>

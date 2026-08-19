@@ -215,6 +215,7 @@ export function ShiftGroupSection({
                   return (
                     <div
                       key={log.id}
+                      data-activity-log-row
                       className="group/log flex items-stretch gap-1.5"
                     >
                       {/* Handle de drag — mismo contrato visual que DragCell de filas */}
@@ -323,7 +324,8 @@ export function ShiftGroupSection({
                                   title="Editar"
                                   aria-label="Editar entrada"
                                   onClick={() => onEditLog(log)}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-800 dark:text-amber-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 opacity-80 transition-colors hover:bg-white/15 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-35"
+                                  style={{ color: "var(--day-log-ink)" }}
                                 >
                                   <Pencil size={14} />
                                 </button>
@@ -343,7 +345,8 @@ export function ShiftGroupSection({
                                     if (!canCreate || busy || !allowDup) return
                                     onDuplicateLog(log)
                                   }}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 opacity-80 transition-colors hover:bg-white/15 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-35"
+                                  style={{ color: "var(--day-log-ink)" }}
                                 >
                                   <Copy size={14} />
                                 </button>
@@ -359,7 +362,8 @@ export function ShiftGroupSection({
                                   title="Eliminar"
                                   aria-label="Eliminar entrada"
                                   onClick={() => onDeleteLog(log)}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 opacity-80 transition-colors hover:bg-white/15 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-35"
+                                  style={{ color: "var(--day-log-ink)" }}
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -383,7 +387,8 @@ export function ShiftGroupSection({
                                   disabled={busy}
                                   aria-label="Más acciones"
                                   onPointerDown={(e) => e.stopPropagation()}
-                                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-35"
+                                  className="rounded-md p-1 opacity-80 transition-colors hover:bg-white/15 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-35"
+                                  style={{ color: "var(--day-log-ink)" }}
                                 >
                                   <MoreHorizontal size={16} />
                                 </button>
