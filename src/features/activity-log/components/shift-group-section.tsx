@@ -1,10 +1,11 @@
 "use client"
 
-import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
+import { useCallback, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import { Trash2, Image as ImageIcon, Plus, Copy, Pencil, MoreHorizontal, GripVertical } from "lucide-react"
 import { getActivityIcon } from "../constants/activity-icons"
 import { getSlotState } from "../constants/shift-definitions"
 import { cn } from "@/shared/utils/utils"
+import { useBadgeColors } from "@/shared/utils/use-badge-colors"
 import * as Dialog from "@radix-ui/react-dialog"
 import { CommentImageDialog } from "@/features/comments/components/comment-image-dialog"
 
@@ -48,6 +49,35 @@ const DISTINCT_SHIFT_COLORS = [
   "text-teal-400",
   "text-fuchsia-400",
 ]
+
+
+/** Badge de día — misma línea visual que semana (solid + texto contraste). */
+function DayLogShell({
+  color,
+  children,
+  className,
+}: {
+  color: string
+  children: ReactNode
+  className?: string
+}) {
+  const badge = useBadgeColors(color, "solid")
+  return (
+    <div
+      className={className}
+      style={
+        {
+          backgroundColor: badge.background,
+          color: badge.text,
+          ["--day-log-ink" as string]: badge.text,
+          ["--day-log-muted" as string]: badge.textMuted,
+        } as CSSProperties
+      }
+    >
+      {children}
+    </div>
+  )
+}
 
 export function ShiftGroupSection({
   group,
@@ -216,34 +246,35 @@ export function ShiftGroupSection({
                         </button>
                       )}
 
-                      <div
+                      <DayLogShell
+                        color={log.activityType.color}
                         className={cn(
-                          "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl bg-foreground/5 p-2.5 transition-opacity",
+                          "group flex min-w-0 flex-1 items-start gap-2.5 rounded-xl p-2.5 transition-opacity",
                           (isDraggingThis || busy) && "opacity-40",
                           busy && "pointer-events-none",
                         )}
                       >
                       <div
-                        className="flex size-8 shrink-0 items-center justify-center rounded-full"
-                        style={{ backgroundColor: `${log.activityType.color}22`, color: log.activityType.color }}
+                        className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
                       >
-                        <LogIcon size={14} />
+                        <LogIcon size={14} strokeWidth={2.5} style={{ color: "var(--day-log-ink)" }} />
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground">
+                        <p className="text-sm font-semibold tracking-wide" style={{ color: "var(--day-log-ink)" }}>
                           {log.activityType.label}
                         </p>
 
                         {log.project && (
-                          <p className="mt-0.5 truncate text-xs text-primary">
+                          <p className="mt-0.5 truncate text-xs font-medium" style={{ color: "var(--day-log-muted)" }}>
                             {log.project.projectCode} · {log.project.name}
                             {log.task && ` · #${String(log.task.taskNumber).padStart(3, "0")} ${log.task.reference}`}
                           </p>
                         )}
 
                         {log.note && (
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          <p className="mt-0.5 truncate text-xs" style={{ color: "var(--day-log-muted)" }}>
                             {log.note}
                           </p>
                         )}
@@ -268,7 +299,7 @@ export function ShiftGroupSection({
                         onPointerDown={e => e.stopPropagation()}
                         className="ml-auto flex shrink-0 items-center self-start"
                       >
-                        <span className="tabular-nums text-xs text-muted-foreground">
+                        <span className="tabular-nums text-xs" style={{ color: "var(--day-log-muted)" }}>
                           {new Date(log.loggedAt).toLocaleTimeString("es-PE", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -434,7 +465,7 @@ export function ShiftGroupSection({
                           </div>
                         )}
                       </div>
-                    </div>
+                      </DayLogShell>
 
                       {/* + a la derecha; oculto mientras hay drag (desktop hover no lo muestre) */}
                       {!loading && state !== "upcoming" && canCreate && !draggingLogId && (

@@ -3,12 +3,11 @@
 import { ENTITY_ICONS } from "@/shared/constants/entity-icons"
 import { PROCESS_DEFINITIONS } from "@/features/processes/constants/process-definitions"
 import { cn } from "@/shared/utils/utils"
-import { useBadgeColors } from "@/shared/utils/use-badge-colors"
+import { useBadgeColors, useDomainInk } from "@/shared/utils/use-badge-colors"
 import type { ProcessCode } from "@/features/tasks/types/task.types"
 
 type Props = {
   allAreas: ProcessCode[]
-  /** Vacío = todas visibles. */
   selectedAreas: ProcessCode[]
   onChange: (next: ProcessCode[]) => void
   className?: string
@@ -24,32 +23,38 @@ function AreaChip({
   onToggle: () => void
 }) {
   const definition = PROCESS_DEFINITIONS[code]
-  const Icon = ENTITY_ICONS[definition.icon]
-  const badge = useBadgeColors(definition.color, "subtle")
+  const Icon = ENTITY_ICONS[definition.icon as keyof typeof ENTITY_ICONS]
+  const solid = useBadgeColors(definition.color, "solid")
+  const ink = useDomainInk(definition.color)
 
   return (
     <button
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition active:scale-95",
-        selected
-          ? "bg-foreground/15 text-foreground"
-          : "bg-background/40 text-muted-foreground hover:bg-foreground/10 hover:text-foreground",
+        "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition active:scale-95",
+        !selected &&
+          "bg-foreground/5 text-muted-foreground hover:bg-foreground/10",
       )}
+      style={
+        selected
+          ? { backgroundColor: solid.background, color: solid.text }
+          : undefined
+      }
     >
-      <Icon size={13} style={{ color: selected ? badge.text : undefined }} className={cn(!selected && "text-muted-foreground")} />
+      {Icon && (
+        <Icon
+          size={13}
+          strokeWidth={2.5}
+          className="block shrink-0"
+          style={{ color: selected ? solid.text : ink }}
+        />
+      )}
       <span>{definition.label}</span>
     </button>
   )
 }
 
-/**
- * Selector de áreas (Mis tareas).
- * - Una sola área a la vez; clic de nuevo → todas (array vacío).
- * - Chips centrados.
- * Iconos de proceso: mismo motor badge-colors que EntityChip / columnas.
- */
 export function AreaFilterChips({
   allAreas,
   selectedAreas,
@@ -63,9 +68,7 @@ export function AreaFilterChips({
   }
 
   function isSelected(code: ProcessCode) {
-    return selectedAreas.length === 0
-      ? true
-      : selectedAreas.includes(code)
+    return selectedAreas.length === 0 ? true : selectedAreas.includes(code)
   }
 
   return (

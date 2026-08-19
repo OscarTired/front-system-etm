@@ -92,11 +92,13 @@ export function PopoverContent({
             "data-[state=closed]:pointer-events-none data-[state=closed]:opacity-0",
           )}
           onPointerDown={event => {
-            // Evita ghost-click al shell bajo el portal
             event.preventDefault()
-          }}
-          onClick={() => {
+            event.stopPropagation()
             close()
+          }}
+          onClick={event => {
+            event.preventDefault()
+            event.stopPropagation()
           }}
         />
 
