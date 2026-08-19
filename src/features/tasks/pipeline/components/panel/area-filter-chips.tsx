@@ -68,7 +68,8 @@ export function AreaFilterChips({
   }
 
   function isSelected(code: ProcessCode) {
-    return selectedAreas.length === 0 ? true : selectedAreas.includes(code)
+    // Vacío = ninguna seleccionada (no “todas”)
+    return selectedAreas.includes(code)
   }
 
   return (
