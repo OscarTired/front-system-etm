@@ -66,7 +66,7 @@ export function ActivityLogPageContent({
 }: Props = {}) {
   const queryClient = useQueryClient()
 
-  const { isCompact } = useResponsive()
+  const { isCompact, isMobile } = useResponsive()
 
   const [date, setDate] = useState<Date>(new Date())
   const [viewMonth, setViewMonth] = useState<Date>(() => new Date())
@@ -309,7 +309,7 @@ export function ActivityLogPageContent({
 
   const isDay = viewMode === "day"
   // Día, semana y mes comparten presupuesto de altura (AppListScroll → h-full).
-  const fillHeight = isAgenda || isMonth || isDay
+  const fillHeight = isAgenda || isMonth || (isDay && !isMobile)
   const showDesktopAreaSidebar =
     !isCompact && departmentQuery === "PRODUCCION" && department !== "REGISTROS"
 
@@ -339,7 +339,13 @@ export function ActivityLogPageContent({
       )}
 
       {isDay && (
-        <div className="flex min-h-0 flex-1 flex-col max-md:mt-2">
+        <div
+          className={
+            isMobile
+              ? "flex w-full flex-col max-md:mt-2"
+              : "flex min-h-0 flex-1 flex-col max-md:mt-2"
+          }
+        >
           <AgendaDayView
             logs={logs}
             loading={loading}
