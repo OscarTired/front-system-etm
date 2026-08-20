@@ -72,6 +72,7 @@ export default function RootLayout({
           position: "fixed",
           inset: 0,
         }}
+        suppressHydrationWarning
       >
         <ApiClientProvider />
 
